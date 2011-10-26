@@ -1,0 +1,3 @@
+root:aid:ext:ver
+\- gid:aid:ext:ver:%s
+   \- gid:aid:ext:ver:%s

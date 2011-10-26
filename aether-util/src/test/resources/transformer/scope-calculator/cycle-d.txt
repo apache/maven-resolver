@@ -1,0 +1,7 @@
+# Checks for graceful handling of cycles in the graph of dependency nodes.
+
+gid:root:jar:1
+\- gid:a:jar:1:compile
+   \- (b)gid:b:jar:1:compile
+      \- gid:a:jar:1:runtime
+         \- ^b

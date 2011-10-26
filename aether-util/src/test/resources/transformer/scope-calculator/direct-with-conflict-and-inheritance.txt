@@ -1,0 +1,11 @@
+# When a direct dependency scope conflicts with a transitive dependency scope, the direct dependency scope always wins.
+# When the scope of the transitive dependency is updated, this update needs to be considered by scope inheritance.
+# In the graph below gid:a:jar:1 has a conflict, after its resolution to test scope, gid:x:jar:1 should end up in
+# test scope as well, everywhere in the graph.
+
+gid:root:jar:1
++- gid:a:jar:1:test
+|  \- gid:x:jar:1:compile
+\- gid:b:jar:1:compile
+   \- gid:a:jar:1:compile
+      \- gid:x:jar:1:compile

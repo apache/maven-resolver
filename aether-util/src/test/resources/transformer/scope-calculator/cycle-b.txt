@@ -1,0 +1,7 @@
+# Variation of cycle-a where the order of direct dependencies has been changed.
+
+gid:root:jar:1
++- gid:b:jar:2:runtime
+|  \- gid:a:jar:2:runtime
+\- gid:a:jar:1:compile
+   \- gid:b:jar:1:compile

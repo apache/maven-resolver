@@ -1,0 +1,5 @@
+# unlikely case, e.g. illegal POM
+
+(null)
++- gid:aid:ext:ver:%s
+\- gid:aid:ext:ver:%s

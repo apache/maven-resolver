@@ -1,0 +1,14 @@
+(null)
++- gid1:aid:ext:ver
+|  \- gid2:aid:ext:ver
+|     \- gid:aid:ext:ver
++- gid2:aid:ext:ver
+|  \- gid1:aid:ext:ver
++- gid1:aid:ext:ver
+|  \- gid3:aid:ext:ver
++- gid3:aid:ext:ver
+|  \- gid1:aid:ext:ver
++- gid2:aid:ext:ver
+|  \- gid3:aid:ext:ver
+\- gid3:aid:ext:ver
+   \- gid2:aid:ext:ver

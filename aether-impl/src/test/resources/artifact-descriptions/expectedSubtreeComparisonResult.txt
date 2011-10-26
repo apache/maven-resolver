@@ -1,0 +1,7 @@
+subtree:comparison:ext:ver
++- duplicate:transitive:ext:dependency:compile
+|  +- gid:aid:ext:ver:compile
+|  |  \- gid:aid2:ext:ver:compile
+|  \- gid:aid2:ext:ver:compile
+\- gid:aid:ext:ver:compile
+   \- gid:aid2:ext:ver:compile

@@ -1,0 +1,4 @@
+match:x:jar:1
++- gid:a:jar:1:compile
+|  \- match:y:jar:2:compile
+\- match:y:jar:2:compile

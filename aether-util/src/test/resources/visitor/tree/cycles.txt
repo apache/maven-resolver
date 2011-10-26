@@ -1,0 +1,6 @@
+gid:a:jar:1
++- (1)gid:b:jar:1:compile
+|  \- gid:c:jar:1:compile
+|     \- ^1
+\- gid:d:jar:1:compile
+   \- ^1

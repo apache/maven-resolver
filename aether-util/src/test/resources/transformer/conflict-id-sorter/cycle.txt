@@ -1,0 +1,5 @@
+(null)
++- gid:aid:ext:ver
+|  \- gid2:aid:ext:ver
+\- gid2:aid:ext:ver
+   \- gid:aid:ext:ver

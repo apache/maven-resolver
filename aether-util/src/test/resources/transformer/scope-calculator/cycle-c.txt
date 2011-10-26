@@ -1,0 +1,10 @@
+# Checks for graceful handling of cycles in the graph of conflict groups. Below, the group {a:1} depends on
+# {b:1} and vice versa. The conflicting groups consist entirely of non-direct dependencies.
+
+gid:root:jar:1
++- gid:x:jar:1:runtime
+|  \- gid:a:jar:1:compile
+|     \- gid:b:jar:1:compile
+\- gid:y:jar:1:runtime
+   \- gid:b:jar:1:compile
+      \- gid:a:jar:1:compile
