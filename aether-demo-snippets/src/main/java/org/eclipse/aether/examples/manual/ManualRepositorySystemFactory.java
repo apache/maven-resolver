@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo.manual;
+package org.eclipse.aether.examples.manual;
 
 import org.apache.maven.repository.internal.DefaultServiceLocator;
 import org.eclipse.aether.RepositorySystem;

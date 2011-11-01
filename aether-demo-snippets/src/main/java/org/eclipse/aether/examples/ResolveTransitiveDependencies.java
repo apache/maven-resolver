@@ -8,47 +8,60 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo;
+package org.eclipse.aether.examples;
+
+import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.demo.util.Booter;
-import org.eclipse.aether.demo.util.ConsoleDependencyGraphDumper;
+import org.eclipse.aether.examples.util.Booter;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.util.artifact.DefaultArtifact;
+import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.filter.DependencyFilterUtils;
 
 
 /**
- * Collects the transitive dependencies of an artifact.
+ * Resolves the transitive (compile) dependencies of an artifact.
  */
-public class GetDependencyTree
+public class ResolveTransitiveDependencies
 {
 
     public static void main( String[] args )
         throws Exception
     {
         System.out.println( "------------------------------------------------------------" );
-        System.out.println( GetDependencyTree.class.getSimpleName() );
+        System.out.println( ResolveTransitiveDependencies.class.getSimpleName() );
 
         RepositorySystem system = Booter.newRepositorySystem();
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.0.2" );
+        Artifact artifact = new DefaultArtifact( "org.sonatype.aether:aether-impl:1.13" );
 
         RemoteRepository repo = Booter.newCentralRepository();
 
+        DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter( JavaScopes.COMPILE );
+
         CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRoot( new Dependency( artifact, "" ) );
+        collectRequest.setRoot( new Dependency( artifact, JavaScopes.COMPILE ) );
         collectRequest.addRepository( repo );
 
-        CollectResult collectResult = system.collectDependencies( session, collectRequest );
+        DependencyRequest dependencyRequest = new DependencyRequest( collectRequest, classpathFlter );
 
-        collectResult.getRoot().accept( new ConsoleDependencyGraphDumper() );
+        List<ArtifactResult> artifactResults =
+            system.resolveDependencies( session, dependencyRequest ).getArtifactResults();
+
+        for ( ArtifactResult artifactResult : artifactResults )
+        {
+            System.out.println( artifactResult.getArtifact() + " resolved to " + artifactResult.getArtifact().getFile() );
+        }
     }
 
 }

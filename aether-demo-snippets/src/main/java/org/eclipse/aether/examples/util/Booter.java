@@ -8,11 +8,11 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo.util;
+package org.eclipse.aether.examples.util;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.demo.manual.ManualRepositorySystemFactory;
+import org.eclipse.aether.examples.manual.ManualRepositorySystemFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.DefaultRepositorySystemSession;

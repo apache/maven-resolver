@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo.util;
+package org.eclipse.aether.examples.util;
 
 import java.io.PrintStream;
 

@@ -8,49 +8,47 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo;
+package org.eclipse.aether.examples;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.demo.util.Booter;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.examples.util.Booter;
+import org.eclipse.aether.examples.util.ConsoleDependencyGraphDumper;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.artifact.DefaultArtifact;
-import org.eclipse.aether.version.Version;
 
 
 /**
- * Determines the newest version of an artifact.
+ * Collects the transitive dependencies of an artifact.
  */
-public class FindNewestVersion
+public class GetDependencyTree
 {
 
     public static void main( String[] args )
         throws Exception
     {
         System.out.println( "------------------------------------------------------------" );
-        System.out.println( FindNewestVersion.class.getSimpleName() );
+        System.out.println( GetDependencyTree.class.getSimpleName() );
 
         RepositorySystem system = Booter.newRepositorySystem();
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.sonatype.aether:aether-util:[0,)" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.0.2" );
 
         RemoteRepository repo = Booter.newCentralRepository();
 
-        VersionRangeRequest rangeRequest = new VersionRangeRequest();
-        rangeRequest.setArtifact( artifact );
-        rangeRequest.addRepository( repo );
+        CollectRequest collectRequest = new CollectRequest();
+        collectRequest.setRoot( new Dependency( artifact, "" ) );
+        collectRequest.addRepository( repo );
 
-        VersionRangeResult rangeResult = system.resolveVersionRange( session, rangeRequest );
+        CollectResult collectResult = system.collectDependencies( session, collectRequest );
 
-        Version newestVersion = rangeResult.getHighestVersion();
-
-        System.out.println( "Newest version " + newestVersion + " from repository "
-            + rangeResult.getRepository( newestVersion ) );
+        collectResult.getRoot().accept( new ConsoleDependencyGraphDumper() );
     }
 
 }

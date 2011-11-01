@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo.aether;
+package org.eclipse.aether.examples.aether;
 
 import java.io.File;
 import java.util.List;

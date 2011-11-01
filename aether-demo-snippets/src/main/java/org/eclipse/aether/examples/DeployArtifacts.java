@@ -8,47 +8,50 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo;
+package org.eclipse.aether.examples;
+
+import java.io.File;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.demo.util.Booter;
+import org.eclipse.aether.deployment.DeployRequest;
+import org.eclipse.aether.examples.util.Booter;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.util.artifact.DefaultArtifact;
+import org.eclipse.aether.util.artifact.SubArtifact;
 
 
 /**
- * Resolves a single artifact.
+ * Deploys a JAR and its POM to a remote repository.
  */
-public class ResolveArtifact
+public class DeployArtifacts
 {
 
     public static void main( String[] args )
         throws Exception
     {
         System.out.println( "------------------------------------------------------------" );
-        System.out.println( ResolveArtifact.class.getSimpleName() );
+        System.out.println( DeployArtifacts.class.getSimpleName() );
 
         RepositorySystem system = Booter.newRepositorySystem();
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.sonatype.aether:aether-util:1.13" );
+        Artifact jarArtifact = new DefaultArtifact( "test", "org.eclipse.aether.examples", "", "jar", "0.1-SNAPSHOT" );
+        jarArtifact = jarArtifact.setFile( new File( "org.eclipse.aether.examples.jar" ) );
 
-        RemoteRepository repo = Booter.newCentralRepository();
+        Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );
+        pomArtifact = pomArtifact.setFile( new File( "pom.xml" ) );
 
-        ArtifactRequest artifactRequest = new ArtifactRequest();
-        artifactRequest.setArtifact( artifact );
-        artifactRequest.addRepository( repo );
+        RemoteRepository distRepo =
+            new RemoteRepository( "org.eclipse.aether.examples", "default", new File( "target/dist-repo" ).toURI().toString() );
 
-        ArtifactResult artifactResult = system.resolveArtifact( session, artifactRequest );
+        DeployRequest deployRequest = new DeployRequest();
+        deployRequest.addArtifact( jarArtifact ).addArtifact( pomArtifact );
+        deployRequest.setRepository( distRepo );
 
-        artifact = artifactResult.getArtifact();
-
-        System.out.println( artifact + " resolved to  " + artifact.getFile() );
+        system.deploy( session, deployRequest );
     }
 
 }

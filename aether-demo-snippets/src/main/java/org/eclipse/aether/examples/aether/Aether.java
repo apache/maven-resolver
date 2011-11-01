@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo.aether;
+package org.eclipse.aether.examples.aether;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -17,10 +17,10 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.demo.util.Booter;
-import org.eclipse.aether.demo.util.ConsoleDependencyGraphDumper;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
+import org.eclipse.aether.examples.util.Booter;
+import org.eclipse.aether.examples.util.ConsoleDependencyGraphDumper;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.installation.InstallRequest;

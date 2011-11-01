@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.demo.plexus;
+package org.eclipse.aether.examples.plexus;
 
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.eclipse.aether.RepositorySystem;
