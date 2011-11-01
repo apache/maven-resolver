@@ -55,7 +55,7 @@ public interface RepositorySystem
      * ["3.8", "3.8.1", "3.8.2"].
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param request The version range request, must not be {@code null}
+     * @param request The version range request, must not be {@code null}.
      * @return The version range result, never {@code null}.
      * @throws VersionRangeResolutionException If the requested range could not be parsed. Note that an empty range does
      *             not raise an exception.
@@ -68,7 +68,7 @@ public interface RepositorySystem
      * "1.0-20090208.132618-23".
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param request The version request, must not be {@code null}
+     * @param request The version request, must not be {@code null}.
      * @return The version result, never {@code null}.
      * @throws VersionResolutionException If the metaversion could not be resolved.
      */
@@ -79,7 +79,7 @@ public interface RepositorySystem
      * Gets information about an artifact like its direct dependencies and potential relocations.
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param request The descriptor request, must not be {@code null}
+     * @param request The descriptor request, must not be {@code null}.
      * @return The descriptor result, never {@code null}.
      * @throws ArtifactDescriptorException If the artifact descriptor could not be read.
      * @see RepositorySystemSession#isIgnoreInvalidArtifactDescriptor()
@@ -94,7 +94,7 @@ public interface RepositorySystem
      * artifact files, use {@link #resolveDependencies(RepositorySystemSession, DependencyRequest)}.
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param request The collection request, must not be {@code null}
+     * @param request The collection request, must not be {@code null}.
      * @return The collection result, never {@code null}.
      * @throws DependencyCollectionException If the dependency tree could not be built.
      * @see RepositorySystemSession#getDependencyTraverser()
@@ -111,7 +111,7 @@ public interface RepositorySystem
      * {@link #resolveArtifacts(RepositorySystemSession, Collection)}.
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param request The dependency request, must not be {@code null}
+     * @param request The dependency request, must not be {@code null}.
      * @return The dependency result, never {@code null}.
      * @throws DependencyResolutionException If the dependency tree could not be built or any dependency artifact could
      *             not be resolved.
@@ -125,7 +125,7 @@ public interface RepositorySystem
      * been processed.
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param request The resolution request, must not be {@code null}
+     * @param request The resolution request, must not be {@code null}.
      * @return The resolution result, never {@code null}.
      * @throws ArtifactResolutionException If the artifact could not be resolved.
      * @see Artifact#getFile()
@@ -139,7 +139,7 @@ public interface RepositorySystem
      * already been processed.
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param requests The resolution requests, must not be {@code null}
+     * @param requests The resolution requests, must not be {@code null}.
      * @return The resolution results (in request order), never {@code null}.
      * @throws ArtifactResolutionException If any artifact could not be resolved.
      * @see Artifact#getFile()
@@ -152,7 +152,7 @@ public interface RepositorySystem
      * Resolves the paths for a collection of metadata. Metadata will be downloaded if necessary.
      * 
      * @param session The repository session, must not be {@code null}.
-     * @param requests The resolution requests, must not be {@code null}
+     * @param requests The resolution requests, must not be {@code null}.
      * @return The resolution results (in request order), never {@code null}.
      * @see Metadata#getFile()
      */

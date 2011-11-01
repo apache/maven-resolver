@@ -122,7 +122,7 @@ public final class ArtifactRequest
     }
 
     /**
-     * Gets the repositories to resolve the version range from.
+     * Gets the repositories to resolve the artifact from.
      * 
      * @return The repositories, never {@code null}.
      */
