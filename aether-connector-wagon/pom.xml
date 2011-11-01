@@ -28,7 +28,7 @@
   </description>
 
   <properties>
-    <wagonVersion>1.0-beta-6</wagonVersion>
+    <wagonVersion>1.0</wagonVersion>
   </properties>
 
   <dependencies>
@@ -78,6 +78,12 @@
       <artifactId>wagon-http-lightweight</artifactId>
       <version>${wagonVersion}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.maven.wagon</groupId>
+          <artifactId>wagon-http-shared</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.sonatype.http-testing-harness</groupId>
