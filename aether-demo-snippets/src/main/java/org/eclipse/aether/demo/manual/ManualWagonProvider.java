@@ -11,8 +11,8 @@
 package org.eclipse.aether.demo.manual;
 
 import org.apache.maven.wagon.Wagon;
-import org.apache.maven.wagon.providers.http.LightweightHttpWagon;
 import org.eclipse.aether.connector.wagon.WagonProvider;
+import org.sonatype.maven.wagon.AhcWagon;
 
 /**
  * A simplistic provider for wagon instances when no Plexus-compatible IoC container is used.
@@ -26,7 +26,7 @@ public class ManualWagonProvider
     {
         if ( "http".equals( roleHint ) )
         {
-            return new LightweightHttpWagon();
+            return new AhcWagon();
         }
         return null;
     }
