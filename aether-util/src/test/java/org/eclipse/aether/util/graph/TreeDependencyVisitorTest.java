@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
-import org.eclipse.aether.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.TreeDependencyVisitor;
 import org.junit.Test;
 

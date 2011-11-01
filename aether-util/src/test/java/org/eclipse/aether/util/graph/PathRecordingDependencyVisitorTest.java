@@ -16,7 +16,7 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.PathRecordingDependencyVisitor;
 import org.junit.Test;
 

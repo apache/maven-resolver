@@ -12,13 +12,13 @@ package org.eclipse.aether.connector.async;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnector;
+import org.eclipse.aether.internal.test.impl.SysoutLogger;
+import org.eclipse.aether.internal.test.impl.TestFileProcessor;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.impl.StubArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
-import org.eclipse.aether.test.impl.SysoutLogger;
-import org.eclipse.aether.test.impl.TestFileProcessor;
-import org.eclipse.aether.test.util.TestFileUtils;
-import org.eclipse.aether.test.util.impl.StubArtifact;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.util.DefaultRepositorySystemSession;
 import org.junit.After;

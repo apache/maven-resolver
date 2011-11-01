@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.eclipse.aether.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;

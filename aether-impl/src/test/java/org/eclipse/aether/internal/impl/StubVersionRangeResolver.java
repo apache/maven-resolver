@@ -14,10 +14,10 @@ import java.util.Arrays;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.internal.test.util.impl.StubVersion;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.test.util.impl.StubVersion;
 import org.eclipse.aether.version.Version;
 
 /**

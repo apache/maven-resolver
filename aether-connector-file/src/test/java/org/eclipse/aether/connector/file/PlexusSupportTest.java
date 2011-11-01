@@ -12,11 +12,11 @@ package org.eclipse.aether.connector.file;
 
 import org.codehaus.plexus.PlexusTestCase;
 import org.eclipse.aether.connector.file.FileRepositoryConnectorFactory;
+import org.eclipse.aether.internal.test.impl.SysoutLogger;
+import org.eclipse.aether.internal.test.impl.TestFileProcessor;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.test.impl.SysoutLogger;
-import org.eclipse.aether.test.impl.TestFileProcessor;
 
 /**
  */

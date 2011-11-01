@@ -15,7 +15,7 @@ import org.eclipse.aether.impl.ArtifactDescriptorReader;
 /**
  */
 public class IniArtifactDescriptorReader
-    extends org.eclipse.aether.test.util.IniArtifactDescriptorReader
+    extends org.eclipse.aether.internal.test.util.IniArtifactDescriptorReader
     implements ArtifactDescriptorReader
 {
 

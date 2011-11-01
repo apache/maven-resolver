@@ -18,7 +18,7 @@ import java.util.Map;
 
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.NearestVersionConflictResolver;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.junit.Test;

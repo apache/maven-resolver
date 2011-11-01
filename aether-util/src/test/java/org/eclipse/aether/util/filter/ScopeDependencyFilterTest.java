@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.test.util.NodeBuilder;
+import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 import org.junit.Test;
 

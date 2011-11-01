@@ -16,7 +16,7 @@ import java.io.IOException;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 import org.junit.Before;
 import org.junit.Test;

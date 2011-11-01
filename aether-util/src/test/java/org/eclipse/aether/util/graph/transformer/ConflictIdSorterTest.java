@@ -18,7 +18,7 @@ import java.util.Queue;
 
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.junit.Before;

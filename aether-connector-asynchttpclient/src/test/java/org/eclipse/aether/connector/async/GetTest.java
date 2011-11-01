@@ -17,11 +17,11 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.test.impl.RecordingTransferListener;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.test.impl.RecordingTransferListener;
-import org.eclipse.aether.test.util.TestFileUtils;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -14,11 +14,11 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnectorFactory;
+import org.eclipse.aether.internal.test.impl.TestFileProcessor;
+import org.eclipse.aether.internal.test.util.connector.suite.ConnectorTestSuite;
+import org.eclipse.aether.internal.test.util.connector.suite.ConnectorTestSetup.AbstractConnectorTestSetup;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.test.impl.TestFileProcessor;
-import org.eclipse.aether.test.util.connector.suite.ConnectorTestSuite;
-import org.eclipse.aether.test.util.connector.suite.ConnectorTestSetup.AbstractConnectorTestSetup;
 import org.sonatype.tests.http.server.jetty.behaviour.ResourceServer;
 import org.sonatype.tests.http.server.jetty.impl.JettyServerProvider;
 

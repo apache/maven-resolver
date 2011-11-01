@@ -16,7 +16,7 @@ import java.util.Map;
 
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.test.util.NodeBuilder;
+import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.util.graph.transformer.ConflictMarker;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.junit.Test;

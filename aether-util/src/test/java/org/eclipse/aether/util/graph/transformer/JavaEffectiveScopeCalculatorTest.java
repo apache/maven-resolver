@@ -18,7 +18,7 @@ import java.util.Locale;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.JavaEffectiveScopeCalculator;
 import org.junit.Before;
 import org.junit.Test;

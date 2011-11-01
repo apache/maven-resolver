@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.aether.internal.impl.TrackingFileManager;
-import org.eclipse.aether.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.junit.Test;
 
 /**

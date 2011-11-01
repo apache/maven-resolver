@@ -20,7 +20,7 @@ import java.util.Locale;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
-import org.eclipse.aether.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 import org.junit.Test;
 

@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 import java.net.URI;
 
-import org.eclipse.aether.test.util.impl.StubArtifact;
+import org.eclipse.aether.internal.test.util.impl.StubArtifact;
 import org.eclipse.aether.util.layout.MavenDefaultLayout;
 import org.junit.Test;
 

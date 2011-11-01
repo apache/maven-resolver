@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import static org.eclipse.aether.test.impl.RecordingRepositoryListener.Type.*;
+import static org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.Type.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -27,6 +27,11 @@ import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultDeployer;
+import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener;
+import org.eclipse.aether.internal.test.impl.TestFileProcessor;
+import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.EventWrapper;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.metadata.MergeableMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
@@ -37,11 +42,6 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.Transfer.State;
-import org.eclipse.aether.test.impl.RecordingRepositoryListener;
-import org.eclipse.aether.test.impl.TestFileProcessor;
-import org.eclipse.aether.test.impl.TestRepositorySystemSession;
-import org.eclipse.aether.test.impl.RecordingRepositoryListener.EventWrapper;
-import org.eclipse.aether.test.util.TestFileUtils;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;

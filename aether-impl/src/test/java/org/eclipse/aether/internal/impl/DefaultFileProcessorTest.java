@@ -18,8 +18,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.io.FileProcessor.ProgressListener;
-import org.eclipse.aether.test.util.TestFileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
