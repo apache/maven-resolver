@@ -29,11 +29,26 @@ public interface TransferEvent
     }
 
     /**
-     * The type of the request/transfer.
+     * The type of the request/transfer being performed.
      */
     enum RequestType
     {
-        GET, PUT,
+
+        /**
+         * Download artifact/metadata.
+         */
+        GET,
+
+        /**
+         * Check artifact/metadata existence only.
+         */
+        GET_EXISTENCE,
+
+        /**
+         * Upload artifact/metadata.
+         */
+        PUT,
+
     }
 
     /**
