@@ -247,6 +247,66 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.0.1</version>
+        <executions>
+          <execution>
+            <id>approved-dependencies</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <searchTransitive>true</searchTransitive>
+                  <excludes>
+                    <exclude>*:*</exclude>
+                  </excludes>
+                  <includes>
+                    <include>org.eclipse.aether</include>
+                    <!-- CQ #5627 -->
+                    <include>org.slf4j:slf4j-api:1.6.2</include>
+                    <!-- CQ #5628 -->
+                    <include>junit:junit:4.8.2</include>
+                    <!-- CQ #5629 -->
+                    <include>org.codehaus.plexus:plexus-component-annotations:1.5.5</include>
+                    <!-- CQ #5630 -->
+                    <include>org.codehaus.plexus:plexus-utils:2.1</include>
+                    <!-- CQ #5631 -->
+                    <include>org.codehaus.plexus:plexus-classworlds:2.4</include>
+                    <!-- CQ #5632 -->
+                    <include>org.apache.maven.wagon:wagon-provider-api:1.0</include>
+                    <!-- CQ #5633 -->
+                    <include>com.ning:async-http-client:1.6.5</include>
+                    <!-- CQ #5634 -->
+                    <include>org.jboss.netty:netty:3.2.5.Final</include>
+                    <!-- CQ #5635 -->
+                    <include>org.sonatype.sisu:sisu-inject-plexus:2.3.0</include>
+                    <!-- CQ #5636 -->
+                    <include>org.sonatype.sisu:sisu-guice:3.1.0</include>
+                    <!-- CQ #5637 -->
+                    <include>org.sonatype.sisu:sisu-guava:0.9.9</include>
+                    <!-- CQ #5641, #5638, #5639, #5640 -->
+                    <include>org.sonatype.sisu:sisu-inject-bean:2.3.0</include>
+                    <!-- CQ #5660 -->
+                    <include>ch.qos.logback:*:*:*:test</include>
+                    <include>org.apache.maven.wagon:wagon-http-lightweight:*:*:test</include>
+                    <include>org.eclipse.jetty:*:*:*:test</include>
+                    <include>org.mortbay.jetty:*:*:*:test</include>
+                    <include>org.sonatype.http-testing-harness:*:*:*:test</include>
+                    <include>javax.servlet:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <profiles>
