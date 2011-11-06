@@ -36,7 +36,6 @@
   <properties>
     <mavenVersion>3.0</mavenVersion>
     <aetherVersion>0.9.0-SNAPSHOT</aetherVersion>
-    <forgeReleaseUrl>https://repository.sonatype.org/service/local/staging/deploy/maven2</forgeReleaseUrl>
   </properties>
 
   <dependencies>
