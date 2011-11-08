@@ -6,19 +6,6 @@ Wiki
 ====
 <https://docs.sonatype.org/display/AETHER/Home>
 
-Issue Tracker
-=============
-<https://bugs.eclipse.org/bugs/buglist.cgi?query_format=specific&order=relevance+desc&bug_status=__open__&product=Aether>
-
-Mailing Lists
-=============
-- Development of Aether:  
-  <aether-dev@eclipse.org> to post mails  
-  <https://dev.eclipse.org/mailman/listinfo/aether-dev> to subscribe to the list or unsubscribe from it
-- Usage of Aether:  
-  <aether-users@eclipse.org> to post mails  
-  <https://dev.eclipse.org/mailman/listinfo/aether-users> to subscribe to the list or unsubscribe from it
-
 Contribution
 ============
 As required by the Eclipse IP process, all contributions need to be submitted in form of patches attached to a
