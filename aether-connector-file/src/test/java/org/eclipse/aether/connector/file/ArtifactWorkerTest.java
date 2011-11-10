@@ -53,7 +53,7 @@ public class ArtifactWorkerTest
     {
         repository =
             new RemoteRepository( "test", "default",
-                                  TestFileUtils.createTempDir( "test-remote-repository" ).toURL().toString() );
+                                  TestFileUtils.createTempDir( "test-remote-repository" ).toURI().toURL().toString() );
         session = new TestRepositorySystemSession();
         layout = new MavenDefaultLayout();
     }
