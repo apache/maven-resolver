@@ -20,7 +20,7 @@ public interface Version
     /**
      * Gets the original string representation of the version.
      * 
-     * @return The string representation of the version.
+     * @return The string representation of the version, never {@code null}.
      */
     String toString();
 

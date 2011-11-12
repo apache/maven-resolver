@@ -42,8 +42,8 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 
 /**
  * A simple service locator that is already setup with all components from this library. To acquire a complete
- * repository system, clients need to add an artifact descriptor, a version resolver, a version range resolver and some
- * repository connectors.
+ * repository system, clients need to add an artifact descriptor, a version resolver, a version range resolver and
+ * optionally some repository connectors to access remote repositories.
  */
 public class DefaultServiceLocator
     implements ServiceLocator
@@ -197,6 +197,14 @@ public class DefaultServiceLocator
         }
     }
 
+    /**
+     * Handles errors during creation of a service.
+     * 
+     * @param type The interface describing the service, must not be {@code null}.
+     * @param impl The implementation class of the service, must not be {@code null}.
+     * @param exception The error that occurred while trying to instantiate the implementation class, must not be
+     *            {@code null}.
+     */
     protected void serviceCreationFailed( Class<?> type, Class<?> impl, Throwable exception )
     {
         exception.printStackTrace();

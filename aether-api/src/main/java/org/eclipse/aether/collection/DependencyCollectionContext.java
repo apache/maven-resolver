@@ -21,6 +21,8 @@ import org.eclipse.aether.graph.Dependency;
  * @see DependencyManager#deriveChildManager(DependencyCollectionContext)
  * @see DependencyTraverser#deriveChildTraverser(DependencyCollectionContext)
  * @see DependencySelector#deriveChildSelector(DependencyCollectionContext)
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface DependencyCollectionContext
 {

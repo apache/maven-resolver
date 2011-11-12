@@ -26,7 +26,7 @@ public interface RepositoryCache
      * original data and store the copy in the cache.
      * 
      * @param session The repository session during which the cache is accessed, must not be {@code null}.
-     * @param key The key to use for lookup the data with, must not be {@code null}.
+     * @param key The key to use for lookup of the data, must not be {@code null}.
      * @param data The data to store in the cache, may be {@code null}.
      */
     void put( RepositorySystemSession session, Object key, Object data );
