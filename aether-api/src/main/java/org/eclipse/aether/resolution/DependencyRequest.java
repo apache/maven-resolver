@@ -21,6 +21,7 @@ import org.eclipse.aether.graph.DependencyNode;
 /**
  * A request to resolve transitive dependencies. This request can either be supplied with a {@link CollectRequest} to
  * calculate the transitive dependencies or with an already resolved dependency graph.
+ * 
  * @see RepositorySystem#resolveDependencies(RepositorySystemSession, DependencyRequest)
  * @see Artifact#getFile()
  */

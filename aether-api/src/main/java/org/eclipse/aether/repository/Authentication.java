@@ -12,7 +12,6 @@ package org.eclipse.aether.repository;
 
 import java.util.Arrays;
 
-
 /**
  * The authentication to use for accessing a protected resource. <em>Note:</em> Instances of this class are immutable
  * and the exposed mutators return new objects rather than changing the current instance.

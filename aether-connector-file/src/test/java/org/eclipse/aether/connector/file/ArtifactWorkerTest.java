@@ -173,7 +173,8 @@ public class ArtifactWorkerTest
 
         File repo = new File( dir, "repo" );
         assertTrue( "Repository from encoded URL does not exist.", repo.exists() );
-        assertTrue( "Artifact was not uploaded correctly.", new File( repo, layout.getPath( artifact ).getRawPath() ).exists() );
+        assertTrue( "Artifact was not uploaded correctly.",
+                    new File( repo, layout.getPath( artifact ).getRawPath() ).exists() );
         TestFileUtils.delete( dir );
     }
 

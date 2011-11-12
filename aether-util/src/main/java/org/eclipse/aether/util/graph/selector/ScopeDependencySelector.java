@@ -23,6 +23,7 @@ import org.eclipse.aether.graph.Dependency;
  * A dependency selector that filters transitive dependencies based on their scope. Direct dependencies are always
  * included regardless of their scope. <em>Note:</em> This filter does not assume any relationships between the scopes.
  * In particular, the filter is not aware of scopes that logically include other scopes.
+ * 
  * @see Dependency#getScope()
  */
 public final class ScopeDependencySelector

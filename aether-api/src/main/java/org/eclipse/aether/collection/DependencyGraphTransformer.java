@@ -16,6 +16,7 @@ import org.eclipse.aether.graph.DependencyNode;
 /**
  * Transforms a given dependency graph. <em>Note:</em> Dependency graphs may contain cycles, as such a graph transformer
  * needs to gracefully handle cyclic graphs, e.g. guard against infinite recursion.
+ * 
  * @see org.eclipse.aether.RepositorySystemSession#getDependencyGraphTransformer()
  */
 public interface DependencyGraphTransformer

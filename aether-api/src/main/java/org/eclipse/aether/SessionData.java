@@ -10,13 +10,13 @@
  *******************************************************************************/
 package org.eclipse.aether;
 
-
 /**
  * A container for data that is specific to a repository system session. Both components within the repository system
  * and clients of the system may use this storage to associate arbitrary data with a session. Unlike a cache, this
  * session data is not subject to purging. For this same reason, session data should also not be abused as a cache (i.e.
  * for storing values that can be re-calculated) to avoid memory exhaustion. <strong>Note:</strong> Actual
  * implementations must be thread-safe.
+ * 
  * @see RepositorySystemSession#getData()
  */
 public interface SessionData

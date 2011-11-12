@@ -23,6 +23,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * A request to resolve an artifact.
+ * 
  * @see RepositorySystem#resolveArtifacts(RepositorySystemSession, java.util.Collection)
  * @see Artifact#getFile()
  */

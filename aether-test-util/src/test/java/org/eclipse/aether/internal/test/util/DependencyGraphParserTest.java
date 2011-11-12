@@ -227,7 +227,7 @@ public class DependencyGraphParserTest
         Artifact artifact = root.getDependency().getArtifact();
         assertEquals( "subst2", artifact.getArtifactId() );
         assertEquals( "subst1", artifact.getGroupId() );
-        
+
         def = "%s:aid:ext:ver\n\\- %s:aid:ext:ver";
         root = parser.parseLiteral( def );
 

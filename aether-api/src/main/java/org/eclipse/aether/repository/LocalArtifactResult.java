@@ -16,6 +16,7 @@ import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A result from the local repository about the existence of an artifact.
+ * 
  * @see LocalRepositoryManager#find(RepositorySystemSession, LocalArtifactRequest)
  */
 public final class LocalArtifactResult

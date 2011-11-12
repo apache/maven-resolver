@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.file;
 
-
 /**
  * URL handling for file URLs. Based on org.apache.maven.wagon.PathUtils.
  */
@@ -53,7 +52,7 @@ final class PathUtils
 
         if ( protocol.length() > 0 )
         {
-	        retValue = url.substring( protocol.length() + 1 );
+            retValue = url.substring( protocol.length() + 1 );
         }
         else
         {
@@ -126,6 +125,5 @@ final class PathUtils
         }
         return decoded;
     }
-
 
 }

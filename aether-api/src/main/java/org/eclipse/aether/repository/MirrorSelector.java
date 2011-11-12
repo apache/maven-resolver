@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.repository;
 
-
 /**
  * Selects a mirror for a given remote repository.
  */

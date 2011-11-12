@@ -94,7 +94,7 @@ final class TestVersionRange
                     + ", bounds may not contain additional ','" );
             }
 
-            lowerBound =  parsedLowerBound.length() > 0 ? new StubVersion( parsedLowerBound ) : null;
+            lowerBound = parsedLowerBound.length() > 0 ? new StubVersion( parsedLowerBound ) : null;
             upperBound = parsedUpperBound.length() > 0 ? new StubVersion( parsedUpperBound ) : null;
 
             if ( upperBound != null && lowerBound != null )
@@ -109,7 +109,7 @@ final class TestVersionRange
     }
 
     public TestVersionRange( Version lowerBound, boolean lowerBoundInclusive, Version upperBound,
-                              boolean upperBoundInclusive )
+                             boolean upperBoundInclusive )
     {
         this.lowerBound = lowerBound;
         this.lowerBoundInclusive = lowerBoundInclusive;

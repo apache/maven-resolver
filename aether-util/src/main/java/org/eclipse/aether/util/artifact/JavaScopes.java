@@ -12,6 +12,7 @@ package org.eclipse.aether.util.artifact;
 
 /**
  * The dependency scopes used for Java dependencies.
+ * 
  * @see org.eclipse.aether.graph.Dependency#getScope()
  */
 public final class JavaScopes

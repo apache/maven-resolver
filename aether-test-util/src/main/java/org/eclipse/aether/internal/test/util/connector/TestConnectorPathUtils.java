@@ -144,7 +144,7 @@ public final class TestConnectorPathUtils
 
         if ( protocol.length() > 0 )
         {
-	        retValue = url.substring( protocol.length() + 1 );
+            retValue = url.substring( protocol.length() + 1 );
         }
         else
         {

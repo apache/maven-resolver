@@ -13,6 +13,7 @@ package org.eclipse.aether.util.graph.transformer;
 /**
  * A collection of keys used by the dependency graph transformers when exchanging information via the graph
  * transformation context.
+ * 
  * @see org.eclipse.aether.collection.DependencyGraphTransformationContext#get(Object)
  */
 public final class TransformationContextKeys

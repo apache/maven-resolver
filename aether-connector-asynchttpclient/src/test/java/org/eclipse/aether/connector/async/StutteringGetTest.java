@@ -18,7 +18,7 @@ import org.sonatype.tests.http.server.api.ServerProvider;
  */
 @RunWith( ConfigurationRunner.class )
 public class StutteringGetTest
-extends GetTest
+    extends GetTest
 {
 
     @Override

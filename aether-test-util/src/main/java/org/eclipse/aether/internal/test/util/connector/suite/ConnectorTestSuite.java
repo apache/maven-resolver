@@ -164,7 +164,6 @@ public abstract class ConnectorTestSuite
         ArtifactUpload[] artUps = new ArtifactUpload[numTransfers];
         MetadataUpload[] metaUps = new MetadataUpload[numTransfers];
 
-
         for ( int i = 0; i < numTransfers; i++ )
         {
             StubArtifact art = new StubArtifact( "testGroup", "testArtifact", "", "jar", i + "-test" );
@@ -242,7 +241,6 @@ public abstract class ConnectorTestSuite
         throws IOException, NoRepositoryConnectorException
     {
         File emptyFile = TestFileUtils.createTempFile( "" );
-        
 
         Artifact artifact = new StubArtifact( "gid:aid:ext:ver" );
         ArtifactUpload upA = new ArtifactUpload( artifact, emptyFile );
@@ -250,7 +248,6 @@ public abstract class ConnectorTestSuite
         File downAFile = new File( dir, "downA.file" );
         downAFile.deleteOnExit();
         ArtifactDownload downA = new ArtifactDownload( artifact, "", downAFile, RepositoryPolicy.CHECKSUM_POLICY_FAIL );
-
 
         Metadata metadata =
             new StubMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
@@ -271,7 +268,6 @@ public abstract class ConnectorTestSuite
         assertEquals( 0, downAFile.length() );
         assertEquals( 0, downMFile.length() );
 
-
         connector.close();
     }
 
@@ -282,7 +278,8 @@ public abstract class ConnectorTestSuite
         byte[] bytes = "These are the test contents.\n".getBytes( "UTF-8" );
         int count = 120000;
         MessageDigest digest = MessageDigest.getInstance( "SHA-1" );
-        for (int i = 0; i < count; i++) {
+        for ( int i = 0; i < count; i++ )
+        {
             digest.update( bytes );
         }
         byte[] hash = digest.digest();
@@ -324,8 +321,6 @@ public abstract class ConnectorTestSuite
         connector.close();
     }
 
-    /*     *
-     */
     private final class DigestingTransferListener
         implements TransferListener
     {

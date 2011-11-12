@@ -12,6 +12,7 @@ package org.eclipse.aether.util.artifact;
 
 /**
  * The keys for common properties of artifacts.
+ * 
  * @see org.eclipse.aether.artifact.Artifact#getProperties()
  */
 public final class ArtifactProperties

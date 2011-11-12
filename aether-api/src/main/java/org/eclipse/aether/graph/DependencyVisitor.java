@@ -10,9 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.graph;
 
-
 /**
  * A visitor for nodes of the dependency graph.
+ * 
  * @see DependencyNode#accept(DependencyVisitor)
  */
 public interface DependencyVisitor

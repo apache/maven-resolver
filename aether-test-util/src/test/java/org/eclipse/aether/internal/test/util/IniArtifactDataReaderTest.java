@@ -148,7 +148,7 @@ public class IniArtifactDataReaderTest
         assertEquals( "aid", art.getArtifactId() );
         assertEquals( "ver", art.getVersion() );
         assertEquals( "ext", art.getExtension() );
-        
+
         dep = deps.get( 1 );
         assertEquals( "scope", dep.getScope() );
         assertEquals( true, dep.isOptional() );

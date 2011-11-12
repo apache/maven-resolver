@@ -22,6 +22,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * A request to resolve a metaversion.
+ * 
  * @see RepositorySystem#resolveVersion(RepositorySystemSession, VersionRequest)
  */
 public final class VersionRequest

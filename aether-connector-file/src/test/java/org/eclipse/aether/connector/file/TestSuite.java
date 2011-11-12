@@ -54,9 +54,7 @@ public class TestSuite
             repoFile = TestFileUtils.createTempDir( "test-repo" );
             try
             {
-                repo =
-                    new RemoteRepository( "test-file", "default",
-                                          repoFile.toURI().toURL().toString() );
+                repo = new RemoteRepository( "test-file", "default", repoFile.toURI().toURL().toString() );
             }
             catch ( MalformedURLException e )
             {

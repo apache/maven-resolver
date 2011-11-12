@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.async;
 
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -73,7 +72,7 @@ public class AsyncConnectorSuiteConfiguration
         this.factory = new AsyncRepositoryConnectorFactory( new TestFileProcessor() );
         this.session = new TestRepositorySystemSession();
         this.repository = new RemoteRepository( "async-test-repo", "default", url( "repo" ) );
-        
+
         this.artifact = new StubArtifact( "gid", "aid", "classifier", "extension", "version", null );
         this.metadata =
             new StubMetadata( "gid", "aid", "version", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT, null );
@@ -158,7 +157,7 @@ public class AsyncConnectorSuiteConfiguration
         MessageDigest digest = MessageDigest.getInstance( algo );
         byte[] bytes = digest.digest( string.getBytes( "UTF-8" ) );
         StringBuilder buffer = new StringBuilder( 64 );
-    
+
         for ( int i = 0; i < bytes.length; i++ )
         {
             int b = bytes[i] & 0xFF;

@@ -21,6 +21,7 @@ import org.eclipse.aether.repository.ArtifactRepository;
  * An event describing an action performed by the repository system. Note that events which indicate the end of an
  * action like {@link EventType#ARTIFACT_RESOLVED} are generally fired in both the success and the failure case. Use
  * {@link #getException()} to check whether an event denotes success or failure.
+ * 
  * @see RepositoryListener
  */
 public interface RepositoryEvent

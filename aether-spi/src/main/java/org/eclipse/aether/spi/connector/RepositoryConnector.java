@@ -23,6 +23,7 @@ import java.util.Collection;
  * from the configuration properties of the repository system session. While a connector itself can use multiple threads
  * internally to performs the transfers, clients must not call a connector concurrently, i.e. connectors are generally
  * not thread-safe.
+ * 
  * @see org.eclipse.aether.RepositorySystemSession#getConfigProperties()
  */
 public interface RepositoryConnector

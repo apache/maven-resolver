@@ -22,6 +22,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * A request to resolve a version range.
+ * 
  * @see RepositorySystem#resolveVersionRange(RepositorySystemSession, VersionRangeRequest)
  */
 public final class VersionRangeRequest

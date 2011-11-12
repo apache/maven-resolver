@@ -23,6 +23,7 @@ import org.eclipse.aether.graph.Exclusion;
 
 /**
  * A dependency selector that applies exclusions based on artifact coordinates.
+ * 
  * @see Dependency#getExclusions()
  */
 public final class ExclusionDependencySelector

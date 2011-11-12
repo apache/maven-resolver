@@ -16,6 +16,7 @@ import org.eclipse.aether.graph.Dependency;
 
 /**
  * A dependency selector that excludes optional dependencies which occur beyond level one of the dependency graph.
+ * 
  * @see Dependency#isOptional()
  */
 public final class OptionalDependencySelector

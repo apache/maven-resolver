@@ -73,7 +73,7 @@ public class NearestVersionConflictResolverTest
         // |     \- e
         // |        \- j:1
         // \- b:2
-        
+
         DependencyNode j = builder.artifactId( "j" ).build();
 
         DependencyNode b1 = builder.artifactId( "b" ).version( "1" ).build();

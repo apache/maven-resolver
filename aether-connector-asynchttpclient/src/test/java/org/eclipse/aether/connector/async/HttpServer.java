@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-
 /**
  * A helper for the tests to start an embedded HTTP server powered by Jetty. Create an instance of this class, use its
  * mutators to configure the server and finally call {@link #start()}.
@@ -117,9 +116,9 @@ public class HttpServer
 
     /**
      * Sets the port to use for HTTP connections.
-     *
+     * 
      * @param httpPort The port to use, may be {@code 0} to pick a random port (default), if negative the HTTP connector
-     *                 will be disabled.
+     *            will be disabled.
      * @return This server, never {@code null}.
      */
     public HttpServer setHttpPort( int httpPort )
@@ -131,7 +130,7 @@ public class HttpServer
 
     /**
      * Gets the port number of the server's HTTP connector.
-     *
+     * 
      * @return The port number of the server's HTTP connector.
      */
     public int getHttpPort()
@@ -145,7 +144,7 @@ public class HttpServer
 
     /**
      * Gets the base URL to the server's HTTP connector, e.g. {@code "http://localhost:8080"}.
-     *
+     * 
      * @return The base URL without trailing slash to the server's HTTP connector, never {@code null}.
      */
     public String getHttpUrl()
@@ -155,9 +154,9 @@ public class HttpServer
 
     /**
      * Sets the port to use for HTTPS connections.
-     *
+     * 
      * @param httpPort The port to use, may be {@code 0} to pick a random port, if negative the HTTPS connector will be
-     *                 disabled (default).
+     *            disabled (default).
      * @return This server, never {@code null}.
      */
     public HttpServer setHttpsPort( int httpsPort )
@@ -169,7 +168,7 @@ public class HttpServer
 
     /**
      * Gets the port number of the server's HTTPS connector.
-     *
+     * 
      * @return The port number of the server's HTTPS connector.
      */
     public int getHttpsPort()
@@ -183,7 +182,7 @@ public class HttpServer
 
     /**
      * Gets the base URL to the server's HTTPS connector, e.g. {@code "https://localhost:8080"}.
-     *
+     * 
      * @return The base URL without trailing slash to the server's HTTPS connector, never {@code null}.
      */
     public String getHttpsUrl()
@@ -193,8 +192,8 @@ public class HttpServer
 
     /**
      * Sets the keystore to use for the server certificate on the SSL connector.
-     *
-     * @param path     The path to the keystore to use for the server certificate, may be {@code null}.
+     * 
+     * @param path The path to the keystore to use for the server certificate, may be {@code null}.
      * @param password The password for the keystore, may be {@code null}.
      * @return This server, never {@code null}.
      */
@@ -207,8 +206,8 @@ public class HttpServer
 
     /**
      * Sets the truststore to use for validating client credentials via the SSL connector.
-     *
-     * @param path     The path to the truststore to use for the trusted client certificates, may be {@code null}.
+     * 
+     * @param path The path to the truststore to use for the trusted client certificates, may be {@code null}.
      * @param password The password for the truststore, may be {@code null}.
      * @return This server, never {@code null}.
      */
@@ -221,9 +220,9 @@ public class HttpServer
 
     /**
      * Enables/disables client-side certificate authentication.
-     *
+     * 
      * @param needClientAuth Whether the server should reject clients whose certificate can't be verified via the
-     *                       truststore.
+     *            truststore.
      * @return This server, never {@code null}.
      */
     public HttpServer setNeedClientAuth( boolean needClientAuth )
@@ -235,7 +234,7 @@ public class HttpServer
     /**
      * Sets the credentials to use for proxy authentication. If either username or password is {@code null}, no proxy
      * authentication is required.
-     *
+     * 
      * @param username The username, may be {@code null}.
      * @param password The password, may be {@code null}.
      * @return This server, never {@code null}.
@@ -276,8 +275,9 @@ public class HttpServer
 
     /**
      * Enforces redirection from HTTP to HTTPS.
-     *
-     * @param redirectToHttps {@code true} to redirect any HTTP requests to HTTPS, {@code false} to handle HTTP normally.
+     * 
+     * @param redirectToHttps {@code true} to redirect any HTTP requests to HTTPS, {@code false} to handle HTTP
+     *            normally.
      * @return This server, never {@code null}.
      */
     public HttpServer setRedirectToHttps( boolean redirectToHttps )
@@ -310,10 +310,10 @@ public class HttpServer
 
     /**
      * Registers a user.
-     *
+     * 
      * @param username The username, must not be {@code null}.
      * @param password The password, must not be {@code null}.
-     * @param roles    The roles of the user, may be empty or {@code null}.
+     * @param roles The roles of the user, may be empty or {@code null}.
      * @return This server, never {@code null}.
      */
     public HttpServer addUser( String username, String password, String... roles )
@@ -326,9 +326,9 @@ public class HttpServer
 
     /**
      * Sets up a security realm.
-     *
+     * 
      * @param pathSpec The path to secure, e.g. {@code "/files/*"}, must not be {@code null}.
-     * @param roles    The roles that have access to the realm, may be empty or {@code null}.
+     * @param roles The roles that have access to the realm, may be empty or {@code null}.
      * @return This server, never {@code null}.
      */
     public HttpServer addSecuredRealm( String pathSpec, String... roles )
@@ -383,14 +383,14 @@ public class HttpServer
 
     /**
      * Adds resources to the server. Resources can be filtered upon serving using the tokens set via
-     * {@link #setFilterToken(String, String)}. The directory mounted into the server via this method will also be used to
-     * store files sent via PUT. Upon requests, the server will try to match the context roots in reverse alphabetical
-     * order, thereby giving longer path prefix matches precedence.
-     *
-     * @param contextRoot        The context root to make the resources accessible at, must not be {@code null}.
-     * @param baseDirectory      The local base directory whose files should be served, must not be {@code null}.
-     * @param filteredExtensions A list of extensions for files to filter, e.g. {@code "xml, "properties"}, may be {@code
-     *                           null}.
+     * {@link #setFilterToken(String, String)}. The directory mounted into the server via this method will also be used
+     * to store files sent via PUT. Upon requests, the server will try to match the context roots in reverse
+     * alphabetical order, thereby giving longer path prefix matches precedence.
+     * 
+     * @param contextRoot The context root to make the resources accessible at, must not be {@code null}.
+     * @param baseDirectory The local base directory whose files should be served, must not be {@code null}.
+     * @param filteredExtensions A list of extensions for files to filter, e.g. {@code "xml, "properties"}, may be
+     *            {@code null}.
      * @return This server, never {@code null}.
      */
     public HttpServer addResources( String contextRoot, String baseDirectory, String... filteredExtensions )
@@ -408,9 +408,9 @@ public class HttpServer
     /**
      * Enables request recording for the specified URI patterns. Recorded requests can be retrieved via
      * {@link #getRecordedRequests()}.
-     *
-     * @param patterns The regular expressions denoting URIs to monitor, e.g. {@code "/context/.*"}, must not be {@code
-     *                 null}.
+     * 
+     * @param patterns The regular expressions denoting URIs to monitor, e.g. {@code "/context/.*"}, must not be
+     *            {@code null}.
      * @return This server, never {@code null}.
      */
     public HttpServer enableRecording( String... patterns )
@@ -427,7 +427,7 @@ public class HttpServer
      * Gets the sequence of requests that have been issued against context roots for which
      * {@link #enableRecording(String...)} was called. A request is encoded in the form {@code <METHOD> <URI>}, e.g.
      * {@code GET /context/some.jar}.
-     *
+     * 
      * @return The sequence of requests since the server was started, can be empty but never {@code null}.
      */
     public List<String> getRecordedRequests()
@@ -437,7 +437,7 @@ public class HttpServer
 
     /**
      * Gets the headers sent in the most recent request to the specified path.
-     *
+     * 
      * @param uri the path
      * @return the http request headers
      */
@@ -448,9 +448,9 @@ public class HttpServer
 
     /**
      * Sets a token to replace during resource filtering. Upon server start, the following tokens will be defined
-     * automatically: <code>@basedir@</code>, <code>@baseurl@</code>, <code>@baseuri@</code>, <code>@port.http@</code> and
-     * <code>@port.https@</code>.
-     *
+     * automatically: <code>@basedir@</code>, <code>@baseurl@</code>, <code>@baseuri@</code>, <code>@port.http@</code>
+     * and <code>@port.https@</code>.
+     * 
      * @param token The token to replace, e.g. <code>@basedir@</code>, must not be {@code null}.
      * @param value The replacement text of the token, may be {@code null}.
      * @return This server, never {@code null}.
@@ -476,7 +476,7 @@ public class HttpServer
 
     /**
      * Sets the latency of the server.
-     *
+     * 
      * @param millis The latency in milliseconds, may be negative for infinite delay.
      * @return This server, never {@code null}.
      */
@@ -525,7 +525,7 @@ public class HttpServer
 
     /**
      * Starts the server. Trying to start an already running server has no effect.
-     *
+     * 
      * @return This server, never {@code null}.
      * @throws Exception If the server could not be started.
      */
@@ -715,8 +715,8 @@ public class HttpServer
                         ( (Request) request ).setHandled( true );
                         return;
                     }
-                    else if ( HttpMethods.PUT.equals( request.getMethod() ) ||
-                        HttpMethods.POST.equals( request.getMethod() ) )
+                    else if ( HttpMethods.PUT.equals( request.getMethod() )
+                        || HttpMethods.POST.equals( request.getMethod() ) )
                     {
                         int i = 0;
                         while ( !file.getParentFile().exists() && !file.getParentFile().mkdirs() )

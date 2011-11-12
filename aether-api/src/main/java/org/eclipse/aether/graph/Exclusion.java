@@ -10,10 +10,10 @@
  *******************************************************************************/
 package org.eclipse.aether.graph;
 
-
 /**
  * An exclusion of one or more transitive dependencies. <em>Note:</em> Instances of this class are immutable and the
  * exposed mutators return new objects rather than changing the current instance.
+ * 
  * @see Dependency#getExclusions()
  */
 public final class Exclusion

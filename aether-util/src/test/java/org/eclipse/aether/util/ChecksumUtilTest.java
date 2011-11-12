@@ -29,7 +29,6 @@ public class ChecksumUtilTest
 {
     private File emptyFile;
 
-
     private File patternFile;
 
     private File textFile;
@@ -114,7 +113,7 @@ public class ChecksumUtilTest
         }
 
     }
-    
+
     @Test
     public void testRead()
         throws IOException
@@ -126,7 +125,7 @@ public class ChecksumUtilTest
 
             File sha1File = TestFileUtils.createTempFile( sha1 );
             File md5File = TestFileUtils.createTempFile( md5 );
-            
+
             assertEquals( sha1, ChecksumUtils.read( sha1File ) );
             assertEquals( md5, ChecksumUtils.read( md5File ) );
 

@@ -30,7 +30,7 @@ public class ArtifactDescription
     private List<Artifact> relocations;
 
     ArtifactDescription( List<Artifact> relocations, List<Dependency> dependencies,
-                                List<Dependency> managedDependencies, List<RemoteRepository> repositories )
+                         List<Dependency> managedDependencies, List<RemoteRepository> repositories )
     {
         this.relocations = relocations;
         this.dependencies = dependencies;

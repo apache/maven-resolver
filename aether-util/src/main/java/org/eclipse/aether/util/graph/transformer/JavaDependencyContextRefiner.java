@@ -21,6 +21,7 @@ import org.eclipse.aether.util.artifact.JavaScopes;
  * A dependency graph transformer that refines the request context for nodes that belong to the "project" context by
  * appending the classpath type to which the node belongs. For instance, a compile-time project dependency will be
  * assigned the request context "project/compile".
+ * 
  * @see DependencyNode#getRequestContext()
  */
 public final class JavaDependencyContextRefiner

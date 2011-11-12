@@ -17,6 +17,7 @@ import org.eclipse.aether.graph.Dependency;
 
 /**
  * A context used during dependency collection to update the dependency manager, selector and traverser.
+ * 
  * @see DependencyManager#deriveChildManager(DependencyCollectionContext)
  * @see DependencyTraverser#deriveChildTraverser(DependencyCollectionContext)
  * @see DependencySelector#deriveChildSelector(DependencyCollectionContext)

@@ -263,14 +263,14 @@ public class IniArtifactDataReader
                     new StubArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(), def.getVersion() );
             }
         }
-            if ( artifact != null )
-            {
-                // commit dependency
-                Dependency dep = new Dependency( artifact, scope, optional, exclusions );
-                ret.add( dep );
+        if ( artifact != null )
+        {
+            // commit dependency
+            Dependency dep = new Dependency( artifact, scope, optional, exclusions );
+            ret.add( dep );
 
-                exclusions = new ArrayList<Exclusion>();
-            }
+            exclusions = new ArrayList<Exclusion>();
+        }
 
         return ret;
     }

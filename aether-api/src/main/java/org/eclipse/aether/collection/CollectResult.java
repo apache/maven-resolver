@@ -19,6 +19,7 @@ import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * The result of a dependency collection request.
+ * 
  * @see RepositorySystem#collectDependencies(RepositorySystemSession, CollectRequest)
  */
 public final class CollectResult

@@ -26,8 +26,8 @@ import org.eclipse.aether.version.VersionScheme;
  * segment is treated as an implicit wildcard. Version can be a range in case a {@link VersionScheme} is specified.
  * </p>
  * <p>
- * For example, <code>org.eclipse.*</code> would match all artifacts whose group id started with <code>org.eclipse.</code>
- * , and <code>:::*-SNAPSHOT</code> would match all snapshot artifacts.
+ * For example, <code>org.eclipse.*</code> would match all artifacts whose group id started with
+ * <code>org.eclipse.</code> , and <code>:::*-SNAPSHOT</code> would match all snapshot artifacts.
  * </p>
  */
 public final class PatternExclusionsDependencyFilter

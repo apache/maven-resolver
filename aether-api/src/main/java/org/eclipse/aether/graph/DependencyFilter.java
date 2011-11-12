@@ -12,7 +12,6 @@ package org.eclipse.aether.graph;
 
 import java.util.List;
 
-
 /**
  * A filter to include/exclude dependency nodes during other operations.
  */

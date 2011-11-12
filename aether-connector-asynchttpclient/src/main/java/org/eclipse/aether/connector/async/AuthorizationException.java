@@ -24,5 +24,4 @@ class AuthorizationException
         super( message, cause );
     }
 
-
 }

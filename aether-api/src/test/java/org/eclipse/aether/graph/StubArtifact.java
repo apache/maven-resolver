@@ -55,10 +55,10 @@ class StubArtifact
         file = null;
         this.properties = properties;
     }
-    
+
     public StubArtifact( String coords )
     {
-        this(coords, Collections.<String, String>emptyMap());
+        this( coords, Collections.<String, String> emptyMap() );
     }
 
     private static String get( String value, String defaultValue )

@@ -23,6 +23,7 @@ import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 /**
  * A dependency filter based on dependency scopes. <em>Note:</em> This filter does not assume any relationships between
  * the scopes. In particular, the filter is not aware of scopes that logically include other scopes.
+ * 
  * @see Dependency#getScope()
  */
 public final class ScopeDependencyFilter

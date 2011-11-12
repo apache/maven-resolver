@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether;
 
-
 /**
  * A trace of nested requests that are performed by the repository system. This trace information can be used to
  * correlate repository events with higher level operations in the application code that eventually caused the events. A
@@ -19,6 +18,7 @@ package org.eclipse.aether;
  * object that is currently processed. When invoking methods on the repository system, client code may provide a request
  * trace that has been prepopulated with whatever data is useful for the application to indicate its state for later
  * evaluation when processing the repository events.
+ * 
  * @see RepositoryEvent#getTrace()
  */
 public interface RequestTrace

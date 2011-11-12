@@ -18,6 +18,7 @@ import org.eclipse.aether.transfer.TransferListener;
  * listeners need to inspect the event details carefully. Also, the listener may be called from an arbitrary thread.
  * <em>Note:</em> Implementors are strongly advised to inherit from {@link AbstractRepositoryListener} instead of
  * directly implementing this interface.
+ * 
  * @see TransferListener
  */
 public interface RepositoryListener

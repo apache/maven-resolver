@@ -19,6 +19,7 @@ import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * The result of a dependency resolution request.
+ * 
  * @see RepositorySystem#resolveDependencies(RepositorySystemSession, DependencyRequest)
  */
 public final class DependencyResult

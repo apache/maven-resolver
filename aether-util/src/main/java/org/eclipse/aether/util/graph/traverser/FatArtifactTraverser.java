@@ -19,6 +19,7 @@ import org.eclipse.aether.util.artifact.ArtifactProperties;
  * A dependency traverser that excludes the dependencies of fat artifacts from the traversal. Fat artifacts are
  * artifacts that have the property {@link org.eclipse.aether.util.artifact.ArtifactProperties#INCLUDES_DEPENDENCIES}
  * set to {@code true}.
+ * 
  * @see org.eclipse.aether.artifact.Artifact#getProperties()
  */
 public final class FatArtifactTraverser

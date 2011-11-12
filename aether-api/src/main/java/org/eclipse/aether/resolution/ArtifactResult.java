@@ -21,6 +21,7 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 
 /**
  * The result of an artifact resolution request.
+ * 
  * @see RepositorySystem#resolveArtifacts(RepositorySystemSession, java.util.Collection)
  * @see Artifact#getFile()
  */

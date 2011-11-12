@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.repository;
 
-
 /**
  * Selects authentication for a given remote repository.
  */

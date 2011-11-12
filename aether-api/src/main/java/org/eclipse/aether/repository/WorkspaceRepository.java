@@ -12,7 +12,6 @@ package org.eclipse.aether.repository;
 
 import java.util.UUID;
 
-
 /**
  * A repository backed by an IDE workspace or the output of a build session.
  */

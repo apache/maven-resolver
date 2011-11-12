@@ -21,12 +21,9 @@ class TestProxySelector
     implements ProxySelector
 {
 
-
     public Proxy getProxy( RemoteRepository repository )
     {
         return null;
     }
-
-
 
 }

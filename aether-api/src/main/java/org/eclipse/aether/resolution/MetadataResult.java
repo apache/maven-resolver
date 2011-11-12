@@ -17,6 +17,7 @@ import org.eclipse.aether.transfer.MetadataNotFoundException;
 
 /**
  * The result of a metadata resolution request.
+ * 
  * @see RepositorySystem#resolveMetadata(RepositorySystemSession, java.util.Collection)
  */
 public final class MetadataResult

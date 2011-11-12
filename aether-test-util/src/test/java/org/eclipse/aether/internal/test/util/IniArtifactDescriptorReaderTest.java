@@ -63,10 +63,10 @@ public class IniArtifactDescriptorReaderTest
         StubArtifact art = new StubArtifact( "gid:aid:ext:ver" );
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest( art, null, "" );
         ArtifactDescriptorResult description = reader.readArtifactDescriptor( session, request );
-        
-        assertEquals(request, description.getRequest());
+
+        assertEquals( request, description.getRequest() );
         assertEquals( art, description.getArtifact() );
-        
+
         assertEquals( 1, description.getRelocations().size() );
         Artifact artifact = description.getRelocations().get( 0 );
         assertEquals( "gid", artifact.getGroupId() );
@@ -106,7 +106,7 @@ public class IniArtifactDescriptorReaderTest
         assertEquals( "aid", art.getArtifactId() );
         assertEquals( "ver", art.getVersion() );
         assertEquals( "ext", art.getExtension() );
-        
+
         dep = deps.get( 1 );
         assertEquals( "scope", dep.getScope() );
         assertEquals( true, dep.isOptional() );

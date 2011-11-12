@@ -20,6 +20,7 @@ import org.eclipse.aether.metadata.Metadata;
 
 /**
  * The result of installing artifacts and their accompanying metadata into the a remote repository.
+ * 
  * @see RepositorySystem#install(RepositorySystemSession, InstallRequest)
  */
 public final class InstallResult

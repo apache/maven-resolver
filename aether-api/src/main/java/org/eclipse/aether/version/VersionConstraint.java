@@ -12,7 +12,6 @@ package org.eclipse.aether.version;
 
 import java.util.Collection;
 
-
 /**
  * A constraint on versions for a dependency. A constraint can either consist of one or more version ranges or a single
  * version. In the first case, the constraint expresses a hard requirement on a version matching one of its ranges. In

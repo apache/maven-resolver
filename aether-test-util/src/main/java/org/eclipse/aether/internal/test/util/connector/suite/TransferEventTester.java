@@ -59,7 +59,8 @@ public class TransferEventTester
         Collection<ArtifactUpload> artUps = ConnectorTestUtils.createTransfers( ArtifactUpload.class, 1, tmpFile );
         Collection<ArtifactDownload> artDowns = ConnectorTestUtils.createTransfers( ArtifactDownload.class, 1, tmpFile );
         Collection<MetadataUpload> metaUps = ConnectorTestUtils.createTransfers( MetadataUpload.class, 1, tmpFile );
-        Collection<MetadataDownload> metaDowns = ConnectorTestUtils.createTransfers( MetadataDownload.class, 1, tmpFile );
+        Collection<MetadataDownload> metaDowns =
+            ConnectorTestUtils.createTransfers( MetadataDownload.class, 1, tmpFile );
 
         connector.put( artUps, null );
         LinkedList<TransferEvent> events = new LinkedList<TransferEvent>( listener.getEvents() );
@@ -194,7 +195,8 @@ public class TransferEventTester
         Collection<ArtifactUpload> artUps = ConnectorTestUtils.createTransfers( ArtifactUpload.class, 1, null );
         Collection<ArtifactDownload> artDowns = ConnectorTestUtils.createTransfers( ArtifactDownload.class, 1, tmpFile );
         Collection<MetadataUpload> metaUps = ConnectorTestUtils.createTransfers( MetadataUpload.class, 1, null );
-        Collection<MetadataDownload> metaDowns = ConnectorTestUtils.createTransfers( MetadataDownload.class, 1, tmpFile );
+        Collection<MetadataDownload> metaDowns =
+            ConnectorTestUtils.createTransfers( MetadataDownload.class, 1, tmpFile );
 
         connector.put( artUps, null );
         LinkedList<TransferEvent> events = new LinkedList<TransferEvent>( listener.getEvents() );
@@ -237,11 +239,10 @@ public class TransferEventTester
         assertNotNull( msg, currentEvent );
         assertEquals( msg, TransferEvent.EventType.FAILED, currentEvent.getType() );
         checkProperties( currentEvent );
-        assertNotNull("exception is missing for fail event", currentEvent.getException() );
+        assertNotNull( "exception is missing for fail event", currentEvent.getException() );
         Exception exception = currentEvent.getException();
         assertTrue( "exception is of wrong type, should be instance of " + expectedError + " but was "
-                        + exception.getClass(),
-                    expectedError.isAssignableFrom( exception.getClass() ) );
+                        + exception.getClass(), expectedError.isAssignableFrom( exception.getClass() ) );
 
         // all events consumed
         assertEquals( "too many events left: " + events.toString(), 0, events.size() );

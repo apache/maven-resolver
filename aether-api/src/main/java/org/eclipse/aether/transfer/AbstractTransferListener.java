@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.transfer;
 
-
 /**
  * A skeleton implementation for custom transfer listeners. The callback methods in this class do nothing.
  */

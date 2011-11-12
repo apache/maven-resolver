@@ -190,8 +190,8 @@ public final class DefaultMirrorSelector
      * 
      * @param repoType The type of the repository, may be {@code null}.
      * @param mirrorType The types supported by the mirror, may be {@code null}.
-     * @return {@code true} if the types associated with the mirror match the type of the original repository, {@code
-     *         false} otherwise.
+     * @return {@code true} if the types associated with the mirror match the type of the original repository,
+     *         {@code false} otherwise.
      */
     static boolean matchesType( String repoType, String mirrorType )
     {

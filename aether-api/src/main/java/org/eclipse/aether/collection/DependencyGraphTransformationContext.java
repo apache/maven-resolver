@@ -14,6 +14,7 @@ import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A context used during dependency collection to exchange information within a chain of dependency graph transformers.
+ * 
  * @see DependencyGraphTransformer
  */
 public interface DependencyGraphTransformationContext

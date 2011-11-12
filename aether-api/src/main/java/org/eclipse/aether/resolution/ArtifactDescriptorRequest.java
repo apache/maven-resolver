@@ -22,6 +22,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * A request to read an artifact descriptor.
+ * 
  * @see RepositorySystem#readArtifactDescriptor(RepositorySystemSession, ArtifactDescriptorRequest)
  */
 public final class ArtifactDescriptorRequest

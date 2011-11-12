@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether;
 
-
 /**
  * Caches auxiliary data used during repository access like already processed metadata. The data in the cache is meant
  * for exclusive consumption by the repository system and is opaque to the cache implementation. <strong>Note:</strong>

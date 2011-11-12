@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.repository;
 
-
 /**
  * Selects a proxy for a given remote repository.
  */

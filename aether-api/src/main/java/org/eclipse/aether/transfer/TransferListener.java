@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.transfer;
 
-
 /**
  * A listener being notified of artifact/metadata transfers from/to remote repositories. The listener may be called from
  * an arbitrary thread. Reusing common regular expression syntax, the sequence of events is roughly as follows:

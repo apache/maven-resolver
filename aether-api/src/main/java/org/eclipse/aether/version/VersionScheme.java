@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.version;
 
-
 /**
  * A version scheme that handles interpretation of version strings to facilitate their comparison.
  */

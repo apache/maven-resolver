@@ -56,7 +56,7 @@ public class AsyncRepositoryConnectorFactory
 
     /**
      * Sets the logger to use for this component.
-     *
+     * 
      * @param logger The logger to use, may be {@code null} to disable logging.
      * @return This component for chaining, never {@code null}.
      */
@@ -89,7 +89,7 @@ public class AsyncRepositoryConnectorFactory
 
     /**
      * Sets the priority of this component.
-     *
+     * 
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */

@@ -12,9 +12,9 @@ package org.eclipse.aether.transfer;
 
 import java.nio.ByteBuffer;
 
-
 /**
  * An event fired to a transfer listener during an artifact/metadata transfer.
+ * 
  * @see TransferListener
  */
 public interface TransferEvent

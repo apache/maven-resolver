@@ -18,6 +18,7 @@ import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A query to the local repository for the existence of an artifact.
+ * 
  * @see LocalRepositoryManager#find(RepositorySystemSession, LocalArtifactRequest)
  */
 public final class LocalArtifactRequest

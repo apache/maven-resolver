@@ -19,6 +19,7 @@ import org.eclipse.aether.repository.ArtifactRepository;
 
 /**
  * The result of a version resolution request.
+ * 
  * @see RepositorySystem#resolveVersion(RepositorySystemSession, VersionRequest)
  */
 public final class VersionResult

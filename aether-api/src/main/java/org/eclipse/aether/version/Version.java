@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.version;
 
-
 /**
  * A parsed artifact version.
  */

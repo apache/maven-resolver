@@ -16,6 +16,7 @@ import org.eclipse.aether.graph.Dependency;
  * Applies dependency management to the dependencies of a dependency node. <em>Note:</em> For the sake of good
  * performance during dependency collection, implementations should provide a semantic {@link Object#equals(Object)
  * equals()} method.
+ * 
  * @see org.eclipse.aether.RepositorySystemSession#getDependencyManager()
  * @see org.eclipse.aether.RepositorySystem#collectDependencies(org.eclipse.aether.RepositorySystemSession,
  *      CollectRequest)

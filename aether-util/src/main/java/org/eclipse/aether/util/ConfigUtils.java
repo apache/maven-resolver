@@ -20,6 +20,7 @@ import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A utility class to read configuration properties from a repository system session.
+ * 
  * @see RepositorySystemSession#getConfigProperties()
  */
 public class ConfigUtils

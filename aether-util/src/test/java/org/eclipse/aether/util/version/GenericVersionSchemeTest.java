@@ -47,7 +47,6 @@ public class GenericVersionSchemeTest
         }
     }
 
-
     @Test
     public void testEnumeratedVersions()
         throws InvalidVersionSpecificationException
@@ -94,7 +93,7 @@ public class GenericVersionSchemeTest
     {
         assertContains( String.format( "%s: %%s should be contained\n", c.toString() ), c, true, versions );
     }
-    
+
     @Test
     public void testInvalid()
     {

@@ -18,6 +18,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * A request to resolve metadata from either a remote repository or the local repository.
+ * 
  * @see RepositorySystem#resolveMetadata(RepositorySystemSession, java.util.Collection)
  * @see Metadata#getFile()
  */

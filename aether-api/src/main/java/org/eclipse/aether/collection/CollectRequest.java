@@ -26,6 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  * dependencies can be specified in which case the specified direct dependencies are merged with the direct dependencies
  * retrieved from the artifact descriptor of the root dependency. And last, only direct dependencies can be specified in
  * which case the root node of the resulting graph has no associated dependency.
+ * 
  * @see RepositorySystem#collectDependencies(RepositorySystemSession, CollectRequest)
  */
 public final class CollectRequest

@@ -55,10 +55,10 @@ public class StubArtifact
         file = null;
         this.properties = properties;
     }
-    
+
     public StubArtifact( String coords )
     {
-        this( coords, Collections.<String, String>emptyMap());
+        this( coords, Collections.<String, String> emptyMap() );
     }
 
     private static String get( String value, String defaultValue )
@@ -66,7 +66,8 @@ public class StubArtifact
         return ( value == null || value.length() <= 0 ) ? defaultValue : value;
     }
 
-    public StubArtifact( String groupId, String artifactId, String classifier, String extension, String version, Map<String, String> properties )
+    public StubArtifact( String groupId, String artifactId, String classifier, String extension, String version,
+                         Map<String, String> properties )
     {
         this.groupId = emptify( groupId );
         this.artifactId = emptify( artifactId );
@@ -74,12 +75,12 @@ public class StubArtifact
         this.extension = emptify( extension );
         this.version = emptify( version );
         this.file = null;
-        this.properties = properties != null ? properties : Collections.<String, String>emptyMap();
+        this.properties = properties != null ? properties : Collections.<String, String> emptyMap();
     }
-    
+
     public StubArtifact( String groupId, String artifactId, String classifier, String extension, String version )
     {
-        this( groupId, artifactId, classifier, extension, version, Collections.<String, String>emptyMap());
+        this( groupId, artifactId, classifier, extension, version, Collections.<String, String> emptyMap() );
     }
 
     private static String emptify( String str )
@@ -108,7 +109,7 @@ public class StubArtifact
         {
             return this;
         }
-        
+
         return new StubArtifact( getGroupId(), getArtifactId(), getClassifier(), getExtension(), version );
     }
 
@@ -139,7 +140,7 @@ public class StubArtifact
 
     public StubArtifact setFile( File file )
     {
-        if ( this.file != null && this.file.equals( file )) 
+        if ( this.file != null && this.file.equals( file ) )
         {
             return this;
         }

@@ -22,6 +22,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * A request to deploy artifacts and their accompanying metadata into the a remote repository.
+ * 
  * @see RepositorySystem#deploy(RepositorySystemSession, DeployRequest)
  */
 public final class DeployRequest

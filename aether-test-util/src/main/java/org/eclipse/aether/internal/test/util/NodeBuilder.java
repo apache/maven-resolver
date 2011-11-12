@@ -52,7 +52,7 @@ public class NodeBuilder
 
     private VersionScheme versionScheme = new TestVersionScheme();
 
-    private Map<String, String> properties = new HashMap<String, String>(0);
+    private Map<String, String> properties = new HashMap<String, String>( 0 );
 
     public NodeBuilder artifactId( String artifactId )
     {
@@ -111,10 +111,10 @@ public class NodeBuilder
         relocations.add( relocation );
         return this;
     }
-    
+
     public NodeBuilder properties( Map<String, String> properties )
     {
-        this.properties = properties != null ? properties : Collections.<String, String>emptyMap();
+        this.properties = properties != null ? properties : Collections.<String, String> emptyMap();
         return this;
     }
 

@@ -23,6 +23,7 @@ import org.eclipse.aether.version.VersionConstraint;
 
 /**
  * The result of a version range resolution request.
+ * 
  * @see RepositorySystem#resolveVersionRange(RepositorySystemSession, VersionRangeRequest)
  */
 public final class VersionRangeResult

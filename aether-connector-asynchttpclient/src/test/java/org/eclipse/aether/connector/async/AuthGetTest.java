@@ -30,7 +30,7 @@ public class AuthGetTest
         throws Exception
     {
         super.before();
-        
+
         repository().setAuthentication( new Authentication( "user", "password" ) );
 
     }

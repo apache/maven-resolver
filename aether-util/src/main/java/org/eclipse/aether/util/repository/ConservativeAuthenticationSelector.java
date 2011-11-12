@@ -27,8 +27,8 @@ public final class ConservativeAuthenticationSelector
     /**
      * Creates a new selector that delegates to the specified selector.
      * 
-     * @param selector The selector to delegate to in case a repository has no authentication yet, must not be {@code
-     *            null}.
+     * @param selector The selector to delegate to in case a repository has no authentication yet, must not be
+     *            {@code null}.
      */
     public ConservativeAuthenticationSelector( AuthenticationSelector selector )
     {

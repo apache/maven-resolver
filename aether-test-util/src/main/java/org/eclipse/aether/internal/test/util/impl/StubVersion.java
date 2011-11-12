@@ -28,7 +28,7 @@ public final class StubVersion
 
     public int compareTo( Version o )
     {
-        return version.compareTo( o.toString());
+        return version.compareTo( o.toString() );
     }
 
     @Override

@@ -69,6 +69,7 @@ public interface FileProcessor
 
     /**
      * A listener object that is notified for every progress made while copying files.
+     * 
      * @see FileProcessor#copy(File, File, ProgressListener)
      */
     public interface ProgressListener

@@ -35,24 +35,27 @@ public class ScopeDependencyFilterTest
 
         // null or empty
         assertTrue( new ScopeDependencyFilter( null, null ).accept( builder.build(), parents ) );
-        assertTrue( new ScopeDependencyFilter( new LinkedList<String>(), new LinkedList<String>() ).accept( builder.build(), parents ) );
+        assertTrue( new ScopeDependencyFilter( new LinkedList<String>(), new LinkedList<String>() ).accept( builder.build(),
+                                                                                                            parents ) );
         assertTrue( new ScopeDependencyFilter( (String[]) null ).accept( builder.build(), parents ) );
-        
-        //only excludes
-        assertTrue( new ScopeDependencyFilter( "test" ).accept( builder.build(), parents ));
-        assertFalse( new ScopeDependencyFilter( "compile" ).accept( builder.build(), parents ));
-        assertFalse( new ScopeDependencyFilter( "compile", "test" ).accept( builder.build(), parents ));
-        
-        //Both
-        String[] excludes1 = {"provided"};
-        String[] includes1 = {"compile","test"}; 
-        assertTrue( new ScopeDependencyFilter( Arrays.asList( includes1 ), Arrays.asList( excludes1 ) ).accept( builder.build() , parents ));
-        assertTrue( new ScopeDependencyFilter( Arrays.asList( includes1 ), null ).accept( builder.build() , parents ));
-        
-        //exclude wins
-        String[] excludes2 = {"compile"};
-        String[] includes2 = {"compile"};
-        assertFalse( new ScopeDependencyFilter( Arrays.asList( includes2 ), Arrays.asList( excludes2 ) ).accept( builder.build() , parents ));
+
+        // only excludes
+        assertTrue( new ScopeDependencyFilter( "test" ).accept( builder.build(), parents ) );
+        assertFalse( new ScopeDependencyFilter( "compile" ).accept( builder.build(), parents ) );
+        assertFalse( new ScopeDependencyFilter( "compile", "test" ).accept( builder.build(), parents ) );
+
+        // Both
+        String[] excludes1 = { "provided" };
+        String[] includes1 = { "compile", "test" };
+        assertTrue( new ScopeDependencyFilter( Arrays.asList( includes1 ), Arrays.asList( excludes1 ) ).accept( builder.build(),
+                                                                                                                parents ) );
+        assertTrue( new ScopeDependencyFilter( Arrays.asList( includes1 ), null ).accept( builder.build(), parents ) );
+
+        // exclude wins
+        String[] excludes2 = { "compile" };
+        String[] includes2 = { "compile" };
+        assertFalse( new ScopeDependencyFilter( Arrays.asList( includes2 ), Arrays.asList( excludes2 ) ).accept( builder.build(),
+                                                                                                                 parents ) );
 
     }
 

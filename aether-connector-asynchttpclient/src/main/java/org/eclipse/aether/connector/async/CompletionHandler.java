@@ -193,7 +193,7 @@ class CompletionHandler
 
     /**
      * Invoked once the HTTP response has been fully read.
-     *
+     * 
      * @param response The {@link com.ning.http.client.Response}
      * @return Type of the value that will be returned by the associated {@link java.util.concurrent.Future}
      */

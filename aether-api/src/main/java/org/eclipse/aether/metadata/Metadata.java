@@ -46,8 +46,8 @@ public interface Metadata
     /**
      * Gets the group identifier of this metadata.
      * 
-     * @return The group identifier or an empty string if the metadata applies to the entire repository, never {@code
-     *         null}.
+     * @return The group identifier or an empty string if the metadata applies to the entire repository, never
+     *         {@code null}.
      */
     String getGroupId();
 

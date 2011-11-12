@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.repository;
 
-
 /**
  * A policy controlling access to a repository. <em>Note:</em> Instances of this class are immutable and the exposed
  * mutators return new objects rather than changing the current instance.

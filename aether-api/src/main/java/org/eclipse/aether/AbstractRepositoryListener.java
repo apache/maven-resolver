@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether;
 
-
 /**
  * A skeleton implementation for custom repository listeners. The callback methods in this class do nothing.
  */

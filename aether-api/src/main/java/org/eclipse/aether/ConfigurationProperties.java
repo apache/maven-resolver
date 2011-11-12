@@ -10,9 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether;
 
-
 /**
  * The keys and defaults for common configuration properties.
+ * 
  * @see RepositorySystemSession#getConfigProperties()
  */
 public final class ConfigurationProperties

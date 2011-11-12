@@ -18,6 +18,7 @@ import org.eclipse.aether.graph.Exclusion;
 
 /**
  * The management updates to apply to a dependency.
+ * 
  * @see DependencyManager#manageDependency(Dependency)
  */
 public class DependencyManagement
