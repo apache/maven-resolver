@@ -211,7 +211,7 @@ public class DefaultDeployer
         }
         finally
         {
-            syncContext.release();
+            syncContext.close();
         }
     }
 

@@ -158,7 +158,7 @@ public class DefaultInstaller
         }
         finally
         {
-            syncContext.release();
+            syncContext.close();
         }
     }
 

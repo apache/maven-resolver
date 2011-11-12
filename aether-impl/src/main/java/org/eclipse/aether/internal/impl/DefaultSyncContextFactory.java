@@ -41,7 +41,7 @@ public class DefaultSyncContextFactory
         {
         }
 
-        public void release()
+        public void close()
         {
         }
 

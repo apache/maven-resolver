@@ -29,7 +29,7 @@ public class StubSyncContextFactory
     {
         return new SyncContext()
         {
-            public void release()
+            public void close()
             {
             }
 

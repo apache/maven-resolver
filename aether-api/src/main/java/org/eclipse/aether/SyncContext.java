@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether;
 
+import java.io.Closeable;
 import java.util.Collection;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -25,7 +26,7 @@ import org.eclipse.aether.metadata.Metadata;
  *     syncContext.acquire( artifacts, metadatas );
  *     // work with the artifacts and metadatas
  * } finally {
- *     syncContext.release();
+ *     syncContext.close();
  * }
  * </pre>
  * 
@@ -38,15 +39,19 @@ import org.eclipse.aether.metadata.Metadata;
  * A synchronization context is meant to be utilized by only one thread and as such is not thread-safe.
  * <p>
  * Note that the level of actual synchronization is subject to the implementation and might range from OS-wide to none.
+ * 
+ * @see RepositorySystem#newSyncContext(RepositorySystemSession, boolean)
  */
 public interface SyncContext
+    extends Closeable
 {
 
     /**
      * Acquires synchronized access to the specified artifacts and metadatas. The invocation will potentially block
      * until all requested resources can be acquired by the calling thread. Acquiring resources that are already
      * acquired by this synchronization context has no effect. Please also see the class-level documentation for
-     * information regarding reentrancy.
+     * information regarding reentrancy. The method may be invoked multiple times on a synchronization context until all
+     * desired resources have been acquired.
      * 
      * @param artifacts The artifacts to acquire, may be {@code null} or empty if none.
      * @param metadatas The metadatas to acquire, may be {@code null} or empty if none.
@@ -54,9 +59,9 @@ public interface SyncContext
     void acquire( Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas );
 
     /**
-     * Releases all previously acquired artifacts/metadatas. If no resources have been acquired before, this method does
-     * nothing. This synchronization context may be reused to acquire other resources in the future.
+     * Releases all previously acquired artifacts/metadatas. If no resources have been acquired before or if this
+     * synchronization context has already been closed, this method does nothing.
      */
-    void release();
+    void close();
 
 }

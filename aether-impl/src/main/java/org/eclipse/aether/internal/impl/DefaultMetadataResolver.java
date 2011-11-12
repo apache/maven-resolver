@@ -174,7 +174,7 @@ public class DefaultMetadataResolver
         }
         finally
         {
-            syncContext.release();
+            syncContext.close();
         }
     }
 

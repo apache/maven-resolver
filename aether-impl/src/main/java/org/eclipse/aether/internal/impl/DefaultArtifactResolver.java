@@ -216,7 +216,7 @@ public class DefaultArtifactResolver
         }
         finally
         {
-            syncContext.release();
+            syncContext.close();
         }
     }
 
