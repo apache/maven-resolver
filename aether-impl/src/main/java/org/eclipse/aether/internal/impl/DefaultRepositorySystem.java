@@ -64,6 +64,7 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 import org.eclipse.aether.util.DefaultRequestTrace;
 import org.eclipse.aether.util.graph.FilteringDependencyVisitor;
@@ -77,7 +78,7 @@ public class DefaultRepositorySystem
 {
 
     @SuppressWarnings( "unused" )
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement
@@ -136,7 +137,7 @@ public class DefaultRepositorySystem
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setVersionResolver( locator.getService( VersionResolver.class ) );
         setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
         setArtifactResolver( locator.getService( ArtifactResolver.class ) );
@@ -149,10 +150,16 @@ public class DefaultRepositorySystem
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
-    public DefaultRepositorySystem setLogger( Logger logger )
+    public DefaultRepositorySystem setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     public DefaultRepositorySystem setVersionResolver( VersionResolver versionResolver )

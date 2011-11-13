@@ -19,6 +19,7 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 
 /**
@@ -29,7 +30,7 @@ public class SimpleLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
 
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     public LocalRepositoryManager newInstance( LocalRepository repository )
@@ -47,13 +48,19 @@ public class SimpleLocalRepositoryManagerFactory
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
     }
 
-    public SimpleLocalRepositoryManagerFactory setLogger( Logger logger )
+    public SimpleLocalRepositoryManagerFactory setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, SimpleLocalRepositoryManager.class );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     public float getPriority()

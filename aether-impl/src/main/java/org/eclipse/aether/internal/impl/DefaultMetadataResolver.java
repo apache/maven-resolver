@@ -52,6 +52,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
@@ -69,7 +70,7 @@ public class DefaultMetadataResolver
 {
 
     @SuppressWarnings( "unused" )
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement
@@ -102,17 +103,23 @@ public class DefaultMetadataResolver
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
-    public DefaultMetadataResolver setLogger( Logger logger )
+    public DefaultMetadataResolver setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )

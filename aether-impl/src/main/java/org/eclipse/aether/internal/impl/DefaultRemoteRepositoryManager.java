@@ -35,6 +35,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.StringUtils;
@@ -46,7 +47,7 @@ public class DefaultRemoteRepositoryManager
     implements RemoteRepositoryManager, Service
 {
 
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement
@@ -80,15 +81,21 @@ public class DefaultRemoteRepositoryManager
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
         connectorFactories = locator.getServices( RepositoryConnectorFactory.class );
     }
 
-    public DefaultRemoteRepositoryManager setLogger( Logger logger )
+    public DefaultRemoteRepositoryManager setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     public DefaultRemoteRepositoryManager setUpdateCheckManager( UpdateCheckManager updateCheckManager )

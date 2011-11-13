@@ -41,6 +41,7 @@ import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 import org.eclipse.aether.util.DefaultRequestTrace;
 import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
@@ -52,7 +53,7 @@ public class DefaultInstaller
     implements Installer, Service
 {
 
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement
@@ -83,17 +84,23 @@ public class DefaultInstaller
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
-    public DefaultInstaller setLogger( Logger logger )
+    public DefaultInstaller setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     public DefaultInstaller setFileProcessor( FileProcessor fileProcessor )

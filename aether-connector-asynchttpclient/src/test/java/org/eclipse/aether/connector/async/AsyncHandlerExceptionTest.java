@@ -12,7 +12,7 @@ package org.eclipse.aether.connector.async;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnector;
-import org.eclipse.aether.internal.test.impl.SysoutLogger;
+import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
 import org.eclipse.aether.internal.test.impl.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.impl.StubArtifact;
@@ -58,7 +58,7 @@ public class AsyncHandlerExceptionTest
             RepositorySystemSession session = new DefaultRepositorySystemSession();
 
             AsyncRepositoryConnector connector =
-                new AsyncRepositoryConnector( repo, session, new TestFileProcessor(), new SysoutLogger() );
+                new AsyncRepositoryConnector( repo, session, new TestFileProcessor(), SysoutLoggerFactory.LOGGER );
 
             try
             {

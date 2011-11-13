@@ -54,6 +54,7 @@ import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
@@ -70,7 +71,7 @@ public class DefaultArtifactResolver
     implements ArtifactResolver, Service
 {
 
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement
@@ -111,7 +112,7 @@ public class DefaultArtifactResolver
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setVersionResolver( locator.getService( VersionResolver.class ) );
@@ -120,10 +121,16 @@ public class DefaultArtifactResolver
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
-    public DefaultArtifactResolver setLogger( Logger logger )
+    public DefaultArtifactResolver setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     public DefaultArtifactResolver setFileProcessor( FileProcessor fileProcessor )

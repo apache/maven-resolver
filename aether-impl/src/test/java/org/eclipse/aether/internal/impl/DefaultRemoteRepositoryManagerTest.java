@@ -21,7 +21,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
-import org.eclipse.aether.internal.test.impl.SysoutLogger;
+import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.Authentication;
@@ -53,7 +53,7 @@ public class DefaultRemoteRepositoryManagerTest
         session.setChecksumPolicy( null );
         session.setUpdatePolicy( null );
         manager = new DefaultRemoteRepositoryManager( new StubUpdateCheckManager(), null );
-        manager.setLogger( new SysoutLogger() );
+        manager.setLoggerFactory( new SysoutLoggerFactory() );
     }
 
     public void teardown()

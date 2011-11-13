@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnectorFactory;
-import org.eclipse.aether.internal.test.impl.SysoutLogger;
+import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
 import org.eclipse.aether.internal.test.impl.TestFileProcessor;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
@@ -65,7 +65,7 @@ public class ResumeGetTest
         throws Exception
     {
         factory = new AsyncRepositoryConnectorFactory( new TestFileProcessor() );
-        factory.setLogger( new SysoutLogger() );
+        factory.setLoggerFactory( new SysoutLoggerFactory() );
         session = new TestRepositorySystemSession();
         artifact = new StubArtifact( "gid", "aid", "classifier", "extension", "version" );
         server = new Server( 0 );

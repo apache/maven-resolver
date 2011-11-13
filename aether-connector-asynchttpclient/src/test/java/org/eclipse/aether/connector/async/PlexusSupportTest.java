@@ -12,11 +12,11 @@ package org.eclipse.aether.connector.async;
 
 import org.codehaus.plexus.PlexusTestCase;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnectorFactory;
-import org.eclipse.aether.internal.test.impl.SysoutLogger;
+import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
 import org.eclipse.aether.internal.test.impl.TestFileProcessor;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 
 /**
  */
@@ -27,7 +27,7 @@ public class PlexusSupportTest
     public void testExistenceOfPlexusComponentMetadata()
         throws Exception
     {
-        getContainer().addComponent( new SysoutLogger(), Logger.class, null );
+        getContainer().addComponent( new SysoutLoggerFactory(), LoggerFactory.class, null );
         getContainer().addComponent( new TestFileProcessor(), FileProcessor.class, null );
 
         RepositoryConnectorFactory factory = lookup( RepositoryConnectorFactory.class, "async-http" );

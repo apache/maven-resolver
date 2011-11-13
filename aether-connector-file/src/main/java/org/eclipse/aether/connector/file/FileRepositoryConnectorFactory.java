@@ -20,6 +20,7 @@ import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
@@ -31,7 +32,7 @@ public class FileRepositoryConnectorFactory
     implements RepositoryConnectorFactory, Service
 {
 
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement
@@ -53,20 +54,26 @@ public class FileRepositoryConnectorFactory
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
     }
 
     /**
-     * Sets the logger to use for this component.
+     * Sets the logger factory to use for this component.
      * 
-     * @param logger The logger to use, may be {@code null} to disable logging.
+     * @param loggerFactory The logger factory to use, may be {@code null} to disable logging.
      * @return This component for chaining, never {@code null}.
      */
-    public FileRepositoryConnectorFactory setLogger( Logger logger )
+    public FileRepositoryConnectorFactory setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, FileRepositoryConnector.class );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     /**

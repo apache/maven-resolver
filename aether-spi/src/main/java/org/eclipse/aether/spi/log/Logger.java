@@ -11,7 +11,9 @@
 package org.eclipse.aether.spi.log;
 
 /**
- * A simple logger to facilitate emission of diagnostic messages.
+ * A simple logger to facilitate emission of diagnostic messages. In general, unrecoverable errors should be reported
+ * via exceptions and informational notifications should be reported via events, hence this logger interface focuses on
+ * support for tracing.
  */
 public interface Logger
 {

@@ -23,6 +23,7 @@ import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLogger;
 
 /**
@@ -32,7 +33,7 @@ public class DefaultRepositoryEventDispatcher
     implements RepositoryEventDispatcher, Service
 {
 
-    @Requirement
+    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement( role = RepositoryListener.class )
@@ -48,10 +49,16 @@ public class DefaultRepositoryEventDispatcher
         setRepositoryListeners( listeners );
     }
 
-    public DefaultRepositoryEventDispatcher setLogger( Logger logger )
+    public DefaultRepositoryEventDispatcher setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
         return this;
+    }
+
+    void setLogger( LoggerFactory loggerFactory )
+    {
+        // plexus support
+        setLoggerFactory( loggerFactory );
     }
 
     public DefaultRepositoryEventDispatcher addRepositoryListener( RepositoryListener listener )
@@ -85,7 +92,7 @@ public class DefaultRepositoryEventDispatcher
 
     public void initService( ServiceLocator locator )
     {
-        setLogger( locator.getService( Logger.class ) );
+        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setListeners( locator.getServices( RepositoryListener.class ) );
     }
 
