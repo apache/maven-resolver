@@ -39,7 +39,7 @@ public class DeployArtifacts
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
         Artifact jarArtifact = new DefaultArtifact( "test", "org.eclipse.aether.examples", "", "jar", "0.1-SNAPSHOT" );
-        jarArtifact = jarArtifact.setFile( new File( "org.eclipse.aether.examples.jar" ) );
+        jarArtifact = jarArtifact.setFile( new File( "demo.jar" ) );
 
         Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );
         pomArtifact = pomArtifact.setFile( new File( "pom.xml" ) );
