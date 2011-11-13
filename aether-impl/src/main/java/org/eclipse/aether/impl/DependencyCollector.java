@@ -19,6 +19,9 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 /**
  * This collector fulfills the contract of
  * {@link RepositorySystem#collectDependencies(RepositorySystemSession, CollectRequest)}.
+ * 
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface DependencyCollector
 {

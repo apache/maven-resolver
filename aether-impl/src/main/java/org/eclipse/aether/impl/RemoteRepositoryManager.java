@@ -19,6 +19,8 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface RemoteRepositoryManager
 {

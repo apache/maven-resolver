@@ -18,6 +18,8 @@ import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 
 /**
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface MetadataResolver
 {
@@ -25,6 +27,7 @@ public interface MetadataResolver
     /**
      * Resolves the paths for a collection of metadata. Metadata will be downloaded if necessary.
      */
-    List<MetadataResult> resolveMetadata( RepositorySystemSession session, Collection<? extends MetadataRequest> requests );
+    List<MetadataResult> resolveMetadata( RepositorySystemSession session,
+                                          Collection<? extends MetadataRequest> requests );
 
 }

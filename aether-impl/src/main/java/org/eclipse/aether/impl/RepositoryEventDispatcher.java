@@ -14,6 +14,9 @@ import org.eclipse.aether.RepositoryEvent;
 
 /**
  * Dispatches repository events to registered listeners.
+ * 
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface RepositoryEventDispatcher
 {

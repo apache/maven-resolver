@@ -19,6 +19,8 @@ import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 
 /**
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface ArtifactResolver
 {
@@ -32,7 +34,8 @@ public interface ArtifactResolver
     /**
      * Resolves the paths for a collection of artifacts. Artifacts will be downloaded if necessary.
      */
-    List<ArtifactResult> resolveArtifacts( RepositorySystemSession session, Collection<? extends ArtifactRequest> requests )
+    List<ArtifactResult> resolveArtifacts( RepositorySystemSession session,
+                                           Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException;
 
 }
