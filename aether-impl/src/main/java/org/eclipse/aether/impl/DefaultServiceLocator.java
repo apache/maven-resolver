@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.aether.impl;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -161,7 +163,12 @@ public class DefaultServiceLocator
                     {
                         try
                         {
-                            Object obj = impl.newInstance();
+                            Constructor<?> constr = impl.getDeclaredConstructor();
+                            if ( !Modifier.isPublic( constr.getModifiers() ) )
+                            {
+                                constr.setAccessible( true );
+                            }
+                            Object obj = constr.newInstance();
                             objs.add( type.cast( obj ) );
                         }
                         catch ( Exception e )
