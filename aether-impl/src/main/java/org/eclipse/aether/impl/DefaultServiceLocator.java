@@ -175,6 +175,10 @@ public class DefaultServiceLocator
                         {
                             serviceCreationFailed( type, impl, e );
                         }
+                        catch ( LinkageError e )
+                        {
+                            serviceCreationFailed( type, impl, e );
+                        }
                     }
                     it = objs.iterator();
                     objs = Collections.unmodifiableList( objs );
@@ -192,6 +196,11 @@ public class DefaultServiceLocator
                             ( (Service) obj ).initService( this );
                         }
                         catch ( Exception e )
+                        {
+                            it.remove();
+                            serviceCreationFailed( type, obj.getClass(), e );
+                        }
+                        catch ( LinkageError e )
                         {
                             it.remove();
                             serviceCreationFailed( type, obj.getClass(), e );
