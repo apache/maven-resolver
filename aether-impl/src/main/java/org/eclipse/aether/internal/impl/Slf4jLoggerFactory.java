@@ -23,6 +23,32 @@ public class Slf4jLoggerFactory
     implements LoggerFactory, Service
 {
 
+    private static final boolean AVAILABLE;
+
+    static
+    {
+        boolean available;
+        try
+        {
+            Class.forName( "org.slf4j.ILoggerFactory" );
+            available = true;
+        }
+        catch ( Exception e )
+        {
+            available = false;
+        }
+        catch ( LinkageError e )
+        {
+            available = false;
+        }
+        AVAILABLE = available;
+    }
+
+    public static boolean isSlf4jAvailable()
+    {
+        return AVAILABLE;
+    }
+
     private ILoggerFactory factory;
 
     @SuppressWarnings( "unused" )

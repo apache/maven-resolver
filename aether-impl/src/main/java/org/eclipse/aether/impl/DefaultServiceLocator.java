@@ -37,10 +37,12 @@ import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
+import org.eclipse.aether.internal.impl.Slf4jLoggerFactory;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.spi.log.LoggerFactory;
 
 /**
  * A simple service locator that is already setup with all components from this library. To acquire a complete
@@ -77,6 +79,10 @@ public class DefaultServiceLocator
         addService( LocalRepositoryProvider.class, DefaultLocalRepositoryProvider.class );
         addService( LocalRepositoryManagerFactory.class, SimpleLocalRepositoryManagerFactory.class );
         addService( LocalRepositoryManagerFactory.class, EnhancedLocalRepositoryManagerFactory.class );
+        if ( Slf4jLoggerFactory.isSlf4jAvailable() )
+        {
+            addService( LoggerFactory.class, Slf4jLoggerFactory.class );
+        }
     }
 
     /**
