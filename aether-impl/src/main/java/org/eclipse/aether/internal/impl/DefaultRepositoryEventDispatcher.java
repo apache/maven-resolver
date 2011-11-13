@@ -11,7 +11,9 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -34,16 +36,16 @@ public class DefaultRepositoryEventDispatcher
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement( role = RepositoryListener.class )
-    private List<RepositoryListener> listeners = new ArrayList<RepositoryListener>();
+    private Collection<RepositoryListener> listeners = new ArrayList<RepositoryListener>();
 
     public DefaultRepositoryEventDispatcher()
     {
         // enables no-arg constructor
     }
 
-    public DefaultRepositoryEventDispatcher( List<RepositoryListener> listeners )
+    public DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
     {
-        setListeners( listeners );
+        setRepositoryListeners( listeners );
     }
 
     public DefaultRepositoryEventDispatcher setLogger( Logger logger )
@@ -52,7 +54,7 @@ public class DefaultRepositoryEventDispatcher
         return this;
     }
 
-    public DefaultRepositoryEventDispatcher addListener( RepositoryListener listener )
+    public DefaultRepositoryEventDispatcher addRepositoryListener( RepositoryListener listener )
     {
         if ( listener == null )
         {
@@ -62,7 +64,7 @@ public class DefaultRepositoryEventDispatcher
         return this;
     }
 
-    public DefaultRepositoryEventDispatcher setListeners( List<RepositoryListener> listeners )
+    public DefaultRepositoryEventDispatcher setRepositoryListeners( Collection<RepositoryListener> listeners )
     {
         if ( listeners == null )
         {
@@ -73,6 +75,12 @@ public class DefaultRepositoryEventDispatcher
             this.listeners = listeners;
         }
         return this;
+    }
+
+    DefaultRepositoryEventDispatcher setListeners( List<RepositoryListener> listeners )
+    {
+        // plexus support
+        return setRepositoryListeners( listeners );
     }
 
     public void initService( ServiceLocator locator )

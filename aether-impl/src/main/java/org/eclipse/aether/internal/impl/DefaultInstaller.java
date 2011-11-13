@@ -12,8 +12,10 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -60,7 +62,7 @@ public class DefaultInstaller
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
     @Requirement( role = MetadataGeneratorFactory.class )
-    private List<MetadataGeneratorFactory> metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<MetadataGeneratorFactory>();
 
     @Requirement
     private SyncContextFactory syncContextFactory;
@@ -71,11 +73,11 @@ public class DefaultInstaller
     }
 
     public DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
-                             List<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
+                             Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
-        setMetadataFactories( metadataFactories );
+        setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
     }
 
@@ -84,7 +86,7 @@ public class DefaultInstaller
         setLogger( locator.getService( Logger.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setMetadataFactories( locator.getServices( MetadataGeneratorFactory.class ) );
+        setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
@@ -124,7 +126,7 @@ public class DefaultInstaller
         return this;
     }
 
-    public DefaultInstaller setMetadataFactories( List<MetadataGeneratorFactory> metadataFactories )
+    public DefaultInstaller setMetadataGeneratorFactories( Collection<MetadataGeneratorFactory> metadataFactories )
     {
         if ( metadataFactories == null )
         {
@@ -135,6 +137,12 @@ public class DefaultInstaller
             this.metadataFactories = metadataFactories;
         }
         return this;
+    }
+
+    DefaultInstaller setMetadataFactories( List<MetadataGeneratorFactory> metadataFactories )
+    {
+        // plexus support
+        return setMetadataGeneratorFactories( metadataFactories );
     }
 
     public DefaultInstaller setSyncContextFactory( SyncContextFactory syncContextFactory )

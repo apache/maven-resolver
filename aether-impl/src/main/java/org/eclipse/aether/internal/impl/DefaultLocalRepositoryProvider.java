@@ -11,10 +11,12 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -39,7 +41,7 @@ public class DefaultLocalRepositoryProvider
     private Logger logger = NullLogger.INSTANCE;
 
     @Requirement( role = LocalRepositoryManagerFactory.class )
-    private List<LocalRepositoryManagerFactory> managerFactories = new ArrayList<LocalRepositoryManagerFactory>();
+    private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<LocalRepositoryManagerFactory>();
 
     private static final Comparator<LocalRepositoryManagerFactory> COMPARATOR =
         new Comparator<LocalRepositoryManagerFactory>()
@@ -57,6 +59,11 @@ public class DefaultLocalRepositoryProvider
         // enables default constructor
     }
 
+    public DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
+    {
+        setLocalRepositoryManagerFactories( factories );
+    }
+
     public void initService( ServiceLocator locator )
     {
         setLogger( locator.getService( Logger.class ) );
@@ -69,7 +76,17 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories( List<LocalRepositoryManagerFactory> factories )
+    public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )
+    {
+        if ( factory == null )
+        {
+            throw new IllegalArgumentException( "Local repository manager factory has not been specified." );
+        }
+        managerFactories.add( factory );
+        return this;
+    }
+
+    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories( Collection<LocalRepositoryManagerFactory> factories )
     {
         if ( factories == null )
         {
@@ -82,14 +99,10 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )
+    DefaultLocalRepositoryProvider setManagerFactories( List<LocalRepositoryManagerFactory> factories )
     {
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "Local repository manager factory has not been specified." );
-        }
-        managerFactories.add( factory );
-        return this;
+        // plexus support
+        return setLocalRepositoryManagerFactories( factories );
     }
 
     public LocalRepositoryManager newLocalRepositoryManager( LocalRepository localRepository )

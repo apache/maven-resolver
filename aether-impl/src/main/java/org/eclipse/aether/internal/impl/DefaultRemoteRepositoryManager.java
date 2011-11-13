@@ -11,10 +11,12 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -51,7 +53,7 @@ public class DefaultRemoteRepositoryManager
     private UpdateCheckManager updateCheckManager;
 
     @Requirement( role = RepositoryConnectorFactory.class )
-    private List<RepositoryConnectorFactory> connectorFactories = new ArrayList<RepositoryConnectorFactory>();
+    private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<RepositoryConnectorFactory>();
 
     private static final Comparator<RepositoryConnectorFactory> COMPARATOR =
         new Comparator<RepositoryConnectorFactory>()
@@ -70,7 +72,7 @@ public class DefaultRemoteRepositoryManager
     }
 
     public DefaultRemoteRepositoryManager( UpdateCheckManager updateCheckManager,
-                                           List<RepositoryConnectorFactory> connectorFactories )
+                                           Set<RepositoryConnectorFactory> connectorFactories )
     {
         setUpdateCheckManager( updateCheckManager );
         setRepositoryConnectorFactories( connectorFactories );
@@ -109,7 +111,7 @@ public class DefaultRemoteRepositoryManager
         return this;
     }
 
-    public DefaultRemoteRepositoryManager setRepositoryConnectorFactories( List<RepositoryConnectorFactory> factories )
+    public DefaultRemoteRepositoryManager setRepositoryConnectorFactories( Collection<RepositoryConnectorFactory> factories )
     {
         if ( factories == null )
         {
@@ -120,6 +122,12 @@ public class DefaultRemoteRepositoryManager
             this.connectorFactories = factories;
         }
         return this;
+    }
+
+    DefaultRemoteRepositoryManager setConnectorFactories( List<RepositoryConnectorFactory> factories )
+    {
+        // plexus support
+        return setRepositoryConnectorFactories( factories );
     }
 
     public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
