@@ -173,15 +173,16 @@ public class TestFileUtils
 
     private static void delete( File file, Collection<File> undeletables )
     {
-        if ( file.isDirectory() )
+        String[] children = file.list();
+        if ( children != null )
         {
-            for ( String child : file.list() )
+            for ( String child : children )
             {
                 delete( new File( file, child ), undeletables );
             }
         }
 
-        if ( !file.delete() && file.exists() )
+        if ( !file.delete() && file.exists() && !file.delete() && file.exists() )
         {
             undeletables.add( file.getAbsoluteFile() );
         }
