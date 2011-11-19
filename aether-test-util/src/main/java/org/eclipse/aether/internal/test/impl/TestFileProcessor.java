@@ -86,11 +86,20 @@ public class TestFileProcessor
             {
                 fos.write( data.getBytes( "UTF-8" ) );
             }
+
+            // allow output to report any flush/close errors
+            fos.close();
         }
         finally
         {
             close( fos );
         }
+    }
+
+    public void copy( File source, File target )
+        throws IOException
+    {
+        copy( source, target, null );
     }
 
     public long copy( File source, File target, ProgressListener listener )
@@ -137,6 +146,9 @@ public class TestFileProcessor
                     }
                 }
             }
+
+            // allow output to report any flush/close errors
+            fos.close();
         }
         finally
         {
@@ -154,7 +166,7 @@ public class TestFileProcessor
 
         if ( !source.renameTo( target ) )
         {
-            copy( source, target, null );
+            copy( source, target );
 
             target.setLastModified( source.lastModified() );
 

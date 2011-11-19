@@ -56,7 +56,7 @@ public class DefaultFileProcessorTest
         File file = TestFileUtils.createTempFile( "testCopy\nasdf" );
         File target = new File( targetDir, "testCopy.txt" );
 
-        fileProcessor.copy( file, target, null );
+        fileProcessor.copy( file, target );
 
         TestFileUtils.assertContent( "testCopy\nasdf".getBytes( "UTF-8" ), file );
 
@@ -72,7 +72,7 @@ public class DefaultFileProcessorTest
         for ( int i = 0; i < 5; i++ )
         {
             File target = new File( targetDir, "testCopy.txt" );
-            fileProcessor.copy( file, target, null );
+            fileProcessor.copy( file, target );
             TestFileUtils.assertContent( "testCopy\nasdf".getBytes( "UTF-8" ), file );
         }
 
@@ -86,7 +86,7 @@ public class DefaultFileProcessorTest
         File file = TestFileUtils.createTempFile( "" );
         File target = new File( targetDir, "testCopyEmptyFile" );
         target.delete();
-        fileProcessor.copy( file, target, null );
+        fileProcessor.copy( file, target );
         assertTrue( "empty file was not copied", target.exists() && target.length() == 0 );
         target.delete();
     }

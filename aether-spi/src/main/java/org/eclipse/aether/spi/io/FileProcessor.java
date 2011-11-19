@@ -35,11 +35,34 @@ public interface FileProcessor
      * Writes the given data to a file. UTF-8 is assumed as encoding for the data. Creates the necessary directories for
      * the target file. In case of an error, the created directories will be left on the file system.
      * 
-     * @param file The file to write to, must not be {@code null}. This file will be overwritten.
+     * @param target The file to write to, must not be {@code null}. This file will be overwritten.
      * @param data The data to write, may be {@code null}.
      * @throws IOException If an I/O error occurs.
      */
-    void write( File file, String data )
+    void write( File target, String data )
+        throws IOException;
+
+    /**
+     * Moves the specified source file to the given target file. If the target file already exists, it is overwritten.
+     * Creates the necessary directories for the target file. In case of an error, the created directories will be left
+     * on the file system.
+     * 
+     * @param source The file to move from, must not be {@code null}.
+     * @param target The file to move to, must not be {@code null}.
+     * @throws IOException If an I/O error occurs.
+     */
+    void move( File source, File target )
+        throws IOException;
+
+    /**
+     * Copies the specified source file to the given target file. Creates the necessary directories for the target file.
+     * In case of an error, the created directories will be left on the file system.
+     * 
+     * @param source The file to copy from, must not be {@code null}.
+     * @param target The file to copy to, must not be {@code null}.
+     * @throws IOException If an I/O error occurs.
+     */
+    void copy( File source, File target )
         throws IOException;
 
     /**
@@ -53,18 +76,6 @@ public interface FileProcessor
      * @throws IOException If an I/O error occurs.
      */
     long copy( File source, File target, ProgressListener listener )
-        throws IOException;
-
-    /**
-     * Moves the specified source file to the given target file. If the target file already exists, it is overwritten.
-     * Creates the necessary directories for the target file. In case of an error, the created directories will be left
-     * on the file system.
-     * 
-     * @param source The file to move from, must not be {@code null}.
-     * @param target The file to move to, must not be {@code null}.
-     * @throws IOException If an I/O error occurs.
-     */
-    void move( File source, File target )
         throws IOException;
 
     /**

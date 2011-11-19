@@ -277,7 +277,7 @@ public class DefaultInstaller
 
             if ( copy )
             {
-                fileProcessor.copy( srcFile, dstFile, null );
+                fileProcessor.copy( srcFile, dstFile );
                 dstFile.setLastModified( srcFile.lastModified() );
             }
             else
@@ -316,7 +316,7 @@ public class DefaultInstaller
             }
             else
             {
-                fileProcessor.copy( metadata.getFile(), dstFile, null );
+                fileProcessor.copy( metadata.getFile(), dstFile );
             }
 
             lrm.add( session, new LocalMetadataRegistration( metadata ) );

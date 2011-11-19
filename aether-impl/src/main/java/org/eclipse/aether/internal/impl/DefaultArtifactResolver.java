@@ -583,7 +583,7 @@ public class DefaultArtifactResolver
             {
                 try
                 {
-                    fileProcessor.copy( file, dst, null );
+                    fileProcessor.copy( file, dst );
                     dst.setLastModified( file.lastModified() );
                 }
                 catch ( IOException e )

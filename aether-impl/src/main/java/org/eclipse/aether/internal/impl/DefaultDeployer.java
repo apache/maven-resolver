@@ -435,7 +435,7 @@ public class DefaultDeployer
             }
             try
             {
-                fileProcessor.copy( metadata.getFile(), dstFile, null );
+                fileProcessor.copy( metadata.getFile(), dstFile );
             }
             catch ( IOException e )
             {
