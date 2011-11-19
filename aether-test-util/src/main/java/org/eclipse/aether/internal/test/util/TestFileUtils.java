@@ -182,10 +182,22 @@ public class TestFileUtils
             }
         }
 
-        if ( !file.delete() && file.exists() && !file.delete() && file.exists() )
+        if ( !del( file ) )
         {
             undeletables.add( file.getAbsoluteFile() );
         }
+    }
+
+    private static boolean del( File file )
+    {
+        for ( int i = 0; i < 10; i++ )
+        {
+            if ( file.delete() || !file.exists() )
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static byte[] getContent( File file )
