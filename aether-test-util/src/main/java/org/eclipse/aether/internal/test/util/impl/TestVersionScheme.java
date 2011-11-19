@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.test.util.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
@@ -38,14 +41,14 @@ public class TestVersionScheme
     public VersionConstraint parseVersionConstraint( final String constraint )
         throws InvalidVersionSpecificationException
     {
-        TestVersionConstraint result = new TestVersionConstraint();
+        Collection<VersionRange> ranges = new ArrayList<VersionRange>();
 
         String process = constraint;
 
         while ( process.startsWith( "[" ) || process.startsWith( "(" ) )
         {
-            int index1 = process.indexOf( ")" );
-            int index2 = process.indexOf( "]" );
+            int index1 = process.indexOf( ')' );
+            int index2 = process.indexOf( ']' );
 
             int index = index2;
             if ( index2 < 0 || ( index1 >= 0 && index1 < index2 ) )
@@ -59,7 +62,7 @@ public class TestVersionScheme
             }
 
             VersionRange range = parseVersionRange( process.substring( 0, index + 1 ) );
-            result.addRange( range );
+            ranges.add( range );
 
             process = process.substring( index + 1 ).trim();
 
@@ -69,15 +72,20 @@ public class TestVersionScheme
             }
         }
 
-        if ( process.length() > 0 && !result.getRanges().isEmpty() )
+        if ( process.length() > 0 && !ranges.isEmpty() )
         {
             throw new InvalidVersionSpecificationException( constraint, "Invalid version range " + constraint
                 + ", expected [ or ( but got " + process );
         }
 
-        if ( result.getRanges().isEmpty() )
+        VersionConstraint result;
+        if ( ranges.isEmpty() )
         {
-            result.setVersion( parseVersion( constraint ) );
+            result = new TestVersionConstraint( parseVersion( constraint ) );
+        }
+        else
+        {
+            result = new TestVersionConstraint( ranges.iterator().next() );
         }
 
         return result;

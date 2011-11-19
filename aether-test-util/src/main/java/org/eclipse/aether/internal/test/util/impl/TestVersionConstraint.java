@@ -10,9 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.test.util.impl;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionRange;
@@ -24,41 +21,43 @@ final class TestVersionConstraint
     implements VersionConstraint
 {
 
-    private Collection<VersionRange> ranges = new HashSet<VersionRange>();
+    private final VersionRange range;
 
-    private Version version;
+    private final Version version;
 
     /**
-     * Adds the specified version range to this constraint. All versions matched by the given range satisfy this
-     * constraint.
+     * Creates a version constraint from the specified version range.
      * 
-     * @param range The version range to add, may be {@code null}.
-     * @return This constraint for chaining, never {@code null}.
+     * @param range The version range, must not be {@code null}.
      */
-    public TestVersionConstraint addRange( VersionRange range )
+    public TestVersionConstraint( VersionRange range )
     {
-        if ( range != null )
+        if ( range == null )
         {
-            ranges.add( range );
+            throw new IllegalArgumentException( "version range missing" );
         }
-        return this;
-    }
-
-    public Collection<VersionRange> getRanges()
-    {
-        return ranges;
+        this.range = range;
+        this.version = null;
     }
 
     /**
-     * Sets the recommended version to satisfy this constraint.
+     * Creates a version constraint from the specified version.
      * 
-     * @param version The recommended version for this constraint, may be {@code null} if none.
-     * @return This constraint for chaining, never {@code null}.
+     * @param version The version, must not be {@code null}.
      */
-    public TestVersionConstraint setVersion( Version version )
+    public TestVersionConstraint( Version version )
     {
+        if ( version == null )
+        {
+            throw new IllegalArgumentException( "version missing" );
+        }
         this.version = version;
-        return this;
+        this.range = null;
+    }
+
+    public VersionRange getRange()
+    {
+        return range;
     }
 
     public Version getVersion()
@@ -68,43 +67,20 @@ final class TestVersionConstraint
 
     public boolean containsVersion( Version version )
     {
-        if ( ranges.isEmpty() )
+        if ( range == null )
         {
             return version.equals( this.version );
         }
         else
         {
-            for ( VersionRange range : ranges )
-            {
-                if ( range.containsVersion( version ) )
-                {
-                    return true;
-                }
-            }
-            return false;
+            return range.containsVersion( version );
         }
     }
 
     @Override
     public String toString()
     {
-        StringBuilder buffer = new StringBuilder( 128 );
-
-        for ( VersionRange range : getRanges() )
-        {
-            if ( buffer.length() > 0 )
-            {
-                buffer.append( "," );
-            }
-            buffer.append( range );
-        }
-
-        if ( buffer.length() <= 0 )
-        {
-            buffer.append( getVersion() );
-        }
-
-        return buffer.toString();
+        return String.valueOf( ( range == null ) ? version : range );
     }
 
     @Override
@@ -121,7 +97,7 @@ final class TestVersionConstraint
 
         TestVersionConstraint that = (TestVersionConstraint) obj;
 
-        return ranges.equals( that.getRanges() ) && eq( version, that.getVersion() );
+        return eq( range, that.range ) && eq( version, that.getVersion() );
     }
 
     private static <T> boolean eq( T s1, T s2 )
@@ -133,7 +109,7 @@ final class TestVersionConstraint
     public int hashCode()
     {
         int hash = 17;
-        hash = hash * 31 + hash( getRanges() );
+        hash = hash * 31 + hash( getRange() );
         hash = hash * 31 + hash( getVersion() );
         return hash;
     }

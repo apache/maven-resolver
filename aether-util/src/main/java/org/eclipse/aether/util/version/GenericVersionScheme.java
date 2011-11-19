@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.util.version;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
@@ -54,7 +57,7 @@ public final class GenericVersionScheme
     public VersionConstraint parseVersionConstraint( final String constraint )
         throws InvalidVersionSpecificationException
     {
-        GenericVersionConstraint result = new GenericVersionConstraint();
+        Collection<VersionRange> ranges = new ArrayList<VersionRange>();
 
         String process = constraint;
 
@@ -75,7 +78,7 @@ public final class GenericVersionScheme
             }
 
             VersionRange range = parseVersionRange( process.substring( 0, index + 1 ) );
-            result.addRange( range );
+            ranges.add( range );
 
             process = process.substring( index + 1 ).trim();
 
@@ -85,15 +88,20 @@ public final class GenericVersionScheme
             }
         }
 
-        if ( process.length() > 0 && !result.getRanges().isEmpty() )
+        if ( process.length() > 0 && !ranges.isEmpty() )
         {
             throw new InvalidVersionSpecificationException( constraint, "Invalid version range " + constraint
                 + ", expected [ or ( but got " + process );
         }
 
-        if ( result.getRanges().isEmpty() )
+        VersionConstraint result;
+        if ( ranges.isEmpty() )
         {
-            result.setVersion( parseVersion( constraint ) );
+            result = new GenericVersionConstraint( parseVersion( constraint ) );
+        }
+        else
+        {
+            result = new GenericVersionConstraint( UnionVersionRange.from( ranges ) );
         }
 
         return result;

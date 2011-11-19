@@ -97,7 +97,7 @@ public final class NearestVersionConflictResolver
             VersionConstraint constraint = node.getVersionConstraint();
 
             boolean backtrack = false;
-            boolean hardConstraint = !constraint.getRanges().isEmpty();
+            boolean hardConstraint = constraint.getRange() != null;
 
             if ( hardConstraint )
             {

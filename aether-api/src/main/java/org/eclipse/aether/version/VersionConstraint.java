@@ -10,22 +10,20 @@
  *******************************************************************************/
 package org.eclipse.aether.version;
 
-import java.util.Collection;
-
 /**
- * A constraint on versions for a dependency. A constraint can either consist of one or more version ranges or a single
- * version. In the first case, the constraint expresses a hard requirement on a version matching one of its ranges. In
- * the second case, the constraint expresses a soft requirement on a specific version (i.e. a recommendation).
+ * A constraint on versions for a dependency. A constraint can either consist of a version range or a single version. In
+ * the first case, the constraint expresses a hard requirement on a version matching the range. In the second case, the
+ * constraint expresses a soft requirement on a specific version (i.e. a recommendation).
  */
 public interface VersionConstraint
 {
 
     /**
-     * Gets the version ranges of this constraint.
+     * Gets the version range of this constraint.
      * 
-     * @return The version ranges, may be empty but never {@code null}.
+     * @return The version range or {@code null} if none.
      */
-    Collection<VersionRange> getRanges();
+    VersionRange getRange();
 
     /**
      * Gets the version recommended by this constraint.
@@ -36,8 +34,8 @@ public interface VersionConstraint
 
     /**
      * Determines whether the specified version satisfies this constraint. In more detail, a version satisfies this
-     * constraint if it matches at least one version range or if this constraint has no version ranges at all and the
-     * specified version equals the version recommended by the constraint.
+     * constraint if it matches its version range or if this constraint has no version range and the specified version
+     * equals the version recommended by the constraint.
      * 
      * @param version The version to test, must not be {@code null}.
      * @return {@code true} if the specified version satisfies this constraint, {@code false} otherwise.

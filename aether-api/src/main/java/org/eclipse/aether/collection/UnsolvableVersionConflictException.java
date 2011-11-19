@@ -76,7 +76,7 @@ public class UnsolvableVersionConflictException
             for ( List<DependencyNode> path : paths )
             {
                 VersionConstraint constraint = path.get( path.size() - 1 ).getVersionConstraint();
-                if ( constraint != null && !constraint.getRanges().isEmpty() )
+                if ( constraint != null && constraint.getRange() != null )
                 {
                     versions.add( constraint.toString() );
                 }
