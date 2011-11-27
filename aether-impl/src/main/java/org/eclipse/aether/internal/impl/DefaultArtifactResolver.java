@@ -97,10 +97,9 @@ public class DefaultArtifactResolver
         // enables default constructor
     }
 
-    public DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
-                                    VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
-                                    RemoteRepositoryManager remoteRepositoryManager,
-                                    SyncContextFactory syncContextFactory )
+    DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+                             VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
+                             RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );

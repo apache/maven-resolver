@@ -44,7 +44,7 @@ public class AsyncRepositoryConnectorFactory
     {
     }
 
-    public AsyncRepositoryConnectorFactory( FileProcessor fileProcessor )
+    AsyncRepositoryConnectorFactory( FileProcessor fileProcessor )
     {
         setFileProcessor( fileProcessor );
     }

@@ -90,10 +90,9 @@ public class DefaultMetadataResolver
         // enables default constructor
     }
 
-    public DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
-                                    UpdateCheckManager updateCheckManager,
-                                    RemoteRepositoryManager remoteRepositoryManager,
-                                    SyncContextFactory syncContextFactory )
+    DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
+                             UpdateCheckManager updateCheckManager, RemoteRepositoryManager remoteRepositoryManager,
+                             SyncContextFactory syncContextFactory )
     {
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setUpdateCheckManager( updateCheckManager );

@@ -73,8 +73,8 @@ public class DefaultInstaller
         // enables default constructor
     }
 
-    public DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
-                             Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
+    DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );

@@ -47,7 +47,7 @@ public class FileRepositoryConnectorFactory
         // enables default constructor
     }
 
-    public FileRepositoryConnectorFactory( FileProcessor fileProcessor )
+    FileRepositoryConnectorFactory( FileProcessor fileProcessor )
     {
         setFileProcessor( fileProcessor );
     }

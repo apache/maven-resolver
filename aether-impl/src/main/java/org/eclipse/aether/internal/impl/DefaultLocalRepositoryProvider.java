@@ -60,7 +60,7 @@ public class DefaultLocalRepositoryProvider
         // enables default constructor
     }
 
-    public DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
+    DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
     {
         setLocalRepositoryManagerFactories( factories );
     }

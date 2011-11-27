@@ -95,9 +95,9 @@ public class DefaultDeployer
         // enables default constructor
     }
 
-    public DefaultDeployer( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
-                            RemoteRepositoryManager remoteRepositoryManager, UpdateCheckManager updateCheckManager,
-                            Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
+    DefaultDeployer( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+                     RemoteRepositoryManager remoteRepositoryManager, UpdateCheckManager updateCheckManager,
+                     Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );

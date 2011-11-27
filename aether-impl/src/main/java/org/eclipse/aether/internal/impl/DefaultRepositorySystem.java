@@ -116,12 +116,11 @@ public class DefaultRepositorySystem
         // enables default constructor
     }
 
-    public DefaultRepositorySystem( VersionResolver versionResolver, VersionRangeResolver versionRangeResolver,
-                                    ArtifactResolver artifactResolver, MetadataResolver metadataResolver,
-                                    ArtifactDescriptorReader artifactDescriptorReader,
-                                    DependencyCollector dependencyCollector, Installer installer, Deployer deployer,
-                                    LocalRepositoryProvider localRepositoryProvider,
-                                    SyncContextFactory syncContextFactory )
+    DefaultRepositorySystem( VersionResolver versionResolver, VersionRangeResolver versionRangeResolver,
+                             ArtifactResolver artifactResolver, MetadataResolver metadataResolver,
+                             ArtifactDescriptorReader artifactDescriptorReader,
+                             DependencyCollector dependencyCollector, Installer installer, Deployer deployer,
+                             LocalRepositoryProvider localRepositoryProvider, SyncContextFactory syncContextFactory )
     {
         setVersionResolver( versionResolver );
         setVersionRangeResolver( versionRangeResolver );

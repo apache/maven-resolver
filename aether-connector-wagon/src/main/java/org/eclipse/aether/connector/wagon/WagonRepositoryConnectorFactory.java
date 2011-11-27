@@ -51,8 +51,8 @@ public class WagonRepositoryConnectorFactory
         // enables default constructor
     }
 
-    public WagonRepositoryConnectorFactory( FileProcessor fileProcessor, WagonProvider wagonProvider,
-                                            WagonConfigurator wagonConfigurator )
+    WagonRepositoryConnectorFactory( FileProcessor fileProcessor, WagonProvider wagonProvider,
+                                     WagonConfigurator wagonConfigurator )
     {
         setFileProcessor( fileProcessor );
         setWagonProvider( wagonProvider );

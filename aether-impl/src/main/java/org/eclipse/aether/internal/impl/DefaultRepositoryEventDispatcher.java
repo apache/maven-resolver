@@ -44,7 +44,7 @@ public class DefaultRepositoryEventDispatcher
         // enables no-arg constructor
     }
 
-    public DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
+    DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
     {
         setRepositoryListeners( listeners );
     }

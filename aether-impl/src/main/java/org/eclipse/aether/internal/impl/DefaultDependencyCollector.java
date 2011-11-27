@@ -78,9 +78,9 @@ public class DefaultDependencyCollector
         // enables default constructor
     }
 
-    public DefaultDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
-                                       ArtifactDescriptorReader artifactDescriptorReader,
-                                       VersionRangeResolver versionRangeResolver )
+    DefaultDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
+                                ArtifactDescriptorReader artifactDescriptorReader,
+                                VersionRangeResolver versionRangeResolver )
     {
         setRemoteRepositoryManager( remoteRepositoryManager );
         setArtifactDescriptorReader( artifactDescriptorReader );

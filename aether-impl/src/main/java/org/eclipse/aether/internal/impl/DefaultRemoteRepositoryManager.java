@@ -72,8 +72,8 @@ public class DefaultRemoteRepositoryManager
         // enables default constructor
     }
 
-    public DefaultRemoteRepositoryManager( UpdateCheckManager updateCheckManager,
-                                           Set<RepositoryConnectorFactory> connectorFactories )
+    DefaultRemoteRepositoryManager( UpdateCheckManager updateCheckManager,
+                                    Set<RepositoryConnectorFactory> connectorFactories )
     {
         setUpdateCheckManager( updateCheckManager );
         setRepositoryConnectorFactories( connectorFactories );
