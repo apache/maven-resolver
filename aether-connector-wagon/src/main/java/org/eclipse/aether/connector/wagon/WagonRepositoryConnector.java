@@ -889,7 +889,7 @@ class WagonRepositoryConnector
             }
             catch ( Exception e )
             {
-                logger.debug( "Failed to upload " + algo + " checksum for " + file + ": " + e.getMessage(), e );
+                logger.warn( "Failed to upload " + algo + " checksum for " + file + ": " + e.getMessage(), e );
             }
         }
 
