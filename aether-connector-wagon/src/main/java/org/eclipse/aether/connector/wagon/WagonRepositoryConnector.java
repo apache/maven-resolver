@@ -871,7 +871,9 @@ class WagonRepositoryConnector
 
                 if ( wagon instanceof StreamingWagon )
                 {
-                    ( (StreamingWagon) wagon ).putFromStream( new ByteArrayInputStream( sum.getBytes( "UTF-8" ) ), dst );
+                    // NOTE: Be sure to declare content length to avoid HTTP 411 from nginx (no chunked encoding)
+                    byte[] data = sum.getBytes( "UTF-8" );
+                    ( (StreamingWagon) wagon ).putFromStream( new ByteArrayInputStream( data ), dst, data.length, -1 );
                 }
                 else
                 {
