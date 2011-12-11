@@ -52,7 +52,8 @@ public class DefaultRemoteRepositoryManagerTest
         session = new TestRepositorySystemSession();
         session.setChecksumPolicy( null );
         session.setUpdatePolicy( null );
-        manager = new DefaultRemoteRepositoryManager( new StubUpdateCheckManager(), null );
+        manager = new DefaultRemoteRepositoryManager();
+        manager.setUpdateCheckManager( new StubUpdateCheckManager() );
         manager.setLoggerFactory( new SysoutLoggerFactory() );
     }
 

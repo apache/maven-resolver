@@ -64,7 +64,8 @@ public class ResumeGetTest
     public void before()
         throws Exception
     {
-        factory = new AsyncRepositoryConnectorFactory( new TestFileProcessor() );
+        factory = new AsyncRepositoryConnectorFactory();
+        factory.setFileProcessor( new TestFileProcessor() );
         factory.setLoggerFactory( new SysoutLoggerFactory() );
         session = new TestRepositorySystemSession();
         artifact = new StubArtifact( "gid", "aid", "classifier", "extension", "version" );

@@ -46,7 +46,9 @@ public class AetherDefaultTest
 
         public RepositoryConnectorFactory factory()
         {
-            return new AsyncRepositoryConnectorFactory( new TestFileProcessor() );
+            AsyncRepositoryConnectorFactory factory = new AsyncRepositoryConnectorFactory();
+            factory.setFileProcessor( new TestFileProcessor() );
+            return factory;
         }
 
         @Override

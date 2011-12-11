@@ -87,10 +87,13 @@ public class DefaultArtifactResolverTest
         VersionResolver versionResolver = new StubVersionResolver();
         session = new TestRepositorySystemSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
-        resolver =
-            new DefaultArtifactResolver( TestFileProcessor.INSTANCE, new StubRepositoryEventDispatcher(),
-                                         versionResolver, updateCheckManager, remoteRepositoryManager,
-                                         new StubSyncContextFactory() );
+        resolver = new DefaultArtifactResolver();
+        resolver.setFileProcessor( TestFileProcessor.INSTANCE );
+        resolver.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
+        resolver.setVersionResolver( versionResolver );
+        resolver.setUpdateCheckManager( updateCheckManager );
+        resolver.setRemoteRepositoryManager( remoteRepositoryManager );
+        resolver.setSyncContextFactory( new StubSyncContextFactory() );
 
         artifact = new StubArtifact( "gid", "aid", "", "ext", "ver" );
 

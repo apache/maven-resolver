@@ -69,7 +69,8 @@ public class AsyncConnectorSuiteConfiguration
     {
         super.before();
 
-        this.factory = new AsyncRepositoryConnectorFactory( new TestFileProcessor() );
+        this.factory = new AsyncRepositoryConnectorFactory();
+        this.factory.setFileProcessor( new TestFileProcessor() );
         this.session = new TestRepositorySystemSession();
         this.repository = new RemoteRepository( "async-test-repo", "default", url( "repo" ) );
 
