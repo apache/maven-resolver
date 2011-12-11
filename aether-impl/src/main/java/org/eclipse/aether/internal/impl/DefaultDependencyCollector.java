@@ -47,7 +47,7 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.util.DefaultRepositorySystemSession;
 import org.eclipse.aether.util.DefaultRequestTrace;
 import org.eclipse.aether.util.artifact.ArtifactProperties;
@@ -62,7 +62,7 @@ public class DefaultDependencyCollector
 
     @SuppressWarnings( "unused" )
     @Requirement( role = LoggerFactory.class )
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
@@ -97,7 +97,7 @@ public class DefaultDependencyCollector
 
     public DefaultDependencyCollector setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
+        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
     }
 

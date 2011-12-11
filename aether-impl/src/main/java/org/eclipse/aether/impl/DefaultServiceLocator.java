@@ -46,8 +46,8 @@ import org.eclipse.aether.spi.log.LoggerFactory;
 
 /**
  * A simple service locator that is already setup with all components from this library. To acquire a complete
- * repository system, clients need to add an artifact descriptor, a version resolver, a version range resolver and
- * optionally some repository connectors to access remote repositories.
+ * repository system, clients need to add an artifact descriptor reader, a version resolver, a version range resolver
+ * and optionally some repository connectors to access remote repositories.
  */
 public class DefaultServiceLocator
     implements ServiceLocator

@@ -20,7 +20,7 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  * Creates {@link EnhancedLocalRepositoryManager}s for repository types {@code "default"} or {@code "" (automatic)}.
@@ -31,7 +31,7 @@ public class EnhancedLocalRepositoryManagerFactory
 {
 
     @Requirement( role = LoggerFactory.class )
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     public LocalRepositoryManager newInstance( LocalRepository repository )
         throws NoLocalRepositoryManagerException
@@ -53,7 +53,7 @@ public class EnhancedLocalRepositoryManagerFactory
 
     public EnhancedLocalRepositoryManagerFactory setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = NullLogger.getIfNull( loggerFactory, EnhancedLocalRepositoryManager.class );
+        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, EnhancedLocalRepositoryManager.class );
         return this;
     }
 

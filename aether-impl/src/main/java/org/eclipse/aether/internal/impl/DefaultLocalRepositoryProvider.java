@@ -29,7 +29,7 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  */
@@ -39,7 +39,7 @@ public class DefaultLocalRepositoryProvider
 {
 
     @Requirement( role = LoggerFactory.class )
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     @Requirement( role = LocalRepositoryManagerFactory.class )
     private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<LocalRepositoryManagerFactory>();
@@ -73,7 +73,7 @@ public class DefaultLocalRepositoryProvider
 
     public DefaultLocalRepositoryProvider setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
+        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
     }
 

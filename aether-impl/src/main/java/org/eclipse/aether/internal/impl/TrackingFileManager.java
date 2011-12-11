@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  * Manages potentially concurrent accesses to a properties file.
@@ -32,11 +32,11 @@ import org.eclipse.aether.spi.log.NullLogger;
 class TrackingFileManager
 {
 
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     public TrackingFileManager setLogger( Logger logger )
     {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+        this.logger = ( logger != null ) ? logger : NullLoggerFactory.LOGGER;
         return this;
     }
 

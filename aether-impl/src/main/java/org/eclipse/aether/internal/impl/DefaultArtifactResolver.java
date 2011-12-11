@@ -55,7 +55,7 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -72,7 +72,7 @@ public class DefaultArtifactResolver
 {
 
     @Requirement( role = LoggerFactory.class )
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     @Requirement
     private FileProcessor fileProcessor;
@@ -122,7 +122,7 @@ public class DefaultArtifactResolver
 
     public DefaultArtifactResolver setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = NullLogger.getIfNull( loggerFactory, getClass() );
+        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
     }
 

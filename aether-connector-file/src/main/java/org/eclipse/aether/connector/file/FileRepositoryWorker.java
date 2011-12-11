@@ -36,7 +36,7 @@ import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.connector.Transfer.State;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.ChecksumFailureException;
@@ -58,7 +58,7 @@ class FileRepositoryWorker
     implements Runnable
 {
 
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     private FileProcessor fileProcessor;
 

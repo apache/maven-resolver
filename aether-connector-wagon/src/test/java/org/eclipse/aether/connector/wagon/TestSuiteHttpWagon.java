@@ -24,7 +24,7 @@ import org.eclipse.aether.internal.test.util.connector.suite.ConnectorTestSetup.
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.sonatype.tests.http.server.jetty.behaviour.ResourceServer;
 import org.sonatype.tests.http.server.jetty.impl.JettyServerProvider;
@@ -80,7 +80,7 @@ public class TestSuiteHttpWagon
                             return new LightweightHttpWagon();
                         }
 
-                    }, null, repository, session, TestFileProcessor.INSTANCE, NullLogger.INSTANCE );
+                    }, null, repository, session, TestFileProcessor.INSTANCE, NullLoggerFactory.LOGGER );
                 }
 
                 public float getPriority()

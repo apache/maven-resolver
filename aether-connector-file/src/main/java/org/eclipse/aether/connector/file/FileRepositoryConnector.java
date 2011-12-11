@@ -22,7 +22,7 @@ import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 
@@ -38,7 +38,7 @@ class FileRepositoryConnector
 
     private RepositorySystemSession session;
 
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     private FileProcessor fileProcessor;
 

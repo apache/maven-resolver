@@ -21,7 +21,7 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLogger;
+import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
@@ -33,7 +33,7 @@ public class AsyncRepositoryConnectorFactory
 {
 
     @Requirement( role = LoggerFactory.class )
-    private Logger logger = NullLogger.INSTANCE;
+    private Logger logger = NullLoggerFactory.LOGGER;
 
     @Requirement
     private FileProcessor fileProcessor;
@@ -63,7 +63,7 @@ public class AsyncRepositoryConnectorFactory
      */
     public AsyncRepositoryConnectorFactory setLoggerFactory( LoggerFactory loggerFactory )
     {
-        this.logger = NullLogger.getIfNull( loggerFactory, AsyncRepositoryConnector.class );
+        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, AsyncRepositoryConnector.class );
         return this;
     }
 
