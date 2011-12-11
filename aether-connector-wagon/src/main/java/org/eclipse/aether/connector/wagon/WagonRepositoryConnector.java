@@ -891,7 +891,15 @@ class WagonRepositoryConnector
             }
             catch ( Exception e )
             {
-                logger.warn( "Failed to upload " + algo + " checksum for " + file + ": " + e.getMessage(), e );
+                String msg = "Failed to upload " + algo + " checksum for " + file + ": " + e.getMessage();
+                if ( logger.isDebugEnabled() )
+                {
+                    logger.warn( msg, e );
+                }
+                else
+                {
+                    logger.warn( msg );
+                }
             }
         }
 
