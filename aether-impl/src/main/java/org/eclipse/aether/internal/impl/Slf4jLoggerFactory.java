@@ -55,34 +55,40 @@ public class Slf4jLoggerFactory
 
     private ILoggerFactory factory;
 
-    @SuppressWarnings( "unused" )
-    private Slf4jLoggerFactory()
+    public Slf4jLoggerFactory()
     {
-        // enables no-arg constructor for service locator support
+        // enables no-arg constructor
     }
 
     @Inject
-    public Slf4jLoggerFactory( ILoggerFactory factory )
+    Slf4jLoggerFactory( ILoggerFactory factory )
     {
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "logger factory not specified" );
-        }
-        this.factory = factory;
+        setLoggerFactory( factory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        factory = locator.getService( ILoggerFactory.class );
-        if ( factory == null )
-        {
-            factory = org.slf4j.LoggerFactory.getILoggerFactory();
-        }
+        setLoggerFactory( locator.getService( ILoggerFactory.class ) );
+    }
+
+    public Slf4jLoggerFactory setLoggerFactory( ILoggerFactory factory )
+    {
+        this.factory = factory;
+        return this;
     }
 
     public Logger getLogger( String name )
     {
-        return new Slf4jLogger( factory.getLogger( name ) );
+        return new Slf4jLogger( getFactory().getLogger( name ) );
+    }
+
+    private ILoggerFactory getFactory()
+    {
+        if ( factory == null )
+        {
+            factory = org.slf4j.LoggerFactory.getILoggerFactory();
+        }
+        return factory;
     }
 
     private static final class Slf4jLogger
