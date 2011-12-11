@@ -19,6 +19,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -66,6 +69,7 @@ import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
  */
+@Named
 @Component( role = ArtifactResolver.class )
 public class DefaultArtifactResolver
     implements ArtifactResolver, Service
@@ -97,9 +101,11 @@ public class DefaultArtifactResolver
         // enables default constructor
     }
 
+    @Inject
     DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
-                             RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory )
+                             RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
+                             LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -107,6 +113,7 @@ public class DefaultArtifactResolver
         setUpdateCheckManager( updateCheckManager );
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

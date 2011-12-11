@@ -13,6 +13,9 @@ package org.eclipse.aether.internal.impl;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystem;
@@ -72,6 +75,7 @@ import org.eclipse.aether.util.graph.TreeDependencyVisitor;
 
 /**
  */
+@Named
 @Component( role = RepositorySystem.class )
 public class DefaultRepositorySystem
     implements RepositorySystem, Service
@@ -116,11 +120,13 @@ public class DefaultRepositorySystem
         // enables default constructor
     }
 
+    @Inject
     DefaultRepositorySystem( VersionResolver versionResolver, VersionRangeResolver versionRangeResolver,
                              ArtifactResolver artifactResolver, MetadataResolver metadataResolver,
                              ArtifactDescriptorReader artifactDescriptorReader,
                              DependencyCollector dependencyCollector, Installer installer, Deployer deployer,
-                             LocalRepositoryProvider localRepositoryProvider, SyncContextFactory syncContextFactory )
+                             LocalRepositoryProvider localRepositoryProvider, SyncContextFactory syncContextFactory,
+                             LoggerFactory loggerFactory )
     {
         setVersionResolver( versionResolver );
         setVersionRangeResolver( versionRangeResolver );
@@ -132,6 +138,7 @@ public class DefaultRepositorySystem
         setDeployer( deployer );
         setLocalRepositoryProvider( localRepositoryProvider );
         setSyncContextFactory( syncContextFactory );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

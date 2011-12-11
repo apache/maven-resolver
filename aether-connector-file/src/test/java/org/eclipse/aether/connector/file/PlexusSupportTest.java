@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.file;
 
+import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.PlexusTestCase;
 import org.eclipse.aether.connector.file.FileRepositoryConnectorFactory;
 import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
@@ -23,6 +24,12 @@ import org.eclipse.aether.spi.log.LoggerFactory;
 public class PlexusSupportTest
     extends PlexusTestCase
 {
+
+    @Override
+    protected void customizeContainerConfiguration( ContainerConfiguration containerConfiguration )
+    {
+        containerConfiguration.setClassPathScanning( "cache" );
+    }
 
     public void testExistenceOfPlexusComponentMetadata()
         throws Exception

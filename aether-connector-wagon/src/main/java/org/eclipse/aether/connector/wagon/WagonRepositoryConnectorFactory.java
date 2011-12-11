@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.wagon;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -27,8 +30,9 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 /**
  * A repository connector factory that uses Maven Wagon for the transfers.
  */
+@Named
 @Component( role = RepositoryConnectorFactory.class, hint = "wagon" )
-public class WagonRepositoryConnectorFactory
+public final class WagonRepositoryConnectorFactory
     implements RepositoryConnectorFactory, Service
 {
 
@@ -51,12 +55,14 @@ public class WagonRepositoryConnectorFactory
         // enables default constructor
     }
 
+    @Inject
     WagonRepositoryConnectorFactory( FileProcessor fileProcessor, WagonProvider wagonProvider,
-                                     WagonConfigurator wagonConfigurator )
+                                     WagonConfigurator wagonConfigurator, LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
         setWagonProvider( wagonProvider );
         setWagonConfigurator( wagonConfigurator );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

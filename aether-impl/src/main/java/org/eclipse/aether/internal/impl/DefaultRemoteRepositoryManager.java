@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -42,6 +45,7 @@ import org.eclipse.aether.util.StringUtils;
 
 /**
  */
+@Named
 @Component( role = RemoteRepositoryManager.class, hint = "default" )
 public class DefaultRemoteRepositoryManager
     implements RemoteRepositoryManager, Service
@@ -72,11 +76,13 @@ public class DefaultRemoteRepositoryManager
         // enables default constructor
     }
 
+    @Inject
     DefaultRemoteRepositoryManager( UpdateCheckManager updateCheckManager,
-                                    Set<RepositoryConnectorFactory> connectorFactories )
+                                    Set<RepositoryConnectorFactory> connectorFactories, LoggerFactory loggerFactory )
     {
         setUpdateCheckManager( updateCheckManager );
         setRepositoryConnectorFactories( connectorFactories );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

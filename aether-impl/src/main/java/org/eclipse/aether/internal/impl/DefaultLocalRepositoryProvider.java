@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
@@ -33,6 +36,7 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  */
+@Named
 @Component( role = LocalRepositoryProvider.class )
 public class DefaultLocalRepositoryProvider
     implements LocalRepositoryProvider, Service
@@ -60,9 +64,11 @@ public class DefaultLocalRepositoryProvider
         // enables default constructor
     }
 
-    DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
+    @Inject
+    DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories, LoggerFactory loggerFactory )
     {
         setLocalRepositoryManagerFactories( factories );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

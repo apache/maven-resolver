@@ -24,6 +24,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -64,6 +67,7 @@ import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
  */
+@Named
 @Component( role = MetadataResolver.class )
 public class DefaultMetadataResolver
     implements MetadataResolver, Service
@@ -90,14 +94,16 @@ public class DefaultMetadataResolver
         // enables default constructor
     }
 
+    @Inject
     DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
                              UpdateCheckManager updateCheckManager, RemoteRepositoryManager remoteRepositoryManager,
-                             SyncContextFactory syncContextFactory )
+                             SyncContextFactory syncContextFactory, LoggerFactory loggerFactory )
     {
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setUpdateCheckManager( updateCheckManager );
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

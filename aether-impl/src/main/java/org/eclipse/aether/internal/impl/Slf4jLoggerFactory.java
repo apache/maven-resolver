@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
@@ -19,6 +22,7 @@ import org.slf4j.ILoggerFactory;
 /**
  * A logger factory that delegates to Slf4J logging.
  */
+@Named
 public class Slf4jLoggerFactory
     implements LoggerFactory, Service
 {
@@ -57,6 +61,7 @@ public class Slf4jLoggerFactory
         // enables no-arg constructor for service locator support
     }
 
+    @Inject
     public Slf4jLoggerFactory( ILoggerFactory factory )
     {
         if ( factory == null )

@@ -16,6 +16,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositoryException;
@@ -55,6 +58,7 @@ import org.eclipse.aether.version.Version;
 
 /**
  */
+@Named
 @Component( role = DependencyCollector.class )
 public class DefaultDependencyCollector
     implements DependencyCollector, Service
@@ -78,13 +82,15 @@ public class DefaultDependencyCollector
         // enables default constructor
     }
 
+    @Inject
     DefaultDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
                                 ArtifactDescriptorReader artifactDescriptorReader,
-                                VersionRangeResolver versionRangeResolver )
+                                VersionRangeResolver versionRangeResolver, LoggerFactory loggerFactory )
     {
         setRemoteRepositoryManager( remoteRepositoryManager );
         setArtifactDescriptorReader( artifactDescriptorReader );
         setVersionRangeResolver( versionRangeResolver );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

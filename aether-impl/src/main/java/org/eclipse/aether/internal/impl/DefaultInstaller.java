@@ -17,6 +17,9 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -48,6 +51,7 @@ import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
  */
+@Named
 @Component( role = Installer.class )
 public class DefaultInstaller
     implements Installer, Service
@@ -73,13 +77,16 @@ public class DefaultInstaller
         // enables default constructor
     }
 
+    @Inject
     DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
-                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
+                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory,
+                      LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

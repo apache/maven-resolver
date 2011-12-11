@@ -145,6 +145,12 @@
       </dependency>
 
       <dependency>
+        <groupId>javax.inject</groupId>
+        <artifactId>javax.inject</artifactId>
+        <version>1</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-component-annotations</artifactId>
         <version>1.5.5</version>
@@ -296,6 +302,8 @@
                     <include>org.sonatype.sisu:sisu-guice:3.1.0</include>
                     <!-- CQ #5637 -->
                     <include>org.sonatype.sisu:sisu-guava:0.9.9</include>
+                    <!-- CQ #5639 -->
+                    <include>javax.inject:javax.inject:1</include>
                     <!-- CQ #5641, #5638, #5639, #5640 -->
                     <include>org.sonatype.sisu:sisu-inject-bean:2.3.0</include>
                     <!-- CQ #5660 -->

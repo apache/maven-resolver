@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.file;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -27,8 +30,9 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 /**
  * Factory creating {@link FileRepositoryConnector}s.
  */
+@Named
 @Component( role = RepositoryConnectorFactory.class, hint = "file" )
-public class FileRepositoryConnectorFactory
+public final class FileRepositoryConnectorFactory
     implements RepositoryConnectorFactory, Service
 {
 
@@ -47,9 +51,11 @@ public class FileRepositoryConnectorFactory
         // enables default constructor
     }
 
-    FileRepositoryConnectorFactory( FileProcessor fileProcessor )
+    @Inject
+    FileRepositoryConnectorFactory( FileProcessor fileProcessor, LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )

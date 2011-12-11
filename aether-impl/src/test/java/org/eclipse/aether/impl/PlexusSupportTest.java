@@ -12,6 +12,7 @@ package org.eclipse.aether.impl;
 
 import java.util.List;
 
+import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.PlexusTestCase;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
@@ -24,6 +25,12 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 public class PlexusSupportTest
     extends PlexusTestCase
 {
+
+    @Override
+    protected void customizeContainerConfiguration( ContainerConfiguration containerConfiguration )
+    {
+        containerConfiguration.setClassPathScanning( "cache" );
+    }
 
     public void testExistenceOfPlexusComponentMetadata()
         throws Exception

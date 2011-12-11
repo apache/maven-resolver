@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.async;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -27,8 +30,9 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 /**
  * A repository connector factory that uses Async Http Client for the transfers.
  */
+@Named
 @Component( role = RepositoryConnectorFactory.class, hint = "async-http" )
-public class AsyncRepositoryConnectorFactory
+public final class AsyncRepositoryConnectorFactory
     implements RepositoryConnectorFactory, Service
 {
 
@@ -44,9 +48,11 @@ public class AsyncRepositoryConnectorFactory
     {
     }
 
-    AsyncRepositoryConnectorFactory( FileProcessor fileProcessor )
+    @Inject
+    AsyncRepositoryConnectorFactory( FileProcessor fileProcessor, LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
+        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
