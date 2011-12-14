@@ -280,7 +280,7 @@ public class DefaultInstaller
         {
             boolean copy =
                 "pom".equals( artifact.getExtension() ) || srcFile.lastModified() != dstFile.lastModified()
-                    || srcFile.length() != dstFile.length();
+                    || srcFile.length() != dstFile.length() || !srcFile.exists();
 
             if ( copy )
             {

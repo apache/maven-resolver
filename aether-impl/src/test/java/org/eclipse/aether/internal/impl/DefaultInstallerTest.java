@@ -156,6 +156,26 @@ public class DefaultInstallerTest
     }
 
     @Test( expected = InstallationException.class )
+    public void testNonExistentArtifactFile()
+        throws InstallationException
+    {
+        InstallRequest request = new InstallRequest();
+        request.addArtifact( artifact.setFile( new File( "missing.txt" ) ) );
+
+        installer.install( session, request );
+    }
+
+    @Test( expected = InstallationException.class )
+    public void testNonExistentMetadataFile()
+        throws InstallationException
+    {
+        InstallRequest request = new InstallRequest();
+        request.addMetadata( metadata.setFile( new File( "missing.xml" ) ) );
+
+        installer.install( session, request );
+    }
+
+    @Test( expected = InstallationException.class )
     public void testArtifactExistsAsDir()
         throws InstallationException
     {
