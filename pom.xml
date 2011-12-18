@@ -251,8 +251,23 @@
           <executions>
             <execution>
               <id>generate-components-xml</id>
+              <phase>process-classes</phase>
               <goals>
                 <goal>generate-metadata</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>sisu-maven-plugin</artifactId>
+          <version>1.1</version>
+          <executions>
+            <execution>
+              <id>generate-index</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>main-index</goal>
               </goals>
             </execution>
           </executions>
@@ -375,6 +390,45 @@
             </executions>
           </plugin>
         </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>m2e</id>
+      <activation>
+        <property>
+          <name>m2e.version</name>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.eclipse.m2e</groupId>
+              <artifactId>lifecycle-mapping</artifactId>
+              <version>1.0.0</version>
+              <configuration>
+                <lifecycleMappingMetadata>
+                  <pluginExecutions>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>sisu-maven-plugin</artifactId>
+                        <versionRange>[1.1,)</versionRange>
+                        <goals>
+                          <goal>test-index</goal>
+                          <goal>main-index</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <ignore/>
+                      </action>
+                    </pluginExecution>
+                  </pluginExecutions>
+                </lifecycleMappingMetadata>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
       </build>
     </profile>
   </profiles>
