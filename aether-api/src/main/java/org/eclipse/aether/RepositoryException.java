@@ -27,7 +27,10 @@ public class RepositoryException
         super( message, cause );
     }
 
-    public static String getMessage( String prefix, Throwable cause )
+    /**
+     * @noreference This method is not intended to be used by clients.
+     */
+    protected static String getMessage( String prefix, Throwable cause )
     {
         String msg = "";
         if ( cause != null )
