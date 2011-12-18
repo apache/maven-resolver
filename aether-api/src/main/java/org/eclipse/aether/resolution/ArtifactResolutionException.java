@@ -31,6 +31,18 @@ public class ArtifactResolutionException
         this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
     }
 
+    public ArtifactResolutionException( List<ArtifactResult> results, String message )
+    {
+        super( message, getCause( results ) );
+        this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
+    }
+
+    public ArtifactResolutionException( List<ArtifactResult> results, String message, Throwable cause )
+    {
+        super( message, cause );
+        this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
+    }
+
     public List<ArtifactResult> getResults()
     {
         return results;

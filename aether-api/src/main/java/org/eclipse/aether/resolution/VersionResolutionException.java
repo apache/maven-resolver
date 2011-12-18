@@ -52,6 +52,18 @@ public class VersionResolutionException
         return cause;
     }
 
+    public VersionResolutionException( VersionResult result, String message )
+    {
+        super( message, getCause( result ) );
+        this.result = result;
+    }
+
+    public VersionResolutionException( VersionResult result, String message, Throwable cause )
+    {
+        super( message, cause );
+        this.result = result;
+    }
+
     public VersionResult getResult()
     {
         return result;

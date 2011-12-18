@@ -21,16 +21,22 @@ public class ArtifactDescriptorException
 
     private final ArtifactDescriptorResult result;
 
+    public ArtifactDescriptorException( ArtifactDescriptorResult result )
+    {
+        super( "Failed to read artifact descriptor"
+            + ( result != null ? " for " + result.getRequest().getArtifact() : "" ), getCause( result ) );
+        this.result = result;
+    }
+
     public ArtifactDescriptorException( ArtifactDescriptorResult result, String message )
     {
         super( message, getCause( result ) );
         this.result = result;
     }
 
-    public ArtifactDescriptorException( ArtifactDescriptorResult result )
+    public ArtifactDescriptorException( ArtifactDescriptorResult result, String message, Throwable cause )
     {
-        super( "Failed to read artifact descriptor"
-            + ( result != null ? " for " + result.getRequest().getArtifact() : "" ), getCause( result ) );
+        super( message, cause );
         this.result = result;
     }
 

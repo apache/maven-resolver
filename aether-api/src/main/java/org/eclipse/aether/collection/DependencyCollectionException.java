@@ -28,6 +28,18 @@ public class DependencyCollectionException
         this.result = result;
     }
 
+    public DependencyCollectionException( CollectResult result, String message )
+    {
+        super( message, getCause( result ) );
+        this.result = result;
+    }
+
+    public DependencyCollectionException( CollectResult result, String message, Throwable cause )
+    {
+        super( message, cause );
+        this.result = result;
+    }
+
     public CollectResult getResult()
     {
         return result;

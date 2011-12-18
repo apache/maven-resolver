@@ -33,6 +33,12 @@ public class InvalidVersionSpecificationException
         this.version = version;
     }
 
+    public InvalidVersionSpecificationException( String version, String message, Throwable cause )
+    {
+        super( message, cause );
+        this.version = version;
+    }
+
     public String getVersion()
     {
         return version;

@@ -27,6 +27,12 @@ public class DependencyResolutionException
         this.result = result;
     }
 
+    public DependencyResolutionException( DependencyResult result, String message, Throwable cause )
+    {
+        super( message, cause );
+        this.result = result;
+    }
+
     private static String getMessage( Throwable cause )
     {
         String msg = null;

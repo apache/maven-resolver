@@ -58,6 +58,12 @@ public class VersionRangeResolutionException
         this.result = result;
     }
 
+    public VersionRangeResolutionException( VersionRangeResult result, String message, Throwable cause )
+    {
+        super( message, cause );
+        this.result = result;
+    }
+
     public VersionRangeResult getResult()
     {
         return result;
