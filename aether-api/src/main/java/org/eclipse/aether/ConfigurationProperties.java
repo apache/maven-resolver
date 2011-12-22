@@ -70,7 +70,7 @@ public final class ConfigurationProperties
     /**
      * The default request timeout to use if {@link #REQUEST_TIMEOUT} isn't set.
      */
-    public static final int DEFAULT_REQUEST_TIMEOUT = 60 * 1000;
+    public static final int DEFAULT_REQUEST_TIMEOUT = 1800 * 1000;
 
     /**
      * The request headers to use for HTTP-based repository connectors. The headers are specified using a
