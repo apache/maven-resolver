@@ -120,7 +120,7 @@ public interface RepositorySystem
         throws DependencyResolutionException;
 
     /**
-     * Resolves the paths for an artifact. The artifact will be downloaded if necessary. An artifacts that is already
+     * Resolves the path for an artifact. The artifact will be downloaded if necessary. An artifact that is already
      * resolved will be skipped and is not re-resolved. Note that this method assumes that any relocations have already
      * been processed.
      * 
