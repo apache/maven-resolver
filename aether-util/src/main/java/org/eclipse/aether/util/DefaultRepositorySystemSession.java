@@ -68,6 +68,8 @@ public class DefaultRepositorySystemSession
 
     private boolean ignoreInvalidArtifactDescriptor;
 
+    private boolean ignoreArtifactDescriptorRepositories;
+
     private String checksumPolicy;
 
     private String updatePolicy;
@@ -126,6 +128,7 @@ public class DefaultRepositorySystemSession
         setNotFoundCachingEnabled( session.isNotFoundCachingEnabled() );
         setIgnoreInvalidArtifactDescriptor( session.isIgnoreInvalidArtifactDescriptor() );
         setIgnoreMissingArtifactDescriptor( session.isIgnoreMissingArtifactDescriptor() );
+        setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );
         setChecksumPolicy( session.getChecksumPolicy() );
         setUpdatePolicy( session.getUpdatePolicy() );
         setLocalRepositoryManager( session.getLocalRepositoryManager() );
@@ -240,6 +243,25 @@ public class DefaultRepositorySystemSession
     public DefaultRepositorySystemSession setIgnoreInvalidArtifactDescriptor( boolean ignoreInvalidArtifactDescriptor )
     {
         this.ignoreInvalidArtifactDescriptor = ignoreInvalidArtifactDescriptor;
+        return this;
+    }
+
+    public boolean isIgnoreArtifactDescriptorRepositories()
+    {
+        return ignoreArtifactDescriptorRepositories;
+    }
+
+    /**
+     * Controls whether repositories declared in artifact descriptors should be ignored during transitive dependency
+     * collection. If enabled, only the repositories originally provided with the collect request will be considered.
+     * 
+     * @param ignoreArtifactDescriptorRepositories {@code true} to ignore additional repositories from artifact
+     *            descriptors, {@code false} to merge those with the originally specified repositories.
+     * @return This session for chaining, never {@code null}.
+     */
+    public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories( boolean ignoreArtifactDescriptorRepositories )
+    {
+        this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
         return this;
     }
 

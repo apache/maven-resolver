@@ -212,9 +212,12 @@ public class DefaultDependencyCollector
 
             root = root.setArtifact( descriptorResult.getArtifact() );
 
-            repositories =
-                remoteRepositoryManager.aggregateRepositories( session, repositories,
-                                                               descriptorResult.getRepositories(), true );
+            if ( !session.isIgnoreArtifactDescriptorRepositories() )
+            {
+                repositories =
+                    remoteRepositoryManager.aggregateRepositories( session, repositories,
+                                                                   descriptorResult.getRepositories(), true );
+            }
             dependencies = mergeDeps( dependencies, descriptorResult.getDependencies() );
             managedDependencies = mergeDeps( managedDependencies, descriptorResult.getManagedDependencies() );
 
@@ -492,9 +495,16 @@ public class DefaultDependencyCollector
                         childManager = depManager.deriveChildManager( context );
                         childTraverser = depTraverser.deriveChildTraverser( context );
 
-                        childRepos =
-                            remoteRepositoryManager.aggregateRepositories( args.session, repositories,
-                                                                           descriptorResult.getRepositories(), true );
+                        if ( args.session.isIgnoreArtifactDescriptorRepositories() )
+                        {
+                            childRepos = repositories;
+                        }
+                        else
+                        {
+                            childRepos =
+                                remoteRepositoryManager.aggregateRepositories( args.session, repositories,
+                                                                               descriptorResult.getRepositories(), true );
+                        }
 
                         key =
                             args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser );

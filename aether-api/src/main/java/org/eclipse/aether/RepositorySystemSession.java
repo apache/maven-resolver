@@ -77,6 +77,15 @@ public interface RepositorySystemSession
     boolean isIgnoreInvalidArtifactDescriptor();
 
     /**
+     * Indicates whether repositories declared in artifact descriptors should be ignored during transitive dependency
+     * collection. If enabled, only the repositories originally provided with the collect request will be considered.
+     * 
+     * @return {@code true} if additional repositories from artifact descriptors are ignored, {@code false} to merge
+     *         those with the originally specified repositories.
+     */
+    boolean isIgnoreArtifactDescriptorRepositories();
+
+    /**
      * Gets the global checksum policy. If set, the global checksum policy overrides the checksum policies of the remote
      * repositories being used for resolution.
      * 

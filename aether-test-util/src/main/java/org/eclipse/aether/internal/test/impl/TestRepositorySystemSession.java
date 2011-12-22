@@ -124,6 +124,11 @@ public class TestRepositorySystemSession
         return false;
     }
 
+    public boolean isIgnoreArtifactDescriptorRepositories()
+    {
+        return false;
+    }
+
     public String getChecksumPolicy()
     {
         return checksumPolicy;

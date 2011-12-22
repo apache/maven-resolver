@@ -154,6 +154,11 @@ public class FilterRepositorySystemSession
         return session.isIgnoreMissingArtifactDescriptor();
     }
 
+    public boolean isIgnoreArtifactDescriptorRepositories()
+    {
+        return session.isIgnoreArtifactDescriptorRepositories();
+    }
+
     public boolean isNotFoundCachingEnabled()
     {
         return session.isNotFoundCachingEnabled();
