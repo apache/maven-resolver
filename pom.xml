@@ -182,6 +182,23 @@
             <links>
               <link>http://download.oracle.com/javase/6/docs/api/</link>
             </links>
+            <tags>
+              <tag>
+                <name>noextend</name>
+                <placement>a</placement>
+                <head>Restriction:</head>
+              </tag>
+              <tag>
+                <name>noimplement</name>
+                <placement>a</placement>
+                <head>Restriction:</head>
+              </tag>
+              <tag>
+                <name>noreference</name>
+                <placement>a</placement>
+                <head>Restriction:</head>
+              </tag>
+            </tags>
           </configuration>
         </plugin>
         <plugin>
