@@ -48,6 +48,13 @@ public final class ArtifactProperties
      */
     public static final String CONSTITUTES_BUILD_PATH = "constitutesBuildPath";
 
+    /**
+     * The URL to a web page from which the artifact can be manually downloaded. This URL is not contacted by the
+     * repository system but serves as a pointer for the end user to assist in getting artifacts that are not published
+     * in a proper repository.
+     */
+    public static final String DOWNLOAD_URL = "downloadUrl";
+
     private ArtifactProperties()
     {
         // hide constructor

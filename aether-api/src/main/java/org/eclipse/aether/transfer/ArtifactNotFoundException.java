@@ -22,21 +22,28 @@ public class ArtifactNotFoundException
 
     public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository )
     {
-        super( artifact, repository, "Could not find artifact " + artifact + getString( " in ", repository )
-            + getLocalPathInfo( artifact, repository ) );
+        super( artifact, repository, getMessage( artifact, repository ) );
     }
 
-    private static String getLocalPathInfo( Artifact artifact, RemoteRepository repository )
+    private static String getMessage( Artifact artifact, RemoteRepository repository )
     {
-        String localPath = ( artifact != null ) ? artifact.getProperty( "localPath", null ) : null;
-        if ( localPath != null && repository == null )
+        StringBuilder buffer = new StringBuilder( 256 );
+        buffer.append( "Could not find artifact " ).append( artifact );
+        buffer.append( getString( " in ", repository ) );
+        if ( artifact != null )
         {
-            return " at specified path " + localPath;
+            String localPath = artifact.getProperty( "localPath", null );
+            if ( localPath != null && repository == null )
+            {
+                buffer.append( " at specified path " ).append( localPath );
+            }
+            String downloadUrl = artifact.getProperty( "downloadUrl", null );
+            if ( downloadUrl != null )
+            {
+                buffer.append( ", try downloading from " ).append( downloadUrl );
+            }
         }
-        else
-        {
-            return "";
-        }
+        return buffer.toString();
     }
 
     public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository, String message )
