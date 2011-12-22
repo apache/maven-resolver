@@ -29,6 +29,7 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
@@ -64,7 +65,6 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.DefaultRequestTrace;
-import org.eclipse.aether.util.artifact.ArtifactProperties;
 import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**

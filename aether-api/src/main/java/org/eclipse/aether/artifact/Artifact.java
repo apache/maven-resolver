@@ -101,29 +101,15 @@ public interface Artifact
      * 
      * @param key The name of the property, must not be {@code null}.
      * @param defaultValue The default value to return in case the property is not set, may be {@code null}.
+     * @see ArtifactProperties
      */
     String getProperty( String key, String defaultValue );
 
     /**
-     * Gets the properties of this artifact. While the exact set of available properties is undefined, the following
-     * properties are considered to be common:
-     * <dl>
-     * <dt>type</dt>
-     * <dd>A high-level characterization of the artifact, e.g. "maven-plugin" or "test-jar".</dd>
-     * <dt>language</dt>
-     * <dd>The programming language this artifact is relevant for, e.g. "java" or "none".</dd>
-     * <dt>includesDependencies</dt>
-     * <dd>A boolean flag indicating whether the artifact presents some kind of bundle that physically includes its
-     * dependencies, e.g. a fat WAR.</dd>
-     * <dt>constitutesBuildPath</dt>
-     * <dd>A boolean flag indicating whether the artifact is meant to be used for the compile/runtime/test build path of
-     * a consumer project.</dd>
-     * <dt>localPath</dt>
-     * <dd>The (expected) path to the artifact on the local filesystem. An artifact which has this property set is
-     * assumed to be not present in any regular repository and likewise has no artifact descriptor.</dd>
-     * </dl>
+     * Gets the properties of this artifact.
      * 
      * @return The (read-only) properties, never {@code null}.
+     * @see ArtifactProperties
      */
     Map<String, String> getProperties();
 
@@ -132,6 +118,7 @@ public interface Artifact
      * 
      * @param properties The properties for the artifact, may be {@code null}.
      * @return The new artifact, never {@code null}.
+     * @see ArtifactProperties
      */
     Artifact setProperties( Map<String, String> properties );
 

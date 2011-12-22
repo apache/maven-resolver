@@ -10,14 +10,14 @@
  *******************************************************************************/
 package org.eclipse.aether.util.graph.traverser;
 
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.util.artifact.ArtifactProperties;
 
 /**
  * A dependency traverser that excludes the dependencies of fat artifacts from the traversal. Fat artifacts are
- * artifacts that have the property {@link org.eclipse.aether.util.artifact.ArtifactProperties#INCLUDES_DEPENDENCIES}
+ * artifacts that have the property {@link org.eclipse.aether.artifact.ArtifactProperties#INCLUDES_DEPENDENCIES}
  * set to {@code true}.
  * 
  * @see org.eclipse.aether.artifact.Artifact#getProperties()

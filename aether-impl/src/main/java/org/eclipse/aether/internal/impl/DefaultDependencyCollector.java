@@ -25,6 +25,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
@@ -53,7 +54,6 @@ import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.util.DefaultRepositorySystemSession;
 import org.eclipse.aether.util.DefaultRequestTrace;
-import org.eclipse.aether.util.artifact.ArtifactProperties;
 import org.eclipse.aether.version.Version;
 
 /**

@@ -8,12 +8,12 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.artifact;
+package org.eclipse.aether.artifact;
 
 /**
  * The keys for common properties of artifacts.
  * 
- * @see org.eclipse.aether.artifact.Artifact#getProperties()
+ * @see Artifact#getProperties()
  */
 public final class ArtifactProperties
 {

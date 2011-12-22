@@ -13,8 +13,8 @@ package org.eclipse.aether.util.artifact;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactType;
-import org.eclipse.aether.util.artifact.ArtifactProperties;
 
 /**
  * A simple artifact type.

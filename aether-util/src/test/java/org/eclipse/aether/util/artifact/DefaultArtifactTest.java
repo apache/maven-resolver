@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.ArtifactProperties;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.util.artifact.DefaultArtifact;
 import org.eclipse.aether.util.artifact.DefaultArtifactType;
 import org.junit.Test;

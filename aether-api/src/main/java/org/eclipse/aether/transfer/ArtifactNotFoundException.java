@@ -11,6 +11,7 @@
 package org.eclipse.aether.transfer;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
@@ -32,12 +33,12 @@ public class ArtifactNotFoundException
         buffer.append( getString( " in ", repository ) );
         if ( artifact != null )
         {
-            String localPath = artifact.getProperty( "localPath", null );
+            String localPath = artifact.getProperty( ArtifactProperties.LOCAL_PATH, null );
             if ( localPath != null && repository == null )
             {
                 buffer.append( " at specified path " ).append( localPath );
             }
-            String downloadUrl = artifact.getProperty( "downloadUrl", null );
+            String downloadUrl = artifact.getProperty( ArtifactProperties.DOWNLOAD_URL, null );
             if ( downloadUrl != null )
             {
                 buffer.append( ", try downloading from " ).append( downloadUrl );
