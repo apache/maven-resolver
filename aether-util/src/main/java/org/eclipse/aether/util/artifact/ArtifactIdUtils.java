@@ -141,4 +141,85 @@ public final class ArtifactIdUtils
         return buffer;
     }
 
+    /**
+     * Determines whether two artifacts have the same identifier. This method is equivalent to calling
+     * {@link String#equals(Object)} on the return values from {@link #toId(Artifact)} for the artifacts but does not
+     * incur the overhead of creating temporary strings.
+     * 
+     * @param artifact1 The first artifact, may be {@code null}.
+     * @param artifact2 The second artifact, may be {@code null}.
+     * @return {@code true} if both artifacts are not {@code null} and have equal ids, {@code false} otherwise.
+     */
+    public static boolean equalsId( Artifact artifact1, Artifact artifact2 )
+    {
+        if ( artifact1 == null || artifact2 == null )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getGroupId(), artifact2.getGroupId() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getExtension(), artifact2.getExtension() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getClassifier(), artifact2.getClassifier() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getVersion(), artifact2.getVersion() ) )
+        {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Determines whether two artifacts have the same base identifier. This method is equivalent to calling
+     * {@link String#equals(Object)} on the return values from {@link #toBaseId(Artifact)} for the artifacts but does
+     * not incur the overhead of creating temporary strings.
+     * 
+     * @param artifact1 The first artifact, may be {@code null}.
+     * @param artifact2 The second artifact, may be {@code null}.
+     * @return {@code true} if both artifacts are not {@code null} and have equal base ids, {@code false} otherwise.
+     */
+    public static boolean equalsBaseId( Artifact artifact1, Artifact artifact2 )
+    {
+        if ( artifact1 == null || artifact2 == null )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getGroupId(), artifact2.getGroupId() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getExtension(), artifact2.getExtension() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getClassifier(), artifact2.getClassifier() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getBaseVersion(), artifact2.getBaseVersion() ) )
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private static <T> boolean eq( T s1, T s2 )
+    {
+        return s1 != null ? s1.equals( s2 ) : s2 == null;
+    }
+
 }
