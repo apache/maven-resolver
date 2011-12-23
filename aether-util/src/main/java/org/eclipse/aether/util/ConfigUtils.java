@@ -23,7 +23,7 @@ import org.eclipse.aether.RepositorySystemSession;
  * 
  * @see RepositorySystemSession#getConfigProperties()
  */
-public class ConfigUtils
+public final class ConfigUtils
 {
 
     private ConfigUtils()

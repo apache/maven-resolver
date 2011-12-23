@@ -23,7 +23,7 @@ import org.eclipse.aether.repository.WorkspaceRepository;
 
 /**
  */
-public class CacheUtils
+public final class CacheUtils
 {
 
     public static <T> boolean eq( T s1, T s2 )

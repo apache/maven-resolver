@@ -48,7 +48,7 @@ public class CloningDependencyVisitor
      * 
      * @return The root node of the cloned dependency graph or {@code null}.
      */
-    public DependencyNode getRootNode()
+    public final DependencyNode getRootNode()
     {
         return root;
     }
@@ -65,7 +65,7 @@ public class CloningDependencyVisitor
         return clone;
     }
 
-    public boolean visitEnter( DependencyNode node )
+    public final boolean visitEnter( DependencyNode node )
     {
         boolean recurse = true;
 
@@ -96,7 +96,7 @@ public class CloningDependencyVisitor
         return recurse;
     }
 
-    public boolean visitLeave( DependencyNode node )
+    public final boolean visitLeave( DependencyNode node )
     {
         parents.pop();
 

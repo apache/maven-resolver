@@ -15,7 +15,7 @@ import org.eclipse.aether.artifact.Artifact;
 /**
  * A utility class to create identifiers for artifacts.
  */
-public class ArtifactIdUtils
+public final class ArtifactIdUtils
 {
 
     private static final char SEP = ':';

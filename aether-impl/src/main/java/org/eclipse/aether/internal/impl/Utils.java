@@ -23,7 +23,7 @@ import org.eclipse.aether.metadata.Metadata;
 
 /**
  */
-class Utils
+final class Utils
 {
 
     private static final Comparator<MetadataGeneratorFactory> COMPARATOR = new Comparator<MetadataGeneratorFactory>()

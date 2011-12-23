@@ -13,7 +13,7 @@ package org.eclipse.aether.util;
 /**
  * A utility class to ease string processing.
  */
-public class StringUtils
+public final class StringUtils
 {
 
     private StringUtils()

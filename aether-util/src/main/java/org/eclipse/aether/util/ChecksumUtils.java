@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * A utility class to assist in the verification and generation of checksums.
  */
-public class ChecksumUtils
+public final class ChecksumUtils
 {
 
     private ChecksumUtils()
