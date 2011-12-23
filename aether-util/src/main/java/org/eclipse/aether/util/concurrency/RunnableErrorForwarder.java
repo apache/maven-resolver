@@ -37,6 +37,13 @@ public final class RunnableErrorForwarder
     private final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
 
     /**
+     * Creates a new error forwarder for worker threads spawned by the current thread.
+     */
+    public RunnableErrorForwarder()
+    {
+    }
+
+    /**
      * Wraps the specified runnable into an equivalent runnable that will allow forwarding of uncaught errors.
      * 
      * @param runnable The runnable from which to forward errors, must not be {@code null}.
@@ -81,7 +88,8 @@ public final class RunnableErrorForwarder
     /**
      * Causes the current thread to wait until all previously {@link #wrap(Runnable) wrapped} runnables have terminated
      * and potentially re-throws an uncaught {@link RuntimeException} or {@link Error} from any of the runnables. In
-     * case multiple runnables encountered uncaught errors, one error is arbitrarily selected.
+     * case multiple runnables encountered uncaught errors, one error is arbitrarily selected. <em>Note:</em> This
+     * method must be called from the same thread that created this error forwarder instance.
      */
     public void await()
     {
@@ -108,6 +116,12 @@ public final class RunnableErrorForwarder
 
     private void awaitTerminationOfAllRunnables()
     {
+        if ( !thread.equals( Thread.currentThread() ) )
+        {
+            throw new IllegalStateException( "wrong caller thread, expected " + thread + " and not "
+                + Thread.currentThread() );
+        }
+
         boolean interrupted = false;
 
         while ( counter.get() > 0 )
