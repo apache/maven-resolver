@@ -24,6 +24,8 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
  * A download of an artifact from a remote repository. A repository connector processing this download has to use
  * {@link #setState(State)}, {@link #setException(ArtifactTransferException)} and
  * {@link #setSupportedContexts(Collection)} (if applicable) to report the results of the transfer.
+ * 
+ * @noextend This class is not intended to be extended by clients.
  */
 public class ArtifactDownload
     extends ArtifactTransfer

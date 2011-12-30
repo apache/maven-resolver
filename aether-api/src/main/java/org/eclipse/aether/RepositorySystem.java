@@ -120,9 +120,10 @@ public interface RepositorySystem
         throws DependencyResolutionException;
 
     /**
-     * Resolves the path for an artifact. The artifact will be downloaded if necessary. An artifact that is already
-     * resolved will be skipped and is not re-resolved. Note that this method assumes that any relocations have already
-     * been processed.
+     * Resolves the path for an artifact. The artifact will be downloaded to the local repository if necessary. An
+     * artifact that is already resolved will be skipped and is not re-resolved. In general, callers must not assume any
+     * relationship between an artifact's resolved filename and its coordinates. Note that this method assumes that any
+     * relocations have already been processed.
      * 
      * @param session The repository session, must not be {@code null}.
      * @param request The resolution request, must not be {@code null}.
@@ -134,9 +135,10 @@ public interface RepositorySystem
         throws ArtifactResolutionException;
 
     /**
-     * Resolves the paths for a collection of artifacts. Artifacts will be downloaded if necessary. Artifacts that are
-     * already resolved will be skipped and are not re-resolved. Note that this method assumes that any relocations have
-     * already been processed.
+     * Resolves the paths for a collection of artifacts. Artifacts will be downloaded to the local repository if
+     * necessary. Artifacts that are already resolved will be skipped and are not re-resolved. In general, callers must
+     * not assume any relationship between an artifact's filename and its coordinates. Note that this method assumes
+     * that any relocations have already been processed.
      * 
      * @param session The repository session, must not be {@code null}.
      * @param requests The resolution requests, must not be {@code null}.
@@ -149,7 +151,8 @@ public interface RepositorySystem
         throws ArtifactResolutionException;
 
     /**
-     * Resolves the paths for a collection of metadata. Metadata will be downloaded if necessary.
+     * Resolves the paths for a collection of metadata. Metadata will be downloaded to the local repository if
+     * necessary, e.g. because it hasn't been cached yet or the cache is deemed outdated.
      * 
      * @param session The repository session, must not be {@code null}.
      * @param requests The resolution requests, must not be {@code null}.

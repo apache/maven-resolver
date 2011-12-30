@@ -20,6 +20,10 @@ package org.eclipse.aether.transfer;
  * 
  * <em>Note:</em> Implementors are strongly advised to inherit from {@link AbstractTransferListener} instead of directly
  * implementing this interface.
+ * 
+ * @see org.eclipse.aether.RepositoryListener
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface TransferListener
 {

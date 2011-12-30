@@ -22,6 +22,8 @@ import org.eclipse.aether.transfer.MetadataTransferException;
 /**
  * A download of metadata from a remote repository. A repository connector processing this download has to use
  * {@link #setState(State)} and {@link #setException(MetadataTransferException)} to report the results of the transfer.
+ * 
+ * @noextend This class is not intended to be extended by clients.
  */
 public class MetadataDownload
     extends MetadataTransfer

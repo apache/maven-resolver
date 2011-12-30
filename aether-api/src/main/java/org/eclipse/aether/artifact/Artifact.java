@@ -82,7 +82,8 @@ public interface Artifact
     String getExtension();
 
     /**
-     * Gets the file of this artifact. Note that only resolved artifacts have a file associated with them.
+     * Gets the file of this artifact. Note that only resolved artifacts have a file associated with them. In general,
+     * callers must not assume any relationship between an artifact's filename and its coordinates.
      * 
      * @return The file or {@code null} if the artifact isn't resolved.
      */

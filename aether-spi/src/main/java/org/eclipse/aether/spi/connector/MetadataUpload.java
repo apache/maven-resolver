@@ -19,6 +19,8 @@ import org.eclipse.aether.transfer.MetadataTransferException;
 /**
  * An upload of metadata to a remote repository. A repository connector processing this upload has to use
  * {@link #setState(State)} and {@link #setException(MetadataTransferException)} to report the results of the transfer.
+ * 
+ * @noextend This class is not intended to be extended by clients.
  */
 public class MetadataUpload
     extends MetadataTransfer

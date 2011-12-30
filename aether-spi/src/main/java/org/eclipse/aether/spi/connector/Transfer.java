@@ -14,6 +14,8 @@ import org.eclipse.aether.RequestTrace;
 
 /**
  * An artifact/metadata transfer.
+ * 
+ * @noextend This class is not intended to be extended by clients.
  */
 public abstract class Transfer
 {

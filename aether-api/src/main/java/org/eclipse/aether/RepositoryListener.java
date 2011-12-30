@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether;
 
-import org.eclipse.aether.transfer.TransferListener;
-
 /**
  * A listener being notified of events from the repository system. In general, the system sends events upon termination
  * of an operation like {@link #artifactResolved(RepositoryEvent)} regardless whether it succeeded or failed so
@@ -19,7 +17,9 @@ import org.eclipse.aether.transfer.TransferListener;
  * <em>Note:</em> Implementors are strongly advised to inherit from {@link AbstractRepositoryListener} instead of
  * directly implementing this interface.
  * 
- * @see TransferListener
+ * @see org.eclipse.aether.transfer.TransferListener
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface RepositoryListener
 {
