@@ -23,7 +23,6 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.transfer.TransferResource;
-import org.eclipse.aether.util.listener.DefaultTransferResource;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -54,11 +53,11 @@ class CompletionHandler
 
     private final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
 
-    private final DefaultTransferResource transferResource;
+    private final TransferResource transferResource;
 
     private final TransferEvent.RequestType requestType;
 
-    public CompletionHandler( DefaultTransferResource transferResource, AsyncHttpClient httpClient, Logger logger,
+    public CompletionHandler( TransferResource transferResource, AsyncHttpClient httpClient, Logger logger,
                               TransferEvent.RequestType requestType )
     {
         this.httpClient = httpClient;

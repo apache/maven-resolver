@@ -58,7 +58,6 @@ import org.eclipse.aether.util.StringUtils;
 import org.eclipse.aether.util.layout.MavenDefaultLayout;
 import org.eclipse.aether.util.layout.RepositoryLayout;
 import org.eclipse.aether.util.listener.DefaultTransferEvent;
-import org.eclipse.aether.util.listener.DefaultTransferResource;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -538,8 +537,8 @@ class AsyncRepositoryConnector
         {
             download.setState( Transfer.State.ACTIVE );
             final String uri = validateUri( path );
-            final DefaultTransferResource transferResource =
-                new DefaultTransferResource( repository.getUrl(), path, file, download.getTrace() );
+            final TransferResource transferResource =
+                new TransferResource( repository.getUrl(), path, file, download.getTrace() );
             final boolean ignoreChecksum = RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( checksumPolicy );
             CompletionHandler completionHandler = null;
 
@@ -1075,8 +1074,8 @@ class AsyncRepositoryConnector
         public void run()
         {
             upload.setState( Transfer.State.ACTIVE );
-            final DefaultTransferResource transferResource =
-                new DefaultTransferResource( repository.getUrl(), path, file, upload.getTrace() );
+            final TransferResource transferResource =
+                new TransferResource( repository.getUrl(), path, file, upload.getTrace() );
 
             try
             {

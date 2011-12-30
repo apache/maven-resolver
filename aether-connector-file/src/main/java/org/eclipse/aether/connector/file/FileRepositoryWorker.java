@@ -45,11 +45,11 @@ import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferEvent.RequestType;
+import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.layout.MavenDefaultLayout;
 import org.eclipse.aether.util.layout.RepositoryLayout;
 import org.eclipse.aether.util.listener.DefaultTransferEvent;
-import org.eclipse.aether.util.listener.DefaultTransferResource;
 
 /**
  * The actual class doing all the work. Handles artifact and metadata up- and downloads.
@@ -91,7 +91,7 @@ class FileRepositoryWorker
 
     private final Direction direction;
 
-    private DefaultTransferResource resource;
+    private TransferResource resource;
 
     static
     {
@@ -442,7 +442,7 @@ class FileRepositoryWorker
         return event;
     }
 
-    private DefaultTransferResource newResource( TransferWrapper transfer, RemoteRepository repository )
+    private TransferResource newResource( TransferWrapper transfer, RemoteRepository repository )
     {
         String resourceName = null;
         switch ( transfer.getType() )
@@ -456,8 +456,8 @@ class FileRepositoryWorker
                 resourceName = layout.getPath( metadata ).getPath();
                 break;
         }
-        return new DefaultTransferResource( PathUtils.decode( repository.getUrl() ), resourceName, transfer.getFile(),
-                                            transfer.getTrace() );
+        return new TransferResource( PathUtils.decode( repository.getUrl() ), resourceName, transfer.getFile(),
+                                     transfer.getTrace() );
     }
 
     public void setLogger( Logger logger )

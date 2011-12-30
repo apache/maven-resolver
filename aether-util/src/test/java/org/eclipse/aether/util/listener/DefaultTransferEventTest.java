@@ -17,7 +17,6 @@ import java.nio.ByteBuffer;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.listener.DefaultTransferEvent;
-import org.eclipse.aether.util.listener.DefaultTransferResource;
 import org.junit.Test;
 
 /**
@@ -25,7 +24,7 @@ import org.junit.Test;
 public class DefaultTransferEventTest
 {
 
-    private static TransferResource res = new DefaultTransferResource( "file://nil", "void", null, null );
+    private static TransferResource res = new TransferResource( "file://nil", "void", null, null );
 
     @Test
     public void testByteArrayConversion()

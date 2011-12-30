@@ -19,8 +19,8 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.transfer.TransferEvent.EventType;
 import org.eclipse.aether.transfer.TransferEvent.RequestType;
+import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.listener.DefaultTransferEvent;
-import org.eclipse.aether.util.listener.DefaultTransferResource;
 
 /**
  * An adapter to transform transfer events from Wagon into events for the repository system.
@@ -31,7 +31,7 @@ class WagonTransferListenerAdapter
 
     private final RequestType requestType;
 
-    private final DefaultTransferResource resource;
+    private final TransferResource resource;
 
     private final TransferListener delegate;
 
@@ -42,7 +42,7 @@ class WagonTransferListenerAdapter
     {
         this.delegate = delegate;
         this.requestType = requestType;
-        resource = new DefaultTransferResource( repositoryUrl, resourceName, file, trace );
+        resource = new TransferResource( repositoryUrl, resourceName, file, trace );
     }
 
     @Override
