@@ -49,13 +49,15 @@ import org.eclipse.aether.spi.log.LoggerFactory;
  * repository system, clients need to add an artifact descriptor reader, a version resolver, a version range resolver
  * and optionally some repository connectors to access remote repositories.
  */
-public class DefaultServiceLocator
+public final class DefaultServiceLocator
     implements ServiceLocator
 {
 
     private final Map<Class<?>, Collection<Class<?>>> classes;
 
     private final Map<Class<?>, List<?>> instances;
+
+    private ErrorHandler errorHandler;
 
     /**
      * Creates a new service locator that already knows about all service implementations included this library.
@@ -219,17 +221,42 @@ public class DefaultServiceLocator
         }
     }
 
-    /**
-     * Handles errors during creation of a service.
-     * 
-     * @param type The interface describing the service, must not be {@code null}.
-     * @param impl The implementation class of the service, must not be {@code null}.
-     * @param exception The error that occurred while trying to instantiate the implementation class, must not be
-     *            {@code null}.
-     */
-    protected void serviceCreationFailed( Class<?> type, Class<?> impl, Throwable exception )
+    private void serviceCreationFailed( Class<?> type, Class<?> impl, Throwable exception )
     {
-        exception.printStackTrace();
+        if ( errorHandler != null )
+        {
+            errorHandler.serviceCreationFailed( type, impl, exception );
+        }
+    }
+
+    /**
+     * Sets the error handler to use.
+     * 
+     * @param errorHandler The error handler to use, may be {@code null} to ignore/swallow errors.
+     */
+    public void setErrorHandler( ErrorHandler errorHandler )
+    {
+        this.errorHandler = errorHandler;
+    }
+
+    /**
+     * A hook to customize the handling of errors encountered while locating a service implementation.
+     */
+    public static abstract class ErrorHandler
+    {
+
+        /**
+         * Handles errors during creation of a service. The default implemention does nothing.
+         * 
+         * @param type The interface describing the service, must not be {@code null}.
+         * @param impl The implementation class of the service, must not be {@code null}.
+         * @param exception The error that occurred while trying to instantiate the implementation class, must not be
+         *            {@code null}.
+         */
+        public void serviceCreationFailed( Class<?> type, Class<?> impl, Throwable exception )
+        {
+        }
+
     }
 
 }
