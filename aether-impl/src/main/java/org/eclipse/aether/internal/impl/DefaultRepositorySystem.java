@@ -69,7 +69,6 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
-import org.eclipse.aether.util.DefaultRequestTrace;
 import org.eclipse.aether.util.graph.FilteringDependencyVisitor;
 import org.eclipse.aether.util.graph.TreeDependencyVisitor;
 
@@ -324,7 +323,7 @@ public class DefaultRepositorySystem
     {
         validateSession( session );
 
-        RequestTrace trace = DefaultRequestTrace.newChild( request.getTrace(), request );
+        RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
         DependencyResult result = new DependencyResult( request );
 

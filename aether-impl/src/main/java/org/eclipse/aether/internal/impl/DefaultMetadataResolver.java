@@ -61,7 +61,6 @@ import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.DefaultRequestTrace;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
@@ -201,7 +200,7 @@ public class DefaultMetadataResolver
 
         for ( MetadataRequest request : requests )
         {
-            RequestTrace trace = DefaultRequestTrace.newChild( request.getTrace(), request );
+            RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
             MetadataResult result = new MetadataResult( request );
             results.add( result );

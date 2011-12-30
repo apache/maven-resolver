@@ -8,33 +8,31 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util;
+package org.eclipse.aether;
 
 import static org.junit.Assert.*;
 
-import org.eclipse.aether.RequestTrace;
-import org.eclipse.aether.util.DefaultRequestTrace;
 import org.junit.Test;
 
 /**
  */
-public class DefaultRequestTraceTest
+public class RequestTraceTest
 {
 
     @Test
     public void testConstructor()
     {
-        DefaultRequestTrace trace = new DefaultRequestTrace( null );
+        RequestTrace trace = new RequestTrace( null );
         assertSame( null, trace.getData() );
 
-        trace = new DefaultRequestTrace( this );
+        trace = new RequestTrace( this );
         assertSame( this, trace.getData() );
     }
 
     @Test
     public void testParentChaining()
     {
-        RequestTrace trace1 = new DefaultRequestTrace( null );
+        RequestTrace trace1 = new RequestTrace( null );
         RequestTrace trace2 = trace1.newChild( this );
 
         assertSame( null, trace1.getParent() );
@@ -46,7 +44,7 @@ public class DefaultRequestTraceTest
     @Test
     public void testNewChildRequestTrace()
     {
-        RequestTrace trace = DefaultRequestTrace.newChild( null, this );
+        RequestTrace trace = RequestTrace.newChild( null, this );
         assertNotNull( trace );
         assertSame( null, trace.getParent() );
         assertSame( this, trace.getData() );

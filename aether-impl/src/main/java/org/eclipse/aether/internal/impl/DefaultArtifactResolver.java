@@ -64,7 +64,6 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.DefaultRequestTrace;
 import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
@@ -247,7 +246,7 @@ public class DefaultArtifactResolver
 
         for ( ArtifactRequest request : requests )
         {
-            RequestTrace trace = DefaultRequestTrace.newChild( request.getTrace(), request );
+            RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
             ArtifactResult result = new ArtifactResult( request );
             results.add( result );
@@ -540,7 +539,7 @@ public class DefaultArtifactResolver
                     Exception exception = new ArtifactNotFoundException( request.getArtifact(), null );
                     result.addException( exception );
                 }
-                RequestTrace trace = DefaultRequestTrace.newChild( request.getTrace(), request );
+                RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
                 artifactResolved( session, trace, request.getArtifact(), null, result.getExceptions() );
             }
         }

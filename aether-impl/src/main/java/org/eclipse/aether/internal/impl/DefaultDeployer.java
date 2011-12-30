@@ -61,7 +61,6 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
-import org.eclipse.aether.util.DefaultRequestTrace;
 import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
@@ -241,7 +240,7 @@ public class DefaultDeployer
     {
         DeployResult result = new DeployResult( request );
 
-        RequestTrace trace = DefaultRequestTrace.newChild( request.getTrace(), request );
+        RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
         RemoteRepository repository = request.getRepository();
 

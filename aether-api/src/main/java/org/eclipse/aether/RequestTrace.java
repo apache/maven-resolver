@@ -21,22 +21,72 @@ package org.eclipse.aether;
  * 
  * @see RepositoryEvent#getTrace()
  */
-public interface RequestTrace
+public class RequestTrace
 {
+
+    private final RequestTrace parent;
+
+    private final Object data;
+
+    /**
+     * Creates a child of the specified request trace. This method is basically a convenience that will invoke
+     * {@link RequestTrace#newChild(Object) parent.newChild()} when the specified parent trace is not {@code null} or
+     * otherwise instantiante a new root trace.
+     * 
+     * @param parent The parent request trace, may be {@code null}.
+     * @param data The data to associate with the child trace, may be {@code null}.
+     * @return The child trace, never {@code null}.
+     */
+    public static RequestTrace newChild( RequestTrace parent, Object data )
+    {
+        if ( parent == null )
+        {
+            return new RequestTrace( data );
+        }
+        return parent.newChild( data );
+    }
+
+    /**
+     * Creates a new root trace with the specified data.
+     * 
+     * @param data The data to associate with the trace, may be {@code null}.
+     */
+    public RequestTrace( Object data )
+    {
+        this( null, data );
+    }
+
+    /**
+     * Creates a new trace with the specified data and parent
+     * 
+     * @param parent The parent trace, may be {@code null} for a root trace.
+     * @param data The data to associate with the trace, may be {@code null}.
+     */
+    protected RequestTrace( RequestTrace parent, Object data )
+    {
+        this.parent = parent;
+        this.data = data;
+    }
 
     /**
      * Gets the data associated with this trace.
      * 
-     * @return The data associated with this trace or {@code null}.
+     * @return The data associated with this trace or {@code null} if none.
      */
-    Object getData();
+    public final Object getData()
+    {
+        return data;
+    }
 
     /**
      * Gets the parent of this trace.
      * 
      * @return The parent of this trace or {@code null} if this is the root of the trace stack.
      */
-    RequestTrace getParent();
+    public final RequestTrace getParent()
+    {
+        return parent;
+    }
 
     /**
      * Creates a new child of this trace.
@@ -44,6 +94,15 @@ public interface RequestTrace
      * @param data The data to associate with the child, may be {@code null}.
      * @return The child trace, never {@code null}.
      */
-    RequestTrace newChild( Object data );
+    public RequestTrace newChild( Object data )
+    {
+        return new RequestTrace( this, data );
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.valueOf( getData() );
+    }
 
 }
