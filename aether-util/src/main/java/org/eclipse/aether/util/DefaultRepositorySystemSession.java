@@ -46,7 +46,7 @@ import org.eclipse.aether.util.graph.traverser.StaticDependencyTraverser;
  * only called during an initialize phase and the session itself is not changed when being used by the repository
  * system.
  */
-public class DefaultRepositorySystemSession
+public final class DefaultRepositorySystemSession
     implements RepositorySystemSession
 {
 
