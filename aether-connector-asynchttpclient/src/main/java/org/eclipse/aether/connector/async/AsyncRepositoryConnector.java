@@ -539,6 +539,7 @@ class AsyncRepositoryConnector
             final String uri = validateUri( path );
             final TransferResource transferResource =
                 new TransferResource( repository.getUrl(), path, file, download.getTrace() );
+            final RequestType requestType = ( file != null ) ? RequestType.GET : RequestType.GET_EXISTENCE;
             final boolean ignoreChecksum = RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( checksumPolicy );
             CompletionHandler completionHandler = null;
 
@@ -596,7 +597,7 @@ class AsyncRepositoryConnector
 
                 final Request activeRequest = request;
                 final AsyncHttpClient activeHttpClient = client;
-                completionHandler = new CompletionHandler( transferResource, httpClient, logger, RequestType.GET, session )
+                completionHandler = new CompletionHandler( transferResource, httpClient, logger, requestType, session )
                 {
                     private final AtomicBoolean handleTmpFile = new AtomicBoolean( true );
 
@@ -777,9 +778,9 @@ class AsyncRepositoryConnector
                                                 }
                                                 if ( listener != null )
                                                 {
-                                                    listener.transferCorrupted(
-                                                        newEvent( transferResource, e, RequestType.GET,
-                                                                  EventType.CORRUPTED ) );
+                                                    listener.transferCorrupted( newEvent( transferResource, e,
+                                                                                          requestType,
+                                                                                          EventType.CORRUPTED ) );
                                                 }
                                             }
                                         }
@@ -882,8 +883,8 @@ class AsyncRepositoryConnector
                         if ( listener != null )
                         {
                             completionHandler.addTransferListener( listener );
-                            listener.transferInitiated(
-                                newEvent( transferResource, null, RequestType.GET, EventType.INITIATED ) );
+                            listener.transferInitiated( newEvent( transferResource, null, requestType,
+                                                                  EventType.INITIATED ) );
                         }
 
                         activeHttpClient.executeRequest( request, completionHandler );
@@ -922,7 +923,7 @@ class AsyncRepositoryConnector
                     if ( listener != null )
                     {
                         listener.transferFailed(
-                            newEvent( transferResource, exception, RequestType.GET, EventType.FAILED ) );
+                            newEvent( transferResource, exception, requestType, EventType.FAILED ) );
                     }
                 }
                 finally

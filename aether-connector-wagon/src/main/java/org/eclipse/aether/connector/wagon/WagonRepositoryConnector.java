@@ -553,7 +553,9 @@ class WagonRepositoryConnector
             {
                 wagonListener =
                     new WagonTransferListenerAdapter( listener, wagonRepo.getUrl(), path, file, download.getTrace(),
-                                                      TransferEvent.RequestType.GET, session );
+                                                      ( file != null ) ? TransferEvent.RequestType.GET
+                                                                      : TransferEvent.RequestType.GET_EXISTENCE,
+                                                      session );
             }
 
             try

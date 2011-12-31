@@ -61,19 +61,7 @@ class FileRepositoryWorker
 
     private enum Direction
     {
-        UPLOAD( TransferEvent.RequestType.PUT ), DOWNLOAD( TransferEvent.RequestType.GET );
-
-        TransferEvent.RequestType type;
-
-        private Direction( TransferEvent.RequestType type )
-        {
-            this.type = type;
-        }
-
-        public RequestType getType()
-        {
-            return type;
-        }
+        UPLOAD, DOWNLOAD;
     }
 
     private static LinkedHashMap<String, String> checksumAlgos;
@@ -113,7 +101,16 @@ class FileRepositoryWorker
 
         this.catapult = new TransferEventCatapult( session.getTransferListener() );
         resource = newResource( transfer, repository );
-        eventBuilder = new TransferEvent.Builder( session, resource ).setRequestType( direction.getType() );
+        eventBuilder = new TransferEvent.Builder( session, resource );
+        switch ( direction )
+        {
+            case UPLOAD:
+                eventBuilder.setRequestType( RequestType.PUT );
+                break;
+            case DOWNLOAD:
+                eventBuilder.setRequestType( transfer.isExistenceCheck() ? RequestType.GET_EXISTENCE : RequestType.GET );
+                break;
+        }
 
         this.direction = direction;
         this.repository = repository;
