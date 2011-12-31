@@ -18,6 +18,7 @@ import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.ProgressAsyncHandler;
 import com.ning.http.client.Response;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
@@ -28,7 +29,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.ByteBuffer;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,13 +57,16 @@ class CompletionHandler
 
     private final TransferEvent.RequestType requestType;
 
+    private final TransferEvent.Builder eventBuilder;
+
     public CompletionHandler( TransferResource transferResource, AsyncHttpClient httpClient, Logger logger,
-                              TransferEvent.RequestType requestType )
+                              TransferEvent.RequestType requestType, RepositorySystemSession session )
     {
         this.httpClient = httpClient;
         this.transferResource = transferResource;
         this.logger = logger;
         this.requestType = requestType;
+        eventBuilder = new TransferEvent.Builder( session, transferResource ).setRequestType( requestType );
     }
 
     public STATE onHeaderWriteCompleted()
@@ -218,34 +221,11 @@ class CompletionHandler
     {
         final long bytesTransferred = byteTransfered.addAndGet( buffer.remaining() );
 
-        final TransferEvent transferEvent = new AsyncTransferEvent()
+        final TransferEvent transferEvent =
+            newEvent( TransferEvent.EventType.PROGRESSED ).setTransferredBytes( bytesTransferred ).setDataBuffer( buffer ).build();
+
+        for ( final TransferListener listener : listeners )
         {
-
-            public EventType getType()
-            {
-                return TransferEvent.EventType.PROGRESSED;
-            }
-
-            public long getTransferredBytes()
-            {
-                return bytesTransferred;
-            }
-
-            public ByteBuffer getDataBuffer()
-            {
-                return buffer.asReadOnlyBuffer();
-            }
-
-            public int getDataLength()
-            {
-                return buffer.remaining();
-            }
-
-        };
-
-        for ( Iterator<TransferListener> iter = listeners.iterator(); iter.hasNext(); )
-        {
-            final TransferListener listener = iter.next();
             listener.transferProgressed( transferEvent );
         }
     }
@@ -255,24 +235,11 @@ class CompletionHandler
     {
         final long bytesTransferred = byteTransfered.get();
 
-        final TransferEvent transferEvent = new AsyncTransferEvent()
+        final TransferEvent transferEvent =
+            newEvent( TransferEvent.EventType.SUCCEEDED ).setTransferredBytes( bytesTransferred ).build();
+
+        for ( final TransferListener listener : listeners )
         {
-
-            public EventType getType()
-            {
-                return TransferEvent.EventType.SUCCEEDED;
-            }
-
-            public long getTransferredBytes()
-            {
-                return bytesTransferred;
-            }
-
-        };
-
-        for ( Iterator<TransferListener> iter = listeners.iterator(); iter.hasNext(); )
-        {
-            final TransferListener listener = iter.next();
             listener.transferSucceeded( transferEvent );
         }
     }
@@ -282,50 +249,23 @@ class CompletionHandler
     {
         final long bytesTransferred = byteTransfered.get();
 
-        final TransferEvent transferEvent = new AsyncTransferEvent()
+        final TransferEvent transferEvent =
+            newEvent( TransferEvent.EventType.FAILED ).setTransferredBytes( bytesTransferred ).build();
+
+        for ( final TransferListener listener : listeners )
         {
-
-            public EventType getType()
-            {
-                return TransferEvent.EventType.FAILED;
-            }
-
-            public long getTransferredBytes()
-            {
-                return bytesTransferred;
-            }
-
-        };
-
-        for ( Iterator<TransferListener> iter = listeners.iterator(); iter.hasNext(); )
-        {
-            final TransferListener listener = iter.next();
             listener.transferFailed( transferEvent );
-
         }
     }
 
     void fireTransferStarted()
         throws TransferCancelledException
     {
-        final TransferEvent transferEvent = new AsyncTransferEvent()
+        final TransferEvent transferEvent =
+            newEvent( TransferEvent.EventType.STARTED ).setTransferredBytes( 0 ).build();
+
+        for ( final TransferListener listener : listeners )
         {
-
-            public EventType getType()
-            {
-                return TransferEvent.EventType.STARTED;
-            }
-
-            public long getTransferredBytes()
-            {
-                return 0;
-            }
-
-        };
-
-        for ( Iterator<TransferListener> iter = listeners.iterator(); iter.hasNext(); )
-        {
-            final TransferListener listener = iter.next();
             listener.transferStarted( transferEvent );
         }
     }
@@ -353,42 +293,11 @@ class CompletionHandler
         return status;
     }
 
-    abstract class AsyncTransferEvent
-        implements TransferEvent
+    private TransferEvent.Builder newEvent( TransferEvent.EventType type )
     {
-
-        public RequestType getRequestType()
-        {
-            return requestType;
-        }
-
-        public TransferResource getResource()
-        {
-            return transferResource;
-        }
-
-        public ByteBuffer getDataBuffer()
-        {
-            return null;
-        }
-
-        public int getDataLength()
-        {
-            return 0;
-        }
-
-        public Exception getException()
-        {
-            return ( Exception.class.isAssignableFrom( exception.get().getClass() ) ? Exception.class.cast( exception.get() )
-                            : new Exception( exception.get() ) );
-        }
-
-        @Override
-        public String toString()
-        {
-            return getRequestType() + " " + getType() + " " + getResource();
-        }
-
+        Throwable t = exception.get();
+        return eventBuilder.copy().setType( type ).setException( t instanceof Exception ? (Exception) t
+                                                                                 : new Exception( t ) );
     }
 
 }

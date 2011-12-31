@@ -55,6 +55,10 @@ class TransferWrapper
 
     public TransferWrapper( ArtifactTransfer transfer )
     {
+        if ( transfer == null )
+        {
+            throw new IllegalArgumentException( "Transfer may not be null." );
+        }
         this.artifactTransfer = transfer;
         this.transfer = transfer;
         this.type = Type.ARTIFACT;
@@ -68,6 +72,10 @@ class TransferWrapper
 
     public TransferWrapper( MetadataTransfer transfer )
     {
+        if ( transfer == null )
+        {
+            throw new IllegalArgumentException( "Transfer may not be null." );
+        }
         this.metadataTransfer = transfer;
         this.transfer = transfer;
         this.type = Type.METADATA;

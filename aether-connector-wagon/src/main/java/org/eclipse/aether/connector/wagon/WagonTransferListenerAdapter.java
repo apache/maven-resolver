@@ -14,13 +14,14 @@ import java.io.File;
 
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.observers.AbstractTransferListener;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.transfer.TransferCancelledException;
-import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transfer.TransferEvent.Builder;
 import org.eclipse.aether.transfer.TransferEvent.EventType;
 import org.eclipse.aether.transfer.TransferEvent.RequestType;
+import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.transfer.TransferResource;
-import org.eclipse.aether.util.listener.DefaultTransferEvent;
 
 /**
  * An adapter to transform transfer events from Wagon into events for the repository system.
@@ -29,30 +30,29 @@ class WagonTransferListenerAdapter
     extends AbstractTransferListener
 {
 
-    private final RequestType requestType;
-
     private final TransferResource resource;
 
     private final TransferListener delegate;
 
-    private long transferredBytes;
+    private final Builder eventBuilder;
 
     public WagonTransferListenerAdapter( TransferListener delegate, String repositoryUrl, String resourceName,
-                                         File file, RequestTrace trace, RequestType requestType )
+                                         File file, RequestTrace trace, RequestType requestType,
+                                         RepositorySystemSession session )
     {
         this.delegate = delegate;
-        this.requestType = requestType;
         resource = new TransferResource( repositoryUrl, resourceName, file, trace );
+        eventBuilder = new Builder( session, resource ).setRequestType( requestType );
     }
 
     @Override
     public void transferStarted( TransferEvent event )
     {
-        transferredBytes = 0;
+        eventBuilder.setTransferredBytes( 0 );
         resource.setContentLength( event.getResource().getContentLength() );
         try
         {
-            delegate.transferStarted( wrap( event, EventType.STARTED ) );
+            delegate.transferStarted( newEvent( EventType.STARTED ).build() );
         }
         catch ( TransferCancelledException e )
         {
@@ -66,10 +66,10 @@ class WagonTransferListenerAdapter
     @Override
     public void transferProgress( TransferEvent event, byte[] buffer, int length )
     {
-        transferredBytes += length;
+        eventBuilder.addTransferredBytes( length );
         try
         {
-            delegate.transferProgressed( wrap( event, EventType.PROGRESSED ).setDataBuffer( buffer, 0, length ) );
+            delegate.transferProgressed( newEvent( EventType.PROGRESSED ).setDataBuffer( buffer, 0, length ).build() );
         }
         catch ( TransferCancelledException e )
         {
@@ -77,19 +77,9 @@ class WagonTransferListenerAdapter
         }
     }
 
-    private DefaultTransferEvent wrap( TransferEvent event, EventType type )
+    public Builder newEvent( EventType type )
     {
-        DefaultTransferEvent e = newEvent( type );
-        e.setRequestType( event.getRequestType() == TransferEvent.REQUEST_PUT ? RequestType.PUT : RequestType.GET );
-        return e;
-    }
-
-    public DefaultTransferEvent newEvent( EventType type )
-    {
-        DefaultTransferEvent e = new DefaultTransferEvent( type, resource );
-        e.setRequestType( requestType );
-        e.setTransferredBytes( transferredBytes );
-        return e;
+        return eventBuilder.copy().setType( type );
     }
 
 }

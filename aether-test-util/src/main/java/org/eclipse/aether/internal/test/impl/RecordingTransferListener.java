@@ -18,7 +18,6 @@ import java.util.List;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transfer.TransferResource;
 
 public class RecordingTransferListener
     implements TransferListener
@@ -72,13 +71,26 @@ public class RecordingTransferListener
     public void transferProgressed( TransferEvent event )
         throws TransferCancelledException
     {
-        event = new RecordedTransferEvent( event );
+        event = deepClone( event );
         events.add( event );
         progressEvents.add( event );
         if ( realListener != null )
         {
             realListener.transferProgressed( event );
         }
+    }
+
+    private TransferEvent deepClone( TransferEvent event )
+    {
+        TransferEvent.Builder builder = new TransferEvent.Builder( event.getSession(), event.getResource() );
+        builder.setType( event.getType() ).setRequestType( event.getRequestType() );
+        builder.setException( event.getException() );
+        ByteBuffer buffer = event.getDataBuffer();
+        if ( buffer != null )
+        {
+            builder.setDataBuffer( (ByteBuffer) ByteBuffer.allocate( buffer.remaining() ).put( buffer ).flip() );
+        }
+        return builder.build();
     }
 
     public void transferInitiated( TransferEvent event )
@@ -114,69 +126,6 @@ public class RecordingTransferListener
     {
         events.clear();
         progressEvents.clear();
-    }
-
-    static class RecordedTransferEvent
-        implements TransferEvent
-    {
-
-        private final TransferEvent event;
-
-        private final ByteBuffer buffer;
-
-        public RecordedTransferEvent( TransferEvent event )
-        {
-            this.event = event;
-
-            // the buffer may be reused for future events so we need to clone it for later inspection
-            ByteBuffer buffer = event.getDataBuffer();
-            if ( buffer != null )
-            {
-                this.buffer = ByteBuffer.allocate( buffer.remaining() );
-                this.buffer.put( buffer );
-                this.buffer.flip();
-            }
-            else
-            {
-                this.buffer = null;
-            }
-        }
-
-        public EventType getType()
-        {
-            return event.getType();
-        }
-
-        public RequestType getRequestType()
-        {
-            return event.getRequestType();
-        }
-
-        public TransferResource getResource()
-        {
-            return event.getResource();
-        }
-
-        public long getTransferredBytes()
-        {
-            return event.getTransferredBytes();
-        }
-
-        public ByteBuffer getDataBuffer()
-        {
-            return ( buffer != null ) ? buffer.asReadOnlyBuffer() : null;
-        }
-
-        public int getDataLength()
-        {
-            return ( buffer != null ) ? buffer.remaining() : 0;
-        }
-
-        public Exception getException()
-        {
-            return event.getException();
-        }
-
     }
 
 }

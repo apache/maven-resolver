@@ -14,7 +14,6 @@ import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.util.listener.DefaultTransferEvent;
 
 /**
  * Helper for {@link TransferEvent}-handling.
@@ -36,44 +35,44 @@ class TransferEventCatapult
         }
     }
 
-    protected void fireInitiated( DefaultTransferEvent event )
+    protected void fireInitiated( TransferEvent.Builder event )
         throws TransferCancelledException
     {
         event.setType( TransferEvent.EventType.INITIATED );
-        listener.transferInitiated( event );
+        listener.transferInitiated( event.build() );
     }
 
-    protected void fireStarted( DefaultTransferEvent event )
+    protected void fireStarted( TransferEvent.Builder event )
         throws TransferCancelledException
     {
         event.setType( TransferEvent.EventType.STARTED );
-        listener.transferStarted( event );
+        listener.transferStarted( event.build() );
     }
 
-    protected void fireSucceeded( DefaultTransferEvent event )
+    protected void fireSucceeded( TransferEvent.Builder event )
     {
         event.setType( TransferEvent.EventType.SUCCEEDED );
-        listener.transferSucceeded( event );
+        listener.transferSucceeded( event.build() );
     }
 
-    protected void fireFailed( DefaultTransferEvent event )
+    protected void fireFailed( TransferEvent.Builder event )
     {
         event.setType( TransferEvent.EventType.FAILED );
-        listener.transferFailed( event );
+        listener.transferFailed( event.build() );
     }
 
-    protected void fireCorrupted( DefaultTransferEvent event )
+    protected void fireCorrupted( TransferEvent.Builder event )
         throws TransferCancelledException
     {
-        event.setType( TransferEvent.EventType.FAILED );
-        listener.transferCorrupted( event );
+        event.setType( TransferEvent.EventType.CORRUPTED );
+        listener.transferCorrupted( event.build() );
     }
 
-    protected void fireProgressed( DefaultTransferEvent event )
+    protected void fireProgressed( TransferEvent.Builder event )
         throws TransferCancelledException
     {
         event.setType( TransferEvent.EventType.PROGRESSED );
-        listener.transferProgressed( event );
+        listener.transferProgressed( event.build() );
     }
 
     private final class NoTransferListener

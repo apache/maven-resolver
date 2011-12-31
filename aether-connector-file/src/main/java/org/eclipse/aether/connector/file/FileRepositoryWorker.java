@@ -26,10 +26,8 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
-import org.eclipse.aether.spi.connector.ArtifactTransfer;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
-import org.eclipse.aether.spi.connector.MetadataTransfer;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.Transfer;
@@ -49,7 +47,6 @@ import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.layout.MavenDefaultLayout;
 import org.eclipse.aether.util.layout.RepositoryLayout;
-import org.eclipse.aether.util.listener.DefaultTransferEvent;
 
 /**
  * The actual class doing all the work. Handles artifact and metadata up- and downloads.
@@ -83,7 +80,7 @@ class FileRepositoryWorker
 
     private final RepositoryLayout layout = new MavenDefaultLayout();
 
-    private TransferWrapper transfer;
+    private final TransferWrapper transfer;
 
     private final RemoteRepository repository;
 
@@ -91,7 +88,9 @@ class FileRepositoryWorker
 
     private final Direction direction;
 
-    private TransferResource resource;
+    private final TransferResource resource;
+
+    private final TransferEvent.Builder eventBuilder;
 
     static
     {
@@ -100,79 +99,8 @@ class FileRepositoryWorker
         checksumAlgos.put( "MD5", ".md5" );
     }
 
-    private FileRepositoryWorker( ArtifactTransfer transfer, RemoteRepository repository, Direction direction,
+    private FileRepositoryWorker( TransferWrapper transfer, RemoteRepository repository, Direction direction,
                                   RepositorySystemSession session )
-    {
-        this( session, repository, direction );
-
-        if ( transfer == null )
-        {
-            throw new IllegalArgumentException( "Transfer may not be null." );
-        }
-        this.transfer = new TransferWrapper( transfer );
-    }
-
-    private FileRepositoryWorker( MetadataTransfer transfer, RemoteRepository repository, Direction direction,
-                                  RepositorySystemSession session )
-    {
-        this( session, repository, direction );
-
-        if ( transfer == null )
-        {
-            throw new IllegalArgumentException( "Transfer may not be null." );
-        }
-        this.transfer = new TransferWrapper( transfer );
-    }
-
-    /**
-     * Initialize the worker for an artifact upload.
-     * 
-     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
-     * @param repository The repository definition. May not be <code>null</code>.
-     * @param session The current repository system session. May not be <code>null</code>.
-     */
-    public FileRepositoryWorker( ArtifactUpload transfer, RemoteRepository repository, RepositorySystemSession session )
-    {
-        this( transfer, repository, Direction.UPLOAD, session );
-    }
-
-    /**
-     * Initialize the worker for an artifact download.
-     * 
-     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
-     * @param repository The repository definition. May not be <code>null</code>.
-     * @param session The current repository system session. May not be <code>null</code>.
-     */
-    public FileRepositoryWorker( ArtifactDownload transfer, RemoteRepository repository, RepositorySystemSession session )
-    {
-        this( transfer, repository, Direction.DOWNLOAD, session );
-    }
-
-    /**
-     * Initialize the worker for an metadata download.
-     * 
-     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
-     * @param repository The repository definition. May not be <code>null</code>.
-     * @param session The current repository system session. May not be <code>null</code>.
-     */
-    public FileRepositoryWorker( MetadataDownload transfer, RemoteRepository repository, RepositorySystemSession session )
-    {
-        this( transfer, repository, Direction.DOWNLOAD, session );
-    }
-
-    /**
-     * Initialize the worker for an metadata upload.
-     * 
-     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
-     * @param repository The repository definition. May not be <code>null</code>.
-     * @param session The current repository system session. May not be <code>null</code>.
-     */
-    public FileRepositoryWorker( MetadataUpload transfer, RemoteRepository repository, RepositorySystemSession session )
-    {
-        this( transfer, repository, Direction.UPLOAD, session );
-    }
-
-    private FileRepositoryWorker( RepositorySystemSession session, RemoteRepository repository, Direction direction )
     {
         if ( repository == null )
         {
@@ -184,9 +112,61 @@ class FileRepositoryWorker
         }
 
         this.catapult = new TransferEventCatapult( session.getTransferListener() );
+        resource = newResource( transfer, repository );
+        eventBuilder = new TransferEvent.Builder( session, resource ).setRequestType( direction.getType() );
 
         this.direction = direction;
         this.repository = repository;
+
+        this.transfer = transfer;
+    }
+
+    /**
+     * Initialize the worker for an artifact upload.
+     * 
+     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
+     * @param repository The repository definition. May not be <code>null</code>.
+     * @param session The current repository system session. May not be <code>null</code>.
+     */
+    public FileRepositoryWorker( ArtifactUpload transfer, RemoteRepository repository, RepositorySystemSession session )
+    {
+        this( new TransferWrapper( transfer ), repository, Direction.UPLOAD, session );
+    }
+
+    /**
+     * Initialize the worker for an artifact download.
+     * 
+     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
+     * @param repository The repository definition. May not be <code>null</code>.
+     * @param session The current repository system session. May not be <code>null</code>.
+     */
+    public FileRepositoryWorker( ArtifactDownload transfer, RemoteRepository repository, RepositorySystemSession session )
+    {
+        this( new TransferWrapper( transfer ), repository, Direction.DOWNLOAD, session );
+    }
+
+    /**
+     * Initialize the worker for an metadata download.
+     * 
+     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
+     * @param repository The repository definition. May not be <code>null</code>.
+     * @param session The current repository system session. May not be <code>null</code>.
+     */
+    public FileRepositoryWorker( MetadataDownload transfer, RemoteRepository repository, RepositorySystemSession session )
+    {
+        this( new TransferWrapper( transfer ), repository, Direction.DOWNLOAD, session );
+    }
+
+    /**
+     * Initialize the worker for an metadata upload.
+     * 
+     * @param transfer The actual {@link Transfer}-object. May not be <code>null</code>.
+     * @param repository The repository definition. May not be <code>null</code>.
+     * @param session The current repository system session. May not be <code>null</code>.
+     */
+    public FileRepositoryWorker( MetadataUpload transfer, RemoteRepository repository, RepositorySystemSession session )
+    {
+        this( new TransferWrapper( transfer ), repository, Direction.UPLOAD, session );
     }
 
     /**
@@ -201,8 +181,7 @@ class FileRepositoryWorker
         try
         {
             transfer.setState( State.ACTIVE );
-            resource = newResource( transfer, repository );
-            DefaultTransferEvent event = newEvent( transfer );
+            TransferEvent.Builder event = newEvent( transfer );
             catapult.fireInitiated( event );
 
             File baseDir = new File( PathUtils.basedir( repository.getUrl() ) );
@@ -295,8 +274,8 @@ class FileRepositoryWorker
             transfer.setState( State.DONE );
             if ( transfer.getException() == null )
             {
-                DefaultTransferEvent event = newEvent( transfer );
-                event.setTransferredBytes( (int) totalTransferred );
+                TransferEvent.Builder event = newEvent( transfer );
+                event.setTransferredBytes( totalTransferred );
                 catapult.fireSucceeded( event );
             }
             else
@@ -314,7 +293,7 @@ class FileRepositoryWorker
                     target.delete();
                 }
 
-                DefaultTransferEvent event = newEvent( transfer );
+                TransferEvent.Builder event = newEvent( transfer );
                 catapult.fireFailed( event );
             }
         }
@@ -385,7 +364,7 @@ class FileRepositoryWorker
                 throw e;
             }
 
-            DefaultTransferEvent event = newEvent( transfer );
+            TransferEvent.Builder event = newEvent( transfer );
             event.setException( e );
             catapult.fireCorrupted( event );
         }
@@ -408,7 +387,7 @@ class FileRepositoryWorker
         }
 
         resource.setContentLength( src.length() );
-        DefaultTransferEvent event = newEvent( transfer );
+        TransferEvent.Builder event = newEvent( transfer );
         catapult.fireStarted( event );
 
         return fileProcessor.copy( src, target, new FileProcessor.ProgressListener()
@@ -420,7 +399,7 @@ class FileRepositoryWorker
                 throws IOException
             {
                 total += buffer.remaining();
-                DefaultTransferEvent event = newEvent( transfer );
+                TransferEvent.Builder event = newEvent( transfer );
                 event.setDataBuffer( buffer ).setTransferredBytes( total );
                 try
                 {
@@ -434,12 +413,9 @@ class FileRepositoryWorker
         } );
     }
 
-    private DefaultTransferEvent newEvent( TransferWrapper transfer )
+    private TransferEvent.Builder newEvent( TransferWrapper transfer )
     {
-        DefaultTransferEvent event = new DefaultTransferEvent( TransferEvent.EventType.INITIATED, resource );
-        event.setRequestType( direction.getType() );
-        event.setException( transfer.getException() );
-        return event;
+        return eventBuilder.copy().setException( transfer.getException() );
     }
 
     private TransferResource newResource( TransferWrapper transfer, RemoteRepository repository )

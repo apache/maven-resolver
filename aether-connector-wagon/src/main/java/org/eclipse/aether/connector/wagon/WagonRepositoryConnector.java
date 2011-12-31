@@ -69,7 +69,6 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 import org.eclipse.aether.util.layout.MavenDefaultLayout;
 import org.eclipse.aether.util.layout.RepositoryLayout;
-import org.eclipse.aether.util.listener.DefaultTransferEvent;
 
 /**
  * A repository connector that uses Maven Wagon for the transfer.
@@ -554,15 +553,15 @@ class WagonRepositoryConnector
             {
                 wagonListener =
                     new WagonTransferListenerAdapter( listener, wagonRepo.getUrl(), path, file, download.getTrace(),
-                                                      TransferEvent.RequestType.GET );
+                                                      TransferEvent.RequestType.GET, session );
             }
 
             try
             {
                 if ( listener != null )
                 {
-                    DefaultTransferEvent event = wagonListener.newEvent( TransferEvent.EventType.INITIATED );
-                    listener.transferInitiated( event );
+                    TransferEvent.Builder event = wagonListener.newEvent( TransferEvent.EventType.INITIATED );
+                    listener.transferInitiated( event.build() );
                 }
 
                 File tmp = ( file != null ) ? getTmpFile( file.getPath() ) : null;
@@ -631,10 +630,10 @@ class WagonRepositoryConnector
                                     }
                                     if ( listener != null )
                                     {
-                                        DefaultTransferEvent event =
+                                        TransferEvent.Builder event =
                                             wagonListener.newEvent( TransferEvent.EventType.CORRUPTED );
                                         event.setException( e );
-                                        listener.transferCorrupted( event );
+                                        listener.transferCorrupted( event.build() );
                                     }
                                 }
                             }
@@ -647,8 +646,8 @@ class WagonRepositoryConnector
 
                     if ( listener != null )
                     {
-                        DefaultTransferEvent event = wagonListener.newEvent( TransferEvent.EventType.SUCCEEDED );
-                        listener.transferSucceeded( event );
+                        TransferEvent.Builder event = wagonListener.newEvent( TransferEvent.EventType.SUCCEEDED );
+                        listener.transferSucceeded( event.build() );
                     }
                 }
                 finally
@@ -666,9 +665,9 @@ class WagonRepositoryConnector
 
                 if ( listener != null )
                 {
-                    DefaultTransferEvent event = wagonListener.newEvent( TransferEvent.EventType.FAILED );
+                    TransferEvent.Builder event = wagonListener.newEvent( TransferEvent.EventType.FAILED );
                     event.setException( e );
-                    listener.transferFailed( event );
+                    listener.transferFailed( event.build() );
                 }
             }
             finally
@@ -782,15 +781,15 @@ class WagonRepositoryConnector
             {
                 wagonListener =
                     new WagonTransferListenerAdapter( listener, wagonRepo.getUrl(), path, file, upload.getTrace(),
-                                                      TransferEvent.RequestType.PUT );
+                                                      TransferEvent.RequestType.PUT, session );
             }
 
             try
             {
                 if ( listener != null )
                 {
-                    DefaultTransferEvent event = wagonListener.newEvent( TransferEvent.EventType.INITIATED );
-                    listener.transferInitiated( event );
+                    TransferEvent.Builder event = wagonListener.newEvent( TransferEvent.EventType.INITIATED );
+                    listener.transferInitiated( event.build() );
                 }
 
                 Wagon wagon = pollWagon();
@@ -814,8 +813,8 @@ class WagonRepositoryConnector
 
                     if ( listener != null )
                     {
-                        DefaultTransferEvent event = wagonListener.newEvent( TransferEvent.EventType.SUCCEEDED );
-                        listener.transferSucceeded( event );
+                        TransferEvent.Builder event = wagonListener.newEvent( TransferEvent.EventType.SUCCEEDED );
+                        listener.transferSucceeded( event.build() );
                     }
                 }
                 finally
@@ -829,9 +828,9 @@ class WagonRepositoryConnector
 
                 if ( listener != null )
                 {
-                    DefaultTransferEvent event = wagonListener.newEvent( TransferEvent.EventType.FAILED );
+                    TransferEvent.Builder event = wagonListener.newEvent( TransferEvent.EventType.FAILED );
                     event.setException( e );
-                    listener.transferFailed( event );
+                    listener.transferFailed( event.build() );
                 }
             }
             finally

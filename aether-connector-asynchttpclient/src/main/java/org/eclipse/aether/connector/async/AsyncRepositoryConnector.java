@@ -57,7 +57,6 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.StringUtils;
 import org.eclipse.aether.util.layout.MavenDefaultLayout;
 import org.eclipse.aether.util.layout.RepositoryLayout;
-import org.eclipse.aether.util.listener.DefaultTransferEvent;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -483,10 +482,11 @@ class AsyncRepositoryConnector
     private TransferEvent newEvent( TransferResource resource, Exception e, TransferEvent.RequestType requestType,
                                     TransferEvent.EventType eventType )
     {
-        DefaultTransferEvent event = new DefaultTransferEvent( eventType, resource );
+        TransferEvent.Builder event = new TransferEvent.Builder( session, resource );
+        event.setType( eventType );
         event.setRequestType( requestType );
         event.setException( e );
-        return event;
+        return event.build();
     }
 
     class GetTask<T extends Transfer>
@@ -596,7 +596,7 @@ class AsyncRepositoryConnector
 
                 final Request activeRequest = request;
                 final AsyncHttpClient activeHttpClient = client;
-                completionHandler = new CompletionHandler( transferResource, httpClient, logger, RequestType.GET )
+                completionHandler = new CompletionHandler( transferResource, httpClient, logger, RequestType.GET, session )
                 {
                     private final AtomicBoolean handleTmpFile = new AtomicBoolean( true );
 
@@ -1082,7 +1082,7 @@ class AsyncRepositoryConnector
                 final String uri = validateUri( path );
 
                 final CompletionHandler completionHandler =
-                    new CompletionHandler( transferResource, httpClient, logger, RequestType.PUT )
+                    new CompletionHandler( transferResource, httpClient, logger, RequestType.PUT, session )
                     {
                         @Override
                         public void onThrowable( Throwable t )
