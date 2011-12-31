@@ -28,7 +28,37 @@ public final class TransferEvent
      */
     public enum EventType
     {
-        INITIATED, STARTED, PROGRESSED, CORRUPTED, SUCCEEDED, FAILED
+
+        /**
+         * @see TransferListener#transferInitiated(TransferEvent)
+         */
+        INITIATED,
+
+        /**
+         * @see TransferListener#transferStarted(TransferEvent)
+         */
+        STARTED,
+
+        /**
+         * @see TransferListener#transferProgressed(TransferEvent)
+         */
+        PROGRESSED,
+
+        /**
+         * @see TransferListener#transferCorrupted(TransferEvent)
+         */
+        CORRUPTED,
+
+        /**
+         * @see TransferListener#transferSucceeded(TransferEvent)
+         */
+        SUCCEEDED,
+
+        /**
+         * @see TransferListener#transferFailed(TransferEvent)
+         */
+        FAILED
+
     }
 
     /**

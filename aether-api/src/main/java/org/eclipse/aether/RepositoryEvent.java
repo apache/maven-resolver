@@ -34,25 +34,102 @@ public final class RepositoryEvent
      */
     public enum EventType
     {
+
+        /**
+         * @see RepositoryListener#artifactDescriptorInvalid(RepositoryEvent)
+         */
         ARTIFACT_DESCRIPTOR_INVALID,
+
+        /**
+         * @see RepositoryListener#artifactDescriptorMissing(RepositoryEvent)
+         */
         ARTIFACT_DESCRIPTOR_MISSING,
+
+        /**
+         * @see RepositoryListener#metadataInvalid(RepositoryEvent)
+         */
         METADATA_INVALID,
+
+        /**
+         * @see RepositoryListener#artifactResolving(RepositoryEvent)
+         */
         ARTIFACT_RESOLVING,
+
+        /**
+         * @see RepositoryListener#artifactResolved(RepositoryEvent)
+         */
         ARTIFACT_RESOLVED,
+
+        /**
+         * @see RepositoryListener#metadataResolving(RepositoryEvent)
+         */
         METADATA_RESOLVING,
+
+        /**
+         * @see RepositoryListener#metadataResolved(RepositoryEvent)
+         */
         METADATA_RESOLVED,
+
+        /**
+         * @see RepositoryListener#artifactDownloading(RepositoryEvent)
+         */
         ARTIFACT_DOWNLOADING,
+
+        /**
+         * @see RepositoryListener#artifactDownloaded(RepositoryEvent)
+         */
         ARTIFACT_DOWNLOADED,
+
+        /**
+         * @see RepositoryListener#metadataDownloading(RepositoryEvent)
+         */
         METADATA_DOWNLOADING,
+
+        /**
+         * @see RepositoryListener#metadataDownloaded(RepositoryEvent)
+         */
         METADATA_DOWNLOADED,
+
+        /**
+         * @see RepositoryListener#artifactInstalling(RepositoryEvent)
+         */
         ARTIFACT_INSTALLING,
+
+        /**
+         * @see RepositoryListener#artifactInstalled(RepositoryEvent)
+         */
         ARTIFACT_INSTALLED,
+
+        /**
+         * @see RepositoryListener#metadataInstalling(RepositoryEvent)
+         */
         METADATA_INSTALLING,
+
+        /**
+         * @see RepositoryListener#metadataInstalled(RepositoryEvent)
+         */
         METADATA_INSTALLED,
+
+        /**
+         * @see RepositoryListener#artifactDeploying(RepositoryEvent)
+         */
         ARTIFACT_DEPLOYING,
+
+        /**
+         * @see RepositoryListener#artifactDeployed(RepositoryEvent)
+         */
         ARTIFACT_DEPLOYED,
+
+        /**
+         * @see RepositoryListener#metadataDeploying(RepositoryEvent)
+         */
         METADATA_DEPLOYING,
+
+        /**
+         * @see RepositoryListener#metadataDeployed(RepositoryEvent)
+         */
         METADATA_DEPLOYED
+
     }
 
     private final EventType type;
