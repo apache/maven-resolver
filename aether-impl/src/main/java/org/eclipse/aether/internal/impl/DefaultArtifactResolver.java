@@ -24,6 +24,7 @@ import javax.inject.Named;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
+import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
@@ -64,7 +65,6 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
  */
@@ -605,16 +605,18 @@ public class DefaultArtifactResolver
 
     private void artifactResolving( RepositorySystemSession session, RequestTrace trace, Artifact artifact )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_RESOLVING, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_RESOLVING );
+        event.setTrace( trace );
         event.setArtifact( artifact );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void artifactResolved( RepositorySystemSession session, RequestTrace trace, Artifact artifact,
                                    ArtifactRepository repository, List<Exception> exceptions )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_RESOLVED, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_RESOLVED );
+        event.setTrace( trace );
         event.setArtifact( artifact );
         event.setRepository( repository );
         event.setExceptions( exceptions );
@@ -623,23 +625,25 @@ public class DefaultArtifactResolver
             event.setFile( artifact.getFile() );
         }
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void artifactDownloading( RepositorySystemSession session, RequestTrace trace, Artifact artifact,
                                       RemoteRepository repository )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_DOWNLOADING, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_DOWNLOADING );
+        event.setTrace( trace );
         event.setArtifact( artifact );
         event.setRepository( repository );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void artifactDownloaded( RepositorySystemSession session, RequestTrace trace, Artifact artifact,
                                      RemoteRepository repository, Exception exception )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_DOWNLOADED, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_DOWNLOADED );
+        event.setTrace( trace );
         event.setArtifact( artifact );
         event.setRepository( repository );
         event.setException( exception );
@@ -648,7 +652,7 @@ public class DefaultArtifactResolver
             event.setFile( artifact.getFile() );
         }
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     static class ResolutionGroup

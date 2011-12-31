@@ -22,6 +22,7 @@ import javax.inject.Named;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
+import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
@@ -46,7 +47,6 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
-import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
  */
@@ -341,47 +341,51 @@ public class DefaultInstaller
     private void artifactInstalling( RepositorySystemSession session, RequestTrace trace, Artifact artifact,
                                      File dstFile )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_INSTALLING, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_INSTALLING );
+        event.setTrace( trace );
         event.setArtifact( artifact );
         event.setRepository( session.getLocalRepositoryManager().getRepository() );
         event.setFile( dstFile );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void artifactInstalled( RepositorySystemSession session, RequestTrace trace, Artifact artifact,
                                     File dstFile, Exception exception )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_INSTALLED, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_INSTALLED );
+        event.setTrace( trace );
         event.setArtifact( artifact );
         event.setRepository( session.getLocalRepositoryManager().getRepository() );
         event.setFile( dstFile );
         event.setException( exception );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void metadataInstalling( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
                                      File dstFile )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_INSTALLING, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_INSTALLING );
+        event.setTrace( trace );
         event.setMetadata( metadata );
         event.setRepository( session.getLocalRepositoryManager().getRepository() );
         event.setFile( dstFile );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void metadataInstalled( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
                                     File dstFile, Exception exception )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_INSTALLED, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_INSTALLED );
+        event.setTrace( trace );
         event.setMetadata( metadata );
         event.setRepository( session.getLocalRepositoryManager().getRepository() );
         event.setFile( dstFile );
         event.setException( exception );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
 }

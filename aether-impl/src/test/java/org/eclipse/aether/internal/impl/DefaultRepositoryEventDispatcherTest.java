@@ -21,7 +21,6 @@ import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
-import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 import org.junit.Test;
 
 /**
@@ -46,7 +45,7 @@ public class DefaultRepositoryEventDispatcherTest
 
         for ( RepositoryEvent.EventType type : RepositoryEvent.EventType.values() )
         {
-            DefaultRepositoryEvent event = new DefaultRepositoryEvent( type, session, null );
+            RepositoryEvent event = new RepositoryEvent.Builder( session, type ).build();
 
             handler.methodName = null;
 

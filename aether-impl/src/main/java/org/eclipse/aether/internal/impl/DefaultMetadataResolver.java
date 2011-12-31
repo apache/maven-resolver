@@ -29,6 +29,7 @@ import javax.inject.Named;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
+import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
@@ -62,7 +63,6 @@ import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
  */
@@ -445,45 +445,49 @@ public class DefaultMetadataResolver
     private void metadataResolving( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
                                     ArtifactRepository repository )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_RESOLVING, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
+        event.setTrace( trace );
         event.setMetadata( metadata );
         event.setRepository( repository );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void metadataResolved( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
                                    ArtifactRepository repository, Exception exception )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_RESOLVED, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVED );
+        event.setTrace( trace );
         event.setMetadata( metadata );
         event.setRepository( repository );
         event.setException( exception );
         event.setFile( metadata.getFile() );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void metadataDownloading( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
                                       ArtifactRepository repository )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_DOWNLOADING, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADING );
+        event.setTrace( trace );
         event.setMetadata( metadata );
         event.setRepository( repository );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private void metadataDownloaded( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
                                      ArtifactRepository repository, File file, Exception exception )
     {
-        DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_DOWNLOADED, session, trace );
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADED );
+        event.setTrace( trace );
         event.setMetadata( metadata );
         event.setRepository( repository );
         event.setException( exception );
         event.setFile( file );
 
-        repositoryEventDispatcher.dispatch( event );
+        repositoryEventDispatcher.dispatch( event.build() );
     }
 
     private Executor getExecutor( int threads )

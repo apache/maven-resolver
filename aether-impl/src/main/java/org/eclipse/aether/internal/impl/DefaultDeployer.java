@@ -24,6 +24,7 @@ import javax.inject.Named;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
+import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -61,7 +62,6 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
-import org.eclipse.aether.util.listener.DefaultRepositoryEvent;
 
 /**
  */
@@ -374,16 +374,17 @@ public class DefaultDeployer
             if ( !( (MergeableMetadata) metadata ).isMerged() )
             {
                 {
-                    DefaultRepositoryEvent event =
-                        new DefaultRepositoryEvent( EventType.METADATA_RESOLVING, session, catapult.getTrace() );
+                    RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
+                    event.setTrace( catapult.getTrace() );
                     event.setMetadata( metadata );
                     event.setRepository( repository );
-                    repositoryEventDispatcher.dispatch( event );
+                    repositoryEventDispatcher.dispatch( event.build() );
 
-                    event = new DefaultRepositoryEvent( EventType.METADATA_DOWNLOADING, session, catapult.getTrace() );
+                    event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADING );
+                    event.setTrace( catapult.getTrace() );
                     event.setMetadata( metadata );
                     event.setRepository( repository );
-                    repositoryEventDispatcher.dispatch( event );
+                    repositoryEventDispatcher.dispatch( event.build() );
                 }
 
                 RepositoryPolicy policy = getPolicy( session, repository, metadata.getNature() );
@@ -401,20 +402,22 @@ public class DefaultDeployer
                 }
 
                 {
-                    DefaultRepositoryEvent event =
-                        new DefaultRepositoryEvent( EventType.METADATA_DOWNLOADED, session, catapult.getTrace() );
+                    RepositoryEvent.Builder event =
+                        new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADED );
+                    event.setTrace( catapult.getTrace() );
                     event.setMetadata( metadata );
                     event.setRepository( repository );
                     event.setException( error );
                     event.setFile( dstFile );
-                    repositoryEventDispatcher.dispatch( event );
+                    repositoryEventDispatcher.dispatch( event.build() );
 
-                    event = new DefaultRepositoryEvent( EventType.METADATA_RESOLVED, session, catapult.getTrace() );
+                    event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVED );
+                    event.setTrace( catapult.getTrace() );
                     event.setMetadata( metadata );
                     event.setRepository( repository );
                     event.setException( error );
                     event.setFile( dstFile );
-                    repositoryEventDispatcher.dispatch( event );
+                    repositoryEventDispatcher.dispatch( event.build() );
                 }
 
                 if ( error != null && !( error instanceof MetadataNotFoundException ) )
@@ -494,44 +497,48 @@ public class DefaultDeployer
 
         public void artifactDeploying( Artifact artifact, File file )
         {
-            DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_DEPLOYING, session, trace );
+            RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_DEPLOYING );
+            event.setTrace( trace );
             event.setArtifact( artifact );
             event.setRepository( repository );
             event.setFile( file );
 
-            dispatcher.dispatch( event );
+            dispatcher.dispatch( event.build() );
         }
 
         public void artifactDeployed( Artifact artifact, File file, ArtifactTransferException exception )
         {
-            DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.ARTIFACT_DEPLOYED, session, trace );
+            RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.ARTIFACT_DEPLOYED );
+            event.setTrace( trace );
             event.setArtifact( artifact );
             event.setRepository( repository );
             event.setFile( file );
             event.setException( exception );
 
-            dispatcher.dispatch( event );
+            dispatcher.dispatch( event.build() );
         }
 
         public void metadataDeploying( Metadata metadata, File file )
         {
-            DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_DEPLOYING, session, trace );
+            RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_DEPLOYING );
+            event.setTrace( trace );
             event.setMetadata( metadata );
             event.setRepository( repository );
             event.setFile( file );
 
-            dispatcher.dispatch( event );
+            dispatcher.dispatch( event.build() );
         }
 
         public void metadataDeployed( Metadata metadata, File file, Exception exception )
         {
-            DefaultRepositoryEvent event = new DefaultRepositoryEvent( EventType.METADATA_DEPLOYED, session, trace );
+            RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_DEPLOYED );
+            event.setTrace( trace );
             event.setMetadata( metadata );
             event.setRepository( repository );
             event.setFile( file );
             event.setException( exception );
 
-            dispatcher.dispatch( event );
+            dispatcher.dispatch( event.build() );
         }
 
     }
