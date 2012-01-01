@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
@@ -26,7 +27,7 @@ public final class AndDependencyFilter
     implements DependencyFilter
 {
 
-    private final Collection<DependencyFilter> filters = new LinkedHashSet<DependencyFilter>();
+    private final Set<DependencyFilter> filters = new LinkedHashSet<DependencyFilter>();
 
     /**
      * Creates a new filter from the specified filters.

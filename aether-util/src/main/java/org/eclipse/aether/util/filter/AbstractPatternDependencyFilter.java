@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
@@ -30,7 +31,7 @@ class AbstractPatternDependencyFilter
     implements DependencyFilter
 {
 
-    private final Collection<String> patterns = new HashSet<String>();
+    private final Set<String> patterns = new HashSet<String>();
 
     private final VersionScheme versionScheme;
 

@@ -30,14 +30,14 @@ public final class ExclusionDependencySelector
     implements DependencySelector
 {
 
-    private final Collection<Exclusion> exclusions;
+    private final Set<Exclusion> exclusions;
 
     /**
      * Creates a new selector without any exclusions.
      */
     public ExclusionDependencySelector()
     {
-        this( Collections.<Exclusion> emptySet() );
+        this.exclusions = Collections.emptySet();
     }
 
     /**
@@ -45,7 +45,19 @@ public final class ExclusionDependencySelector
      * 
      * @param exclusions The exclusions, may be {@code null}.
      */
-    public ExclusionDependencySelector( Set<Exclusion> exclusions )
+    public ExclusionDependencySelector( Collection<Exclusion> exclusions )
+    {
+        if ( exclusions != null && !exclusions.isEmpty() )
+        {
+            this.exclusions = new LinkedHashSet<Exclusion>( exclusions );
+        }
+        else
+        {
+            this.exclusions = Collections.emptySet();
+        }
+    }
+
+    private ExclusionDependencySelector( Set<Exclusion> exclusions )
     {
         if ( exclusions != null && !exclusions.isEmpty() )
         {

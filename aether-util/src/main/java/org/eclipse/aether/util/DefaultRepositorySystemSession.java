@@ -393,11 +393,12 @@ public final class DefaultRepositorySystemSession
         else
         {
             map = new LinkedHashMap<String, T>();
-            for ( Object key : table.keySet() )
+            for ( Map.Entry<?, ?> entry : table.entrySet() )
             {
+                Object key = entry.getKey();
                 if ( key instanceof String )
                 {
-                    Object value = table.get( key );
+                    Object value = entry.getValue();
                     if ( valueType.isInstance( value ) )
                     {
                         map.put( key.toString(), valueType.cast( value ) );

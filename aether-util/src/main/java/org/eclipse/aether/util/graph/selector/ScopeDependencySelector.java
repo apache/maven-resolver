@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
@@ -32,9 +33,9 @@ public final class ScopeDependencySelector
 
     private final boolean transitive;
 
-    private final Collection<String> included;
+    private final Set<String> included;
 
-    private final Collection<String> excluded;
+    private final Set<String> excluded;
 
     /**
      * Creates a new selector using the specified includes and excludes.
@@ -75,7 +76,7 @@ public final class ScopeDependencySelector
         this( null, Arrays.asList( excluded ) );
     }
 
-    private ScopeDependencySelector( boolean transitive, Collection<String> included, Collection<String> excluded )
+    private ScopeDependencySelector( boolean transitive, Set<String> included, Set<String> excluded )
     {
         this.transitive = transitive;
         this.included = included;

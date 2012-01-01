@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
@@ -30,9 +31,9 @@ public final class ScopeDependencyFilter
     implements DependencyFilter
 {
 
-    private final Collection<String> included = new HashSet<String>();
+    private final Set<String> included = new HashSet<String>();
 
-    private final Collection<String> excluded = new HashSet<String>();
+    private final Set<String> excluded = new HashSet<String>();
 
     /**
      * Creates a new filter using the specified includes and excludes.

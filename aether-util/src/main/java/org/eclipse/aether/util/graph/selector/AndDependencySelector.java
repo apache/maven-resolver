@@ -26,7 +26,7 @@ public final class AndDependencySelector
     implements DependencySelector
 {
 
-    private final Collection<DependencySelector> selectors;
+    private final Set<DependencySelector> selectors;
 
     /**
      * Creates a new selector from the specified selectors.
@@ -51,7 +51,19 @@ public final class AndDependencySelector
      * 
      * @param selectors The selectors to combine, may be {@code null}.
      */
-    public AndDependencySelector( Set<DependencySelector> selectors )
+    public AndDependencySelector( Collection<DependencySelector> selectors )
+    {
+        if ( selectors != null && !selectors.isEmpty() )
+        {
+            this.selectors = new LinkedHashSet<DependencySelector>( selectors );
+        }
+        else
+        {
+            this.selectors = Collections.emptySet();
+        }
+    }
+
+    private AndDependencySelector( Set<DependencySelector> selectors )
     {
         if ( selectors != null && !selectors.isEmpty() )
         {

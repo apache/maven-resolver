@@ -13,6 +13,7 @@ package org.eclipse.aether.util.filter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
@@ -20,17 +21,17 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
 
 /**
- * A simple filter to exclude artifacts based either artifact id or group id and artifact id.
+ * A simple filter to exclude artifacts based on either artifact id or group id and artifact id.
  */
 public final class ExclusionsDependencyFilter
     implements DependencyFilter
 {
 
-    private final Collection<String> excludes = new HashSet<String>();
+    private final Set<String> excludes = new HashSet<String>();
 
     /**
      * Creates a new filter using the specified exclude patterns. A pattern can either be of the form
-     * {@code groupId:artifactId} (recommended) or just {@code artifactId}.
+     * {@code groupId:artifactId} (recommended) or just {@code artifactId} (deprecated).
      * 
      * @param excludes The exclude patterns, may be {@code null} or empty to exclude no artifacts.
      */
