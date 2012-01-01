@@ -70,35 +70,35 @@ public final class DefaultRepositorySystemSession
 
     private TransferListener transferListener;
 
-    private Map<String, String> systemProperties = new HashMap<String, String>();
+    private Map<String, String> systemProperties;
 
-    private Map<String, String> systemPropertiesView = Collections.unmodifiableMap( systemProperties );
+    private Map<String, String> systemPropertiesView;
 
-    private Map<String, String> userProperties = new HashMap<String, String>();
+    private Map<String, String> userProperties;
 
-    private Map<String, String> userPropertiesView = Collections.unmodifiableMap( userProperties );
+    private Map<String, String> userPropertiesView;
 
-    private Map<String, Object> configProperties = new HashMap<String, Object>();
+    private Map<String, Object> configProperties;
 
-    private Map<String, Object> configPropertiesView = Collections.unmodifiableMap( configProperties );
+    private Map<String, Object> configPropertiesView;
 
-    private MirrorSelector mirrorSelector = NullMirrorSelector.INSTANCE;
+    private MirrorSelector mirrorSelector;
 
-    private ProxySelector proxySelector = NullProxySelector.INSTANCE;
+    private ProxySelector proxySelector;
 
-    private AuthenticationSelector authenticationSelector = NullAuthenticationSelector.INSTANCE;
+    private AuthenticationSelector authenticationSelector;
 
-    private ArtifactTypeRegistry artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
+    private ArtifactTypeRegistry artifactTypeRegistry;
 
-    private DependencyTraverser dependencyTraverser = NullDependencyTraverser.INSTANCE;
+    private DependencyTraverser dependencyTraverser;
 
-    private DependencyManager dependencyManager = NullDependencyManager.INSTANCE;
+    private DependencyManager dependencyManager;
 
-    private DependencySelector dependencySelector = NullDependencySelector.INSTANCE;
+    private DependencySelector dependencySelector;
 
-    private DependencyGraphTransformer dependencyGraphTransformer = NullDependencyGraphTransformer.INSTANCE;
+    private DependencyGraphTransformer dependencyGraphTransformer;
 
-    private SessionData data = new DefaultSessionData();
+    private SessionData data;
 
     private RepositoryCache cache;
 
@@ -109,7 +109,21 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession()
     {
-        // enables default constructor
+        systemProperties = new HashMap<String, String>();
+        systemPropertiesView = Collections.unmodifiableMap( systemProperties );
+        userProperties = new HashMap<String, String>();
+        userPropertiesView = Collections.unmodifiableMap( userProperties );
+        configProperties = new HashMap<String, Object>();
+        configPropertiesView = Collections.unmodifiableMap( configProperties );
+        mirrorSelector = NullMirrorSelector.INSTANCE;
+        proxySelector = NullProxySelector.INSTANCE;
+        authenticationSelector = NullAuthenticationSelector.INSTANCE;
+        artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
+        dependencyTraverser = NullDependencyTraverser.INSTANCE;
+        dependencyManager = NullDependencyManager.INSTANCE;
+        dependencySelector = NullDependencySelector.INSTANCE;
+        dependencyGraphTransformer = NullDependencyGraphTransformer.INSTANCE;
+        data = new DefaultSessionData();
     }
 
     /**
