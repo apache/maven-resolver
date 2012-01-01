@@ -8,14 +8,13 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util;
+package org.eclipse.aether;
 
 import static org.junit.Assert.*;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.DefaultRepositorySystemSession;
 import org.junit.Test;
 
 /**

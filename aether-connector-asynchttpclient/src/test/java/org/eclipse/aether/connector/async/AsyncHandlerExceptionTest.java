@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.async;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnector;
 import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
@@ -20,7 +21,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
-import org.eclipse.aether.util.DefaultRepositorySystemSession;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

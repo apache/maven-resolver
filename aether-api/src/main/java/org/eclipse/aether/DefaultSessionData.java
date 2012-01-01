@@ -8,12 +8,10 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util;
+package org.eclipse.aether;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.eclipse.aether.SessionData;
 
 /**
  * A simple session data storage backed by a thread-safe map.

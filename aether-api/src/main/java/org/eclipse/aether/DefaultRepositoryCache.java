@@ -8,23 +8,20 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util;
+package org.eclipse.aether;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.eclipse.aether.RepositoryCache;
-import org.eclipse.aether.RepositorySystemSession;
-
 /**
- * A simplistic repository cache backed by a {@link ConcurrentHashMap}. The simplistic nature of this cache makes it
- * only suitable for use with short-lived repository system sessions.
+ * A simplistic repository cache backed by a thread-safe map. The simplistic nature of this cache makes it only suitable
+ * for use with short-lived repository system sessions where pruning of cache data is not required.
  */
 public final class DefaultRepositoryCache
     implements RepositoryCache
 {
 
-    private Map<Object, Object> cache = new ConcurrentHashMap<Object, Object>( 256 );
+    private final Map<Object, Object> cache = new ConcurrentHashMap<Object, Object>( 256 );
 
     public Object get( RepositorySystemSession session, Object key )
     {

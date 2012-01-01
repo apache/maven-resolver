@@ -8,22 +8,23 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util;
+package org.eclipse.aether;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.aether.RepositoryCache;
-import org.eclipse.aether.RepositoryListener;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
@@ -35,27 +36,15 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.util.graph.manager.NoopDependencyManager;
-import org.eclipse.aether.util.graph.selector.StaticDependencySelector;
-import org.eclipse.aether.util.graph.transformer.NoopDependencyGraphTransformer;
-import org.eclipse.aether.util.graph.traverser.StaticDependencyTraverser;
 
 /**
  * A simple repository system session. <em>Note:</em> This class is not thread-safe. It is assumed that the mutators get
- * only called during an initialize phase and the session itself is not changed when being used by the repository
- * system.
+ * only called during an initialization phase and that the session itself is not changed when being used by the
+ * repository system.
  */
 public final class DefaultRepositorySystemSession
     implements RepositorySystemSession
 {
-
-    private static final DependencyTraverser TRAVERSER = new StaticDependencyTraverser( true );
-
-    private static final DependencyManager MANAGER = NoopDependencyManager.INSTANCE;
-
-    private static final DependencySelector SELECTOR = new StaticDependencySelector( true );
-
-    private static final DependencyGraphTransformer TRANSFORMER = NoopDependencyGraphTransformer.INSTANCE;
 
     private boolean offline;
 
@@ -101,20 +90,22 @@ public final class DefaultRepositorySystemSession
 
     private ArtifactTypeRegistry artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
 
-    private DependencyTraverser dependencyTraverser = TRAVERSER;
+    private DependencyTraverser dependencyTraverser = NullDependencyTraverser.INSTANCE;
 
-    private DependencyManager dependencyManager = MANAGER;
+    private DependencyManager dependencyManager = NullDependencyManager.INSTANCE;
 
-    private DependencySelector dependencySelector = SELECTOR;
+    private DependencySelector dependencySelector = NullDependencySelector.INSTANCE;
 
-    private DependencyGraphTransformer dependencyGraphTransformer = TRANSFORMER;
+    private DependencyGraphTransformer dependencyGraphTransformer = NullDependencyGraphTransformer.INSTANCE;
 
     private SessionData data = new DefaultSessionData();
 
     private RepositoryCache cache;
 
     /**
-     * Creates an uninitialized session.
+     * Creates an uninitialized session. <em>Note:</em> The new session is not ready to use, as a bare minimum,
+     * {@link #setLocalRepositoryManager(LocalRepositoryManager)} needs to be called but usually other settings also
+     * need to be customized to achieve meaningful behavior.
      */
     public DefaultRepositorySystemSession()
     {
@@ -128,6 +119,11 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession( RepositorySystemSession session )
     {
+        if ( session == null )
+        {
+            throw new IllegalArgumentException( "repository system session not specified" );
+        }
+
         setOffline( session.isOffline() );
         setTransferErrorCachingEnabled( session.isTransferErrorCachingEnabled() );
         setNotFoundCachingEnabled( session.isNotFoundCachingEnabled() );
@@ -324,8 +320,8 @@ public final class DefaultRepositorySystemSession
     }
 
     /**
-     * Sets the local repository manager used during this session. Eventually, a valid session must have a local
-     * repository manager set.
+     * Sets the local repository manager used during this session. <em>Note:</em> Eventually, a valid session must have
+     * a local repository manager set.
      * 
      * @param localRepositoryManager The local repository manager used during this session, may be {@code null}.
      * @return This session for chaining, never {@code null}.
@@ -696,7 +692,7 @@ public final class DefaultRepositorySystemSession
         this.dependencyTraverser = dependencyTraverser;
         if ( this.dependencyTraverser == null )
         {
-            this.dependencyTraverser = TRAVERSER;
+            this.dependencyTraverser = NullDependencyTraverser.INSTANCE;
         }
         return this;
     }
@@ -717,7 +713,7 @@ public final class DefaultRepositorySystemSession
         this.dependencyManager = dependencyManager;
         if ( this.dependencyManager == null )
         {
-            this.dependencyManager = MANAGER;
+            this.dependencyManager = NullDependencyManager.INSTANCE;
         }
         return this;
     }
@@ -738,7 +734,7 @@ public final class DefaultRepositorySystemSession
         this.dependencySelector = dependencySelector;
         if ( this.dependencySelector == null )
         {
-            this.dependencySelector = SELECTOR;
+            this.dependencySelector = NullDependencySelector.INSTANCE;
         }
         return this;
     }
@@ -760,7 +756,7 @@ public final class DefaultRepositorySystemSession
         this.dependencyGraphTransformer = dependencyGraphTransformer;
         if ( this.dependencyGraphTransformer == null )
         {
-            this.dependencyGraphTransformer = TRANSFORMER;
+            this.dependencyGraphTransformer = NullDependencyGraphTransformer.INSTANCE;
         }
         return this;
     }
@@ -842,7 +838,7 @@ public final class DefaultRepositorySystemSession
 
     }
 
-    static class NullArtifactTypeRegistry
+    static final class NullArtifactTypeRegistry
         implements ArtifactTypeRegistry
     {
 
@@ -851,6 +847,74 @@ public final class DefaultRepositorySystemSession
         public ArtifactType get( String typeId )
         {
             return null;
+        }
+
+    }
+
+    static class NullDependencyGraphTransformer
+        implements DependencyGraphTransformer
+    {
+
+        public static final DependencyGraphTransformer INSTANCE = new NullDependencyGraphTransformer();
+
+        public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
+            throws RepositoryException
+        {
+            return node;
+        }
+
+    }
+
+    static class NullDependencyManager
+        implements DependencyManager
+    {
+
+        public static final DependencyManager INSTANCE = new NullDependencyManager();
+
+        public DependencyManager deriveChildManager( DependencyCollectionContext context )
+        {
+            return this;
+        }
+
+        public DependencyManagement manageDependency( Dependency dependency )
+        {
+            return null;
+        }
+
+    }
+
+    static class NullDependencySelector
+        implements DependencySelector
+    {
+
+        public static final DependencySelector INSTANCE = new NullDependencySelector();
+
+        public DependencySelector deriveChildSelector( DependencyCollectionContext context )
+        {
+            return this;
+        }
+
+        public boolean selectDependency( Dependency dependency )
+        {
+            return true;
+        }
+
+    }
+
+    static class NullDependencyTraverser
+        implements DependencyTraverser
+    {
+
+        public static final DependencyTraverser INSTANCE = new NullDependencyTraverser();
+
+        public DependencyTraverser deriveChildTraverser( DependencyCollectionContext context )
+        {
+            return this;
+        }
+
+        public boolean traverseDependency( Dependency dependency )
+        {
+            return true;
         }
 
     }

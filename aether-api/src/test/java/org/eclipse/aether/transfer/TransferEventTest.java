@@ -12,11 +12,9 @@ package org.eclipse.aether.transfer;
 
 import static org.junit.Assert.*;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
@@ -29,19 +27,7 @@ public class TransferEventTest
 
     private static TransferResource res = new TransferResource( "file://nil", "void", null, null );
 
-    private static RepositorySystemSession session =
-        (RepositorySystemSession) Proxy.newProxyInstance( Thread.currentThread().getContextClassLoader(),
-                                                          new Class<?>[] { RepositorySystemSession.class },
-                                                          new InvocationHandler()
-                                                          {
-
-                                                              public Object invoke( Object proxy, Method method,
-                                                                                    Object[] args )
-                                                                  throws Throwable
-                                                              {
-                                                                  return null;
-                                                              }
-                                                          } );
+    private static RepositorySystemSession session = new DefaultRepositorySystemSession();
 
     @Test
     public void testByteArrayConversion()
