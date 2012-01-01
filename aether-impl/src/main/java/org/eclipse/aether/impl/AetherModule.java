@@ -17,6 +17,7 @@ import java.util.Set;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.internal.impl.DefaultDependencyCollector;
@@ -109,6 +110,13 @@ public final class AetherModule
         factories.add( simple );
         factories.add( enhanced );
         return Collections.unmodifiableSet( factories );
+    }
+
+    @Provides
+    @Singleton
+    Set<RepositoryListener> providesRepositoryListeners()
+    {
+        return Collections.emptySet();
     }
 
     private static class Slf4jModule

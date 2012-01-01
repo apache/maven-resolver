@@ -15,6 +15,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositoryEvent;
@@ -28,6 +31,7 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  */
+@Named
 @Component( role = RepositoryEventDispatcher.class )
 public class DefaultRepositoryEventDispatcher
     implements RepositoryEventDispatcher, Service
@@ -44,9 +48,11 @@ public class DefaultRepositoryEventDispatcher
         // enables no-arg constructor
     }
 
-    DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
+    @Inject
+    DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners, LoggerFactory loggerFactory )
     {
         setRepositoryListeners( listeners );
+        setLoggerFactory( loggerFactory );
     }
 
     public DefaultRepositoryEventDispatcher setLoggerFactory( LoggerFactory loggerFactory )
