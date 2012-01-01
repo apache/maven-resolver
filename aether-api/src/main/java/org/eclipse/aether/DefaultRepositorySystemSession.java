@@ -46,6 +46,8 @@ public final class DefaultRepositorySystemSession
     implements RepositorySystemSession
 {
 
+    private boolean readOnly;
+
     private boolean offline;
 
     private boolean transferErrorCachingEnabled;
@@ -179,6 +181,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setOffline( boolean offline )
     {
+        failIfReadOnly();
         this.offline = offline;
         return this;
     }
@@ -199,6 +202,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setTransferErrorCachingEnabled( boolean transferErrorCachingEnabled )
     {
+        failIfReadOnly();
         this.transferErrorCachingEnabled = transferErrorCachingEnabled;
         return this;
     }
@@ -219,6 +223,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setNotFoundCachingEnabled( boolean notFoundCachingEnabled )
     {
+        failIfReadOnly();
         this.notFoundCachingEnabled = notFoundCachingEnabled;
         return this;
     }
@@ -238,6 +243,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setIgnoreMissingArtifactDescriptor( boolean ignoreMissingArtifactDescriptor )
     {
+        failIfReadOnly();
         this.ignoreMissingArtifactDescriptor = ignoreMissingArtifactDescriptor;
         return this;
     }
@@ -257,6 +263,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setIgnoreInvalidArtifactDescriptor( boolean ignoreInvalidArtifactDescriptor )
     {
+        failIfReadOnly();
         this.ignoreInvalidArtifactDescriptor = ignoreInvalidArtifactDescriptor;
         return this;
     }
@@ -276,6 +283,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories( boolean ignoreArtifactDescriptorRepositories )
     {
+        failIfReadOnly();
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
         return this;
     }
@@ -297,6 +305,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setChecksumPolicy( String checksumPolicy )
     {
+        failIfReadOnly();
         this.checksumPolicy = checksumPolicy;
         return this;
     }
@@ -318,6 +327,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUpdatePolicy( String updatePolicy )
     {
+        failIfReadOnly();
         this.updatePolicy = updatePolicy;
         return this;
     }
@@ -342,6 +352,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setLocalRepositoryManager( LocalRepositoryManager localRepositoryManager )
     {
+        failIfReadOnly();
         this.localRepositoryManager = localRepositoryManager;
         return this;
     }
@@ -360,6 +371,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setWorkspaceReader( WorkspaceReader workspaceReader )
     {
+        failIfReadOnly();
         this.workspaceReader = workspaceReader;
         return this;
     }
@@ -377,6 +389,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setRepositoryListener( RepositoryListener repositoryListener )
     {
+        failIfReadOnly();
         this.repositoryListener = repositoryListener;
         return this;
     }
@@ -394,6 +407,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setTransferListener( TransferListener transferListener )
     {
+        failIfReadOnly();
         this.transferListener = transferListener;
         return this;
     }
@@ -451,6 +465,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setSystemProperties( Map<String, String> systemProperties )
     {
+        failIfReadOnly();
         this.systemProperties = copy( systemProperties );
         systemPropertiesView = Collections.unmodifiableMap( this.systemProperties );
         return this;
@@ -465,6 +480,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setSystemProps( Map<?, ?> systemProperties )
     {
+        failIfReadOnly();
         this.systemProperties = copySafe( systemProperties, String.class );
         systemPropertiesView = Collections.unmodifiableMap( this.systemProperties );
         return this;
@@ -479,6 +495,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setSystemProperty( String key, String value )
     {
+        failIfReadOnly();
         if ( value != null )
         {
             systemProperties.put( key, value );
@@ -505,6 +522,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUserProperties( Map<String, String> userProperties )
     {
+        failIfReadOnly();
         this.userProperties = copy( userProperties );
         userPropertiesView = Collections.unmodifiableMap( this.userProperties );
         return this;
@@ -520,6 +538,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUserProps( Map<?, ?> userProperties )
     {
+        failIfReadOnly();
         this.userProperties = copySafe( userProperties, String.class );
         userPropertiesView = Collections.unmodifiableMap( this.userProperties );
         return this;
@@ -534,6 +553,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUserProperty( String key, String value )
     {
+        failIfReadOnly();
         if ( value != null )
         {
             userProperties.put( key, value );
@@ -559,6 +579,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setConfigProperties( Map<String, Object> configProperties )
     {
+        failIfReadOnly();
         this.configProperties = copy( configProperties );
         configPropertiesView = Collections.unmodifiableMap( this.configProperties );
         return this;
@@ -573,6 +594,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setConfigProps( Map<?, ?> configProperties )
     {
+        failIfReadOnly();
         this.configProperties = copySafe( configProperties, Object.class );
         configPropertiesView = Collections.unmodifiableMap( this.configProperties );
         return this;
@@ -587,6 +609,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setConfigProperty( String key, Object value )
     {
+        failIfReadOnly();
         if ( value != null )
         {
             configProperties.put( key, value );
@@ -613,6 +636,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setMirrorSelector( MirrorSelector mirrorSelector )
     {
+        failIfReadOnly();
         this.mirrorSelector = mirrorSelector;
         if ( this.mirrorSelector == null )
         {
@@ -637,6 +661,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setProxySelector( ProxySelector proxySelector )
     {
+        failIfReadOnly();
         this.proxySelector = proxySelector;
         if ( this.proxySelector == null )
         {
@@ -661,6 +686,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setAuthenticationSelector( AuthenticationSelector authenticationSelector )
     {
+        failIfReadOnly();
         this.authenticationSelector = authenticationSelector;
         if ( this.authenticationSelector == null )
         {
@@ -682,6 +708,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setArtifactTypeRegistry( ArtifactTypeRegistry artifactTypeRegistry )
     {
+        failIfReadOnly();
         this.artifactTypeRegistry = artifactTypeRegistry;
         if ( this.artifactTypeRegistry == null )
         {
@@ -703,6 +730,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setDependencyTraverser( DependencyTraverser dependencyTraverser )
     {
+        failIfReadOnly();
         this.dependencyTraverser = dependencyTraverser;
         if ( this.dependencyTraverser == null )
         {
@@ -724,6 +752,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setDependencyManager( DependencyManager dependencyManager )
     {
+        failIfReadOnly();
         this.dependencyManager = dependencyManager;
         if ( this.dependencyManager == null )
         {
@@ -745,6 +774,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setDependencySelector( DependencySelector dependencySelector )
     {
+        failIfReadOnly();
         this.dependencySelector = dependencySelector;
         if ( this.dependencySelector == null )
         {
@@ -767,6 +797,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setDependencyGraphTransformer( DependencyGraphTransformer dependencyGraphTransformer )
     {
+        failIfReadOnly();
         this.dependencyGraphTransformer = dependencyGraphTransformer;
         if ( this.dependencyGraphTransformer == null )
         {
@@ -788,6 +819,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setData( SessionData data )
     {
+        failIfReadOnly();
         this.data = data;
         if ( this.data == null )
         {
@@ -809,8 +841,27 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setCache( RepositoryCache cache )
     {
+        failIfReadOnly();
         this.cache = cache;
         return this;
+    }
+
+    /**
+     * Marks this session as read-only such that any future attempts to call its mutators it will fail with an
+     * exception. Marking an already read-only session as read-only has no effect. The session's data and cache remain
+     * writable.
+     */
+    public void setReadOnly()
+    {
+        readOnly = true;
+    }
+
+    private void failIfReadOnly()
+    {
+        if ( readOnly )
+        {
+            throw new IllegalStateException( "repository system session is read-only" );
+        }
     }
 
     static class NullProxySelector
