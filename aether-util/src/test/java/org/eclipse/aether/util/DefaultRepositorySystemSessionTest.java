@@ -47,4 +47,58 @@ public class DefaultRepositorySystemSessionTest
         assertSame( repo.getAuthentication(), session.getAuthenticationSelector().getAuthentication( repo ) );
     }
 
+    @Test
+    public void testCopyConstructorCopiesPropertiesDeep()
+    {
+        DefaultRepositorySystemSession session1 = new DefaultRepositorySystemSession();
+        session1.setUserProps( System.getProperties() );
+        session1.setSystemProps( System.getProperties() );
+        session1.setConfigProps( System.getProperties() );
+
+        DefaultRepositorySystemSession session2 = new DefaultRepositorySystemSession( session1 );
+        session2.setUserProperty( "key", "test" );
+        session2.setSystemProperty( "key", "test" );
+        session2.setConfigProperty( "key", "test" );
+
+        assertEquals( null, session1.getUserProperties().get( "key" ) );
+        assertEquals( null, session1.getSystemProperties().get( "key" ) );
+        assertEquals( null, session1.getConfigProperties().get( "key" ) );
+    }
+
+    @Test
+    public void testReadOnlyProperties()
+    {
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+
+        try
+        {
+            session.getUserProperties().put( "key", "test" );
+            fail( "user properties are modifiable" );
+        }
+        catch ( UnsupportedOperationException e )
+        {
+            // expected
+        }
+
+        try
+        {
+            session.getSystemProperties().put( "key", "test" );
+            fail( "system properties are modifiable" );
+        }
+        catch ( UnsupportedOperationException e )
+        {
+            // expected
+        }
+
+        try
+        {
+            session.getConfigProperties().put( "key", "test" );
+            fail( "config properties are modifiable" );
+        }
+        catch ( UnsupportedOperationException e )
+        {
+            // expected
+        }
+    }
+
 }

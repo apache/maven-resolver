@@ -10,9 +10,8 @@
  *******************************************************************************/
 package org.eclipse.aether.util;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.aether.RepositoryCache;
@@ -84,9 +83,15 @@ public final class DefaultRepositorySystemSession
 
     private Map<String, String> systemProperties = new HashMap<String, String>();
 
+    private Map<String, String> systemPropertiesView = Collections.unmodifiableMap( systemProperties );
+
     private Map<String, String> userProperties = new HashMap<String, String>();
 
+    private Map<String, String> userPropertiesView = Collections.unmodifiableMap( userProperties );
+
     private Map<String, Object> configProperties = new HashMap<String, Object>();
+
+    private Map<String, Object> configPropertiesView = Collections.unmodifiableMap( configProperties );
 
     private MirrorSelector mirrorSelector = NullMirrorSelector.INSTANCE;
 
@@ -383,7 +388,20 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
-    private <T> Map<String, T> toSafeMap( Map<?, ?> table, Class<T> valueType )
+    private <K, V> Map<K, V> copy( Map<K, V> map )
+    {
+        if ( map == null || map.isEmpty() )
+        {
+            map = new HashMap<K, V>();
+        }
+        else
+        {
+            map = new HashMap<K, V>( map );
+        }
+        return map;
+    }
+
+    private <T> Map<String, T> copySafe( Map<?, ?> table, Class<T> valueType )
     {
         Map<String, T> map;
         if ( table == null || table.isEmpty() )
@@ -392,7 +410,7 @@ public final class DefaultRepositorySystemSession
         }
         else
         {
-            map = new LinkedHashMap<String, T>();
+            map = new HashMap<String, T>();
             for ( Map.Entry<?, ?> entry : table.entrySet() )
             {
                 Object key = entry.getKey();
@@ -411,7 +429,7 @@ public final class DefaultRepositorySystemSession
 
     public Map<String, String> getSystemProperties()
     {
-        return systemProperties;
+        return systemPropertiesView;
     }
 
     /**
@@ -423,14 +441,8 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setSystemProperties( Map<String, String> systemProperties )
     {
-        if ( systemProperties == null )
-        {
-            this.systemProperties = new HashMap<String, String>();
-        }
-        else
-        {
-            this.systemProperties = systemProperties;
-        }
+        this.systemProperties = copy( systemProperties );
+        systemPropertiesView = Collections.unmodifiableMap( this.systemProperties );
         return this;
     }
 
@@ -441,9 +453,10 @@ public final class DefaultRepositorySystemSession
      * @param systemProperties The system properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setSystemProps( Hashtable<?, ?> systemProperties )
+    public DefaultRepositorySystemSession setSystemProps( Map<?, ?> systemProperties )
     {
-        this.systemProperties = toSafeMap( systemProperties, String.class );
+        this.systemProperties = copySafe( systemProperties, String.class );
+        systemPropertiesView = Collections.unmodifiableMap( this.systemProperties );
         return this;
     }
 
@@ -469,7 +482,7 @@ public final class DefaultRepositorySystemSession
 
     public Map<String, String> getUserProperties()
     {
-        return userProperties;
+        return userPropertiesView;
     }
 
     /**
@@ -482,14 +495,8 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUserProperties( Map<String, String> userProperties )
     {
-        if ( userProperties == null )
-        {
-            this.userProperties = new HashMap<String, String>();
-        }
-        else
-        {
-            this.userProperties = userProperties;
-        }
+        this.userProperties = copy( userProperties );
+        userPropertiesView = Collections.unmodifiableMap( this.userProperties );
         return this;
     }
 
@@ -503,7 +510,8 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUserProps( Map<?, ?> userProperties )
     {
-        this.userProperties = toSafeMap( userProperties, String.class );
+        this.userProperties = copySafe( userProperties, String.class );
+        userPropertiesView = Collections.unmodifiableMap( this.userProperties );
         return this;
     }
 
@@ -529,7 +537,7 @@ public final class DefaultRepositorySystemSession
 
     public Map<String, Object> getConfigProperties()
     {
-        return configProperties;
+        return configPropertiesView;
     }
 
     /**
@@ -541,14 +549,8 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setConfigProperties( Map<String, Object> configProperties )
     {
-        if ( configProperties == null )
-        {
-            this.configProperties = new HashMap<String, Object>();
-        }
-        else
-        {
-            this.configProperties = configProperties;
-        }
+        this.configProperties = copy( configProperties );
+        configPropertiesView = Collections.unmodifiableMap( this.configProperties );
         return this;
     }
 
@@ -561,7 +563,8 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setConfigProps( Map<?, ?> configProperties )
     {
-        this.configProperties = toSafeMap( configProperties, Object.class );
+        this.configProperties = copySafe( configProperties, Object.class );
+        configPropertiesView = Collections.unmodifiableMap( this.configProperties );
         return this;
     }
 
