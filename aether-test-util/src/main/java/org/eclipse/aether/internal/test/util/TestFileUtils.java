@@ -149,7 +149,14 @@ public class TestFileUtils
     {
         if ( c != null )
         {
-            c.close();
+            try
+            {
+                c.close();
+            }
+            catch ( IOException e )
+            {
+                // ignore
+            }
         }
     }
 
@@ -287,9 +294,10 @@ public class TestFileUtils
     public static void read( Properties props, File file )
         throws IOException
     {
-        FileInputStream fis = new FileInputStream( file );
+        FileInputStream fis = null;
         try
         {
+            fis = new FileInputStream( file );
             props.load( fis );
         }
         finally
@@ -303,9 +311,10 @@ public class TestFileUtils
     {
         file.getParentFile().mkdirs();
 
-        FileOutputStream fos = new FileOutputStream( file );
+        FileOutputStream fos = null;
         try
         {
+            fos = new FileOutputStream( file );
             props.store( fos, "aether-test" );
         }
         finally
