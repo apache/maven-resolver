@@ -268,8 +268,6 @@ public class IniArtifactDataReader
             // commit dependency
             Dependency dep = new Dependency( artifact, scope, optional, exclusions );
             ret.add( dep );
-
-            exclusions = new ArrayList<Exclusion>();
         }
 
         return ret;
