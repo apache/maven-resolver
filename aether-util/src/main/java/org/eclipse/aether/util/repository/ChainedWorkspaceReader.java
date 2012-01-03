@@ -47,7 +47,7 @@ public final class ChainedWorkspaceReader
         }
 
         StringBuilder buffer = new StringBuilder();
-        for ( WorkspaceReader reader : readers )
+        for ( WorkspaceReader reader : this.readers )
         {
             if ( buffer.length() > 0 )
             {
