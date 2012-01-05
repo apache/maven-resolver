@@ -21,6 +21,7 @@
   </parent>
 
   <artifactId>aether-impl</artifactId>
+  <packaging>bundle</packaging>
 
   <name>Aether :: Implementation</name>
   <description>
@@ -43,17 +44,20 @@
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
+      <optional>true</optional>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-inject-plexus</artifactId>
+      <optional>true</optional>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-component-annotations</artifactId>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
-      <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -85,6 +89,16 @@
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Export-Package>org.eclipse.aether.impl</Export-Package>
+            <Private-Package>org.eclipse.aether.internal.impl</Private-Package>
+          </instructions>
+        </configuration>
       </plugin>
     </plugins>
   </build>

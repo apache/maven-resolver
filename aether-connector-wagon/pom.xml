@@ -21,6 +21,7 @@
   </parent>
 
   <artifactId>aether-connector-wagon</artifactId>
+  <packaging>bundle</packaging>
 
   <name>Aether :: Connector :: Wagon</name>
   <description>
@@ -53,25 +54,30 @@
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-component-annotations</artifactId>
       <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-classworlds</artifactId>
       <version>2.4</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
       <version>2.1</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.sonatype.sisu</groupId>
       <artifactId>sisu-inject-plexus</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.eclipse.aether</groupId>
@@ -111,6 +117,15 @@
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>org.eclipse.aether.connector.wagon</Bundle-SymbolicName>
+          </instructions>
+        </configuration>
       </plugin>
     </plugins>
   </build>
