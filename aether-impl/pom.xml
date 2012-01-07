@@ -96,7 +96,6 @@
         <configuration>
           <instructions>
             <Export-Package>org.eclipse.aether.impl</Export-Package>
-            <Private-Package>org.eclipse.aether.internal.impl</Private-Package>
           </instructions>
         </configuration>
       </plugin>
