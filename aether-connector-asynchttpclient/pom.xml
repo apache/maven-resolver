@@ -23,7 +23,7 @@
   <artifactId>aether-connector-asynchttpclient</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Aether :: Connector :: AsyncHttpClient</name>
+  <name>Aether Connector AsyncHttpClient</name>
   <description>
     A repository connector implementation based on AsyncHttpClient.
   </description>

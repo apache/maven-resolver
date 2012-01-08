@@ -23,7 +23,7 @@
   <artifactId>aether-connector-wagon</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Aether :: Connector :: Wagon</name>
+  <name>Aether Connector Wagon</name>
   <description>
     A repository connector implementation based on Maven Wagon.
   </description>

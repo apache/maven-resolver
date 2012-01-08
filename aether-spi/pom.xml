@@ -23,7 +23,7 @@
   <artifactId>aether-spi</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Aether :: SPI</name>
+  <name>Aether SPI</name>
   <description>
     The service provider interface for repository system implementations and repository connectors.
   </description>

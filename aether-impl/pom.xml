@@ -23,7 +23,7 @@
   <artifactId>aether-impl</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Aether :: Implementation</name>
+  <name>Aether Implementation</name>
   <description>
     An implementation of the repository system.
   </description>

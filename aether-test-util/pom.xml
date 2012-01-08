@@ -23,7 +23,7 @@
   <artifactId>aether-test-util</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Aether :: Test Utilities</name>
+  <name>Aether Test Utilities</name>
   <description>
     A collection of utility classes to ease testing of the repository system.
   </description>

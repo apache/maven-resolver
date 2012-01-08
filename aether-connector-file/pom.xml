@@ -23,7 +23,7 @@
   <artifactId>aether-connector-file</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Aether :: Connector :: File</name>
+  <name>Aether Connector File</name>
   <description>
       A repository connector implementation for repositories using file:// URLs.
   </description>
