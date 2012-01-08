@@ -81,20 +81,16 @@ public abstract class AbstractArtifact
     /**
      * Creates a new artifact with the specified coordinates, properties and file.
      * 
-     * @param groupId The group identifier of the artifact, may be {@code null}.
-     * @param artifactId The artifact identifier of the artifact, may be {@code null}.
-     * @param classifier The classifier of the artifact, may be {@code null}.
-     * @param extension The file extension of the artifact, may be {@code null}.
      * @param version The version of the artifact, may be {@code null}.
      * @param properties The properties of the artifact, may be {@code null} if none. The method may assume immutability
      *            of the supplied map, i.e. need not copy it.
      * @param file The resolved file of the artifact, may be {@code null}.
      * @return The new artifact instance, never {@code null}.
      */
-    private Artifact newInstance( String groupId, String artifactId, String classifier, String extension,
-                                  String version, Map<String, String> properties, File file )
+    private Artifact newInstance( String version, Map<String, String> properties, File file )
     {
-        return new DefaultArtifact( groupId, artifactId, classifier, extension, version, file, properties );
+        return new DefaultArtifact( getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, file,
+                                    properties );
     }
 
     public Artifact setVersion( String version )
@@ -104,8 +100,7 @@ public abstract class AbstractArtifact
         {
             return this;
         }
-        return newInstance( getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, getProperties(),
-                            getFile() );
+        return newInstance( version, getProperties(), getFile() );
     }
 
     public Artifact setFile( File file )
@@ -115,8 +110,7 @@ public abstract class AbstractArtifact
         {
             return this;
         }
-        return newInstance( getGroupId(), getArtifactId(), getClassifier(), getExtension(), getVersion(),
-                            getProperties(), file );
+        return newInstance( getVersion(), getProperties(), file );
     }
 
     public Artifact setProperties( Map<String, String> properties )
@@ -126,8 +120,7 @@ public abstract class AbstractArtifact
         {
             return this;
         }
-        return newInstance( getGroupId(), getArtifactId(), getClassifier(), getExtension(), getVersion(),
-                            copyProperties( properties ), getFile() );
+        return newInstance( getVersion(), copyProperties( properties ), getFile() );
     }
 
     /**
