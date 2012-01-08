@@ -21,7 +21,6 @@
   </parent>
 
   <artifactId>aether-spi</artifactId>
-  <packaging>bundle</packaging>
 
   <name>Aether SPI</name>
   <description>

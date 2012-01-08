@@ -23,7 +23,6 @@
   <artifactId>aether-api</artifactId>
 
   <name>Aether API</name>
-  <packaging>bundle</packaging>
   <description>
     The application programming interface for the repository system.
   </description>

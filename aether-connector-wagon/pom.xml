@@ -21,7 +21,6 @@
   </parent>
 
   <artifactId>aether-connector-wagon</artifactId>
-  <packaging>bundle</packaging>
 
   <name>Aether Connector Wagon</name>
   <description>

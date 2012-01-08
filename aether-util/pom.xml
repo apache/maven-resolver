@@ -23,7 +23,6 @@
   <artifactId>aether-util</artifactId>
 
   <name>Aether Utilities</name>
-  <packaging>bundle</packaging>
   <description>
     A collection of utility classes to ease usage of the repository system.
   </description>

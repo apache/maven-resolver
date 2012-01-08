@@ -21,7 +21,6 @@
   </parent>
 
   <artifactId>aether-connector-file</artifactId>
-  <packaging>bundle</packaging>
 
   <name>Aether Connector File</name>
   <description>

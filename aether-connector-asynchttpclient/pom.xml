@@ -21,7 +21,6 @@
   </parent>
 
   <artifactId>aether-connector-asynchttpclient</artifactId>
-  <packaging>bundle</packaging>
 
   <name>Aether Connector AsyncHttpClient</name>
   <description>
