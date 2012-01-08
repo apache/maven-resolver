@@ -47,14 +47,39 @@ public final class DefaultArtifactType
             throw new IllegalArgumentException( "no type id specified" );
         }
         this.id = id;
-        this.extension = ( extension != null && extension.length() > 0 ) ? extension : id;
-        this.classifier = ( classifier != null ) ? classifier : "";
+        this.extension = emptify( extension );
+        this.classifier = emptify( classifier );
         Map<String, String> props = new HashMap<String, String>();
         props.put( ArtifactProperties.TYPE, id );
         props.put( ArtifactProperties.LANGUAGE, ( language != null && language.length() > 0 ) ? language : "none" );
         props.put( ArtifactProperties.INCLUDES_DEPENDENCIES, Boolean.toString( includesDependencies ) );
         props.put( ArtifactProperties.CONSTITUTES_BUILD_PATH, Boolean.toString( constitutesBuildPath ) );
         properties = Collections.unmodifiableMap( props );
+    }
+
+    /**
+     * Creates a new artifact type with the specified properties.
+     * 
+     * @param id The identifier of the type, must not be {@code null} or empty.
+     * @param extension The file extension for artifacts of this type, may be {@code null}.
+     * @param classifier The classifier for artifacts of this type, may be {@code null}.
+     * @param properties The properties for artifacts of this type, may be {@code null}.
+     */
+    public DefaultArtifactType( String id, String extension, String classifier, Map<String, String> properties )
+    {
+        if ( id == null || id.length() < 0 )
+        {
+            throw new IllegalArgumentException( "no type id specified" );
+        }
+        this.id = id;
+        this.extension = emptify( extension );
+        this.classifier = emptify( classifier );
+        this.properties = AbstractArtifact.copyProperties( properties );
+    }
+
+    private static String emptify( String str )
+    {
+        return ( str == null ) ? "" : str;
     }
 
     public String getId()
