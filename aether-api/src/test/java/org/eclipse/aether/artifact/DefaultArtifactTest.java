@@ -154,4 +154,20 @@ public class DefaultArtifactTest
         assertEquals( "value2", a.getProperty( "key", null ) );
     }
 
+    @Test
+    public void testIsSnapshot()
+    {
+        Artifact a = new DefaultArtifact( "gid:aid:ext:cls:1.0" );
+        assertFalse( a.getVersion(), a.isSnapshot() );
+
+        a = new DefaultArtifact( "gid:aid:ext:cls:1.0-SNAPSHOT" );
+        assertTrue( a.getVersion(), a.isSnapshot() );
+
+        a = new DefaultArtifact( "gid:aid:ext:cls:1.0-20101116.150650-3" );
+        assertTrue( a.getVersion(), a.isSnapshot() );
+
+        a = new DefaultArtifact( "gid:aid:ext:cls:1.0-20101116x150650-3" );
+        assertFalse( a.getVersion(), a.isSnapshot() );
+    }
+
 }
