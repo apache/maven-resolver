@@ -182,6 +182,7 @@
           <configuration>
             <instructions>
               <Bundle-DocURL>${project.url}</Bundle-DocURL>
+              <Bundle-Name>${project.name} (Incubation)</Bundle-Name>
             </instructions>
           </configuration>
         </plugin>
