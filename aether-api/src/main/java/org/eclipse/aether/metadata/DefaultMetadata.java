@@ -17,7 +17,7 @@ import java.io.File;
  * objects rather than changing the current instance.
  */
 public final class DefaultMetadata
-    implements Metadata
+    extends AbstractMetadata
 {
 
     private final String groupId;
@@ -167,31 +167,6 @@ public final class DefaultMetadata
     public File getFile()
     {
         return file;
-    }
-
-    public Metadata setFile( File file )
-    {
-        return new DefaultMetadata( groupId, artifactId, version, type, nature, file );
-    }
-
-    @Override
-    public String toString()
-    {
-        StringBuilder buffer = new StringBuilder( 128 );
-        if ( getGroupId().length() > 0 )
-        {
-            buffer.append( getGroupId() );
-        }
-        if ( getArtifactId().length() > 0 )
-        {
-            buffer.append( ':' ).append( getArtifactId() );
-        }
-        if ( getVersion().length() > 0 )
-        {
-            buffer.append( ':' ).append( getVersion() );
-        }
-        buffer.append( '/' ).append( getType() );
-        return buffer.toString();
     }
 
 }

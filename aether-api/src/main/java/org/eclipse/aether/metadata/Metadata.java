@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,11 @@ import java.io.File;
  * in only one repository, metadata usually exists in multiple repositories and each repository contains a different
  * copy of the metadata. <em>Note:</em> Metadata instances are supposed to be immutable, e.g. any exposed mutator method
  * returns a new metadata instance and leaves the original instance unchanged. Implementors are strongly advised to obey
- * this contract.
+ * this contract. <em>Note:</em> Implementors are strongly advised to inherit from {@link AbstractMetadata} instead of
+ * directly implementing this interface.
+ * 
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface Metadata
 {
