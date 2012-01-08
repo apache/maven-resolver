@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.artifact;
+package org.eclipse.aether.artifact;
 
 import static org.junit.Assert.*;
 
@@ -19,8 +19,7 @@ import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
-import org.eclipse.aether.util.artifact.DefaultArtifact;
-import org.eclipse.aether.util.artifact.DefaultArtifactType;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
 /**

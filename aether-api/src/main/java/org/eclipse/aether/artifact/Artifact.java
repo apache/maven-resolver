@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,11 @@ import java.util.Map;
 
 /**
  * A specific artifact. <em>Note:</em> Artifact instances are supposed to be immutable, e.g. any exposed mutator method
- * returns a new artifact instance and leaves the original instance unchanged. Implementors are strongly advised to obey
- * this contract.
+ * returns a new artifact instance and leaves the original instance unchanged. <em>Note:</em> Implementors are strongly
+ * advised to inherit from {@link AbstractArtifact} instead of directly implementing this interface.
+ * 
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface Artifact
 {
@@ -38,14 +41,14 @@ public interface Artifact
     /**
      * Gets the version of this artifact, for example "1.0-20100529-1213". Note that in case of meta versions like
      * "1.0-SNAPSHOT", the artifact's version depends on the state of the artifact. Artifacts that have been resolved or
-     * deployed will have the meta version expanded.
+     * deployed will usually have the meta version expanded.
      * 
      * @return The version, never {@code null}.
      */
     String getVersion();
 
     /**
-     * Sets the version of this artifact.
+     * Sets the version of the artifact.
      * 
      * @param version The version of this artifact, may be {@code null} or empty.
      * @return The new artifact, never {@code null}.

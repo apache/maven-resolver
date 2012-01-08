@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.artifact;
+package org.eclipse.aether.artifact;
 
 import java.io.File;
 import java.util.Collections;
@@ -17,10 +17,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.ArtifactType;
-import org.eclipse.aether.util.artifact.AbstractArtifact;
-import org.eclipse.aether.util.artifact.DefaultArtifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * A simple artifact. <em>Note:</em> Instances of this class are immutable and the exposed mutators return new objects
@@ -43,8 +40,6 @@ public final class DefaultArtifact
     private final File file;
 
     private final Map<String, String> properties;
-
-    private String baseVersion;
 
     /**
      * Creates a new artifact with the specified coordinates. If not specified in the artifact coordinates, the
@@ -81,7 +76,7 @@ public final class DefaultArtifact
         classifier = get( m.group( 6 ), "" );
         version = m.group( 7 );
         file = null;
-        this.properties = copy( properties );
+        this.properties = copyProperties( properties );
     }
 
     private static String get( String value, String defaultValue )
@@ -197,6 +192,7 @@ public final class DefaultArtifact
             {
                 properties.putAll( dominant );
             }
+            properties = Collections.unmodifiableMap( properties );
         }
 
         return properties;
@@ -223,7 +219,7 @@ public final class DefaultArtifact
         this.extension = emptify( extension );
         this.version = emptify( version );
         this.file = file;
-        this.properties = copy( properties );
+        this.properties = copyProperties( properties );
     }
 
     DefaultArtifact( String groupId, String artifactId, String classifier, String extension, String version, File file,
@@ -254,32 +250,9 @@ public final class DefaultArtifact
         return artifactId;
     }
 
-    public String getBaseVersion()
-    {
-        if ( baseVersion == null )
-        {
-            baseVersion = toBaseVersion( getVersion() );
-        }
-        return baseVersion;
-    }
-
     public String getVersion()
     {
         return version;
-    }
-
-    public Artifact setVersion( String version )
-    {
-        if ( this.version.equals( version ) || ( version == null && this.version.length() <= 0 ) )
-        {
-            return this;
-        }
-        return new DefaultArtifact( groupId, artifactId, classifier, extension, version, file, properties );
-    }
-
-    public boolean isSnapshot()
-    {
-        return isSnapshot( getVersion() );
     }
 
     public String getClassifier()
@@ -297,15 +270,6 @@ public final class DefaultArtifact
         return file;
     }
 
-    public Artifact setFile( File file )
-    {
-        if ( ( this.file == null ) ? file == null : this.file.equals( file ) )
-        {
-            return this;
-        }
-        return new DefaultArtifact( groupId, artifactId, classifier, extension, version, file, properties );
-    }
-
     public String getProperty( String key, String defaultValue )
     {
         String value = properties.get( key );
@@ -314,16 +278,7 @@ public final class DefaultArtifact
 
     public Map<String, String> getProperties()
     {
-        return Collections.unmodifiableMap( properties );
-    }
-
-    public Artifact setProperties( Map<String, String> properties )
-    {
-        if ( this.properties.equals( properties ) || ( properties == null && this.properties.isEmpty() ) )
-        {
-            return this;
-        }
-        return new DefaultArtifact( groupId, artifactId, classifier, extension, version, file, copy( properties ) );
+        return properties;
     }
 
 }

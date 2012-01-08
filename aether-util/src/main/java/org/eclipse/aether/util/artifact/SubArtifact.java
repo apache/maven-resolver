@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,10 +14,8 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 
+import org.eclipse.aether.artifact.AbstractArtifact;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.AbstractArtifact;
-import org.eclipse.aether.util.artifact.DefaultArtifact;
-import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
  * An artifact whose identity is derived from another artifact. <em>Note:</em> Instances of this class are immutable and
@@ -107,7 +105,7 @@ public final class SubArtifact
         this.classifier = classifier;
         this.extension = extension;
         this.file = file;
-        this.properties = copy( properties );
+        this.properties = copyProperties( properties );
     }
 
     private SubArtifact( Artifact mainArtifact, String classifier, String extension, File file,
@@ -134,12 +132,6 @@ public final class SubArtifact
     public String getVersion()
     {
         return mainArtifact.getVersion();
-    }
-
-    public Artifact setVersion( String version )
-    {
-        return new DefaultArtifact( getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, getFile(),
-                                    getProperties() );
     }
 
     public String getBaseVersion()

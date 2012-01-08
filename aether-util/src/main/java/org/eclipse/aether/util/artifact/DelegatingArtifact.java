@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,8 +13,8 @@ package org.eclipse.aether.util.artifact;
 import java.io.File;
 import java.util.Map;
 
+import org.eclipse.aether.artifact.AbstractArtifact;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.AbstractArtifact;
 
 /**
  * An artifact that delegates to another artifact instance. This class serves as a base for subclasses that want to

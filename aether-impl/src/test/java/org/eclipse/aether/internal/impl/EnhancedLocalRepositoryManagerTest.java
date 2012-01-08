@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,9 +21,11 @@ import java.util.Collections;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManager;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
@@ -32,8 +34,6 @@ import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.LocalMetadataRequest;
 import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.artifact.DefaultArtifact;
-import org.eclipse.aether.util.metadata.DefaultMetadata;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

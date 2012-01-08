@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.artifact;
+package org.eclipse.aether.artifact;
 
 import java.io.File;
 import java.util.Collections;
@@ -17,12 +17,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.util.artifact.DefaultArtifact;
-
 /**
- * A skeleton class for artifacts that implements {@link Object#equals(Object)}, {@link Object#hashCode()} and
- * {@link Object#toString()}.
+ * A skeleton class for artifacts.
  */
 public abstract class AbstractArtifact
     implements Artifact
@@ -32,12 +28,22 @@ public abstract class AbstractArtifact
 
     private static final Pattern SNAPSHOT_TIMESTAMP = Pattern.compile( "^(.*-)?([0-9]{8}.[0-9]{6}-[0-9]+)$" );
 
-    protected static boolean isSnapshot( String version )
+    public boolean isSnapshot()
+    {
+        return isSnapshot( getVersion() );
+    }
+
+    private static boolean isSnapshot( String version )
     {
         return version.endsWith( SNAPSHOT ) || SNAPSHOT_TIMESTAMP.matcher( version ).matches();
     }
 
-    protected static String toBaseVersion( String version )
+    public String getBaseVersion()
+    {
+        return toBaseVersion( getVersion() );
+    }
+
+    private static String toBaseVersion( String version )
     {
         String baseVersion;
 
@@ -81,18 +87,20 @@ public abstract class AbstractArtifact
      * @param extension The file extension of the artifact, may be {@code null}.
      * @param version The version of the artifact, may be {@code null}.
      * @param properties The properties of the artifact, may be {@code null} if none. The method may assume immutability
-     *            of the supplied map.
+     *            of the supplied map, i.e. need not copy it.
      * @param file The resolved file of the artifact, may be {@code null}.
+     * @return The new artifact instance, never {@code null}.
      */
-    protected Artifact newInstance( String groupId, String artifactId, String classifier, String extension,
-                                    String version, Map<String, String> properties, File file )
+    private Artifact newInstance( String groupId, String artifactId, String classifier, String extension,
+                                  String version, Map<String, String> properties, File file )
     {
         return new DefaultArtifact( groupId, artifactId, classifier, extension, version, file, properties );
     }
 
     public Artifact setVersion( String version )
     {
-        if ( getVersion().equals( version ) )
+        String current = getVersion();
+        if ( current.equals( version ) || ( version == null && current.length() <= 0 ) )
         {
             return this;
         }
@@ -102,7 +110,8 @@ public abstract class AbstractArtifact
 
     public Artifact setFile( File file )
     {
-        if ( eq( getFile(), file ) )
+        File current = getFile();
+        if ( ( current == null ) ? file == null : current.equals( file ) )
         {
             return this;
         }
@@ -112,19 +121,27 @@ public abstract class AbstractArtifact
 
     public Artifact setProperties( Map<String, String> properties )
     {
-        if ( getProperties().equals( properties ) )
+        Map<String, String> current = getProperties();
+        if ( current.equals( properties ) || ( properties == null && current.isEmpty() ) )
         {
             return this;
         }
         return newInstance( getGroupId(), getArtifactId(), getClassifier(), getExtension(), getVersion(),
-                            copy( properties ), getFile() );
+                            copyProperties( properties ), getFile() );
     }
 
-    static Map<String, String> copy( Map<String, String> properties )
+    /**
+     * Copies the specified artifact properties. This utility method should be used when creating new artifact instances
+     * with caller-supplied properties.
+     * 
+     * @param properties The properties to copy, may be {@code null}.
+     * @return The copied and read-only properties, never {@code null}.
+     */
+    protected static Map<String, String> copyProperties( Map<String, String> properties )
     {
         if ( properties != null && !properties.isEmpty() )
         {
-            return new HashMap<String, String>( properties );
+            return Collections.unmodifiableMap( new HashMap<String, String>( properties ) );
         }
         else
         {
@@ -147,6 +164,13 @@ public abstract class AbstractArtifact
         return buffer.toString();
     }
 
+    /**
+     * Compares this artifact with the specified object.
+     * 
+     * @param obj The object to compare this artifact against, may be {@code null}.
+     * @return {@code true} if and only if the specified object is another {@link Artifact} with equal coordinates,
+     *         properties and file, {@code false} otherwise.
+     */
     @Override
     public boolean equals( Object obj )
     {
@@ -172,6 +196,11 @@ public abstract class AbstractArtifact
         return s1 != null ? s1.equals( s2 ) : s2 == null;
     }
 
+    /**
+     * Returns a hash code for this artifact.
+     * 
+     * @return A hash code for the artifact.
+     */
     @Override
     public int hashCode()
     {

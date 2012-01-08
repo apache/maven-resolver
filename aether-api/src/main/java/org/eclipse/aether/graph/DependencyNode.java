@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,10 @@ import org.eclipse.aether.version.VersionConstraint;
 
 /**
  * A node within a dependency graph. <em>Note:</em> When traversing a dirty graph, i.e. a graph which hasn't undergone
- * conflict resolution, there can be multiple path leading to the same node instance.
+ * conflict resolution, there can be multiple paths leading to the same node instance.
+ * 
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface DependencyNode
 {

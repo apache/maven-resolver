@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,13 +8,11 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.artifact;
+package org.eclipse.aether.artifact;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.eclipse.aether.artifact.ArtifactProperties;
-import org.eclipse.aether.artifact.ArtifactType;
 
 /**
  * A simple artifact type.
@@ -56,7 +54,7 @@ public final class DefaultArtifactType
         props.put( ArtifactProperties.LANGUAGE, ( language != null && language.length() > 0 ) ? language : "none" );
         props.put( ArtifactProperties.INCLUDES_DEPENDENCIES, Boolean.toString( includesDependencies ) );
         props.put( ArtifactProperties.CONSTITUTES_BUILD_PATH, Boolean.toString( constitutesBuildPath ) );
-        properties = props;
+        properties = Collections.unmodifiableMap( props );
     }
 
     public String getId()

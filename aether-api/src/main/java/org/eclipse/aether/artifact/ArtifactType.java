@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,9 @@ import java.util.Map;
  * An artifact type describing artifact characteristics that are common for certain artifacts. Artifact types are a
  * means to simplify the description of an artifact by referring to an artifact type instead of specifying the various
  * properties individually.
+ * 
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface ArtifactType
 {
@@ -44,7 +47,7 @@ public interface ArtifactType
     /**
      * Gets the properties to use for artifacts of this type (unless explicitly overridden by the artifact).
      * 
-     * @return The properties, never {@code null}.
+     * @return The (read-only) properties, never {@code null}.
      */
     Map<String, String> getProperties();
 
