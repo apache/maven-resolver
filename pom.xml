@@ -46,6 +46,18 @@
       <post>aether-users@eclipse.org</post>
       <archive>http://dev.eclipse.org/mhonarc/lists/aether-users/</archive>
     </mailingList>
+    <mailingList>
+      <name>Aether Commit Notification List</name>
+      <subscribe>https://dev.eclipse.org/mailman/listinfo/aether-commit</subscribe>
+      <unsubscribe>https://dev.eclipse.org/mailman/listinfo/aether-commit</unsubscribe>
+      <archive>http://dev.eclipse.org/mhonarc/lists/aether-commit/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Aether CI Notification List</name>
+      <subscribe>https://dev.eclipse.org/mailman/listinfo/aether-build</subscribe>
+      <unsubscribe>https://dev.eclipse.org/mailman/listinfo/aether-build</unsubscribe>
+      <archive>http://dev.eclipse.org/mhonarc/lists/aether-build/</archive>
+    </mailingList>
   </mailingLists>
 
   <scm>
@@ -61,7 +73,7 @@
 
   <ciManagement>
     <system>Hudson</system>
-    <url>https://builds.sonatype.org/job/aether/</url>
+    <url>https://hudson.eclipse.org/hudson/job/aether-core-nightly/</url>
   </ciManagement>
 
   <distributionManagement>
