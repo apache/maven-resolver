@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 import org.junit.Test;
@@ -27,7 +28,7 @@ public class DependencyTest
     @Test
     public void testSetScope()
     {
-        Dependency d1 = new Dependency( new StubArtifact( "gid:aid:ver" ), "compile" );
+        Dependency d1 = new Dependency( new DefaultArtifact( "gid:aid:ver" ), "compile" );
 
         Dependency d2 = d1.setScope( null );
         assertNotSame( d2, d1 );
@@ -42,7 +43,7 @@ public class DependencyTest
     public void testSetExclusions()
     {
         Dependency d1 =
-            new Dependency( new StubArtifact( "gid:aid:ver" ), "compile", false,
+            new Dependency( new DefaultArtifact( "gid:aid:ver" ), "compile", false,
                             Collections.singleton( new Exclusion( "g", "a", "c", "e" ) ) );
 
         Dependency d2 = d1.setExclusions( null );
