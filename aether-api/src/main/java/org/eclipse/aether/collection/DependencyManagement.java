@@ -21,7 +21,7 @@ import org.eclipse.aether.graph.Exclusion;
  * 
  * @see DependencyManager#manageDependency(Dependency)
  */
-public class DependencyManagement
+public final class DependencyManagement
 {
 
     private String version;
