@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.aether.RepositoryEvent;
@@ -399,6 +400,21 @@ public class DefaultDeployerTest
             public String getArtifactId()
             {
                 return "aether";
+            }
+
+            public Metadata setProperties( Map<String, String> properties )
+            {
+                return this;
+            }
+
+            public Map<String, String> getProperties()
+            {
+                return Collections.emptyMap();
+            }
+
+            public String getProperty( String key, String defaultValue )
+            {
+                return defaultValue;
             }
 
             public void merge( File current, File result )

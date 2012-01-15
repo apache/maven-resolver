@@ -11,6 +11,7 @@
 package org.eclipse.aether.metadata;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * A piece of repository metadata, e.g. an index of available versions. In contrast to an artifact, which usually exists
@@ -99,5 +100,30 @@ public interface Metadata
      * @return The new metadata, never {@code null}.
      */
     Metadata setFile( File file );
+
+    /**
+     * Gets the specified property.
+     * 
+     * @param key The name of the property, must not be {@code null}.
+     * @param defaultValue The default value to return in case the property is not set, may be {@code null}.
+     * @return The requested property value or {@code null} if the property is not set and no default value was
+     *         provided.
+     */
+    String getProperty( String key, String defaultValue );
+
+    /**
+     * Gets the properties of this metadata.
+     * 
+     * @return The (read-only) properties, never {@code null}.
+     */
+    Map<String, String> getProperties();
+
+    /**
+     * Sets the properties for the metadata.
+     * 
+     * @param properties The properties for the metadata, may be {@code null}.
+     * @return The new metadata, never {@code null}.
+     */
+    Metadata setProperties( Map<String, String> properties );
 
 }

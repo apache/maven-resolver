@@ -11,6 +11,9 @@
 package org.eclipse.aether.metadata;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A skeleton class for metadata.
@@ -19,9 +22,10 @@ public abstract class AbstractMetadata
     implements Metadata
 {
 
-    private Metadata newInstance( File file )
+    private Metadata newInstance( Map<String, String> properties, File file )
     {
-        return new DefaultMetadata( getGroupId(), getArtifactId(), getVersion(), getType(), getNature(), file );
+        return new DefaultMetadata( getGroupId(), getArtifactId(), getVersion(), getType(), getNature(), file,
+                                    properties );
     }
 
     public Metadata setFile( File file )
@@ -31,7 +35,42 @@ public abstract class AbstractMetadata
         {
             return this;
         }
-        return newInstance( file );
+        return newInstance( getProperties(), file );
+    }
+
+    public Metadata setProperties( Map<String, String> properties )
+    {
+        Map<String, String> current = getProperties();
+        if ( current.equals( properties ) || ( properties == null && current.isEmpty() ) )
+        {
+            return this;
+        }
+        return newInstance( copyProperties( properties ), getFile() );
+    }
+
+    public String getProperty( String key, String defaultValue )
+    {
+        String value = getProperties().get( key );
+        return ( value != null ) ? value : defaultValue;
+    }
+
+    /**
+     * Copies the specified metadata properties. This utility method should be used when creating new metadata instances
+     * with caller-supplied properties.
+     * 
+     * @param properties The properties to copy, may be {@code null}.
+     * @return The copied and read-only properties, never {@code null}.
+     */
+    protected static Map<String, String> copyProperties( Map<String, String> properties )
+    {
+        if ( properties != null && !properties.isEmpty() )
+        {
+            return Collections.unmodifiableMap( new HashMap<String, String>( properties ) );
+        }
+        else
+        {
+            return Collections.emptyMap();
+        }
     }
 
     @Override
@@ -59,7 +98,7 @@ public abstract class AbstractMetadata
      * 
      * @param obj The object to compare this metadata against, may be {@code null}.
      * @return {@code true} if and only if the specified object is another {@link Metadata} with equal coordinates,
-     *         type, nature and file, {@code false} otherwise.
+     *         type, nature, properties and file, {@code false} otherwise.
      */
     @Override
     public boolean equals( Object obj )
@@ -77,7 +116,8 @@ public abstract class AbstractMetadata
 
         return getArtifactId().equals( that.getArtifactId() ) && getGroupId().equals( that.getGroupId() )
             && getVersion().equals( that.getVersion() ) && getType().equals( that.getType() )
-            && getNature().equals( that.getNature() ) && eq( getFile(), that.getFile() );
+            && getNature().equals( that.getNature() ) && eq( getFile(), that.getFile() )
+            && eq( getProperties(), that.getProperties() );
     }
 
     private static <T> boolean eq( T s1, T s2 )
