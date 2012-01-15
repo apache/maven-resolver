@@ -105,6 +105,8 @@ public interface Artifact
      * 
      * @param key The name of the property, must not be {@code null}.
      * @param defaultValue The default value to return in case the property is not set, may be {@code null}.
+     * @return The requested property value or {@code null} if the property is not set and no default value was
+     *         provided.
      * @see ArtifactProperties
      */
     String getProperty( String key, String defaultValue );
