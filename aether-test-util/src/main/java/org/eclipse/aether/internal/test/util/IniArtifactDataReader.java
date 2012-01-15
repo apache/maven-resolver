@@ -24,9 +24,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
-import org.eclipse.aether.internal.test.util.impl.StubArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
@@ -260,7 +260,8 @@ public class IniArtifactDataReader
                 scope = "".equals( def.getScope() ) ? "compile" : def.getScope();
 
                 artifact =
-                    new StubArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(), def.getVersion() );
+                    new DefaultArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(),
+                                         def.getVersion() );
             }
         }
         if ( artifact != null )
@@ -283,7 +284,8 @@ public class IniArtifactDataReader
         for ( String coords : list )
         {
             ArtifactDefinition def = new ArtifactDefinition( coords );
-            ret.add( new StubArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(), def.getVersion() ) );
+            ret.add( new DefaultArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(),
+                                          def.getVersion() ) );
         }
         return ret;
     }

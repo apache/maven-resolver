@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,12 +16,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnectorFactory;
 import org.eclipse.aether.internal.test.impl.TestFileProcessor;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.impl.StubArtifact;
-import org.eclipse.aether.internal.test.util.impl.StubMetadata;
+import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
@@ -74,9 +74,10 @@ public class AsyncConnectorSuiteConfiguration
         this.session = new TestRepositorySystemSession();
         this.repository = new RemoteRepository( "async-test-repo", "default", url( "repo" ) );
 
-        this.artifact = new StubArtifact( "gid", "aid", "classifier", "extension", "version", null );
+        this.artifact = new DefaultArtifact( "gid", "aid", "classifier", "extension", "version", null );
         this.metadata =
-            new StubMetadata( "gid", "aid", "version", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT, null );
+            new DefaultMetadata( "gid", "aid", "version", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT,
+                                 null );
 
         connector = null;
 

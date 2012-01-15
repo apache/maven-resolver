@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,7 @@ import java.util.Map;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
@@ -34,7 +35,6 @@ import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.EventWrapper;
 import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.Type;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.impl.StubArtifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
@@ -95,7 +95,7 @@ public class DefaultArtifactResolverTest
         resolver.setRemoteRepositoryManager( remoteRepositoryManager );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
 
-        artifact = new StubArtifact( "gid", "aid", "", "ext", "ver" );
+        artifact = new DefaultArtifact( "gid", "aid", "", "ext", "ver" );
 
         connector = new RecordingRepositoryConnector();
         remoteRepositoryManager.setConnector( connector );

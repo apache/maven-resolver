@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,11 +18,11 @@ import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.IniArtifactDescriptorReader;
-import org.eclipse.aether.internal.test.util.impl.StubArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -51,7 +51,7 @@ public class IniArtifactDescriptorReaderTest
     public void testMissingDescriptor()
         throws ArtifactDescriptorException
     {
-        StubArtifact art = new StubArtifact( "missing:aid:ver:ext" );
+        Artifact art = new DefaultArtifact( "missing:aid:ver:ext" );
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest( art, null, "" );
         reader.readArtifactDescriptor( session, request );
     }
@@ -60,7 +60,7 @@ public class IniArtifactDescriptorReaderTest
     public void testLookup()
         throws ArtifactDescriptorException
     {
-        StubArtifact art = new StubArtifact( "gid:aid:ext:ver" );
+        Artifact art = new DefaultArtifact( "gid:aid:ext:ver" );
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest( art, null, "" );
         ArtifactDescriptorResult description = reader.readArtifactDescriptor( session, request );
 

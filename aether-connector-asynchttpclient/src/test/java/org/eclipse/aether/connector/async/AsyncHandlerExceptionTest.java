@@ -12,11 +12,12 @@ package org.eclipse.aether.connector.async;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnector;
 import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
 import org.eclipse.aether.internal.test.impl.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.impl.StubArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
@@ -62,7 +63,7 @@ public class AsyncHandlerExceptionTest
 
             try
             {
-                StubArtifact artifact = new StubArtifact( "gid:aid:1.0" );
+                Artifact artifact = new DefaultArtifact( "gid:aid:1.0" );
                 for ( int i = 0; i < 16; i++ )
                 {
                     System.out.println( "RUN #" + i );

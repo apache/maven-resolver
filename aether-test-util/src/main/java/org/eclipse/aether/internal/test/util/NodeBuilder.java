@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.test.util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.internal.test.util.impl.StubArtifact;
 import org.eclipse.aether.internal.test.util.impl.TestDependencyNode;
 import org.eclipse.aether.internal.test.util.impl.TestVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
@@ -100,14 +101,14 @@ public class NodeBuilder
 
     public NodeBuilder reloc( String artifactId )
     {
-        Artifact relocation = new StubArtifact( groupId, artifactId, classifier, ext, version );
+        Artifact relocation = new DefaultArtifact( groupId, artifactId, classifier, ext, version );
         relocations.add( relocation );
         return this;
     }
 
     public NodeBuilder reloc( String groupId, String artifactId, String version )
     {
-        Artifact relocation = new StubArtifact( groupId, artifactId, classifier, ext, version );
+        Artifact relocation = new DefaultArtifact( groupId, artifactId, classifier, ext, version );
         relocations.add( relocation );
         return this;
     }
@@ -124,7 +125,8 @@ public class NodeBuilder
         TestDependencyNode node = new TestDependencyNode();
         if ( artifactId != null && artifactId.length() > 0 )
         {
-            Artifact artifact = new StubArtifact( groupId, artifactId, classifier, ext, version, properties );
+            Artifact artifact =
+                new DefaultArtifact( groupId, artifactId, classifier, ext, version, properties, (File) null );
             dependency = new Dependency( artifact, scope, optional );
             node.setDependency( dependency );
             try

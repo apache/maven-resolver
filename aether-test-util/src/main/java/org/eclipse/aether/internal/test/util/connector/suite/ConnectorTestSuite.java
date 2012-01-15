@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,10 +21,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.impl.StubArtifact;
-import org.eclipse.aether.internal.test.util.impl.StubMetadata;
+import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
@@ -82,10 +82,10 @@ public abstract class ConnectorTestSuite
         throws IOException, NoRepositoryConnectorException
     {
 
-        StubArtifact artifact = new StubArtifact( "testGroup", "testArtifact", "", "jar", "1-test" );
-        StubMetadata metadata =
-            new StubMetadata( "testGroup", "testArtifact", "1-test", "maven-metadata.xml",
-                              Metadata.Nature.RELEASE_OR_SNAPSHOT );
+        Artifact artifact = new DefaultArtifact( "testGroup", "testArtifact", "", "jar", "1-test" );
+        Metadata metadata =
+            new DefaultMetadata( "testGroup", "testArtifact", "1-test", "maven-metadata.xml",
+                                 Metadata.Nature.RELEASE_OR_SNAPSHOT );
 
         RepositoryConnector connector = factory().newInstance( session, repository );
 
@@ -166,10 +166,10 @@ public abstract class ConnectorTestSuite
 
         for ( int i = 0; i < numTransfers; i++ )
         {
-            StubArtifact art = new StubArtifact( "testGroup", "testArtifact", "", "jar", i + "-test" );
-            StubMetadata meta =
-                new StubMetadata( "testGroup", "testArtifact", i + "-test", "maven-metadata.xml",
-                                  Metadata.Nature.RELEASE_OR_SNAPSHOT );
+            Artifact art = new DefaultArtifact( "testGroup", "testArtifact", "", "jar", i + "-test" );
+            Metadata meta =
+                new DefaultMetadata( "testGroup", "testArtifact", i + "-test", "maven-metadata.xml",
+                                     Metadata.Nature.RELEASE_OR_SNAPSHOT );
 
             ArtifactUpload artUp = new ArtifactUpload( art, artifactFile );
             MetadataUpload metaUp = new MetadataUpload( meta, metadataFile );
@@ -200,10 +200,10 @@ public abstract class ConnectorTestSuite
                 File artFile = new File( localPath.toString() + "/a" + i );
                 File metaFile = new File( localPath.toString() + "/m" + i );
 
-                StubArtifact art = new StubArtifact( "testGroup", "testArtifact", "", "jar", i + "-test" );
-                StubMetadata meta =
-                    new StubMetadata( "testGroup", "testArtifact", i + "-test", "maven-metadata.xml",
-                                      Metadata.Nature.RELEASE_OR_SNAPSHOT );
+                Artifact art = new DefaultArtifact( "testGroup", "testArtifact", "", "jar", i + "-test" );
+                Metadata meta =
+                    new DefaultMetadata( "testGroup", "testArtifact", i + "-test", "maven-metadata.xml",
+                                         Metadata.Nature.RELEASE_OR_SNAPSHOT );
 
                 ArtifactDownload artDown =
                     new ArtifactDownload( art, null, artFile, RepositoryPolicy.CHECKSUM_POLICY_FAIL );
@@ -242,7 +242,7 @@ public abstract class ConnectorTestSuite
     {
         File emptyFile = TestFileUtils.createTempFile( "" );
 
-        Artifact artifact = new StubArtifact( "gid:aid:ext:ver" );
+        Artifact artifact = new DefaultArtifact( "gid:aid:ext:ver" );
         ArtifactUpload upA = new ArtifactUpload( artifact, emptyFile );
         File dir = TestFileUtils.createTempDir( "con-test" );
         File downAFile = new File( dir, "downA.file" );
@@ -250,7 +250,7 @@ public abstract class ConnectorTestSuite
         ArtifactDownload downA = new ArtifactDownload( artifact, "", downAFile, RepositoryPolicy.CHECKSUM_POLICY_FAIL );
 
         Metadata metadata =
-            new StubMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
+            new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
         MetadataUpload upM = new MetadataUpload( metadata, emptyFile );
         File downMFile = new File( dir, "downM.file" );
         downMFile.deleteOnExit();
@@ -286,7 +286,7 @@ public abstract class ConnectorTestSuite
 
         File file = TestFileUtils.createTempFile( bytes, count );
 
-        Artifact artifact = new StubArtifact( "gid:aid:ext:ver" );
+        Artifact artifact = new DefaultArtifact( "gid:aid:ext:ver" );
         ArtifactUpload upA = new ArtifactUpload( artifact, file );
 
         File dir = TestFileUtils.createTempDir( "con-test" );
@@ -295,7 +295,7 @@ public abstract class ConnectorTestSuite
         ArtifactDownload downA = new ArtifactDownload( artifact, "", downAFile, RepositoryPolicy.CHECKSUM_POLICY_FAIL );
 
         Metadata metadata =
-            new StubMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
+            new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
         MetadataUpload upM = new MetadataUpload( metadata, file );
         File downMFile = new File( dir, "downM.file" );
         downMFile.deleteOnExit();
