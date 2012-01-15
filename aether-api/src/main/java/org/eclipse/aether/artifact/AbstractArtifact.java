@@ -123,6 +123,12 @@ public abstract class AbstractArtifact
         return newInstance( getVersion(), copyProperties( properties ), getFile() );
     }
 
+    public String getProperty( String key, String defaultValue )
+    {
+        String value = getProperties().get( key );
+        return ( value != null ) ? value : defaultValue;
+    }
+
     /**
      * Copies the specified artifact properties. This utility method should be used when creating new artifact instances
      * with caller-supplied properties.

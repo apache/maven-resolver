@@ -270,12 +270,6 @@ public final class DefaultArtifact
         return file;
     }
 
-    public String getProperty( String key, String defaultValue )
-    {
-        String value = properties.get( key );
-        return ( value != null ) ? value : defaultValue;
-    }
-
     public Map<String, String> getProperties()
     {
         return properties;

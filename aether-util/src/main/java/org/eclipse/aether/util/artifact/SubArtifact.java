@@ -11,7 +11,6 @@
 package org.eclipse.aether.util.artifact;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.AbstractArtifact;
@@ -168,15 +167,9 @@ public final class SubArtifact
         return new SubArtifact( mainArtifact, classifier, extension, file, properties );
     }
 
-    public String getProperty( String key, String defaultValue )
-    {
-        String value = properties.get( key );
-        return ( value != null ) ? value : defaultValue;
-    }
-
     public Map<String, String> getProperties()
     {
-        return Collections.unmodifiableMap( properties );
+        return properties;
     }
 
     public Artifact setProperties( Map<String, String> properties )
