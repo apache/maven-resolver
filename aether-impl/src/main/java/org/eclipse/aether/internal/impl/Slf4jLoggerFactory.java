@@ -34,7 +34,7 @@ public class Slf4jLoggerFactory
         boolean available;
         try
         {
-            Class.forName( "org.slf4j.ILoggerFactory" );
+            Slf4jLoggerFactory.class.getClassLoader().loadClass( "org.slf4j.ILoggerFactory" );
             available = true;
         }
         catch ( Exception e )
