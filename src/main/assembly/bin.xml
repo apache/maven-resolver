@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ ~ Copyright (c) 2012 Sonatype, Inc.
+ ~ All rights reserved. This program and the accompanying materials
+ ~ are made available under the terms of the Eclipse Public License v1.0
+ ~ which accompanies this distribution, and is available at
+ ~ http://www.eclipse.org/legal/epl-v10.html
+ ~
+ ~ Contributors:
+ ~    Sonatype, Inc. - initial API and implementation
+-->
+
+<assembly>
+  <id>bin-incubation</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <fileSets>
+    <fileSet>
+      <directory>aether-api/target</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+        <include>*.jar.asc</include>
+      </includes>
+      <excludes>
+        <exclude>*-sources.*</exclude>
+        <exclude>*-javadoc.*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>aether-spi/target</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+        <include>*.jar.asc</include>
+      </includes>
+      <excludes>
+        <exclude>*-sources.*</exclude>
+        <exclude>*-javadoc.*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>aether-util/target</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+        <include>*.jar.asc</include>
+      </includes>
+      <excludes>
+        <exclude>*-sources.*</exclude>
+        <exclude>*-javadoc.*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>aether-impl/target</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+        <include>*.jar.asc</include>
+      </includes>
+      <excludes>
+        <exclude>*-sources.*</exclude>
+        <exclude>*-javadoc.*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>aether-connector-file/target</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+        <include>*.jar.asc</include>
+      </includes>
+      <excludes>
+        <exclude>*-sources.*</exclude>
+        <exclude>*-javadoc.*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>aether-connector-asynchttpclient/target</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+        <include>*.jar.asc</include>
+      </includes>
+      <excludes>
+        <exclude>*-sources.*</exclude>
+        <exclude>*-javadoc.*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>aether-connector-wagon/target</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+        <include>*.jar.asc</include>
+      </includes>
+      <excludes>
+        <exclude>*-sources.*</exclude>
+        <exclude>*-javadoc.*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>target/apidocs</directory>
+      <outputDirectory>apidocs</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/assembly/resources</directory>
+      <outputDirectory>.</outputDirectory>
+    </fileSet>
+  </fileSets>
+</assembly>

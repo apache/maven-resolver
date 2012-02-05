@@ -269,8 +269,9 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.5</version>
+          <version>2.8.1</version>
           <configuration>
+            <detectOfflineLinks>false</detectOfflineLinks>
             <links>
               <link>http://download.oracle.com/javase/6/docs/api/</link>
             </links>
@@ -301,6 +302,32 @@
                 <head>Restriction:</head>
               </tag>
             </tags>
+            <groups>
+              <group>
+                <title>API</title>
+                <packages>org.eclipse.aether*</packages>
+              </group>
+              <group>
+                <title>SPI</title>
+                <packages>org.eclipse.aether.spi*</packages>
+              </group>
+              <group>
+                <title>Utilities</title>
+                <packages>org.eclipse.aether.util*</packages>
+              </group>
+              <group>
+                <title>Repository Connectors</title>
+                <packages>org.eclipse.aether.connector*</packages>
+              </group>
+              <group>
+                <title>Implementation</title>
+                <packages>org.eclipse.aether.impl*</packages>
+              </group>
+              <group>
+                <title>Internals</title>
+                <packages>org.eclipse.aether.internal*</packages>
+              </group>
+            </groups>
           </configuration>
         </plugin>
         <plugin>
@@ -311,7 +338,7 @@
             <autoVersionSubmodules>true</autoVersionSubmodules>
             <mavenExecutorId>forked-path</mavenExecutorId>
             <useReleaseProfile>false</useReleaseProfile>
-            <goals>deploy</goals>
+            <goals>deploy javadoc:aggregate-jar assembly:attached</goals>
             <arguments>-Psonatype-oss-release</arguments>
           </configuration>
         </plugin>
@@ -477,6 +504,52 @@
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>default-cli</id>
+                <configuration>
+                  <attach>false</attach>
+                  <excludePackageNames>*.internal.*</excludePackageNames>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
             <dependencies>
               <dependency>
@@ -498,6 +571,15 @@
                     <descriptorRef>source-release</descriptorRef>
                   </descriptorRefs>
                   <tarLongFileFormat>gnu</tarLongFileFormat>
+                </configuration>
+              </execution>
+              <execution>
+                <id>default-cli</id>
+                <configuration>
+                  <attach>false</attach>
+                  <descriptors>
+                    <descriptor>src/main/assembly/bin.xml</descriptor>
+                  </descriptors>
                 </configuration>
               </execution>
             </executions>
