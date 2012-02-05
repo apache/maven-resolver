@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.aether.examples.plexus;
 
+import org.codehaus.plexus.ContainerConfiguration;
+import org.codehaus.plexus.DefaultContainerConfiguration;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.eclipse.aether.RepositorySystem;
 
@@ -27,7 +29,8 @@ public class PlexusRepositorySystemFactory
          */
         try
         {
-            return new DefaultPlexusContainer().lookup( RepositorySystem.class );
+            ContainerConfiguration config = new DefaultContainerConfiguration().setAutoWiring( true );
+            return new DefaultPlexusContainer( config ).lookup( RepositorySystem.class );
         }
         catch ( Exception e )
         {
