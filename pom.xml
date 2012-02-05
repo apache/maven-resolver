@@ -286,6 +286,16 @@
                 <head>Restriction:</head>
               </tag>
               <tag>
+                <name>noinstantiate</name>
+                <placement>a</placement>
+                <head>Restriction:</head>
+              </tag>
+              <tag>
+                <name>nooverride</name>
+                <placement>a</placement>
+                <head>Restriction:</head>
+              </tag>
+              <tag>
                 <name>noreference</name>
                 <placement>a</placement>
                 <head>Restriction:</head>
