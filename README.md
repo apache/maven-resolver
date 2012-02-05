@@ -2,10 +2,6 @@ Homepage
 ========
 <http://www.eclipse.org/aether/>
 
-Wiki
-====
-<https://docs.sonatype.org/display/AETHER/Home>
-
 Contribution
 ============
 As required by the Eclipse IP process, all contributions need to be submitted in form of patches attached to a
