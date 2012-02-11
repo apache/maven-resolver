@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,18 @@ public final class NoopDependencyManager
     implements DependencyManager
 {
 
+    /**
+     * A ready-made instance of this dependency manager which can safely be reused throughout an entire application
+     * regardless of multi-threading.
+     */
     public static final DependencyManager INSTANCE = new NoopDependencyManager();
+
+    /**
+     * Creates a new instance of this dependency manager. Usually, {@link #INSTANCE} should be used instead.
+     */
+    public NoopDependencyManager()
+    {
+    }
 
     public DependencyManager deriveChildManager( DependencyCollectionContext context )
     {

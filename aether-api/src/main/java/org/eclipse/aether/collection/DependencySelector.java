@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,9 +24,9 @@ public interface DependencySelector
 {
 
     /**
-     * Applies exclusions to the specified dependency.
+     * Decides whether the specified dependency should be included in the dependency graph.
      * 
-     * @param dependency The dependency to filter, must not be {@code null}.
+     * @param dependency The dependency to check, must not be {@code null}.
      * @return {@code false} if the dependency should be excluded from the children of the current node, {@code true}
      *         otherwise.
      */
@@ -37,7 +37,7 @@ public interface DependencySelector
      * implementors are strongly advised to simply return the current instance if nothing changed to help save memory.
      * 
      * @param context The dependency collection context, must not be {@code null}.
-     * @return The dependency filter for the target node, must not be {@code null}.
+     * @return The dependency selector for the target node, must not be {@code null}.
      */
     DependencySelector deriveChildSelector( DependencyCollectionContext context );
 
