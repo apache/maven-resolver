@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -396,7 +396,8 @@ public final class ArtifactDescriptorResult
     }
 
     /**
-     * Gets any additional information about the artifact in form of key-value pairs.
+     * Gets any additional information about the artifact in form of key-value pairs. <em>Note:</em> Regardless of their
+     * actual type, all property values must be treated as being read-only.
      * 
      * @return The additional information about the artifact, never {@code null}.
      */
