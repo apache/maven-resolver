@@ -40,7 +40,8 @@ import org.eclipse.aether.transfer.TransferListener;
 /**
  * A simple repository system session. <em>Note:</em> This class is not thread-safe. It is assumed that the mutators get
  * only called during an initialization phase and that the session itself is not changed when being used by the
- * repository system.
+ * repository system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to
+ * prevent accidental manipulation of it afterwards.
  */
 public final class DefaultRepositorySystemSession
     implements RepositorySystemSession
@@ -129,7 +130,8 @@ public final class DefaultRepositorySystemSession
     }
 
     /**
-     * Creates a shallow copy of the specified session.
+     * Creates a shallow copy of the specified session. Actually, the copy is not completely shallow, all maps holding
+     * properties are copied as well. In other words, mutating the new session has no effect on the original session.
      * 
      * @param session The session to copy, must not be {@code null}.
      */
@@ -847,9 +849,9 @@ public final class DefaultRepositorySystemSession
     }
 
     /**
-     * Marks this session as read-only such that any future attempts to call its mutators it will fail with an
-     * exception. Marking an already read-only session as read-only has no effect. The session's data and cache remain
-     * writable.
+     * Marks this session as read-only such that any future attempts to call its mutators will fail with an exception.
+     * Marking an already read-only session as read-only has no effect. The session's data and cache remain writable
+     * though.
      */
     public void setReadOnly()
     {
