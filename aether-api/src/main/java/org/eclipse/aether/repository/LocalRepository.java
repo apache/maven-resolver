@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,9 @@ import java.io.File;
 
 /**
  * A repository on the local file system used to cache contents of remote repositories and to store locally installed
- * artifacts.
+ * artifacts. Note that this class merely describes such a repository, actual access to the contained artifacts is
+ * handled by a {@link LocalRepositoryManager} which is usually determined from the {@link #getContentType() type} of
+ * the repository.
  */
 public final class LocalRepository
     implements ArtifactRepository

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,10 @@ package org.eclipse.aether.repository;
 import java.util.UUID;
 
 /**
- * A repository backed by an IDE workspace or the output of a build session.
+ * A repository backed by an IDE workspace, the output of a build session or similar ad-hoc collection of artifacts. As
+ * far as the repository system is concerned, a workspace repository is read-only, i.e. can only be used for artifact
+ * resolution but not installation/deployment. Note that this class merely describes such a repository, actual access to
+ * the contained artifacts is handled by a {@link WorkspaceReader}.
  */
 public final class WorkspaceRepository
     implements ArtifactRepository
@@ -23,16 +26,31 @@ public final class WorkspaceRepository
 
     private final Object key;
 
+    /**
+     * Creates a new workspace repository of type {@code "workspace"} and a random key.
+     */
     public WorkspaceRepository()
     {
         this( "workspace" );
     }
 
+    /**
+     * Creates a new workspace repository with the specified type and a random key.
+     * 
+     * @param type The type of the repository, may be {@code null}.
+     */
     public WorkspaceRepository( String type )
     {
         this( type, null );
     }
 
+    /**
+     * Creates a new workspace repository with the specified type and key. The key is used to distinguish one workspace
+     * from another and should be sensitive to the artifacts that are (potentially) available in the workspace.
+     * 
+     * @param type The type of the repository, may be {@code null}.
+     * @param key The (comparison) key for the repository, may be {@code null} to generate a unique random key.
+     */
     public WorkspaceRepository( String type, Object key )
     {
         this.type = ( type != null ) ? type : "";
