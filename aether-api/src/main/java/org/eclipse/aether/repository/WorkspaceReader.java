@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,9 @@ import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Manages a repository backed by the IDE workspace or a build session.
+ * Manages a repository backed by the IDE workspace, a build session or a similar ad-hoc collection of artifacts.
+ * 
+ * @see org.eclipse.aether.RepositorySystemSession#getWorkspaceReader()
  */
 public interface WorkspaceReader
 {
