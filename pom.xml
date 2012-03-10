@@ -257,7 +257,8 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>2.4</version>
+          <!-- NOTE: Avoiding 2.4+ due to https://github.com/sonatype/m2eclipse-extras/issues/10 -->
+          <version>2.3.2</version>
           <configuration>
             <archive>
               <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
