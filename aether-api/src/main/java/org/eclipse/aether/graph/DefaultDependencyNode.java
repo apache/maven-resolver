@@ -290,8 +290,9 @@ public final class DefaultDependencyNode
     {
         if ( visitor.visitEnter( this ) )
         {
-            for ( DependencyNode child : getChildren() )
+            for ( int i = 0, n = children.size(); i < n; i++ )
             {
+                DependencyNode child = children.get( i );
                 if ( !child.accept( visitor ) )
                 {
                     break;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -93,8 +93,9 @@ public final class DefaultMirrorSelector
 
         if ( repoId != null && !mirrors.isEmpty() )
         {
-            for ( MirrorDef mirror : mirrors )
+            for ( int i = 0, n = mirrors.size(); i < n; i++ )
             {
+                MirrorDef mirror = mirrors.get( i );
                 if ( repoId.equals( mirror.mirrorOfIds )
                     && matchesType( repository.getContentType(), mirror.mirrorOfTypes ) )
                 {
@@ -102,8 +103,9 @@ public final class DefaultMirrorSelector
                 }
             }
 
-            for ( MirrorDef mirror : mirrors )
+            for ( int i = 0, n = mirrors.size(); i < n; i++ )
             {
+                MirrorDef mirror = mirrors.get( i );
                 if ( matchPattern( repository, mirror.mirrorOfIds )
                     && matchesType( repository.getContentType(), mirror.mirrorOfTypes ) )
                 {
