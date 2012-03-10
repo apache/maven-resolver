@@ -8,14 +8,13 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.layout;
+package org.eclipse.aether.util.repository.layout;
 
 import static org.junit.Assert.*;
 
 import java.net.URI;
 
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.util.layout.MavenDefaultLayout;
 import org.junit.Test;
 
 /**
