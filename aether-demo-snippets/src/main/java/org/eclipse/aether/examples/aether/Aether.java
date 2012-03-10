@@ -32,7 +32,7 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.util.graph.PreorderNodeListGenerator;
+import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 
 public class Aether
 {
