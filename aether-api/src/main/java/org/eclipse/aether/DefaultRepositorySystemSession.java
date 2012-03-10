@@ -35,6 +35,7 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
+import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
 
 /**
@@ -51,15 +52,13 @@ public final class DefaultRepositorySystemSession
 
     private boolean offline;
 
-    private boolean transferErrorCachingEnabled;
-
-    private boolean notFoundCachingEnabled;
-
     private boolean ignoreMissingArtifactDescriptor;
 
     private boolean ignoreInvalidArtifactDescriptor;
 
     private boolean ignoreArtifactDescriptorRepositories;
+
+    private ResolutionErrorPolicy resolutionErrorPolicy;
 
     private String checksumPolicy;
 
@@ -143,11 +142,10 @@ public final class DefaultRepositorySystemSession
         }
 
         setOffline( session.isOffline() );
-        setTransferErrorCachingEnabled( session.isTransferErrorCachingEnabled() );
-        setNotFoundCachingEnabled( session.isNotFoundCachingEnabled() );
         setIgnoreInvalidArtifactDescriptor( session.isIgnoreInvalidArtifactDescriptor() );
         setIgnoreMissingArtifactDescriptor( session.isIgnoreMissingArtifactDescriptor() );
         setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );
+        setResolutionErrorPolicy( session.getResolutionErrorPolicy() );
         setChecksumPolicy( session.getChecksumPolicy() );
         setUpdatePolicy( session.getUpdatePolicy() );
         setLocalRepositoryManager( session.getLocalRepositoryManager() );
@@ -185,48 +183,6 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.offline = offline;
-        return this;
-    }
-
-    public boolean isTransferErrorCachingEnabled()
-    {
-        return transferErrorCachingEnabled;
-    }
-
-    /**
-     * Controls whether transfer errors (e.g. unreachable host, bad authentication) from resolution attempts should be
-     * cached in the local repository. If caching is enabled, resolution will not be reattempted until the update policy
-     * for the affected resource has expired.
-     * 
-     * @param transferErrorCachingEnabled {@code true} to cache transfer errors, {@code false} to always reattempt
-     *            downloading.
-     * @return This session for chaining, never {@code null}.
-     */
-    public DefaultRepositorySystemSession setTransferErrorCachingEnabled( boolean transferErrorCachingEnabled )
-    {
-        failIfReadOnly();
-        this.transferErrorCachingEnabled = transferErrorCachingEnabled;
-        return this;
-    }
-
-    public boolean isNotFoundCachingEnabled()
-    {
-        return notFoundCachingEnabled;
-    }
-
-    /**
-     * Controls whether missing artifacts/metadata from resolution attempts should be cached in the local repository. If
-     * caching is enabled, resolution will not be reattempted until the update policy for the affected resource has
-     * expired.
-     * 
-     * @param notFoundCachingEnabled {@code true} if to cache missing resources, {@code false} to always reattempt
-     *            downloading.
-     * @return This session for chaining, never {@code null}.
-     */
-    public DefaultRepositorySystemSession setNotFoundCachingEnabled( boolean notFoundCachingEnabled )
-    {
-        failIfReadOnly();
-        this.notFoundCachingEnabled = notFoundCachingEnabled;
         return this;
     }
 
@@ -287,6 +243,25 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
+        return this;
+    }
+
+    public ResolutionErrorPolicy getResolutionErrorPolicy()
+    {
+        return resolutionErrorPolicy;
+    }
+
+    /**
+     * Sets the policy which controls whether resolutions errors from remote repositories should be cached.
+     * 
+     * @param resolutionErrorPolicy The resolution error policy for this session, may be {@code null} if resolution
+     *            errors should generally not be cached.
+     * @return This session for chaining, never {@code null}.
+     */
+    public DefaultRepositorySystemSession setResolutionErrorPolicy( ResolutionErrorPolicy resolutionErrorPolicy )
+    {
+        failIfReadOnly();
+        this.resolutionErrorPolicy = resolutionErrorPolicy;
         return this;
     }
 

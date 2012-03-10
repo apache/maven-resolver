@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,6 +32,7 @@ import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
+import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
@@ -199,9 +200,10 @@ public class DefaultUpdateCheckManager
         }
         else
         {
+            int errorPolicy = Utils.getPolicy( session, artifact, repository );
             if ( error == null || error.length() <= 0 )
             {
-                if ( session.isNotFoundCachingEnabled() )
+                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_NOT_FOUND ) != 0 )
                 {
                     check.setRequired( false );
                     check.setException( newException( error, artifact, repository ) );
@@ -213,7 +215,7 @@ public class DefaultUpdateCheckManager
             }
             else
             {
-                if ( session.isTransferErrorCachingEnabled() )
+                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_TRANSFER_ERROR ) != 0 )
                 {
                     check.setRequired( false );
                     check.setException( newException( error, artifact, repository ) );
@@ -338,14 +340,22 @@ public class DefaultUpdateCheckManager
         }
         else
         {
+            int errorPolicy = Utils.getPolicy( session, metadata, repository );
             if ( error == null || error.length() <= 0 )
             {
-                check.setRequired( false );
-                check.setException( newException( error, metadata, repository ) );
+                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_NOT_FOUND ) != 0 )
+                {
+                    check.setRequired( false );
+                    check.setException( newException( error, metadata, repository ) );
+                }
+                else
+                {
+                    check.setRequired( true );
+                }
             }
             else
             {
-                if ( session.isTransferErrorCachingEnabled() )
+                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_TRANSFER_ERROR ) != 0 )
                 {
                     check.setRequired( false );
                     check.setException( newException( error, metadata, repository ) );

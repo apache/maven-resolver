@@ -312,12 +312,11 @@ public class DefaultUpdateCheckManagerTest
         manager.touchMetadata( session, check );
         resetSessionData( session );
 
-        // ! file.exists && ! updateRequired -> artifact not found in remote repo
-        // ignore NotFoundCaching-setting, don't check if update policy does not say so for metadata
-        check.setPolicy( RepositoryPolicy.UPDATE_POLICY_DAILY );
+        // ! file.exists && updateRequired -> check in remote repo
+        check = newMetadataCheck().setPolicy( RepositoryPolicy.UPDATE_POLICY_DAILY );
         manager.checkMetadata( session, check );
-        assertEquals( false, check.isRequired() );
-        assertTrue( check.getException() instanceof MetadataNotFoundException );
+        assertEquals( true, check.isRequired() );
+        assertNull( check.getException() );
     }
 
     @Test
@@ -589,7 +588,7 @@ public class DefaultUpdateCheckManagerTest
         manager.touchArtifact( session, check );
         resetSessionData( session );
 
-        // ! file.exists && ! updateRequired -> artifact not found in remote repo
+        // ! file.exists && updateRequired -> check in remote repo
         check = newArtifactCheck().setPolicy( RepositoryPolicy.UPDATE_POLICY_DAILY );
         manager.checkArtifact( session, check );
         assertEquals( true, check.isRequired() );

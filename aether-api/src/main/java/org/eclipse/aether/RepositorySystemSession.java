@@ -24,6 +24,7 @@ import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
+import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
 
 /**
@@ -45,24 +46,6 @@ public interface RepositorySystemSession
      * @return {@code true} if the repository system is in offline mode, {@code false} otherwise.
      */
     boolean isOffline();
-
-    /**
-     * Indicates whether transfer errors (e.g. unreachable host, bad authentication) from resolution attempts should be
-     * cached in the local repository. If caching is enabled, resolution will not be reattempted until the update policy
-     * for the affected resource has expired.
-     * 
-     * @return {@code true} if transfer errors are cached, {@code false} to always reattempt downloading.
-     */
-    boolean isTransferErrorCachingEnabled();
-
-    /**
-     * Indicates whether missing artifacts/metadata from resolution attempts should be cached in the local repository.
-     * If caching is enabled, resolution will not be reattempted until the update policy for the affected resource has
-     * expired.
-     * 
-     * @return {@code true} if missing resources are cached, {@code false} to always reattempt downloading.
-     */
-    boolean isNotFoundCachingEnabled();
 
     /**
      * Indicates whether missing artifact descriptors are silently ignored. If enabled and no artifact descriptor is
@@ -90,6 +73,14 @@ public interface RepositorySystemSession
      *         those with the originally specified repositories.
      */
     boolean isIgnoreArtifactDescriptorRepositories();
+
+    /**
+     * Gets the policy which controls whether resolutions errors from remote repositories should be cached.
+     * 
+     * @return The resolution error policy for this session or {@code null} if resolution errors should generally not be
+     *         cached.
+     */
+    ResolutionErrorPolicy getResolutionErrorPolicy();
 
     /**
      * Gets the global checksum policy. If set, the global checksum policy overrides the checksum policies of the remote

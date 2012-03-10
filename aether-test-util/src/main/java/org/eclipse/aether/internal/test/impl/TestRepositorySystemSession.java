@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SessionData;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
@@ -30,6 +31,7 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -37,6 +39,8 @@ import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
+import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
 import org.eclipse.aether.transfer.TransferListener;
 
 public class TestRepositorySystemSession
@@ -54,6 +58,8 @@ public class TestRepositorySystemSession
     private ProxySelector proxySelector = new TestProxySelector();
 
     private LocalRepositoryManager localRepositoryManager;
+
+    private ResolutionErrorPolicy resolutionErrorPolicy = new TestResolutionErrorPolicy();
 
     private boolean transferErrorCaching;
 
@@ -104,14 +110,9 @@ public class TestRepositorySystemSession
         return offline;
     }
 
-    public boolean isTransferErrorCachingEnabled()
+    public ResolutionErrorPolicy getResolutionErrorPolicy()
     {
-        return transferErrorCaching;
-    }
-
-    public boolean isNotFoundCachingEnabled()
-    {
-        return notFoundCaching;
+        return resolutionErrorPolicy;
     }
 
     public boolean isIgnoreMissingArtifactDescriptor()
@@ -336,4 +337,27 @@ public class TestRepositorySystemSession
     {
         this.offline = offline;
     }
+
+    private class TestResolutionErrorPolicy
+        implements ResolutionErrorPolicy
+    {
+
+        public int getArtifactPolicy( RepositorySystemSession session, ResolutionErrorPolicyRequest<Artifact> request )
+        {
+            return getPolicy();
+        }
+
+        public int getMetadataPolicy( RepositorySystemSession session, ResolutionErrorPolicyRequest<Metadata> request )
+        {
+            return getPolicy();
+        }
+
+        private int getPolicy()
+        {
+            return ( notFoundCaching ? ResolutionErrorPolicy.CACHE_NOT_FOUND : 0 )
+                | ( transferErrorCaching ? ResolutionErrorPolicy.CACHE_TRANSFER_ERROR : 0 );
+        }
+
+    }
+
 }
