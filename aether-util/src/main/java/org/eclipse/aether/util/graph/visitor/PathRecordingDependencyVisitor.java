@@ -92,11 +92,9 @@ public final class PathRecordingDependencyVisitor
         if ( accept )
         {
             DependencyNode[] path = new DependencyNode[parents.size()];
-            int i = parents.size() - 1;
-            for ( DependencyNode n : parents )
+            for ( int i = 0, n = parents.size(); i < n; i++ )
             {
-                path[i] = n;
-                i--;
+                path[n - i - 1] = parents.get( i );
             }
             paths.add( Arrays.asList( path ) );
         }
