@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.graph;
+package org.eclipse.aether.util.graph.visitor;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -16,7 +16,7 @@ import java.util.Map;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
-import org.eclipse.aether.util.graph.FilteringDependencyVisitor;
+import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 
 /**
  * A dependency visitor that constructs a clone of the visited dependency graph. If such a visitor is passed into a

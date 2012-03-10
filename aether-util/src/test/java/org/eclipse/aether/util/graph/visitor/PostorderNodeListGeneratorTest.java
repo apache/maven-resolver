@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.graph;
+package org.eclipse.aether.util.graph.visitor;
 
 import static org.junit.Assert.*;
 
@@ -16,10 +16,9 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.eclipse.aether.util.graph.PreorderNodeListGenerator;
 import org.junit.Test;
 
-public class PreorderNodeListGeneratorTest
+public class PostorderNodeListGeneratorTest
 {
 
     private DependencyNode parse( String resource )
@@ -44,10 +43,10 @@ public class PreorderNodeListGeneratorTest
     {
         DependencyNode root = parse( "simple.txt" );
 
-        PreorderNodeListGenerator visitor = new PreorderNodeListGenerator();
+        PostorderNodeListGenerator visitor = new PostorderNodeListGenerator();
         root.accept( visitor );
 
-        assertSequence( visitor.getNodes(), "a", "b", "c", "d", "e" );
+        assertSequence( visitor.getNodes(), "c", "b", "e", "d", "a" );
     }
 
     @Test
@@ -56,10 +55,10 @@ public class PreorderNodeListGeneratorTest
     {
         DependencyNode root = parse( "cycles.txt" );
 
-        PreorderNodeListGenerator visitor = new PreorderNodeListGenerator();
+        PostorderNodeListGenerator visitor = new PostorderNodeListGenerator();
         root.accept( visitor );
 
-        assertSequence( visitor.getNodes(), "a", "b", "c", "d", "e" );
+        assertSequence( visitor.getNodes(), "c", "b", "e", "d", "a" );
     }
 
 }
