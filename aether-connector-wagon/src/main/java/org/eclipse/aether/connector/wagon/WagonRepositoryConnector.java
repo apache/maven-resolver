@@ -706,7 +706,14 @@ class WagonRepositoryConnector
                 }
                 catch ( IOException e )
                 {
-                    throw new ChecksumFailureException( e );
+                    if ( !tmp.exists() )
+                    { // see comment in rename()
+                        expected = "";
+                    }
+                    else
+                    {
+                        throw new ChecksumFailureException( e );
+                    }
                 }
 
                 if ( expected.equalsIgnoreCase( actual ) )
