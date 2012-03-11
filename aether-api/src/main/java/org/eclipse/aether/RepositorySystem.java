@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -82,8 +82,7 @@ public interface RepositorySystem
      * @param request The descriptor request, must not be {@code null}.
      * @return The descriptor result, never {@code null}.
      * @throws ArtifactDescriptorException If the artifact descriptor could not be read.
-     * @see RepositorySystemSession#isIgnoreInvalidArtifactDescriptor()
-     * @see RepositorySystemSession#isIgnoreMissingArtifactDescriptor()
+     * @see RepositorySystemSession#getArtifactDescriptorPolicy()
      */
     ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session, ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException;

@@ -39,6 +39,7 @@ import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
+import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
 import org.eclipse.aether.transfer.TransferListener;
@@ -115,14 +116,9 @@ public class TestRepositorySystemSession
         return resolutionErrorPolicy;
     }
 
-    public boolean isIgnoreMissingArtifactDescriptor()
+    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy()
     {
-        return false;
-    }
-
-    public boolean isIgnoreInvalidArtifactDescriptor()
-    {
-        return false;
+        return null;
     }
 
     public boolean isIgnoreArtifactDescriptorRepositories()

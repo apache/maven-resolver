@@ -35,6 +35,7 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
+import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
 
@@ -52,13 +53,11 @@ public final class DefaultRepositorySystemSession
 
     private boolean offline;
 
-    private boolean ignoreMissingArtifactDescriptor;
-
-    private boolean ignoreInvalidArtifactDescriptor;
-
     private boolean ignoreArtifactDescriptorRepositories;
 
     private ResolutionErrorPolicy resolutionErrorPolicy;
+
+    private ArtifactDescriptorPolicy artifactDescriptorPolicy;
 
     private String checksumPolicy;
 
@@ -142,10 +141,9 @@ public final class DefaultRepositorySystemSession
         }
 
         setOffline( session.isOffline() );
-        setIgnoreInvalidArtifactDescriptor( session.isIgnoreInvalidArtifactDescriptor() );
-        setIgnoreMissingArtifactDescriptor( session.isIgnoreMissingArtifactDescriptor() );
         setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );
         setResolutionErrorPolicy( session.getResolutionErrorPolicy() );
+        setArtifactDescriptorPolicy( session.getArtifactDescriptorPolicy() );
         setChecksumPolicy( session.getChecksumPolicy() );
         setUpdatePolicy( session.getUpdatePolicy() );
         setLocalRepositoryManager( session.getLocalRepositoryManager() );
@@ -186,46 +184,6 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
-    public boolean isIgnoreMissingArtifactDescriptor()
-    {
-        return ignoreMissingArtifactDescriptor;
-    }
-
-    /**
-     * Controls whether missing artifact descriptors are silently ignored. If enabled and no artifact descriptor is
-     * available, an empty stub descriptor is used instead.
-     * 
-     * @param ignoreMissingArtifactDescriptor {@code true} if to ignore missing artifact descriptors, {@code false} to
-     *            fail the operation with an exception.
-     * @return This session for chaining, never {@code null}.
-     */
-    public DefaultRepositorySystemSession setIgnoreMissingArtifactDescriptor( boolean ignoreMissingArtifactDescriptor )
-    {
-        failIfReadOnly();
-        this.ignoreMissingArtifactDescriptor = ignoreMissingArtifactDescriptor;
-        return this;
-    }
-
-    public boolean isIgnoreInvalidArtifactDescriptor()
-    {
-        return ignoreInvalidArtifactDescriptor;
-    }
-
-    /**
-     * Controls whether invalid artifact descriptors are silently ignored. If enabled and an artifact descriptor is
-     * invalid, an empty stub descriptor is used instead.
-     * 
-     * @param ignoreInvalidArtifactDescriptor {@code true} if to ignore invalid artifact descriptors, {@code false} to
-     *            fail the operation with an exception.
-     * @return This session for chaining, never {@code null}.
-     */
-    public DefaultRepositorySystemSession setIgnoreInvalidArtifactDescriptor( boolean ignoreInvalidArtifactDescriptor )
-    {
-        failIfReadOnly();
-        this.ignoreInvalidArtifactDescriptor = ignoreInvalidArtifactDescriptor;
-        return this;
-    }
-
     public boolean isIgnoreArtifactDescriptorRepositories()
     {
         return ignoreArtifactDescriptorRepositories;
@@ -262,6 +220,25 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.resolutionErrorPolicy = resolutionErrorPolicy;
+        return this;
+    }
+
+    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy()
+    {
+        return artifactDescriptorPolicy;
+    }
+
+    /**
+     * Sets the policy which controls how errors related to reading artifact descriptors should be handled.
+     * 
+     * @param artifactDescriptorPolicy The descriptor error policy for this session, may be {@code null} if descriptor
+     *            errors should generally not be tolerated.
+     * @return This session for chaining, never {@code null}.
+     */
+    public DefaultRepositorySystemSession setArtifactDescriptorPolicy( ArtifactDescriptorPolicy artifactDescriptorPolicy )
+    {
+        failIfReadOnly();
+        this.artifactDescriptorPolicy = artifactDescriptorPolicy;
         return this;
     }
 

@@ -24,6 +24,7 @@ import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
+import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
 
@@ -48,24 +49,6 @@ public interface RepositorySystemSession
     boolean isOffline();
 
     /**
-     * Indicates whether missing artifact descriptors are silently ignored. If enabled and no artifact descriptor is
-     * available, an empty stub descriptor is used instead.
-     * 
-     * @return {@code true} if missing artifact descriptors are ignored, {@code false} to fail the operation with an
-     *         exception.
-     */
-    boolean isIgnoreMissingArtifactDescriptor();
-
-    /**
-     * Indicates whether invalid artifact descriptors are silently ignored. If enabled and an artifact descriptor is
-     * invalid, an empty stub descriptor is used instead.
-     * 
-     * @return {@code true} if invalid artifact descriptors are ignored, {@code false} to fail the operation with an
-     *         exception.
-     */
-    boolean isIgnoreInvalidArtifactDescriptor();
-
-    /**
      * Indicates whether repositories declared in artifact descriptors should be ignored during transitive dependency
      * collection. If enabled, only the repositories originally provided with the collect request will be considered.
      * 
@@ -81,6 +64,14 @@ public interface RepositorySystemSession
      *         cached.
      */
     ResolutionErrorPolicy getResolutionErrorPolicy();
+
+    /**
+     * Gets the policy which controls how errors related to reading artifact descriptors should be handled.
+     * 
+     * @return The descriptor error policy for this session or {@code null} if descriptor errors should generally not be
+     *         tolerated.
+     */
+    ArtifactDescriptorPolicy getArtifactDescriptorPolicy();
 
     /**
      * Gets the global checksum policy. If set, the global checksum policy overrides the checksum policies of the remote
