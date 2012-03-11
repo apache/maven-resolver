@@ -56,7 +56,7 @@ public final class ResolutionErrorPolicyRequest<T>
     }
 
     /**
-     * Gets the artifact/metadata for which to determine the error policy.
+     * Sets the artifact/metadata for which to determine the error policy.
      * 
      * @param item The artifact/metadata for which to determine the error policy, may be {@code null}.
      * @return This request for chaining, never {@code null}.

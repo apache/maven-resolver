@@ -35,8 +35,7 @@ public final class SimpleResolutionErrorPolicy
      */
     public SimpleResolutionErrorPolicy( boolean cacheNotFound, boolean cacheTransferErrors )
     {
-        this( ( cacheNotFound ? ResolutionErrorPolicy.CACHE_NOT_FOUND : 0 )
-            | ( cacheTransferErrors ? ResolutionErrorPolicy.CACHE_TRANSFER_ERROR : 0 ) );
+        this( ( cacheNotFound ? CACHE_NOT_FOUND : 0 ) | ( cacheTransferErrors ? CACHE_TRANSFER_ERROR : 0 ) );
     }
 
     /**

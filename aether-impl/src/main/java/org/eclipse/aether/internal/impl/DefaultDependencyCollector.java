@@ -494,7 +494,7 @@ public class DefaultDependencyCollector
                         childManager = depManager.deriveChildManager( context );
                         childTraverser = depTraverser.deriveChildTraverser( context );
 
-                        if ( args.session.isIgnoreArtifactDescriptorRepositories() )
+                        if ( args.ignoreRepos )
                         {
                             childRepos = repositories;
                         }
@@ -595,6 +595,8 @@ public class DefaultDependencyCollector
 
         final RepositorySystemSession session;
 
+        final boolean ignoreRepos;
+
         final RequestTrace trace;
 
         final DataPool pool;
@@ -608,6 +610,7 @@ public class DefaultDependencyCollector
         {
             this.result = result;
             this.session = session;
+            this.ignoreRepos = session.isIgnoreArtifactDescriptorRepositories();
             this.trace = trace;
             this.pool = pool;
             this.edges = edges;
