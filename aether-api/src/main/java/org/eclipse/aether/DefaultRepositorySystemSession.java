@@ -366,19 +366,6 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
-    private <K, V> Map<K, V> copy( Map<K, V> map )
-    {
-        if ( map == null || map.isEmpty() )
-        {
-            map = new HashMap<K, V>();
-        }
-        else
-        {
-            map = new HashMap<K, V>( map );
-        }
-        return map;
-    }
-
     private <T> Map<String, T> copySafe( Map<?, ?> table, Class<T> valueType )
     {
         Map<String, T> map;
@@ -388,7 +375,7 @@ public final class DefaultRepositorySystemSession
         }
         else
         {
-            map = new HashMap<String, T>();
+            map = new HashMap<String, T>( (int) ( table.size() / 0.75f ) + 1 );
             for ( Map.Entry<?, ?> entry : table.entrySet() )
             {
                 Object key = entry.getKey();
@@ -413,26 +400,13 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the system properties to use, e.g. for processing of artifact descriptors. System properties are usually
      * collected from the runtime environment like {@link System#getProperties()} and environment variables.
+     * <em>Note:</em> System properties are of type {@code Map<String, String>} and any key-value pair in the input map
+     * that doesn't match this type will be silently ignored.
      * 
      * @param systemProperties The system properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setSystemProperties( Map<String, String> systemProperties )
-    {
-        failIfReadOnly();
-        this.systemProperties = copy( systemProperties );
-        systemPropertiesView = Collections.unmodifiableMap( this.systemProperties );
-        return this;
-    }
-
-    /**
-     * Sets the system properties to use, e.g. for processing of artifact descriptors. System properties are usually
-     * collected from the runtime environment like {@link System#getProperties()} and environment variables.
-     * 
-     * @param systemProperties The system properties, may be {@code null} or empty if none.
-     * @return This session for chaining, never {@code null}.
-     */
-    public DefaultRepositorySystemSession setSystemProps( Map<?, ?> systemProperties )
+    public DefaultRepositorySystemSession setSystemProperties( Map<?, ?> systemProperties )
     {
         failIfReadOnly();
         this.systemProperties = copySafe( systemProperties, String.class );
@@ -469,28 +443,13 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the user properties to use, e.g. for processing of artifact descriptors. User properties are similar to
      * system properties but are set on the discretion of the user and hence are considered of higher priority than
-     * system properties.
+     * system properties. <em>Note:</em> User properties are of type {@code Map<String, String>} and any key-value pair
+     * in the input map that doesn't match this type will be silently ignored.
      * 
      * @param userProperties The user properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setUserProperties( Map<String, String> userProperties )
-    {
-        failIfReadOnly();
-        this.userProperties = copy( userProperties );
-        userPropertiesView = Collections.unmodifiableMap( this.userProperties );
-        return this;
-    }
-
-    /**
-     * Sets the user properties to use, e.g. for processing of artifact descriptors. User properties are similar to
-     * system properties but are set on the discretion of the user and hence are considered of higher priority than
-     * system properties.
-     * 
-     * @param userProperties The user properties, may be {@code null} or empty if none.
-     * @return This session for chaining, never {@code null}.
-     */
-    public DefaultRepositorySystemSession setUserProps( Map<?, ?> userProperties )
+    public DefaultRepositorySystemSession setUserProperties( Map<?, ?> userProperties )
     {
         failIfReadOnly();
         this.userProperties = copySafe( userProperties, String.class );
@@ -526,27 +485,14 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the configuration properties used to tweak internal aspects of the repository system (e.g. thread pooling,
-     * connector-specific behavior, etc.)
+     * connector-specific behavior, etc.) <em>Note:</em> Configuration properties are of type
+     * {@code Map<String, Object>} and any key-value pair in the input map that doesn't match this type will be silently
+     * ignored.
      * 
      * @param configProperties The configuration properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setConfigProperties( Map<String, Object> configProperties )
-    {
-        failIfReadOnly();
-        this.configProperties = copy( configProperties );
-        configPropertiesView = Collections.unmodifiableMap( this.configProperties );
-        return this;
-    }
-
-    /**
-     * Sets the configuration properties used to tweak internal aspects of the repository system (e.g. thread pooling,
-     * connector-specific behavior, etc.)
-     * 
-     * @param configProperties The configuration properties, may be {@code null} or empty if none.
-     * @return This session for chaining, never {@code null}.
-     */
-    public DefaultRepositorySystemSession setConfigProps( Map<?, ?> configProperties )
+    public DefaultRepositorySystemSession setConfigProperties( Map<?, ?> configProperties )
     {
         failIfReadOnly();
         this.configProperties = copySafe( configProperties, Object.class );

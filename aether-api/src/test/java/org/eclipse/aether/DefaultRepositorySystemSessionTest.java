@@ -50,9 +50,9 @@ public class DefaultRepositorySystemSessionTest
     public void testCopyConstructorCopiesPropertiesDeep()
     {
         DefaultRepositorySystemSession session1 = new DefaultRepositorySystemSession();
-        session1.setUserProps( System.getProperties() );
-        session1.setSystemProps( System.getProperties() );
-        session1.setConfigProps( System.getProperties() );
+        session1.setUserProperties( System.getProperties() );
+        session1.setSystemProperties( System.getProperties() );
+        session1.setConfigProperties( System.getProperties() );
 
         DefaultRepositorySystemSession session2 = new DefaultRepositorySystemSession( session1 );
         session2.setUserProperty( "key", "test" );
