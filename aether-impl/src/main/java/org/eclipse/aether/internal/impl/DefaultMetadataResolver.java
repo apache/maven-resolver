@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,7 @@ import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.impl.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
@@ -83,6 +84,9 @@ public class DefaultMetadataResolver
     private UpdateCheckManager updateCheckManager;
 
     @Requirement
+    private RepositoryConnectorProvider repositoryConnectorProvider;
+
+    @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
 
     @Requirement
@@ -95,11 +99,14 @@ public class DefaultMetadataResolver
 
     @Inject
     DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
-                             UpdateCheckManager updateCheckManager, RemoteRepositoryManager remoteRepositoryManager,
-                             SyncContextFactory syncContextFactory, LoggerFactory loggerFactory )
+                             UpdateCheckManager updateCheckManager,
+                             RepositoryConnectorProvider repositoryConnectorProvider,
+                             RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
+                             LoggerFactory loggerFactory )
     {
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setUpdateCheckManager( updateCheckManager );
+        setRepositoryConnectorProvider( repositoryConnectorProvider );
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setLoggerFactory( loggerFactory );
@@ -110,6 +117,7 @@ public class DefaultMetadataResolver
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
+        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
@@ -143,6 +151,16 @@ public class DefaultMetadataResolver
             throw new IllegalArgumentException( "update check manager has not been specified" );
         }
         this.updateCheckManager = updateCheckManager;
+        return this;
+    }
+
+    public DefaultMetadataResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
+    {
+        if ( repositoryConnectorProvider == null )
+        {
+            throw new IllegalArgumentException( "repository connector provider has not been specified" );
+        }
+        this.repositoryConnectorProvider = repositoryConnectorProvider;
         return this;
     }
 
@@ -572,7 +590,7 @@ public class DefaultMetadataResolver
                 download.setRepositories( repositories );
 
                 RepositoryConnector connector =
-                    remoteRepositoryManager.getRepositoryConnector( session, requestRepository );
+                    repositoryConnectorProvider.newRepositoryConnector( session, requestRepository );
                 try
                 {
                     connector.get( null, Arrays.asList( download ) );

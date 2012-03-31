@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,12 +11,8 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,20 +29,17 @@ import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
-import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.StringUtils;
 
 /**
  */
 @Named
-@Component( role = RemoteRepositoryManager.class, hint = "default" )
+@Component( role = RemoteRepositoryManager.class )
 public class DefaultRemoteRepositoryManager
     implements RemoteRepositoryManager, Service
 {
@@ -57,31 +50,15 @@ public class DefaultRemoteRepositoryManager
     @Requirement
     private UpdateCheckManager updateCheckManager;
 
-    @Requirement( role = RepositoryConnectorFactory.class )
-    private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<RepositoryConnectorFactory>();
-
-    private static final Comparator<RepositoryConnectorFactory> COMPARATOR =
-        new Comparator<RepositoryConnectorFactory>()
-        {
-
-            public int compare( RepositoryConnectorFactory o1, RepositoryConnectorFactory o2 )
-            {
-                return Float.compare( o2.getPriority(), o1.getPriority() );
-            }
-
-        };
-
     public DefaultRemoteRepositoryManager()
     {
         // enables default constructor
     }
 
     @Inject
-    DefaultRemoteRepositoryManager( UpdateCheckManager updateCheckManager,
-                                    Set<RepositoryConnectorFactory> connectorFactories, LoggerFactory loggerFactory )
+    DefaultRemoteRepositoryManager( UpdateCheckManager updateCheckManager, LoggerFactory loggerFactory )
     {
         setUpdateCheckManager( updateCheckManager );
-        setRepositoryConnectorFactories( connectorFactories );
         setLoggerFactory( loggerFactory );
     }
 
@@ -89,7 +66,6 @@ public class DefaultRemoteRepositoryManager
     {
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        connectorFactories = locator.getServices( RepositoryConnectorFactory.class );
     }
 
     public DefaultRemoteRepositoryManager setLoggerFactory( LoggerFactory loggerFactory )
@@ -112,35 +88,6 @@ public class DefaultRemoteRepositoryManager
         }
         this.updateCheckManager = updateCheckManager;
         return this;
-    }
-
-    public DefaultRemoteRepositoryManager addRepositoryConnectorFactory( RepositoryConnectorFactory factory )
-    {
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "repository connector factory has not been specified" );
-        }
-        connectorFactories.add( factory );
-        return this;
-    }
-
-    public DefaultRemoteRepositoryManager setRepositoryConnectorFactories( Collection<RepositoryConnectorFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.connectorFactories = new ArrayList<RepositoryConnectorFactory>();
-        }
-        else
-        {
-            this.connectorFactories = factories;
-        }
-        return this;
-    }
-
-    DefaultRemoteRepositoryManager setConnectorFactories( List<RepositoryConnectorFactory> factories )
-    {
-        // plexus support
-        return setRepositoryConnectorFactories( factories );
     }
 
     public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
@@ -347,78 +294,6 @@ public class DefaultRemoteRepositoryManager
         {
             return 1;
         }
-    }
-
-    public RepositoryConnector getRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
-        throws NoRepositoryConnectorException
-    {
-        if ( repository == null )
-        {
-            throw new IllegalArgumentException( "remote repository has not been specified" );
-        }
-
-        List<RepositoryConnectorFactory> factories = new ArrayList<RepositoryConnectorFactory>( connectorFactories );
-        Collections.sort( factories, COMPARATOR );
-
-        for ( RepositoryConnectorFactory factory : factories )
-        {
-            try
-            {
-                RepositoryConnector connector = factory.newInstance( session, repository );
-
-                if ( logger.isDebugEnabled() )
-                {
-                    StringBuilder buffer = new StringBuilder( 256 );
-                    buffer.append( "Using connector " ).append( connector.getClass().getSimpleName() );
-                    buffer.append( " with priority " ).append( factory.getPriority() );
-                    buffer.append( " for " ).append( repository.getUrl() );
-
-                    Authentication auth = repository.getAuthentication();
-                    if ( auth != null )
-                    {
-                        buffer.append( " as " ).append( auth.getUsername() );
-                    }
-
-                    Proxy proxy = repository.getProxy();
-                    if ( proxy != null )
-                    {
-                        buffer.append( " via " ).append( proxy.getHost() ).append( ':' ).append( proxy.getPort() );
-
-                        auth = proxy.getAuthentication();
-                        if ( auth != null )
-                        {
-                            buffer.append( " as " ).append( auth.getUsername() );
-                        }
-                    }
-
-                    logger.debug( buffer.toString() );
-                }
-
-                return connector;
-            }
-            catch ( NoRepositoryConnectorException e )
-            {
-                // continue and try next factory
-            }
-        }
-
-        StringBuilder buffer = new StringBuilder( 256 );
-        buffer.append( "No connector available to access repository " );
-        buffer.append( repository.getId() );
-        buffer.append( " (" ).append( repository.getUrl() );
-        buffer.append( ") of type " ).append( repository.getContentType() );
-        buffer.append( " using the available factories " );
-        for ( ListIterator<RepositoryConnectorFactory> it = factories.listIterator(); it.hasNext(); )
-        {
-            RepositoryConnectorFactory factory = it.next();
-            buffer.append( factory.getClass().getSimpleName() );
-            if ( it.hasNext() )
-            {
-                buffer.append( ", " );
-            }
-        }
-
-        throw new NoRepositoryConnectorException( repository, buffer.toString() );
     }
 
 }

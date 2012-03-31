@@ -45,7 +45,7 @@ public class DefaultMetadataResolverTest
 
     private DefaultMetadataResolver resolver;
 
-    private StubRemoteRepositoryManager manager;
+    private StubRepositoryConnectorProvider connectorProvider;
 
     private RemoteRepository repository;
 
@@ -62,19 +62,19 @@ public class DefaultMetadataResolverTest
         throws Exception
     {
         session = new TestRepositorySystemSession();
-        // session.setLocalRepositoryManager( new EnhancedLocalRepositoryManager( TestFileUtils.createTempDir() ) );
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
-        manager = new StubRemoteRepositoryManager();
+        connectorProvider = new StubRepositoryConnectorProvider();
         resolver = new DefaultMetadataResolver();
         resolver.setUpdateCheckManager( new StaticUpdateCheckManager( true ) );
         resolver.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        resolver.setRemoteRepositoryManager( manager );
+        resolver.setRepositoryConnectorProvider( connectorProvider );
+        resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
         repository =
             new RemoteRepository( "test-DMRT", "default", TestFileUtils.createTempDir().toURI().toURL().toString() );
         metadata = new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
         connector = new RecordingRepositoryConnector();
-        manager.setConnector( connector );
+        connectorProvider.setConnector( connector );
     }
 
     @After
@@ -155,7 +155,7 @@ public class DefaultMetadataResolverTest
             }
 
         };
-        manager.setConnector( connector );
+        connectorProvider.setConnector( connector );
 
         File file =
             new File( session.getLocalRepository().getBasedir(),

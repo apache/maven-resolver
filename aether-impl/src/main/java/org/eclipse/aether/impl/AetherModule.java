@@ -27,6 +27,7 @@ import org.eclipse.aether.internal.impl.DefaultInstaller;
 import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
 import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
+import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
@@ -46,8 +47,8 @@ import com.google.inject.name.Names;
 
 /**
  * A ready-made Guice module that sets up bindings for all components from this library. To acquire a complete
- * repository system, clients need to add an artifact descriptor reader, a version resolver, a version range resolver
- * and optionally some repository connectors to access remote repositories.
+ * repository system, clients need to bind an artifact descriptor reader, a version resolver, a version range resolver,
+ * zero or more metadata generator factories and some repository connectors to access remote repositories.
  */
 public final class AetherModule
     extends AbstractModule
@@ -68,6 +69,8 @@ public final class AetherModule
         .to( DefaultInstaller.class ).in( Singleton.class );
         bind( MetadataResolver.class ) //
         .to( DefaultMetadataResolver.class ).in( Singleton.class );
+        bind( RepositoryConnectorProvider.class ) //
+        .to( DefaultRepositoryConnectorProvider.class ).in( Singleton.class );
         bind( RemoteRepositoryManager.class ) //
         .to( DefaultRemoteRepositoryManager.class ).in( Singleton.class );
         bind( UpdateCheckManager.class ) //

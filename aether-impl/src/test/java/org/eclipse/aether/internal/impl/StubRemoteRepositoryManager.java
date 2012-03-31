@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,28 +16,14 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.util.StringUtils;
 
 class StubRemoteRepositoryManager
     implements RemoteRepositoryManager
 {
 
-    public StubRemoteRepositoryManager( RepositoryConnector connector )
-    {
-        setConnector( connector );
-    }
-
     public StubRemoteRepositoryManager()
     {
-    }
-
-    private RepositoryConnector connector;
-
-    public void setConnector( RepositoryConnector connector )
-    {
-        this.connector = connector;
     }
 
     public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
@@ -63,12 +49,6 @@ class StubRemoteRepositoryManager
         }
 
         return policy;
-    }
-
-    public RepositoryConnector getRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
-        throws NoRepositoryConnectorException
-    {
-        return connector;
     }
 
 }

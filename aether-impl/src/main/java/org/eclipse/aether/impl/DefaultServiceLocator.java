@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,6 +31,7 @@ import org.eclipse.aether.internal.impl.DefaultInstaller;
 import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
 import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
+import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
@@ -73,6 +74,7 @@ public final class DefaultServiceLocator
         addService( Deployer.class, DefaultDeployer.class );
         addService( Installer.class, DefaultInstaller.class );
         addService( MetadataResolver.class, DefaultMetadataResolver.class );
+        addService( RepositoryConnectorProvider.class, DefaultRepositoryConnectorProvider.class );
         addService( RemoteRepositoryManager.class, DefaultRemoteRepositoryManager.class );
         addService( UpdateCheckManager.class, DefaultUpdateCheckManager.class );
         addService( FileProcessor.class, DefaultFileProcessor.class );

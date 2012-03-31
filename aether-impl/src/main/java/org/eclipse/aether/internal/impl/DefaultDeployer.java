@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,6 +38,7 @@ import org.eclipse.aether.impl.Deployer;
 import org.eclipse.aether.impl.MetadataGenerator;
 import org.eclipse.aether.impl.MetadataGeneratorFactory;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.impl.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
@@ -82,6 +83,9 @@ public class DefaultDeployer
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
     @Requirement
+    private RepositoryConnectorProvider repositoryConnectorProvider;
+
+    @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
 
     @Requirement
@@ -100,12 +104,14 @@ public class DefaultDeployer
 
     @Inject
     DefaultDeployer( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+                     RepositoryConnectorProvider repositoryConnectorProvider,
                      RemoteRepositoryManager remoteRepositoryManager, UpdateCheckManager updateCheckManager,
                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory,
                      LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
+        setRepositoryConnectorProvider( repositoryConnectorProvider );
         setRemoteRepositoryManager( remoteRepositoryManager );
         setUpdateCheckManager( updateCheckManager );
         setMetadataGeneratorFactories( metadataFactories );
@@ -118,6 +124,7 @@ public class DefaultDeployer
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
+        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
         setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
@@ -153,6 +160,16 @@ public class DefaultDeployer
             throw new IllegalArgumentException( "repository event dispatcher has not been specified" );
         }
         this.repositoryEventDispatcher = repositoryEventDispatcher;
+        return this;
+    }
+
+    public DefaultDeployer setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
+    {
+        if ( repositoryConnectorProvider == null )
+        {
+            throw new IllegalArgumentException( "repository connector provider has not been specified" );
+        }
+        this.repositoryConnectorProvider = repositoryConnectorProvider;
         return this;
     }
 
@@ -247,17 +264,17 @@ public class DefaultDeployer
         RepositoryConnector connector;
         try
         {
-            connector = remoteRepositoryManager.getRepositoryConnector( session, repository );
+            connector = repositoryConnectorProvider.newRepositoryConnector( session, repository );
         }
         catch ( NoRepositoryConnectorException e )
         {
             throw new DeploymentException( "Failed to deploy artifacts/metadata: " + e.getMessage(), e );
         }
 
-        List<MetadataGenerator> generators = getMetadataGenerators( session, request );
-
         try
         {
+            List<MetadataGenerator> generators = getMetadataGenerators( session, request );
+
             List<ArtifactUpload> artifactUploads = new ArrayList<ArtifactUpload>();
             List<MetadataUpload> metadataUploads = new ArrayList<MetadataUpload>();
             IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<Metadata, Object>();

@@ -72,7 +72,7 @@ public class DefaultArtifactResolverTest
 
     private TestLocalRepositoryManager lrm;
 
-    private StubRemoteRepositoryManager remoteRepositoryManager;
+    private StubRepositoryConnectorProvider repositoryConnectorProvider;
 
     private Artifact artifact;
 
@@ -83,7 +83,7 @@ public class DefaultArtifactResolverTest
         throws IOException
     {
         UpdateCheckManager updateCheckManager = new StaticUpdateCheckManager( true );
-        remoteRepositoryManager = new StubRemoteRepositoryManager();
+        repositoryConnectorProvider = new StubRepositoryConnectorProvider();
         VersionResolver versionResolver = new StubVersionResolver();
         session = new TestRepositorySystemSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
@@ -92,13 +92,14 @@ public class DefaultArtifactResolverTest
         resolver.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
         resolver.setVersionResolver( versionResolver );
         resolver.setUpdateCheckManager( updateCheckManager );
-        resolver.setRemoteRepositoryManager( remoteRepositoryManager );
+        resolver.setRepositoryConnectorProvider( repositoryConnectorProvider );
+        resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
 
         artifact = new DefaultArtifact( "gid", "aid", "", "ext", "ver" );
 
         connector = new RecordingRepositoryConnector();
-        remoteRepositoryManager.setConnector( connector );
+        repositoryConnectorProvider.setConnector( connector );
     }
 
     @After
@@ -211,7 +212,7 @@ public class DefaultArtifactResolverTest
         };
 
         connector.setExpectGet( artifact );
-        remoteRepositoryManager.setConnector( connector );
+        repositoryConnectorProvider.setConnector( connector );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
         request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
@@ -261,7 +262,7 @@ public class DefaultArtifactResolverTest
             }
         };
 
-        remoteRepositoryManager.setConnector( connector );
+        repositoryConnectorProvider.setConnector( connector );
         resolver.setUpdateCheckManager( new DefaultUpdateCheckManager() );
 
         session.setNotFoundCachingEnabled( true );
@@ -397,7 +398,7 @@ public class DefaultArtifactResolverTest
         };
 
         connector.setExpectGet( artifact );
-        remoteRepositoryManager.setConnector( connector );
+        repositoryConnectorProvider.setConnector( connector );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
         request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
@@ -523,7 +524,7 @@ public class DefaultArtifactResolverTest
             }
 
         };
-        remoteRepositoryManager.setConnector( connector );
+        repositoryConnectorProvider.setConnector( connector );
 
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener( listener );

@@ -27,7 +27,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
-import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultDeployer;
 import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener;
 import org.eclipse.aether.internal.test.impl.TestFileProcessor;
@@ -61,7 +60,7 @@ public class DefaultDeployerTest
 
     private TestRepositorySystemSession session;
 
-    private StubRemoteRepositoryManager manager;
+    private StubRepositoryConnectorProvider connectorProvider;
 
     private DefaultDeployer deployer;
 
@@ -82,20 +81,20 @@ public class DefaultDeployerTest
                                  TestFileUtils.createTempFile( "metadata" ) );
 
         session = new TestRepositorySystemSession();
-        manager = new StubRemoteRepositoryManager();
+        connectorProvider = new StubRepositoryConnectorProvider();
 
         deployer = new DefaultDeployer();
-        deployer.setRemoteRepositoryManager( manager );
+        deployer.setRepositoryConnectorProvider( connectorProvider );
+        deployer.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         deployer.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        UpdateCheckManager updateCheckManager = new StaticUpdateCheckManager( true );
-        deployer.setUpdateCheckManager( updateCheckManager );
+        deployer.setUpdateCheckManager( new StaticUpdateCheckManager( true ) );
         deployer.setFileProcessor( TestFileProcessor.INSTANCE );
         deployer.setSyncContextFactory( new StubSyncContextFactory() );
 
         request = new DeployRequest();
         request.setRepository( new RemoteRepository( "id", "default", "file:///" ) );
         connector = new RecordingRepositoryConnector();
-        manager.setConnector( connector );
+        connectorProvider.setConnector( connector );
 
         listener = new RecordingRepositoryListener();
         session.setRepositoryListener( listener );
@@ -112,7 +111,7 @@ public class DefaultDeployerTest
         session = null;
         listener = null;
         connector = null;
-        manager = null;
+        connectorProvider = null;
         deployer = null;
     }
 
@@ -224,7 +223,7 @@ public class DefaultDeployerTest
 
         };
 
-        manager.setConnector( connector );
+        connectorProvider.setConnector( connector );
 
         request.addArtifact( artifact );
 
@@ -330,7 +329,7 @@ public class DefaultDeployerTest
 
         };
 
-        manager.setConnector( connector );
+        connectorProvider.setConnector( connector );
 
         request.addMetadata( metadata );
 
@@ -445,7 +444,7 @@ public class DefaultDeployerTest
             }
         };
 
-        manager.setConnector( new RepositoryConnector()
+        connectorProvider.setConnector( new RepositoryConnector()
         {
 
             public void put( Collection<? extends ArtifactUpload> artifactUploads,

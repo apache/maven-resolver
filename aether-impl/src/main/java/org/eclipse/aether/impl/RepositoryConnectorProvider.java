@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,24 +10,21 @@
  *******************************************************************************/
 package org.eclipse.aether.impl;
 
-import java.util.List;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
+import org.eclipse.aether.spi.connector.RepositoryConnector;
+import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
+ * Retrieves a repository connector from the installed repository connector factories.
+ * 
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RemoteRepositoryManager
+public interface RepositoryConnectorProvider
 {
 
-    List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
-                                                  List<RemoteRepository> dominantRepositories,
-                                                  List<RemoteRepository> recessiveRepositories, boolean recessiveIsRaw );
-
-    RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
-                                boolean snapshots );
+    RepositoryConnector newRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
+        throws NoRepositoryConnectorException;
 
 }

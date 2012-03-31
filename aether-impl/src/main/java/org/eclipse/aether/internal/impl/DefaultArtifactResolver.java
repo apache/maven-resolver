@@ -33,6 +33,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.impl.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
@@ -91,6 +92,9 @@ public class DefaultArtifactResolver
     private UpdateCheckManager updateCheckManager;
 
     @Requirement
+    private RepositoryConnectorProvider repositoryConnectorProvider;
+
+    @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
 
     @Requirement
@@ -104,6 +108,7 @@ public class DefaultArtifactResolver
     @Inject
     DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
+                             RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
                              LoggerFactory loggerFactory )
     {
@@ -111,6 +116,7 @@ public class DefaultArtifactResolver
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setVersionResolver( versionResolver );
         setUpdateCheckManager( updateCheckManager );
+        setRepositoryConnectorProvider( repositoryConnectorProvider );
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setLoggerFactory( loggerFactory );
@@ -123,6 +129,7 @@ public class DefaultArtifactResolver
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setVersionResolver( locator.getService( VersionResolver.class ) );
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
+        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
@@ -176,6 +183,16 @@ public class DefaultArtifactResolver
             throw new IllegalArgumentException( "update check manager has not been specified" );
         }
         this.updateCheckManager = updateCheckManager;
+        return this;
+    }
+
+    public DefaultArtifactResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
+    {
+        if ( repositoryConnectorProvider == null )
+        {
+            throw new IllegalArgumentException( "repository connector provider has not been specified" );
+        }
+        this.repositoryConnectorProvider = repositoryConnectorProvider;
         return this;
     }
 
@@ -464,7 +481,7 @@ public class DefaultArtifactResolver
             try
             {
                 RepositoryConnector connector =
-                    remoteRepositoryManager.getRepositoryConnector( session, group.repository );
+                    repositoryConnectorProvider.newRepositoryConnector( session, group.repository );
                 try
                 {
                     connector.get( downloads, null );
