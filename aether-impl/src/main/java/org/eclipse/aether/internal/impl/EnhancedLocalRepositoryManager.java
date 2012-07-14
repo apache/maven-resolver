@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -101,14 +101,16 @@ class EnhancedLocalRepositoryManager
     @Override
     public void add( RepositorySystemSession session, LocalArtifactRegistration request )
     {
+        Collection<String> repositories;
         if ( request.getRepository() == null )
         {
-            addArtifact( request.getArtifact(), Collections.singleton( LOCAL_REPO_ID ) );
+            repositories = Collections.singleton( LOCAL_REPO_ID );
         }
         else
         {
-            addArtifact( request.getArtifact(), getRepositoryKeys( request.getRepository(), request.getContexts() ) );
+            repositories = getRepositoryKeys( request.getRepository(), request.getContexts() );
         }
+        addArtifact( request.getArtifact(), repositories, request.getRepository() == null );
     }
 
     private Collection<String> getRepositoryKeys( RemoteRepository repository, Collection<String> contexts )
@@ -126,13 +128,13 @@ class EnhancedLocalRepositoryManager
         return keys;
     }
 
-    private void addArtifact( Artifact artifact, Collection<String> repositories )
+    private void addArtifact( Artifact artifact, Collection<String> repositories, boolean local )
     {
         if ( artifact == null )
         {
             throw new IllegalArgumentException( "artifact to register not specified" );
         }
-        String path = getPathForLocalArtifact( artifact );
+        String path = getPathForArtifact( artifact, local );
         File file = new File( getRepository().getBasedir(), path );
         addRepo( file, repositories );
     }

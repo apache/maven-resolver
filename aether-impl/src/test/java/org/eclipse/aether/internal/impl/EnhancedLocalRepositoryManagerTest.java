@@ -43,6 +43,8 @@ public class EnhancedLocalRepositoryManagerTest
 
     private Artifact artifact;
 
+    private Artifact snapshot;
+
     private File basedir;
 
     private EnhancedLocalRepositoryManager manager;
@@ -71,6 +73,10 @@ public class EnhancedLocalRepositoryManagerTest
         artifact =
             new DefaultArtifact( "gid", "aid", "", "jar", "1-test", Collections.<String, String> emptyMap(),
                                  TestFileUtils.createTempFile( "artifact" ) );
+
+        snapshot =
+            new DefaultArtifact( "gid", "aid", "", "jar", "1.0-20120710.231549-9",
+                                 Collections.<String, String> emptyMap(), TestFileUtils.createTempFile( "artifact" ) );
 
         metadata =
             new DefaultMetadata( "gid", "aid", "1-test", "maven-metadata.xml", Nature.RELEASE,
@@ -177,6 +183,15 @@ public class EnhancedLocalRepositoryManagerTest
         LocalArtifactRequest request = new LocalArtifactRequest( artifact, null, null );
         LocalArtifactResult result = manager.find( session, request );
         assertTrue( result.isAvailable() );
+        assertEquals( null, result.getRepository() );
+
+        snapshot = snapshot.setVersion( snapshot.getBaseVersion() );
+        addLocalArtifact( snapshot );
+
+        request = new LocalArtifactRequest( snapshot, null, null );
+        result = manager.find( session, request );
+        assertTrue( result.isAvailable() );
+        assertEquals( null, result.getRepository() );
     }
 
     @Test
@@ -188,6 +203,14 @@ public class EnhancedLocalRepositoryManagerTest
         LocalArtifactRequest request = new LocalArtifactRequest( artifact, Arrays.asList( repository ), testContext );
         LocalArtifactResult result = manager.find( session, request );
         assertTrue( result.isAvailable() );
+        assertEquals( repository, result.getRepository() );
+
+        addRemoteArtifact( snapshot );
+
+        request = new LocalArtifactRequest( snapshot, Arrays.asList( repository ), testContext );
+        result = manager.find( session, request );
+        assertTrue( result.isAvailable() );
+        assertEquals( repository, result.getRepository() );
     }
 
     @Test
