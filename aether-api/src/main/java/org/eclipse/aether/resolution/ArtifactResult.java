@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -113,7 +113,8 @@ public final class ArtifactResult
     }
 
     /**
-     * Gets the repository from which the artifact was eventually resolved.
+     * Gets the repository from which the artifact was eventually resolved. Note that successive resolutions of the same
+     * artifact might yield different results if the employed local repository does not track the origin of an artifact.
      * 
      * @return The repository from which the artifact was resolved or {@code null} if unknown.
      */
