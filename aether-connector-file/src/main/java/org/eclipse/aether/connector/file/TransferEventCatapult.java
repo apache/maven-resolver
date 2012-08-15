@@ -75,7 +75,7 @@ class TransferEventCatapult
         listener.transferProgressed( event.build() );
     }
 
-    private final class NoTransferListener
+    private static final class NoTransferListener
         extends AbstractTransferListener
     {
     }
