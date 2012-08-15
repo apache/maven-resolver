@@ -12,8 +12,9 @@ package org.eclipse.aether.connector.file;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -312,7 +313,7 @@ class FileRepositoryWorker
             }
 
             File crcTarget = new File( targetPath + checksumAlgos.get( name ) );
-            FileWriter crcWriter = new FileWriter( crcTarget );
+            OutputStreamWriter crcWriter = new OutputStreamWriter( new FileOutputStream( crcTarget ), "US-ASCII" );
             crcWriter.write( sum.toString() );
             crcWriter.close();
         }
