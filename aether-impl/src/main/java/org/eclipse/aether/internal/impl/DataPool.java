@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -190,8 +190,6 @@ final class DataPool
 
         final Artifact artifact;
 
-        final Map<String, Object> properties;
-
         final List<Artifact> relocations;
 
         final List<RemoteRepository> repositories;
@@ -203,7 +201,6 @@ final class DataPool
         public GoodDescriptor( ArtifactDescriptorResult result )
         {
             artifact = result.getArtifact();
-            properties = result.getProperties();
             relocations = result.getRelocations();
             dependencies = result.getDependencies();
             managedDependencies = result.getManagedDependencies();
@@ -214,7 +211,6 @@ final class DataPool
         {
             ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
             result.setArtifact( artifact );
-            result.setProperties( properties );
             result.setRelocations( relocations );
             result.setDependencies( dependencies );
             result.setManagedDependencies( dependencies );
