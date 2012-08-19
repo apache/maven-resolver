@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.aether.spi.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -40,6 +41,17 @@ public interface FileProcessor
      * @throws IOException If an I/O error occurs.
      */
     void write( File target, String data )
+        throws IOException;
+
+    /**
+     * Writes the given stream to a file. Creates the necessary directories for the target file. In case of an error,
+     * the created directories will be left on the file system.
+     * 
+     * @param target The file to write to, must not be {@code null}. This file will be overwritten.
+     * @param source The stream to write to the file, must not be {@code null}.
+     * @throws IOException If an I/O error occurs.
+     */
+    void write( File target, InputStream source )
         throws IOException;
 
     /**
