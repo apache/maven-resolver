@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,9 +26,17 @@ class StaticUpdateCheckManager
 
     private boolean checkRequired;
 
+    private boolean localUpToDate;
+
     public StaticUpdateCheckManager( boolean checkRequired )
     {
+        this( checkRequired, !checkRequired );
+    }
+
+    public StaticUpdateCheckManager( boolean checkRequired, boolean localUpToDate )
+    {
         this.checkRequired = checkRequired;
+        this.localUpToDate = localUpToDate;
     }
 
     public void touchMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
@@ -39,15 +47,14 @@ class StaticUpdateCheckManager
     {
     }
 
-    public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )
-    {
-        return policy1;
-    }
-
     public void checkMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
         check.setRequired( checkRequired );
 
+        if ( check.getLocalLastUpdated() != 0 && localUpToDate )
+        {
+            check.setRequired( false );
+        }
         if ( !check.isRequired() && !check.getFile().isFile() )
         {
             check.setException( new MetadataNotFoundException( check.getItem(), check.getRepository() ) );
@@ -58,15 +65,14 @@ class StaticUpdateCheckManager
     {
         check.setRequired( checkRequired );
 
+        if ( check.getLocalLastUpdated() != 0 && localUpToDate )
+        {
+            check.setRequired( false );
+        }
         if ( !check.isRequired() && !check.getFile().isFile() )
         {
             check.setException( new ArtifactNotFoundException( check.getItem(), check.getRepository() ) );
         }
-    }
-
-    public boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
-    {
-        return checkRequired;
     }
 
 }

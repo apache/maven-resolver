@@ -32,6 +32,7 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
+import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Slf4jLoggerFactory;
@@ -75,6 +76,8 @@ public final class AetherModule
         .to( DefaultRemoteRepositoryManager.class ).in( Singleton.class );
         bind( UpdateCheckManager.class ) //
         .to( DefaultUpdateCheckManager.class ).in( Singleton.class );
+        bind( UpdatePolicyAnalyzer.class ) //
+        .to( DefaultUpdatePolicyAnalyzer.class ).in( Singleton.class );
         bind( FileProcessor.class ) //
         .to( DefaultFileProcessor.class ).in( Singleton.class );
         bind( SyncContextFactory.class ) //
@@ -133,7 +136,6 @@ public final class AetherModule
             .to( Slf4jLoggerFactory.class );
         }
 
-        @SuppressWarnings( "unused" )
         @Provides
         @Singleton
         ILoggerFactory getLoggerFactory()

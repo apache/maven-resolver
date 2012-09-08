@@ -21,7 +21,7 @@ import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
-import org.eclipse.aether.impl.UpdateCheckManager;
+import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.MirrorSelector;
@@ -48,7 +48,7 @@ public class DefaultRemoteRepositoryManager
     private Logger logger = NullLoggerFactory.LOGGER;
 
     @Requirement
-    private UpdateCheckManager updateCheckManager;
+    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     public DefaultRemoteRepositoryManager()
     {
@@ -56,16 +56,16 @@ public class DefaultRemoteRepositoryManager
     }
 
     @Inject
-    DefaultRemoteRepositoryManager( UpdateCheckManager updateCheckManager, LoggerFactory loggerFactory )
+    DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer, LoggerFactory loggerFactory )
     {
-        setUpdateCheckManager( updateCheckManager );
+        setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
         setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
+        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
     }
 
     public DefaultRemoteRepositoryManager setLoggerFactory( LoggerFactory loggerFactory )
@@ -80,13 +80,13 @@ public class DefaultRemoteRepositoryManager
         setLoggerFactory( loggerFactory );
     }
 
-    public DefaultRemoteRepositoryManager setUpdateCheckManager( UpdateCheckManager updateCheckManager )
+    public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
-        if ( updateCheckManager == null )
+        if ( updatePolicyAnalyzer == null )
         {
-            throw new IllegalArgumentException( "update check manager has not been specified" );
+            throw new IllegalArgumentException( "update policy analyzer has not been specified" );
         }
-        this.updateCheckManager = updateCheckManager;
+        this.updatePolicyAnalyzer = updatePolicyAnalyzer;
         return this;
     }
 
@@ -263,8 +263,8 @@ public class DefaultRemoteRepositoryManager
             }
 
             String updates =
-                updateCheckManager.getEffectiveUpdatePolicy( session, policy1.getUpdatePolicy(),
-                                                             policy2.getUpdatePolicy() );
+                updatePolicyAnalyzer.getEffectiveUpdatePolicy( session, policy1.getUpdatePolicy(),
+                                                               policy2.getUpdatePolicy() );
 
             policy = new RepositoryPolicy( true, updates, checksums );
         }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,21 +17,16 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.impl.UpdateCheck;
-import org.eclipse.aether.impl.UpdateCheckManager;
+import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
 import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
-import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.transfer.ArtifactTransferException;
-import org.eclipse.aether.transfer.MetadataTransferException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,7 +48,7 @@ public class DefaultRemoteRepositoryManagerTest
         session.setChecksumPolicy( null );
         session.setUpdatePolicy( null );
         manager = new DefaultRemoteRepositoryManager();
-        manager.setUpdateCheckManager( new StubUpdateCheckManager() );
+        manager.setUpdatePolicyAnalyzer( new StubUpdatePolicyAnalyzer() );
         manager.setLoggerFactory( new SysoutLoggerFactory() );
     }
 
@@ -242,8 +237,8 @@ public class DefaultRemoteRepositoryManagerTest
         assertEquals( 2011, result.get( 0 ).getProxy().getPort() );
     }
 
-    private static class StubUpdateCheckManager
-        implements UpdateCheckManager
+    private static class StubUpdatePolicyAnalyzer
+        implements UpdatePolicyAnalyzer
     {
 
         public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )
@@ -276,26 +271,6 @@ public class DefaultRemoteRepositoryManagerTest
         public boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
         {
             return false;
-        }
-
-        public void checkArtifact( RepositorySystemSession session,
-                                   UpdateCheck<Artifact, ArtifactTransferException> check )
-        {
-        }
-
-        public void touchArtifact( RepositorySystemSession session,
-                                   UpdateCheck<Artifact, ArtifactTransferException> check )
-        {
-        }
-
-        public void checkMetadata( RepositorySystemSession session,
-                                   UpdateCheck<Metadata, MetadataTransferException> check )
-        {
-        }
-
-        public void touchMetadata( RepositorySystemSession session,
-                                   UpdateCheck<Metadata, MetadataTransferException> check )
-        {
         }
 
     }

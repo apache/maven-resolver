@@ -36,6 +36,7 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
+import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Slf4jLoggerFactory;
@@ -77,6 +78,7 @@ public final class DefaultServiceLocator
         addService( RepositoryConnectorProvider.class, DefaultRepositoryConnectorProvider.class );
         addService( RemoteRepositoryManager.class, DefaultRemoteRepositoryManager.class );
         addService( UpdateCheckManager.class, DefaultUpdateCheckManager.class );
+        addService( UpdatePolicyAnalyzer.class, DefaultUpdatePolicyAnalyzer.class );
         addService( FileProcessor.class, DefaultFileProcessor.class );
         addService( SyncContextFactory.class, DefaultSyncContextFactory.class );
         addService( RepositoryEventDispatcher.class, DefaultRepositoryEventDispatcher.class );

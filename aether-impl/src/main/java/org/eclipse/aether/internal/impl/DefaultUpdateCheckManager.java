@@ -11,7 +11,6 @@
 package org.eclipse.aether.internal.impl;
 
 import java.io.File;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +19,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
@@ -27,11 +29,11 @@ import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
+import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
@@ -45,6 +47,7 @@ import org.eclipse.aether.transfer.MetadataTransferException;
 
 /**
  */
+@Named
 @Component( role = UpdateCheckManager.class )
 public class DefaultUpdateCheckManager
     implements UpdateCheckManager, Service
@@ -52,6 +55,9 @@ public class DefaultUpdateCheckManager
 
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
+
+    @Requirement
+    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     private static final String UPDATED_KEY_SUFFIX = ".lastUpdated";
 
@@ -66,9 +72,17 @@ public class DefaultUpdateCheckManager
         // enables default constructor
     }
 
+    @Inject
+    DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer, LoggerFactory loggerFactory )
+    {
+        setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
+        setLoggerFactory( loggerFactory );
+    }
+
     public void initService( ServiceLocator locator )
     {
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
+        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
     }
 
     public DefaultUpdateCheckManager setLoggerFactory( LoggerFactory loggerFactory )
@@ -83,31 +97,14 @@ public class DefaultUpdateCheckManager
         setLoggerFactory( loggerFactory );
     }
 
-    public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )
+    public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
-        return ordinalOfUpdatePolicy( policy1 ) < ordinalOfUpdatePolicy( policy2 ) ? policy1 : policy2;
-    }
-
-    private int ordinalOfUpdatePolicy( String policy )
-    {
-        if ( RepositoryPolicy.UPDATE_POLICY_DAILY.equals( policy ) )
+        if ( updatePolicyAnalyzer == null )
         {
-            return 1440;
+            throw new IllegalArgumentException( "update policy analyzer has not been specified" );
         }
-        else if ( RepositoryPolicy.UPDATE_POLICY_ALWAYS.equals( policy ) )
-        {
-            return 0;
-        }
-        else if ( policy != null && policy.startsWith( RepositoryPolicy.UPDATE_POLICY_INTERVAL ) )
-        {
-            String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
-            return Integer.valueOf( s );
-        }
-        else
-        {
-            // assume "never"
-            return Integer.MAX_VALUE;
-        }
+        this.updatePolicyAnalyzer = updatePolicyAnalyzer;
+        return this;
     }
 
     public void checkArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
@@ -528,63 +525,9 @@ public class DefaultUpdateCheckManager
         ( (Map<Object, Boolean>) checkedFiles ).put( updateKey, Boolean.TRUE );
     }
 
-    public boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
+    private boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
     {
-        boolean checkForUpdates;
-
-        if ( policy == null )
-        {
-            policy = "";
-        }
-
-        if ( RepositoryPolicy.UPDATE_POLICY_ALWAYS.equals( policy ) )
-        {
-            checkForUpdates = true;
-        }
-        else if ( RepositoryPolicy.UPDATE_POLICY_DAILY.equals( policy ) )
-        {
-            Calendar cal = Calendar.getInstance();
-            cal.set( Calendar.HOUR_OF_DAY, 0 );
-            cal.set( Calendar.MINUTE, 0 );
-            cal.set( Calendar.SECOND, 0 );
-            cal.set( Calendar.MILLISECOND, 0 );
-
-            checkForUpdates = cal.getTimeInMillis() > lastModified;
-        }
-        else if ( policy.startsWith( RepositoryPolicy.UPDATE_POLICY_INTERVAL ) )
-        {
-            int minutes;
-            try
-            {
-                String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
-                minutes = Integer.valueOf( s );
-            }
-            catch ( RuntimeException e )
-            {
-                minutes = 24 * 60;
-
-                logger.warn( "Non-parseable repository update policy '" + policy + "', assuming '"
-                    + RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":1440'" );
-            }
-
-            Calendar cal = Calendar.getInstance();
-            cal.add( Calendar.MINUTE, -minutes );
-
-            checkForUpdates = cal.getTimeInMillis() > lastModified;
-        }
-        else
-        {
-            // assume "never"
-            checkForUpdates = false;
-
-            if ( !RepositoryPolicy.UPDATE_POLICY_NEVER.equals( policy ) )
-            {
-                logger.warn( "Unknown repository update policy '" + policy + "', assuming '"
-                    + RepositoryPolicy.UPDATE_POLICY_NEVER + "'" );
-            }
-        }
-
-        return checkForUpdates;
+        return updatePolicyAnalyzer.isUpdatedRequired( session, lastModified, policy );
     }
 
     private Properties read( File touchFile )

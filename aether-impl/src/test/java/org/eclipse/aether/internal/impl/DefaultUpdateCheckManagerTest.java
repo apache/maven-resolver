@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import static org.eclipse.aether.repository.RepositoryPolicy.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -69,7 +68,7 @@ public class DefaultUpdateCheckManagerTest
 
         session = new TestRepositorySystemSession();
         repository = new RemoteRepository( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() );
-        manager = new DefaultUpdateCheckManager();
+        manager = new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() );
         metadata =
             new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT,
                                  metadataFile );
@@ -111,65 +110,6 @@ public class DefaultUpdateCheckManagerTest
         check.setRepository( repository );
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10" );
         return check;
-    }
-
-    @Test
-    public void testIsUpdateRequired_PolicyNever()
-        throws Exception
-    {
-        String policy = RepositoryPolicy.UPDATE_POLICY_NEVER;
-        assertEquals( false, manager.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, 0, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, 1, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, System.currentTimeMillis() - 604800000, policy ) );
-    }
-
-    @Test
-    public void testIsUpdateRequired_PolicyAlways()
-        throws Exception
-    {
-        String policy = RepositoryPolicy.UPDATE_POLICY_ALWAYS;
-        assertEquals( true, manager.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( true, manager.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( true, manager.isUpdatedRequired( session, 0, policy ) );
-        assertEquals( true, manager.isUpdatedRequired( session, 1, policy ) );
-        assertEquals( true, manager.isUpdatedRequired( session, System.currentTimeMillis() - 1000, policy ) );
-    }
-
-    @Test
-    public void testIsUpdateRequired_PolicyDaily()
-        throws Exception
-    {
-        Calendar cal = Calendar.getInstance();
-        cal.set( Calendar.HOUR_OF_DAY, 0 );
-        cal.set( Calendar.MINUTE, 0 );
-        cal.set( Calendar.SECOND, 0 );
-        cal.set( Calendar.MILLISECOND, 0 );
-        long localMidnight = cal.getTimeInMillis();
-
-        String policy = RepositoryPolicy.UPDATE_POLICY_DAILY;
-        assertEquals( true, manager.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, localMidnight + 0, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, localMidnight + 1, policy ) );
-        assertEquals( true, manager.isUpdatedRequired( session, localMidnight - 1, policy ) );
-    }
-
-    @Test
-    public void testIsUpdateRequired_PolicyInterval()
-        throws Exception
-    {
-        String policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":5";
-        assertEquals( true, manager.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, System.currentTimeMillis(), policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, System.currentTimeMillis() - 5 - 1, policy ) );
-        assertEquals( false, manager.isUpdatedRequired( session, System.currentTimeMillis() - 1000 * 5 - 1, policy ) );
-        assertEquals( true, manager.isUpdatedRequired( session, System.currentTimeMillis() - 1000 * 60 * 5 - 1, policy ) );
-
-        policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":invalid";
-        assertEquals( false, manager.isUpdatedRequired( session, System.currentTimeMillis(), policy ) );
     }
 
     @Test( expected = Exception.class )
@@ -712,21 +652,6 @@ public class DefaultUpdateCheckManagerTest
 
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );
-    }
-
-    @Test
-    public void testEffectivePolicy()
-    {
-        assertEquals( UPDATE_POLICY_ALWAYS,
-                      manager.getEffectiveUpdatePolicy( session, UPDATE_POLICY_ALWAYS, UPDATE_POLICY_DAILY ) );
-        assertEquals( UPDATE_POLICY_ALWAYS,
-                      manager.getEffectiveUpdatePolicy( session, UPDATE_POLICY_ALWAYS, UPDATE_POLICY_NEVER ) );
-        assertEquals( UPDATE_POLICY_DAILY,
-                      manager.getEffectiveUpdatePolicy( session, UPDATE_POLICY_DAILY, UPDATE_POLICY_NEVER ) );
-        assertEquals( UPDATE_POLICY_INTERVAL + ":60",
-                      manager.getEffectiveUpdatePolicy( session, UPDATE_POLICY_DAILY, UPDATE_POLICY_INTERVAL + ":60" ) );
-        assertEquals( UPDATE_POLICY_INTERVAL + ":60", manager.getEffectiveUpdatePolicy( session, UPDATE_POLICY_INTERVAL
-            + ":100", UPDATE_POLICY_INTERVAL + ":60" ) );
     }
 
 }

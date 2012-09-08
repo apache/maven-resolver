@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
 import org.eclipse.aether.internal.test.impl.TestLocalRepositoryManager;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
@@ -228,21 +227,10 @@ public class DefaultMetadataResolverTest
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata( metadata );
         File file = new File( session.getLocalRepository().getBasedir(), path );
         TestFileUtils.write( file.getAbsolutePath(), file );
-        final long timestamp = file.lastModified();
 
         MetadataRequest request = new MetadataRequest( metadata, repository, "" );
         request.setFavorLocalRepository( true );
-        resolver.setUpdateCheckManager( new StaticUpdateCheckManager( false )
-        {
-
-            @Override
-            public boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
-            {
-                assertEquals( timestamp, lastModified );
-                return super.isUpdatedRequired( session, lastModified, policy );
-            }
-
-        } );
+        resolver.setUpdateCheckManager( new StaticUpdateCheckManager( true, true ) );
 
         List<MetadataResult> results = resolver.resolveMetadata( session, Arrays.asList( request ) );
 

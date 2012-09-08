@@ -263,7 +263,7 @@ public class DefaultArtifactResolverTest
         };
 
         repositoryConnectorProvider.setConnector( connector );
-        resolver.setUpdateCheckManager( new DefaultUpdateCheckManager() );
+        resolver.setUpdateCheckManager( new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() ) );
 
         session.setNotFoundCachingEnabled( true );
         session.setUpdatePolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
