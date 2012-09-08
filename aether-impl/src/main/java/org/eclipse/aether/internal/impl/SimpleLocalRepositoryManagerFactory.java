@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.repository.LocalRepository;
@@ -25,6 +27,7 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 /**
  * Creates local repository managers for repository type {@code "simple"}.
  */
+@Named( "simple" )
 @Component( role = LocalRepositoryManagerFactory.class, hint = "simple" )
 public class SimpleLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service

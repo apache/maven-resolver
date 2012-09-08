@@ -20,12 +20,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+import javax.inject.Named;
+
 import org.codehaus.plexus.component.annotations.Component;
 import org.eclipse.aether.spi.io.FileProcessor;
 
 /**
  * A utility class helping with file-based operations.
  */
+@Named
 @Component( role = FileProcessor.class )
 public class DefaultFileProcessor
     implements FileProcessor
