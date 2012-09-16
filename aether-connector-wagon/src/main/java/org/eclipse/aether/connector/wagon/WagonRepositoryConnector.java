@@ -42,7 +42,7 @@ import org.apache.maven.wagon.repository.Repository;
 import org.apache.maven.wagon.repository.RepositoryPermissions;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
@@ -95,6 +95,10 @@ class WagonRepositoryConnector
 
     private final RepositorySystemSession session;
 
+    private final AuthenticationContext repoAuthContext;
+
+    private final AuthenticationContext proxyAuthContext;
+
     private final WagonProvider wagonProvider;
 
     private final WagonConfigurator wagonConfigurator;
@@ -126,6 +130,11 @@ class WagonRepositoryConnector
                                      FileProcessor fileProcessor, Logger logger )
         throws NoRepositoryConnectorException
     {
+        if ( !"default".equals( repository.getContentType() ) )
+        {
+            throw new NoRepositoryConnectorException( repository );
+        }
+
         this.logger = logger;
         this.fileProcessor = fileProcessor;
         this.wagonProvider = wagonProvider;
@@ -133,11 +142,6 @@ class WagonRepositoryConnector
         this.repository = repository;
         this.session = session;
         this.listener = session.getTransferListener();
-
-        if ( !"default".equals( repository.getContentType() ) )
-        {
-            throw new NoRepositoryConnectorException( repository );
-        }
 
         wagonRepo = new Repository( repository.getId(), repository.getUrl() );
         wagonRepo.setPermissions( getPermissions( repository.getId(), session ) );
@@ -158,8 +162,11 @@ class WagonRepositoryConnector
             throw new NoRepositoryConnectorException( repository );
         }
 
-        wagonAuth = getAuthenticationInfo( repository );
-        wagonProxy = getProxy( repository );
+        repoAuthContext = AuthenticationContext.forRepository( session, repository );
+        proxyAuthContext = AuthenticationContext.forProxy( session, repository );
+
+        wagonAuth = getAuthenticationInfo( repository, repoAuthContext );
+        wagonProxy = getProxy( repository, proxyAuthContext );
 
         int threads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
         executor = getExecutor( threads );
@@ -230,39 +237,88 @@ class WagonRepositoryConnector
         return result;
     }
 
-    private AuthenticationInfo getAuthenticationInfo( RemoteRepository repository )
+    private AuthenticationInfo getAuthenticationInfo( RemoteRepository repository, final AuthenticationContext authContext )
     {
         AuthenticationInfo auth = null;
 
-        Authentication a = repository.getAuthentication();
-        if ( a != null )
+        if ( authContext != null )
         {
-            auth = new AuthenticationInfo();
-            auth.setUserName( a.getUsername() );
-            auth.setPassword( a.getPassword() );
-            auth.setPrivateKey( a.getPrivateKeyFile() );
-            auth.setPassphrase( a.getPassphrase() );
+            auth = new AuthenticationInfo()
+            {
+                @Override
+                public String getUserName()
+                {
+                    return authContext.get( AuthenticationContext.USERNAME );
+                }
+
+                @Override
+                public String getPassword()
+                {
+                    return authContext.get( AuthenticationContext.PASSWORD );
+                }
+
+                @Override
+                public String getPrivateKey()
+                {
+                    return authContext.get( AuthenticationContext.PRIVATE_KEY_PATH );
+                }
+
+                @Override
+                public String getPassphrase()
+                {
+                    return authContext.get( AuthenticationContext.PRIVATE_KEY_PASSPHRASE );
+                }
+            };
         }
 
         return auth;
     }
 
-    private ProxyInfoProvider getProxy( RemoteRepository repository )
+    private ProxyInfoProvider getProxy( RemoteRepository repository, final AuthenticationContext authContext )
     {
         ProxyInfoProvider proxy = null;
 
         Proxy p = repository.getProxy();
         if ( p != null )
         {
-            final ProxyInfo prox = new ProxyInfo();
+            final ProxyInfo prox;
+            if ( authContext != null )
+            {
+                prox = new ProxyInfo()
+                {
+                    @Override
+                    public String getUserName()
+                    {
+                        return authContext.get( AuthenticationContext.USERNAME );
+                    }
+
+                    @Override
+                    public String getPassword()
+                    {
+                        return authContext.get( AuthenticationContext.PASSWORD );
+                    }
+
+                    @Override
+                    public String getNtlmDomain()
+                    {
+                        return authContext.get( AuthenticationContext.NTLM_DOMAIN );
+                    }
+
+                    @Override
+                    public String getNtlmHost()
+                    {
+                        return authContext.get( AuthenticationContext.NTLM_WORKSTATION );
+                    }
+                };
+            }
+            else
+            {
+                prox = new ProxyInfo();
+            }
             prox.setType( p.getType() );
             prox.setHost( p.getHost() );
             prox.setPort( p.getPort() );
-            if ( p.getAuthentication() != null )
-            {
-                prox.setUserName( p.getAuthentication().getUsername() );
-                prox.setPassword( p.getAuthentication().getPassword() );
-            }
+
             proxy = new ProxyInfoProvider()
             {
                 public ProxyInfo getProxyInfo( String protocol )
@@ -478,6 +534,9 @@ class WagonRepositoryConnector
     public void close()
     {
         closed = true;
+
+        AuthenticationContext.close( repoAuthContext );
+        AuthenticationContext.close( proxyAuthContext );
 
         for ( Wagon wagon = wagons.poll(); wagon != null; wagon = wagons.poll() )
         {

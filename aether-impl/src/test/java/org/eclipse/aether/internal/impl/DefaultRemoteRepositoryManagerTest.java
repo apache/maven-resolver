@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,12 +21,12 @@ import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
 import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
 import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
-import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
+import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -165,7 +165,7 @@ public class DefaultRemoteRepositoryManagerTest
     {
         final RemoteRepository repo = newRepo( "a", "http://", false, "", "" );
         final RemoteRepository mirror = newRepo( "a", "http://", false, "", "" );
-        mirror.setAuthentication( new Authentication( "username", "password" ) );
+        mirror.setAuthentication( new AuthenticationBuilder().build() );
         session.setMirrorSelector( new MirrorSelector()
         {
             public RemoteRepository getMirror( RemoteRepository repository )
@@ -179,8 +179,7 @@ public class DefaultRemoteRepositoryManagerTest
                                            true );
 
         assertEquals( 1, result.size() );
-        assertEquals( "username", result.get( 0 ).getAuthentication().getUsername() );
-        assertEquals( "password", result.get( 0 ).getAuthentication().getPassword() );
+        assertSame( mirror.getAuthentication(), result.get( 0 ).getAuthentication() );
     }
 
     @Test

@@ -148,7 +148,7 @@ public class DefaultRepositoryConnectorProvider
                     Authentication auth = repository.getAuthentication();
                     if ( auth != null )
                     {
-                        buffer.append( " as " ).append( auth.getUsername() );
+                        buffer.append( " with " ).append( auth );
                     }
 
                     Proxy proxy = repository.getProxy();
@@ -159,7 +159,7 @@ public class DefaultRepositoryConnectorProvider
                         auth = proxy.getAuthentication();
                         if ( auth != null )
                         {
-                            buffer.append( " as " ).append( auth.getUsername() );
+                            buffer.append( " with " ).append( auth );
                         }
                     }
 

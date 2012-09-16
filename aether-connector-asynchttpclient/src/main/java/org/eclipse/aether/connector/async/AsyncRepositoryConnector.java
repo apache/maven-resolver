@@ -27,7 +27,7 @@ import com.ning.http.client.providers.netty.NettyAsyncHttpProvider;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
@@ -107,6 +107,10 @@ class AsyncRepositoryConnector
 
     private final RepositorySystemSession session;
 
+    private final AuthenticationContext repoAuthContext;
+
+    private final AuthenticationContext proxyAuthContext;
+
     private boolean useCache = false;
 
     private final boolean disableResumeSupport;
@@ -131,12 +135,6 @@ class AsyncRepositoryConnector
                                      FileProcessor fileProcessor, Logger logger )
         throws NoRepositoryConnectorException
     {
-        this.logger = logger;
-        this.repository = repository;
-        this.listener = session.getTransferListener();
-        this.fileProcessor = fileProcessor;
-        this.session = session;
-
         if ( !"default".equals( repository.getContentType() ) )
         {
             throw new NoRepositoryConnectorException( repository );
@@ -147,6 +145,15 @@ class AsyncRepositoryConnector
         {
             throw new NoRepositoryConnectorException( repository );
         }
+
+        this.logger = logger;
+        this.repository = repository;
+        this.listener = session.getTransferListener();
+        this.fileProcessor = fileProcessor;
+        this.session = session;
+
+        repoAuthContext = AuthenticationContext.forRepository( session, repository );
+        proxyAuthContext = AuthenticationContext.forProxy( session, repository );
 
         AsyncHttpClientConfig config = createConfig( session, repository, true );
 
@@ -266,11 +273,13 @@ class AsyncRepositoryConnector
     {
         Realm realm = null;
 
-        Authentication a = repository.getAuthentication();
-        if ( a != null && a.getUsername() != null )
+        if ( repoAuthContext != null )
         {
-            realm = new Realm.RealmBuilder().setPrincipal( a.getUsername() ).setPassword(
-                a.getPassword() ).setUsePreemptiveAuth( false ).setEnconding( credentialEncoding ).build();
+            Realm.RealmBuilder builder = new Realm.RealmBuilder();
+            builder.setUsePreemptiveAuth( false ).setEnconding( credentialEncoding );
+            builder.setPrincipal( repoAuthContext.get( AuthenticationContext.USERNAME ) );
+            builder.setPassword( repoAuthContext.get( AuthenticationContext.PASSWORD ) );
+            realm = builder.build();
         }
 
         return realm;
@@ -283,18 +292,34 @@ class AsyncRepositoryConnector
         Proxy p = repository.getProxy();
         if ( p != null )
         {
-            Authentication a = p.getAuthentication();
             boolean useSSL = repository.getProtocol().equalsIgnoreCase( "https" ) ||
                 repository.getProtocol().equalsIgnoreCase( "dav:https" );
-            if ( a == null )
+            if ( proxyAuthContext == null )
             {
                 proxyServer = new ProxyServer( useSSL ? Protocol.HTTPS : Protocol.HTTP, p.getHost(), p.getPort() );
             }
             else
             {
-                proxyServer =
-                    new ProxyServer( useSSL ? Protocol.HTTPS : Protocol.HTTP, p.getHost(), p.getPort(), a.getUsername(),
-                                     a.getPassword() );
+                proxyServer = new ProxyServer( useSSL ? Protocol.HTTPS : Protocol.HTTP, p.getHost(), p.getPort() )
+                {
+                    @Override
+                    public String getPrincipal()
+                    {
+                        return proxyAuthContext.get( AuthenticationContext.USERNAME );
+                    }
+
+                    @Override
+                    public String getPassword()
+                    {
+                        return proxyAuthContext.get( AuthenticationContext.PASSWORD );
+                    }
+
+                    @Override
+                    public String getNtlmDomain()
+                    {
+                        return proxyAuthContext.get( AuthenticationContext.NTLM_DOMAIN );
+                    }
+                };
                 proxyServer.setEncoding( credentialEncoding );
             }
         }
@@ -1320,6 +1345,8 @@ class AsyncRepositoryConnector
     public void close()
     {
         closed.set( true );
+        AuthenticationContext.close( repoAuthContext );
+        AuthenticationContext.close( proxyAuthContext );
         httpClient.close();
     }
 

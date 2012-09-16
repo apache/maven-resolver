@@ -31,7 +31,7 @@ import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
@@ -136,7 +136,7 @@ public class DefaultUpdateCheckManager
         File touchFile = getTouchFile( artifact, artifactFile );
         Properties props = read( touchFile );
 
-        String updateKey = getUpdateKey( artifactFile, repository );
+        String updateKey = getUpdateKey( session, artifactFile, repository );
         String dataKey = getDataKey( artifact, artifactFile, repository );
 
         String error = getError( props, dataKey );
@@ -159,7 +159,7 @@ public class DefaultUpdateCheckManager
         else
         {
             // artifact could not be transferred
-            String transferKey = getTransferKey( artifact, artifactFile, repository );
+            String transferKey = getTransferKey( session, artifact, artifactFile, repository );
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
@@ -272,7 +272,7 @@ public class DefaultUpdateCheckManager
         File touchFile = getTouchFile( metadata, metadataFile );
         Properties props = read( touchFile );
 
-        String updateKey = getUpdateKey( metadataFile, repository );
+        String updateKey = getUpdateKey( session, metadataFile, repository );
         String dataKey = getDataKey( metadata, metadataFile, check.getAuthoritativeRepository() );
 
         String error = getError( props, dataKey );
@@ -299,7 +299,7 @@ public class DefaultUpdateCheckManager
         else
         {
             // metadata could not be transferred
-            String transferKey = getTransferKey( metadata, metadataFile, repository );
+            String transferKey = getTransferKey( session, metadata, metadataFile, repository );
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
@@ -435,9 +435,10 @@ public class DefaultUpdateCheckManager
         return buffer.toString();
     }
 
-    private String getTransferKey( Artifact artifact, File artifactFile, RemoteRepository repository )
+    private String getTransferKey( RepositorySystemSession session, Artifact artifact, File artifactFile,
+                                   RemoteRepository repository )
     {
-        return getRepoKey( repository );
+        return getRepoKey( session, repository );
     }
 
     private String getDataKey( Metadata metadata, File metadataFile, RemoteRepository repository )
@@ -445,24 +446,24 @@ public class DefaultUpdateCheckManager
         return metadataFile.getName();
     }
 
-    private String getTransferKey( Metadata metadata, File metadataFile, RemoteRepository repository )
+    private String getTransferKey( RepositorySystemSession session, Metadata metadata, File metadataFile,
+                                   RemoteRepository repository )
     {
-        return metadataFile.getName() + '/' + getRepoKey( repository );
+        return metadataFile.getName() + '/' + getRepoKey( session, repository );
     }
 
-    private String getRepoKey( RemoteRepository repository )
+    private String getRepoKey( RepositorySystemSession session, RemoteRepository repository )
     {
         StringBuilder buffer = new StringBuilder( 128 );
 
         Proxy proxy = repository.getProxy();
         if ( proxy != null )
         {
-            appendAuth( buffer, proxy.getAuthentication() );
+            buffer.append( AuthenticationDigest.forProxy( session, repository ) ).append( '@' );
             buffer.append( proxy.getHost() ).append( ':' ).append( proxy.getPort() ).append( '>' );
         }
 
-        Authentication auth = repository.getAuthentication();
-        appendAuth( buffer, auth );
+        buffer.append( AuthenticationDigest.forRepository( session, repository ) ).append( '@' );
 
         buffer.append( repository.getContentType() ).append( '-' );
         buffer.append( normalizeRepoUrl( repository.getUrl() ) );
@@ -480,22 +481,9 @@ public class DefaultUpdateCheckManager
         return result;
     }
 
-    private void appendAuth( StringBuilder buffer, Authentication auth )
+    private String getUpdateKey( RepositorySystemSession session, File file, RemoteRepository repository )
     {
-        if ( auth != null )
-        {
-            SimpleDigest digest = new SimpleDigest();
-            digest.update( auth.getUsername() );
-            digest.update( auth.getPassword() );
-            digest.update( auth.getPrivateKeyFile() );
-            digest.update( auth.getPassphrase() );
-            buffer.append( digest.digest() ).append( '@' );
-        }
-    }
-
-    private String getUpdateKey( File file, RemoteRepository repository )
-    {
-        return file.getAbsolutePath() + '|' + getRepoKey( repository );
+        return file.getAbsolutePath() + '|' + getRepoKey( session, repository );
     }
 
     private boolean isAlreadyUpdated( SessionData data, Object updateKey )
@@ -542,9 +530,9 @@ public class DefaultUpdateCheckManager
         File artifactFile = check.getFile();
         File touchFile = getTouchFile( artifact, artifactFile );
 
-        String updateKey = getUpdateKey( artifactFile, check.getRepository() );
+        String updateKey = getUpdateKey( session, artifactFile, check.getRepository() );
         String dataKey = getDataKey( artifact, artifactFile, check.getAuthoritativeRepository() );
-        String transferKey = getTransferKey( artifact, artifactFile, check.getRepository() );
+        String transferKey = getTransferKey( session, artifact, artifactFile, check.getRepository() );
 
         setUpdated( session.getData(), updateKey );
         Properties props = write( touchFile, dataKey, transferKey, check.getException() );
@@ -573,9 +561,9 @@ public class DefaultUpdateCheckManager
         File metadataFile = check.getFile();
         File touchFile = getTouchFile( metadata, metadataFile );
 
-        String updateKey = getUpdateKey( metadataFile, check.getRepository() );
+        String updateKey = getUpdateKey( session, metadataFile, check.getRepository() );
         String dataKey = getDataKey( metadata, metadataFile, check.getAuthoritativeRepository() );
-        String transferKey = getTransferKey( metadata, metadataFile, check.getRepository() );
+        String transferKey = getTransferKey( session, metadata, metadataFile, check.getRepository() );
 
         setUpdated( session.getData(), updateKey );
         write( touchFile, dataKey, transferKey, check.getException() );

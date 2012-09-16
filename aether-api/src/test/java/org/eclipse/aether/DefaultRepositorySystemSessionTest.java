@@ -12,7 +12,11 @@ package org.eclipse.aether;
 
 import static org.junit.Assert.*;
 
+import java.util.Map;
+
 import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.AuthenticationContext;
+import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.Test;
@@ -42,7 +46,16 @@ public class DefaultRepositorySystemSessionTest
         RemoteRepository repo = new RemoteRepository( "id", "default", "void" );
         assertSame( null, session.getAuthenticationSelector().getAuthentication( repo ) );
 
-        repo.setAuthentication( new Authentication( "user", "pass" ) );
+        repo.setAuthentication( new Authentication()
+        {
+            public void fill( AuthenticationContext context, String key, Map<String, String> data )
+            {
+            }
+
+            public void digest( AuthenticationDigest digest )
+            {
+            }
+        } );
         assertSame( repo.getAuthentication(), session.getAuthenticationSelector().getAuthentication( repo ) );
     }
 

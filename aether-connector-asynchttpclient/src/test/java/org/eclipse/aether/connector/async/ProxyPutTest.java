@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.net.URL;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
+import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.sonatype.tests.http.runner.annotations.Configurators;
@@ -37,7 +38,7 @@ public class ProxyPutTest
     {
         super.before();
 
-        Authentication auth = new Authentication( "puser", "password" );
+        Authentication auth = new AuthenticationBuilder().username( "puser" ).password( "password" ).build();
         Proxy proxy = new Proxy( "http", "localhost", provider().getPort(), auth );
         repository().setProxy( proxy );
     }
