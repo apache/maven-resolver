@@ -33,6 +33,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
+import org.eclipse.aether.util.repository.AuthenticationBuilder;
 
 public class Aether
 {
@@ -99,7 +100,7 @@ public class Aether
         RepositorySystemSession session = newSession();
 
         RemoteRepository nexus = new RemoteRepository( "nexus", "default", remoteRepository );
-        Authentication authentication = new Authentication( "admin", "admin123" );
+        Authentication authentication = new AuthenticationBuilder().username( "admin" ).password( "admin123" ).build();
         nexus.setAuthentication( authentication );
 
         DeployRequest deployRequest = new DeployRequest();
