@@ -82,8 +82,7 @@ public class DefaultUpdatePolicyAnalyzer
         }
         else if ( policy != null && policy.startsWith( RepositoryPolicy.UPDATE_POLICY_INTERVAL ) )
         {
-            String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
-            return Integer.valueOf( s );
+            return getMinutes( policy );
         }
         else
         {
@@ -117,19 +116,7 @@ public class DefaultUpdatePolicyAnalyzer
         }
         else if ( policy.startsWith( RepositoryPolicy.UPDATE_POLICY_INTERVAL ) )
         {
-            int minutes;
-            try
-            {
-                String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
-                minutes = Integer.valueOf( s );
-            }
-            catch ( RuntimeException e )
-            {
-                minutes = 24 * 60;
-
-                logger.warn( "Non-parseable repository update policy '" + policy + "', assuming '"
-                    + RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":1440'" );
-            }
+            int minutes = getMinutes( policy );
 
             Calendar cal = Calendar.getInstance();
             cal.add( Calendar.MINUTE, -minutes );
@@ -149,6 +136,24 @@ public class DefaultUpdatePolicyAnalyzer
         }
 
         return checkForUpdates;
+    }
+
+    private int getMinutes( String policy )
+    {
+        int minutes;
+        try
+        {
+            String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
+            minutes = Integer.valueOf( s );
+        }
+        catch ( RuntimeException e )
+        {
+            minutes = 24 * 60;
+
+            logger.warn( "Non-parseable repository update policy '" + policy + "', assuming '"
+                + RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":1440'" );
+        }
+        return minutes;
     }
 
 }
