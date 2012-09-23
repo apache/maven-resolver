@@ -209,8 +209,8 @@ public class DefaultRemoteRepositoryManager
                 merged.setMirroredRepositories( new ArrayList<RemoteRepository>( dominant.getMirroredRepositories() ) );
             }
 
-            merged.setPolicy( false, merge( session, merged.getPolicy( false ), rec.getPolicy( false ) ) );
-            merged.setPolicy( true, merge( session, merged.getPolicy( true ), rec.getPolicy( true ) ) );
+            merged.setPolicy( false, merge( session, merged.getPolicy( false ), rec.getPolicy( false ), false ) );
+            merged.setPolicy( true, merge( session, merged.getPolicy( true ), rec.getPolicy( true ), false ) );
 
             merged.getMirroredRepositories().add( rec );
         }
@@ -221,39 +221,69 @@ public class DefaultRemoteRepositoryManager
     public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
                                        boolean snapshots )
     {
-        RepositoryPolicy policy;
-
-        // get effective per-repository policy
-        if ( releases && snapshots )
-        {
-            policy = merge( session, repository.getPolicy( false ), repository.getPolicy( true ) );
-        }
-        else
-        {
-            policy = repository.getPolicy( snapshots );
-        }
-
-        // superimpose global policy
-        if ( !StringUtils.isEmpty( session.getChecksumPolicy() ) )
-        {
-            policy = policy.setChecksumPolicy( session.getChecksumPolicy() );
-        }
-        if ( !StringUtils.isEmpty( session.getUpdatePolicy() ) )
-        {
-            policy = policy.setUpdatePolicy( session.getUpdatePolicy() );
-        }
-
+        RepositoryPolicy policy1 = releases ? repository.getPolicy( false ) : null;
+        RepositoryPolicy policy2 = snapshots ? repository.getPolicy( true ) : null;
+        RepositoryPolicy policy = merge( session, policy1, policy2, true );
         return policy;
     }
 
-    private RepositoryPolicy merge( RepositorySystemSession session, RepositoryPolicy policy1, RepositoryPolicy policy2 )
+    private RepositoryPolicy merge( RepositorySystemSession session, RepositoryPolicy policy1,
+                                    RepositoryPolicy policy2, boolean globalPolicy )
     {
         RepositoryPolicy policy;
 
-        if ( policy1.isEnabled() && policy2.isEnabled() )
+        if ( policy2 == null )
         {
-            String checksums;
-            if ( ordinalOfChecksumPolicy( policy2.getChecksumPolicy() ) < ordinalOfChecksumPolicy( policy1.getChecksumPolicy() ) )
+            if ( globalPolicy )
+            {
+                policy = merge( policy1, session.getUpdatePolicy(), session.getChecksumPolicy() );
+            }
+            else
+            {
+                policy = policy1;
+            }
+        }
+        else if ( policy1 == null )
+        {
+            if ( globalPolicy )
+            {
+                policy = merge( policy2, session.getUpdatePolicy(), session.getChecksumPolicy() );
+            }
+            else
+            {
+                policy = policy2;
+            }
+        }
+        else if ( !policy2.isEnabled() )
+        {
+            if ( globalPolicy )
+            {
+                policy = merge( policy1, session.getUpdatePolicy(), session.getChecksumPolicy() );
+            }
+            else
+            {
+                policy = policy1;
+            }
+        }
+        else if ( !policy1.isEnabled() )
+        {
+            if ( globalPolicy )
+            {
+                policy = merge( policy2, session.getUpdatePolicy(), session.getChecksumPolicy() );
+            }
+            else
+            {
+                policy = policy2;
+            }
+        }
+        else
+        {
+            String checksums = session.getChecksumPolicy();
+            if ( globalPolicy && !StringUtils.isEmpty( checksums ) )
+            {
+                // use global override
+            }
+            else if ( ordinalOfChecksumPolicy( policy2.getChecksumPolicy() ) < ordinalOfChecksumPolicy( policy1.getChecksumPolicy() ) )
             {
                 checksums = policy2.getChecksumPolicy();
             }
@@ -262,21 +292,41 @@ public class DefaultRemoteRepositoryManager
                 checksums = policy1.getChecksumPolicy();
             }
 
-            String updates =
-                updatePolicyAnalyzer.getEffectiveUpdatePolicy( session, policy1.getUpdatePolicy(),
-                                                               policy2.getUpdatePolicy() );
+            String updates = session.getUpdatePolicy();
+            if ( globalPolicy && !StringUtils.isEmpty( updates ) )
+            {
+                // use global override
+            }
+            else
+            {
+                updates =
+                    updatePolicyAnalyzer.getEffectiveUpdatePolicy( session, policy1.getUpdatePolicy(),
+                                                                   policy2.getUpdatePolicy() );
+            }
 
             policy = new RepositoryPolicy( true, updates, checksums );
         }
-        else if ( policy2.isEnabled() )
-        {
-            policy = policy2;
-        }
-        else
-        {
-            policy = policy1;
-        }
 
+        return policy;
+    }
+
+    private RepositoryPolicy merge( RepositoryPolicy policy, String updates, String checksums )
+    {
+        if ( policy != null )
+        {
+            if ( StringUtils.isEmpty( updates ) )
+            {
+                updates = policy.getUpdatePolicy();
+            }
+            if ( StringUtils.isEmpty( checksums ) )
+            {
+                checksums = policy.getChecksumPolicy();
+            }
+            if ( !policy.getUpdatePolicy().equals( updates ) || !policy.getChecksumPolicy().equals( checksums ) )
+            {
+                policy = new RepositoryPolicy( policy.isEnabled(), updates, checksums );
+            }
+        }
         return policy;
     }
 
