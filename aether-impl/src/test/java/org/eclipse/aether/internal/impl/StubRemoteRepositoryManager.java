@@ -39,14 +39,18 @@ class StubRemoteRepositoryManager
     {
         RepositoryPolicy policy = repository.getPolicy( snapshots );
 
-        if ( !StringUtils.isEmpty( session.getChecksumPolicy() ) )
+        String checksums = session.getChecksumPolicy();
+        if ( StringUtils.isEmpty( checksums ) )
         {
-            policy = policy.setChecksumPolicy( session.getChecksumPolicy() );
+            checksums = policy.getChecksumPolicy();
         }
-        if ( !StringUtils.isEmpty( session.getUpdatePolicy() ) )
+        String updates = session.getUpdatePolicy();
+        if ( StringUtils.isEmpty( updates ) )
         {
-            policy = policy.setUpdatePolicy( session.getUpdatePolicy() );
+            updates = policy.getUpdatePolicy();
         }
+
+        policy = new RepositoryPolicy( policy.isEnabled(), updates, checksums );
 
         return policy;
     }

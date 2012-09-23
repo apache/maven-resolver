@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,8 +11,7 @@
 package org.eclipse.aether.repository;
 
 /**
- * A policy controlling access to a repository. <em>Note:</em> Instances of this class are immutable and the exposed
- * mutators return new objects rather than changing the current instance.
+ * A policy controlling access to a repository.
  */
 public final class RepositoryPolicy
 {
@@ -92,21 +91,6 @@ public final class RepositoryPolicy
     }
 
     /**
-     * Sets the enabled flag for the associated repository.
-     * 
-     * @param enabled {@code true} if the repository should be contacted, {@code false} otherwise.
-     * @return The new policy, never {@code null}.
-     */
-    public RepositoryPolicy setEnabled( boolean enabled )
-    {
-        if ( this.enabled == enabled )
-        {
-            return this;
-        }
-        return new RepositoryPolicy( enabled, updatePolicy, checksumPolicy );
-    }
-
-    /**
      * Gets the update policy for locally cached data from the repository.
      * 
      * @return The update policy, never {@code null}.
@@ -117,23 +101,6 @@ public final class RepositoryPolicy
     }
 
     /**
-     * Sets the update policy for locally cached data from the repository. Well-known policies are
-     * {@link #UPDATE_POLICY_NEVER}, {@link #UPDATE_POLICY_ALWAYS}, {@link #UPDATE_POLICY_DAILY} and
-     * {@link #UPDATE_POLICY_INTERVAL}
-     * 
-     * @param updatePolicy The update policy, may be {@code null}.
-     * @return The new policy, never {@code null}.
-     */
-    public RepositoryPolicy setUpdatePolicy( String updatePolicy )
-    {
-        if ( this.updatePolicy.equals( updatePolicy ) )
-        {
-            return this;
-        }
-        return new RepositoryPolicy( enabled, updatePolicy, checksumPolicy );
-    }
-
-    /**
      * Gets the policy for checksum validation.
      * 
      * @return The checksum policy, never {@code null}.
@@ -141,22 +108,6 @@ public final class RepositoryPolicy
     public String getChecksumPolicy()
     {
         return checksumPolicy;
-    }
-
-    /**
-     * Sets the policy for checksum validation. Well-known policies are {@link #CHECKSUM_POLICY_FAIL},
-     * {@link #CHECKSUM_POLICY_WARN} and {@link #CHECKSUM_POLICY_IGNORE}.
-     * 
-     * @param checksumPolicy The checksum policy, may be {@code null}.
-     * @return The new policy, never {@code null}.
-     */
-    public RepositoryPolicy setChecksumPolicy( String checksumPolicy )
-    {
-        if ( this.checksumPolicy.equals( checksumPolicy ) )
-        {
-            return this;
-        }
-        return new RepositoryPolicy( enabled, updatePolicy, checksumPolicy );
     }
 
     @Override
