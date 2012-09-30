@@ -42,7 +42,7 @@ public class AuthWithNonAsciiCredentialsGetTest
         super.before();
 
         Authentication auth =
-            new AuthenticationBuilder().username( "user-non-ascii" ).password( "\u00E4\u00DF" ).build();
+            new AuthenticationBuilder().addUsername( "user-non-ascii" ).addPassword( "\u00E4\u00DF" ).build();
         repository = new RemoteRepository.Builder( repository() ).setAuthentication( auth ).build();
     }
 

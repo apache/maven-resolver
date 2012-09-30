@@ -164,7 +164,7 @@ public class DefaultRemoteRepositoryManagerTest
     {
         final RemoteRepository repo = newRepo( "a", "http://", false, "", "" ).build();
         final RemoteRepository mirror =
-            newRepo( "a", "http://", false, "", "" ).setAuthentication( new AuthenticationBuilder().build() ).build();
+            newRepo( "a", "http://", false, "", "" ).setAuthentication( new AuthenticationBuilder().addUsername( "test" ).build() ).build();
         session.setMirrorSelector( new MirrorSelector()
         {
             public RemoteRepository getMirror( RemoteRepository repository )

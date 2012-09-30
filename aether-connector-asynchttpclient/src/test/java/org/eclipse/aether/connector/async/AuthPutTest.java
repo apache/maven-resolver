@@ -33,7 +33,7 @@ public class AuthPutTest
     {
         super.before();
 
-        Authentication auth = new AuthenticationBuilder().username( "user" ).password( "password" ).build();
+        Authentication auth = new AuthenticationBuilder().addUsername( "user" ).addPassword( "password" ).build();
         repository = new RemoteRepository.Builder( repository() ).setAuthentication( auth ).build();
     }
 

@@ -39,7 +39,7 @@ public class ProxyGetTest
     {
         super.before();
 
-        Authentication auth = new AuthenticationBuilder().username( "puser" ).password( "password" ).build();
+        Authentication auth = new AuthenticationBuilder().addUsername( "puser" ).addPassword( "password" ).build();
         Proxy proxy = new Proxy( "http", "localhost", provider().getPort(), auth );
         repository = new RemoteRepository.Builder( repository() ).setProxy( proxy ).build();
     }
