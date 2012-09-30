@@ -44,8 +44,8 @@ public class DeployArtifacts
         pomArtifact = pomArtifact.setFile( new File( "pom.xml" ) );
 
         RemoteRepository distRepo =
-            new RemoteRepository( "org.eclipse.aether.examples", "default",
-                                  new File( "target/dist-repo" ).toURI().toString() );
+            new RemoteRepository.Builder( "org.eclipse.aether.examples", "default",
+                                  new File( "target/dist-repo" ).toURI().toString() ).build();
 
         DeployRequest deployRequest = new DeployRequest();
         deployRequest.addArtifact( jarArtifact ).addArtifact( pomArtifact );

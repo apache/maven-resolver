@@ -63,7 +63,7 @@ public class Aether
         RepositorySystemSession session = newSession();
         Dependency dependency =
             new Dependency( new DefaultArtifact( groupId, artifactId, "", "jar", version ), "runtime" );
-        RemoteRepository central = new RemoteRepository( "central", "default", remoteRepository );
+        RemoteRepository central = new RemoteRepository.Builder( "central", "default", remoteRepository ).build();
 
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRoot( dependency );
@@ -99,9 +99,9 @@ public class Aether
     {
         RepositorySystemSession session = newSession();
 
-        RemoteRepository nexus = new RemoteRepository( "nexus", "default", remoteRepository );
-        Authentication authentication = new AuthenticationBuilder().username( "admin" ).password( "admin123" ).build();
-        nexus.setAuthentication( authentication );
+        Authentication auth = new AuthenticationBuilder().addUsername( "admin" ).addPassword( "admin123" ).build();
+        RemoteRepository nexus =
+            new RemoteRepository.Builder( "nexus", "default", remoteRepository ).setAuthentication( auth ).build();
 
         DeployRequest deployRequest = new DeployRequest();
         deployRequest.addArtifact( artifact ).addArtifact( pom );
