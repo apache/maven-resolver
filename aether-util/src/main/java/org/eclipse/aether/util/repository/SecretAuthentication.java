@@ -110,7 +110,7 @@ final class SecretAuthentication
         {
             xor( secret );
             digest.update( key );
-            digest.update( value );
+            digest.update( secret );
         }
         finally
         {
