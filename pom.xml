@@ -95,6 +95,23 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <id>bbentmann</id>
+      <name>Benjamin Bentmann</name>
+      <roles>
+        <role>Project Lead</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>jvanzyl</id>
+      <name>Jason Van Zyl</name>
+      <roles>
+        <role>Project Lead</role>
+      </roles>
+    </developer>
+  </developers>
+
   <modules>
     <module>aether-api</module>
     <module>aether-spi</module>
