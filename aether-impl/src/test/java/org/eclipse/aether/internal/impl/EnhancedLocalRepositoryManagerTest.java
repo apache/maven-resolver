@@ -65,10 +65,9 @@ public class EnhancedLocalRepositoryManagerTest
     public void setup()
         throws Exception
     {
+        String url = TestFileUtils.createTempDir( "enhanced-remote-repo" ).toURI().toURL().toString();
         repository =
-            new RemoteRepository( "enhanced-remote-repo", "default",
-                                  TestFileUtils.createTempDir( "enhanced-remote-repo" ).toURI().toURL().toString() );
-        repository.setRepositoryManager( true );
+            new RemoteRepository.Builder( "enhanced-remote-repo", "default", url ).setRepositoryManager( true ).build();
 
         artifact =
             new DefaultArtifact( "gid", "aid", "", "jar", "1-test", Collections.<String, String> emptyMap(),
@@ -161,7 +160,7 @@ public class EnhancedLocalRepositoryManagerTest
     @Test
     public void testGetPathForRemoteArtifact()
     {
-        RemoteRepository remoteRepo = new RemoteRepository( "repo", "default", "ram:/void" );
+        RemoteRepository remoteRepo = new RemoteRepository.Builder( "repo", "default", "ram:/void" ).build();
 
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );

@@ -52,8 +52,8 @@ public class ArtifactWorkerTest
         throws IOException
     {
         repository =
-            new RemoteRepository( "test", "default",
-                                  TestFileUtils.createTempDir( "test-remote-repository" ).toURI().toURL().toString() );
+            new RemoteRepository.Builder( "test", "default",
+                                  TestFileUtils.createTempDir( "test-remote-repository" ).toURI().toURL().toString() ).build();
         session = new TestRepositorySystemSession();
         layout = new MavenDefaultLayout();
     }
@@ -165,7 +165,7 @@ public class ArtifactWorkerTest
         String enc = "%72%65%70%6F";
         File dir = TestFileUtils.createTempDir();
         String repoDir = dir.toURI().toURL().toString() + "/" + enc;
-        repository = new RemoteRepository( "test", "default", repoDir );
+        repository = new RemoteRepository.Builder( "test", "default", repoDir ).build();
 
         Artifact artifact = new DefaultArtifact( "gid", "aid", "jar", "ver" );
         String content = "test content";

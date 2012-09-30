@@ -55,7 +55,7 @@ public class AsyncHandlerExceptionTest
 
         try
         {
-            RemoteRepository repo = new RemoteRepository( "id", "default", server.getHttpUrl() + "/repo" );
+            RemoteRepository repo = new RemoteRepository.Builder( "id", "default", server.getHttpUrl() + "/repo" ).build();
             RepositorySystemSession session = new DefaultRepositorySystemSession();
 
             AsyncRepositoryConnector connector =

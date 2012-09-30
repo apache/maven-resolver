@@ -15,6 +15,7 @@ import java.net.URL;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -40,7 +41,7 @@ public class ProxyPutTest
 
         Authentication auth = new AuthenticationBuilder().username( "puser" ).password( "password" ).build();
         Proxy proxy = new Proxy( "http", "localhost", provider().getPort(), auth );
-        repository().setProxy( proxy );
+        repository = new RemoteRepository.Builder( repository() ).setProxy( proxy ).build();
     }
 
     @Override

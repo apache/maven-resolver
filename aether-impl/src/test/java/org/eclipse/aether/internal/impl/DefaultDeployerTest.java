@@ -92,7 +92,7 @@ public class DefaultDeployerTest
         deployer.setSyncContextFactory( new StubSyncContextFactory() );
 
         request = new DeployRequest();
-        request.setRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.setRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
         connector = new RecordingRepositoryConnector();
         connectorProvider.setConnector( connector );
 

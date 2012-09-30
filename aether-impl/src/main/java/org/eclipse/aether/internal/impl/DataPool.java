@@ -221,12 +221,7 @@ final class DataPool
         private static List<RemoteRepository> clone( List<RemoteRepository> repositories )
         {
             List<RemoteRepository> clones = new ArrayList<RemoteRepository>( repositories.size() );
-            for ( RemoteRepository repository : repositories )
-            {
-                RemoteRepository clone = new RemoteRepository( repository );
-                clone.setMirroredRepositories( new ArrayList<RemoteRepository>( repository.getMirroredRepositories() ) );
-                clones.add( clone );
-            }
+            clones.addAll( repositories );
             return clones;
         }
 

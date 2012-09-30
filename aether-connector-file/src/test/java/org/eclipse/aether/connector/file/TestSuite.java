@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -54,7 +54,8 @@ public class TestSuite
             repoFile = TestFileUtils.createTempDir( "test-repo" );
             try
             {
-                repo = new RemoteRepository( "test-file", "default", repoFile.toURI().toURL().toString() );
+                repo =
+                    new RemoteRepository.Builder( "test-file", "default", repoFile.toURI().toURL().toString() ).build();
             }
             catch ( MalformedURLException e )
             {

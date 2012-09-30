@@ -67,7 +67,7 @@ public class DefaultUpdateCheckManagerTest
         TestFileUtils.write( "artifact", artifactFile );
 
         session = new TestRepositorySystemSession();
-        repository = new RemoteRepository( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() );
+        repository = new RemoteRepository.Builder( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
         manager = new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() );
         metadata =
             new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT,

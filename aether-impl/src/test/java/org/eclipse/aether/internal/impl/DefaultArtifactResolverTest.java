@@ -176,7 +176,7 @@ public class DefaultArtifactResolverTest
         connector.setExpectGet( artifact );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         ArtifactResult result = resolver.resolveArtifact( session, request );
 
@@ -215,7 +215,7 @@ public class DefaultArtifactResolverTest
         repositoryConnectorProvider.setConnector( connector );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         try
         {
@@ -268,7 +268,7 @@ public class DefaultArtifactResolverTest
         session.setNotFoundCachingEnabled( true );
         session.setUpdatePolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
 
-        RemoteRepository remoteRepo = new RemoteRepository( "id", "default", "file:///" );
+        RemoteRepository remoteRepo = new RemoteRepository.Builder( "id", "default", "file:///" ).build();
 
         Artifact artifact1 = artifact;
         Artifact artifact2 = artifact.setVersion( "ver2" );
@@ -349,7 +349,7 @@ public class DefaultArtifactResolverTest
         };
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         ArtifactResult result = resolver.resolveArtifact( session, request );
 
@@ -401,7 +401,7 @@ public class DefaultArtifactResolverTest
         repositoryConnectorProvider.setConnector( connector );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         ArtifactResult result = resolver.resolveArtifact( session, request );
 
@@ -488,7 +488,7 @@ public class DefaultArtifactResolverTest
         session.setRepositoryListener( listener );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         resolver.resolveArtifact( session, request );
 
@@ -530,7 +530,7 @@ public class DefaultArtifactResolverTest
         session.setRepositoryListener( listener );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         try
         {
@@ -704,7 +704,7 @@ public class DefaultArtifactResolverTest
         } );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         ArtifactResult result = resolver.resolveArtifact( session, request );
 
@@ -781,7 +781,7 @@ public class DefaultArtifactResolverTest
             }
         } );
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
-        request.addRepository( new RemoteRepository( "id", "default", "file:///" ) );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
 
         resolver.setVersionResolver( new VersionResolver()
         {

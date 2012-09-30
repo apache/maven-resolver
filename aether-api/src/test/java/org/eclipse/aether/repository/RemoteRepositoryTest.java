@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,62 +23,64 @@ public class RemoteRepositoryTest
     @Test
     public void testGetProtocol()
     {
-        RemoteRepository repo = new RemoteRepository( "id", "type", "" );
+        RemoteRepository.Builder builder = new RemoteRepository.Builder( "id", "type", "" );
+        RemoteRepository repo = builder.build();
         assertEquals( "", repo.getProtocol() );
 
-        repo = repo.setUrl( "http://localhost" );
+        repo = builder.setUrl( "http://localhost" ).build();
         assertEquals( "http", repo.getProtocol() );
 
-        repo = repo.setUrl( "HTTP://localhost" );
+        repo = builder.setUrl( "HTTP://localhost" ).build();
         assertEquals( "HTTP", repo.getProtocol() );
 
-        repo = repo.setUrl( "dav+http://www.sonatype.org/" );
+        repo = builder.setUrl( "dav+http://www.sonatype.org/" ).build();
         assertEquals( "dav+http", repo.getProtocol() );
 
-        repo = repo.setUrl( "dav:http://www.sonatype.org/" );
+        repo = builder.setUrl( "dav:http://www.sonatype.org/" ).build();
         assertEquals( "dav:http", repo.getProtocol() );
 
-        repo = repo.setUrl( "file:/path" );
+        repo = builder.setUrl( "file:/path" ).build();
         assertEquals( "file", repo.getProtocol() );
 
-        repo = repo.setUrl( "file:path" );
+        repo = builder.setUrl( "file:path" ).build();
         assertEquals( "file", repo.getProtocol() );
 
-        repo = repo.setUrl( "file:C:\\dir" );
+        repo = builder.setUrl( "file:C:\\dir" ).build();
         assertEquals( "file", repo.getProtocol() );
 
-        repo = repo.setUrl( "file:C:/dir" );
+        repo = builder.setUrl( "file:C:/dir" ).build();
         assertEquals( "file", repo.getProtocol() );
     }
 
     @Test
     public void testGetHost()
     {
-        RemoteRepository repo = new RemoteRepository( "id", "type", "" );
+        RemoteRepository.Builder builder = new RemoteRepository.Builder( "id", "type", "" );
+        RemoteRepository repo = builder.build();
         assertEquals( "", repo.getHost() );
 
-        repo = repo.setUrl( "http://localhost" );
+        repo = builder.setUrl( "http://localhost" ).build();
         assertEquals( "localhost", repo.getHost() );
 
-        repo = repo.setUrl( "http://localhost/" );
+        repo = builder.setUrl( "http://localhost/" ).build();
         assertEquals( "localhost", repo.getHost() );
 
-        repo = repo.setUrl( "http://localhost:1234/" );
+        repo = builder.setUrl( "http://localhost:1234/" ).build();
         assertEquals( "localhost", repo.getHost() );
 
-        repo = repo.setUrl( "http://127.0.0.1" );
+        repo = builder.setUrl( "http://127.0.0.1" ).build();
         assertEquals( "127.0.0.1", repo.getHost() );
 
-        repo = repo.setUrl( "http://127.0.0.1/" );
+        repo = builder.setUrl( "http://127.0.0.1/" ).build();
         assertEquals( "127.0.0.1", repo.getHost() );
 
-        repo = repo.setUrl( "http://user@localhost/path" );
+        repo = builder.setUrl( "http://user@localhost/path" ).build();
         assertEquals( "localhost", repo.getHost() );
 
-        repo = repo.setUrl( "http://user:pass@localhost/path" );
+        repo = builder.setUrl( "http://user:pass@localhost/path" ).build();
         assertEquals( "localhost", repo.getHost() );
 
-        repo = repo.setUrl( "http://user:pass@localhost:1234/path" );
+        repo = builder.setUrl( "http://user:pass@localhost:1234/path" ).build();
         assertEquals( "localhost", repo.getHost() );
     }
 

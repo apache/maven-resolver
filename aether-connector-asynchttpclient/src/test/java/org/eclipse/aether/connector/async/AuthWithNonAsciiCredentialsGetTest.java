@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.async;
 
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -39,7 +41,9 @@ public class AuthWithNonAsciiCredentialsGetTest
     {
         super.before();
 
-        repository().setAuthentication( new AuthenticationBuilder().username( "user-non-ascii" ).password( "\u00E4\u00DF" ).build() );
+        Authentication auth =
+            new AuthenticationBuilder().username( "user-non-ascii" ).password( "\u00E4\u00DF" ).build();
+        repository = new RemoteRepository.Builder( repository() ).setAuthentication( auth ).build();
     }
 
     @Override

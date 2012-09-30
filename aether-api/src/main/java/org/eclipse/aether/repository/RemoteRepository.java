@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.aether.repository;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,65 +27,66 @@ public final class RemoteRepository
     private static final Pattern URL_PATTERN =
         Pattern.compile( "([^:/]+(:[^:/]{2,}+(?=://))?):(//([^@/]*@)?([^/:]+))?.*" );
 
-    private String id = "";
+    private final String id;
 
-    private String type = "";
+    private final String type;
 
-    private String url = "";
+    private final String url;
 
-    private RepositoryPolicy releasePolicy;
+    private final RepositoryPolicy releasePolicy;
 
-    private RepositoryPolicy snapshotPolicy;
+    private final RepositoryPolicy snapshotPolicy;
 
-    private Proxy proxy;
+    private final Proxy proxy;
 
-    private Authentication authentication;
+    private final Authentication authentication;
 
-    private List<RemoteRepository> mirroredRepositories = Collections.emptyList();
+    private final List<RemoteRepository> mirroredRepositories;
 
-    private boolean repositoryManager;
+    private final boolean repositoryManager;
 
-    /**
-     * Creates a new repository using the default release/snapshot policies.
-     */
-    public RemoteRepository()
+    RemoteRepository( Builder builder )
     {
-        setPolicy( true, null );
-        setPolicy( false, null );
+        if ( builder.prototype != null )
+        {
+            id = ( builder.delta & Builder.ID ) != 0 ? builder.id : builder.prototype.id;
+            type = ( builder.delta & Builder.TYPE ) != 0 ? builder.type : builder.prototype.type;
+            url = ( builder.delta & Builder.URL ) != 0 ? builder.url : builder.prototype.url;
+            releasePolicy =
+                ( builder.delta & Builder.RELEASES ) != 0 ? builder.releasePolicy : builder.prototype.releasePolicy;
+            snapshotPolicy =
+                ( builder.delta & Builder.SNAPSHOTS ) != 0 ? builder.snapshotPolicy : builder.prototype.snapshotPolicy;
+            proxy = ( builder.delta & Builder.PROXY ) != 0 ? builder.proxy : builder.prototype.proxy;
+            authentication =
+                ( builder.delta & Builder.AUTH ) != 0 ? builder.authentication : builder.prototype.authentication;
+            repositoryManager =
+                ( builder.delta & Builder.REPOMAN ) != 0 ? builder.repositoryManager
+                                : builder.prototype.repositoryManager;
+            mirroredRepositories =
+                ( builder.delta & Builder.MIRRORED ) != 0 ? copy( builder.mirroredRepositories )
+                                : builder.prototype.mirroredRepositories;
+        }
+        else
+        {
+            id = builder.id;
+            type = builder.type;
+            url = builder.url;
+            releasePolicy = builder.releasePolicy;
+            snapshotPolicy = builder.snapshotPolicy;
+            proxy = builder.proxy;
+            authentication = builder.authentication;
+            repositoryManager = builder.repositoryManager;
+            mirroredRepositories = copy( builder.mirroredRepositories );
+        }
     }
 
-    /**
-     * Creates a shallow copy of the specified repository.
-     * 
-     * @param repository The repository to copy, must not be {@code null}.
-     */
-    public RemoteRepository( RemoteRepository repository )
+    private static List<RemoteRepository> copy( List<RemoteRepository> repos )
     {
-        setId( repository.getId() );
-        setContentType( repository.getContentType() );
-        setUrl( repository.getUrl() );
-        setPolicy( true, repository.getPolicy( true ) );
-        setPolicy( false, repository.getPolicy( false ) );
-        setAuthentication( repository.getAuthentication() );
-        setProxy( repository.getProxy() );
-        setMirroredRepositories( repository.getMirroredRepositories() );
-        setRepositoryManager( repository.isRepositoryManager() );
-    }
-
-    /**
-     * Creates a new repository with the specified properties and the default policies.
-     * 
-     * @param id The identifier of the repository, may be {@code null}.
-     * @param type The type of the repository, may be {@code null}.
-     * @param url The (base) URL of the repository, may be {@code null}.
-     */
-    public RemoteRepository( String id, String type, String url )
-    {
-        setId( id );
-        setContentType( type );
-        setUrl( url );
-        setPolicy( true, null );
-        setPolicy( false, null );
+        if ( repos == null || repos.isEmpty() )
+        {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList( Arrays.asList( repos.toArray( new RemoteRepository[repos.size()] ) ) );
     }
 
     public String getId()
@@ -91,35 +94,9 @@ public final class RemoteRepository
         return id;
     }
 
-    /**
-     * Sets the identifier of this repository.
-     * 
-     * @param id The identifier of this repository, may be {@code null}.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setId( String id )
-    {
-        this.id = ( id != null ) ? id : "";
-
-        return this;
-    }
-
     public String getContentType()
     {
         return type;
-    }
-
-    /**
-     * Sets the type of this repository, e.g. "default".
-     * 
-     * @param type The type of this repository, may be {@code null}.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setContentType( String type )
-    {
-        this.type = ( type != null ) ? type : "";
-
-        return this;
     }
 
     /**
@@ -130,19 +107,6 @@ public final class RemoteRepository
     public String getUrl()
     {
         return url;
-    }
-
-    /**
-     * Sets the (base) URL of this repository.
-     * 
-     * @param url The URL of this repository, may be {@code null}.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setUrl( String url )
-    {
-        this.url = ( url != null ) ? url : "";
-
-        return this;
     }
 
     /**
@@ -194,32 +158,6 @@ public final class RemoteRepository
     }
 
     /**
-     * Sets the policy to apply for snapshot/release artifacts.
-     * 
-     * @param snapshot {@code true} to set the snapshot policy, {@code false} to set the release policy.
-     * @param policy The repository policy to set, may be {@code null} to use a default policy.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setPolicy( boolean snapshot, RepositoryPolicy policy )
-    {
-        if ( policy == null )
-        {
-            policy = new RepositoryPolicy();
-        }
-
-        if ( snapshot )
-        {
-            snapshotPolicy = policy;
-        }
-        else
-        {
-            releasePolicy = policy;
-        }
-
-        return this;
-    }
-
-    /**
      * Gets the proxy that has been selected for this repository.
      * 
      * @return The selected proxy or {@code null} if none.
@@ -227,19 +165,6 @@ public final class RemoteRepository
     public Proxy getProxy()
     {
         return proxy;
-    }
-
-    /**
-     * Sets the proxy to use in order to access this repository.
-     * 
-     * @param proxy The proxy to use, may be {@code null}.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setProxy( Proxy proxy )
-    {
-        this.proxy = proxy;
-
-        return this;
     }
 
     /**
@@ -253,45 +178,13 @@ public final class RemoteRepository
     }
 
     /**
-     * Sets the authentication to use in order to access this repository.
-     * 
-     * @param authentication The authentication to use, may be {@code null}.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setAuthentication( Authentication authentication )
-    {
-        this.authentication = authentication;
-
-        return this;
-    }
-
-    /**
      * Gets the repositories that this repository serves as a mirror for.
      * 
-     * @return The repositories being mirrored by this repository, never {@code null}.
+     * @return The (read-only) repositories being mirrored by this repository, never {@code null}.
      */
     public List<RemoteRepository> getMirroredRepositories()
     {
         return mirroredRepositories;
-    }
-
-    /**
-     * Sets the repositories being mirrored by this repository.
-     * 
-     * @param mirroredRepositories The repositories being mirrored by this repository, may be {@code null}.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setMirroredRepositories( List<RemoteRepository> mirroredRepositories )
-    {
-        if ( mirroredRepositories == null || mirroredRepositories.isEmpty() )
-        {
-            this.mirroredRepositories = Collections.emptyList();
-        }
-        else
-        {
-            this.mirroredRepositories = mirroredRepositories;
-        }
-        return this;
     }
 
     /**
@@ -302,19 +195,6 @@ public final class RemoteRepository
     public boolean isRepositoryManager()
     {
         return repositoryManager;
-    }
-
-    /**
-     * Marks this repository as a repository manager or not.
-     * 
-     * @param repositoryManager {@code true} if this repository points at a repository manager, {@code false} if the
-     *            repository is just serving static contents.
-     * @return This repository for chaining, never {@code null}.
-     */
-    public RemoteRepository setRepositoryManager( boolean repositoryManager )
-    {
-        this.repositoryManager = repositoryManager;
-        return this;
     }
 
     @Override
@@ -392,6 +272,301 @@ public final class RemoteRepository
     private static int hash( Object obj )
     {
         return obj != null ? obj.hashCode() : 0;
+    }
+
+    /**
+     * A builder to create remote repositories.
+     */
+    public static final class Builder
+    {
+
+        private static final RepositoryPolicy DEFAULT_POLICY = new RepositoryPolicy();
+
+        static final int ID = 0x0001, TYPE = 0x0002, URL = 0x0004, RELEASES = 0x0008, SNAPSHOTS = 0x0010,
+                        PROXY = 0x0020, AUTH = 0x0040, MIRRORED = 0x0080, REPOMAN = 0x0100;
+
+        int delta;
+
+        RemoteRepository prototype;
+
+        String id;
+
+        String type;
+
+        String url;
+
+        RepositoryPolicy releasePolicy = DEFAULT_POLICY;
+
+        RepositoryPolicy snapshotPolicy = DEFAULT_POLICY;
+
+        Proxy proxy;
+
+        Authentication authentication;
+
+        List<RemoteRepository> mirroredRepositories;
+
+        boolean repositoryManager;
+
+        /**
+         * Creates a new repository builder.
+         * 
+         * @param id The identifier of the repository, may be {@code null}.
+         * @param type The type of the repository, may be {@code null}.
+         * @param url The (base) URL of the repository, may be {@code null}.
+         */
+        public Builder( String id, String type, String url )
+        {
+            this.id = ( id != null ) ? id : "";
+            this.type = ( type != null ) ? type : "";
+            this.url = ( url != null ) ? url : "";
+        }
+
+        /**
+         * Creates a new repository builder which uses the specified remote repository as a prototype for the new one.
+         * All properties which have not been set on the builder will be copied from the prototype when building the
+         * repository.
+         * 
+         * @param prototype The remote repository to use as prototype, must not be {@code null}.
+         */
+        public Builder( RemoteRepository prototype )
+        {
+            if ( prototype == null )
+            {
+                throw new IllegalArgumentException( "repository prototype missing" );
+            }
+            this.prototype = prototype;
+        }
+
+        /**
+         * Builds a new remote repository from the current values of this builder. The state of the builder itself
+         * remains unchanged.
+         * 
+         * @return The remote repository, never {@code null}.
+         */
+        public RemoteRepository build()
+        {
+            if ( prototype != null && delta == 0 )
+            {
+                return prototype;
+            }
+            return new RemoteRepository( this );
+        }
+
+        private <T> void delta( int flag, T builder, T prototype )
+        {
+            boolean equal = ( builder != null ) ? builder.equals( prototype ) : prototype == null;
+            if ( equal )
+            {
+                delta &= ~flag;
+            }
+            else
+            {
+                delta |= flag;
+            }
+        }
+
+        /**
+         * Sets the identifier of the repository.
+         * 
+         * @param id The identifier of the repository, may be {@code null}.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setId( String id )
+        {
+            this.id = ( id != null ) ? id : "";
+            if ( prototype != null )
+            {
+                delta( ID, this.id, prototype.getId() );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the type of the repository, e.g. "default".
+         * 
+         * @param type The type of the repository, may be {@code null}.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setContentType( String type )
+        {
+            this.type = ( type != null ) ? type : "";
+            if ( prototype != null )
+            {
+                delta( TYPE, this.type, prototype.getContentType() );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the (base) URL of the repository.
+         * 
+         * @param url The URL of the repository, may be {@code null}.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setUrl( String url )
+        {
+            this.url = ( url != null ) ? url : "";
+            if ( prototype != null )
+            {
+                delta( URL, this.url, prototype.getUrl() );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the policy to apply for snapshot and release artifacts.
+         * 
+         * @param policy The repository policy to set, may be {@code null} to use a default policy.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setPolicy( RepositoryPolicy policy )
+        {
+            this.releasePolicy = this.snapshotPolicy = ( policy != null ) ? policy : DEFAULT_POLICY;
+            if ( prototype != null )
+            {
+                delta( RELEASES, this.releasePolicy, prototype.getPolicy( false ) );
+                delta( SNAPSHOTS, this.snapshotPolicy, prototype.getPolicy( true ) );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the policy to apply for release artifacts.
+         * 
+         * @param releasePolicy The repository policy to set, may be {@code null} to use a default policy.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setReleasePolicy( RepositoryPolicy releasePolicy )
+        {
+            this.releasePolicy = ( releasePolicy != null ) ? releasePolicy : DEFAULT_POLICY;
+            if ( prototype != null )
+            {
+                delta( RELEASES, this.releasePolicy, prototype.getPolicy( false ) );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the policy to apply for snapshot artifacts.
+         * 
+         * @param snapshotPolicy The repository policy to set, may be {@code null} to use a default policy.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setSnapshotPolicy( RepositoryPolicy snapshotPolicy )
+        {
+            this.snapshotPolicy = ( snapshotPolicy != null ) ? snapshotPolicy : DEFAULT_POLICY;
+            if ( prototype != null )
+            {
+                delta( SNAPSHOTS, this.snapshotPolicy, prototype.getPolicy( true ) );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the proxy to use in order to access the repository.
+         * 
+         * @param proxy The proxy to use, may be {@code null}.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setProxy( Proxy proxy )
+        {
+            this.proxy = proxy;
+            if ( prototype != null )
+            {
+                delta( PROXY, this.proxy, prototype.getProxy() );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the authentication to use in order to access the repository.
+         * 
+         * @param authentication The authentication to use, may be {@code null}.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setAuthentication( Authentication authentication )
+        {
+            this.authentication = authentication;
+            if ( prototype != null )
+            {
+                delta( AUTH, this.authentication, prototype.getAuthentication() );
+            }
+            return this;
+        }
+
+        /**
+         * Sets the repositories being mirrored by the repository.
+         * 
+         * @param mirroredRepositories The repositories being mirrored by the repository, may be {@code null}.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setMirroredRepositories( List<RemoteRepository> mirroredRepositories )
+        {
+            if ( this.mirroredRepositories == null )
+            {
+                this.mirroredRepositories = new ArrayList<RemoteRepository>();
+            }
+            else
+            {
+                this.mirroredRepositories.clear();
+            }
+            if ( mirroredRepositories != null )
+            {
+                this.mirroredRepositories.addAll( mirroredRepositories );
+            }
+            if ( prototype != null )
+            {
+                delta( MIRRORED, this.mirroredRepositories, prototype.getMirroredRepositories() );
+            }
+            return this;
+        }
+
+        /**
+         * Adds the specified repository to the list of repositories being mirrored by the repository. If this builder
+         * was {@link #Builder(RemoteRepository) constructed from a prototype}, the given repository will be added to
+         * the list of mirrored repositories from the prototype.
+         * 
+         * @param mirroredRepository The repository being mirrored by the repository, may be {@code null}.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder addMirroredRepository( RemoteRepository mirroredRepository )
+        {
+            if ( mirroredRepository != null )
+            {
+                if ( this.mirroredRepositories == null )
+                {
+                    this.mirroredRepositories = new ArrayList<RemoteRepository>();
+                    if ( prototype != null )
+                    {
+                        mirroredRepositories.addAll( prototype.getMirroredRepositories() );
+                    }
+                }
+                mirroredRepositories.add( mirroredRepository );
+                if ( prototype != null )
+                {
+                    delta |= MIRRORED;
+                }
+            }
+            return this;
+        }
+
+        /**
+         * Marks the repository as a repository manager or not.
+         * 
+         * @param repositoryManager {@code true} if the repository points at a repository manager, {@code false} if the
+         *            repository is just serving static contents.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setRepositoryManager( boolean repositoryManager )
+        {
+            this.repositoryManager = repositoryManager;
+            if ( prototype != null )
+            {
+                delta( REPOMAN, this.repositoryManager, prototype.isRepositoryManager() );
+            }
+            return this;
+        }
+
     }
 
 }

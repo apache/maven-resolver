@@ -48,7 +48,7 @@ public class AsyncConnectorSuiteConfiguration
 
     private TestRepositorySystemSession session;
 
-    private RemoteRepository repository;
+    protected RemoteRepository repository;
 
     private Artifact artifact;
 
@@ -72,7 +72,7 @@ public class AsyncConnectorSuiteConfiguration
         this.factory = new AsyncRepositoryConnectorFactory();
         this.factory.setFileProcessor( new TestFileProcessor() );
         this.session = new TestRepositorySystemSession();
-        this.repository = new RemoteRepository( "async-test-repo", "default", url( "repo" ) );
+        this.repository = new RemoteRepository.Builder( "async-test-repo", "default", url( "repo" ) ).build();
 
         this.artifact = new DefaultArtifact( "gid", "aid", "classifier", "extension", "version", null );
         this.metadata =
@@ -80,7 +80,6 @@ public class AsyncConnectorSuiteConfiguration
                                  null );
 
         connector = null;
-
     }
 
     @Override

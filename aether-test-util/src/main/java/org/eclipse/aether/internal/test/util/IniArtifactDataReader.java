@@ -215,7 +215,7 @@ public class IniArtifactDataReader
             String type = split[1];
             String url = split[2];
 
-            ret.add( new RemoteRepository( id, type, url ) );
+            ret.add( new RemoteRepository.Builder( id, type, url ).build() );
         }
         return ret;
     }

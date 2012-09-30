@@ -150,15 +150,25 @@ public class DefaultRemoteRepositoryManager
 
             if ( recessiveIsRaw )
             {
+                RemoteRepository.Builder builder = null;
                 Authentication auth = authSelector.getAuthentication( repository );
                 if ( auth != null )
                 {
-                    repository.setAuthentication( auth );
+                    builder = new RemoteRepository.Builder( repository );
+                    builder.setAuthentication( auth );
                 }
                 Proxy proxy = proxySelector.getProxy( repository );
                 if ( proxy != null )
                 {
-                    repository.setProxy( proxy );
+                    if ( builder == null )
+                    {
+                        builder = new RemoteRepository.Builder( repository );
+                    }
+                    builder.setProxy( proxy );
+                }
+                if ( builder != null )
+                {
+                    repository = builder.build();
                 }
             }
 
@@ -176,7 +186,8 @@ public class DefaultRemoteRepositoryManager
     private RemoteRepository mergeMirrors( RepositorySystemSession session, RemoteRepository dominant,
                                            RemoteRepository recessive )
     {
-        RemoteRepository merged = dominant;
+        RemoteRepository.Builder merged = null;
+        RepositoryPolicy releases = null, snapshots = null;
 
         next: for ( RemoteRepository rec : recessive.getMirroredRepositories() )
         {
@@ -190,32 +201,24 @@ public class DefaultRemoteRepositoryManager
                 }
             }
 
-            if ( merged == dominant )
+            if ( merged == null )
             {
-                merged = new RemoteRepository();
-
-                merged.setRepositoryManager( dominant.isRepositoryManager() );
-
-                merged.setId( dominant.getId() );
-                merged.setContentType( dominant.getContentType() );
-                merged.setUrl( dominant.getUrl() );
-
-                merged.setAuthentication( dominant.getAuthentication() );
-                merged.setProxy( dominant.getProxy() );
-
-                merged.setPolicy( false, dominant.getPolicy( false ) );
-                merged.setPolicy( true, dominant.getPolicy( true ) );
-
-                merged.setMirroredRepositories( new ArrayList<RemoteRepository>( dominant.getMirroredRepositories() ) );
+                merged = new RemoteRepository.Builder( dominant );
+                releases = dominant.getPolicy( false );
+                snapshots = dominant.getPolicy( true );
             }
 
-            merged.setPolicy( false, merge( session, merged.getPolicy( false ), rec.getPolicy( false ), false ) );
-            merged.setPolicy( true, merge( session, merged.getPolicy( true ), rec.getPolicy( true ), false ) );
+            releases = merge( session, releases, rec.getPolicy( false ), false );
+            snapshots = merge( session, snapshots, rec.getPolicy( true ), false );
 
-            merged.getMirroredRepositories().add( rec );
+            merged.addMirroredRepository( rec );
         }
 
-        return merged;
+        if ( merged == null )
+        {
+            return dominant;
+        }
+        return merged.setReleasePolicy( releases ).setSnapshotPolicy( snapshots ).build();
     }
 
     public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,

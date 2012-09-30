@@ -64,27 +64,22 @@ public final class DefaultMirrorSelector
             return null;
         }
 
-        RemoteRepository repo = new RemoteRepository();
+        RemoteRepository.Builder builder =
+            new RemoteRepository.Builder( mirror.id, repository.getContentType(), mirror.url );
 
-        repo.setRepositoryManager( mirror.repositoryManager );
-        repo.setId( mirror.id );
-        repo.setUrl( mirror.url );
+        builder.setRepositoryManager( mirror.repositoryManager );
 
         if ( mirror.type != null && mirror.type.length() > 0 )
         {
-            repo.setContentType( mirror.type );
-        }
-        else
-        {
-            repo.setContentType( repository.getContentType() );
+            builder.setContentType( mirror.type );
         }
 
-        repo.setPolicy( true, repository.getPolicy( true ) );
-        repo.setPolicy( false, repository.getPolicy( false ) );
+        builder.setSnapshotPolicy( repository.getPolicy( true ) );
+        builder.setReleasePolicy( repository.getPolicy( false ) );
 
-        repo.setMirroredRepositories( Collections.singletonList( repository ) );
+        builder.setMirroredRepositories( Collections.singletonList( repository ) );
 
-        return repo;
+        return builder.build();
     }
 
     private MirrorDef findMirror( RemoteRepository repository )

@@ -70,7 +70,8 @@ public class DefaultMetadataResolverTest
         resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
         repository =
-            new RemoteRepository( "test-DMRT", "default", TestFileUtils.createTempDir().toURI().toURL().toString() );
+            new RemoteRepository.Builder( "test-DMRT", "default",
+                                          TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
         metadata = new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
         connector = new RecordingRepositoryConnector();
         connectorProvider.setConnector( connector );

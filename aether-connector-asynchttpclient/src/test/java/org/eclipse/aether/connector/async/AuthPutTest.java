@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.aether.connector.async;
 
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -31,7 +33,8 @@ public class AuthPutTest
     {
         super.before();
 
-        repository().setAuthentication( new AuthenticationBuilder().username( "user" ).password( "password" ).build() );
+        Authentication auth = new AuthenticationBuilder().username( "user" ).password( "password" ).build();
+        repository = new RemoteRepository.Builder( repository() ).setAuthentication( auth ).build();
     }
 
 }

@@ -59,10 +59,10 @@ public class DefaultRemoteRepositoryManagerTest
         session = null;
     }
 
-    private RemoteRepository newRepo( String id, String url, boolean enabled, String updates, String checksums )
+    private RemoteRepository.Builder newRepo( String id, String url, boolean enabled, String updates, String checksums )
     {
         RepositoryPolicy policy = new RepositoryPolicy( enabled, updates, checksums );
-        return new RemoteRepository( id, "test", url ).setPolicy( true, policy ).setPolicy( false, policy );
+        return new RemoteRepository.Builder( id, "test", url ).setPolicy( policy );
     }
 
     private void assertEqual( RemoteRepository expected, RemoteRepository actual )
@@ -89,9 +89,8 @@ public class DefaultRemoteRepositoryManagerTest
         RepositoryPolicy releasePolicy =
             new RepositoryPolicy( true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL );
 
-        RemoteRepository repo = new RemoteRepository( "id", "type", "http://localhost" );
-        repo.setPolicy( true, snapshotPolicy );
-        repo.setPolicy( false, releasePolicy );
+        RemoteRepository repo = new RemoteRepository.Builder( "id", "type", "http://localhost" ) //
+        .setSnapshotPolicy( snapshotPolicy ).setReleasePolicy( releasePolicy ).build();
 
         RepositoryPolicy effectivePolicy = manager.getPolicy( session, repo, true, true );
         assertEquals( true, effectivePolicy.isEnabled() );
@@ -102,10 +101,10 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testAggregateSimpleRepos()
     {
-        RemoteRepository dominant1 = newRepo( "a", "file://", false, "", "" );
+        RemoteRepository dominant1 = newRepo( "a", "file://", false, "", "" ).build();
 
-        RemoteRepository recessive1 = newRepo( "a", "http://", true, "", "" );
-        RemoteRepository recessive2 = newRepo( "b", "file://", true, "", "" );
+        RemoteRepository recessive1 = newRepo( "a", "http://", true, "", "" ).build();
+        RemoteRepository recessive2 = newRepo( "b", "file://", true, "", "" ).build();
 
         List<RemoteRepository> result =
             manager.aggregateRepositories( session, Arrays.asList( dominant1 ),
@@ -119,13 +118,13 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testAggregateMirrorRepos_DominantMirrorComplete()
     {
-        RemoteRepository dominant1 = newRepo( "a", "http://", false, "", "" );
-        RemoteRepository dominantMirror1 = newRepo( "x", "file://", false, "", "" );
-        dominantMirror1.setMirroredRepositories( Arrays.asList( dominant1 ) );
+        RemoteRepository dominant1 = newRepo( "a", "http://", false, "", "" ).build();
+        RemoteRepository dominantMirror1 =
+            newRepo( "x", "file://", false, "", "" ).addMirroredRepository( dominant1 ).build();
 
-        RemoteRepository recessive1 = newRepo( "a", "https://", true, "", "" );
-        RemoteRepository recessiveMirror1 = newRepo( "x", "http://", true, "", "" );
-        recessiveMirror1.setMirroredRepositories( Arrays.asList( recessive1 ) );
+        RemoteRepository recessive1 = newRepo( "a", "https://", true, "", "" ).build();
+        RemoteRepository recessiveMirror1 =
+            newRepo( "x", "http://", true, "", "" ).addMirroredRepository( recessive1 ).build();
 
         List<RemoteRepository> result =
             manager.aggregateRepositories( session, Arrays.asList( dominantMirror1 ),
@@ -140,21 +139,21 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testAggregateMirrorRepos_DominantMirrorIncomplete()
     {
-        RemoteRepository dominant1 = newRepo( "a", "http://", false, "", "" );
-        RemoteRepository dominantMirror1 = newRepo( "x", "file://", false, "", "" );
-        dominantMirror1.setMirroredRepositories( Arrays.asList( dominant1 ) );
+        RemoteRepository dominant1 = newRepo( "a", "http://", false, "", "" ).build();
+        RemoteRepository dominantMirror1 =
+            newRepo( "x", "file://", false, "", "" ).addMirroredRepository( dominant1 ).build();
 
-        RemoteRepository recessive1 = newRepo( "a", "https://", true, "", "" );
-        RemoteRepository recessive2 = newRepo( "b", "https://", true, "", "" );
-        RemoteRepository recessiveMirror1 = newRepo( "x", "http://", true, "", "" );
-        recessiveMirror1.setMirroredRepositories( Arrays.asList( recessive1, recessive2 ) );
+        RemoteRepository recessive1 = newRepo( "a", "https://", true, "", "" ).build();
+        RemoteRepository recessive2 = newRepo( "b", "https://", true, "", "" ).build();
+        RemoteRepository recessiveMirror1 =
+            newRepo( "x", "http://", true, "", "" ).setMirroredRepositories( Arrays.asList( recessive1, recessive2 ) ).build();
 
         List<RemoteRepository> result =
             manager.aggregateRepositories( session, Arrays.asList( dominantMirror1 ),
                                            Arrays.asList( recessiveMirror1 ), false );
 
         assertEquals( 1, result.size() );
-        assertEqual( newRepo( "x", "file://", true, "", "" ), result.get( 0 ) );
+        assertEqual( newRepo( "x", "file://", true, "", "" ).build(), result.get( 0 ) );
         assertEquals( 2, result.get( 0 ).getMirroredRepositories().size() );
         assertEquals( dominant1, result.get( 0 ).getMirroredRepositories().get( 0 ) );
         assertEquals( recessive2, result.get( 0 ).getMirroredRepositories().get( 1 ) );
@@ -163,9 +162,9 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testMirrorAuthentication()
     {
-        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" );
-        final RemoteRepository mirror = newRepo( "a", "http://", false, "", "" );
-        mirror.setAuthentication( new AuthenticationBuilder().build() );
+        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" ).build();
+        final RemoteRepository mirror =
+            newRepo( "a", "http://", false, "", "" ).setAuthentication( new AuthenticationBuilder().build() ).build();
         session.setMirrorSelector( new MirrorSelector()
         {
             public RemoteRepository getMirror( RemoteRepository repository )
@@ -185,9 +184,9 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testMirrorProxy()
     {
-        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" );
-        final RemoteRepository mirror = newRepo( "a", "http://", false, "", "" );
-        mirror.setProxy( new Proxy( "http", "host", 2011, null ) );
+        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" ).build();
+        final RemoteRepository mirror =
+            newRepo( "a", "http://", false, "", "" ).setProxy( new Proxy( "http", "host", 2011, null ) ).build();
         session.setMirrorSelector( new MirrorSelector()
         {
             public RemoteRepository getMirror( RemoteRepository repository )
@@ -209,7 +208,7 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testProxySelector()
     {
-        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" );
+        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" ).build();
         final Proxy proxy = new Proxy( "http", "host", 2011, null );
         session.setProxySelector( new ProxySelector()
         {

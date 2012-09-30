@@ -117,7 +117,7 @@ public class ResumeGetTest
 
         ArtifactDownload download = new ArtifactDownload( artifact, "", file, RepositoryPolicy.CHECKSUM_POLICY_IGNORE );
 
-        RemoteRepository repo = new RemoteRepository( "test", "default", url() );
+        RemoteRepository repo = new RemoteRepository.Builder( "test", "default", url() ).build();
         RepositoryConnector connector = factory.newInstance( session, repo );
         try
         {

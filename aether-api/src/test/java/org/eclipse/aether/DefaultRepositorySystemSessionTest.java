@@ -31,11 +31,12 @@ public class DefaultRepositorySystemSessionTest
     {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
-        RemoteRepository repo = new RemoteRepository( "id", "default", "void" );
+        RemoteRepository repo = new RemoteRepository.Builder( "id", "default", "void" ).build();
         assertSame( null, session.getProxySelector().getProxy( repo ) );
 
-        repo.setProxy( new Proxy( "http", "localhost", 8080, null ) );
-        assertSame( repo.getProxy(), session.getProxySelector().getProxy( repo ) );
+        Proxy proxy = new Proxy( "http", "localhost", 8080, null );
+        repo = new RemoteRepository.Builder( repo ).setProxy( proxy ).build();
+        assertSame( proxy, session.getProxySelector().getProxy( repo ) );
     }
 
     @Test
@@ -43,10 +44,10 @@ public class DefaultRepositorySystemSessionTest
     {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
-        RemoteRepository repo = new RemoteRepository( "id", "default", "void" );
+        RemoteRepository repo = new RemoteRepository.Builder( "id", "default", "void" ).build();
         assertSame( null, session.getAuthenticationSelector().getAuthentication( repo ) );
 
-        repo.setAuthentication( new Authentication()
+        Authentication auth = new Authentication()
         {
             public void fill( AuthenticationContext context, String key, Map<String, String> data )
             {
@@ -55,8 +56,9 @@ public class DefaultRepositorySystemSessionTest
             public void digest( AuthenticationDigest digest )
             {
             }
-        } );
-        assertSame( repo.getAuthentication(), session.getAuthenticationSelector().getAuthentication( repo ) );
+        };
+        repo = new RemoteRepository.Builder( repo ).setAuthentication( auth ).build();
+        assertSame( auth, session.getAuthenticationSelector().getAuthentication( repo ) );
     }
 
     @Test
