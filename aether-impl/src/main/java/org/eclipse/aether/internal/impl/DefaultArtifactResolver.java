@@ -382,7 +382,6 @@ public class DefaultArtifactResolver
                 continue;
             }
 
-            AtomicBoolean resolved = new AtomicBoolean( false );
             Iterator<ResolutionGroup> groupIt = groups.iterator();
             for ( RemoteRepository repo : repos )
             {
@@ -406,143 +405,13 @@ public class DefaultArtifactResolver
                     groups.add( group );
                     groupIt = Collections.<ResolutionGroup> emptyList().iterator();
                 }
-                group.items.add( new ResolutionItem( trace, artifact, resolved, result, local, repo ) );
+                group.items.add( new ResolutionItem( trace, artifact, result, local, repo ) );
             }
         }
 
         for ( ResolutionGroup group : groups )
         {
-            List<ArtifactDownload> downloads = new ArrayList<ArtifactDownload>();
-            for ( ResolutionItem item : group.items )
-            {
-                Artifact artifact = item.artifact;
-
-                if ( item.resolved.get() )
-                {
-                    // resolved in previous resolution group
-                    continue;
-                }
-
-                ArtifactDownload download = new ArtifactDownload();
-                download.setArtifact( artifact );
-                download.setRequestContext( item.request.getRequestContext() );
-                download.setTrace( item.trace );
-                if ( item.local.getFile() != null )
-                {
-                    download.setFile( item.local.getFile() );
-                    download.setExistenceCheck( true );
-                }
-                else
-                {
-                    String path =
-                        lrm.getPathForRemoteArtifact( artifact, group.repository, item.request.getRequestContext() );
-                    download.setFile( new File( lrm.getRepository().getBasedir(), path ) );
-                }
-
-                boolean snapshot = artifact.isSnapshot();
-                RepositoryPolicy policy =
-                    remoteRepositoryManager.getPolicy( session, group.repository, !snapshot, snapshot );
-
-                int errorPolicy = Utils.getPolicy( session, artifact, group.repository );
-                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_ALL ) != 0 )
-                {
-                    UpdateCheck<Artifact, ArtifactTransferException> check =
-                        new UpdateCheck<Artifact, ArtifactTransferException>();
-                    check.setItem( artifact );
-                    check.setFile( download.getFile() );
-                    check.setFileValid( !download.isExistenceCheck() );
-                    check.setRepository( group.repository );
-                    check.setPolicy( policy.getUpdatePolicy() );
-                    item.updateCheck = check;
-                    updateCheckManager.checkArtifact( session, check );
-                    if ( !check.isRequired() )
-                    {
-                        item.result.addException( check.getException() );
-                        continue;
-                    }
-                }
-
-                download.setChecksumPolicy( policy.getChecksumPolicy() );
-                download.setRepositories( item.repository.getMirroredRepositories() );
-                downloads.add( download );
-                item.download = download;
-            }
-
-            if ( downloads.isEmpty() )
-            {
-                continue;
-            }
-
-            for ( ArtifactDownload download : downloads )
-            {
-                artifactDownloading( session, download.getTrace(), download.getArtifact(), group.repository );
-            }
-
-            try
-            {
-                RepositoryConnector connector =
-                    repositoryConnectorProvider.newRepositoryConnector( session, group.repository );
-                try
-                {
-                    connector.get( downloads, null );
-                }
-                finally
-                {
-                    connector.close();
-                }
-            }
-            catch ( NoRepositoryConnectorException e )
-            {
-                for ( ArtifactDownload download : downloads )
-                {
-                    download.setException( new ArtifactTransferException( download.getArtifact(), group.repository, e ) );
-                }
-            }
-
-            for ( ResolutionItem item : group.items )
-            {
-                ArtifactDownload download = item.download;
-                if ( download == null )
-                {
-                    continue;
-                }
-
-                if ( item.updateCheck != null )
-                {
-                    item.updateCheck.setException( download.getException() );
-                    updateCheckManager.touchArtifact( session, item.updateCheck );
-                }
-
-                if ( download.getException() == null )
-                {
-                    item.resolved.set( true );
-                    item.result.setRepository( group.repository );
-                    Artifact artifact = download.getArtifact();
-                    try
-                    {
-                        artifact = artifact.setFile( getFile( session, artifact, download.getFile() ) );
-                        item.result.setArtifact( artifact );
-                    }
-                    catch ( ArtifactTransferException e )
-                    {
-                        item.result.addException( e );
-                        continue;
-                    }
-                    lrm.add( session,
-                             new LocalArtifactRegistration( artifact, group.repository, download.getSupportedContexts() ) );
-
-                    artifactDownloaded( session, download.getTrace(), artifact, group.repository, null );
-
-                    artifactResolved( session, download.getTrace(), artifact, group.repository, null );
-                }
-                else
-                {
-                    item.result.addException( download.getException() );
-
-                    artifactDownloaded( session, download.getTrace(), download.getArtifact(), group.repository,
-                                        download.getException() );
-                }
-            }
+            performDownloads( session, group );
         }
 
         for ( ArtifactResult result : results )
@@ -620,6 +489,156 @@ public class DefaultArtifactResolver
         }
 
         return file;
+    }
+
+    private void performDownloads( RepositorySystemSession session, ResolutionGroup group )
+    {
+        List<ArtifactDownload> downloads = gatherDownloads( session, group );
+        if ( downloads.isEmpty() )
+        {
+            return;
+        }
+
+        for ( ArtifactDownload download : downloads )
+        {
+            artifactDownloading( session, download.getTrace(), download.getArtifact(), group.repository );
+        }
+
+        try
+        {
+            RepositoryConnector connector =
+                repositoryConnectorProvider.newRepositoryConnector( session, group.repository );
+            try
+            {
+                connector.get( downloads, null );
+            }
+            finally
+            {
+                connector.close();
+            }
+        }
+        catch ( NoRepositoryConnectorException e )
+        {
+            for ( ArtifactDownload download : downloads )
+            {
+                download.setException( new ArtifactTransferException( download.getArtifact(), group.repository, e ) );
+            }
+        }
+
+        evaluateDownloads( session, group );
+    }
+
+    private List<ArtifactDownload> gatherDownloads( RepositorySystemSession session, ResolutionGroup group )
+    {
+        LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+        List<ArtifactDownload> downloads = new ArrayList<ArtifactDownload>();
+
+        for ( ResolutionItem item : group.items )
+        {
+            Artifact artifact = item.artifact;
+
+            if ( item.resolved.get() )
+            {
+                // resolved in previous resolution group
+                continue;
+            }
+
+            ArtifactDownload download = new ArtifactDownload();
+            download.setArtifact( artifact );
+            download.setRequestContext( item.request.getRequestContext() );
+            download.setTrace( item.trace );
+            if ( item.local.getFile() != null )
+            {
+                download.setFile( item.local.getFile() );
+                download.setExistenceCheck( true );
+            }
+            else
+            {
+                String path =
+                    lrm.getPathForRemoteArtifact( artifact, group.repository, item.request.getRequestContext() );
+                download.setFile( new File( lrm.getRepository().getBasedir(), path ) );
+            }
+
+            boolean snapshot = artifact.isSnapshot();
+            RepositoryPolicy policy =
+                remoteRepositoryManager.getPolicy( session, group.repository, !snapshot, snapshot );
+
+            int errorPolicy = Utils.getPolicy( session, artifact, group.repository );
+            if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_ALL ) != 0 )
+            {
+                UpdateCheck<Artifact, ArtifactTransferException> check =
+                    new UpdateCheck<Artifact, ArtifactTransferException>();
+                check.setItem( artifact );
+                check.setFile( download.getFile() );
+                check.setFileValid( !download.isExistenceCheck() );
+                check.setRepository( group.repository );
+                check.setPolicy( policy.getUpdatePolicy() );
+                item.updateCheck = check;
+                updateCheckManager.checkArtifact( session, check );
+                if ( !check.isRequired() )
+                {
+                    item.result.addException( check.getException() );
+                    continue;
+                }
+            }
+
+            download.setChecksumPolicy( policy.getChecksumPolicy() );
+            download.setRepositories( item.repository.getMirroredRepositories() );
+            downloads.add( download );
+            item.download = download;
+        }
+
+        return downloads;
+    }
+
+    private void evaluateDownloads( RepositorySystemSession session, ResolutionGroup group )
+    {
+        LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+
+        for ( ResolutionItem item : group.items )
+        {
+            ArtifactDownload download = item.download;
+            if ( download == null )
+            {
+                continue;
+            }
+
+            if ( item.updateCheck != null )
+            {
+                item.updateCheck.setException( download.getException() );
+                updateCheckManager.touchArtifact( session, item.updateCheck );
+            }
+
+            if ( download.getException() == null )
+            {
+                item.resolved.set( true );
+                item.result.setRepository( group.repository );
+                Artifact artifact = download.getArtifact();
+                try
+                {
+                    artifact = artifact.setFile( getFile( session, artifact, download.getFile() ) );
+                    item.result.setArtifact( artifact );
+                }
+                catch ( ArtifactTransferException e )
+                {
+                    item.result.addException( e );
+                    continue;
+                }
+                lrm.add( session,
+                         new LocalArtifactRegistration( artifact, group.repository, download.getSupportedContexts() ) );
+
+                artifactDownloaded( session, download.getTrace(), artifact, group.repository, null );
+
+                artifactResolved( session, download.getTrace(), artifact, group.repository, null );
+            }
+            else
+            {
+                item.result.addException( download.getException() );
+
+                artifactDownloaded( session, download.getTrace(), download.getArtifact(), group.repository,
+                                    download.getException() );
+            }
+        }
     }
 
     private void artifactResolving( RepositorySystemSession session, RequestTrace trace, Artifact artifact )
@@ -716,12 +735,12 @@ public class DefaultArtifactResolver
 
         UpdateCheck<Artifact, ArtifactTransferException> updateCheck;
 
-        ResolutionItem( RequestTrace trace, Artifact artifact, AtomicBoolean resolved, ArtifactResult result,
-                        LocalArtifactResult local, RemoteRepository repository )
+        ResolutionItem( RequestTrace trace, Artifact artifact, ArtifactResult result, LocalArtifactResult local,
+                        RemoteRepository repository )
         {
             this.trace = trace;
             this.artifact = artifact;
-            this.resolved = resolved;
+            this.resolved = new AtomicBoolean( false );
             this.result = result;
             this.request = result.getRequest();
             this.local = local;
