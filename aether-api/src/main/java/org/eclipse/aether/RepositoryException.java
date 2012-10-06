@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,8 @@
 package org.eclipse.aether;
 
 /**
- * The base class for exceptions thrown by the repository system.
+ * The base class for exceptions thrown by the repository system. <em>Note:</em> Unless otherwise noted, instances of
+ * this class and its subclasses will not persist fields carrying extended error information during serialization.
  */
 public class RepositoryException
     extends Exception
