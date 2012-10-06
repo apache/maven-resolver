@@ -35,6 +35,18 @@ public final class Proxy
     private final Authentication auth;
 
     /**
+     * Creates a new proxy with the specified properties and no authentication.
+     * 
+     * @param type The type of the proxy, e.g. "http", may be {@code null}.
+     * @param host The host of the proxy, may be {@code null}.
+     * @param port The port of the proxy.
+     */
+    public Proxy( String type, String host, int port )
+    {
+        this( type, host, port, null );
+    }
+
+    /**
      * Creates a new proxy with the specified properties.
      * 
      * @param type The type of the proxy, e.g. "http", may be {@code null}.
