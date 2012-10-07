@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -108,33 +108,14 @@ final class TestVersionRange
         }
     }
 
-    public TestVersionRange( Version lowerBound, boolean lowerBoundInclusive, Version upperBound,
-                             boolean upperBoundInclusive )
+    public Bound getLowerBound()
     {
-        this.lowerBound = lowerBound;
-        this.lowerBoundInclusive = lowerBoundInclusive;
-        this.upperBound = upperBound;
-        this.upperBoundInclusive = upperBoundInclusive;
+        return new Bound( lowerBound, lowerBoundInclusive );
     }
 
-    public Version getLowerBound()
+    public Bound getUpperBound()
     {
-        return lowerBound;
-    }
-
-    public boolean isLowerBoundInclusive()
-    {
-        return lowerBoundInclusive;
-    }
-
-    public Version getUpperBound()
-    {
-        return upperBound;
-    }
-
-    public boolean isUpperBoundInclusive()
-    {
-        return upperBoundInclusive;
+        return new Bound( upperBound, upperBoundInclusive );
     }
 
     public boolean acceptsSnapshots()

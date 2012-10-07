@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
+ * Copyright (c) 2011, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,6 +28,10 @@ final class UnionVersionRange
 
     private final Set<VersionRange> ranges;
 
+    private final Bound lowerBound;
+
+    private final Bound upperBound;
+
     public static VersionRange from( VersionRange... ranges )
     {
         if ( ranges == null )
@@ -51,10 +55,56 @@ final class UnionVersionRange
         if ( ranges == null || ranges.isEmpty() )
         {
             this.ranges = Collections.emptySet();
+            lowerBound = upperBound = null;
         }
         else
         {
             this.ranges = new HashSet<VersionRange>( ranges );
+            Bound lowerBound = null, upperBound = null;
+            for ( VersionRange range : this.ranges )
+            {
+                Bound lb = range.getLowerBound();
+                if ( lb == null )
+                {
+                    lowerBound = null;
+                    break;
+                }
+                else if ( lowerBound == null )
+                {
+                    lowerBound = lb;
+                }
+                else
+                {
+                    int c = lb.getVersion().compareTo( lowerBound.getVersion() );
+                    if ( c < 0 || ( c == 0 && !lowerBound.isInclusive() ) )
+                    {
+                        lowerBound = lb;
+                    }
+                }
+            }
+            for ( VersionRange range : this.ranges )
+            {
+                Bound ub = range.getUpperBound();
+                if ( ub == null )
+                {
+                    upperBound = null;
+                    break;
+                }
+                else if ( upperBound == null )
+                {
+                    upperBound = ub;
+                }
+                else
+                {
+                    int c = ub.getVersion().compareTo( upperBound.getVersion() );
+                    if ( c > 0 || ( c == 0 && !upperBound.isInclusive() ) )
+                    {
+                        upperBound = ub;
+                    }
+                }
+            }
+            this.lowerBound = lowerBound;
+            this.upperBound = upperBound;
         }
     }
 
@@ -68,6 +118,16 @@ final class UnionVersionRange
             }
         }
         return false;
+    }
+
+    public Bound getLowerBound()
+    {
+        return lowerBound;
+    }
+
+    public Bound getUpperBound()
+    {
+        return upperBound;
     }
 
     @Override

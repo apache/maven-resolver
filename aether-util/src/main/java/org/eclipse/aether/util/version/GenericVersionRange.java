@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,13 +21,9 @@ final class GenericVersionRange
     implements VersionRange
 {
 
-    private final Version lowerBound;
+    private final Bound lowerBound;
 
-    private final boolean lowerBoundInclusive;
-
-    private final Version upperBound;
-
-    private final boolean upperBoundInclusive;
+    private final Bound upperBound;
 
     /**
      * Creates a version range from the specified range specification.
@@ -39,6 +35,9 @@ final class GenericVersionRange
         throws InvalidVersionSpecificationException
     {
         String process = range;
+
+        boolean lowerBoundInclusive, upperBoundInclusive;
+        Version lowerBound, upperBound;
 
         if ( range.startsWith( "[" ) )
         {
@@ -106,44 +105,28 @@ final class GenericVersionRange
                 }
             }
         }
+
+        this.lowerBound = ( lowerBound != null ) ? new Bound( lowerBound, lowerBoundInclusive ) : null;
+        this.upperBound = ( upperBound != null ) ? new Bound( upperBound, upperBoundInclusive ) : null;
     }
 
-    public GenericVersionRange( Version lowerBound, boolean lowerBoundInclusive, Version upperBound,
-                                boolean upperBoundInclusive )
-    {
-        this.lowerBound = lowerBound;
-        this.lowerBoundInclusive = lowerBoundInclusive;
-        this.upperBound = upperBound;
-        this.upperBoundInclusive = upperBoundInclusive;
-    }
-
-    public Version getLowerBound()
+    public Bound getLowerBound()
     {
         return lowerBound;
     }
 
-    public boolean isLowerBoundInclusive()
-    {
-        return lowerBoundInclusive;
-    }
-
-    public Version getUpperBound()
+    public Bound getUpperBound()
     {
         return upperBound;
-    }
-
-    public boolean isUpperBoundInclusive()
-    {
-        return upperBoundInclusive;
     }
 
     public boolean containsVersion( Version version )
     {
         if ( lowerBound != null )
         {
-            int comparison = lowerBound.compareTo( version );
+            int comparison = lowerBound.getVersion().compareTo( version );
 
-            if ( comparison == 0 && !lowerBoundInclusive )
+            if ( comparison == 0 && !lowerBound.isInclusive() )
             {
                 return false;
             }
@@ -155,9 +138,9 @@ final class GenericVersionRange
 
         if ( upperBound != null )
         {
-            int comparison = upperBound.compareTo( version );
+            int comparison = upperBound.getVersion().compareTo( version );
 
-            if ( comparison == 0 && !upperBoundInclusive )
+            if ( comparison == 0 && !upperBound.isInclusive() )
             {
                 return false;
             }
@@ -184,8 +167,7 @@ final class GenericVersionRange
 
         GenericVersionRange that = (GenericVersionRange) obj;
 
-        return upperBoundInclusive == that.upperBoundInclusive && lowerBoundInclusive == that.lowerBoundInclusive
-            && eq( upperBound, that.upperBound ) && eq( lowerBound, that.lowerBound );
+        return eq( upperBound, that.upperBound ) && eq( lowerBound, that.lowerBound );
     }
 
     private static <T> boolean eq( T s1, T s2 )
@@ -198,9 +180,7 @@ final class GenericVersionRange
     {
         int hash = 17;
         hash = hash * 31 + hash( upperBound );
-        hash = hash * 31 + ( upperBoundInclusive ? 1 : 0 );
         hash = hash * 31 + hash( lowerBound );
-        hash = hash * 31 + ( lowerBoundInclusive ? 1 : 0 );
         return hash;
     }
 
@@ -213,17 +193,25 @@ final class GenericVersionRange
     public String toString()
     {
         StringBuilder buffer = new StringBuilder( 64 );
-        buffer.append( lowerBoundInclusive ? '[' : '(' );
         if ( lowerBound != null )
         {
-            buffer.append( lowerBound );
+            buffer.append( lowerBound.isInclusive() ? '[' : '(' );
+            buffer.append( lowerBound.getVersion() );
+        }
+        else
+        {
+            buffer.append( '(' );
         }
         buffer.append( ',' );
         if ( upperBound != null )
         {
-            buffer.append( upperBound );
+            buffer.append( upperBound.getVersion() );
+            buffer.append( upperBound.isInclusive() ? ']' : ')' );
         }
-        buffer.append( upperBoundInclusive ? ']' : ')' );
+        else
+        {
+            buffer.append( ')' );
+        }
         return buffer.toString();
     }
 
