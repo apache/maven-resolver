@@ -66,6 +66,7 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
@@ -376,7 +377,8 @@ public class DefaultArtifactResolver
             {
                 Exception exception =
                     new ArtifactNotFoundException( artifact, null, "The repository system is offline but the artifact "
-                        + artifact + " is not available in the local repository." );
+                        + artifact + " is not available in the local repository.",
+                                                   new RepositoryOfflineException( null ) );
                 result.addException( exception );
                 artifactResolved( session, trace, artifact, null, result.getExceptions() );
                 continue;

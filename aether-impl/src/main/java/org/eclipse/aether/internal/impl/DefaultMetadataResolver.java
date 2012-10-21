@@ -62,6 +62,7 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 
@@ -273,9 +274,11 @@ public class DefaultMetadataResolver
                 else
                 {
                     String msg =
-                        "The repository system is offline but the metadata " + metadata + " from " + repository
-                            + " is not available in the local repository.";
-                    result.setException( new MetadataNotFoundException( metadata, repository, msg ) );
+                        "Cannot access " + repository.getId() + " (" + repository.getUrl()
+                            + ") in offline mode and the metadata " + metadata
+                            + " is not available in the local repository";
+                    result.setException( new MetadataNotFoundException( metadata, repository, msg,
+                                                                        new RepositoryOfflineException( repository ) ) );
                 }
 
                 metadataResolved( session, trace, metadata, repository, result.getException() );

@@ -51,6 +51,7 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.junit.Test;
 
 public class RepositoryExceptionTest
@@ -168,6 +169,12 @@ public class RepositoryExceptionTest
     public void testNoRepositoryConnectorException_Serializable()
     {
         assertSerializable( new NoRepositoryConnectorException( newRepo() ) );
+    }
+
+    @Test
+    public void testRepositoryOfflineException_Serializable()
+    {
+        assertSerializable( new RepositoryOfflineException( newRepo() ) );
     }
 
     @Test

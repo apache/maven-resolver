@@ -63,6 +63,7 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 
 /**
  */
@@ -237,7 +238,8 @@ public class DefaultDeployer
     {
         if ( session.isOffline() )
         {
-            throw new DeploymentException( "The repository system is in offline mode, deployment impossible" );
+            throw new DeploymentException( "Cannot deploy artifacts in offline mode",
+                                           new RepositoryOfflineException( request.getRepository() ) );
         }
 
         SyncContext syncContext = syncContextFactory.newInstance( session, false );
