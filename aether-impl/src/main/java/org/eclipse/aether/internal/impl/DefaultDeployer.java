@@ -37,6 +37,7 @@ import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.impl.Deployer;
 import org.eclipse.aether.impl.MetadataGenerator;
 import org.eclipse.aether.impl.MetadataGeneratorFactory;
+import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
@@ -98,6 +99,9 @@ public class DefaultDeployer
     @Requirement
     private SyncContextFactory syncContextFactory;
 
+    @Requirement
+    private OfflineController offlineController;
+
     public DefaultDeployer()
     {
         // enables default constructor
@@ -108,7 +112,7 @@ public class DefaultDeployer
                      RepositoryConnectorProvider repositoryConnectorProvider,
                      RemoteRepositoryManager remoteRepositoryManager, UpdateCheckManager updateCheckManager,
                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory,
-                     LoggerFactory loggerFactory )
+                     OfflineController offlineController, LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -118,6 +122,7 @@ public class DefaultDeployer
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
         setLoggerFactory( loggerFactory );
+        setOfflineController( offlineController );
     }
 
     public void initService( ServiceLocator locator )
@@ -130,6 +135,7 @@ public class DefaultDeployer
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
         setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
+        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     public DefaultDeployer setLoggerFactory( LoggerFactory loggerFactory )
@@ -233,13 +239,27 @@ public class DefaultDeployer
         return this;
     }
 
+    public DefaultDeployer setOfflineController( OfflineController offlineController )
+    {
+        if ( offlineController == null )
+        {
+            throw new IllegalArgumentException( "offline controller has not been specified" );
+        }
+        this.offlineController = offlineController;
+        return this;
+    }
+
     public DeployResult deploy( RepositorySystemSession session, DeployRequest request )
         throws DeploymentException
     {
-        if ( session.isOffline() )
+        try
         {
-            throw new DeploymentException( "Cannot deploy artifacts in offline mode",
-                                           new RepositoryOfflineException( request.getRepository() ) );
+            offlineController.checkOffline( session, request.getRepository() );
+        }
+        catch ( RepositoryOfflineException e )
+        {
+            throw new DeploymentException( "Cannot deploy while " + request.getRepository().getId() + " ("
+                + request.getRepository().getUrl() + ") is in offline mode", e );
         }
 
         SyncContext syncContext = syncContextFactory.newInstance( session, false );

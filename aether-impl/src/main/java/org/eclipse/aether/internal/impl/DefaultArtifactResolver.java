@@ -32,6 +32,7 @@ import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.impl.ArtifactResolver;
+import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
@@ -101,6 +102,9 @@ public class DefaultArtifactResolver
     @Requirement
     private SyncContextFactory syncContextFactory;
 
+    @Requirement
+    private OfflineController offlineController;
+
     public DefaultArtifactResolver()
     {
         // enables default constructor
@@ -111,7 +115,7 @@ public class DefaultArtifactResolver
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             LoggerFactory loggerFactory )
+                             OfflineController offlineController, LoggerFactory loggerFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -120,6 +124,7 @@ public class DefaultArtifactResolver
         setRepositoryConnectorProvider( repositoryConnectorProvider );
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
+        setOfflineController( offlineController );
         setLoggerFactory( loggerFactory );
     }
 
@@ -133,6 +138,7 @@ public class DefaultArtifactResolver
         setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
+        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     public DefaultArtifactResolver setLoggerFactory( LoggerFactory loggerFactory )
@@ -214,6 +220,16 @@ public class DefaultArtifactResolver
             throw new IllegalArgumentException( "sync context factory has not been specified" );
         }
         this.syncContextFactory = syncContextFactory;
+        return this;
+    }
+
+    public DefaultArtifactResolver setOfflineController( OfflineController offlineController )
+    {
+        if ( offlineController == null )
+        {
+            throw new IllegalArgumentException( "offline controller has not been specified" );
+        }
+        this.offlineController = offlineController;
         return this;
     }
 
@@ -373,17 +389,6 @@ public class DefaultArtifactResolver
                 logger.debug( "Verifying availability of " + local.getFile() + " from " + repos );
             }
 
-            if ( session.isOffline() )
-            {
-                Exception exception =
-                    new ArtifactNotFoundException( artifact, null, "The repository system is offline but the artifact "
-                        + artifact + " is not available in the local repository.",
-                                                   new RepositoryOfflineException( null ) );
-                result.addException( exception );
-                artifactResolved( session, trace, artifact, null, result.getExceptions() );
-                continue;
-            }
-
             Iterator<ResolutionGroup> groupIt = groups.iterator();
             for ( RemoteRepository repo : repos )
             {
@@ -391,6 +396,21 @@ public class DefaultArtifactResolver
                 {
                     continue;
                 }
+
+                try
+                {
+                    offlineController.checkOffline( session, repo );
+                }
+                catch ( RepositoryOfflineException e )
+                {
+                    Exception exception =
+                        new ArtifactNotFoundException( artifact, null, "Cannot access " + repo.getId() + " ("
+                            + repo.getUrl() + ") in offline mode and the artifact " + artifact
+                            + " has not been downloaded from it before.", e );
+                    result.addException( exception );
+                    continue;
+                }
+
                 ResolutionGroup group = null;
                 while ( groupIt.hasNext() )
                 {

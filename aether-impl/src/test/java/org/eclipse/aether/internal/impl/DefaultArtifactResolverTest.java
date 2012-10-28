@@ -95,6 +95,7 @@ public class DefaultArtifactResolverTest
         resolver.setRepositoryConnectorProvider( repositoryConnectorProvider );
         resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
+        resolver.setOfflineController( new DefaultOfflineController() );
 
         artifact = new DefaultArtifact( "gid", "aid", "", "ext", "ver" );
 

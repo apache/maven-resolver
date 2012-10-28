@@ -30,6 +30,7 @@ import org.eclipse.aether.internal.impl.DefaultFileProcessor;
 import org.eclipse.aether.internal.impl.DefaultInstaller;
 import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
 import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
+import org.eclipse.aether.internal.impl.DefaultOfflineController;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
@@ -82,6 +83,7 @@ public final class DefaultServiceLocator
         addService( FileProcessor.class, DefaultFileProcessor.class );
         addService( SyncContextFactory.class, DefaultSyncContextFactory.class );
         addService( RepositoryEventDispatcher.class, DefaultRepositoryEventDispatcher.class );
+        addService( OfflineController.class, DefaultOfflineController.class );
         addService( LocalRepositoryProvider.class, DefaultLocalRepositoryProvider.class );
         addService( LocalRepositoryManagerFactory.class, SimpleLocalRepositoryManagerFactory.class );
         addService( LocalRepositoryManagerFactory.class, EnhancedLocalRepositoryManagerFactory.class );

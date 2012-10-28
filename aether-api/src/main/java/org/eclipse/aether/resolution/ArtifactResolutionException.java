@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
+import org.eclipse.aether.transfer.RepositoryOfflineException;
 
 /**
  * Thrown in case of a unresolvable artifacts.
@@ -97,14 +98,18 @@ public class ArtifactResolutionException
         {
             if ( !result.isResolved() )
             {
-                Throwable nf = null;
+                Throwable notFound = null, offline = null;
                 for ( Throwable t : result.getExceptions() )
                 {
                     if ( t instanceof ArtifactNotFoundException )
                     {
-                        if ( nf == null )
+                        if ( notFound == null )
                         {
-                            nf = t;
+                            notFound = t;
+                        }
+                        if ( offline == null && t.getCause() instanceof RepositoryOfflineException )
+                        {
+                            offline = t;
                         }
                     }
                     else
@@ -113,9 +118,13 @@ public class ArtifactResolutionException
                     }
 
                 }
-                if ( nf != null )
+                if ( offline != null )
                 {
-                    return nf;
+                    return offline;
+                }
+                if ( notFound != null )
+                {
+                    return notFound;
                 }
             }
         }

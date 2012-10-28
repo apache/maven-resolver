@@ -69,6 +69,7 @@ public class DefaultMetadataResolverTest
         resolver.setRepositoryConnectorProvider( connectorProvider );
         resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
+        resolver.setOfflineController( new DefaultOfflineController() );
         repository =
             new RemoteRepository.Builder( "test-DMRT", "default",
                                           TestFileUtils.createTempDir().toURI().toURL().toString() ).build();

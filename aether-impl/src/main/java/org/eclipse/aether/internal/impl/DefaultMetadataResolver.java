@@ -35,6 +35,7 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
@@ -93,6 +94,9 @@ public class DefaultMetadataResolver
     @Requirement
     private SyncContextFactory syncContextFactory;
 
+    @Requirement
+    private OfflineController offlineController;
+
     public DefaultMetadataResolver()
     {
         // enables default constructor
@@ -103,13 +107,14 @@ public class DefaultMetadataResolver
                              UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             LoggerFactory loggerFactory )
+                             OfflineController offlineController, LoggerFactory loggerFactory )
     {
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setUpdateCheckManager( updateCheckManager );
         setRepositoryConnectorProvider( repositoryConnectorProvider );
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
+        setOfflineController( offlineController );
         setLoggerFactory( loggerFactory );
     }
 
@@ -121,6 +126,7 @@ public class DefaultMetadataResolver
         setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
+        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     public DefaultMetadataResolver setLoggerFactory( LoggerFactory loggerFactory )
@@ -182,6 +188,16 @@ public class DefaultMetadataResolver
             throw new IllegalArgumentException( "sync context factory has not been specified" );
         }
         this.syncContextFactory = syncContextFactory;
+        return this;
+    }
+
+    public DefaultMetadataResolver setOfflineController( OfflineController offlineController )
+    {
+        if ( offlineController == null )
+        {
+            throw new IllegalArgumentException( "offline controller has not been specified" );
+        }
+        this.offlineController = offlineController;
         return this;
     }
 
@@ -264,7 +280,11 @@ public class DefaultMetadataResolver
 
             File metadataFile = lrmResult.getFile();
 
-            if ( session.isOffline() )
+            try
+            {
+                offlineController.checkOffline( session, repository );
+            }
+            catch ( RepositoryOfflineException e )
             {
                 if ( metadataFile != null )
                 {
@@ -276,9 +296,8 @@ public class DefaultMetadataResolver
                     String msg =
                         "Cannot access " + repository.getId() + " (" + repository.getUrl()
                             + ") in offline mode and the metadata " + metadata
-                            + " is not available in the local repository";
-                    result.setException( new MetadataNotFoundException( metadata, repository, msg,
-                                                                        new RepositoryOfflineException( repository ) ) );
+                            + " has not been downloaded from it before";
+                    result.setException( new MetadataNotFoundException( metadata, repository, msg, e ) );
                 }
 
                 metadataResolved( session, trace, metadata, repository, result.getException() );

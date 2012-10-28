@@ -90,6 +90,7 @@ public class DefaultDeployerTest
         deployer.setUpdateCheckManager( new StaticUpdateCheckManager( true ) );
         deployer.setFileProcessor( TestFileProcessor.INSTANCE );
         deployer.setSyncContextFactory( new StubSyncContextFactory() );
+        deployer.setOfflineController( new DefaultOfflineController() );
 
         request = new DeployRequest();
         request.setRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );

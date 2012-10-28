@@ -26,6 +26,7 @@ import org.eclipse.aether.internal.impl.DefaultFileProcessor;
 import org.eclipse.aether.internal.impl.DefaultInstaller;
 import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
 import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
+import org.eclipse.aether.internal.impl.DefaultOfflineController;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
@@ -84,6 +85,8 @@ public final class AetherModule
         .to( DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( RepositoryEventDispatcher.class ) //
         .to( DefaultRepositoryEventDispatcher.class ).in( Singleton.class );
+        bind( OfflineController.class ) //
+        .to( DefaultOfflineController.class ).in( Singleton.class );
         bind( LocalRepositoryProvider.class ) //
         .to( DefaultLocalRepositoryProvider.class ).in( Singleton.class );
         bind( LocalRepositoryManagerFactory.class ).annotatedWith( Names.named( "simple" ) ) //
