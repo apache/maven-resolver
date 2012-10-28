@@ -404,7 +404,7 @@ public class DefaultArtifactResolver
                 catch ( RepositoryOfflineException e )
                 {
                     Exception exception =
-                        new ArtifactNotFoundException( artifact, null, "Cannot access " + repo.getId() + " ("
+                        new ArtifactNotFoundException( artifact, repo, "Cannot access " + repo.getId() + " ("
                             + repo.getUrl() + ") in offline mode and the artifact " + artifact
                             + " has not been downloaded from it before.", e );
                     result.addException( exception );

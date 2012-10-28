@@ -12,6 +12,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.codehaus.plexus.component.annotations.Component;
@@ -37,6 +38,17 @@ public class DefaultOfflineController
 
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
+
+    public DefaultOfflineController()
+    {
+        // enables default constructor
+    }
+
+    @Inject
+    DefaultOfflineController( LoggerFactory loggerFactory )
+    {
+        setLoggerFactory( loggerFactory );
+    }
 
     public void initService( ServiceLocator locator )
     {
