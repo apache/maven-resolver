@@ -53,6 +53,7 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.version.Version;
 
 /**
@@ -394,7 +395,7 @@ public class DefaultDependencyCollector
                 }
                 catch ( VersionRangeResolutionException e )
                 {
-                    addException( args.result, e );
+                    addException( args, e );
                     continue nextDependency;
                 }
 
@@ -430,7 +431,7 @@ public class DefaultDependencyCollector
                                 }
                                 catch ( ArtifactDescriptorException e )
                                 {
-                                    addException( args.result, e );
+                                    addException( args, e );
                                     args.pool.putDescriptor( key, e );
                                     continue;
                                 }
@@ -580,11 +581,11 @@ public class DefaultDependencyCollector
         return artifact.getProperty( ArtifactProperties.LOCAL_PATH, null ) != null;
     }
 
-    private void addException( CollectResult result, Exception e )
+    private void addException( Args args, Exception e )
     {
-        if ( result.getExceptions().size() < 100 )
+        if ( args.maxExceptions < 0 || args.result.getExceptions().size() < args.maxExceptions )
         {
-            result.addException( e );
+            args.result.addException( e );
         }
     }
 
@@ -596,6 +597,8 @@ public class DefaultDependencyCollector
         final RepositorySystemSession session;
 
         final boolean ignoreRepos;
+
+        final int maxExceptions;
 
         final RequestTrace trace;
 
@@ -611,6 +614,7 @@ public class DefaultDependencyCollector
             this.result = result;
             this.session = session;
             this.ignoreRepos = session.isIgnoreArtifactDescriptorRepositories();
+            this.maxExceptions = ConfigUtils.getInteger( session, 50, "aether.dependencyCollector.maxExceptions" );
             this.trace = trace;
             this.pool = pool;
             this.edges = edges;
