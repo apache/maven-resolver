@@ -64,7 +64,6 @@ public class DefaultDependencyCollector
     implements DependencyCollector, Service
 {
 
-    @SuppressWarnings( "unused" )
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
@@ -181,7 +180,7 @@ public class DefaultDependencyCollector
             catch ( VersionRangeResolutionException e )
             {
                 result.addException( e );
-                throw new DependencyCollectionException( result );
+                throw new DependencyCollectionException( result, e.getMessage() );
             }
 
             Version version = rangeResult.getVersions().get( rangeResult.getVersions().size() - 1 );
@@ -207,7 +206,7 @@ public class DefaultDependencyCollector
             catch ( ArtifactDescriptorException e )
             {
                 result.addException( e );
-                throw new DependencyCollectionException( result );
+                throw new DependencyCollectionException( result, e.getMessage() );
             }
 
             root = root.setArtifact( descriptorResult.getArtifact() );
@@ -240,7 +239,7 @@ public class DefaultDependencyCollector
         result.setRoot( edge );
 
         boolean traverse = ( root == null ) || depTraverser.traverseDependency( root );
-
+        String errorPath = null;
         if ( traverse && !dependencies.isEmpty() )
         {
             DataPool pool = new DataPool( session );
@@ -255,6 +254,8 @@ public class DefaultDependencyCollector
 
             process( args, dependencies, repositories, depSelector.deriveChildSelector( context ),
                      depManager.deriveChildManager( context ), depTraverser.deriveChildTraverser( context ) );
+
+            errorPath = args.errorPath;
         }
 
         DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
@@ -269,6 +270,10 @@ public class DefaultDependencyCollector
             result.addException( e );
         }
 
+        if ( errorPath != null )
+        {
+            throw new DependencyCollectionException( result, "Failed to collect dependencies at " + errorPath );
+        }
         if ( !result.getExceptions().isEmpty() )
         {
             throw new DependencyCollectionException( result );
@@ -322,7 +327,6 @@ public class DefaultDependencyCollector
 
     private void process( final Args args, List<Dependency> dependencies, List<RemoteRepository> repositories,
                           DependencySelector depSelector, DependencyManager depManager, DependencyTraverser depTraverser )
-        throws DependencyCollectionException
     {
         nextDependency: for ( Dependency dependency : dependencies )
         {
@@ -395,7 +399,7 @@ public class DefaultDependencyCollector
                 }
                 catch ( VersionRangeResolutionException e )
                 {
-                    addException( args, e );
+                    addException( args, dependency, e );
                     continue nextDependency;
                 }
 
@@ -431,7 +435,7 @@ public class DefaultDependencyCollector
                                 }
                                 catch ( ArtifactDescriptorException e )
                                 {
-                                    addException( args, e );
+                                    addException( args, d, e );
                                     args.pool.putDescriptor( key, e );
                                     continue;
                                 }
@@ -581,11 +585,34 @@ public class DefaultDependencyCollector
         return artifact.getProperty( ArtifactProperties.LOCAL_PATH, null ) != null;
     }
 
-    private void addException( Args args, Exception e )
+    private void addException( Args args, Dependency dependency, Exception e )
     {
         if ( args.maxExceptions < 0 || args.result.getExceptions().size() < args.maxExceptions )
         {
             args.result.addException( e );
+            if ( args.errorPath == null )
+            {
+                StringBuilder buffer = new StringBuilder( 256 );
+                for ( int i = 0; i < args.edges.size(); i++ )
+                {
+                    if ( buffer.length() > 0 )
+                    {
+                        buffer.append( " -> " );
+                    }
+                    Dependency dep = args.edges.get( i ).getDependency();
+                    if ( dep == null )
+                    {
+                        continue;
+                    }
+                    buffer.append( dep.getArtifact() );
+                }
+                if ( buffer.length() > 0 )
+                {
+                    buffer.append( " -> " );
+                }
+                buffer.append( dependency.getArtifact() );
+                args.errorPath = buffer.toString();
+            }
         }
     }
 
@@ -607,6 +634,8 @@ public class DefaultDependencyCollector
         final EdgeStack edges;
 
         final DefaultDependencyCollectionContext collectionContext;
+
+        String errorPath;
 
         public Args( CollectResult result, RepositorySystemSession session, RequestTrace trace, DataPool pool,
                      EdgeStack edges, DefaultDependencyCollectionContext collectionContext )

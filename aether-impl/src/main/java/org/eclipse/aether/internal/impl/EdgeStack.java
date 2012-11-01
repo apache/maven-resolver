@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,9 +15,10 @@ import java.util.Arrays;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
-/* * @see DefaultDependencyCollector
+/**
+ * @see DefaultDependencyCollector
  */
-class EdgeStack
+final class EdgeStack
 {
 
     private GraphEdge[] edges = new GraphEdge[64];
@@ -91,6 +92,16 @@ class EdgeStack
         }
 
         return null;
+    }
+
+    public int size()
+    {
+        return size;
+    }
+
+    public GraphEdge get( int index )
+    {
+        return edges[index];
     }
 
     @Override
