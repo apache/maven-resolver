@@ -85,7 +85,7 @@ public class DefaultOfflineController
 
     private boolean isOfflineProtocol( RepositorySystemSession session, RemoteRepository repository )
     {
-        String[] protocols = getConfig( session, "aether.offlineController.protocols" );
+        String[] protocols = getConfig( session, "aether.offline.protocols" );
         if ( protocols != null )
         {
             String protocol = repository.getProtocol();
@@ -105,7 +105,7 @@ public class DefaultOfflineController
 
     private boolean isOfflineHost( RepositorySystemSession session, RemoteRepository repository )
     {
-        String[] hosts = getConfig( session, "aether.offlineController.hosts" );
+        String[] hosts = getConfig( session, "aether.offline.hosts" );
         if ( hosts != null )
         {
             String host = repository.getHost();

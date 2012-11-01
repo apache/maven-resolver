@@ -26,8 +26,8 @@ public class DefaultOfflineControllerTest
     {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
         session.setOffline( offline );
-        session.setConfigProperty( "aether.offlineController.protocols", protocols );
-        session.setConfigProperty( "aether.offlineController.hosts", hosts );
+        session.setConfigProperty( "aether.offline.protocols", protocols );
+        session.setConfigProperty( "aether.offline.hosts", hosts );
         return session;
     }
 
