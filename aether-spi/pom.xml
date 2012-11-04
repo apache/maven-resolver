@@ -27,6 +27,10 @@
     The service provider interface for repository system implementations and repository connectors.
   </description>
 
+  <properties>
+    <bundle.symbolicName>org.eclipse.aether.spi</bundle.symbolicName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.eclipse.aether</groupId>

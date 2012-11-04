@@ -29,6 +29,7 @@
 
   <properties>
     <wagonVersion>1.0</wagonVersion>
+    <bundle.symbolicName>org.eclipse.aether.connector.wagon</bundle.symbolicName>
   </properties>
 
   <dependencies>
@@ -120,11 +121,6 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <instructions>
-            <Bundle-SymbolicName>org.eclipse.aether.connector.wagon</Bundle-SymbolicName>
-          </instructions>
-        </configuration>
       </plugin>
     </plugins>
   </build>

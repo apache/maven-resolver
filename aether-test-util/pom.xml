@@ -27,6 +27,10 @@
     A collection of utility classes to ease testing of the repository system.
   </description>
 
+  <properties>
+    <bundle.symbolicName>org.eclipse.aether.test-util</bundle.symbolicName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.eclipse.aether</groupId>

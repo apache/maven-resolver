@@ -27,6 +27,10 @@
     The application programming interface for the repository system.
   </description>
 
+  <properties>
+    <bundle.symbolicName>org.eclipse.aether.api</bundle.symbolicName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

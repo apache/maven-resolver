@@ -27,6 +27,10 @@
     An implementation of the repository system.
   </description>
 
+  <properties>
+    <bundle.symbolicName>org.eclipse.aether.impl</bundle.symbolicName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.eclipse.aether</groupId>
