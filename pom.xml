@@ -669,7 +669,7 @@
               <version>1.0.0</version>
               <configuration>
                 <lifecycleMappingMetadata>
-                  <pluginExecutions>
+                  <pluginExecutions>                  
                     <pluginExecution>
                       <pluginExecutionFilter>
                         <groupId>org.sonatype.plugins</groupId>
@@ -684,6 +684,19 @@
                         <ignore />
                       </action>
                     </pluginExecution>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <versionRange>[1.7,)</versionRange>
+                        <goals>
+                          <goal>parse-version</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <ignore></ignore>
+                      </action>
+                    </pluginExecution>                    
                   </pluginExecutions>
                 </lifecycleMappingMetadata>
               </configuration>
