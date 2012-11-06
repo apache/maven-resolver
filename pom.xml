@@ -669,7 +669,7 @@
               <version>1.0.0</version>
               <configuration>
                 <lifecycleMappingMetadata>
-                  <pluginExecutions>                  
+                  <pluginExecutions>
                     <pluginExecution>
                       <pluginExecutionFilter>
                         <groupId>org.sonatype.plugins</groupId>
@@ -694,9 +694,9 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore></ignore>
+                        <ignore />
                       </action>
-                    </pluginExecution>                    
+                    </pluginExecution>
                   </pluginExecutions>
                 </lifecycleMappingMetadata>
               </configuration>
