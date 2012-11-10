@@ -124,7 +124,6 @@
   </modules>
 
   <properties>
-    <maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
@@ -539,6 +538,18 @@
         <version>1.7</version>
         <executions>
           <execution>
+            <id>osgi-timestamp</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>timestamp-property</goal>
+            </goals>
+            <configuration>
+              <name>bundle.osgiTimestamp</name>
+              <pattern>yyyyMMdd-HHmm</pattern>
+              <timeZone>UTC</timeZone>
+            </configuration>
+          </execution>
+          <execution>
             <id>osgi-version</id>
             <phase>initialize</phase>
             <goals>
@@ -548,7 +559,7 @@
               <name>bundle.osgiVersion</name>
               <value>${project.version}</value>
               <regex>-SNAPSHOT</regex>
-              <replacement>.${maven.build.timestamp}</replacement>
+              <replacement>.${bundle.osgiTimestamp}</replacement>
               <failIfNoMatch>false</failIfNoMatch>
             </configuration>
           </execution>
@@ -703,7 +714,8 @@
                         <artifactId>build-helper-maven-plugin</artifactId>
                         <versionRange>[1.7,)</versionRange>
                         <goals>
-                          <goal>parse-version</goal>
+                          <goal>regex-property</goal>
+                          <goal>timestamp-property</goal>
                         </goals>
                       </pluginExecutionFilter>
                       <action>
