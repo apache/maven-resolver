@@ -124,6 +124,7 @@
   </modules>
 
   <properties>
+    <maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
@@ -221,6 +222,7 @@
               <Bundle-DocURL>${project.url}</Bundle-DocURL>
               <Bundle-Name>${project.name} (Incubation)</Bundle-Name>
               <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
+              <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
             </instructions>
           </configuration>
           <executions>
@@ -540,10 +542,14 @@
             <id>osgi-version</id>
             <phase>initialize</phase>
             <goals>
-              <goal>parse-version</goal>
+              <goal>regex-property</goal>
             </goals>
             <configuration>
-              <propertyPrefix>bundle</propertyPrefix>
+              <name>bundle.osgiVersion</name>
+              <value>${project.version}</value>
+              <regex>-SNAPSHOT</regex>
+              <replacement>.${maven.build.timestamp}</replacement>
+              <failIfNoMatch>false</failIfNoMatch>
             </configuration>
           </execution>
         </executions>
