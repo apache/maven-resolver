@@ -470,14 +470,21 @@
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
-            <id>approved-dependencies</id>
+            <id>qa</id>
             <phase>verify</phase>
             <goals>
               <goal>enforce</goal>
             </goals>
             <configuration>
               <rules>
+                <requireProperty>
+                  <!-- enforce OSGi-friendly versioning scheme such that milestone < rc < final release -->
+                  <property>project.version</property>
+                  <regex>[0-9]+\.[0-9]+\.[0-9]+((.*-SNAPSHOT)|(\.M[0-9]+)|(\.RC[0-9]+)|(\.v[0-9]{8}))</regex>
+                  <regexMessage>Project version must be either X.Y.Z.M#, X.Y.Z.RC# or X.Y.Z.v########</regexMessage>
+                </requireProperty>
                 <bannedDependencies>
+                  <!-- enforce use of dependencies approved via IP log -->
                   <searchTransitive>true</searchTransitive>
                   <excludes>
                     <exclude>*:*</exclude>
