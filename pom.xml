@@ -547,6 +547,7 @@
               <name>bundle.osgiTimestamp</name>
               <pattern>yyyyMMdd-HHmm</pattern>
               <timeZone>UTC</timeZone>
+              <locale>en</locale>
             </configuration>
           </execution>
           <execution>
