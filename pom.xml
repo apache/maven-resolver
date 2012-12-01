@@ -504,10 +504,10 @@
                     <include>org.codehaus.plexus:plexus-classworlds:2.4</include>
                     <!-- CQ #5632 -->
                     <include>org.apache.maven.wagon:wagon-provider-api:1.0</include>
-                    <!-- CQ #5633 -->
-                    <include>com.ning:async-http-client:1.6.5</include>
-                    <!-- CQ #5634 -->
-                    <include>org.jboss.netty:netty:3.2.5.Final</include>
+                    <!-- CQ #6816 -->
+                    <include>com.ning:async-http-client:1.7.6</include>
+                    <!-- CQ #6817 -->
+                    <include>io.netty:netty:3.4.4.Final</include>
                     <!-- CQ #5635 -->
                     <include>org.sonatype.sisu:sisu-inject-plexus:2.3.0</include>
                     <!-- CQ #5636 -->
