@@ -48,7 +48,15 @@ import org.eclipse.aether.spi.log.LoggerFactory;
 /**
  * A simple service locator that is already setup with all components from this library. To acquire a complete
  * repository system, clients need to add an artifact descriptor reader, a version resolver, a version range resolver
- * and optionally some repository connectors to access remote repositories.
+ * and optionally some repository connectors to access remote repositories. Once the locator is fully populated, the
+ * repository system can be created like this:
+ * 
+ * <pre>
+ * RepositorySystem repoSystem = serviceLocator.getService( RepositorySystem.class );
+ * </pre>
+ * 
+ * <em>Note:</em> This class is not thread-safe. Clients are expected to create the service locator and the repository
+ * system on a single thread.
  */
 public final class DefaultServiceLocator
     implements ServiceLocator
@@ -220,7 +228,9 @@ public final class DefaultServiceLocator
     }
 
     /**
-     * Sets the implementation class for a service.
+     * Sets the implementation class for a service. The specified class must have a no-arg constructor (of any
+     * visibility). If the service implementation itself requires other services for its operation, it should implement
+     * {@link Service} to gain access to this service locator.
      * 
      * @param <T> The service type.
      * @param type The interface describing the service, must not be {@code null}.
@@ -234,7 +244,9 @@ public final class DefaultServiceLocator
     }
 
     /**
-     * Adds the implementation class for a service.
+     * Adds an implementation class for a service. The specified class must have a no-arg constructor (of any
+     * visibility). If the service implementation itself requires other services for its operation, it should implement
+     * {@link Service} to gain access to this service locator.
      * 
      * @param <T> The service type.
      * @param type The interface describing the service, must not be {@code null}.
