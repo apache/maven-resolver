@@ -13,11 +13,9 @@ package org.eclipse.aether.impl;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,9 +54,122 @@ public final class DefaultServiceLocator
     implements ServiceLocator
 {
 
-    private final Map<Class<?>, Collection<Class<?>>> classes;
+    private class Entry<T>
+    {
 
-    private final Map<Class<?>, List<?>> instances;
+        private final Class<T> type;
+
+        private final Collection<Object> providers;
+
+        private List<T> instances;
+
+        public Entry( Class<T> type )
+        {
+            if ( type == null )
+            {
+                throw new IllegalArgumentException( "service type not specified" );
+            }
+            this.type = type;
+            providers = new LinkedHashSet<Object>( 8 );
+        }
+
+        public synchronized void setServices( T... services )
+        {
+            providers.clear();
+            if ( services != null )
+            {
+                for ( T service : services )
+                {
+                    if ( service == null )
+                    {
+                        throw new IllegalArgumentException( "service instance not specified" );
+                    }
+                    providers.add( service );
+                }
+            }
+            instances = null;
+        }
+
+        public synchronized void setService( Class<? extends T> impl )
+        {
+            providers.clear();
+            addService( impl );
+        }
+
+        public synchronized void addService( Class<? extends T> impl )
+        {
+            if ( impl == null )
+            {
+                throw new IllegalArgumentException( "implementation class not specified" );
+            }
+            providers.add( impl );
+            instances = null;
+        }
+
+        public T getInstance()
+        {
+            List<T> instances = getInstances();
+            return instances.isEmpty() ? null : instances.get( 0 );
+        }
+
+        public synchronized List<T> getInstances()
+        {
+            if ( instances == null )
+            {
+                instances = new ArrayList<T>( providers.size() );
+                for ( Object provider : providers )
+                {
+                    T instance;
+                    if ( provider instanceof Class )
+                    {
+                        instance = newInstance( (Class<?>) provider );
+                    }
+                    else
+                    {
+                        instance = type.cast( provider );
+                    }
+                    if ( instance != null )
+                    {
+                        instances.add( instance );
+                    }
+                }
+                instances = Collections.unmodifiableList( instances );
+            }
+            return instances;
+        }
+
+        private T newInstance( Class<?> impl )
+        {
+            try
+            {
+                Constructor<?> constr = impl.getDeclaredConstructor();
+                if ( !Modifier.isPublic( constr.getModifiers() ) )
+                {
+                    constr.setAccessible( true );
+                }
+                Object obj = constr.newInstance();
+
+                T instance = type.cast( obj );
+                if ( instance instanceof Service )
+                {
+                    ( (Service) instance ).initService( DefaultServiceLocator.this );
+                }
+                return instance;
+            }
+            catch ( Exception e )
+            {
+                serviceCreationFailed( type, impl, e );
+            }
+            catch ( LinkageError e )
+            {
+                serviceCreationFailed( type, impl, e );
+            }
+            return null;
+        }
+
+    }
+
+    private final Map<Class<?>, Entry<?>> entries;
 
     private ErrorHandler errorHandler;
 
@@ -67,8 +178,7 @@ public final class DefaultServiceLocator
      */
     public DefaultServiceLocator()
     {
-        classes = new HashMap<Class<?>, Collection<Class<?>>>();
-        instances = new HashMap<Class<?>, List<?>>();
+        entries = new HashMap<Class<?>, Entry<?>>();
 
         addService( RepositorySystem.class, DefaultRepositorySystem.class );
         addService( ArtifactResolver.class, DefaultArtifactResolver.class );
@@ -93,6 +203,22 @@ public final class DefaultServiceLocator
         }
     }
 
+    private <T> Entry<T> getEntry( Class<T> type, boolean create )
+    {
+        if ( type == null )
+        {
+            throw new IllegalArgumentException( "service type not specified" );
+        }
+        @SuppressWarnings( "unchecked" )
+        Entry<T> entry = (Entry<T>) entries.get( type );
+        if ( entry == null && create )
+        {
+            entry = new Entry<T>( type );
+            entries.put( type, entry );
+        }
+        return entry;
+    }
+
     /**
      * Sets the implementation class for a service.
      * 
@@ -103,8 +229,8 @@ public final class DefaultServiceLocator
      */
     public <T> DefaultServiceLocator setService( Class<T> type, Class<? extends T> impl )
     {
-        classes.remove( type );
-        return addService( type, impl );
+        getEntry( type, true ).setService( impl );
+        return this;
     }
 
     /**
@@ -117,17 +243,7 @@ public final class DefaultServiceLocator
      */
     public <T> DefaultServiceLocator addService( Class<T> type, Class<? extends T> impl )
     {
-        if ( impl == null )
-        {
-            throw new IllegalArgumentException( "implementation class must not be null" );
-        }
-        Collection<Class<?>> impls = classes.get( type );
-        if ( impls == null )
-        {
-            impls = new LinkedHashSet<Class<?>>();
-            classes.put( type, impls );
-        }
-        impls.add( impl );
+        getEntry( type, true ).addService( impl );
         return this;
     }
 
@@ -136,95 +252,25 @@ public final class DefaultServiceLocator
      * 
      * @param <T> The service type.
      * @param type The interface describing the service, must not be {@code null}.
-     * @param services The instances of the service, must not be {@code null}.
+     * @param services The instances of the service, may be {@code null} but must not contain {@code null} elements.
      * @return This locator for chaining, never {@code null}.
      */
     public <T> DefaultServiceLocator setServices( Class<T> type, T... services )
     {
-        synchronized ( instances )
-        {
-            instances.put( type, Arrays.asList( services ) );
-        }
+        getEntry( type, true ).setServices( services );
         return this;
     }
 
     public <T> T getService( Class<T> type )
     {
-        List<T> objs = getServices( type );
-        return objs.isEmpty() ? null : objs.get( 0 );
+        Entry<T> entry = getEntry( type, false );
+        return ( entry != null ) ? entry.getInstance() : null;
     }
 
     public <T> List<T> getServices( Class<T> type )
     {
-        synchronized ( instances )
-        {
-            @SuppressWarnings( "unchecked" )
-            List<T> objs = (List<T>) instances.get( type );
-
-            if ( objs == null )
-            {
-                Iterator<T> it;
-                Collection<Class<?>> impls = classes.get( type );
-                if ( impls == null || impls.isEmpty() )
-                {
-                    objs = Collections.emptyList();
-                    it = objs.iterator();
-                }
-                else
-                {
-                    objs = new ArrayList<T>( impls.size() );
-                    for ( Class<?> impl : impls )
-                    {
-                        try
-                        {
-                            Constructor<?> constr = impl.getDeclaredConstructor();
-                            if ( !Modifier.isPublic( constr.getModifiers() ) )
-                            {
-                                constr.setAccessible( true );
-                            }
-                            Object obj = constr.newInstance();
-                            objs.add( type.cast( obj ) );
-                        }
-                        catch ( Exception e )
-                        {
-                            serviceCreationFailed( type, impl, e );
-                        }
-                        catch ( LinkageError e )
-                        {
-                            serviceCreationFailed( type, impl, e );
-                        }
-                    }
-                    it = objs.iterator();
-                    objs = Collections.unmodifiableList( objs );
-                }
-
-                instances.put( type, objs );
-
-                while ( it.hasNext() )
-                {
-                    T obj = it.next();
-                    if ( obj instanceof Service )
-                    {
-                        try
-                        {
-                            ( (Service) obj ).initService( this );
-                        }
-                        catch ( Exception e )
-                        {
-                            it.remove();
-                            serviceCreationFailed( type, obj.getClass(), e );
-                        }
-                        catch ( LinkageError e )
-                        {
-                            it.remove();
-                            serviceCreationFailed( type, obj.getClass(), e );
-                        }
-                    }
-                }
-            }
-
-            return objs;
-        }
+        Entry<T> entry = getEntry( type, false );
+        return ( entry != null ) ? entry.getInstances() : null;
     }
 
     private void serviceCreationFailed( Class<?> type, Class<?> impl, Throwable exception )
