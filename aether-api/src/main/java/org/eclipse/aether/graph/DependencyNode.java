@@ -20,8 +20,11 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
 /**
- * A node within a dependency graph. <em>Note:</em> When traversing a dirty graph, i.e. a graph which hasn't undergone
- * conflict resolution, there can be multiple paths leading to the same node instance.
+ * A node within a dependency graph. To conserve memory, dependency graphs may reuse a given node instance multiple
+ * times to represent reoccurring dependencies. As such clients traversing a dependency graph should be prepared to
+ * discover multiple paths leading to the same node instance unless the input graph is known to be a duplicate-free
+ * tree. <em>Note:</em> Unless otherwise noted, implementation classes are not thread-safe and dependency nodes should
+ * not be mutated by concurrent threads.
  * 
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
@@ -125,7 +128,8 @@ public interface DependencyNode
 
     /**
      * Gets the custom data associated with this dependency node. Clients of the repository system can use this data to
-     * annotate dependency nodes with domain-specific information.
+     * annotate dependency nodes with domain-specific information. Note that the returned map is read-only and
+     * {@link #setData(Object, Object)} needs to be used to update the custom data.
      * 
      * @return The (read-only) key-value mappings, never {@code null}.
      */
