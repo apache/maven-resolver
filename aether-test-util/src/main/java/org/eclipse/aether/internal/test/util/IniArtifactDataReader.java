@@ -30,62 +30,15 @@ import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * A parser for an artifact description in an INI-like format.
- * <p>
- * Possible sections are:
- * <ul>
- * <li>relocations</li>
- * <li>dependencies</li>
- * <li>managedDependencies</li>
- * <li>repositories</li>
- * </ul>
- * The relocation- and dependency-sections contain artifact coordinates of the form:
- * 
- * <pre>
- * gid:aid:ver:ext[:scope][:optional]
- * </pre>
- * 
- * The dependency-sections may specify exclusions:
- * 
- * <pre>
- * -gid:aid
- * </pre>
- * 
- * A repository definition is of the form:
- * 
- * <pre>
- * id:type:url
- * </pre>
- * 
- * <h2>Example</h2>
- * 
- * <pre>
- * [relocation]
- * gid:aid:ver:ext
- * 
- * [dependencies]
- * gid:aid:ver:ext:scope
- * -exclusion:aid
- * gid:aid2:ver:ext:scope:optional
- * 
- * [managed-dependencies]
- * gid:aid2:ver2:ext:scope
- * -gid:aid
- * -gid:aid
- * 
- * [repositories]
- * id:type:file:///test-repo
- * </pre>
- * 
  * @see IniArtifactDescriptorReader
  */
-public class IniArtifactDataReader
+class IniArtifactDataReader
 {
 
     private String prefix = "";
 
     /**
-     * Constructs a data reader with the prefix <code>""</code>.
+     * Constructs a data reader with the prefix {@code ""}.
      */
     public IniArtifactDataReader()
     {
@@ -139,7 +92,7 @@ public class IniArtifactDataReader
 
     private enum State
     {
-        NONE, RELOCATIONS, DEPENDENCIES, MANAGEDDEPENDENCIES, REPOSITORIES
+        NONE, RELOCATION, DEPENDENCIES, MANAGEDDEPENDENCIES, REPOSITORIES
     }
 
     private ArtifactDescription parse( Reader reader )
@@ -191,13 +144,13 @@ public class IniArtifactDataReader
             in.close();
         }
 
-        List<Artifact> relocations = relocations( sections.get( State.RELOCATIONS ) );
+        Artifact relocation = relocation( sections.get( State.RELOCATION ) );
         List<Dependency> dependencies = dependencies( sections.get( State.DEPENDENCIES ) );
         List<Dependency> managedDependencies = dependencies( sections.get( State.MANAGEDDEPENDENCIES ) );
         List<RemoteRepository> repositories = repositories( sections.get( State.REPOSITORIES ) );
 
         ArtifactDescription description =
-            new ArtifactDescription( relocations, dependencies, managedDependencies, repositories );
+            new ArtifactDescription( relocation, dependencies, managedDependencies, repositories );
         return description;
     }
 
@@ -274,20 +227,15 @@ public class IniArtifactDataReader
         return ret;
     }
 
-    private List<Artifact> relocations( List<String> list )
+    private Artifact relocation( List<String> list )
     {
-        List<Artifact> ret = new ArrayList<Artifact>();
-        if ( list == null )
+        if ( list == null || list.isEmpty() )
         {
-            return ret;
+            return null;
         }
-        for ( String coords : list )
-        {
-            ArtifactDefinition def = new ArtifactDefinition( coords );
-            ret.add( new DefaultArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(),
-                                          def.getVersion() ) );
-        }
-        return ret;
+        String coords = list.get( 0 );
+        ArtifactDefinition def = new ArtifactDefinition( coords );
+        return new DefaultArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(), def.getVersion() );
     }
 
     private static boolean isEmpty( String line )

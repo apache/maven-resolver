@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -41,28 +41,19 @@ public class IniArtifactDataReaderTest
     }
 
     @Test
-    public void testRelocations()
+    public void testRelocation()
         throws IOException
     {
-        String def = "[relocations]\ngid:aid:ext:ver\ngid2:aid2:ext2:ver2";
+        String def = "[relocation]\ngid:aid:ext:ver";
 
         ArtifactDescription description = parser.parseLiteral( def );
 
-        List<Artifact> relocations = description.getRelocations();
-        assertNotNull( relocations );
-        assertEquals( 2, relocations.size() );
-
-        Artifact artifact = relocations.get( 0 );
+        Artifact artifact = description.getRelocation();
+        assertNotNull( artifact );
         assertEquals( "aid", artifact.getArtifactId() );
         assertEquals( "gid", artifact.getGroupId() );
         assertEquals( "ver", artifact.getVersion() );
         assertEquals( "ext", artifact.getExtension() );
-
-        artifact = relocations.get( 1 );
-        assertEquals( "aid2", artifact.getArtifactId() );
-        assertEquals( "gid2", artifact.getGroupId() );
-        assertEquals( "ver2", artifact.getVersion() );
-        assertEquals( "ext2", artifact.getExtension() );
     }
 
     @Test
@@ -109,8 +100,7 @@ public class IniArtifactDataReaderTest
     {
         ArtifactDescription description = parser.parse( "ArtifactDataReaderTest.ini" );
 
-        assertEquals( 1, description.getRelocations().size() );
-        Artifact artifact = description.getRelocations().get( 0 );
+        Artifact artifact = description.getRelocation();
         assertEquals( "gid", artifact.getGroupId() );
         assertEquals( "aid", artifact.getArtifactId() );
         assertEquals( "ver", artifact.getVersion() );

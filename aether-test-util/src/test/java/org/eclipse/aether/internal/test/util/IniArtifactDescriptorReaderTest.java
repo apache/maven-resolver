@@ -65,7 +65,7 @@ public class IniArtifactDescriptorReaderTest
         ArtifactDescriptorResult description = reader.readArtifactDescriptor( session, request );
 
         assertEquals( request, description.getRequest() );
-        assertEquals( art, description.getArtifact() );
+        assertEquals( art.setVersion( "1" ), description.getArtifact() );
 
         assertEquals( 1, description.getRelocations().size() );
         Artifact artifact = description.getRelocations().get( 0 );
