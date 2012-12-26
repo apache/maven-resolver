@@ -14,35 +14,36 @@ import java.util.Arrays;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * @see DefaultDependencyCollector
  */
-final class EdgeStack
+final class NodeStack
 {
 
-    private GraphEdge[] edges = new GraphEdge[64];
+    private DependencyNode[] nodes = new DependencyNode[96];
 
     private int size;
 
-    public GraphEdge top()
+    public DependencyNode top()
     {
         if ( size <= 0 )
         {
             throw new IllegalStateException( "stack empty" );
         }
-        return edges[size - 1];
+        return nodes[size - 1];
     }
 
-    public void push( GraphEdge edge )
+    public void push( DependencyNode node )
     {
-        if ( size >= edges.length )
+        if ( size >= nodes.length )
         {
-            GraphEdge[] tmp = new GraphEdge[size + 64];
-            System.arraycopy( edges, 0, tmp, 0, edges.length );
-            edges = tmp;
+            DependencyNode[] tmp = new DependencyNode[size + 64];
+            System.arraycopy( nodes, 0, tmp, 0, nodes.length );
+            nodes = tmp;
         }
-        edges[size++] = edge;
+        nodes[size++] = node;
     }
 
     public void pop()
@@ -54,13 +55,13 @@ final class EdgeStack
         size--;
     }
 
-    public GraphEdge find( Artifact artifact )
+    public DependencyNode find( Artifact artifact )
     {
         for ( int i = size - 1; i >= 0; i-- )
         {
-            GraphEdge edge = edges[i];
+            DependencyNode node = nodes[i];
 
-            Dependency dependency = edge.getDependency();
+            Dependency dependency = node.getDependency();
             if ( dependency == null )
             {
                 break;
@@ -88,7 +89,7 @@ final class EdgeStack
                 continue;
             }
 
-            return edge;
+            return node;
         }
 
         return null;
@@ -99,15 +100,15 @@ final class EdgeStack
         return size;
     }
 
-    public GraphEdge get( int index )
+    public DependencyNode get( int index )
     {
-        return edges[index];
+        return nodes[index];
     }
 
     @Override
     public String toString()
     {
-        return Arrays.toString( edges );
+        return Arrays.toString( nodes );
     }
 
 }

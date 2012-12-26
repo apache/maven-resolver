@@ -35,7 +35,9 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -160,7 +162,7 @@ public class DefaultDependencyCollector
         List<Dependency> dependencies = request.getDependencies();
         List<Dependency> managedDependencies = request.getManagedDependencies();
 
-        GraphEdge edge = null;
+        DefaultDependencyNode node = null;
         if ( root != null )
         {
             VersionRangeResult rangeResult;
@@ -220,23 +222,21 @@ public class DefaultDependencyCollector
             dependencies = mergeDeps( dependencies, descriptorResult.getDependencies() );
             managedDependencies = mergeDeps( managedDependencies, descriptorResult.getManagedDependencies() );
 
-            GraphNode node = new GraphNode();
+            node = new DefaultDependencyNode();
+            node.setDependency( root );
+            node.setRequestContext( request.getRequestContext() );
+            node.setRelocations( descriptorResult.getRelocations() );
+            node.setVersionConstraint( rangeResult.getVersionConstraint() );
+            node.setVersion( version );
             node.setAliases( descriptorResult.getAliases() );
             node.setRepositories( request.getRepositories() );
-
-            edge = new GraphEdge( node );
-            edge.setDependency( root );
-            edge.setRequestContext( request.getRequestContext() );
-            edge.setRelocations( descriptorResult.getRelocations() );
-            edge.setVersionConstraint( rangeResult.getVersionConstraint() );
-            edge.setVersion( version );
         }
         else
         {
-            edge = new GraphEdge( new GraphNode() );
+            node = new DefaultDependencyNode();
         }
 
-        result.setRoot( edge );
+        result.setRoot( node );
 
         boolean traverse = ( root == null ) || depTraverser.traverseDependency( root );
         String errorPath = null;
@@ -244,13 +244,13 @@ public class DefaultDependencyCollector
         {
             DataPool pool = new DataPool( session );
 
-            EdgeStack edges = new EdgeStack();
-            edges.push( edge );
+            NodeStack nodes = new NodeStack();
+            nodes.push( node );
 
             DefaultDependencyCollectionContext context =
                 new DefaultDependencyCollectionContext( session, root, managedDependencies );
 
-            Args args = new Args( result, session, trace, pool, edges, context );
+            Args args = new Args( result, session, trace, pool, nodes, context );
 
             process( args, dependencies, repositories, depSelector.deriveChildSelector( context ),
                      depManager.deriveChildManager( context ), depTraverser.deriveChildTraverser( context ) );
@@ -263,7 +263,7 @@ public class DefaultDependencyCollector
         {
             DefaultDependencyGraphTransformationContext context =
                 new DefaultDependencyGraphTransformationContext( session );
-            result.setRoot( transformer.transformGraph( edge, context ) );
+            result.setRoot( transformer.transformGraph( node, context ) );
         }
         catch ( RepositoryException e )
         {
@@ -449,22 +449,24 @@ public class DefaultDependencyCollector
 
                     d = d.setArtifact( descriptorResult.getArtifact() );
 
-                    GraphNode node = args.edges.top().getTarget();
+                    DependencyNode node = args.nodes.top();
 
-                    GraphEdge cycleEdge = args.edges.find( d.getArtifact() );
-                    if ( cycleEdge != null )
+                    DependencyNode cycleNode = args.nodes.find( d.getArtifact() );
+                    if ( cycleNode != null )
                     {
-                        GraphEdge edge = new GraphEdge( cycleEdge.getTarget() );
-                        edge.setDependency( d );
-                        edge.setScope( d.getScope() );
-                        edge.setPremanagedScope( premanagedScope );
-                        edge.setPremanagedVersion( premanagedVersion );
-                        edge.setRelocations( relocations );
-                        edge.setVersionConstraint( rangeResult.getVersionConstraint() );
-                        edge.setVersion( version );
-                        edge.setRequestContext( args.result.getRequest().getRequestContext() );
+                        DefaultDependencyNode child = new DefaultDependencyNode();
+                        child.setChildren( new ArrayList<DependencyNode>( cycleNode.getChildren() ) );
+                        child.setDependency( d );
+                        child.setPremanagedScope( premanagedScope );
+                        child.setPremanagedVersion( premanagedVersion );
+                        child.setRelocations( relocations );
+                        child.setVersionConstraint( rangeResult.getVersionConstraint() );
+                        child.setVersion( version );
+                        child.setAliases( descriptorResult.getAliases() );
+                        child.setRepositories( cycleNode.getRepositories() );
+                        child.setRequestContext( cycleNode.getRequestContext() );
 
-                        node.getOutgoingEdges().add( edge );
+                        node.getChildren().add( child );
 
                         continue;
                     }
@@ -483,11 +485,21 @@ public class DefaultDependencyCollector
 
                     d = args.pool.intern( d.setArtifact( args.pool.intern( d.getArtifact() ) ) );
 
-                    DependencySelector childSelector = null;
-                    DependencyManager childManager = null;
-                    DependencyTraverser childTraverser = null;
-                    List<RemoteRepository> childRepos = null;
-                    Object key = null;
+                    List<RemoteRepository> repos =
+                        getRemoteRepositories( rangeResult.getRepository( version ), repositories );
+
+                    DefaultDependencyNode child = new DefaultDependencyNode();
+                    child.setDependency( d );
+                    child.setPremanagedScope( premanagedScope );
+                    child.setPremanagedVersion( premanagedVersion );
+                    child.setRelocations( relocations );
+                    child.setVersionConstraint( rangeResult.getVersionConstraint() );
+                    child.setVersion( version );
+                    child.setAliases( descriptorResult.getAliases() );
+                    child.setRepositories( repos );
+                    child.setRequestContext( args.result.getRequest().getRequestContext() );
+
+                    node.getChildren().add( child );
 
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
                     if ( recurse )
@@ -495,10 +507,11 @@ public class DefaultDependencyCollector
                         DefaultDependencyCollectionContext context = args.collectionContext;
                         context.set( d, descriptorResult.getManagedDependencies() );
 
-                        childSelector = depSelector.deriveChildSelector( context );
-                        childManager = depManager.deriveChildManager( context );
-                        childTraverser = depTraverser.deriveChildTraverser( context );
+                        DependencySelector childSelector = depSelector.deriveChildSelector( context );
+                        DependencyManager childManager = depManager.deriveChildManager( context );
+                        DependencyTraverser childTraverser = depTraverser.deriveChildTraverser( context );
 
+                        List<RemoteRepository> childRepos = null;
                         if ( args.ignoreRepos )
                         {
                             childRepos = repositories;
@@ -510,68 +523,25 @@ public class DefaultDependencyCollector
                                                                                descriptorResult.getRepositories(), true );
                         }
 
-                        key =
+                        Object key =
                             args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser );
-                    }
-                    else
-                    {
-                        key = args.pool.toKey( d.getArtifact(), repositories );
-                    }
 
-                    List<RemoteRepository> repos;
-                    ArtifactRepository repo = rangeResult.getRepository( version );
-                    if ( repo instanceof RemoteRepository )
-                    {
-                        repos = Collections.singletonList( (RemoteRepository) repo );
-                    }
-                    else if ( repo == null )
-                    {
-                        repos = repositories;
-                    }
-                    else
-                    {
-                        repos = Collections.emptyList();
-                    }
-
-                    GraphNode child = args.pool.getNode( key );
-                    if ( child == null )
-                    {
-                        child = new GraphNode();
-                        child.setAliases( descriptorResult.getAliases() );
-                        child.setRepositories( repos );
-
-                        args.pool.putNode( key, child );
-                    }
-                    else
-                    {
-                        recurse = false;
-
-                        if ( repos.size() < child.getRepositories().size() )
+                        List<DependencyNode> children = args.pool.getChildren( key );
+                        if ( children == null )
                         {
-                            child.setRepositories( repos );
+                            args.pool.putChildren( key, child.getChildren() );
+
+                            args.nodes.push( child );
+
+                            process( args, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+                                     childTraverser );
+
+                            args.nodes.pop();
                         }
-                    }
-
-                    GraphEdge edge = new GraphEdge( child );
-                    edge.setDependency( d );
-                    edge.setScope( d.getScope() );
-                    edge.setPremanagedScope( premanagedScope );
-                    edge.setPremanagedVersion( premanagedVersion );
-                    edge.setRelocations( relocations );
-                    edge.setVersionConstraint( rangeResult.getVersionConstraint() );
-                    edge.setVersion( version );
-                    edge.setRequestContext( args.result.getRequest().getRequestContext() );
-
-                    node.getOutgoingEdges().add( edge );
-
-                    if ( recurse )
-                    {
-                        args.edges.push( edge );
-
-                        process( args, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
-                                 childTraverser );
-
-                        args.edges.pop();
+                        else
+                        {
+                            child.setChildren( new ArrayList<DependencyNode>( children ) );
+                        }
                     }
                 }
 
@@ -593,13 +563,13 @@ public class DefaultDependencyCollector
             if ( args.errorPath == null )
             {
                 StringBuilder buffer = new StringBuilder( 256 );
-                for ( int i = 0; i < args.edges.size(); i++ )
+                for ( int i = 0; i < args.nodes.size(); i++ )
                 {
                     if ( buffer.length() > 0 )
                     {
                         buffer.append( " -> " );
                     }
-                    Dependency dep = args.edges.get( i ).getDependency();
+                    Dependency dep = args.nodes.get( i ).getDependency();
                     if ( dep == null )
                     {
                         continue;
@@ -614,6 +584,20 @@ public class DefaultDependencyCollector
                 args.errorPath = buffer.toString();
             }
         }
+    }
+
+    private List<RemoteRepository> getRemoteRepositories( ArtifactRepository repository,
+                                                          List<RemoteRepository> repositories )
+    {
+        if ( repository instanceof RemoteRepository )
+        {
+            return Collections.singletonList( (RemoteRepository) repository );
+        }
+        else if ( repository != null )
+        {
+            return Collections.emptyList();
+        }
+        return repositories;
     }
 
     static class Args
@@ -631,14 +615,14 @@ public class DefaultDependencyCollector
 
         final DataPool pool;
 
-        final EdgeStack edges;
+        final NodeStack nodes;
 
         final DefaultDependencyCollectionContext collectionContext;
 
         String errorPath;
 
         public Args( CollectResult result, RepositorySystemSession session, RequestTrace trace, DataPool pool,
-                     EdgeStack edges, DefaultDependencyCollectionContext collectionContext )
+                     NodeStack nodes, DefaultDependencyCollectionContext collectionContext )
         {
             this.result = result;
             this.session = session;
@@ -646,7 +630,7 @@ public class DefaultDependencyCollector
             this.maxExceptions = ConfigUtils.getInteger( session, 50, "aether.dependencyCollector.maxExceptions" );
             this.trace = trace;
             this.pool = pool;
-            this.edges = edges;
+            this.nodes = nodes;
             this.collectionContext = collectionContext;
         }
 

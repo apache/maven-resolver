@@ -27,6 +27,7 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -59,7 +60,7 @@ final class DataPool
 
     private Map<Object, Constraint> constraints = new WeakHashMap<Object, Constraint>();
 
-    private Map<Object, GraphNode> nodes = new HashMap<Object, GraphNode>( 256 );
+    private Map<Object, List<DependencyNode>> nodes = new HashMap<Object, List<DependencyNode>>( 256 );
 
     @SuppressWarnings( "unchecked" )
     public DataPool( RepositorySystemSession session )
@@ -156,25 +157,20 @@ final class DataPool
         constraints.put( key, new Constraint( result ) );
     }
 
-    public Object toKey( Artifact artifact, List<RemoteRepository> repositories )
-    {
-        return new NodeKey( artifact, repositories );
-    }
-
     public Object toKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
                          DependencyManager manager, DependencyTraverser traverser )
     {
         return new GraphKey( artifact, repositories, selector, manager, traverser );
     }
 
-    public GraphNode getNode( Object key )
+    public List<DependencyNode> getChildren( Object key )
     {
         return nodes.get( key );
     }
 
-    public void putNode( Object key, GraphNode node )
+    public void putChildren( Object key, List<DependencyNode> children )
     {
-        nodes.put( key, node );
+        nodes.put( key, children );
     }
 
     static abstract class Descriptor
@@ -337,49 +333,6 @@ final class DataPool
                 }
             }
             return true;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return hashCode;
-        }
-
-    }
-
-    static class NodeKey
-    {
-
-        private final Artifact artifact;
-
-        private final List<RemoteRepository> repositories;
-
-        private final int hashCode;
-
-        public NodeKey( Artifact artifact, List<RemoteRepository> repositories )
-        {
-            this.artifact = artifact;
-            this.repositories = repositories;
-
-            int hash = 17;
-            hash = hash * 31 + artifact.hashCode();
-            hash = hash * 31 + repositories.hashCode();
-            hashCode = hash;
-        }
-
-        @Override
-        public boolean equals( Object obj )
-        {
-            if ( obj == this )
-            {
-                return true;
-            }
-            else if ( !( obj instanceof NodeKey ) )
-            {
-                return false;
-            }
-            NodeKey that = (NodeKey) obj;
-            return artifact.equals( that.artifact ) && repositories.equals( that.repositories );
         }
 
         @Override

@@ -93,6 +93,23 @@ public final class DefaultDependencyNode
         return children;
     }
 
+    /**
+     * Sets the child nodes of this node.
+     * 
+     * @param children The child nodes, may be {@code null}
+     */
+    public void setChildren( List<DependencyNode> children )
+    {
+        if ( children == null )
+        {
+            this.children = new ArrayList<DependencyNode>( 0 );
+        }
+        else
+        {
+            this.children = children;
+        }
+    }
+
     public Dependency getDependency()
     {
         return dependency;
