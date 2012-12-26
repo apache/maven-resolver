@@ -19,9 +19,9 @@ import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.internal.test.util.impl.TestDependencyNode;
 import org.eclipse.aether.internal.test.util.impl.TestVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionScheme;
@@ -122,7 +122,7 @@ public class NodeBuilder
     public DependencyNode build()
     {
         Dependency dependency = null;
-        TestDependencyNode node = new TestDependencyNode();
+        DefaultDependencyNode node = new DefaultDependencyNode();
         if ( artifactId != null && artifactId.length() > 0 )
         {
             Artifact artifact =
