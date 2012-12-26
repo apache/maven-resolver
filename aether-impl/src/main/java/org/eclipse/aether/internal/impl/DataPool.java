@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -188,6 +187,8 @@ final class DataPool
 
         final List<Artifact> relocations;
 
+        final Collection<Artifact> aliases;
+
         final List<RemoteRepository> repositories;
 
         final List<Dependency> dependencies;
@@ -198,9 +199,10 @@ final class DataPool
         {
             artifact = result.getArtifact();
             relocations = result.getRelocations();
+            aliases = result.getAliases();
             dependencies = result.getDependencies();
             managedDependencies = result.getManagedDependencies();
-            repositories = clone( result.getRepositories() );
+            repositories = result.getRepositories();
         }
 
         public ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request )
@@ -208,17 +210,11 @@ final class DataPool
             ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
             result.setArtifact( artifact );
             result.setRelocations( relocations );
+            result.setAliases( aliases );
             result.setDependencies( dependencies );
-            result.setManagedDependencies( dependencies );
-            result.setRepositories( clone( repositories ) );
+            result.setManagedDependencies( managedDependencies );
+            result.setRepositories( repositories );
             return result;
-        }
-
-        private static List<RemoteRepository> clone( List<RemoteRepository> repositories )
-        {
-            List<RemoteRepository> clones = new ArrayList<RemoteRepository>( repositories.size() );
-            clones.addAll( repositories );
-            return clones;
         }
 
     }
