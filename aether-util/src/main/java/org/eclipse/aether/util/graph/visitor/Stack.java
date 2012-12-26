@@ -23,7 +23,8 @@ class Stack<E>
     implements RandomAccess
 {
 
-    private Object[] elements = new Object[64];
+    @SuppressWarnings( "unchecked" )
+    private E[] elements = (E[]) new Object[96];
 
     private int size;
 
@@ -31,34 +32,32 @@ class Stack<E>
     {
         if ( size >= elements.length )
         {
-            Object[] tmp = new Object[size + 64];
+            @SuppressWarnings( "unchecked" )
+            E[] tmp = (E[]) new Object[size + 64];
             System.arraycopy( elements, 0, tmp, 0, elements.length );
             elements = tmp;
         }
         elements[size++] = element;
     }
 
-    @SuppressWarnings( "unchecked" )
     public E pop()
     {
         if ( size <= 0 )
         {
             throw new NoSuchElementException();
         }
-        return (E) elements[--size];
+        return elements[--size];
     }
 
-    @SuppressWarnings( "unchecked" )
     public E peek()
     {
         if ( size <= 0 )
         {
             return null;
         }
-        return (E) elements[size - 1];
+        return elements[size - 1];
     }
 
-    @SuppressWarnings( "unchecked" )
     @Override
     public E get( int index )
     {
@@ -66,7 +65,7 @@ class Stack<E>
         {
             throw new IndexOutOfBoundsException( "Index: " + index + ", Size: " + size );
         }
-        return (E) elements[size - index - 1];
+        return elements[size - index - 1];
     }
 
     @Override
