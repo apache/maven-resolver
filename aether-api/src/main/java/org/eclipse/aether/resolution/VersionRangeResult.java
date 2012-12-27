@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 package org.eclipse.aether.resolution;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +32,11 @@ public final class VersionRangeResult
 
     private final VersionRangeRequest request;
 
-    private final List<Exception> exceptions;
+    private List<Exception> exceptions;
 
     private List<Version> versions;
 
-    private final Map<Version, ArtifactRepository> repositories;
+    private Map<Version, ArtifactRepository> repositories;
 
     private VersionConstraint versionConstraint;
 
@@ -51,9 +52,9 @@ public final class VersionRangeResult
             throw new IllegalArgumentException( "version range request has not been specified" );
         }
         this.request = request;
-        this.exceptions = new ArrayList<Exception>( 4 );
-        versions = new ArrayList<Version>();
-        repositories = new HashMap<Version, ArtifactRepository>();
+        exceptions = Collections.emptyList();
+        versions = Collections.emptyList();
+        repositories = Collections.emptyMap();
     }
 
     /**
@@ -86,7 +87,11 @@ public final class VersionRangeResult
     {
         if ( exception != null )
         {
-            this.exceptions.add( exception );
+            if ( exceptions.isEmpty() )
+            {
+                exceptions = new ArrayList<Exception>();
+            }
+            exceptions.add( exception );
         }
         return this;
     }
@@ -102,13 +107,17 @@ public final class VersionRangeResult
     }
 
     /**
-     * Adds the specified version to the result.
+     * Adds the specified version to the result. Note that versions must be added in ascending order.
      * 
      * @param version The version to add, must not be {@code null}.
      * @return This result for chaining, never {@code null}.
      */
     public VersionRangeResult addVersion( Version version )
     {
+        if ( versions.isEmpty() )
+        {
+            versions = new ArrayList<Version>();
+        }
         versions.add( version );
         return this;
     }
@@ -121,7 +130,14 @@ public final class VersionRangeResult
      */
     public VersionRangeResult setVersions( List<Version> versions )
     {
-        this.versions = ( versions != null ) ? versions : new ArrayList<Version>();
+        if ( versions == null )
+        {
+            this.versions = Collections.emptyList();
+        }
+        else
+        {
+            this.versions = versions;
+        }
         return this;
     }
 
@@ -175,7 +191,11 @@ public final class VersionRangeResult
     {
         if ( repository != null )
         {
-            this.repositories.put( version, repository );
+            if ( repositories.isEmpty() )
+            {
+                repositories = new HashMap<Version, ArtifactRepository>();
+            }
+            repositories.put( version, repository );
         }
         return this;
     }

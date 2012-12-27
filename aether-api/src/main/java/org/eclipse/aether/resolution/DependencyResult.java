@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.resolution;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
@@ -45,9 +45,9 @@ public final class DependencyResult
             throw new IllegalArgumentException( "dependency request has not been specified" );
         }
         this.request = request;
-        this.root = request.getRoot();
-        this.collectExceptions = new ArrayList<Exception>( 2 );
-        this.artifactResults = new ArrayList<ArtifactResult>( 2 );
+        root = request.getRoot();
+        collectExceptions = Collections.emptyList();
+        artifactResults = Collections.emptyList();
     }
 
     /**
@@ -101,7 +101,14 @@ public final class DependencyResult
      */
     public DependencyResult setCollectExceptions( List<Exception> exceptions )
     {
-        this.collectExceptions = ( exceptions != null ) ? exceptions : new ArrayList<Exception>();
+        if ( exceptions == null )
+        {
+            this.collectExceptions = Collections.emptyList();
+        }
+        else
+        {
+            this.collectExceptions = exceptions;
+        }
         return this;
     }
 
@@ -123,7 +130,14 @@ public final class DependencyResult
      */
     public DependencyResult setArtifactResults( List<ArtifactResult> results )
     {
-        this.artifactResults = ( results != null ) ? results : new ArrayList<ArtifactResult>();
+        if ( results == null )
+        {
+            this.artifactResults = Collections.emptyList();
+        }
+        else
+        {
+            this.artifactResults = results;
+        }
         return this;
     }
 

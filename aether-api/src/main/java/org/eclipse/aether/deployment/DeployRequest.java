@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.aether.deployment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -28,13 +29,20 @@ import org.eclipse.aether.repository.RemoteRepository;
 public final class DeployRequest
 {
 
-    private Collection<Artifact> artifacts = new ArrayList<Artifact>();
+    private Collection<Artifact> artifacts = Collections.emptyList();
 
-    private Collection<Metadata> metadata = new ArrayList<Metadata>();
+    private Collection<Metadata> metadata = Collections.emptyList();
 
     private RemoteRepository repository;
 
     private RequestTrace trace;
+
+    /**
+     * Creates an uninitialized request.
+     */
+    public DeployRequest()
+    {
+    }
 
     /**
      * Gets the artifact to deploy.
@@ -56,7 +64,7 @@ public final class DeployRequest
     {
         if ( artifacts == null )
         {
-            this.artifacts = new ArrayList<Artifact>();
+            this.artifacts = Collections.emptyList();
         }
         else
         {
@@ -75,6 +83,10 @@ public final class DeployRequest
     {
         if ( artifact != null )
         {
+            if ( artifacts.isEmpty() )
+            {
+                artifacts = new ArrayList<Artifact>();
+            }
             artifacts.add( artifact );
         }
         return this;
@@ -100,7 +112,7 @@ public final class DeployRequest
     {
         if ( metadata == null )
         {
-            this.metadata = new ArrayList<Metadata>();
+            this.metadata = Collections.emptyList();
         }
         else
         {
@@ -119,6 +131,10 @@ public final class DeployRequest
     {
         if ( metadata != null )
         {
+            if ( this.metadata.isEmpty() )
+            {
+                this.metadata = new ArrayList<Metadata>();
+            }
             this.metadata.add( metadata );
         }
         return this;

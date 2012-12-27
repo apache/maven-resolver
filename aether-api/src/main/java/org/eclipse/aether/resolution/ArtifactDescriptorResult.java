@@ -63,14 +63,13 @@ public final class ArtifactDescriptorResult
             throw new IllegalArgumentException( "artifact descriptor request has not been specified" );
         }
         this.request = request;
-        this.artifact = request.getArtifact();
-        this.exceptions = new ArrayList<Exception>( 2 );
-        this.relocations = new ArrayList<Artifact>( 2 );
-        this.aliases = new ArrayList<Artifact>( 1 );
-        this.dependencies = new ArrayList<Dependency>();
-        this.managedDependencies = new ArrayList<Dependency>();
-        this.repositories = new ArrayList<RemoteRepository>();
-        this.properties = Collections.emptyMap();
+        artifact = request.getArtifact();
+        exceptions = Collections.emptyList();
+        relocations = Collections.emptyList();
+        aliases = Collections.emptyList();
+        dependencies = managedDependencies = Collections.emptyList();
+        repositories = Collections.emptyList();
+        properties = Collections.emptyMap();
     }
 
     /**
@@ -103,7 +102,7 @@ public final class ArtifactDescriptorResult
     {
         if ( exceptions == null )
         {
-            this.exceptions = new ArrayList<Exception>( 2 );
+            this.exceptions = Collections.emptyList();
         }
         else
         {
@@ -122,7 +121,11 @@ public final class ArtifactDescriptorResult
     {
         if ( exception != null )
         {
-            this.exceptions.add( exception );
+            if ( exceptions.isEmpty() )
+            {
+                exceptions = new ArrayList<Exception>();
+            }
+            exceptions.add( exception );
         }
         return this;
     }
@@ -148,7 +151,7 @@ public final class ArtifactDescriptorResult
     {
         if ( relocations == null )
         {
-            this.relocations = new ArrayList<Artifact>( 2 );
+            this.relocations = Collections.emptyList();
         }
         else
         {
@@ -167,6 +170,10 @@ public final class ArtifactDescriptorResult
     {
         if ( artifact != null )
         {
+            if ( relocations.isEmpty() )
+            {
+                relocations = new ArrayList<Artifact>();
+            }
             relocations.add( artifact );
         }
         return this;
@@ -194,7 +201,7 @@ public final class ArtifactDescriptorResult
     {
         if ( aliases == null )
         {
-            this.aliases = new ArrayList<Artifact>( 0 );
+            this.aliases = Collections.emptyList();
         }
         else
         {
@@ -213,6 +220,10 @@ public final class ArtifactDescriptorResult
     {
         if ( alias != null )
         {
+            if ( aliases.isEmpty() )
+            {
+                aliases = new ArrayList<Artifact>();
+            }
             aliases.add( alias );
         }
         return this;
@@ -283,7 +294,7 @@ public final class ArtifactDescriptorResult
     {
         if ( dependencies == null )
         {
-            this.dependencies = new ArrayList<Dependency>();
+            this.dependencies = Collections.emptyList();
         }
         else
         {
@@ -302,6 +313,10 @@ public final class ArtifactDescriptorResult
     {
         if ( dependency != null )
         {
+            if ( dependencies.isEmpty() )
+            {
+                dependencies = new ArrayList<Dependency>();
+            }
             dependencies.add( dependency );
         }
         return this;
@@ -327,7 +342,7 @@ public final class ArtifactDescriptorResult
     {
         if ( dependencies == null )
         {
-            this.managedDependencies = new ArrayList<Dependency>();
+            this.managedDependencies = Collections.emptyList();
         }
         else
         {
@@ -346,6 +361,10 @@ public final class ArtifactDescriptorResult
     {
         if ( dependency != null )
         {
+            if ( managedDependencies.isEmpty() )
+            {
+                managedDependencies = new ArrayList<Dependency>();
+            }
             managedDependencies.add( dependency );
         }
         return this;
@@ -371,7 +390,7 @@ public final class ArtifactDescriptorResult
     {
         if ( repositories == null )
         {
-            this.repositories = new ArrayList<RemoteRepository>( 2 );
+            this.repositories = Collections.emptyList();
         }
         else
         {
@@ -390,6 +409,10 @@ public final class ArtifactDescriptorResult
     {
         if ( repository != null )
         {
+            if ( repositories.isEmpty() )
+            {
+                repositories = new ArrayList<RemoteRepository>();
+            }
             repositories.add( repository );
         }
         return this;

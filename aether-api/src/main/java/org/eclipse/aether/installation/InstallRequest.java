@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.aether.installation;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -27,11 +28,18 @@ import org.eclipse.aether.metadata.Metadata;
 public final class InstallRequest
 {
 
-    private Collection<Artifact> artifacts = new ArrayList<Artifact>();
+    private Collection<Artifact> artifacts = Collections.emptyList();
 
-    private Collection<Metadata> metadata = new ArrayList<Metadata>();
+    private Collection<Metadata> metadata = Collections.emptyList();
 
     private RequestTrace trace;
+
+    /**
+     * Creates an uninitialized request.
+     */
+    public InstallRequest()
+    {
+    }
 
     /**
      * Gets the artifact to install.
@@ -53,7 +61,7 @@ public final class InstallRequest
     {
         if ( artifacts == null )
         {
-            this.artifacts = new ArrayList<Artifact>();
+            this.artifacts = Collections.emptyList();
         }
         else
         {
@@ -72,6 +80,10 @@ public final class InstallRequest
     {
         if ( artifact != null )
         {
+            if ( artifacts.isEmpty() )
+            {
+                artifacts = new ArrayList<Artifact>();
+            }
             artifacts.add( artifact );
         }
         return this;
@@ -97,7 +109,7 @@ public final class InstallRequest
     {
         if ( metadata == null )
         {
-            this.metadata = new ArrayList<Metadata>();
+            this.metadata = Collections.emptyList();
         }
         else
         {
@@ -116,6 +128,10 @@ public final class InstallRequest
     {
         if ( metadata != null )
         {
+            if ( this.metadata.isEmpty() )
+            {
+                this.metadata = new ArrayList<Metadata>();
+            }
             this.metadata.add( metadata );
         }
         return this;

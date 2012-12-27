@@ -11,6 +11,7 @@
 package org.eclipse.aether.resolution;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
@@ -30,7 +31,7 @@ public final class ArtifactResult
 
     private final ArtifactRequest request;
 
-    private final List<Exception> exceptions;
+    private List<Exception> exceptions;
 
     private Artifact artifact;
 
@@ -48,7 +49,7 @@ public final class ArtifactResult
             throw new IllegalArgumentException( "resolution request has not been specified" );
         }
         this.request = request;
-        this.exceptions = new ArrayList<Exception>( 2 );
+        exceptions = Collections.emptyList();
     }
 
     /**
@@ -107,7 +108,11 @@ public final class ArtifactResult
     {
         if ( exception != null )
         {
-            this.exceptions.add( exception );
+            if ( exceptions.isEmpty() )
+            {
+                exceptions = new ArrayList<Exception>();
+            }
+            exceptions.add( exception );
         }
         return this;
     }

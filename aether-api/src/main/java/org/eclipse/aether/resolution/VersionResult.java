@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 package org.eclipse.aether.resolution;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
@@ -27,7 +28,7 @@ public final class VersionResult
 
     private final VersionRequest request;
 
-    private final List<Exception> exceptions;
+    private List<Exception> exceptions;
 
     private String version;
 
@@ -45,7 +46,7 @@ public final class VersionResult
             throw new IllegalArgumentException( "version request has not been specified" );
         }
         this.request = request;
-        this.exceptions = new ArrayList<Exception>( 4 );
+        exceptions = Collections.emptyList();
     }
 
     /**
@@ -78,7 +79,11 @@ public final class VersionResult
     {
         if ( exception != null )
         {
-            this.exceptions.add( exception );
+            if ( exceptions.isEmpty() )
+            {
+                exceptions = new ArrayList<Exception>();
+            }
+            exceptions.add( exception );
         }
         return this;
     }
