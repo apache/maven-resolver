@@ -232,7 +232,7 @@ public class DefaultDependencyCollector
         }
         else
         {
-            node = new DefaultDependencyNode( (Dependency) null );
+            node = new DefaultDependencyNode( request.getRootArtifact() );
         }
 
         result.setRoot( node );

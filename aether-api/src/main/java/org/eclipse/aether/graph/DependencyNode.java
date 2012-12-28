@@ -41,11 +41,21 @@ public interface DependencyNode
 
     /**
      * Gets the dependency associated with this node. <em>Note:</em> For dependency graphs that have been constructed
-     * without a root dependency, the root node will not have a dependency associated with it.
+     * without a root dependency, this method will yield {@code null} when invoked on the graph's root node. The root
+     * node of such graphs may however still have a label as returned by {@link #getArtifact()}.
      * 
      * @return The dependency or {@code null} if none.
      */
     Dependency getDependency();
+
+    /**
+     * Gets the artifact associated with this node. If this node is associated with a dependency, this is equivalent to
+     * {@code getDependency().getArtifact()}. Otherwise the artifact merely provides a label for this node in which case
+     * the artifact must not be subjected to dependency collection/resolution.
+     * 
+     * @return The associated artifact or {@code null} if none.
+     */
+    Artifact getArtifact();
 
     /**
      * Updates the artifact of the dependency after resolution. The new artifact must have the same coordinates as the

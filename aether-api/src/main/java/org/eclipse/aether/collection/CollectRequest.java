@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -31,6 +32,8 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 public final class CollectRequest
 {
+
+    private Artifact rootArtifact;
 
     private Dependency root;
 
@@ -93,6 +96,33 @@ public final class CollectRequest
         setDependencies( dependencies );
         setManagedDependencies( managedDependencies );
         setRepositories( repositories );
+    }
+
+    /**
+     * Gets the root artifact for the dependency graph.
+     * 
+     * @return The root artifact for the dependency graph or {@code null} if none.
+     */
+    public Artifact getRootArtifact()
+    {
+        return rootArtifact;
+    }
+
+    /**
+     * Sets the root artifact for the dependency graph. This must not be confused with {@link #setRoot(Dependency)}: The
+     * root <em>dependency</em>, like any other specified dependency, will be subject to dependency
+     * collection/resolution, i.e. should have an artifact descriptor and a corresponding artifact file. The root
+     * <em>artifact</em> on the other hand is only used as a label for the root node of the graph in case no root
+     * dependency was specified. As such, the configured root artifact is ignored if {@link #getRoot()} does not return
+     * {@code null}.
+     * 
+     * @param rootArtifact The root artifact for the dependency graph, may be {@code null}.
+     * @return This request for chaining, never {@code null}.
+     */
+    public CollectRequest setRootArtifact( Artifact rootArtifact )
+    {
+        this.rootArtifact = rootArtifact;
+        return this;
     }
 
     /**

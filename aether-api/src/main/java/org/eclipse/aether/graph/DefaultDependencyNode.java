@@ -33,6 +33,8 @@ public final class DefaultDependencyNode
 
     private Dependency dependency;
 
+    private Artifact artifact;
+
     private List<Artifact> relocations;
 
     private Collection<Artifact> aliases;
@@ -59,6 +61,24 @@ public final class DefaultDependencyNode
     public DefaultDependencyNode( Dependency dependency )
     {
         this.dependency = dependency;
+        artifact = ( dependency != null ) ? dependency.getArtifact() : null;
+        children = new ArrayList<DependencyNode>( 0 );
+        aliases = relocations = Collections.emptyList();
+        repositories = Collections.emptyList();
+        context = "";
+        data = Collections.emptyMap();
+    }
+
+    /**
+     * Creates a new root node with the specified artifact as its label. Note that the new node has no dependency, i.e.
+     * {@link #getDependency()} will return {@code null}. Put differently, the specified artifact will not be subject to
+     * dependency collection/resolution.
+     * 
+     * @param artifact The artifact to use as label for this node, may be {@code null}.
+     */
+    public DefaultDependencyNode( Artifact artifact )
+    {
+        this.artifact = artifact;
         children = new ArrayList<DependencyNode>( 0 );
         aliases = relocations = Collections.emptyList();
         repositories = Collections.emptyList();
@@ -74,6 +94,7 @@ public final class DefaultDependencyNode
     public DefaultDependencyNode( DependencyNode node )
     {
         dependency = node.getDependency();
+        artifact = node.getArtifact();
         children = new ArrayList<DependencyNode>( 0 );
         setAliases( node.getAliases() );
         setRequestContext( node.getRequestContext() );
@@ -113,6 +134,11 @@ public final class DefaultDependencyNode
         return dependency;
     }
 
+    public Artifact getArtifact()
+    {
+        return artifact;
+    }
+
     public void setArtifact( Artifact artifact )
     {
         if ( dependency == null )
@@ -120,6 +146,7 @@ public final class DefaultDependencyNode
             throw new UnsupportedOperationException( "node does not have a dependency" );
         }
         dependency = dependency.setArtifact( artifact );
+        artifact = dependency.getArtifact();
     }
 
     public List<Artifact> getRelocations()
@@ -327,7 +354,7 @@ public final class DefaultDependencyNode
         Dependency dep = getDependency();
         if ( dep == null )
         {
-            return String.valueOf( getChildren() );
+            return String.valueOf( getArtifact() );
         }
         return dep.toString();
     }
