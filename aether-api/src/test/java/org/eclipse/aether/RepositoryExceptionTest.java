@@ -181,8 +181,7 @@ public class RepositoryExceptionTest
     public void testUnsolvableVersionConflictException_Serializable()
     {
         DependencyNode node = new DefaultDependencyNode( new Dependency( newArtifact(), "test" ) );
-        assertSerializable( new UnsolvableVersionConflictException( Collections.singleton( Arrays.asList( node ) ),
-                                                                    new Object() ) );
+        assertSerializable( new UnsolvableVersionConflictException( Collections.singleton( Arrays.asList( node ) ) ) );
     }
 
     @Test

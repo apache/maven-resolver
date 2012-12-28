@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,8 +35,6 @@ public final class ConflictMarker
     implements DependencyGraphTransformer
 {
 
-    private final Object SEEN = Boolean.TRUE;
-
     /**
      * After the execution of this method, every DependencyNode with an attached dependency is member of one conflict
      * group.
@@ -49,7 +47,7 @@ public final class ConflictMarker
         Map<DependencyNode, Object> nodes = new IdentityHashMap<DependencyNode, Object>( 1024 );
         Map<Object, ConflictGroup> groups = new HashMap<Object, ConflictGroup>( 1024 );
 
-        analyze( node, nodes, groups );
+        analyze( node, nodes, groups, new int[] { 0 } );
 
         Map<DependencyNode, Object> conflictIds = mark( nodes.keySet(), groups );
 
@@ -58,9 +56,10 @@ public final class ConflictMarker
         return node;
     }
 
-    private void analyze( DependencyNode node, Map<DependencyNode, Object> nodes, Map<Object, ConflictGroup> groups )
+    private void analyze( DependencyNode node, Map<DependencyNode, Object> nodes, Map<Object, ConflictGroup> groups,
+                          int[] counter )
     {
-        if ( nodes.put( node, SEEN ) != null )
+        if ( nodes.put( node, Boolean.TRUE ) != null )
         {
             return;
         }
@@ -87,7 +86,7 @@ public final class ConflictMarker
                         }
                         else
                         {
-                            group = new ConflictGroup( newKeys );
+                            group = new ConflictGroup( newKeys, counter[0]++ );
                             fixMappings = true;
                         }
                     }
@@ -106,7 +105,7 @@ public final class ConflictMarker
                         }
                         else if ( newKeys != group.keys )
                         {
-                            group = new ConflictGroup( newKeys );
+                            group = new ConflictGroup( newKeys, counter[0]++ );
                             fixMappings = true;
                         }
                     }
@@ -115,7 +114,7 @@ public final class ConflictMarker
 
             if ( group == null )
             {
-                group = new ConflictGroup( keys );
+                group = new ConflictGroup( keys, counter[0]++ );
                 fixMappings = true;
             }
             if ( fixMappings )
@@ -129,7 +128,7 @@ public final class ConflictMarker
 
         for ( DependencyNode child : node.getChildren() )
         {
-            analyze( child, nodes, groups );
+            analyze( child, nodes, groups, counter );
         }
     }
 
@@ -209,7 +208,7 @@ public final class ConflictMarker
             if ( dependency != null )
             {
                 Object key = toKey( dependency.getArtifact() );
-                conflictIds.put( node, groups.get( key ).keys );
+                conflictIds.put( node, groups.get( key ).index );
             }
         }
 
@@ -226,9 +225,12 @@ public final class ConflictMarker
 
         final Set<Object> keys;
 
-        public ConflictGroup( Set<Object> keys )
+        final int index;
+
+        public ConflictGroup( Set<Object> keys, int index )
         {
             this.keys = keys;
+            this.index = index;
         }
 
         @Override

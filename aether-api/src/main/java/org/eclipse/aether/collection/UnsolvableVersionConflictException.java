@@ -28,42 +28,13 @@ public class UnsolvableVersionConflictException
     extends RepositoryException
 {
 
-    private final transient Object dependencyConflictId;
-
     private final transient Collection<String> versions;
 
     private final transient Collection<List<DependencyNode>> paths;
 
-    public UnsolvableVersionConflictException( Object dependencyConflictId, Collection<String> versions )
-    {
-        super( "Could not resolve version conflict for " + dependencyConflictId + " with requested versions "
-            + toList( versions ) );
-        this.dependencyConflictId = ( dependencyConflictId != null ) ? dependencyConflictId : "";
-        this.versions = ( versions != null ) ? versions : Collections.<String> emptyList();
-        this.paths = Collections.emptyList();
-    }
-
-    private static String toList( Collection<String> versions )
-    {
-        StringBuilder buffer = new StringBuilder( 256 );
-        if ( versions != null )
-        {
-            for ( String version : versions )
-            {
-                if ( buffer.length() > 0 )
-                {
-                    buffer.append( ", " );
-                }
-                buffer.append( version );
-            }
-        }
-        return buffer.toString();
-    }
-
-    public UnsolvableVersionConflictException( Collection<List<DependencyNode>> paths, Object dependencyConflictId )
+    public UnsolvableVersionConflictException( Collection<List<DependencyNode>> paths )
     {
         super( "Could not resolve version conflict among " + toPaths( paths ) );
-        this.dependencyConflictId = ( dependencyConflictId != null ) ? dependencyConflictId : "";
         if ( paths == null )
         {
             this.paths = Collections.emptyList();
@@ -132,16 +103,6 @@ public class UnsolvableVersionConflictException
         }
 
         return buffer.toString();
-    }
-
-    /**
-     * Gets the conflict id of the dependency that encountered the version conflict.
-     * 
-     * @return The conflict id, never {@code null}.
-     */
-    public Object getDependencyConflictId()
-    {
-        return dependencyConflictId;
     }
 
     /**

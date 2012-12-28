@@ -195,7 +195,7 @@ public final class NearestVersionConflictResolver
         };
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor( filter );
         root.accept( visitor );
-        return new UnsolvableVersionConflictException( visitor.getPaths(), group.key );
+        return new UnsolvableVersionConflictException( visitor.getPaths() );
     }
 
     private boolean isNearer( Position pos1, Version ver1, Position pos2, Version ver2 )
