@@ -29,13 +29,13 @@ public final class DefaultDependencyNode
     implements DependencyNode
 {
 
-    private List<DependencyNode> children = new ArrayList<DependencyNode>( 0 );
+    private List<DependencyNode> children;
 
     private Dependency dependency;
 
-    private List<Artifact> relocations = Collections.emptyList();
+    private List<Artifact> relocations;
 
-    private Collection<Artifact> aliases = Collections.emptyList();
+    private Collection<Artifact> aliases;
 
     private VersionConstraint versionConstraint;
 
@@ -45,38 +45,36 @@ public final class DefaultDependencyNode
 
     private String premanagedScope;
 
-    private List<RemoteRepository> repositories = Collections.emptyList();
+    private List<RemoteRepository> repositories;
 
-    private String context = "";
+    private String context;
 
-    private Map<Object, Object> data = Collections.emptyMap();
-
-    /**
-     * Creates an empty dependency node.
-     */
-    public DefaultDependencyNode()
-    {
-        // enables no-arg constructor
-    }
+    private Map<Object, Object> data;
 
     /**
-     * Creates a new root node with the specified dependency.
+     * Creates a new node with the specified dependency.
      * 
-     * @param dependency The dependency associated with this node, may be {@code null}.
+     * @param dependency The dependency associated with this node, may be {@code null} for a root node.
      */
     public DefaultDependencyNode( Dependency dependency )
     {
         this.dependency = dependency;
+        children = new ArrayList<DependencyNode>( 0 );
+        aliases = relocations = Collections.emptyList();
+        repositories = Collections.emptyList();
+        context = "";
+        data = Collections.emptyMap();
     }
 
     /**
-     * Creates a shallow clone of the specified node.
+     * Creates a shallow clone of the specified node. The new node has initially no children.
      * 
      * @param node The node to copy, must not be {@code null}.
      */
     public DefaultDependencyNode( DependencyNode node )
     {
-        setDependency( node.getDependency() );
+        dependency = node.getDependency();
+        children = new ArrayList<DependencyNode>( 0 );
         setAliases( node.getAliases() );
         setRequestContext( node.getRequestContext() );
         setPremanagedScope( node.getPremanagedScope() );
@@ -115,13 +113,12 @@ public final class DefaultDependencyNode
         return dependency;
     }
 
-    public void setDependency( Dependency dependency )
-    {
-        this.dependency = dependency;
-    }
-
     public void setArtifact( Artifact artifact )
     {
+        if ( dependency == null )
+        {
+            throw new UnsupportedOperationException( "node does not have a dependency" );
+        }
         dependency = dependency.setArtifact( artifact );
     }
 
@@ -191,6 +188,10 @@ public final class DefaultDependencyNode
 
     public void setScope( String scope )
     {
+        if ( dependency == null )
+        {
+            throw new UnsupportedOperationException( "node does not have a dependency" );
+        }
         dependency = dependency.setScope( scope );
     }
 

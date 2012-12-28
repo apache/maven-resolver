@@ -122,13 +122,15 @@ public class NodeBuilder
     public DependencyNode build()
     {
         Dependency dependency = null;
-        DefaultDependencyNode node = new DefaultDependencyNode();
         if ( artifactId != null && artifactId.length() > 0 )
         {
             Artifact artifact =
                 new DefaultArtifact( groupId, artifactId, classifier, ext, version, properties, (File) null );
             dependency = new Dependency( artifact, scope, optional );
-            node.setDependency( dependency );
+        }
+        DefaultDependencyNode node = new DefaultDependencyNode( dependency );
+        if ( artifactId != null && artifactId.length() > 0 )
+        {
             try
             {
                 node.setVersion( versionScheme.parseVersion( version ) );

@@ -48,7 +48,9 @@ public interface DependencyNode
     Dependency getDependency();
 
     /**
-     * Sets the artifact of the dependency.
+     * Updates the artifact of the dependency after resolution. The new artifact must have the same coordinates as the
+     * original artifact. This method may only be invoked if this node actually has a dependency, i.e. if
+     * {@link #getDependency()} is not null.
      * 
      * @param artifact The artifact satisfying the dependency, must not be {@code null}.
      */
@@ -85,7 +87,8 @@ public interface DependencyNode
     Version getVersion();
 
     /**
-     * Sets the scope of the dependency.
+     * Sets the scope of the dependency. This method may only be invoked if this node actually has a dependency, i.e. if
+     * {@link #getDependency()} is not null.
      * 
      * @param scope The scope, may be {@code null}.
      */

@@ -222,8 +222,7 @@ public class DefaultDependencyCollector
             dependencies = mergeDeps( dependencies, descriptorResult.getDependencies() );
             managedDependencies = mergeDeps( managedDependencies, descriptorResult.getManagedDependencies() );
 
-            node = new DefaultDependencyNode();
-            node.setDependency( root );
+            node = new DefaultDependencyNode( root );
             node.setRequestContext( request.getRequestContext() );
             node.setRelocations( descriptorResult.getRelocations() );
             node.setVersionConstraint( rangeResult.getVersionConstraint() );
@@ -233,7 +232,7 @@ public class DefaultDependencyCollector
         }
         else
         {
-            node = new DefaultDependencyNode();
+            node = new DefaultDependencyNode( (Dependency) null );
         }
 
         result.setRoot( node );
@@ -454,9 +453,8 @@ public class DefaultDependencyCollector
                     DependencyNode cycleNode = args.nodes.find( d.getArtifact() );
                     if ( cycleNode != null )
                     {
-                        DefaultDependencyNode child = new DefaultDependencyNode();
+                        DefaultDependencyNode child = new DefaultDependencyNode( d );
                         child.setChildren( new ArrayList<DependencyNode>( cycleNode.getChildren() ) );
-                        child.setDependency( d );
                         child.setPremanagedScope( premanagedScope );
                         child.setPremanagedVersion( premanagedVersion );
                         child.setRelocations( relocations );
@@ -488,8 +486,7 @@ public class DefaultDependencyCollector
                     List<RemoteRepository> repos =
                         getRemoteRepositories( rangeResult.getRepository( version ), repositories );
 
-                    DefaultDependencyNode child = new DefaultDependencyNode();
-                    child.setDependency( d );
+                    DefaultDependencyNode child = new DefaultDependencyNode( d );
                     child.setPremanagedScope( premanagedScope );
                     child.setPremanagedVersion( premanagedVersion );
                     child.setRelocations( relocations );
