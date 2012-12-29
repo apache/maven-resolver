@@ -33,11 +33,21 @@ public interface DependencyNode
 {
 
     /**
-     * Gets the child nodes of this node.
+     * Gets the child nodes of this node. To conserve memory, dependency nodes with equal dependencies may share the
+     * same child list instance. Hence clients mutating the child list need to be aware that these changes might affect
+     * more than this node. Where this is not desired, the child list should be copied before mutation if the client
+     * cannot be sure whether it might be shared with other nodes in the graph.
      * 
      * @return The child nodes of this node, never {@code null}.
      */
     List<DependencyNode> getChildren();
+
+    /**
+     * Sets the child nodes of this node.
+     * 
+     * @param children The child nodes, may be {@code null}
+     */
+    void setChildren( List<DependencyNode> children );
 
     /**
      * Gets the dependency associated with this node. <em>Note:</em> For dependency graphs that have been constructed

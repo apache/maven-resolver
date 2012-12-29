@@ -24,7 +24,6 @@ import java.util.Map;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -383,28 +382,6 @@ public class DefaultDependencyCollectorTest
 
         assertEquals( "managed", dep( node, 1 ).getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) );
         assertEquals( "managed", dep( node, 0, 0 ).getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) );
-    }
-
-    @Test
-    public void testDiamondWithSharedSinkNode()
-        throws Exception
-    {
-        CollectRequest request = new CollectRequest();
-        request.addDependency( new Dependency( new DefaultArtifact( "test:a:1" ), "compile" ) );
-        request.addDependency( new Dependency( new DefaultArtifact( "test:b:1" ), "compile" ) );
-        request.addRepository( repository );
-        collector.setArtifactDescriptorReader( new IniArtifactDescriptorReader( "artifact-descriptions/diamond/" ) );
-        CollectResult result = collector.collectDependencies( session, request );
-        DependencyNode root = result.getRoot();
-        assertNotNull( root );
-        assertEquals( 2, root.getChildren().size() );
-        assertEquals( 1, root.getChildren().get( 0 ).getChildren().size() );
-        assertEquals( 1, root.getChildren().get( 1 ).getChildren().size() );
-        assertSame( root.getChildren().get( 0 ).getChildren().get( 0 ),
-                    root.getChildren().get( 1 ).getChildren().get( 0 ) );
-        root.getChildren().get( 0 ).getChildren().remove( 0 );
-        assertEquals( 0, root.getChildren().get( 0 ).getChildren().size() );
-        assertEquals( 1, root.getChildren().get( 1 ).getChildren().size() );
     }
 
     /*     */

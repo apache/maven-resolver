@@ -112,11 +112,6 @@ public final class DefaultDependencyNode
         return children;
     }
 
-    /**
-     * Sets the child nodes of this node.
-     * 
-     * @param children The child nodes, may be {@code null}
-     */
     public void setChildren( List<DependencyNode> children )
     {
         if ( children == null )

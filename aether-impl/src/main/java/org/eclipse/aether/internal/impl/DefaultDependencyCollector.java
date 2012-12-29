@@ -454,7 +454,7 @@ public class DefaultDependencyCollector
                     if ( cycleNode != null )
                     {
                         DefaultDependencyNode child = new DefaultDependencyNode( d );
-                        child.setChildren( new ArrayList<DependencyNode>( cycleNode.getChildren() ) );
+                        child.setChildren( cycleNode.getChildren() );
                         child.setPremanagedScope( premanagedScope );
                         child.setPremanagedVersion( premanagedVersion );
                         child.setRelocations( relocations );
@@ -537,7 +537,7 @@ public class DefaultDependencyCollector
                         }
                         else
                         {
-                            child.setChildren( new ArrayList<DependencyNode>( children ) );
+                            child.setChildren( children );
                         }
                     }
                 }
