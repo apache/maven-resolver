@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.aether.util.graph.transformer;
 
 import static org.junit.Assert.*;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -70,7 +71,8 @@ public class ConflictIdSorterTest
 
     private void expectCycle( boolean cycle )
     {
-        assertEquals( Boolean.valueOf( cycle ), ctx.get( TransformationContextKeys.CYCLIC_CONFLICT_IDS ) );
+        Collection<?> cycles = (Collection<?>) ctx.get( TransformationContextKeys.CYCLIC_CONFLICT_IDS );
+        assertEquals( cycle, !cycles.isEmpty() );
     }
 
     public DependencyNode transform( DependencyNode node )

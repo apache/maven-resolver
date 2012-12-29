@@ -1,0 +1,14 @@
+# This highlights a design flaw in the previous separation of JavaEffectiveScopeCalculator and NearestVersionConflictResolver:
+# scope conflicts can't be properly determined and resolved until ancestor dependencies got their version conflicts resolved.
+# Otherwise, dependencies can get promoted to a scope due to a scope conflict which actually no longer arises after conflicting
+# versions got removed. In the dirty graph below, the effective scope of test:y should be "test" and not "compile" (as suggested
+# by its test:x parent).
+
+test:root:jar:1
++- test:a:jar:1:compile
+|  +- test:x:jar:1:compile             # (a)
++- test:b:jar:1:test
+|  +- test:y:jar:1:compile
++- test:c:jar:1:test
+   +- test:x:jar:1:compile             # conflicts with (a), hence leaving scope as "compile"
+      +- test:y:jar:1:compile          # since our parent gets removed in favor of (a), no need to promote y into scope "compile"

@@ -4,7 +4,7 @@
 |  \- gid:aid:ext:ver:provided
 +- gid:aid3:ext:ver
 |  \- gid:aid:ext:ver:runtime
-+- gid:aid3:ext:ver
++- gid:aid4:ext:ver
 |  \- gid:aid:ext:ver:test
-\- gid:aid3:ext:ver
+\- gid:aid5:ext:ver
    \- gid:aid:ext:ver:compile

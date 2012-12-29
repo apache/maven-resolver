@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,22 +12,23 @@ package org.eclipse.aether.util.graph.transformer;
 
 import static org.junit.Assert.*;
 
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.eclipse.aether.util.graph.transformer.NearestVersionConflictResolver;
-import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.junit.Test;
 
 /**
  */
-public class NearestVersionConflictResolverTest
+public class NearestVersionSelectorTest
     extends AbstractDependencyGraphTransformerTest
 {
+
+    private ConflictResolver newConflictResolver()
+    {
+        return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
+    }
 
     @Test
     public void testSelectHighestVersionFromMultipleVersionsAtSameLevel()
@@ -47,14 +48,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( a3 );
         root.getChildren().add( a2 );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( a1, "a" );
-        conflictIds.put( a2, "a" );
-        conflictIds.put( a3, "a" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         assertEquals( 1, root.getChildren().size() );
         assertSame( a3, root.getChildren().iterator().next() );
@@ -95,18 +89,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( c );
         root.getChildren().add( b2 );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( j, "j" );
-        conflictIds.put( a, "a" );
-        conflictIds.put( b1, "b" );
-        conflictIds.put( b2, "b" );
-        conflictIds.put( c, "c" );
-        conflictIds.put( d, "d" );
-        conflictIds.put( e, "e" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         List<DependencyNode> trail = find( root, "j" );
         assertEquals( 5, trail.size() );
@@ -148,19 +131,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( c );
         root.getChildren().add( b2 );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( j1, "j" );
-        conflictIds.put( j2, "j" );
-        conflictIds.put( a, "a" );
-        conflictIds.put( b1, "b" );
-        conflictIds.put( b2, "b" );
-        conflictIds.put( c, "c" );
-        conflictIds.put( d, "d" );
-        conflictIds.put( e, "e" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         List<DependencyNode> trail = find( root, "j" );
         assertEquals( 5, trail.size() );
@@ -205,20 +176,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( c );
         root.getChildren().add( d );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( x1, "x" );
-        conflictIds.put( x2, "x" );
-        conflictIds.put( x3, "x" );
-        conflictIds.put( x2r, "x" );
-        conflictIds.put( a, "a" );
-        conflictIds.put( b, "b" );
-        conflictIds.put( c, "c" );
-        conflictIds.put( d, "d" );
-        conflictIds.put( e, "e" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         List<DependencyNode> trail = find( root, "x" );
         assertEquals( 3, trail.size() );
@@ -248,15 +206,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( a1 );
         root.getChildren().add( b2 );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( a1, "a" );
-        conflictIds.put( a2, "a" );
-        conflictIds.put( b1, "b" );
-        conflictIds.put( b2, "b" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         assertEquals( 2, root.getChildren().size() );
         assertSame( a1, root.getChildren().get( 0 ) );
@@ -288,15 +238,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( b );
         root.getChildren().add( c );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( a1, "a" );
-        conflictIds.put( a2, "a" );
-        conflictIds.put( b, "b" );
-        conflictIds.put( c, "c" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
     }
 
     @Test
@@ -328,17 +270,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( b );
         root.getChildren().add( c );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( a1, "a" );
-        conflictIds.put( a2, "a" );
-        conflictIds.put( a3, "a" );
-        conflictIds.put( a4, "a" );
-        conflictIds.put( b, "b" );
-        conflictIds.put( c, "c" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
     }
 
     @Test
@@ -363,15 +295,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( a );
         root.getChildren().add( b2 );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( a, "a" );
-        conflictIds.put( b1, "b" );
-        conflictIds.put( b2, "b" );
-        conflictIds.put( c, "c" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         assertEquals( 2, root.getChildren().size() );
         assertSame( a, root.getChildren().get( 0 ) );
@@ -402,15 +326,7 @@ public class NearestVersionConflictResolverTest
         root.getChildren().add( a );
         root.getChildren().add( b );
 
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>();
-        conflictIds.put( a, "a" );
-        conflictIds.put( b, "b" );
-        conflictIds.put( c1, "c" );
-        conflictIds.put( c2, "c" );
-        context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
-
-        NearestVersionConflictResolver transformer = new NearestVersionConflictResolver();
-        root = transformer.transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         assertEquals( 2, root.getChildren().size() );
         assertSame( a, root.getChildren().get( 0 ) );
@@ -425,13 +341,50 @@ public class NearestVersionConflictResolverTest
     {
         DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "cycle.txt" );
 
-        root = new SimpleConflictMarker().transformGraph( root, context );
-        root = new NearestVersionConflictResolver().transformGraph( root, context );
+        root = newConflictResolver().transformGraph( root, context );
 
         assertEquals( 2, root.getChildren().size() );
         assertEquals( 1, root.getChildren().get( 0 ).getChildren().size() );
         assertEquals( 0, root.getChildren().get( 0 ).getChildren().get( 0 ).getChildren().size() );
         assertEquals( 0, root.getChildren().get( 1 ).getChildren().size() );
+    }
+
+    @Test
+    public void testLoop()
+        throws Exception
+    {
+        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "loop.txt" );
+
+        root = newConflictResolver().transformGraph( root, context );
+
+        assertEquals( 0, root.getChildren().size() );
+    }
+
+    @Test
+    public void testOverlappingCycles()
+        throws Exception
+    {
+        DependencyNode root =
+            new DependencyGraphParser( "transformer/version-resolver/" ).parse( "overlapping-cycles.txt" );
+
+        root = newConflictResolver().transformGraph( root, context );
+
+        assertEquals( 2, root.getChildren().size() );
+    }
+
+    @Test
+    public void testScopeDerivationAndConflictResolutionCantHappenForAllNodesBeforeVersionSelection()
+        throws Exception
+    {
+        DependencyNode root =
+            new DependencyGraphParser( "transformer/version-resolver/" ).parse( "scope-vs-version.txt" );
+
+        root = newConflictResolver().transformGraph( root, context );
+
+        DependencyNode[] nodes = find( root, "y" ).toArray( new DependencyNode[0] );
+        assertEquals( 3, nodes.length );
+        assertEquals( "test", nodes[1].getDependency().getScope() );
+        assertEquals( "test", nodes[0].getDependency().getScope() );
     }
 
 }

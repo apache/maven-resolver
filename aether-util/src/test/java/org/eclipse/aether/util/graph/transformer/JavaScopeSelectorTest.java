@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,16 +19,13 @@ import java.util.Locale;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.eclipse.aether.util.graph.transformer.JavaEffectiveScopeCalculator;
 import org.junit.Before;
 import org.junit.Test;
 
-public class JavaEffectiveScopeCalculatorTest
+public class JavaScopeSelectorTest
 {
 
     private DependencyGraphParser parser;
-
-    private SimpleDependencyGraphTransformationContext ctx;
 
     private enum Scope
     {
@@ -41,11 +38,15 @@ public class JavaEffectiveScopeCalculatorTest
         }
     }
 
+    private ConflictResolver newConflictResolver()
+    {
+        return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
+    }
+
     @Before
     public void setup()
     {
         parser = new DependencyGraphParser( "transformer/scope-calculator/" );
-        ctx = new SimpleDependencyGraphTransformationContext();
     }
 
     private DependencyNode parse( String name, String... substitutions )
@@ -95,9 +96,7 @@ public class JavaEffectiveScopeCalculatorTest
     private DependencyNode transform( DependencyNode root )
         throws RepositoryException
     {
-        root = new SimpleConflictMarker().transformGraph( root, ctx );
-        root = new JavaEffectiveScopeCalculator().transformGraph( root, ctx );
-        return root;
+        return newConflictResolver().transformGraph( root, new SimpleDependencyGraphTransformationContext() );
     }
 
     @Test
@@ -106,9 +105,9 @@ public class JavaEffectiveScopeCalculatorTest
     {
         String resource = "inheritance.txt";
 
-        String expected = "provided";
-        int[] coords = new int[] { 0, 0 };
-        expectScope( expected, transform( parse( resource, "provided", "test" ) ), coords );
+        String expected = "test";
+        DependencyNode root = transform( parse( resource, "provided", "test" ) );
+        expectScope( parser.dump( root ), expected, root, 0, 0 );
     }
 
     @Test
@@ -130,7 +129,6 @@ public class JavaEffectiveScopeCalculatorTest
         root = transform( root );
 
         expectScope( "test", root, 0, 0 );
-        expectScope( "test", root, 1, 0, 0 );
     }
 
     @Test
@@ -141,9 +139,7 @@ public class JavaEffectiveScopeCalculatorTest
         root = transform( root );
 
         expectScope( "compile", root, 0 );
-        expectScope( "runtime", root, 0, 0 );
         expectScope( "runtime", root, 1 );
-        expectScope( "compile", root, 1, 0 );
     }
 
     @Test
@@ -154,9 +150,7 @@ public class JavaEffectiveScopeCalculatorTest
         root = transform( root );
 
         expectScope( "runtime", root, 0 );
-        expectScope( "compile", root, 0, 0 );
         expectScope( "compile", root, 1 );
-        expectScope( "runtime", root, 1, 0 );
     }
 
     @Test
@@ -168,10 +162,8 @@ public class JavaEffectiveScopeCalculatorTest
 
         expectScope( "runtime", root, 0 );
         expectScope( "runtime", root, 0, 0 );
-        expectScope( "runtime", root, 0, 0, 0 );
         expectScope( "runtime", root, 1 );
         expectScope( "runtime", root, 1, 0 );
-        expectScope( "runtime", root, 1, 0, 0 );
     }
 
     @Test
@@ -183,7 +175,6 @@ public class JavaEffectiveScopeCalculatorTest
 
         expectScope( "compile", root, 0 );
         expectScope( "compile", root, 0, 0 );
-        expectScope( "compile", root, 0, 0, 0 );
     }
 
     @Test
@@ -205,10 +196,6 @@ public class JavaEffectiveScopeCalculatorTest
             msg += "\ntransformed:\n" + parser.dump( root );
 
             expectScope( msg, direct, root, 0 );
-            expectScope( msg, direct, root, 1, 0 );
-            expectScope( msg, direct, root, 2, 0 );
-            expectScope( msg, direct, root, 3, 0 );
-            expectScope( msg, direct, root, 4, 0 );
         }
     }
 
@@ -230,7 +217,6 @@ public class JavaEffectiveScopeCalculatorTest
                 msg += "\ntransformed:\n" + parser.dump( root );
 
                 expectScope( msg, expected, root, 0, 0 );
-                expectScope( msg, expected, root, 1, 0 );
             }
         }
     }
@@ -253,13 +239,12 @@ public class JavaEffectiveScopeCalculatorTest
                 msg += "\ntransformed:\n" + parser.dump( root );
 
                 expectScope( msg, expected, root, 0, 0 );
-                expectScope( msg, expected, root, 1, 0 );
             }
         }
     }
 
     /**
-     * obscure case (illegal maven POM). Current behavior: last mentioned wins.
+     * obscure case (illegal maven POM).
      */
     @Test
     public void testConflictingDirectNodes()
@@ -272,14 +257,13 @@ public class JavaEffectiveScopeCalculatorTest
                 parser.setSubstitutions( scope1.toString(), scope2.toString() );
                 DependencyNode root = parser.parse( "conflicting-direct-nodes.txt" );
 
-                String expected = scope2.toString();
+                String expected = scope1.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
 
                 root = transform( root );
                 msg += "\ntransformed:\n" + parser.dump( root );
 
                 expectScope( msg, expected, root, 0 );
-                expectScope( msg, expected, root, 1 );
             }
         }
     }

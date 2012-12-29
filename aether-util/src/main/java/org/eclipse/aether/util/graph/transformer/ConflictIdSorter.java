@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.aether.util.graph.transformer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -32,8 +33,8 @@ import org.eclipse.aether.graph.DependencyNode;
  * the {@link ConflictMarker} to calculate the conflict ids. When this transformer has executed, the transformation
  * context holds a {@code List<Object>} that denotes the topologically sorted conflict ids. The list will be stored
  * using the key {@link TransformationContextKeys#SORTED_CONFLICT_IDS}. In addition, the transformer will store a
- * {@code Boolean} using the key {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} that indicates whether the
- * conflict ids have cyclic dependencies.
+ * {@code Collection<Collection<Object>>} using the key {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} that
+ * describes cycles among conflict ids.
  */
 public final class ConflictIdSorter
     implements DependencyGraphTransformer
@@ -118,21 +119,7 @@ public final class ConflictIdSorter
             }
         }
 
-        while ( !roots.isEmpty() )
-        {
-            ConflictId root = roots.remove();
-
-            sorted.add( root.key );
-
-            for ( ConflictId child : root.children )
-            {
-                child.inDegree--;
-                if ( child.inDegree == 0 )
-                {
-                    roots.add( child );
-                }
-            }
-        }
+        processRoots( sorted, roots );
 
         boolean cycle = sorted.size() < conflictIds.size();
 
@@ -157,25 +144,80 @@ public final class ConflictIdSorter
             nearest.inDegree = 0;
             roots.add( nearest );
 
-            while ( !roots.isEmpty() )
-            {
-                ConflictId root = roots.remove();
+            processRoots( sorted, roots );
+        }
 
-                sorted.add( root.key );
-
-                for ( ConflictId child : root.children )
-                {
-                    child.inDegree--;
-                    if ( child.inDegree == 0 )
-                    {
-                        roots.add( child );
-                    }
-                }
-            }
+        Collection<Collection<Object>> cycles = Collections.emptySet();
+        if ( cycle )
+        {
+            cycles = findCycles( conflictIds );
         }
 
         context.put( TransformationContextKeys.SORTED_CONFLICT_IDS, sorted );
-        context.put( TransformationContextKeys.CYCLIC_CONFLICT_IDS, Boolean.valueOf( cycle ) );
+        context.put( TransformationContextKeys.CYCLIC_CONFLICT_IDS, cycles );
+    }
+
+    private void processRoots( List<Object> sorted, RootQueue roots )
+    {
+        while ( !roots.isEmpty() )
+        {
+            ConflictId root = roots.remove();
+
+            sorted.add( root.key );
+
+            for ( ConflictId child : root.children )
+            {
+                child.inDegree--;
+                if ( child.inDegree == 0 )
+                {
+                    roots.add( child );
+                }
+            }
+        }
+    }
+
+    private Collection<Collection<Object>> findCycles( Collection<ConflictId> conflictIds )
+    {
+        Collection<Collection<Object>> cycles = new HashSet<Collection<Object>>();
+
+        Map<Object, Integer> stack = new HashMap<Object, Integer>( 128 );
+        Map<ConflictId, Object> visited = new IdentityHashMap<ConflictId, Object>( conflictIds.size() );
+        for ( ConflictId id : conflictIds )
+        {
+            findCycles( id, visited, stack, cycles );
+        }
+
+        return cycles;
+    }
+
+    private void findCycles( ConflictId id, Map<ConflictId, Object> visited, Map<Object, Integer> stack,
+                             Collection<Collection<Object>> cycles )
+    {
+        Integer depth = stack.put( id.key, stack.size() );
+        if ( depth != null )
+        {
+            stack.put( id.key, depth );
+            Collection<Object> cycle = new HashSet<Object>();
+            for ( Map.Entry<Object, Integer> entry : stack.entrySet() )
+            {
+                if ( entry.getValue() >= depth )
+                {
+                    cycle.add( entry.getKey() );
+                }
+            }
+            cycles.add( cycle );
+        }
+        else
+        {
+            if ( visited.put( id, Boolean.TRUE ) == null )
+            {
+                for ( ConflictId childId : id.children )
+                {
+                    findCycles( childId, visited, stack, cycles );
+                }
+            }
+            stack.remove( id.key );
+        }
     }
 
     static final class ConflictId
