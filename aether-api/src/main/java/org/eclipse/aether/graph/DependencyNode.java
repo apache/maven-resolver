@@ -159,6 +159,13 @@ public interface DependencyNode
     Map<Object, Object> getData();
 
     /**
+     * Sets the custom data associated with this dependency node.
+     * 
+     * @param data The new custom data, may be {@code null}.
+     */
+    void setData( Map<Object, Object> data );
+
+    /**
      * Associates the specified dependency node data with the given key. <em>Note:</em> This method must not be called
      * while {@link #getData()} is being iterated.
      * 

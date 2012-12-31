@@ -87,7 +87,8 @@ public final class DefaultDependencyNode
     }
 
     /**
-     * Creates a shallow clone of the specified node. The new node has initially no children.
+     * Creates a mostly shallow clone of the specified node. The new node has its own copy of any custom data and
+     * initially no children.
      * 
      * @param node The node to copy, must not be {@code null}.
      */
@@ -104,7 +105,8 @@ public final class DefaultDependencyNode
         setRepositories( node.getRepositories() );
         setVersion( node.getVersion() );
         setVersionConstraint( node.getVersionConstraint() );
-        setData( node.getData() );
+        Map<Object, Object> data = node.getData();
+        setData( data.isEmpty() ? null : new HashMap<Object, Object>( data ) );
     }
 
     public List<DependencyNode> getChildren()

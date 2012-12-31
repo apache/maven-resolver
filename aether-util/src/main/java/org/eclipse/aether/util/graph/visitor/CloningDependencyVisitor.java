@@ -21,8 +21,8 @@ import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 /**
  * A dependency visitor that constructs a clone of the visited dependency graph. If such a visitor is passed into a
  * {@link FilteringDependencyVisitor}, a sub graph can be created. This class creates shallow clones of the visited
- * dependency nodes but clients can create a subclass and override {@link #clone(DependencyNode)} to alter the clone
- * process.
+ * dependency nodes (via {@link DefaultDependencyNode#DefaultDependencyNode(DependencyNode)}) but clients can create a
+ * subclass and override {@link #clone(DependencyNode)} to alter the clone process.
  */
 public class CloningDependencyVisitor
     implements DependencyVisitor
