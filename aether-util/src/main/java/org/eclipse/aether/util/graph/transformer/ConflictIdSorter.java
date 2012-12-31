@@ -52,6 +52,10 @@ public final class ConflictIdSorter
             conflictIds = (Map<?, ?>) context.get( TransformationContextKeys.CONFLICT_IDS );
         }
 
+        @SuppressWarnings( "unchecked" )
+        Map<String, Object> stats = (Map<String, Object>) context.get( TransformationContextKeys.STATS );
+        long time1 = System.currentTimeMillis();
+
         Map<Object, ConflictId> ids = new LinkedHashMap<Object, ConflictId>( 256 );
 
         {
@@ -68,7 +72,18 @@ public final class ConflictIdSorter
             buildConflitIdDAG( ids, node, id, 0, visited, conflictIds );
         }
 
-        topsortConflictIds( ids.values(), context );
+        long time2 = System.currentTimeMillis();
+
+        int cycles = topsortConflictIds( ids.values(), context );
+
+        if ( stats != null )
+        {
+            long time3 = System.currentTimeMillis();
+            stats.put( "ConflictIdSorter.graphTime", time2 - time1 );
+            stats.put( "ConflictIdSorter.topsortTime", time3 - time2 );
+            stats.put( "ConflictIdSorter.conflictIdCount", ids.size() );
+            stats.put( "ConflictIdSorter.conflictIdCycleCount", cycles );
+        }
 
         return node;
     }
@@ -106,7 +121,7 @@ public final class ConflictIdSorter
         }
     }
 
-    private void topsortConflictIds( Collection<ConflictId> conflictIds, DependencyGraphTransformationContext context )
+    private int topsortConflictIds( Collection<ConflictId> conflictIds, DependencyGraphTransformationContext context )
     {
         List<Object> sorted = new ArrayList<Object>( conflictIds.size() );
 
@@ -155,6 +170,8 @@ public final class ConflictIdSorter
 
         context.put( TransformationContextKeys.SORTED_CONFLICT_IDS, sorted );
         context.put( TransformationContextKeys.CYCLIC_CONFLICT_IDS, cycles );
+
+        return cycles.size();
     }
 
     private void processRoots( List<Object> sorted, RootQueue roots )

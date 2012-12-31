@@ -45,6 +45,12 @@ public final class TransformationContextKeys
      */
     public static final Object CYCLIC_CONFLICT_IDS = "cyclicConflictIds";
 
+    /**
+     * The key in the graph transformation context where a {@code Map<String, Object>} is stored that can be used to
+     * include some runtime/performance stats in the debug log. If this map is not present, no stats should be recorded.
+     */
+    public static final Object STATS = "stats";
+
     private TransformationContextKeys()
     {
         // hide constructor

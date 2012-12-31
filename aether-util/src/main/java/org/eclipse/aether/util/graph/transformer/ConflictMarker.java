@@ -44,14 +44,28 @@ public final class ConflictMarker
     public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
         throws RepositoryException
     {
+        @SuppressWarnings( "unchecked" )
+        Map<String, Object> stats = (Map<String, Object>) context.get( TransformationContextKeys.STATS );
+        long time1 = System.currentTimeMillis();
+
         Map<DependencyNode, Object> nodes = new IdentityHashMap<DependencyNode, Object>( 1024 );
         Map<Object, ConflictGroup> groups = new HashMap<Object, ConflictGroup>( 1024 );
 
         analyze( node, nodes, groups, new int[] { 0 } );
 
+        long time2 = System.currentTimeMillis();
+
         Map<DependencyNode, Object> conflictIds = mark( nodes.keySet(), groups );
 
         context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
+
+        if ( stats != null )
+        {
+            long time3 = System.currentTimeMillis();
+            stats.put( "ConflictMarker.analyzeTime", time2 - time1 );
+            stats.put( "ConflictMarker.markTime", time3 - time2 );
+            stats.put( "ConflictMarker.nodeCount", nodes.size() );
+        }
 
         return node;
     }

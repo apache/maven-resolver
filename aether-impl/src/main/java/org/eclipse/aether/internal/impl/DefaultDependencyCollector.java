@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -56,6 +58,7 @@ import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
 
 /**
@@ -162,6 +165,9 @@ public class DefaultDependencyCollector
         List<Dependency> dependencies = request.getDependencies();
         List<Dependency> managedDependencies = request.getManagedDependencies();
 
+        Map<String, Object> stats = logger.isDebugEnabled() ? new LinkedHashMap<String, Object>() : null;
+        long time1 = System.currentTimeMillis();
+
         DefaultDependencyNode node = null;
         if ( root != null )
         {
@@ -257,16 +263,27 @@ public class DefaultDependencyCollector
             errorPath = args.errorPath;
         }
 
+        long time2 = System.currentTimeMillis();
+
         DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
         try
         {
             DefaultDependencyGraphTransformationContext context =
                 new DefaultDependencyGraphTransformationContext( session );
+            context.put( TransformationContextKeys.STATS, stats );
             result.setRoot( transformer.transformGraph( node, context ) );
         }
         catch ( RepositoryException e )
         {
             result.addException( e );
+        }
+
+        if ( stats != null )
+        {
+            long time3 = System.currentTimeMillis();
+            stats.put( "DefaultDependencyCollector.collectTime", time2 - time1 );
+            stats.put( "DefaultDependencyCollector.transformTime", time3 - time2 );
+            logger.debug( "Dependency collection stats: " + stats );
         }
 
         if ( errorPath != null )

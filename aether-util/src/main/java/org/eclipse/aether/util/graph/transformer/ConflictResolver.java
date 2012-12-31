@@ -118,6 +118,10 @@ public final class ConflictResolver
         }
 
         @SuppressWarnings( "unchecked" )
+        Map<String, Object> stats = (Map<String, Object>) context.get( TransformationContextKeys.STATS );
+        long time1 = System.currentTimeMillis();
+
+        @SuppressWarnings( "unchecked" )
         Collection<Collection<?>> conflictIdCycles =
             (Collection<Collection<?>>) context.get( TransformationContextKeys.CYCLIC_CONFLICT_IDS );
         if ( conflictIdCycles == null )
@@ -188,6 +192,13 @@ public final class ConflictResolver
                 state.prepare( state, null );
                 gatherConflictItems( winner, state );
             }
+        }
+
+        if ( stats != null )
+        {
+            long time2 = System.currentTimeMillis();
+            stats.put( "ConflictResolver.totalTime", time2 - time1 );
+            stats.put( "ConflictResolver.conflictItemCount", state.totalConflictItems );
         }
 
         return node;
@@ -341,6 +352,11 @@ public final class ConflictResolver
         Object currentId;
 
         /**
+         * Stats counter.
+         */
+        int totalConflictItems;
+
+        /**
          * Flag whether we should keep losers in the graph to enable visualization/troubleshooting of conflicts.
          */
         final boolean verbose;
@@ -441,6 +457,7 @@ public final class ConflictResolver
         {
             List<DependencyNode> previousParent = null;
             int previousDepth = 0;
+            totalConflictItems += items.size();
             for ( int i = items.size() - 1; i >= 0; i-- )
             {
                 ConflictItem item = items.get( i );
