@@ -387,4 +387,26 @@ public class NearestVersionSelectorTest
         assertEquals( "test", nodes[0].getDependency().getScope() );
     }
 
+    @Test
+    public void testVerboseMode()
+        throws Exception
+    {
+        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "verbose.txt" );
+
+        session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, Boolean.TRUE );
+        root = newConflictResolver().transformGraph( root, context );
+
+        assertEquals( 2, root.getChildren().size() );
+        assertEquals( 1, root.getChildren().get( 0 ).getChildren().size() );
+        DependencyNode winner = root.getChildren().get( 0 ).getChildren().get( 0 );
+        assertEquals( "test", winner.getDependency().getScope() );
+        assertEquals( "compile", winner.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_SCOPE ) );
+        assertEquals( 1, root.getChildren().get( 1 ).getChildren().size() );
+        DependencyNode loser = root.getChildren().get( 1 ).getChildren().get( 0 );
+        assertEquals( "test", loser.getDependency().getScope() );
+        assertEquals( 0, loser.getChildren().size() );
+        assertSame( winner, loser.getData().get( ConflictResolver.NODE_DATA_WINNER ) );
+        assertEquals( "compile", loser.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_SCOPE ) );
+    }
+
 }

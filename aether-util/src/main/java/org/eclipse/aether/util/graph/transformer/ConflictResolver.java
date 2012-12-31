@@ -19,27 +19,59 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * A dependency graph transformer that resolves version and scope conflicts among dependencies. For a given set of
  * conflicting nodes, one node will be chosen as the winner and the other nodes are removed from the dependency graph.
  * The exact rules by which a winning node and its effective scope are determined are controlled by user-supplied
- * implementations of {@link VersionSelector},{@link ScopeSelector} and {@link ScopeDeriver}. This transformer will
- * query the keys {@link TransformationContextKeys#CONFLICT_IDS}, {@link TransformationContextKeys#SORTED_CONFLICT_IDS},
- * {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for existing information about conflict ids. In absence of this
- * information, it will automatically invoke the {@link ConflictIdSorter} to calculate it.
+ * implementations of {@link VersionSelector}, {@link ScopeSelector} and {@link ScopeDeriver}.
+ * <p>
+ * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
+ * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
+ * into a tree but all nodes participating in a conflict are retained. The nodes that were rejected during conflict
+ * resolution have no children and link back to the winner node via the {@link #NODE_DATA_WINNER} key in their custom
+ * data. Additionally, the key {@link #NODE_DATA_ORIGINAL_SCOPE} is used to store the original scope of each node.
+ * Obviously, the resulting dependency tree is not suitable for artifact resolution unless a filter is employed to
+ * exclude the duplicate dependencies.
+ * <p>
+ * This transformer will query the keys {@link TransformationContextKeys#CONFLICT_IDS},
+ * {@link TransformationContextKeys#SORTED_CONFLICT_IDS}, {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for
+ * existing information about conflict ids. In absence of this information, it will automatically invoke the
+ * {@link ConflictIdSorter} to calculate it.
  */
 public final class ConflictResolver
     implements DependencyGraphTransformer
 {
+
+    /**
+     * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
+     * properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
+     */
+    public static final String CONFIG_PROP_VERBOSE = "aether.conflictResolver.verbose";
+
+    /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which a reference to the
+     * {@link DependencyNode} which has won the conflict is stored.
+     */
+    public static final String NODE_DATA_WINNER = "conflict.winner";
+
+    /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the scope of the
+     * dependency before scope derivation and conflict resolution is stored.
+     */
+    public static final String NODE_DATA_ORIGINAL_SCOPE = "conflict.originalScope";
 
     private final VersionSelector versionSelector;
 
@@ -114,7 +146,7 @@ public final class ConflictResolver
             }
         }
 
-        State state = new State( node, conflictIds, sortedConflictIds.size() );
+        State state = new State( node, conflictIds, sortedConflictIds.size(), context.getSession() );
         for ( Iterator<?> it = sortedConflictIds.iterator(); it.hasNext(); )
         {
             Object conflictId = it.next();
@@ -138,8 +170,12 @@ public final class ConflictResolver
                     throw new RepositoryException( "conflict resolver did not select winner among " + state.items );
                 }
                 scopeSelector.selectScope( ctx );
+                if ( state.verbose )
+                {
+                    ctx.winner.node.setData( NODE_DATA_ORIGINAL_SCOPE, ctx.winner.node.getDependency().getScope() );
+                }
                 ctx.winner.node.setScope( ctx.scope );
-                removeLosers( state.items, ctx.winner );
+                removeLosers( state );
             }
 
             // record the winner so we can detect leftover losers during future graph walks
@@ -188,27 +224,43 @@ public final class ConflictResolver
         return true;
     }
 
-    private void removeLosers( Collection<ConflictItem> items, ConflictItem winner )
+    private void removeLosers( State state )
     {
+        ConflictItem winner = state.conflictCtx.winner;
         List<DependencyNode> previousParent = null;
-        Iterator<DependencyNode> childIt = null;
-        for ( ConflictItem item : items )
+        ListIterator<DependencyNode> childIt = null;
+        boolean conflictVisualized = false;
+        for ( ConflictItem item : state.items )
         {
             if ( item == winner )
             {
                 continue;
             }
-            if ( childIt == null || item.parent != previousParent )
+            if ( item.parent != previousParent )
             {
-                childIt = item.parent.iterator();
+                childIt = item.parent.listIterator();
                 previousParent = item.parent;
+                conflictVisualized = false;
             }
             while ( childIt.hasNext() )
             {
                 DependencyNode child = childIt.next();
                 if ( child == item.node )
                 {
-                    childIt.remove();
+                    if ( state.verbose && !conflictVisualized && item.parent != winner.parent )
+                    {
+                        conflictVisualized = true;
+                        DependencyNode loser = new DefaultDependencyNode( child );
+                        loser.setData( NODE_DATA_WINNER, winner.node );
+                        loser.setData( NODE_DATA_ORIGINAL_SCOPE, loser.getDependency().getScope() );
+                        loser.setScope( item.getScopes().iterator().next() );
+                        loser.setChildren( Collections.<DependencyNode> emptyList() );
+                        childIt.set( loser );
+                    }
+                    else
+                    {
+                        childIt.remove();
+                    }
                     break;
                 }
             }
@@ -289,6 +341,11 @@ public final class ConflictResolver
         Object currentId;
 
         /**
+         * Flag whether we should keep losers in the graph to enable visualization/troubleshooting of conflicts.
+         */
+        final boolean verbose;
+
+        /**
          * A mapping from conflict id to winner node, helps to recognize nodes that have their effective scope set or
          * are leftovers from previous removals.
          */
@@ -351,14 +408,15 @@ public final class ConflictResolver
          */
         final ScopeContext scopeCtx;
 
-        State( DependencyNode root, Map<?, ?> conflictIds, int conflictIdCount )
+        State( DependencyNode root, Map<?, ?> conflictIds, int conflictIdCount, RepositorySystemSession session )
         {
             this.conflictIds = conflictIds;
+            verbose = ConfigUtils.getBoolean( session, false, CONFIG_PROP_VERBOSE );
             potentialAncestorIds = new HashSet<Object>( conflictIdCount * 2 );
             resolvedIds = new HashMap<Object, DependencyNode>( conflictIdCount * 2 );
             items = new ArrayList<ConflictItem>( 256 );
-            infos = new IdentityHashMap<List<DependencyNode>, NodeInfo>( 128 );
-            stack = new IdentityHashMap<List<DependencyNode>, Object>( 128 );
+            infos = new IdentityHashMap<List<DependencyNode>, NodeInfo>( 64 );
+            stack = new IdentityHashMap<List<DependencyNode>, Object>( 64 );
             parentNodes = new ArrayList<DependencyNode>( 64 );
             parentScopes = new ArrayList<String>( 64 );
             parentInfos = new ArrayList<NodeInfo>( 64 );
@@ -415,13 +473,20 @@ public final class ConflictResolver
         boolean push( DependencyNode node, Object conflictId )
             throws RepositoryException
         {
-            if ( conflictId != null && !potentialAncestorIds.contains( conflictId ) )
+            if ( conflictId == null )
+            {
+                if ( node.getDependency() != null )
+                {
+                    if ( node.getData().get( NODE_DATA_WINNER ) != null )
+                    {
+                        return false;
+                    }
+                    throw new RepositoryException( "missing conflict id for node " + node );
+                }
+            }
+            else if ( !potentialAncestorIds.contains( conflictId ) )
             {
                 return false;
-            }
-            if ( conflictId == null && node.getDependency() != null )
-            {
-                throw new RepositoryException( "missing conflict id for node " + node );
             }
 
             List<DependencyNode> graphNode = node.getChildren();

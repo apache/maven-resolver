@@ -1,0 +1,8 @@
+test:root:jar:1
++- test:a:jar:1:test
+|  +- test:x:jar:1:compile
+|  \- test:x:jar:2:compile
+\- test:b:jar:1:test
+   +- test:x:jar:1:compile
+      \- test:z:jar:1:compile
+   \- test:x:jar:2:compile

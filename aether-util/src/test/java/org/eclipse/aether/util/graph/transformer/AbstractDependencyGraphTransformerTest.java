@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.aether.util.graph.transformer;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
@@ -26,11 +27,13 @@ public abstract class AbstractDependencyGraphTransformerTest
 
     protected NodeBuilder builder;
 
+    protected DefaultRepositorySystemSession session;
+
     protected DependencyGraphTransformationContext context;
 
     protected DependencyGraphTransformationContext newContext()
     {
-        return new SimpleDependencyGraphTransformationContext();
+        return new SimpleDependencyGraphTransformationContext( session );
     }
 
     protected List<DependencyNode> find( DependencyNode node, String id )
@@ -75,6 +78,7 @@ public abstract class AbstractDependencyGraphTransformerTest
     public void setUp()
     {
         builder = new NodeBuilder();
+        session = new DefaultRepositorySystemSession();
         context = newContext();
     }
 
@@ -82,6 +86,7 @@ public abstract class AbstractDependencyGraphTransformerTest
     public void tearDown()
     {
         builder = null;
+        session = null;
         context = null;
     }
 

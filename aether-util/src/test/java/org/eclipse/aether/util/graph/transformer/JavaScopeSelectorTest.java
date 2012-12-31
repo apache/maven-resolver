@@ -16,7 +16,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.Before;
@@ -96,7 +98,9 @@ public class JavaScopeSelectorTest
     private DependencyNode transform( DependencyNode root )
         throws RepositoryException
     {
-        return newConflictResolver().transformGraph( root, new SimpleDependencyGraphTransformationContext() );
+        DependencyGraphTransformationContext ctx =
+            new SimpleDependencyGraphTransformationContext( new DefaultRepositorySystemSession() );
+        return newConflictResolver().transformGraph( root, ctx );
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2012 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,11 +22,23 @@ class SimpleDependencyGraphTransformationContext
     implements DependencyGraphTransformationContext
 {
 
+    private RepositorySystemSession session;
+
     private Map<Object, Object> map = new HashMap<Object, Object>();
+
+    public SimpleDependencyGraphTransformationContext()
+    {
+        this( null );
+    }
+
+    public SimpleDependencyGraphTransformationContext( RepositorySystemSession session )
+    {
+        this.session = session;
+    }
 
     public RepositorySystemSession getSession()
     {
-        return null;
+        return session;
     }
 
     public Object get( Object key )
