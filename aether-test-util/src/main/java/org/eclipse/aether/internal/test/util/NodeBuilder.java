@@ -22,7 +22,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.internal.test.util.impl.TestVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionScheme;
 

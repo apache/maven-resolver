@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,12 +15,13 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnectorFactory;
-import org.eclipse.aether.internal.test.impl.TestFileProcessor;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -46,7 +47,7 @@ public class AsyncConnectorSuiteConfiguration
 
     private AsyncRepositoryConnectorFactory factory;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     protected RemoteRepository repository;
 
@@ -71,7 +72,7 @@ public class AsyncConnectorSuiteConfiguration
 
         this.factory = new AsyncRepositoryConnectorFactory();
         this.factory.setFileProcessor( new TestFileProcessor() );
-        this.session = new TestRepositorySystemSession();
+        this.session = TestUtils.newSession();
         this.repository = new RemoteRepository.Builder( "async-test-repo", "default", url( "repo" ) ).build();
 
         this.artifact = new DefaultArtifact( "gid", "aid", "classifier", "extension", "version", null );
@@ -110,7 +111,7 @@ public class AsyncConnectorSuiteConfiguration
     /**
      * @return
      */
-    protected TestRepositorySystemSession session()
+    protected DefaultRepositorySystemSession session()
     {
         return session;
     }

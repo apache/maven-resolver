@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,8 +19,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.eclipse.aether.internal.test.impl.RecordingTransferListener;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.RecordingTransferListener;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
@@ -44,7 +44,7 @@ public class TransferEventTester
      * Test the order of events and their properties for the successful up- and download of artifact and metadata.
      */
     public static void testSuccessfulTransferEvents( RepositoryConnectorFactory factory,
-                                                     TestRepositorySystemSession session, RemoteRepository repository )
+                                                     DefaultRepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException, IOException
     {
         RecordingTransferListener listener = new RecordingTransferListener( session.getTransferListener() );
@@ -181,7 +181,7 @@ public class TransferEventTester
      * item for downloads.
      */
     public static void testFailedTransferEvents( RepositoryConnectorFactory factory,
-                                                 TestRepositorySystemSession session, RemoteRepository repository )
+                                                 DefaultRepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException, IOException
     {
         RecordingTransferListener listener = new RecordingTransferListener( session.getTransferListener() );

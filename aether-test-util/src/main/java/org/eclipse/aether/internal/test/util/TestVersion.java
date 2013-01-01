@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,20 +8,20 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.internal.test.util.impl;
+package org.eclipse.aether.internal.test.util;
 
 import org.eclipse.aether.version.Version;
 
 /**
  * Version ordering by {@link String#compareToIgnoreCase(String)}.
  */
-final class StubVersion
+final class TestVersion
     implements Version
 {
 
     private String version;
 
-    public StubVersion( String version )
+    public TestVersion( String version )
     {
         this.version = version == null ? "" : version;
     }
@@ -49,7 +49,7 @@ final class StubVersion
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        StubVersion other = (StubVersion) obj;
+        TestVersion other = (TestVersion) obj;
         if ( version == null )
         {
             if ( other.version != null )

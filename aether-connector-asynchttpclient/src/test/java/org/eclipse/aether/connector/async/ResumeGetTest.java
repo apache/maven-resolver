@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,13 +25,14 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.connector.async.AsyncRepositoryConnectorFactory;
-import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
-import org.eclipse.aether.internal.test.impl.TestFileProcessor;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestFileProcessor;
+import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
@@ -51,7 +52,7 @@ public class ResumeGetTest
 
     private AsyncRepositoryConnectorFactory factory;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private Artifact artifact;
 
@@ -66,8 +67,8 @@ public class ResumeGetTest
     {
         factory = new AsyncRepositoryConnectorFactory();
         factory.setFileProcessor( new TestFileProcessor() );
-        factory.setLoggerFactory( new SysoutLoggerFactory() );
-        session = new TestRepositorySystemSession();
+        factory.setLoggerFactory( new TestLoggerFactory() );
+        session = TestUtils.newSession();
         artifact = new DefaultArtifact( "gid", "aid", "classifier", "extension", "version" );
         server = new Server( 0 );
     }

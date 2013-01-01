@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,10 +17,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Locale;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.Test;
 
 /**
@@ -40,7 +41,7 @@ public class DefaultRepositoryEventDispatcherTest
             (RepositoryListener) Proxy.newProxyInstance( getClass().getClassLoader(),
                                                          new Class<?>[] { RepositoryListener.class }, handler );
 
-        TestRepositorySystemSession session = new TestRepositorySystemSession();
+        DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setRepositoryListener( listener );
 
         for ( RepositoryEvent.EventType type : RepositoryEvent.EventType.values() )

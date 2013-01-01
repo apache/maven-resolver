@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.internal.test.util.impl;
+package org.eclipse.aether.internal.test.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,14 +22,14 @@ import org.eclipse.aether.version.VersionScheme;
 /**
  * A version scheme using a generic version syntax.
  */
-public class TestVersionScheme
+final class TestVersionScheme
     implements VersionScheme
 {
 
     public Version parseVersion( final String version )
         throws InvalidVersionSpecificationException
     {
-        return new StubVersion( version );
+        return new TestVersion( version );
     }
 
     public VersionRange parseVersionRange( final String range )

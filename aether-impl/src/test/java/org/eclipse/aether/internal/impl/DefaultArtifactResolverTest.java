@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
@@ -28,13 +29,13 @@ import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
-import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener;
-import org.eclipse.aether.internal.test.impl.TestFileProcessor;
-import org.eclipse.aether.internal.test.impl.TestLocalRepositoryManager;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
-import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.EventWrapper;
-import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.Type;
+import org.eclipse.aether.internal.test.util.RecordingRepositoryListener;
+import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
+import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.EventWrapper;
+import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.Type;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
@@ -58,6 +59,7 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
+import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +70,7 @@ public class DefaultArtifactResolverTest
 {
     private DefaultArtifactResolver resolver;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private TestLocalRepositoryManager lrm;
 
@@ -85,10 +87,10 @@ public class DefaultArtifactResolverTest
         UpdateCheckManager updateCheckManager = new StaticUpdateCheckManager( true );
         repositoryConnectorProvider = new StubRepositoryConnectorProvider();
         VersionResolver versionResolver = new StubVersionResolver();
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
         resolver = new DefaultArtifactResolver();
-        resolver.setFileProcessor( TestFileProcessor.INSTANCE );
+        resolver.setFileProcessor( new TestFileProcessor() );
         resolver.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
         resolver.setVersionResolver( versionResolver );
         resolver.setUpdateCheckManager( updateCheckManager );
@@ -266,7 +268,7 @@ public class DefaultArtifactResolverTest
         repositoryConnectorProvider.setConnector( connector );
         resolver.setUpdateCheckManager( new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() ) );
 
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
         session.setUpdatePolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
 
         RemoteRepository remoteRepo = new RemoteRepository.Builder( "id", "default", "file:///" ).build();
@@ -316,38 +318,32 @@ public class DefaultArtifactResolverTest
     public void testResolveFromWorkspace()
         throws IOException, ArtifactResolutionException
     {
-        session = new TestRepositorySystemSession()
+        WorkspaceReader workspace = new WorkspaceReader()
         {
-            @Override
-            public WorkspaceReader getWorkspaceReader()
+
+            public WorkspaceRepository getRepository()
             {
-                return new WorkspaceReader()
+                return new WorkspaceRepository( "default" );
+            }
+
+            public List<String> findVersions( Artifact artifact )
+            {
+                return Arrays.asList( artifact.getVersion() );
+            }
+
+            public File findArtifact( Artifact artifact )
+            {
+                try
                 {
-
-                    public WorkspaceRepository getRepository()
-                    {
-                        return new WorkspaceRepository( "default" );
-                    }
-
-                    public List<String> findVersions( Artifact artifact )
-                    {
-                        return Arrays.asList( artifact.getVersion() );
-                    }
-
-                    public File findArtifact( Artifact artifact )
-                    {
-                        try
-                        {
-                            return TestFileUtils.createTempFile( artifact.toString() );
-                        }
-                        catch ( IOException e )
-                        {
-                            throw new RuntimeException( e.getMessage(), e );
-                        }
-                    }
-                };
+                    return TestFileUtils.createTempFile( artifact.toString() );
+                }
+                catch ( IOException e )
+                {
+                    throw new RuntimeException( e.getMessage(), e );
+                }
             }
         };
+        session.setWorkspaceReader( workspace );
 
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
         request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
@@ -372,31 +368,25 @@ public class DefaultArtifactResolverTest
     public void testResolveFromWorkspaceFallbackToRepository()
         throws IOException, ArtifactResolutionException
     {
-        session = new TestRepositorySystemSession()
+        WorkspaceReader workspace = new WorkspaceReader()
         {
-            @Override
-            public WorkspaceReader getWorkspaceReader()
+
+            public WorkspaceRepository getRepository()
             {
-                return new WorkspaceReader()
-                {
+                return new WorkspaceRepository( "default" );
+            }
 
-                    public WorkspaceRepository getRepository()
-                    {
-                        return new WorkspaceRepository( "default" );
-                    }
+            public List<String> findVersions( Artifact artifact )
+            {
+                return Arrays.asList( artifact.getVersion() );
+            }
 
-                    public List<String> findVersions( Artifact artifact )
-                    {
-                        return Arrays.asList( artifact.getVersion() );
-                    }
-
-                    public File findArtifact( Artifact artifact )
-                    {
-                        return null;
-                    }
-                };
+            public File findArtifact( Artifact artifact )
+            {
+                return null;
             }
         };
+        session.setWorkspaceReader( workspace );
 
         connector.setExpectGet( artifact );
         repositoryConnectorProvider.setConnector( connector );

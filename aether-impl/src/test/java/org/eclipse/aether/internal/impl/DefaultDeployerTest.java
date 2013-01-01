@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import static org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.Type.*;
+import static org.eclipse.aether.internal.test.util.RecordingRepositoryListener.Type.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -28,11 +29,11 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.internal.impl.DefaultDeployer;
-import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener;
-import org.eclipse.aether.internal.test.impl.TestFileProcessor;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
-import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.EventWrapper;
+import org.eclipse.aether.internal.test.util.RecordingRepositoryListener;
+import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.EventWrapper;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.MergeableMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -58,7 +59,7 @@ public class DefaultDeployerTest
 
     private DefaultMetadata metadata;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private StubRepositoryConnectorProvider connectorProvider;
 
@@ -80,7 +81,7 @@ public class DefaultDeployerTest
             new DefaultMetadata( "gid", "aid", "ver", "type", Nature.RELEASE_OR_SNAPSHOT,
                                  TestFileUtils.createTempFile( "metadata" ) );
 
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         connectorProvider = new StubRepositoryConnectorProvider();
 
         deployer = new DefaultDeployer();
@@ -88,7 +89,7 @@ public class DefaultDeployerTest
         deployer.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         deployer.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
         deployer.setUpdateCheckManager( new StaticUpdateCheckManager( true ) );
-        deployer.setFileProcessor( TestFileProcessor.INSTANCE );
+        deployer.setFileProcessor( new TestFileProcessor() );
         deployer.setSyncContextFactory( new StubSyncContextFactory() );
         deployer.setOfflineController( new DefaultOfflineController() );
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import static org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.Type.*;
+import static org.eclipse.aether.internal.test.util.RecordingRepositoryListener.Type.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -26,12 +27,12 @@ import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
 import org.eclipse.aether.internal.impl.DefaultInstaller;
-import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener;
-import org.eclipse.aether.internal.test.impl.TestFileProcessor;
-import org.eclipse.aether.internal.test.impl.TestLocalRepositoryManager;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
-import org.eclipse.aether.internal.test.impl.RecordingRepositoryListener.EventWrapper;
+import org.eclipse.aether.internal.test.util.RecordingRepositoryListener;
+import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
+import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.EventWrapper;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
@@ -46,7 +47,7 @@ public class DefaultInstallerTest
 
     private DefaultMetadata metadata;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private String localArtifactPath;
 
@@ -72,14 +73,14 @@ public class DefaultInstallerTest
             new DefaultMetadata( "gid", "aid", "ver", "type", Nature.RELEASE_OR_SNAPSHOT,
                                  TestFileUtils.createTempFile( "metadata".getBytes(), 1 ) );
 
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         localArtifactPath = session.getLocalRepositoryManager().getPathForLocalArtifact( artifact );
         localMetadataPath = session.getLocalRepositoryManager().getPathForLocalMetadata( metadata );
 
         localArtifactFile = new File( session.getLocalRepository().getBasedir(), localArtifactPath );
 
         installer = new DefaultInstaller();
-        installer.setFileProcessor( TestFileProcessor.INSTANCE );
+        installer.setFileProcessor( new TestFileProcessor() );
         installer.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
         installer.setSyncContextFactory( new StubSyncContextFactory() );
         request = new InstallRequest();

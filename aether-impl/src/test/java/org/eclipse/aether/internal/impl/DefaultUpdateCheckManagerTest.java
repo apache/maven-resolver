@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,13 +18,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -33,6 +34,7 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
+import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +48,7 @@ public class DefaultUpdateCheckManagerTest
 
     private DefaultUpdateCheckManager manager;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private Metadata metadata;
 
@@ -66,7 +68,7 @@ public class DefaultUpdateCheckManagerTest
         File artifactFile = new File( dir, "artifact.txt" );
         TestFileUtils.write( "artifact", artifactFile );
 
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         repository = new RemoteRepository.Builder( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
         manager = new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() );
         metadata =
@@ -224,7 +226,7 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         metadata.getFile().delete();
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
 
@@ -244,7 +246,7 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         metadata.getFile().delete();
-        session.setNotFoundCachingEnabled( false );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, false ) );
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
 
@@ -274,7 +276,7 @@ public class DefaultUpdateCheckManagerTest
 
         // ! file.exists && ! updateRequired && previousError -> depends on transfer error caching
         check = newMetadataCheck();
-        session.setTransferErrorCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, true ) );
         manager.checkMetadata( session, check );
         assertEquals( false, check.isRequired() );
         assertTrue( check.getException() instanceof MetadataTransferException );
@@ -296,7 +298,7 @@ public class DefaultUpdateCheckManagerTest
 
         // ! file.exists && ! updateRequired && previousError -> depends on transfer error caching
         check = newMetadataCheck();
-        session.setTransferErrorCachingEnabled( false );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, false ) );
         manager.checkMetadata( session, check );
         assertEquals( true, check.isRequired() );
         assertNull( check.getException() );
@@ -326,7 +328,7 @@ public class DefaultUpdateCheckManagerTest
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         check.getFile().delete();
         assertEquals( check.getFile().getAbsolutePath(), false, check.getFile().exists() );
@@ -341,7 +343,7 @@ public class DefaultUpdateCheckManagerTest
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         manager.touchMetadata( session, check );
         resetSessionData( session );
@@ -357,7 +359,7 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         manager.touchMetadata( session, check );
         resetSessionData( session );
@@ -375,7 +377,7 @@ public class DefaultUpdateCheckManagerTest
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         manager.checkMetadata( session, check );
         assertEquals( false, check.isRequired() );
@@ -502,7 +504,7 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         artifact.getFile().delete();
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setException( new ArtifactNotFoundException( artifact, repository ) );
@@ -521,7 +523,7 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         artifact.getFile().delete();
-        session.setNotFoundCachingEnabled( false );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, false ) );
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setException( new ArtifactNotFoundException( artifact, repository ) );
@@ -549,7 +551,7 @@ public class DefaultUpdateCheckManagerTest
 
         // ! file.exists && ! updateRequired && previousError -> depends on transfer error caching
         check = newArtifactCheck();
-        session.setTransferErrorCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, true ) );
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );
         assertTrue( check.getException() instanceof ArtifactTransferException );
@@ -569,7 +571,7 @@ public class DefaultUpdateCheckManagerTest
 
         // ! file.exists && ! updateRequired && previousError -> depends on transfer error caching
         check = newArtifactCheck();
-        session.setTransferErrorCachingEnabled( false );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, false ) );
         manager.checkArtifact( session, check );
         assertEquals( true, check.isRequired() );
         assertNull( check.getException() );
@@ -599,7 +601,7 @@ public class DefaultUpdateCheckManagerTest
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         check.getFile().delete();
         assertEquals( check.getFile().getAbsolutePath(), false, check.getFile().exists() );
@@ -614,7 +616,7 @@ public class DefaultUpdateCheckManagerTest
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         manager.touchArtifact( session, check );
         resetSessionData( session );
@@ -630,7 +632,7 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         manager.touchArtifact( session, check );
         resetSessionData( session );
@@ -648,7 +650,7 @@ public class DefaultUpdateCheckManagerTest
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
-        session.setNotFoundCachingEnabled( true );
+        session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
 
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );

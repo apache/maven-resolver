@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,8 @@ import static org.junit.Assert.*;
 
 import java.util.Calendar;
 
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,14 +28,14 @@ public class DefaultUpdatePolicyAnalyzerTest
 
     private DefaultUpdatePolicyAnalyzer analyzer;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     @Before
     public void setup()
         throws Exception
     {
         analyzer = new DefaultUpdatePolicyAnalyzer();
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
     }
 
     private long now()

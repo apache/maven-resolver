@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.internal.test.impl;
+package org.eclipse.aether.internal.test.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,6 @@ import java.util.Set;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
@@ -29,6 +28,9 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 
+/**
+ * A simplistic local repository manager that uses a temporary base directory.
+ */
 public class TestLocalRepositoryManager
     implements LocalRepositoryManager
 {
@@ -42,9 +44,15 @@ public class TestLocalRepositoryManager
     private Set<Metadata> metadataRegistrations = new HashSet<Metadata>();
 
     public TestLocalRepositoryManager()
-        throws IOException
     {
-        localRepository = new LocalRepository( TestFileUtils.createTempDir( "test-local-repository" ) );
+        try
+        {
+            localRepository = new LocalRepository( TestFileUtils.createTempDir( "test-local-repo" ) );
+        }
+        catch ( IOException e )
+        {
+            throw new IllegalStateException( e );
+        }
     }
 
     public LocalRepository getRepository()

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,8 @@ package org.eclipse.aether.internal.test.util.connector.suite;
 
 import java.util.Map;
 
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.junit.After;
@@ -28,7 +29,7 @@ public abstract class ConnectorTestSuiteSetup
 
     protected RemoteRepository repository;
 
-    protected TestRepositorySystemSession session;
+    protected DefaultRepositorySystemSession session;
 
     private Map<String, Object> context = null;
 
@@ -60,7 +61,7 @@ public abstract class ConnectorTestSuiteSetup
     public void before()
         throws Exception
     {
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         repository = connectorSetup.before( session, context );
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.IniArtifactDescriptorReader;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -30,7 +29,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.junit.Before;
 import org.junit.Test;
 
-/* *
+/**
  */
 public class IniArtifactDescriptorReaderTest
 {
@@ -44,7 +43,7 @@ public class IniArtifactDescriptorReaderTest
         throws IOException
     {
         reader = new IniArtifactDescriptorReader( "org/eclipse/aether/internal/test/util/" );
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
     }
 
     @Test( expected = ArtifactDescriptorException.class )

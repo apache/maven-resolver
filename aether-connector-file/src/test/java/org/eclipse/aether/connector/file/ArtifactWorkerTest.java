@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,12 +16,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.connector.file.FileRepositoryWorker;
-import org.eclipse.aether.internal.test.impl.TestFileProcessor;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -43,7 +44,7 @@ public class ArtifactWorkerTest
 
     private RemoteRepository repository;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private RepositoryLayout layout;
 
@@ -54,7 +55,7 @@ public class ArtifactWorkerTest
         repository =
             new RemoteRepository.Builder( "test", "default",
                                   TestFileUtils.createTempDir( "test-remote-repository" ).toURI().toURL().toString() ).build();
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         layout = new MavenDefaultLayout();
     }
 
@@ -86,7 +87,7 @@ public class ArtifactWorkerTest
         ArtifactDownload down = new ArtifactDownload( artifact, "", file, "" );
         down.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
         FileRepositoryWorker worker = new FileRepositoryWorker( down, repository, session );
-        worker.setFileProcessor( TestFileProcessor.INSTANCE );
+        worker.setFileProcessor( new TestFileProcessor() );
         worker.run();
         if ( down.getException() != null )
         {
@@ -102,7 +103,7 @@ public class ArtifactWorkerTest
 
         ArtifactUpload transfer = new ArtifactUpload( artifact, file );
         FileRepositoryWorker worker = new FileRepositoryWorker( transfer, repository, session );
-        worker.setFileProcessor( TestFileProcessor.INSTANCE );
+        worker.setFileProcessor( new TestFileProcessor() );
         worker.run();
 
         TestFileUtils.delete( file );
@@ -122,7 +123,7 @@ public class ArtifactWorkerTest
         DefaultMetadata metadata = new DefaultMetadata( "test", "artId1", "1", "jar", Nature.RELEASE_OR_SNAPSHOT );
         MetadataUpload up = new MetadataUpload( metadata, srcFile );
         FileRepositoryWorker worker = new FileRepositoryWorker( up, repository, session );
-        worker.setFileProcessor( TestFileProcessor.INSTANCE );
+        worker.setFileProcessor( new TestFileProcessor() );
         worker.run();
         if ( up.getException() != null )
         {
@@ -136,7 +137,7 @@ public class ArtifactWorkerTest
         down.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
         down.setMetadata( metadata ).setFile( targetFile );
         worker = new FileRepositoryWorker( down, repository, session );
-        worker.setFileProcessor( TestFileProcessor.INSTANCE );
+        worker.setFileProcessor( new TestFileProcessor() );
         worker.run();
 
         if ( down.getException() != null )

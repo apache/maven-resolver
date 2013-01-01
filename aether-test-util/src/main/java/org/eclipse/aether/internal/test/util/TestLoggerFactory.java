@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,43 +8,68 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.internal.test.impl;
+package org.eclipse.aether.internal.test.util;
+
+import java.io.PrintStream;
 
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 
-public final class SysoutLoggerFactory
+/**
+ * A logger factory that writes to some {@link PrintStream}.
+ */
+public final class TestLoggerFactory
     implements LoggerFactory
 {
 
-    public static final Logger LOGGER = new SysoutLogger();
+    private final Logger logger;
+
+    /**
+     * Creates a new logger factory that writes to {@link System#out}.
+     */
+    public TestLoggerFactory()
+    {
+        this( null );
+    }
+
+    public TestLoggerFactory( PrintStream out )
+    {
+        logger = new TestLogger( out );
+    }
 
     public Logger getLogger( String name )
     {
-        return LOGGER;
+        return logger;
     }
 
-    private static final class SysoutLogger
+    private static final class TestLogger
         implements Logger
     {
 
-        public void warn( String msg, Throwable error )
-        {
-            warn( msg );
-            if ( error != null )
-            {
-                error.printStackTrace( System.err );
-            }
-        }
+        private final PrintStream out;
 
-        public void warn( String msg )
+        public TestLogger( PrintStream out )
         {
-            System.err.println( msg );
+            this.out = ( out != null ) ? out : System.out;
         }
 
         public boolean isWarnEnabled()
         {
             return true;
+        }
+
+        public void warn( String msg, Throwable error )
+        {
+            out.println( "[WARN] " + msg );
+            if ( error != null )
+            {
+                error.printStackTrace( out );
+            }
+        }
+
+        public void warn( String msg )
+        {
+            warn( msg, null );
         }
 
         public boolean isDebugEnabled()
@@ -54,16 +79,16 @@ public final class SysoutLoggerFactory
 
         public void debug( String msg, Throwable error )
         {
-            debug( msg );
+            out.println( "[DEBUG] " + msg );
             if ( error != null )
             {
-                error.printStackTrace( System.err );
+                error.printStackTrace( out );
             }
         }
 
         public void debug( String msg )
         {
-            System.out.println( msg );
+            debug( msg, null );
         }
 
     }

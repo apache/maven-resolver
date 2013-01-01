@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,18 +22,15 @@ import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.connector.Transfer.State;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -60,8 +57,7 @@ public abstract class ConnectorTestSuite
     /**
      * Test successful event order.
      * 
-     * @see TransferEventTester#testSuccessfulTransferEvents(RepositoryConnectorFactory, TestRepositorySystemSession,
-     *      RemoteRepository)
+     * @see TransferEventTester#testSuccessfulTransferEvents
      */
     @Test
     public void testSuccessfulEvents()

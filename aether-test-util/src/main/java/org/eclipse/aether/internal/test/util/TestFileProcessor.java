@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.internal.test.impl;
+package org.eclipse.aether.internal.test.util;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -27,8 +27,6 @@ import org.eclipse.aether.spi.io.FileProcessor;
 public class TestFileProcessor
     implements FileProcessor
 {
-
-    public static final FileProcessor INSTANCE = new TestFileProcessor();
 
     private static void close( Closeable closeable )
     {

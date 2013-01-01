@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,11 +16,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
-import org.eclipse.aether.internal.test.impl.SysoutLoggerFactory;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestLoggerFactory;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
@@ -36,7 +37,7 @@ import org.junit.Test;
 public class DefaultRemoteRepositoryManagerTest
 {
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private DefaultRemoteRepositoryManager manager;
 
@@ -44,12 +45,12 @@ public class DefaultRemoteRepositoryManagerTest
     public void setup()
         throws Exception
     {
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         session.setChecksumPolicy( null );
         session.setUpdatePolicy( null );
         manager = new DefaultRemoteRepositoryManager();
         manager.setUpdatePolicyAnalyzer( new StubUpdatePolicyAnalyzer() );
-        manager.setLoggerFactory( new SysoutLoggerFactory() );
+        manager.setLoggerFactory( new TestLoggerFactory() );
     }
 
     public void teardown()

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
@@ -34,8 +35,8 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.DefaultDependencyCollector;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -51,7 +52,7 @@ public class DefaultDependencyCollectorTest
 
     private DefaultDependencyCollector collector;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private DependencyGraphParser parser;
 
@@ -61,7 +62,7 @@ public class DefaultDependencyCollectorTest
     public void setup()
         throws IOException
     {
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
 
         collector = new DefaultDependencyCollector();
         collector.setArtifactDescriptorReader( new IniArtifactDescriptorReader( "artifact-descriptions/" ) );

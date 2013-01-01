@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,10 +20,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
-import org.eclipse.aether.internal.test.impl.TestLocalRepositoryManager;
-import org.eclipse.aether.internal.test.impl.TestRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalMetadataRegistration;
@@ -48,7 +49,7 @@ public class DefaultMetadataResolverTest
 
     private RemoteRepository repository;
 
-    private TestRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
     private Metadata metadata;
 
@@ -60,7 +61,7 @@ public class DefaultMetadataResolverTest
     public void setup()
         throws Exception
     {
-        session = new TestRepositorySystemSession();
+        session = TestUtils.newSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
         connectorProvider = new StubRepositoryConnectorProvider();
         resolver = new DefaultMetadataResolver();

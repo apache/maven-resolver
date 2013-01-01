@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.internal.test.util.impl;
+package org.eclipse.aether.internal.test.util;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
@@ -80,7 +80,7 @@ final class TestVersionRange
                     + ", single version must be surrounded by []" );
             }
 
-            lowerBound = upperBound = new StubVersion( process.trim() );
+            lowerBound = upperBound = new TestVersion( process.trim() );
         }
         else
         {
@@ -94,8 +94,8 @@ final class TestVersionRange
                     + ", bounds may not contain additional ','" );
             }
 
-            lowerBound = parsedLowerBound.length() > 0 ? new StubVersion( parsedLowerBound ) : null;
-            upperBound = parsedUpperBound.length() > 0 ? new StubVersion( parsedUpperBound ) : null;
+            lowerBound = parsedLowerBound.length() > 0 ? new TestVersion( parsedLowerBound ) : null;
+            upperBound = parsedUpperBound.length() > 0 ? new TestVersion( parsedUpperBound ) : null;
 
             if ( upperBound != null && lowerBound != null )
             {
