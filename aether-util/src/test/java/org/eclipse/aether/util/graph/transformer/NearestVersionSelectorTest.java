@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,8 @@ public class NearestVersionSelectorTest
     extends AbstractDependencyGraphTransformerTest
 {
 
-    private ConflictResolver newConflictResolver()
+    @Override
+    protected ConflictResolver newTransformer()
     {
         return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
     }
@@ -48,7 +49,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( a3 );
         root.getChildren().add( a2 );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 1, root.getChildren().size() );
         assertSame( a3, root.getChildren().iterator().next() );
@@ -89,7 +90,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( c );
         root.getChildren().add( b2 );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         List<DependencyNode> trail = find( root, "j" );
         assertEquals( 5, trail.size() );
@@ -131,7 +132,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( c );
         root.getChildren().add( b2 );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         List<DependencyNode> trail = find( root, "j" );
         assertEquals( 5, trail.size() );
@@ -176,7 +177,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( c );
         root.getChildren().add( d );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         List<DependencyNode> trail = find( root, "x" );
         assertEquals( 3, trail.size() );
@@ -206,7 +207,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( a1 );
         root.getChildren().add( b2 );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
         assertSame( a1, root.getChildren().get( 0 ) );
@@ -238,7 +239,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( b );
         root.getChildren().add( c );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
     }
 
     @Test
@@ -270,7 +271,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( b );
         root.getChildren().add( c );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
     }
 
     @Test
@@ -295,7 +296,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( a );
         root.getChildren().add( b2 );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
         assertSame( a, root.getChildren().get( 0 ) );
@@ -326,7 +327,7 @@ public class NearestVersionSelectorTest
         root.getChildren().add( a );
         root.getChildren().add( b );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
         assertSame( a, root.getChildren().get( 0 ) );
@@ -341,7 +342,7 @@ public class NearestVersionSelectorTest
     {
         DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "cycle.txt" );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
         assertEquals( 1, root.getChildren().get( 0 ).getChildren().size() );
@@ -355,7 +356,7 @@ public class NearestVersionSelectorTest
     {
         DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "loop.txt" );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 0, root.getChildren().size() );
     }
@@ -367,7 +368,7 @@ public class NearestVersionSelectorTest
         DependencyNode root =
             new DependencyGraphParser( "transformer/version-resolver/" ).parse( "overlapping-cycles.txt" );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
     }
@@ -379,7 +380,7 @@ public class NearestVersionSelectorTest
         DependencyNode root =
             new DependencyGraphParser( "transformer/version-resolver/" ).parse( "scope-vs-version.txt" );
 
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         DependencyNode[] nodes = find( root, "y" ).toArray( new DependencyNode[0] );
         assertEquals( 3, nodes.length );
@@ -394,7 +395,7 @@ public class NearestVersionSelectorTest
         DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "verbose.txt" );
 
         session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, Boolean.TRUE );
-        root = newConflictResolver().transformGraph( root, context );
+        assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
         assertEquals( 1, root.getChildren().get( 0 ).getChildren().size() );

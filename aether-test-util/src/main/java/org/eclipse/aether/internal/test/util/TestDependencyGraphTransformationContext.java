@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.util.graph.transformer;
+package org.eclipse.aether.internal.test.util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,22 +18,18 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 
 /**
  */
-class SimpleDependencyGraphTransformationContext
+class TestDependencyGraphTransformationContext
     implements DependencyGraphTransformationContext
 {
 
-    private RepositorySystemSession session;
+    private final RepositorySystemSession session;
 
-    private Map<Object, Object> map = new HashMap<Object, Object>();
+    private final Map<Object, Object> map;
 
-    public SimpleDependencyGraphTransformationContext()
-    {
-        this( null );
-    }
-
-    public SimpleDependencyGraphTransformationContext( RepositorySystemSession session )
+    public TestDependencyGraphTransformationContext( RepositorySystemSession session )
     {
         this.session = session;
+        this.map = new HashMap<Object, Object>();
     }
 
     public RepositorySystemSession getSession()
@@ -43,12 +39,33 @@ class SimpleDependencyGraphTransformationContext
 
     public Object get( Object key )
     {
+        if ( key == null )
+        {
+            throw new IllegalArgumentException( "key must not be null" );
+        }
         return map.get( key );
     }
 
     public Object put( Object key, Object value )
     {
-        return map.put( key, value );
+        if ( key == null )
+        {
+            throw new IllegalArgumentException( "key must not be null" );
+        }
+        if ( value != null )
+        {
+            return map.put( key, value );
+        }
+        else
+        {
+            return map.remove( key );
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.valueOf( map );
     }
 
 }

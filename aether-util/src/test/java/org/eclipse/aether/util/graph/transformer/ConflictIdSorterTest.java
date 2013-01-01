@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter;
@@ -28,19 +28,20 @@ import org.junit.Test;
 /**
  */
 public class ConflictIdSorterTest
+    extends AbstractDependencyGraphTransformerTest
 {
 
-    private ConflictIdSorter sorter;
-
-    private DependencyGraphTransformationContext ctx;
-
     private DependencyGraphParser parser;
+
+    @Override
+    protected DependencyGraphTransformer newTransformer()
+    {
+        return new ChainedDependencyGraphTransformer( new SimpleConflictMarker(), new ConflictIdSorter() );
+    }
 
     @Before
     public void setup()
     {
-        sorter = new ConflictIdSorter();
-        ctx = new SimpleDependencyGraphTransformationContext();
         parser = new DependencyGraphParser( "transformer/conflict-id-sorter/" );
     }
 
@@ -65,22 +66,14 @@ public class ConflictIdSorterTest
     private void expectOrder( String... id )
     {
         @SuppressWarnings( "unchecked" )
-        List<String> sorted = (List<String>) ctx.get( TransformationContextKeys.SORTED_CONFLICT_IDS );
+        List<String> sorted = (List<String>) context.get( TransformationContextKeys.SORTED_CONFLICT_IDS );
         expectOrder( sorted, id );
     }
 
     private void expectCycle( boolean cycle )
     {
-        Collection<?> cycles = (Collection<?>) ctx.get( TransformationContextKeys.CYCLIC_CONFLICT_IDS );
+        Collection<?> cycles = (Collection<?>) context.get( TransformationContextKeys.CYCLIC_CONFLICT_IDS );
         assertEquals( cycle, !cycles.isEmpty() );
-    }
-
-    public DependencyNode transform( DependencyNode node )
-        throws Exception
-    {
-        node = new SimpleConflictMarker().transformGraph( node, ctx );
-        node = sorter.transformGraph( node, ctx );
-        return node;
     }
 
     @Test
@@ -88,7 +81,7 @@ public class ConflictIdSorterTest
         throws Exception
     {
         DependencyNode node = parser.parse( "simple.txt" );
-        transform( node );
+        assertSame( node, transform( node ) );
 
         expectOrder( "gid2:aid::ext", "gid:aid::ext", "gid:aid2::ext" );
         expectCycle( false );
@@ -99,7 +92,7 @@ public class ConflictIdSorterTest
         throws Exception
     {
         DependencyNode node = parser.parse( "cycle.txt" );
-        transform( node );
+        assertSame( node, transform( node ) );
 
         expectOrder( "gid:aid::ext", "gid2:aid::ext" );
         expectCycle( true );
@@ -110,7 +103,7 @@ public class ConflictIdSorterTest
         throws Exception
     {
         DependencyNode node = parser.parse( "cycles.txt" );
-        transform( node );
+        assertSame( node, transform( node ) );
 
         expectOrder( "*", "*", "*", "gid:aid::ext" );
         expectCycle( true );
@@ -121,7 +114,7 @@ public class ConflictIdSorterTest
         throws Exception
     {
         DependencyNode node = parser.parse( "no-conflicts.txt" );
-        transform( node );
+        assertSame( node, transform( node ) );
 
         expectOrder( "gid:aid::ext", "gid3:aid::ext", "gid2:aid::ext", "gid4:aid::ext" );
         expectCycle( false );

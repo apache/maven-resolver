@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,19 +12,17 @@ package org.eclipse.aether.util.graph.transformer;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.Before;
 import org.junit.Test;
 
 public class JavaScopeSelectorTest
+    extends AbstractDependencyGraphTransformerTest
 {
 
     private DependencyGraphParser parser;
@@ -40,7 +38,8 @@ public class JavaScopeSelectorTest
         }
     }
 
-    private ConflictResolver newConflictResolver()
+    @Override
+    protected DependencyGraphTransformer newTransformer()
     {
         return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
     }
@@ -52,7 +51,7 @@ public class JavaScopeSelectorTest
     }
 
     private DependencyNode parse( String name, String... substitutions )
-        throws IOException
+        throws Exception
     {
         parser.setSubstitutions( Arrays.asList( substitutions ) );
         return parser.parse( name );
@@ -95,17 +94,9 @@ public class JavaScopeSelectorTest
         return node;
     }
 
-    private DependencyNode transform( DependencyNode root )
-        throws RepositoryException
-    {
-        DependencyGraphTransformationContext ctx =
-            new SimpleDependencyGraphTransformationContext( new DefaultRepositorySystemSession() );
-        return newConflictResolver().transformGraph( root, ctx );
-    }
-
     @Test
     public void testScopeInheritanceProvided()
-        throws IOException, RepositoryException
+        throws Exception
     {
         String resource = "inheritance.txt";
 
@@ -119,7 +110,7 @@ public class JavaScopeSelectorTest
         throws Exception
     {
         DependencyNode root = parser.parse( "conflict-and-inheritance.txt" );
-        root = transform( root );
+        assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0, 0 );
         expectScope( "compile", root, 0, 0, 0 );
@@ -130,7 +121,7 @@ public class JavaScopeSelectorTest
         throws Exception
     {
         DependencyNode root = parser.parse( "direct-with-conflict-and-inheritance.txt" );
-        root = transform( root );
+        assertSame( root, transform( root ) );
 
         expectScope( "test", root, 0, 0 );
     }
@@ -140,7 +131,7 @@ public class JavaScopeSelectorTest
         throws Exception
     {
         DependencyNode root = parser.parse( "cycle-a.txt" );
-        root = transform( root );
+        assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0 );
         expectScope( "runtime", root, 1 );
@@ -151,7 +142,7 @@ public class JavaScopeSelectorTest
         throws Exception
     {
         DependencyNode root = parser.parse( "cycle-b.txt" );
-        root = transform( root );
+        assertSame( root, transform( root ) );
 
         expectScope( "runtime", root, 0 );
         expectScope( "compile", root, 1 );
@@ -162,7 +153,7 @@ public class JavaScopeSelectorTest
         throws Exception
     {
         DependencyNode root = parser.parse( "cycle-c.txt" );
-        root = transform( root );
+        assertSame( root, transform( root ) );
 
         expectScope( "runtime", root, 0 );
         expectScope( "runtime", root, 0, 0 );
@@ -175,7 +166,7 @@ public class JavaScopeSelectorTest
         throws Exception
     {
         DependencyNode root = parser.parse( "cycle-d.txt" );
-        root = transform( root );
+        assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0 );
         expectScope( "compile", root, 0, 0 );
@@ -183,7 +174,7 @@ public class JavaScopeSelectorTest
 
     @Test
     public void testDirectNodesAlwaysWin()
-        throws IOException, RepositoryException
+        throws Exception
     {
 
         for ( Scope directScope : Scope.values() )
@@ -196,7 +187,7 @@ public class JavaScopeSelectorTest
             String msg =
                 String.format( "direct node should be setting scope ('%s') for all nodes.\n" + parser.dump( root ),
                                direct );
-            root = transform( root );
+            assertSame( root, transform( root ) );
             msg += "\ntransformed:\n" + parser.dump( root );
 
             expectScope( msg, direct, root, 0 );
@@ -205,7 +196,7 @@ public class JavaScopeSelectorTest
 
     @Test
     public void testNonDirectMultipleInheritance()
-        throws RepositoryException, IOException
+        throws Exception
     {
         for ( Scope scope1 : Scope.values() )
         {
@@ -217,7 +208,7 @@ public class JavaScopeSelectorTest
                 String expected = scope1.compareTo( scope2 ) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
 
-                root = transform( root );
+                assertSame( root, transform( root ) );
                 msg += "\ntransformed:\n" + parser.dump( root );
 
                 expectScope( msg, expected, root, 0, 0 );
@@ -227,7 +218,7 @@ public class JavaScopeSelectorTest
 
     @Test
     public void testConflictScopeOrdering()
-        throws RepositoryException, IOException
+        throws Exception
     {
         for ( Scope scope1 : Scope.values() )
         {
@@ -239,7 +230,7 @@ public class JavaScopeSelectorTest
                 String expected = scope1.compareTo( scope2 ) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
 
-                root = transform( root );
+                assertSame( root, transform( root ) );
                 msg += "\ntransformed:\n" + parser.dump( root );
 
                 expectScope( msg, expected, root, 0, 0 );
@@ -252,7 +243,7 @@ public class JavaScopeSelectorTest
      */
     @Test
     public void testConflictingDirectNodes()
-        throws RepositoryException, IOException
+        throws Exception
     {
         for ( Scope scope1 : Scope.values() )
         {
@@ -264,7 +255,7 @@ public class JavaScopeSelectorTest
                 String expected = scope1.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
 
-                root = transform( root );
+                assertSame( root, transform( root ) );
                 msg += "\ntransformed:\n" + parser.dump( root );
 
                 expectScope( msg, expected, root, 0 );

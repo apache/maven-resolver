@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,13 +10,17 @@
  *******************************************************************************/
 package org.eclipse.aether.util.graph.transformer;
 
+import static org.junit.Assert.*;
+
 import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.After;
 import org.junit.Before;
 
@@ -27,13 +31,21 @@ public abstract class AbstractDependencyGraphTransformerTest
 
     protected NodeBuilder builder;
 
+    protected DependencyGraphTransformer transformer;
+
     protected DefaultRepositorySystemSession session;
 
     protected DependencyGraphTransformationContext context;
 
-    protected DependencyGraphTransformationContext newContext()
+    protected abstract DependencyGraphTransformer newTransformer();
+
+    protected DependencyNode transform( DependencyNode root )
+        throws Exception
     {
-        return new SimpleDependencyGraphTransformationContext( session );
+        context = TestUtils.newTransformationContext( session );
+        root = transformer.transformGraph( root, context );
+        assertNotNull( root );
+        return root;
     }
 
     protected List<DependencyNode> find( DependencyNode node, String id )
@@ -78,14 +90,15 @@ public abstract class AbstractDependencyGraphTransformerTest
     public void setUp()
     {
         builder = new NodeBuilder();
+        transformer = newTransformer();
         session = new DefaultRepositorySystemSession();
-        context = newContext();
     }
 
     @After
     public void tearDown()
     {
         builder = null;
+        transformer = null;
         session = null;
         context = null;
     }

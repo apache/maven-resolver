@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,101 +12,100 @@ package org.eclipse.aether.util.graph.transformer;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
-
-import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 import org.junit.Before;
 import org.junit.Test;
 
-/* *
+/**
  */
 public class JavaDependencyContextRefinerTest
+    extends AbstractDependencyGraphTransformerTest
 {
-
-    private JavaDependencyContextRefiner refiner;
 
     private DependencyGraphParser parser;
 
-    private SimpleDependencyGraphTransformationContext context;
+    @Override
+    protected DependencyGraphTransformer newTransformer()
+    {
+        return new JavaDependencyContextRefiner();
+    }
 
     @Before
-    public void setUp()
+    public void setup()
     {
-        refiner = new JavaDependencyContextRefiner();
         parser = new DependencyGraphParser();
-        context = new SimpleDependencyGraphTransformationContext();
-
     }
 
     @Test
     public void testDoNotRefineOtherContext()
-        throws IOException, RepositoryException
+        throws Exception
     {
         DependencyNode node = parser.parseLiteral( "gid:aid:ext:cls:ver" );
         node.setRequestContext( "otherContext" );
 
-        DependencyNode refinedNode = refiner.transformGraph( node, context );
+        DependencyNode refinedNode = transform( node );
         assertEquals( node, refinedNode );
     }
 
     @Test
     public void testRefineToCompile()
-        throws IOException, RepositoryException
+        throws Exception
     {
         String expected = "project/compile";
 
         DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:compile" );
         node.setRequestContext( "project" );
-        DependencyNode refinedNode = refiner.transformGraph( node, context );
+        DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
 
         node = parser.parseLiteral( "gid:aid:ext:ver:system" );
         node.setRequestContext( "project" );
-        refinedNode = refiner.transformGraph( node, context );
+        refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
 
         node = parser.parseLiteral( "gid:aid:ext:ver:provided" );
         node.setRequestContext( "project" );
-        refinedNode = refiner.transformGraph( node, context );
+        refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
     }
 
     @Test
     public void testRefineToTest()
-        throws IOException, RepositoryException
+        throws Exception
     {
         String expected = "project/test";
 
         DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:test" );
         node.setRequestContext( "project" );
-        DependencyNode refinedNode = refiner.transformGraph( node, context );
+        DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
     }
 
     @Test
     public void testRefineToRuntime()
-        throws IOException, RepositoryException
+        throws Exception
     {
         String expected = "project/runtime";
 
         DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:runtime" );
         node.setRequestContext( "project" );
-        DependencyNode refinedNode = refiner.transformGraph( node, context );
+        DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
     }
 
     @Test
     public void testDoNotRefineUnknownScopes()
-        throws IOException, RepositoryException
+        throws Exception
     {
         String expected = "project";
 
         DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:unknownScope" );
         node.setRequestContext( "project" );
-        DependencyNode refinedNode = refiner.transformGraph( node, context );
+        DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
     }
+
 }

@@ -11,6 +11,8 @@
 package org.eclipse.aether.internal.test.util;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 
 /**
  * Utility methods to help unit testing.
@@ -32,6 +34,14 @@ public class TestUtils
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
         session.setLocalRepositoryManager( new TestLocalRepositoryManager() );
         return session;
+    }
+
+    /**
+     * Creates a new dependency graph transformation context.
+     */
+    public static DependencyGraphTransformationContext newTransformationContext( RepositorySystemSession session )
+    {
+        return new TestDependencyGraphTransformationContext( session );
     }
 
 }
