@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -76,7 +76,6 @@ public class DependencyGraphParserTest
         Dependency dependency = node.getDependency();
         assertNotNull( dependency );
         assertEquals( "", dependency.getScope() );
-
     }
 
     @Test
@@ -179,7 +178,7 @@ public class DependencyGraphParserTest
         String prefix = "org/eclipse/aether/internal/test/util/";
         String name = "testResourceLoading.txt";
 
-        DependencyNode node = parser.parse( prefix + name );
+        DependencyNode node = parser.parseResource( prefix + name );
         assertEquals( 0, node.getChildren().size() );
         assertNodeProperties( node, "" );
     }
@@ -193,7 +192,7 @@ public class DependencyGraphParserTest
 
         String name = "testResourceLoading.txt";
 
-        DependencyNode node = parser.parse( name );
+        DependencyNode node = parser.parseResource( name );
         assertEquals( 0, node.getChildren().size() );
         assertNodeProperties( node, "" );
     }
@@ -242,7 +241,7 @@ public class DependencyGraphParserTest
         String prefix = "org/eclipse/aether/internal/test/util/";
         String name = "testResourceLoading.txt";
 
-        List<DependencyNode> nodes = parser.parseMultiple( prefix + name );
+        List<DependencyNode> nodes = parser.parseMultiResource( prefix + name );
 
         assertEquals( 2, nodes.size() );
         assertEquals( "aid", nodes.get( 0 ).getDependency().getArtifact().getArtifactId() );
@@ -271,4 +270,22 @@ public class DependencyGraphParserTest
         assertEquals( 1, root.getChildren().size() );
         assertNull( root.getChildren().get( 0 ).getDependency() );
     }
+
+    @Test
+    public void testOptional()
+        throws IOException
+    {
+        String def = "gid:aid:jar:1:compile:optional";
+
+        DependencyNode node = parser.parseLiteral( def );
+
+        assertNotNull( node );
+        assertEquals( 0, node.getChildren().size() );
+
+        Dependency dependency = node.getDependency();
+        assertNotNull( dependency );
+        assertEquals( "compile", dependency.getScope() );
+        assertEquals( true, dependency.isOptional() );
+    }
+
 }

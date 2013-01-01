@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionScheme;
 
 /**
+ * A builder to create dependency nodes for unit testing.
  */
 public class NodeBuilder
 {
@@ -89,6 +90,12 @@ public class NodeBuilder
     public NodeBuilder scope( String scope )
     {
         this.scope = scope;
+        return this;
+    }
+
+    public NodeBuilder optional( boolean optional )
+    {
+        this.optional = optional;
         return this;
     }
 

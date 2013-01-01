@@ -221,7 +221,7 @@ public class DefaultDependencyCollectorTest
     public void testEqualSubtree()
         throws IOException, DependencyCollectionException
     {
-        DependencyNode root = parser.parse( "expectedSubtreeComparisonResult.txt" );
+        DependencyNode root = parser.parseResource( "expectedSubtreeComparisonResult.txt" );
         Dependency dependency = root.getDependency();
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
 
@@ -233,7 +233,7 @@ public class DefaultDependencyCollectorTest
     public void testCyclicDependencies()
         throws Exception
     {
-        DependencyNode root = parser.parse( "cycle.txt" );
+        DependencyNode root = parser.parseResource( "cycle.txt" );
         CollectRequest request = new CollectRequest( root.getDependency(), Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertEqualSubtree( root, result.getRoot() );
@@ -243,7 +243,7 @@ public class DefaultDependencyCollectorTest
     public void testCyclicDependenciesBig()
         throws Exception
     {
-        DependencyNode root = parser.parse( "cycle-big.txt" );
+        DependencyNode root = parser.parseResource( "cycle-big.txt" );
         CollectRequest request = new CollectRequest( root.getDependency(), Arrays.asList( repository ) );
         collector.setArtifactDescriptorReader( new IniArtifactDescriptorReader( "artifact-descriptions/cycle-big/" ) );
         CollectResult result = collector.collectDependencies( session, request );
@@ -255,7 +255,7 @@ public class DefaultDependencyCollectorTest
     public void testPartialResultOnError()
         throws IOException
     {
-        DependencyNode root = parser.parse( "expectedPartialSubtreeOnError.txt" );
+        DependencyNode root = parser.parseResource( "expectedPartialSubtreeOnError.txt" );
 
         Dependency dependency = root.getDependency();
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
@@ -365,7 +365,7 @@ public class DefaultDependencyCollectorTest
     {
         collector.setArtifactDescriptorReader( new IniArtifactDescriptorReader( "artifact-descriptions/managed/" ) );
 
-        DependencyNode root = parser.parse( "expectedSubtreeComparisonResult.txt" );
+        DependencyNode root = parser.parseResource( "expectedSubtreeComparisonResult.txt" );
         TestDependencyManager depMgmt = new TestDependencyManager();
         depMgmt.addManagedDependency( dep( root, 0 ), "managed", null, null );
         depMgmt.addManagedDependency( dep( root, 0, 1 ), "managed", "managed", null );

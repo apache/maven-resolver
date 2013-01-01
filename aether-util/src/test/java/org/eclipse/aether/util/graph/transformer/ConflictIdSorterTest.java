@@ -80,7 +80,7 @@ public class ConflictIdSorterTest
     public void testSimple()
         throws Exception
     {
-        DependencyNode node = parser.parse( "simple.txt" );
+        DependencyNode node = parser.parseResource( "simple.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "gid2:aid::ext", "gid:aid::ext", "gid:aid2::ext" );
@@ -91,7 +91,7 @@ public class ConflictIdSorterTest
     public void testCycle()
         throws Exception
     {
-        DependencyNode node = parser.parse( "cycle.txt" );
+        DependencyNode node = parser.parseResource( "cycle.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "gid:aid::ext", "gid2:aid::ext" );
@@ -102,7 +102,7 @@ public class ConflictIdSorterTest
     public void testCycles()
         throws Exception
     {
-        DependencyNode node = parser.parse( "cycles.txt" );
+        DependencyNode node = parser.parseResource( "cycles.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "*", "*", "*", "gid:aid::ext" );
@@ -113,7 +113,7 @@ public class ConflictIdSorterTest
     public void testNoConflicts()
         throws Exception
     {
-        DependencyNode node = parser.parse( "no-conflicts.txt" );
+        DependencyNode node = parser.parseResource( "no-conflicts.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "gid:aid::ext", "gid3:aid::ext", "gid2:aid::ext", "gid4:aid::ext" );

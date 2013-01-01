@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ public class FilteringDependencyVisitorTest
     private DependencyNode parse( String resource )
         throws Exception
     {
-        return new DependencyGraphParser( "visitor/filtering/" ).parse( resource );
+        return new DependencyGraphParser( "visitor/filtering/" ).parseResource( resource );
     }
 
     @Test

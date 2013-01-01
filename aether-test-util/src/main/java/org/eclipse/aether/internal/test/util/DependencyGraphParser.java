@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -88,7 +89,7 @@ import org.eclipse.aether.graph.DependencyNode;
  * 
  * <h2>Multiple definitions in one resource</h2>
  * <p>
- * By using {@link #parseMultiple(String)}, definitions divided by a line beginning with "---" can be read from the same
+ * By using {@link #parseMultiResource(String)}, definitions divided by a line beginning with "---" can be read from the same
  * resource. The rest of the line is ignored.
  * <h2>Substitutions</h2>
  * <p>
@@ -107,13 +108,39 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public class DependencyGraphParser
 {
-    private Map<String, DependencyNode> nodes = new HashMap<String, DependencyNode>();
 
-    private String prefix = "";
+    private final String prefix;
 
     private Collection<String> substitutions;
 
-    private Iterator<String> substitutionIterator;
+    /**
+     * Create a parser with the given prefix and the given substitution strings.
+     * 
+     * @see DependencyGraphParser#parseResource(String)
+     */
+    public DependencyGraphParser( String prefix, Collection<String> substitutions )
+    {
+        this.prefix = prefix;
+        this.substitutions = substitutions;
+    }
+
+    /**
+     * Create a parser with the given prefix.
+     * 
+     * @see DependencyGraphParser#parseResource(String)
+     */
+    public DependencyGraphParser( String prefix )
+    {
+        this( prefix, Collections.<String> emptyList() );
+    }
+
+    /**
+     * Create a parser with an empty prefix.
+     */
+    public DependencyGraphParser()
+    {
+        this( "" );
+    }
 
     /**
      * Parse the given graph definition.
@@ -128,39 +155,10 @@ public class DependencyGraphParser
     }
 
     /**
-     * Create a parser with the given prefix and the given substitution strings.
-     * 
-     * @see DependencyGraphParser#parse(String)
+     * Parse the graph definition read from the given classpath resource. If a prefix is set, this method will load the
+     * resource from 'prefix + resource'.
      */
-    public DependencyGraphParser( String prefix, Collection<String> substitutions )
-    {
-        this.prefix = prefix;
-        this.substitutions = substitutions;
-    }
-
-    /**
-     * Create a parser with the given prefix.
-     * 
-     * @see DependencyGraphParser#parse(String)
-     */
-    public DependencyGraphParser( String prefix )
-    {
-        this( prefix, null );
-    }
-
-    /**
-     * Create a parser with an empty prefix.
-     */
-    public DependencyGraphParser()
-    {
-        this( "" );
-    }
-
-    /**
-     * Parse the graph definition read from the given resource. If a prefix is set, this method will load the resource
-     * from 'prefix + resource'.
-     */
-    public DependencyNode parse( String resource )
+    public DependencyNode parseResource( String resource )
         throws IOException
     {
         URL res = this.getClass().getClassLoader().getResource( prefix + resource );
@@ -174,7 +172,7 @@ public class DependencyGraphParser
     /**
      * Parse multiple graphs in one resource, divided by "---".
      */
-    public List<DependencyNode> parseMultiple( String resource )
+    public List<DependencyNode> parseMultiResource( String resource )
         throws IOException
     {
         URL res = this.getClass().getClassLoader().getResource( prefix + resource );
@@ -218,11 +216,7 @@ public class DependencyGraphParser
     private DependencyNode parse( BufferedReader in )
         throws IOException
     {
-
-        if ( substitutions != null )
-        {
-            substitutionIterator = substitutions.iterator();
-        }
+        Iterator<String> substitutionIterator = ( substitutions != null ) ? substitutions.iterator() : null;
 
         String line = null;
 
@@ -230,6 +224,7 @@ public class DependencyGraphParser
         DependencyNode node = null;
         int prevLevel = 0;
 
+        Map<String, DependencyNode> nodes = new HashMap<String, DependencyNode>();
         LinkedList<DependencyNode> stack = new LinkedList<DependencyNode>();
         boolean isRootNode = true;
 
@@ -276,7 +271,12 @@ public class DependencyGraphParser
 
             if ( ctx.getDefinition() != null && ctx.getDefinition().isReference() )
             {
-                DependencyNode child = reference( ctx.getDefinition().getReference() );
+                String reference = ctx.getDefinition().getReference();
+                DependencyNode child = nodes.get( reference );
+                if ( child == null )
+                {
+                    throw new IllegalArgumentException( "undefined reference " + reference );
+                }
                 node.getChildren().add( child );
                 node = child;
             }
@@ -293,30 +293,17 @@ public class DependencyGraphParser
 
                 if ( ctx.getDefinition() != null && ctx.getDefinition().hasId() )
                 {
-                    this.nodes.put( ctx.getDefinition().getId(), node );
+                    nodes.put( ctx.getDefinition().getId(), node );
                 }
             }
         }
 
-        this.nodes.clear();
-
         return root;
-
     }
 
     private boolean isEOFMarker( String line )
     {
         return line.startsWith( "---" );
-    }
-
-    private DependencyNode reference( String reference )
-    {
-        if ( !nodes.containsKey( reference ) )
-        {
-            throw new IllegalArgumentException( "undefined reference " + reference );
-        }
-
-        return this.nodes.get( reference );
     }
 
     private static boolean isEmpty( String line )
@@ -353,7 +340,8 @@ public class DependencyGraphParser
         if ( def != null )
         {
             builder.artifactId( def.getArtifactId() ).groupId( def.getGroupId() );
-            builder.ext( def.getExtension() ).version( def.getVersion() ).scope( def.getScope() );
+            builder.ext( def.getExtension() ).version( def.getVersion() );
+            builder.scope( def.getScope() ).optional( def.isOptional() );
             builder.properties( ctx.getProperties() );
         }
         DependencyNode node = builder.build();
@@ -567,8 +555,7 @@ public class DependencyGraphParser
 
     public void setSubstitutions( String... substitutions )
     {
-        this.setSubstitutions( Arrays.asList( substitutions ) );
-
+        setSubstitutions( Arrays.asList( substitutions ) );
     }
 
 }

@@ -340,7 +340,7 @@ public class NearestVersionSelectorTest
     public void testCyclicGraph()
         throws Exception
     {
-        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "cycle.txt" );
+        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "cycle.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -354,7 +354,7 @@ public class NearestVersionSelectorTest
     public void testLoop()
         throws Exception
     {
-        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "loop.txt" );
+        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "loop.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -366,7 +366,7 @@ public class NearestVersionSelectorTest
         throws Exception
     {
         DependencyNode root =
-            new DependencyGraphParser( "transformer/version-resolver/" ).parse( "overlapping-cycles.txt" );
+            new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "overlapping-cycles.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -378,7 +378,7 @@ public class NearestVersionSelectorTest
         throws Exception
     {
         DependencyNode root =
-            new DependencyGraphParser( "transformer/version-resolver/" ).parse( "scope-vs-version.txt" );
+            new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "scope-vs-version.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -392,7 +392,7 @@ public class NearestVersionSelectorTest
     public void testVerboseMode()
         throws Exception
     {
-        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parse( "verbose.txt" );
+        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "verbose.txt" );
 
         session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, Boolean.TRUE );
         assertSame( root, transform( root ) );

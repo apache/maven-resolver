@@ -12,7 +12,6 @@ package org.eclipse.aether.util.graph.transformer;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
 import java.util.Locale;
 
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -50,11 +49,11 @@ public class JavaScopeSelectorTest
         parser = new DependencyGraphParser( "transformer/scope-calculator/" );
     }
 
-    private DependencyNode parse( String name, String... substitutions )
+    private DependencyNode parse( String resource, String... substitutions )
         throws Exception
     {
-        parser.setSubstitutions( Arrays.asList( substitutions ) );
-        return parser.parse( name );
+        parser.setSubstitutions( substitutions );
+        return parser.parseResource( resource );
     }
 
     private void expectScope( String expected, DependencyNode root, int... coords )
@@ -109,7 +108,7 @@ public class JavaScopeSelectorTest
     public void testConflictWinningScopeGetsUsedForInheritance()
         throws Exception
     {
-        DependencyNode root = parser.parse( "conflict-and-inheritance.txt" );
+        DependencyNode root = parse( "conflict-and-inheritance.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0, 0 );
@@ -120,7 +119,7 @@ public class JavaScopeSelectorTest
     public void testScopeOfDirectDependencyWinsConflictAndGetsUsedForInheritanceToChildrenEverywhereInGraph()
         throws Exception
     {
-        DependencyNode root = parser.parse( "direct-with-conflict-and-inheritance.txt" );
+        DependencyNode root = parse( "direct-with-conflict-and-inheritance.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "test", root, 0, 0 );
@@ -130,7 +129,7 @@ public class JavaScopeSelectorTest
     public void testCycleA()
         throws Exception
     {
-        DependencyNode root = parser.parse( "cycle-a.txt" );
+        DependencyNode root = parse( "cycle-a.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0 );
@@ -141,7 +140,7 @@ public class JavaScopeSelectorTest
     public void testCycleB()
         throws Exception
     {
-        DependencyNode root = parser.parse( "cycle-b.txt" );
+        DependencyNode root = parse( "cycle-b.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "runtime", root, 0 );
@@ -152,7 +151,7 @@ public class JavaScopeSelectorTest
     public void testCycleC()
         throws Exception
     {
-        DependencyNode root = parser.parse( "cycle-c.txt" );
+        DependencyNode root = parse( "cycle-c.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "runtime", root, 0 );
@@ -165,7 +164,7 @@ public class JavaScopeSelectorTest
     public void testCycleD()
         throws Exception
     {
-        DependencyNode root = parser.parse( "cycle-d.txt" );
+        DependencyNode root = parse( "cycle-d.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0 );
@@ -181,8 +180,7 @@ public class JavaScopeSelectorTest
         {
             String direct = directScope.toString();
 
-            parser.setSubstitutions( direct );
-            DependencyNode root = parser.parse( "direct-nodes-winning.txt" );
+            DependencyNode root = parse( "direct-nodes-winning.txt", direct );
 
             String msg =
                 String.format( "direct node should be setting scope ('%s') for all nodes.\n" + parser.dump( root ),
@@ -202,8 +200,7 @@ public class JavaScopeSelectorTest
         {
             for ( Scope scope2 : Scope.values() )
             {
-                parser.setSubstitutions( scope1.toString(), scope2.toString() );
-                DependencyNode root = parser.parse( "multiple-inheritance.txt" );
+                DependencyNode root = parse( "multiple-inheritance.txt", scope1.toString(), scope2.toString() );
 
                 String expected = scope1.compareTo( scope2 ) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
@@ -224,8 +221,7 @@ public class JavaScopeSelectorTest
         {
             for ( Scope scope2 : Scope.values() )
             {
-                parser.setSubstitutions( scope1.toString(), scope2.toString() );
-                DependencyNode root = parser.parse( "dueling-scopes.txt" );
+                DependencyNode root = parse( "dueling-scopes.txt", scope1.toString(), scope2.toString() );
 
                 String expected = scope1.compareTo( scope2 ) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
@@ -249,8 +245,7 @@ public class JavaScopeSelectorTest
         {
             for ( Scope scope2 : Scope.values() )
             {
-                parser.setSubstitutions( scope1.toString(), scope2.toString() );
-                DependencyNode root = parser.parse( "conflicting-direct-nodes.txt" );
+                DependencyNode root = parse( "conflicting-direct-nodes.txt", scope1.toString(), scope2.toString() );
 
                 String expected = scope1.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
