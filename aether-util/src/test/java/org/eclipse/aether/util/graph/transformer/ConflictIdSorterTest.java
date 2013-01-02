@@ -22,7 +22,6 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -31,18 +30,16 @@ public class ConflictIdSorterTest
     extends AbstractDependencyGraphTransformerTest
 {
 
-    private DependencyGraphParser parser;
-
     @Override
     protected DependencyGraphTransformer newTransformer()
     {
         return new ChainedDependencyGraphTransformer( new SimpleConflictMarker(), new ConflictIdSorter() );
     }
 
-    @Before
-    public void setup()
+    @Override
+    protected DependencyGraphParser newParser()
     {
-        parser = new DependencyGraphParser( "transformer/conflict-id-sorter/" );
+        return new DependencyGraphParser( "transformer/conflict-id-sorter/" );
     }
 
     private void expectOrder( List<String> sorted, String... ids )
@@ -80,7 +77,7 @@ public class ConflictIdSorterTest
     public void testSimple()
         throws Exception
     {
-        DependencyNode node = parser.parseResource( "simple.txt" );
+        DependencyNode node = parseResource( "simple.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "gid2:aid::ext", "gid:aid::ext", "gid:aid2::ext" );
@@ -91,7 +88,7 @@ public class ConflictIdSorterTest
     public void testCycle()
         throws Exception
     {
-        DependencyNode node = parser.parseResource( "cycle.txt" );
+        DependencyNode node = parseResource( "cycle.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "gid:aid::ext", "gid2:aid::ext" );
@@ -102,7 +99,7 @@ public class ConflictIdSorterTest
     public void testCycles()
         throws Exception
     {
-        DependencyNode node = parser.parseResource( "cycles.txt" );
+        DependencyNode node = parseResource( "cycles.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "*", "*", "*", "gid:aid::ext" );
@@ -113,7 +110,7 @@ public class ConflictIdSorterTest
     public void testNoConflicts()
         throws Exception
     {
-        DependencyNode node = parser.parseResource( "no-conflicts.txt" );
+        DependencyNode node = parseResource( "no-conflicts.txt" );
         assertSame( node, transform( node ) );
 
         expectOrder( "gid:aid::ext", "gid3:aid::ext", "gid2:aid::ext", "gid4:aid::ext" );

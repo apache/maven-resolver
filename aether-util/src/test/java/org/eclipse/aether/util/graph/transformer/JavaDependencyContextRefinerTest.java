@@ -16,7 +16,6 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -25,25 +24,23 @@ public class JavaDependencyContextRefinerTest
     extends AbstractDependencyGraphTransformerTest
 {
 
-    private DependencyGraphParser parser;
-
     @Override
     protected DependencyGraphTransformer newTransformer()
     {
         return new JavaDependencyContextRefiner();
     }
 
-    @Before
-    public void setup()
+    @Override
+    protected DependencyGraphParser newParser()
     {
-        parser = new DependencyGraphParser();
+        return new DependencyGraphParser( "transformer/context-refiner/" );
     }
 
     @Test
     public void testDoNotRefineOtherContext()
         throws Exception
     {
-        DependencyNode node = parser.parseLiteral( "gid:aid:ext:cls:ver" );
+        DependencyNode node = parseLiteral( "gid:aid:ext:cls:ver" );
         node.setRequestContext( "otherContext" );
 
         DependencyNode refinedNode = transform( node );
@@ -56,17 +53,17 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project/compile";
 
-        DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:compile" );
+        DependencyNode node = parseLiteral( "gid:aid:ext:ver:compile" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
 
-        node = parser.parseLiteral( "gid:aid:ext:ver:system" );
+        node = parseLiteral( "gid:aid:ext:ver:system" );
         node.setRequestContext( "project" );
         refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
 
-        node = parser.parseLiteral( "gid:aid:ext:ver:provided" );
+        node = parseLiteral( "gid:aid:ext:ver:provided" );
         node.setRequestContext( "project" );
         refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
@@ -78,7 +75,7 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project/test";
 
-        DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:test" );
+        DependencyNode node = parseLiteral( "gid:aid:ext:ver:test" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
@@ -90,7 +87,7 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project/runtime";
 
-        DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:runtime" );
+        DependencyNode node = parseLiteral( "gid:aid:ext:ver:runtime" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
@@ -102,7 +99,7 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project";
 
-        DependencyNode node = parser.parseLiteral( "gid:aid:ext:ver:unknownScope" );
+        DependencyNode node = parseLiteral( "gid:aid:ext:ver:unknownScope" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );

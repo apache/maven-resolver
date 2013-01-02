@@ -31,64 +31,28 @@ public class NearestVersionSelectorTest
         return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
     }
 
+    @Override
+    protected DependencyGraphParser newParser()
+    {
+        return new DependencyGraphParser( "transformer/version-resolver/" );
+    }
+
     @Test
     public void testSelectHighestVersionFromMultipleVersionsAtSameLevel()
         throws Exception
     {
-        // root
-        // +- a:1
-        // +- a:3
-        // \- a:2
-
-        DependencyNode a1 = builder.artifactId( "a" ).version( "1" ).build();
-        DependencyNode a2 = builder.artifactId( "a" ).version( "2" ).build();
-        DependencyNode a3 = builder.artifactId( "a" ).version( "3" ).build();
-
-        DependencyNode root = builder.artifactId( null ).build();
-        root.getChildren().add( a1 );
-        root.getChildren().add( a3 );
-        root.getChildren().add( a2 );
-
+        DependencyNode root = parseResource( "sibling-versions.txt" );
         assertSame( root, transform( root ) );
 
         assertEquals( 1, root.getChildren().size() );
-        assertSame( a3, root.getChildren().iterator().next() );
+        assertEquals( "3", root.getChildren().get( 0 ).getDependency().getArtifact().getVersion() );
     }
 
     @Test
     public void testSelectedVersionAtDeeperLevelThanOriginallySeen()
         throws Exception
     {
-        // root
-        // +- a
-        // |  \- b:1           # will be removed in favor of b:2
-        // |     \- j:1        # nearest version of j in dirty tree
-        // +- c
-        // |  \- d
-        // |     \- e
-        // |        \- j:1
-        // \- b:2
-
-        DependencyNode j = builder.artifactId( "j" ).build();
-
-        DependencyNode b1 = builder.artifactId( "b" ).version( "1" ).build();
-        b1.getChildren().add( j );
-        DependencyNode a = builder.artifactId( "a" ).build();
-        a.getChildren().add( b1 );
-
-        DependencyNode e = builder.artifactId( "e" ).build();
-        e.getChildren().add( j );
-        DependencyNode d = builder.artifactId( "d" ).build();
-        d.getChildren().add( e );
-        DependencyNode c = builder.artifactId( "c" ).build();
-        c.getChildren().add( d );
-
-        DependencyNode b2 = builder.artifactId( "b" ).version( "2" ).build();
-
-        DependencyNode root = builder.artifactId( null ).build();
-        root.getChildren().add( a );
-        root.getChildren().add( c );
-        root.getChildren().add( b2 );
+        DependencyNode root = parseResource( "nearest-underneath-loser-a.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -100,37 +64,7 @@ public class NearestVersionSelectorTest
     public void testNearestDirtyVersionUnderneathRemovedNode()
         throws Exception
     {
-        // root
-        // +- a
-        // |  \- b:1           # will be removed in favor of b:2
-        // |     \- j:1        # nearest version of j in dirty tree
-        // +- c
-        // |  \- d
-        // |     \- e
-        // |        \- j:2
-        // \- b:2
-
-        DependencyNode j1 = builder.artifactId( "j" ).version( "1" ).build();
-        DependencyNode j2 = builder.artifactId( "j" ).version( "2" ).build();
-
-        DependencyNode b1 = builder.artifactId( "b" ).version( "1" ).build();
-        b1.getChildren().add( j1 );
-        DependencyNode a = builder.artifactId( "a" ).build();
-        a.getChildren().add( b1 );
-
-        DependencyNode e = builder.artifactId( "e" ).build();
-        e.getChildren().add( j2 );
-        DependencyNode d = builder.artifactId( "d" ).build();
-        d.getChildren().add( e );
-        DependencyNode c = builder.artifactId( "c" ).build();
-        c.getChildren().add( d );
-
-        DependencyNode b2 = builder.artifactId( "b" ).version( "2" ).build();
-
-        DependencyNode root = builder.artifactId( null ).build();
-        root.getChildren().add( a );
-        root.getChildren().add( c );
-        root.getChildren().add( b2 );
+        DependencyNode root = parseResource( "nearest-underneath-loser-b.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -188,32 +122,15 @@ public class NearestVersionSelectorTest
     public void testCyclicConflictIdGraph()
         throws Exception
     {
-        // root
-        // +- a:1
-        // |  \- b:1
-        // \- b:2
-        //    \- a:2
-
-        DependencyNode a1 = builder.artifactId( "a" ).version( "1" ).build();
-        DependencyNode a2 = builder.artifactId( "a" ).version( "2" ).build();
-
-        DependencyNode b1 = builder.artifactId( "b" ).version( "1" ).build();
-        DependencyNode b2 = builder.artifactId( "b" ).version( "2" ).build();
-
-        a1.getChildren().add( b1 );
-        b2.getChildren().add( a2 );
-
-        DependencyNode root = builder.artifactId( null ).build();
-        root.getChildren().add( a1 );
-        root.getChildren().add( b2 );
+        DependencyNode root = parseResource( "conflict-id-cycle.txt" );
 
         assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
-        assertSame( a1, root.getChildren().get( 0 ) );
-        assertSame( b2, root.getChildren().get( 1 ) );
-        assertTrue( a1.getChildren().isEmpty() );
-        assertTrue( b2.getChildren().isEmpty() );
+        assertEquals( "a", root.getChildren().get( 0 ).getDependency().getArtifact().getArtifactId() );
+        assertEquals( "b", root.getChildren().get( 1 ).getDependency().getArtifact().getArtifactId() );
+        assertTrue( root.getChildren().get( 0 ).getChildren().isEmpty() );
+        assertTrue( root.getChildren().get( 1 ).getChildren().isEmpty() );
     }
 
     @Test( expected = UnsolvableVersionConflictException.class )
@@ -278,31 +195,15 @@ public class NearestVersionSelectorTest
     public void testConflictGroupCompletelyDroppedFromResolvedTree()
         throws Exception
     {
-        // root
-        // +- a:1
-        // |  \- b:1
-        // |     \- c:1     # conflict group c will completely vanish from resolved tree
-        // \- b:2
-
-        DependencyNode a = builder.artifactId( "a" ).version( "1" ).build();
-        DependencyNode b1 = builder.artifactId( "b" ).version( "1" ).build();
-        DependencyNode b2 = builder.artifactId( "b" ).version( "2" ).build();
-        DependencyNode c = builder.artifactId( "c" ).version( "1" ).build();
-
-        b1.getChildren().add( c );
-        a.getChildren().add( b1 );
-
-        DependencyNode root = builder.artifactId( null ).build();
-        root.getChildren().add( a );
-        root.getChildren().add( b2 );
+        DependencyNode root = parseResource( "dead-conflict-group.txt" );
 
         assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
-        assertSame( a, root.getChildren().get( 0 ) );
-        assertSame( b2, root.getChildren().get( 1 ) );
-        assertTrue( a.getChildren().isEmpty() );
-        assertTrue( b2.getChildren().isEmpty() );
+        assertEquals( "a", root.getChildren().get( 0 ).getDependency().getArtifact().getArtifactId() );
+        assertEquals( "b", root.getChildren().get( 1 ).getDependency().getArtifact().getArtifactId() );
+        assertTrue( root.getChildren().get( 0 ).getChildren().isEmpty() );
+        assertTrue( root.getChildren().get( 1 ).getChildren().isEmpty() );
     }
 
     @Test
@@ -340,7 +241,7 @@ public class NearestVersionSelectorTest
     public void testCyclicGraph()
         throws Exception
     {
-        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "cycle.txt" );
+        DependencyNode root = parseResource( "cycle.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -354,7 +255,7 @@ public class NearestVersionSelectorTest
     public void testLoop()
         throws Exception
     {
-        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "loop.txt" );
+        DependencyNode root = parseResource( "loop.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -365,8 +266,7 @@ public class NearestVersionSelectorTest
     public void testOverlappingCycles()
         throws Exception
     {
-        DependencyNode root =
-            new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "overlapping-cycles.txt" );
+        DependencyNode root = parseResource( "overlapping-cycles.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -377,8 +277,7 @@ public class NearestVersionSelectorTest
     public void testScopeDerivationAndConflictResolutionCantHappenForAllNodesBeforeVersionSelection()
         throws Exception
     {
-        DependencyNode root =
-            new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "scope-vs-version.txt" );
+        DependencyNode root = parseResource( "scope-vs-version.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -392,7 +291,7 @@ public class NearestVersionSelectorTest
     public void testVerboseMode()
         throws Exception
     {
-        DependencyNode root = new DependencyGraphParser( "transformer/version-resolver/" ).parseResource( "verbose.txt" );
+        DependencyNode root = parseResource( "verbose.txt" );
 
         session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, Boolean.TRUE );
         assertSame( root, transform( root ) );

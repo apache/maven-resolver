@@ -17,14 +17,11 @@ import java.util.Locale;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Before;
 import org.junit.Test;
 
 public class JavaScopeSelectorTest
     extends AbstractDependencyGraphTransformerTest
 {
-
-    private DependencyGraphParser parser;
 
     private enum Scope
     {
@@ -43,17 +40,10 @@ public class JavaScopeSelectorTest
         return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
     }
 
-    @Before
-    public void setup()
+    @Override
+    protected DependencyGraphParser newParser()
     {
-        parser = new DependencyGraphParser( "transformer/scope-calculator/" );
-    }
-
-    private DependencyNode parse( String resource, String... substitutions )
-        throws Exception
-    {
-        parser.setSubstitutions( substitutions );
-        return parser.parseResource( resource );
+        return new DependencyGraphParser( "transformer/scope-calculator/" );
     }
 
     private void expectScope( String expected, DependencyNode root, int... coords )
@@ -100,7 +90,7 @@ public class JavaScopeSelectorTest
         String resource = "inheritance.txt";
 
         String expected = "test";
-        DependencyNode root = transform( parse( resource, "provided", "test" ) );
+        DependencyNode root = transform( parseResource( resource, "provided", "test" ) );
         expectScope( parser.dump( root ), expected, root, 0, 0 );
     }
 
@@ -108,7 +98,7 @@ public class JavaScopeSelectorTest
     public void testConflictWinningScopeGetsUsedForInheritance()
         throws Exception
     {
-        DependencyNode root = parse( "conflict-and-inheritance.txt" );
+        DependencyNode root = parseResource( "conflict-and-inheritance.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0, 0 );
@@ -119,7 +109,7 @@ public class JavaScopeSelectorTest
     public void testScopeOfDirectDependencyWinsConflictAndGetsUsedForInheritanceToChildrenEverywhereInGraph()
         throws Exception
     {
-        DependencyNode root = parse( "direct-with-conflict-and-inheritance.txt" );
+        DependencyNode root = parseResource( "direct-with-conflict-and-inheritance.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "test", root, 0, 0 );
@@ -129,7 +119,7 @@ public class JavaScopeSelectorTest
     public void testCycleA()
         throws Exception
     {
-        DependencyNode root = parse( "cycle-a.txt" );
+        DependencyNode root = parseResource( "cycle-a.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0 );
@@ -140,7 +130,7 @@ public class JavaScopeSelectorTest
     public void testCycleB()
         throws Exception
     {
-        DependencyNode root = parse( "cycle-b.txt" );
+        DependencyNode root = parseResource( "cycle-b.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "runtime", root, 0 );
@@ -151,7 +141,7 @@ public class JavaScopeSelectorTest
     public void testCycleC()
         throws Exception
     {
-        DependencyNode root = parse( "cycle-c.txt" );
+        DependencyNode root = parseResource( "cycle-c.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "runtime", root, 0 );
@@ -164,7 +154,7 @@ public class JavaScopeSelectorTest
     public void testCycleD()
         throws Exception
     {
-        DependencyNode root = parse( "cycle-d.txt" );
+        DependencyNode root = parseResource( "cycle-d.txt" );
         assertSame( root, transform( root ) );
 
         expectScope( "compile", root, 0 );
@@ -180,7 +170,7 @@ public class JavaScopeSelectorTest
         {
             String direct = directScope.toString();
 
-            DependencyNode root = parse( "direct-nodes-winning.txt", direct );
+            DependencyNode root = parseResource( "direct-nodes-winning.txt", direct );
 
             String msg =
                 String.format( "direct node should be setting scope ('%s') for all nodes.\n" + parser.dump( root ),
@@ -200,7 +190,7 @@ public class JavaScopeSelectorTest
         {
             for ( Scope scope2 : Scope.values() )
             {
-                DependencyNode root = parse( "multiple-inheritance.txt", scope1.toString(), scope2.toString() );
+                DependencyNode root = parseResource( "multiple-inheritance.txt", scope1.toString(), scope2.toString() );
 
                 String expected = scope1.compareTo( scope2 ) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
@@ -221,7 +211,7 @@ public class JavaScopeSelectorTest
         {
             for ( Scope scope2 : Scope.values() )
             {
-                DependencyNode root = parse( "dueling-scopes.txt", scope1.toString(), scope2.toString() );
+                DependencyNode root = parseResource( "dueling-scopes.txt", scope1.toString(), scope2.toString() );
 
                 String expected = scope1.compareTo( scope2 ) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );
@@ -245,7 +235,7 @@ public class JavaScopeSelectorTest
         {
             for ( Scope scope2 : Scope.values() )
             {
-                DependencyNode root = parse( "conflicting-direct-nodes.txt", scope1.toString(), scope2.toString() );
+                DependencyNode root = parseResource( "conflicting-direct-nodes.txt", scope1.toString(), scope2.toString() );
 
                 String expected = scope1.toString();
                 String msg = String.format( "expected '%s' to win\n" + parser.dump( root ), expected );

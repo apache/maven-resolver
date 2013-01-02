@@ -19,6 +19,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.After;
@@ -33,11 +34,15 @@ public abstract class AbstractDependencyGraphTransformerTest
 
     protected DependencyGraphTransformer transformer;
 
+    protected DependencyGraphParser parser;
+
     protected DefaultRepositorySystemSession session;
 
     protected DependencyGraphTransformationContext context;
 
     protected abstract DependencyGraphTransformer newTransformer();
+
+    protected abstract DependencyGraphParser newParser();
 
     protected DependencyNode transform( DependencyNode root )
         throws Exception
@@ -46,6 +51,20 @@ public abstract class AbstractDependencyGraphTransformerTest
         root = transformer.transformGraph( root, context );
         assertNotNull( root );
         return root;
+    }
+
+    protected DependencyNode parseResource( String resource, String... substitutions )
+        throws Exception
+    {
+        parser.setSubstitutions( substitutions );
+        return parser.parseResource( resource );
+    }
+
+    protected DependencyNode parseLiteral( String literal, String... substitutions )
+        throws Exception
+    {
+        parser.setSubstitutions( substitutions );
+        return parser.parseLiteral( literal );
     }
 
     protected List<DependencyNode> find( DependencyNode node, String id )
@@ -91,6 +110,7 @@ public abstract class AbstractDependencyGraphTransformerTest
     {
         builder = new NodeBuilder();
         transformer = newTransformer();
+        parser = newParser();
         session = new DefaultRepositorySystemSession();
     }
 
@@ -99,6 +119,7 @@ public abstract class AbstractDependencyGraphTransformerTest
     {
         builder = null;
         transformer = null;
+        parser = null;
         session = null;
         context = null;
     }

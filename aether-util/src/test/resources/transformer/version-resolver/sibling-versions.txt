@@ -1,0 +1,7 @@
+# multiple versions of the same GA beneath the same parent as seen after expansion of version ranges
+# versions neither in ascending nor descending order
+
+test:root:jar:1
++- test:a:jar:1
++- test:a:jar:3
+\- test:a:jar:2

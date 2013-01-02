@@ -16,6 +16,7 @@ import java.util.Map;
 
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.util.graph.transformer.ConflictMarker;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
@@ -31,6 +32,12 @@ public class ConflictMarkerTest
     protected DependencyGraphTransformer newTransformer()
     {
         return new ConflictMarker();
+    }
+
+    @Override
+    protected DependencyGraphParser newParser()
+    {
+        return new DependencyGraphParser( "transformer/conflict-marker/" );
     }
 
     @Test

@@ -1,0 +1,9 @@
+test:root:jar:1
++- test:a:jar:1
+|  \- test:b:jar:1           # will be removed in favor of test:b:jar:2
+|     \- test:j:jar:1        # nearest version of j in dirty tree
++- test:c:jar:1
+|  \- test:d:jar:1
+|     \- test:e:jar:1
+|        \- test:j:jar:2
+\- test:b:jar:2
