@@ -1,3 +1,3 @@
-gid:aid:jar:1
-+- gid:aid2:jar:2:system
-\- gid:aid2:jar:3:compile
+gid:aid:1
++- gid:aid2:2 system
+\- gid:aid2:3 compile

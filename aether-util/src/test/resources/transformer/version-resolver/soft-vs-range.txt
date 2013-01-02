@@ -1,0 +1,5 @@
+test:root:1
++- test:a:1
+|  \- test:c:2     # nearest occurrence of c but doesn't match range given below
+\- test:b:1
+   \- test:c:1[1]

@@ -1,7 +1,7 @@
 # a graph which itself is acyclic but its conflict ids are cyclic (a <-> b)
 
-test:root:jar:1
-+- test:a:jar:1
-|  \- test:b:jar:1
-\- test:b:jar:2
-   \- test:a:jar:2
+test:root:1
++- test:a:1
+|  \- test:b:1
+\- test:b:2
+   \- test:a:2

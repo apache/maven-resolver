@@ -1,5 +1,5 @@
-test:root:jar:1
-+- test:a:jar:1
-|  \- test:b:jar:1
-|     \- test:c:jar:1     # conflict group c will completely vanish from resolved tree
-\- test:b:jar:2
+test:root:1
++- test:a:1
+|  \- test:b:1
+|     \- test:c:1     # conflict group c will completely vanish from resolved tree
+\- test:b:2

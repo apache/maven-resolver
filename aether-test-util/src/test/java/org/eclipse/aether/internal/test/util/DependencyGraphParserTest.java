@@ -42,7 +42,7 @@ public class DependencyGraphParserTest
     public void testOnlyRoot()
         throws IOException
     {
-        String def = "gid:aid:jar:1:scope";
+        String def = "gid:aid:jar:1 scope";
 
         DependencyNode node = parser.parseLiteral( def );
 
@@ -83,7 +83,7 @@ public class DependencyGraphParserTest
         throws IOException
     {
         String def =
-            "gid1:aid1:ext1:ver1:scope1\n" + "+- gid2:aid2:ext2:ver2:scope2\n" + "\\- gid3:aid3:ext3:ver3:scope3\n";
+            "gid1:aid1:ext1:ver1 scope1\n" + "+- gid2:aid2:ext2:ver2 scope2\n" + "\\- gid3:aid3:ext3:ver3 scope3\n";
 
         DependencyNode node = parser.parseLiteral( def );
         assertNotNull( node );
@@ -107,8 +107,8 @@ public class DependencyGraphParserTest
         throws IOException
     {
         String def =
-            "gid1:aid1:ext1:ver1\n" + "+- gid2:aid2:ext2:ver2:scope2\n" + "|  \\- gid3:aid3:ext3:ver3\n"
-                + "\\- gid4:aid4:ext4:ver4:scope4";
+            "gid1:aid1:ext1:ver1\n" + "+- gid2:aid2:ext2:ver2 scope2\n" + "|  \\- gid3:aid3:ext3:ver3\n"
+                + "\\- gid4:aid4:ext4:ver4 scope4";
 
         DependencyNode node = parser.parseLiteral( def );
         assertNodeProperties( node, 1 );
@@ -161,7 +161,7 @@ public class DependencyGraphParserTest
     public void testId()
         throws IOException
     {
-        String def = "(id)gid:aid:ext:ver\n\\- ^id";
+        String def = "gid:aid:ext:ver (id)\n\\- ^id";
         DependencyNode node = parser.parseLiteral( def );
         assertNodeProperties( node, "" );
 
@@ -201,7 +201,7 @@ public class DependencyGraphParserTest
     public void testProperties()
         throws IOException
     {
-        String def = "gid:aid:ext:ver;test=foo;test2=fizzle";
+        String def = "gid:aid:ext:ver props=test:foo,test2:fizzle";
         DependencyNode node = parser.parseLiteral( def );
 
         assertNodeProperties( node, "" );
@@ -275,7 +275,7 @@ public class DependencyGraphParserTest
     public void testOptional()
         throws IOException
     {
-        String def = "gid:aid:jar:1:compile:optional";
+        String def = "gid:aid:jar:1 compile optional";
 
         DependencyNode node = parser.parseLiteral( def );
 

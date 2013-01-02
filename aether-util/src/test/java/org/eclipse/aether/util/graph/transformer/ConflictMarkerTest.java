@@ -17,7 +17,6 @@ import java.util.Map;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.util.graph.transformer.ConflictMarker;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.junit.Test;
@@ -44,11 +43,7 @@ public class ConflictMarkerTest
     public void testSimple()
         throws Exception
     {
-        NodeBuilder builder = new NodeBuilder();
-
-        DependencyNode root = builder.build();
-        root.getChildren().add( builder.artifactId( "a" ).build() );
-        root.getChildren().add( builder.artifactId( "b" ).build() );
+        DependencyNode root = parseResource( "simple.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -66,11 +61,7 @@ public class ConflictMarkerTest
     public void testRelocation1()
         throws Exception
     {
-        NodeBuilder builder = new NodeBuilder();
-
-        DependencyNode root = builder.build();
-        root.getChildren().add( builder.artifactId( "a" ).build() );
-        root.getChildren().add( builder.artifactId( "a" ).reloc( "reloc" ).build() );
+        DependencyNode root = parseResource( "relocation1.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -87,11 +78,7 @@ public class ConflictMarkerTest
     public void testRelocation2()
         throws Exception
     {
-        NodeBuilder builder = new NodeBuilder();
-
-        DependencyNode root = builder.build();
-        root.getChildren().add( builder.artifactId( "a" ).reloc( "reloc" ).build() );
-        root.getChildren().add( builder.artifactId( "a" ).build() );
+        DependencyNode root = parseResource( "relocation2.txt" );
 
         assertSame( root, transform( root ) );
 
@@ -108,12 +95,7 @@ public class ConflictMarkerTest
     public void testRelocation3()
         throws Exception
     {
-        NodeBuilder builder = new NodeBuilder();
-
-        DependencyNode root = builder.build();
-        root.getChildren().add( builder.artifactId( "a" ).build() );
-        root.getChildren().add( builder.artifactId( "b" ).build() );
-        root.getChildren().add( builder.artifactId( "c" ).reloc( "a" ).reloc( "b" ).build() );
+        DependencyNode root = parseResource( "relocation3.txt" );
 
         assertSame( root, transform( root ) );
 

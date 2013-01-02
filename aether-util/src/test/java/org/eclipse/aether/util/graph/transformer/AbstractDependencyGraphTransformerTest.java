@@ -20,7 +20,6 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -29,8 +28,6 @@ import org.junit.Before;
  */
 public abstract class AbstractDependencyGraphTransformerTest
 {
-
-    protected NodeBuilder builder;
 
     protected DependencyGraphTransformer transformer;
 
@@ -108,7 +105,6 @@ public abstract class AbstractDependencyGraphTransformerTest
     @Before
     public void setUp()
     {
-        builder = new NodeBuilder();
         transformer = newTransformer();
         parser = newParser();
         session = new DefaultRepositorySystemSession();
@@ -117,7 +113,6 @@ public abstract class AbstractDependencyGraphTransformerTest
     @After
     public void tearDown()
     {
-        builder = null;
         transformer = null;
         parser = null;
         session = null;

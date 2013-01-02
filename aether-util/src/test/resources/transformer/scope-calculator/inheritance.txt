@@ -1,3 +1,3 @@
-root:a:ext:ver
-\- gid:b:ext:ver:%s
-   \- gid:c:ext:ver:%s
+root:a:ver
+\- gid:b:ver %s
+   \- gid:c:ver %s

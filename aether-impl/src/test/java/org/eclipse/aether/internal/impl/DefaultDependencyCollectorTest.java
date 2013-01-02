@@ -158,7 +158,7 @@ public class DefaultDependencyCollectorTest
 
         assertEquals( 1, newRoot.getChildren().size() );
 
-        DependencyNode expect = parser.parseLiteral( "gid:aid2:ext:ver:compile" );
+        DependencyNode expect = parser.parseLiteral( "gid:aid2:ext:ver compile" );
         assertEquals( expect.getDependency(), newRoot.getChildren().get( 0 ).getDependency() );
     }
 
@@ -206,11 +206,11 @@ public class DefaultDependencyCollectorTest
 
         assertEquals( 2, newRoot.getChildren().size() );
 
-        DependencyNode expect = parser.parseLiteral( "gid:aid:ext:ver:compile" );
+        DependencyNode expect = parser.parseLiteral( "gid:aid:ext:ver compile" );
         Dependency dep = expect.getDependency();
         assertEquals( dep, dep( newRoot, 0 ) );
 
-        expect = parser.parseLiteral( "gid:aid2:ext:ver:compile" );
+        expect = parser.parseLiteral( "gid:aid2:ext:ver compile" );
         dep = expect.getDependency();
         assertEquals( dep, dep( newRoot, 1 ) );
         assertEquals( dep, dep( newRoot, 0, 0 ) );
@@ -284,8 +284,8 @@ public class DefaultDependencyCollectorTest
     public void testCollectMultipleDependencies()
         throws IOException, DependencyCollectionException
     {
-        DependencyNode root1 = parser.parseLiteral( "gid:aid:ext:ver:compile" );
-        DependencyNode root2 = parser.parseLiteral( "gid:aid2:ext:ver:compile" );
+        DependencyNode root1 = parser.parseLiteral( "gid:aid:ext:ver compile" );
+        DependencyNode root2 = parser.parseLiteral( "gid:aid2:ext:ver compile" );
         List<Dependency> dependencies = Arrays.asList( root1.getDependency(), root2.getDependency() );
         CollectRequest request = new CollectRequest( dependencies, null, Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
@@ -320,7 +320,7 @@ public class DefaultDependencyCollectorTest
             }
         } );
 
-        DependencyNode root = parser.parseLiteral( "verrange:parent:jar:[1,):compile" );
+        DependencyNode root = parser.parseLiteral( "verrange:parent:jar:1[1,) compile" );
         List<Dependency> dependencies = Arrays.asList( root.getDependency() );
         CollectRequest request = new CollectRequest( dependencies, null, Arrays.asList( repository, repo2 ) );
         CollectResult result = collector.collectDependencies( session, request );
@@ -351,11 +351,11 @@ public class DefaultDependencyCollectorTest
         assertEquals( dependency.getArtifact(), dep( newRoot ).getArtifact() );
 
         assertEquals( 1, newRoot.getChildren().size() );
-        DependencyNode expect = parser.parseLiteral( "gid:aid:ext:ver:compile" );
+        DependencyNode expect = parser.parseLiteral( "gid:aid:ext:ver compile" );
         assertEquals( dep( expect ), dep( newRoot, 0 ) );
 
         assertEquals( 1, path( newRoot, 0 ).getChildren().size() );
-        expect = parser.parseLiteral( "gid:aid2:ext:managedVersion:managedScope" );
+        expect = parser.parseLiteral( "gid:aid2:ext:managedVersion managedScope" );
         assertEquals( dep( expect ), dep( newRoot, 0, 0 ) );
     }
 

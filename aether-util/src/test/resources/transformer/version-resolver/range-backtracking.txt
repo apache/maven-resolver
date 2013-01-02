@@ -1,0 +1,10 @@
+(null)
++- test:x:1
++- test:a:1
+|  \- test:b:1
+|     \- test:x:3
++- test:c:1
+|  \- test:x:2
+\- test:d:1
+   \- test:e:1
+      \- test:x:2[2,)   # forces rejection of x:1, should fallback to nearest and not first-seen, i.e. x:2 and not x:3

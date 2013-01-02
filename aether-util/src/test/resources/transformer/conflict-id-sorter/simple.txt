@@ -1,7 +1,5 @@
-# simple test case for the ConflictIdSorter
-
 (null)
-+- gid:aid:ext:ver
-|  \- gid:aid2:ext:ver
-\- gid2:aid:ext:ver
-   \- gid:aid:ext:ver
++- gid:aid:ver
+|  \- gid:aid2:ver
+\- gid2:aid:ver
+   \- gid:aid:ver

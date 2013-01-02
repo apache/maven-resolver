@@ -1,5 +1,5 @@
 (null)
-+- gid:aid:ext:ver:%s
-|  \- (1)gid2:aid:ext:ver:compile
-\- gid3:aid:ext:ver:%s
++- gid:aid:ver %s
+|  \- gid2:aid:ver compile   (1)
+\- gid3:aid:ver %s
    \- ^1

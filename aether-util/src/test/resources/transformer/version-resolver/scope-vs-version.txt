@@ -4,11 +4,11 @@
 # versions got removed. In the dirty graph below, the effective scope of test:y should be "test" and not "compile" (as suggested
 # by its test:x parent).
 
-test:root:jar:1
-+- test:a:jar:1:compile
-|  +- test:x:jar:1:compile             # (a)
-+- test:b:jar:1:test
-|  +- test:y:jar:1:compile
-+- test:c:jar:1:test
-   +- test:x:jar:1:compile             # conflicts with (a), hence leaving scope as "compile"
-      +- test:y:jar:1:compile          # since our parent gets removed in favor of (a), no need to promote y into scope "compile"
+test:root:1
++- test:a:1 compile
+|  +- test:x:1 compile             # (a)
++- test:b:1 test
+|  +- test:y:1 compile
++- test:c:1 test
+   +- test:x:1 compile             # conflicts with (a), hence leaving scope as "compile"
+      +- test:y:1 compile          # since our parent gets removed in favor of (a), no need to promote y into scope "compile"

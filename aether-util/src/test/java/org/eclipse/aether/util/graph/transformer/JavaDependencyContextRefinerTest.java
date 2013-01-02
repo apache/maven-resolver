@@ -40,7 +40,7 @@ public class JavaDependencyContextRefinerTest
     public void testDoNotRefineOtherContext()
         throws Exception
     {
-        DependencyNode node = parseLiteral( "gid:aid:ext:cls:ver" );
+        DependencyNode node = parseLiteral( "gid:aid:cls:ver" );
         node.setRequestContext( "otherContext" );
 
         DependencyNode refinedNode = transform( node );
@@ -53,17 +53,17 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project/compile";
 
-        DependencyNode node = parseLiteral( "gid:aid:ext:ver:compile" );
+        DependencyNode node = parseLiteral( "gid:aid:ver compile" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
 
-        node = parseLiteral( "gid:aid:ext:ver:system" );
+        node = parseLiteral( "gid:aid:ver system" );
         node.setRequestContext( "project" );
         refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
 
-        node = parseLiteral( "gid:aid:ext:ver:provided" );
+        node = parseLiteral( "gid:aid:ver provided" );
         node.setRequestContext( "project" );
         refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
@@ -75,7 +75,7 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project/test";
 
-        DependencyNode node = parseLiteral( "gid:aid:ext:ver:test" );
+        DependencyNode node = parseLiteral( "gid:aid:ver test" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
@@ -87,7 +87,7 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project/runtime";
 
-        DependencyNode node = parseLiteral( "gid:aid:ext:ver:runtime" );
+        DependencyNode node = parseLiteral( "gid:aid:ver runtime" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );
@@ -99,7 +99,7 @@ public class JavaDependencyContextRefinerTest
     {
         String expected = "project";
 
-        DependencyNode node = parseLiteral( "gid:aid:ext:ver:unknownScope" );
+        DependencyNode node = parseLiteral( "gid:aid:ver unknownScope" );
         node.setRequestContext( "project" );
         DependencyNode refinedNode = transform( node );
         assertEquals( expected, refinedNode.getRequestContext() );

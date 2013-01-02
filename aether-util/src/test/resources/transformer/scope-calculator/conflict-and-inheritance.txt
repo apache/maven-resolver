@@ -1,10 +1,10 @@
 # Another scenario to check that scope inheritance considers the effective scopes of parent nodes as determined during
-# scope conflict resolution. In this example, gid:x:jar:1 should end up in compile scope (and not runtime) because its
-# parent gid:c:jar:2 will be promoted to compile scope due to a conflict with gid:c:jar:1.
+# scope conflict resolution. In this example, gid:x:1 should end up in compile scope (and not runtime) because its
+# parent gid:c:2 will be promoted to compile scope due to a conflict with gid:c:1.
 
-gid:root:jar:1
-+- gid:a:jar:1:compile
-|  \- gid:c:jar:2:runtime
-|     \- gid:x:jar:1:compile
-\- gid:b:jar:1:compile
-   \- gid:c:jar:1:compile
+gid:root:1
++- gid:a:1 compile
+|  \- gid:c:2 runtime
+|     \- gid:x:1 compile
+\- gid:b:1 compile
+   \- gid:c:1 compile

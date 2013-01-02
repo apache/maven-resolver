@@ -1,9 +1,9 @@
 cycle:root:jar:1
-+- (a)cycle:a:jar:1:compile
-|  \- cycle:b:jar:1:compile
-|     \- cycle:c:jar:1:compile
++- cycle:a:jar:1 compile          (a)
+|  \- cycle:b:jar:1 compile
+|     \- cycle:c:jar:1 compile
 |        \- ^a
-\- (b)cycle:b:jar:1:compile
-   \- cycle:c:jar:1:compile
-      \- cycle:a:jar:1:compile
+\- cycle:b:jar:1 compile          (b)
+   \- cycle:c:jar:1 compile
+      \- cycle:a:jar:1 compile
          \- ^b

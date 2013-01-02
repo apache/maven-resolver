@@ -80,7 +80,7 @@ public class ConflictIdSorterTest
         DependencyNode node = parseResource( "simple.txt" );
         assertSame( node, transform( node ) );
 
-        expectOrder( "gid2:aid::ext", "gid:aid::ext", "gid:aid2::ext" );
+        expectOrder( "gid2:aid::jar", "gid:aid::jar", "gid:aid2::jar" );
         expectCycle( false );
     }
 
@@ -91,7 +91,7 @@ public class ConflictIdSorterTest
         DependencyNode node = parseResource( "cycle.txt" );
         assertSame( node, transform( node ) );
 
-        expectOrder( "gid:aid::ext", "gid2:aid::ext" );
+        expectOrder( "gid:aid::jar", "gid2:aid::jar" );
         expectCycle( true );
     }
 
@@ -102,7 +102,7 @@ public class ConflictIdSorterTest
         DependencyNode node = parseResource( "cycles.txt" );
         assertSame( node, transform( node ) );
 
-        expectOrder( "*", "*", "*", "gid:aid::ext" );
+        expectOrder( "*", "*", "*", "gid:aid::jar" );
         expectCycle( true );
     }
 
@@ -113,7 +113,7 @@ public class ConflictIdSorterTest
         DependencyNode node = parseResource( "no-conflicts.txt" );
         assertSame( node, transform( node ) );
 
-        expectOrder( "gid:aid::ext", "gid3:aid::ext", "gid2:aid::ext", "gid4:aid::ext" );
+        expectOrder( "gid:aid::jar", "gid3:aid::jar", "gid2:aid::jar", "gid4:aid::jar" );
         expectCycle( false );
     }
 

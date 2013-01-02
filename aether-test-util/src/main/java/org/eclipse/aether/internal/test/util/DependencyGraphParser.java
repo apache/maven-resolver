@@ -27,70 +27,47 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.eclipse.aether.version.VersionScheme;
 
 /**
- * Creates a dependency tree from a text description. <h2>Definition</h2> The description format is based on 'mvn
- * dependency:tree'. Line format:
+ * Creates a dependency graph from a text description. <h2>Definition</h2> Each (non-empty) line in the input defines
+ * one node of the resulting graph:
  * 
  * <pre>
- * [level]dependencyDefinition[;key=value;key=value;...]
+ * line      ::= (indent? ("(null)" | node | reference))? comment?
+ * comment   ::= "#" rest-of-line
+ * indent    ::= "|  "*  ("+" | "\\") "- "
+ * reference ::= "^" id
+ * node      ::= coords (range)? space (scope("<" premanagedScope)?)? space "optional"? space ("relocations=" coords ("," coords)*)? ("(" id ")")?
+ * coords    ::= groupId ":" artifactId (":" extension (":" classifier)?)? ":" version
  * </pre>
  * 
- * A <code>dependencyDefinition</code> is of the form:
- * 
- * <pre>
- * (id|[(id)]gid:aid:ext:ver[:scope])
- * </pre>
- * 
- * It may also be <code>(null)</code> to indicate an "empty" node with no dependency.
+ * The special token {@code (null)} may be used to indicate an "empty" root node with no dependency.
  * <p>
- * <h2>Levels</h2>
+ * If {@code indent} is empty, the line defines the root node. Only one root node may be defined. The level is
+ * calculated by the distance from the beginning of the line. One level is three characters of indentation.
  * <p>
- * If <code>level</code> is empty, the line defines the root node. Only one root node may be defined. The level is
- * calculated by the distance from the beginning of the line. One level is three characters. A level definition has to
- * follow this format:
- * 
- * <pre>
- * '[| ]*[+\\]- '
- * </pre>
- * 
- * <h2>ID</h2> An ID may be used to reference a previously built node. An ID is of the form:
- * 
- * <pre>
- * '[0-9a-zA-Z]+'
- * </pre>
- * 
- * To define a node with an ID, prefix the definition with an id in parens:
- * 
- * <pre>
- * (id)gid:aid:ext:ver
- * </pre>
- * 
- * To insert a previously defined node into the graph, use a caret followed by the ID:
- * 
- * <pre>
- * ^id
- * </pre>
- * 
- * <h2>Comments</h2>
- * <p>
- * A hash starts a comment. A comment ends with the end of the line. Empty lines are ignored.
+ * The {@code ^id} syntax allows to reuse a previously built node to share common sub graphs among different parent
+ * nodes.
  * <h2>Example</h2>
  * 
  * <pre>
- * gid:aid:ext:ver
- * +- gid:aid2:ext:ver:scope
- * |  \- (id1)gid:aid3:ext:ver
- * +- gid:aid4:ext:ver:scope
- * \- ^id1
+ * gid:aid:ver
+ * +- gid:aid2:ver scope
+ * |  \- gid:aid3:ver        (id1)    # assign id for reference below
+ * +- gid:aid4:ext:ver scope
+ * \- ^id1                            # reuse previous node
  * </pre>
  * 
  * <h2>Multiple definitions in one resource</h2>
  * <p>
- * By using {@link #parseMultiResource(String)}, definitions divided by a line beginning with "---" can be read from the same
- * resource. The rest of the line is ignored.
+ * By using {@link #parseMultiResource(String)}, definitions divided by a line beginning with "---" can be read from the
+ * same resource. The rest of the line is ignored.
  * <h2>Substitutions</h2>
  * <p>
  * You may define substitutions (see {@link #setSubstitutions(String...)},
@@ -109,6 +86,8 @@ import org.eclipse.aether.graph.DependencyNode;
 public class DependencyGraphParser
 {
 
+    private final VersionScheme versionScheme;
+
     private final String prefix;
 
     private Collection<String> substitutions;
@@ -122,6 +101,7 @@ public class DependencyGraphParser
     {
         this.prefix = prefix;
         this.substitutions = substitutions;
+        versionScheme = new TestVersionScheme();
     }
 
     /**
@@ -269,9 +249,9 @@ public class DependencyGraphParser
 
             prevLevel = ctx.getLevel();
 
-            if ( ctx.getDefinition() != null && ctx.getDefinition().isReference() )
+            if ( ctx.getDefinition() != null && ctx.getDefinition().reference != null )
             {
-                String reference = ctx.getDefinition().getReference();
+                String reference = ctx.getDefinition().reference;
                 DependencyNode child = nodes.get( reference );
                 if ( child == null )
                 {
@@ -291,9 +271,9 @@ public class DependencyGraphParser
                     isRootNode = false;
                 }
 
-                if ( ctx.getDefinition() != null && ctx.getDefinition().hasId() )
+                if ( ctx.getDefinition() != null && ctx.getDefinition().id != null )
                 {
-                    nodes.put( ctx.getDefinition().getId(), node );
+                    nodes.put( ctx.getDefinition().id, node );
                 }
             }
         }
@@ -325,7 +305,7 @@ public class DependencyGraphParser
 
     private DependencyNode build( DependencyNode parent, LineContext ctx, boolean isRoot )
     {
-        ArtifactDefinition def = ctx.getDefinition();
+        NodeDefinition def = ctx.getDefinition();
         if ( !isRoot && parent == null )
         {
             throw new IllegalArgumentException( "dangling node: " + def );
@@ -335,16 +315,38 @@ public class DependencyGraphParser
             throw new IllegalArgumentException( "inconsistent leveling (parent for level 0?): " + def );
         }
 
-        NodeBuilder builder = new NodeBuilder();
-
+        DefaultDependencyNode node;
         if ( def != null )
         {
-            builder.artifactId( def.getArtifactId() ).groupId( def.getGroupId() );
-            builder.ext( def.getExtension() ).version( def.getVersion() );
-            builder.scope( def.getScope() ).optional( def.isOptional() );
-            builder.properties( ctx.getProperties() );
+            DefaultArtifact artifact = new DefaultArtifact( def.coords, def.properties );
+            Dependency dependency = new Dependency( artifact, def.scope, def.optional );
+            node = new DefaultDependencyNode( dependency );
+            node.setPremanagedScope( def.premanagedScope );
+            node.setPremanagedVersion( def.premanagedVersion );
+            if ( def.relocations != null )
+            {
+                List<Artifact> relocations = new ArrayList<Artifact>();
+                for ( String relocation : def.relocations )
+                {
+                    relocations.add( new DefaultArtifact( relocation ) );
+                }
+                node.setRelocations( relocations );
+            }
+            try
+            {
+                node.setVersion( versionScheme.parseVersion( artifact.getVersion() ) );
+                node.setVersionConstraint( versionScheme.parseVersionConstraint( def.range != null ? def.range
+                                : artifact.getVersion() ) );
+            }
+            catch ( InvalidVersionSpecificationException e )
+            {
+                throw new IllegalArgumentException( "bad version: " + e.getMessage(), e );
+            }
         }
-        DependencyNode node = builder.build();
+        else
+        {
+            node = new DefaultDependencyNode( (Dependency) null );
+        }
 
         if ( parent != null )
         {
@@ -485,51 +487,25 @@ public class DependencyGraphParser
             return ctx;
         }
 
-        split = definition.split( ";" );
-        ctx.setDefinition( new ArtifactDefinition( split[0] ) );
-
-        if ( split.length > 1 ) // properties
-        {
-            Map<String, String> props = new HashMap<String, String>();
-            for ( int i = 1; i < split.length; i++ )
-            {
-                String[] keyValue = split[i].split( "=" );
-                String key = keyValue[0];
-                String value = keyValue[1];
-                props.put( key, value );
-            }
-            ctx.setProperties( props );
-        }
+        ctx.setDefinition( new NodeDefinition( definition ) );
 
         return ctx;
     }
 
     static class LineContext
     {
-        ArtifactDefinition definition;
-
-        private Map<String, String> properties;
+        NodeDefinition definition;
 
         int level;
 
-        public ArtifactDefinition getDefinition()
+        public NodeDefinition getDefinition()
         {
             return definition;
         }
 
-        public void setDefinition( ArtifactDefinition definition )
+        public void setDefinition( NodeDefinition definition )
         {
             this.definition = definition;
-        }
-
-        public Map<String, String> getProperties()
-        {
-            return properties;
-        }
-
-        public void setProperties( Map<String, String> properties )
-        {
-            this.properties = properties;
         }
 
         public int getLevel()

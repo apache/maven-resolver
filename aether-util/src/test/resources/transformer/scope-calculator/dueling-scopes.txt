@@ -1,7 +1,7 @@
 # pattern to test scope mediation in conflict groups
 
 (null)
-+- gid:aid2:ext:ver
-|  \- gid:aid:ext:ver:%s
-\- gid:aid3:ext:ver
-   \- gid:aid:ext:ver:%s
++- gid:aid2:ver
+|  \- gid:aid:ver %s
+\- gid:aid3:ver
+   \- gid:aid:ver %s

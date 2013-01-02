@@ -1,0 +1,3 @@
+(null)
++- test:a:1
+\- test:a:1 relocations=test:reloc:1

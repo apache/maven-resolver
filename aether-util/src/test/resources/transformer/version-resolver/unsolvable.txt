@@ -1,0 +1,5 @@
+(null)
++- test:b:1
+|  \- test:a:1[1]
+\- test:c:1
+   \- test:a:2[2]
