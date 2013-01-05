@@ -18,8 +18,8 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
 /**
  * An artifact descriptor reader that gets data from a simple text file on the classpath. The data file for an artifact
- * with the coordinates {@code gid:aid:ext:ver} is expected to be named {@code gid_aid_ext_ver.ini} and can optionally
- * have some prefix. The data file can have the following sections:
+ * with the coordinates {@code gid:aid:ext:ver} is expected to be named {@code gid_aid_ver.ini} and can optionally have
+ * some prefix. The data file can have the following sections:
  * <ul>
  * <li>relocation</li>
  * <li>dependencies</li>
@@ -77,7 +77,7 @@ public class IniArtifactDescriptorReader
     }
 
     /**
-     * Parses the resource {@code $prefix/gid_aid_ext_ver.ini} from the request artifact as an artifact description and
+     * Parses the resource {@code $prefix/gid_aid_ver.ini} from the request artifact as an artifact description and
      * wraps it into an ArtifactDescriptorResult.
      */
     public ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
@@ -88,8 +88,7 @@ public class IniArtifactDescriptorReader
         for ( Artifact artifact = request.getArtifact();; )
         {
             String resourceName =
-                String.format( "%s_%s_%s_%s.ini", artifact.getGroupId(), artifact.getArtifactId(),
-                               artifact.getVersion(), artifact.getExtension() );
+                String.format( "%s_%s_%s.ini", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion() );
             try
             {
                 ArtifactDescription data = reader.parse( resourceName );
