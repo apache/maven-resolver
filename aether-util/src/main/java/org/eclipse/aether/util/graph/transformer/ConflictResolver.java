@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -985,8 +985,8 @@ public final class ConflictResolver
         /**
          * Determines the winning node among conflicting dependencies. Implementations will usually iterate
          * {@link ConflictContext#getItems()}, inspect {@link ConflictItem#getNode()} and eventually call
-         * {@link ConflictContext#setWinner(ConflictItem)} to deliver the winner. Failure to select a winner will
-         * automatically fail the entire conflict resolution.
+         * {@link ConflictContext#setWinner(ConflictResolver.ConflictItem)} to deliver the winner. Failure to select a
+         * winner will automatically fail the entire conflict resolution.
          * 
          * @param context The conflict context, must not be {@code null}.
          * @throws RepositoryException If the version selection failed.
