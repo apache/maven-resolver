@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,7 +29,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
  * The relocation and dependency sections contain artifact coordinates of the form:
  * 
  * <pre>
- * gid:aid:ver:ext[:scope][:optional]
+ * gid:aid:ext:ver[:scope][:optional]
  * </pre>
  * 
  * The dependency sections may also specify exclusions:
@@ -48,15 +48,15 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
  * 
  * <pre>
  * [relocation]
- * gid:aid:ver:ext
+ * gid:aid:ext:ver
  * 
  * [dependencies]
- * gid:aid:ver:ext:scope
+ * gid:aid:ext:ver:scope
  * -exclusion:aid
- * gid:aid2:ver:ext:scope:optional
+ * gid:aid2:ext:ver:scope:optional
  * 
  * [managed-dependencies]
- * gid:aid2:ver2:ext:scope
+ * gid:aid2:ext:ver2:scope
  * -gid:aid
  * -gid:aid
  * 

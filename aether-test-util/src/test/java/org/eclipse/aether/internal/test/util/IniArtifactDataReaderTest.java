@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,9 +69,10 @@ public class IniArtifactDataReaderTest
         assertEquals( 2, dependencies.size() );
 
         Dependency dependency = dependencies.get( 0 );
-        assertNotNull( dependency.getArtifact() );
+        assertEquals( "compile", dependency.getScope() );
 
         Artifact artifact = dependency.getArtifact();
+        assertNotNull( artifact );
         assertEquals( "aid", artifact.getArtifactId() );
         assertEquals( "gid", artifact.getGroupId() );
         assertEquals( "ver", artifact.getVersion() );
@@ -83,15 +84,61 @@ public class IniArtifactDataReaderTest
         Exclusion exclusion = exclusions.iterator().next();
         assertEquals( "exclusion", exclusion.getGroupId() );
         assertEquals( "aid", exclusion.getArtifactId() );
+        assertEquals( "*", exclusion.getClassifier() );
+        assertEquals( "*", exclusion.getExtension() );
 
         dependency = dependencies.get( 1 );
-        assertNotNull( dependency.getArtifact() );
 
         artifact = dependency.getArtifact();
+        assertNotNull( artifact );
         assertEquals( "aid2", artifact.getArtifactId() );
         assertEquals( "gid2", artifact.getGroupId() );
         assertEquals( "ver2", artifact.getVersion() );
         assertEquals( "ext2", artifact.getExtension() );
+    }
+
+    @Test
+    public void testManagedDependencies()
+        throws IOException
+    {
+        String def = "[managed-dependencies]\ngid:aid:ext:ver\n-exclusion:aid\ngid2:aid2:ext2:ver2:runtime";
+
+        ArtifactDescription description = parser.parseLiteral( def );
+
+        List<Dependency> dependencies = description.getManagedDependencies();
+        assertNotNull( dependencies );
+        assertEquals( 2, dependencies.size() );
+
+        Dependency dependency = dependencies.get( 0 );
+        assertEquals( "", dependency.getScope() );
+
+        Artifact artifact = dependency.getArtifact();
+        assertNotNull( artifact );
+        assertEquals( "aid", artifact.getArtifactId() );
+        assertEquals( "gid", artifact.getGroupId() );
+        assertEquals( "ver", artifact.getVersion() );
+        assertEquals( "ext", artifact.getExtension() );
+
+        Collection<Exclusion> exclusions = dependency.getExclusions();
+        assertNotNull( exclusions );
+        assertEquals( 1, exclusions.size() );
+        Exclusion exclusion = exclusions.iterator().next();
+        assertEquals( "exclusion", exclusion.getGroupId() );
+        assertEquals( "aid", exclusion.getArtifactId() );
+        assertEquals( "*", exclusion.getClassifier() );
+        assertEquals( "*", exclusion.getExtension() );
+
+        dependency = dependencies.get( 1 );
+        assertEquals( "runtime", dependency.getScope() );
+
+        artifact = dependency.getArtifact();
+        assertNotNull( artifact );
+        assertEquals( "aid2", artifact.getArtifactId() );
+        assertEquals( "gid2", artifact.getGroupId() );
+        assertEquals( "ver2", artifact.getVersion() );
+        assertEquals( "ext2", artifact.getExtension() );
+
+        assertEquals( 0, dependency.getExclusions().size() );
     }
 
     @Test

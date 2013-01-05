@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -120,7 +120,9 @@ class IniArtifactDataReader
                 {
                     try
                     {
-                        state = State.valueOf( line.substring( 1, line.length() - 1 ).toUpperCase( Locale.ENGLISH ) );
+                        String name = line.substring( 1, line.length() - 1 );
+                        name = name.replace( "-", "" ).toUpperCase( Locale.ENGLISH );
+                        state = State.valueOf( name );
                         sections.put( state, new ArrayList<String>() );
                     }
                     catch ( IllegalArgumentException e )
@@ -145,8 +147,8 @@ class IniArtifactDataReader
         }
 
         Artifact relocation = relocation( sections.get( State.RELOCATION ) );
-        List<Dependency> dependencies = dependencies( sections.get( State.DEPENDENCIES ) );
-        List<Dependency> managedDependencies = dependencies( sections.get( State.MANAGEDDEPENDENCIES ) );
+        List<Dependency> dependencies = dependencies( sections.get( State.DEPENDENCIES ), "compile" );
+        List<Dependency> managedDependencies = dependencies( sections.get( State.MANAGEDDEPENDENCIES ), "" );
         List<RemoteRepository> repositories = repositories( sections.get( State.REPOSITORIES ) );
 
         ArtifactDescription description =
@@ -173,7 +175,7 @@ class IniArtifactDataReader
         return ret;
     }
 
-    private List<Dependency> dependencies( List<String> list )
+    private List<Dependency> dependencies( List<String> list, String defaultScope )
     {
         List<Dependency> ret = new ArrayList<Dependency>();
         if ( list == null )
@@ -193,7 +195,7 @@ class IniArtifactDataReader
             {
                 coords = coords.substring( 1 );
                 String[] split = coords.split( ":" );
-                exclusions.add( new Exclusion( split[0], split[1], "", "" ) );
+                exclusions.add( new Exclusion( split[0], split[1], "*", "*" ) );
             }
             else
             {
@@ -210,7 +212,7 @@ class IniArtifactDataReader
 
                 optional = def.isOptional();
 
-                scope = "".equals( def.getScope() ) ? "compile" : def.getScope();
+                scope = "".equals( def.getScope() ) ? defaultScope : def.getScope();
 
                 artifact =
                     new DefaultArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(),
