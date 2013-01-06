@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeSelector;
  * A scope selector for use with {@link ConflictResolver} that supports the scopes from {@link JavaScopes}.
  */
 public final class JavaScopeSelector
-    implements ScopeSelector
+    extends ScopeSelector
 {
 
     /**
@@ -34,6 +34,7 @@ public final class JavaScopeSelector
     {
     }
 
+    @Override
     public void selectScope( ConflictContext context )
         throws RepositoryException
     {

@@ -150,7 +150,7 @@ public final class ConflictResolver
             }
         }
 
-        State state = new State( node, conflictIds, sortedConflictIds.size(), context.getSession() );
+        State state = new State( node, conflictIds, sortedConflictIds.size(), context );
         for ( Iterator<?> it = sortedConflictIds.iterator(); it.hasNext(); )
         {
             Object conflictId = it.next();
@@ -168,12 +168,12 @@ public final class ConflictResolver
             if ( !state.items.isEmpty() )
             {
                 ConflictContext ctx = state.conflictCtx;
-                versionSelector.selectVersion( ctx );
+                state.versionSelector.selectVersion( ctx );
                 if ( ctx.winner == null )
                 {
                     throw new RepositoryException( "conflict resolver did not select winner among " + state.items );
                 }
-                scopeSelector.selectScope( ctx );
+                state.scopeSelector.selectScope( ctx );
                 if ( state.verbose )
                 {
                     ctx.winner.node.setData( NODE_DATA_ORIGINAL_SCOPE, ctx.winner.node.getDependency().getScope() );
@@ -424,10 +424,27 @@ public final class ConflictResolver
          */
         final ScopeContext scopeCtx;
 
-        State( DependencyNode root, Map<?, ?> conflictIds, int conflictIdCount, RepositorySystemSession session )
+        /**
+         * The effective version selector, i.e. after initialization.
+         */
+        final VersionSelector versionSelector;
+
+        /**
+         * The effective scope selector, i.e. after initialization.
+         */
+        final ScopeSelector scopeSelector;
+
+        /**
+         * The effective scope deriver, i.e. after initialization.
+         */
+        final ScopeDeriver scopeDeriver;
+
+        State( DependencyNode root, Map<?, ?> conflictIds, int conflictIdCount,
+               DependencyGraphTransformationContext context )
+            throws RepositoryException
         {
             this.conflictIds = conflictIds;
-            verbose = ConfigUtils.getBoolean( session, false, CONFIG_PROP_VERBOSE );
+            verbose = ConfigUtils.getBoolean( context.getSession(), false, CONFIG_PROP_VERBOSE );
             potentialAncestorIds = new HashSet<Object>( conflictIdCount * 2 );
             resolvedIds = new HashMap<Object, DependencyNode>( conflictIdCount * 2 );
             items = new ArrayList<ConflictItem>( 256 );
@@ -438,6 +455,9 @@ public final class ConflictResolver
             parentInfos = new ArrayList<NodeInfo>( 64 );
             conflictCtx = new ConflictContext( root, conflictIds, items );
             scopeCtx = new ScopeContext( null, null );
+            versionSelector = ConflictResolver.this.versionSelector.getInstance( root, context );
+            scopeSelector = ConflictResolver.this.scopeSelector.getInstance( root, context );
+            scopeDeriver = ConflictResolver.this.scopeDeriver.getInstance( root, context );
         }
 
         void prepare( Object conflictId, Collection<Object> cyclicPredecessors )
@@ -979,8 +999,28 @@ public final class ConflictResolver
      * version selector does not need to deal with potential scope conflicts, these will be addressed afterwards by the
      * {@link ScopeSelector}. Implementations must be stateless.
      */
-    public interface VersionSelector
+    public static abstract class VersionSelector
     {
+
+        /**
+         * Retrieves the version selector for use during the specified graph transformation. The conflict resolver calls
+         * this method once per
+         * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
+         * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
+         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * default implementation simply returns the current instance which is appropriate for implementations which do
+         * not require auxiliary data.
+         * 
+         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
+         * @param context The graph transformation context, must not be {@code null}.
+         * @return The scope deriver to use for the given graph transformation, never {@code null}.
+         * @throws RepositoryException If the instance could not be retrieved.
+         */
+        public VersionSelector getInstance( DependencyNode root, DependencyGraphTransformationContext context )
+            throws RepositoryException
+        {
+            return this;
+        }
 
         /**
          * Determines the winning node among conflicting dependencies. Implementations will usually iterate
@@ -991,7 +1031,7 @@ public final class ConflictResolver
          * @param context The conflict context, must not be {@code null}.
          * @throws RepositoryException If the version selection failed.
          */
-        void selectVersion( ConflictContext context )
+        public abstract void selectVersion( ConflictContext context )
             throws RepositoryException;
 
     }
@@ -1001,8 +1041,28 @@ public final class ConflictResolver
      * potentially conflicting set of {@link ScopeDeriver derived scopes}. The scope selector gets invoked after the
      * {@link VersionSelector} has picked the winning node. Implementations must be stateless.
      */
-    public interface ScopeSelector
+    public static abstract class ScopeSelector
     {
+
+        /**
+         * Retrieves the scope selector for use during the specified graph transformation. The conflict resolver calls
+         * this method once per
+         * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
+         * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
+         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * default implementation simply returns the current instance which is appropriate for implementations which do
+         * not require auxiliary data.
+         * 
+         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
+         * @param context The graph transformation context, must not be {@code null}.
+         * @return The scope deriver to use for the given graph transformation, never {@code null}.
+         * @throws RepositoryException If the instance could not be retrieved.
+         */
+        public ScopeSelector getInstance( DependencyNode root, DependencyGraphTransformationContext context )
+            throws RepositoryException
+        {
+            return this;
+        }
 
         /**
          * Determines the effective scope of the dependency given by {@link ConflictContext#getWinner()}.
@@ -1013,7 +1073,7 @@ public final class ConflictResolver
          * @param context The conflict context, must not be {@code null}.
          * @throws RepositoryException If the scope selection failed.
          */
-        void selectScope( ConflictContext context )
+        public abstract void selectScope( ConflictContext context )
             throws RepositoryException;
 
     }
@@ -1022,8 +1082,28 @@ public final class ConflictResolver
      * An extension point of {@link ConflictResolver} that determines the scope of a dependency in relation to the scope
      * of its parent. Implementations must be stateless.
      */
-    public interface ScopeDeriver
+    public static abstract class ScopeDeriver
     {
+
+        /**
+         * Retrieves the scope deriver for use during the specified graph transformation. The conflict resolver calls
+         * this method once per
+         * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
+         * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
+         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * default implementation simply returns the current instance which is appropriate for implementations which do
+         * not require auxiliary data.
+         * 
+         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
+         * @param context The graph transformation context, must not be {@code null}.
+         * @return The scope deriver to use for the given graph transformation, never {@code null}.
+         * @throws RepositoryException If the instance could not be retrieved.
+         */
+        public ScopeDeriver getInstance( DependencyNode root, DependencyGraphTransformationContext context )
+            throws RepositoryException
+        {
+            return this;
+        }
 
         /**
          * Determines the scope of a dependency in relation to the scope of its parent. Implementors need to call
@@ -1033,7 +1113,7 @@ public final class ConflictResolver
          * @param context The scope context, must not be {@code null}.
          * @throws RepositoryException If the scope deriviation failed.
          */
-        void deriveScope( ScopeContext context )
+        public abstract void deriveScope( ScopeContext context )
             throws RepositoryException;
 
     }
