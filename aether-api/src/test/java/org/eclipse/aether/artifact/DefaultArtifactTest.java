@@ -36,6 +36,7 @@ public class DefaultArtifactTest
         assertEquals( "gid", a.getGroupId() );
         assertEquals( "aid", a.getArtifactId() );
         assertEquals( "ver", a.getVersion() );
+        assertEquals( "ver", a.getBaseVersion() );
         assertEquals( "jar", a.getExtension() );
         assertEquals( "", a.getClassifier() );
 
@@ -43,13 +44,15 @@ public class DefaultArtifactTest
         assertEquals( "gid", a.getGroupId() );
         assertEquals( "aid", a.getArtifactId() );
         assertEquals( "ver", a.getVersion() );
+        assertEquals( "ver", a.getBaseVersion() );
         assertEquals( "ext", a.getExtension() );
         assertEquals( "", a.getClassifier() );
 
         a = new DefaultArtifact( "org.gid:foo-bar:jar:1.1-20101116.150650-3" );
         assertEquals( "org.gid", a.getGroupId() );
         assertEquals( "foo-bar", a.getArtifactId() );
-        assertEquals( "1.1-20101116.150650-3", a.getVersion() );
+        assertEquals( "1.1-SNAPSHOT", a.getVersion() );
+        assertEquals( "ver", a.getBaseVersion() );
         assertEquals( "jar", a.getExtension() );
         assertEquals( "", a.getClassifier() );
 
@@ -57,6 +60,7 @@ public class DefaultArtifactTest
         assertEquals( "gid", a.getGroupId() );
         assertEquals( "aid", a.getArtifactId() );
         assertEquals( "ver", a.getVersion() );
+        assertEquals( "ver", a.getBaseVersion() );
         assertEquals( "ext", a.getExtension() );
         assertEquals( "cls", a.getClassifier() );
 
@@ -64,6 +68,7 @@ public class DefaultArtifactTest
         assertEquals( "gid", a.getGroupId() );
         assertEquals( "aid", a.getArtifactId() );
         assertEquals( "ver", a.getVersion() );
+        assertEquals( "ver", a.getBaseVersion() );
         assertEquals( "jar", a.getExtension() );
         assertEquals( "cls", a.getClassifier() );
 
@@ -71,6 +76,7 @@ public class DefaultArtifactTest
         assertEquals( "gid", a.getGroupId() );
         assertEquals( "aid", a.getArtifactId() );
         assertEquals( "ver", a.getVersion() );
+        assertEquals( "ver", a.getBaseVersion() );
         assertEquals( "ext", a.getExtension() );
         assertEquals( "cls", a.getClassifier() );
     }
