@@ -36,6 +36,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.DefaultDependencyCollector;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
+import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -58,6 +59,11 @@ public class DefaultDependencyCollectorTest
 
     private RemoteRepository repository;
 
+    private IniArtifactDescriptorReader newReader( String prefix )
+    {
+        return new IniArtifactDescriptorReader( "artifact-descriptions/" + prefix );
+    }
+
     @Before
     public void setup()
         throws IOException
@@ -65,9 +71,10 @@ public class DefaultDependencyCollectorTest
         session = TestUtils.newSession();
 
         collector = new DefaultDependencyCollector();
-        collector.setArtifactDescriptorReader( new IniArtifactDescriptorReader( "artifact-descriptions/" ) );
+        collector.setArtifactDescriptorReader( newReader( "" ) );
         collector.setVersionRangeResolver( new StubVersionRangeResolver() );
         collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
+        collector.setLoggerFactory( new TestLoggerFactory() );
 
         parser = new DependencyGraphParser( "artifact-descriptions/" );
 
@@ -243,12 +250,29 @@ public class DefaultDependencyCollectorTest
     public void testCyclicDependenciesBig()
         throws Exception
     {
-        DependencyNode root = parser.parseResource( "cycle-big.txt" );
+        DependencyNode root = parser.parseLiteral( "1:2:pom:5.50-SNAPSHOT" );
         CollectRequest request = new CollectRequest( root.getDependency(), Arrays.asList( repository ) );
-        collector.setArtifactDescriptorReader( new IniArtifactDescriptorReader( "artifact-descriptions/cycle-big/" ) );
+        collector.setArtifactDescriptorReader( newReader( "cycle-big/" ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertNotNull( result.getRoot() );
         // we only care about the performance here, this test must not hang or run out of mem
+    }
+
+    @Test
+    public void testCyclicProjects()
+        throws Exception
+    {
+        DependencyNode root = parser.parseLiteral( "test:a:2" );
+        CollectRequest request = new CollectRequest( root.getDependency(), Arrays.asList( repository ) );
+        collector.setArtifactDescriptorReader( newReader( "versionless-cycle/" ) );
+        CollectResult result = collector.collectDependencies( session, request );
+        DependencyNode a1 = path( result.getRoot(), 0, 0 );
+        assertEquals( "a", a1.getArtifact().getArtifactId() );
+        assertEquals( "1", a1.getArtifact().getVersion() );
+        for ( DependencyNode child : a1.getChildren() )
+        {
+            assertFalse( "1".equals( child.getArtifact().getVersion() ) );
+        }
     }
 
     @Test
@@ -363,7 +387,7 @@ public class DefaultDependencyCollectorTest
     public void testDependencyManagement()
         throws IOException, DependencyCollectionException
     {
-        collector.setArtifactDescriptorReader( new IniArtifactDescriptorReader( "artifact-descriptions/managed/" ) );
+        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
 
         DependencyNode root = parser.parseResource( "expectedSubtreeComparisonResult.txt" );
         TestDependencyManager depMgmt = new TestDependencyManager();

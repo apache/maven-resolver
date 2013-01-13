@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -76,10 +76,6 @@ final class NodeStack
             {
                 continue;
             }
-            if ( !a.getBaseVersion().equals( artifact.getBaseVersion() ) )
-            {
-                continue;
-            }
             if ( !a.getExtension().equals( artifact.getExtension() ) )
             {
                 continue;
@@ -88,6 +84,13 @@ final class NodeStack
             {
                 continue;
             }
+            /*
+             * NOTE: While a:1 and a:2 are technically different artifacts, we want to consider the path a:2 -> b:2 ->
+             * a:1 a cycle in the current context. The artifacts themselves might not form a cycle but their producing
+             * projects surely do. Furthermore, conflict resolution will always have to consider a:1 a loser (otherwise
+             * its ancestor a:2 would get pruned and so would a:1) so there is no point in building the sub graph of
+             * a:1.
+             */
 
             return node;
         }
