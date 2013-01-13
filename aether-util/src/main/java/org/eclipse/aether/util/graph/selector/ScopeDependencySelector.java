@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,11 +10,11 @@
  *******************************************************************************/
 package org.eclipse.aether.util.graph.selector;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.TreeSet;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
@@ -33,9 +33,9 @@ public final class ScopeDependencySelector
 
     private final boolean transitive;
 
-    private final Set<String> included;
+    private final Collection<String> included;
 
-    private final Set<String> excluded;
+    private final Collection<String> excluded;
 
     /**
      * Creates a new selector using the specified includes and excludes.
@@ -46,24 +46,28 @@ public final class ScopeDependencySelector
     public ScopeDependencySelector( Collection<String> included, Collection<String> excluded )
     {
         transitive = false;
-        if ( included != null )
+        this.included = clone( included );
+        this.excluded = clone( excluded );
+    }
+
+    private static Collection<String> clone( Collection<String> scopes )
+    {
+        Collection<String> copy;
+        if ( scopes == null || scopes.isEmpty() )
         {
-            this.included = new HashSet<String>();
-            this.included.addAll( included );
+            // checking for null is faster than isEmpty()
+            copy = null;
         }
         else
         {
-            this.included = Collections.emptySet();
+            copy = new HashSet<String>( scopes );
+            if ( copy.size() <= 2 )
+            {
+                // contains() is faster for smallish array (sorted for equals()!)
+                copy = new ArrayList<String>( new TreeSet<String>( copy ) );
+            }
         }
-        if ( excluded != null )
-        {
-            this.excluded = new HashSet<String>();
-            this.excluded.addAll( excluded );
-        }
-        else
-        {
-            this.excluded = Collections.emptySet();
-        }
+        return copy;
     }
 
     /**
@@ -73,10 +77,10 @@ public final class ScopeDependencySelector
      */
     public ScopeDependencySelector( String... excluded )
     {
-        this( null, Arrays.asList( excluded ) );
+        this( null, ( excluded != null ) ? Arrays.asList( excluded ) : null );
     }
 
-    private ScopeDependencySelector( boolean transitive, Set<String> included, Set<String> excluded )
+    private ScopeDependencySelector( boolean transitive, Collection<String> included, Collection<String> excluded )
     {
         this.transitive = transitive;
         this.included = included;
@@ -91,8 +95,7 @@ public final class ScopeDependencySelector
         }
 
         String scope = dependency.getScope();
-        return ( included.isEmpty() || included.contains( scope ) )
-            && ( excluded.isEmpty() || !excluded.contains( scope ) );
+        return ( included == null || included.contains( scope ) ) && ( excluded == null || !excluded.contains( scope ) );
     }
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
@@ -118,7 +121,12 @@ public final class ScopeDependencySelector
         }
 
         ScopeDependencySelector that = (ScopeDependencySelector) obj;
-        return transitive == that.transitive && included.equals( that.included ) && excluded.equals( that.excluded );
+        return transitive == that.transitive && eq( included, that.included ) && eq( excluded, that.excluded );
+    }
+
+    private static <T> boolean eq( T o1, T o2 )
+    {
+        return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
     }
 
     @Override
@@ -126,8 +134,8 @@ public final class ScopeDependencySelector
     {
         int hash = 17;
         hash = hash * 31 + ( transitive ? 1 : 0 );
-        hash = hash * 31 + included.hashCode();
-        hash = hash * 31 + excluded.hashCode();
+        hash = hash * 31 + ( included != null ? included.hashCode() : 0 );
+        hash = hash * 31 + ( excluded != null ? excluded.hashCode() : 0 );
         return hash;
     }
 

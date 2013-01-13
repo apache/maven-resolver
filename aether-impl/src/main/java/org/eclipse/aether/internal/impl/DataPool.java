@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,8 +13,6 @@ package org.eclipse.aether.internal.impl;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -57,7 +55,7 @@ final class DataPool
 
     private Map<Object, Descriptor> descriptors;
 
-    private Map<Object, Constraint> constraints = new WeakHashMap<Object, Constraint>();
+    private Map<Object, Constraint> constraints = new HashMap<Object, Constraint>();
 
     private Map<Object, List<DependencyNode>> nodes = new HashMap<Object, List<DependencyNode>>( 256 );
 
@@ -179,7 +177,7 @@ final class DataPool
 
     }
 
-    static class GoodDescriptor
+    static final class GoodDescriptor
         extends Descriptor
     {
 
@@ -219,7 +217,7 @@ final class DataPool
 
     }
 
-    static class BadDescriptor
+    static final class BadDescriptor
         extends Descriptor
     {
 
@@ -232,38 +230,55 @@ final class DataPool
 
     }
 
-    static class Constraint
+    static final class Constraint
     {
 
-        final Map<Version, ArtifactRepository> repositories;
+        final VersionRepo[] repositories;
 
         final VersionConstraint versionConstraint;
 
         public Constraint( VersionRangeResult result )
         {
             versionConstraint = result.getVersionConstraint();
-            repositories = new LinkedHashMap<Version, ArtifactRepository>();
-            for ( Version version : result.getVersions() )
+            List<Version> versions = result.getVersions();
+            repositories = new VersionRepo[versions.size()];
+            int i = 0;
+            for ( Version version : versions )
             {
-                repositories.put( version, result.getRepository( version ) );
+                repositories[i++] = new VersionRepo( version, result.getRepository( version ) );
             }
         }
 
         public VersionRangeResult toResult( VersionRangeRequest request )
         {
             VersionRangeResult result = new VersionRangeResult( request );
-            for ( Map.Entry<Version, ArtifactRepository> entry : repositories.entrySet() )
+            for ( VersionRepo vr : repositories )
             {
-                result.addVersion( entry.getKey() );
-                result.setRepository( entry.getKey(), entry.getValue() );
+                result.addVersion( vr.version );
+                result.setRepository( vr.version, vr.repo );
             }
             result.setVersionConstraint( versionConstraint );
             return result;
         }
 
+        static final class VersionRepo
+        {
+
+            final Version version;
+
+            final ArtifactRepository repo;
+
+            VersionRepo( Version version, ArtifactRepository repo )
+            {
+                this.version = version;
+                this.repo = repo;
+            }
+
+        }
+
     }
 
-    static class ConstraintKey
+    static final class ConstraintKey
     {
 
         private final Artifact artifact;
@@ -294,16 +309,16 @@ final class DataPool
             return artifact.equals( that.artifact ) && equals( repositories, that.repositories );
         }
 
-        private static boolean equals( Collection<RemoteRepository> repos1, Collection<RemoteRepository> repos2 )
+        private static boolean equals( List<RemoteRepository> repos1, List<RemoteRepository> repos2 )
         {
             if ( repos1.size() != repos2.size() )
             {
                 return false;
             }
-            for ( Iterator<RemoteRepository> it1 = repos1.iterator(), it2 = repos2.iterator(); it1.hasNext(); )
+            for ( int i = 0, n = repos1.size(); i < n; i++ )
             {
-                RemoteRepository repo1 = it1.next();
-                RemoteRepository repo2 = it2.next();
+                RemoteRepository repo1 = repos1.get( i );
+                RemoteRepository repo2 = repos2.get( i );
                 if ( repo1.isRepositoryManager() != repo2.isRepositoryManager() )
                 {
                     return false;
@@ -339,7 +354,7 @@ final class DataPool
 
     }
 
-    static class GraphKey
+    static final class GraphKey
     {
 
         private final Artifact artifact;

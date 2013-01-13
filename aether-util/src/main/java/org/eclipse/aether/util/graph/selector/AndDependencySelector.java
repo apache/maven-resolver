@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,6 +27,8 @@ public final class AndDependencySelector
 {
 
     private final Set<DependencySelector> selectors;
+
+    private int hashCode;
 
     /**
      * Creates a new selector from the specified selectors.
@@ -163,9 +165,13 @@ public final class AndDependencySelector
     @Override
     public int hashCode()
     {
-        int hash = getClass().hashCode();
-        hash = hash * 31 + selectors.hashCode();
-        return hash;
+        if ( hashCode == 0 )
+        {
+            int hash = 17;
+            hash = hash * 31 + selectors.hashCode();
+            hashCode = hash;
+        }
+        return hashCode;
     }
 
 }

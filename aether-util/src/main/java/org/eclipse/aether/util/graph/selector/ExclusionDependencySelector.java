@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,10 +10,10 @@
  *******************************************************************************/
 package org.eclipse.aether.util.graph.selector;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Comparator;
+import java.util.TreeSet;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -30,14 +30,17 @@ public final class ExclusionDependencySelector
     implements DependencySelector
 {
 
-    private final Set<Exclusion> exclusions;
+    // sorted and dupe-free array, faster to iterate than LinkedHashSet
+    private final Exclusion[] exclusions;
+
+    private int hashCode;
 
     /**
      * Creates a new selector without any exclusions.
      */
     public ExclusionDependencySelector()
     {
-        this.exclusions = Collections.emptySet();
+        this.exclusions = new Exclusion[0];
     }
 
     /**
@@ -49,24 +52,19 @@ public final class ExclusionDependencySelector
     {
         if ( exclusions != null && !exclusions.isEmpty() )
         {
-            this.exclusions = new LinkedHashSet<Exclusion>( exclusions );
+            TreeSet<Exclusion> sorted = new TreeSet<Exclusion>( ExclusionComparator.INSTANCE );
+            sorted.addAll( exclusions );
+            this.exclusions = sorted.toArray( new Exclusion[sorted.size()] );
         }
         else
         {
-            this.exclusions = Collections.emptySet();
+            this.exclusions = new Exclusion[0];
         }
     }
 
-    private ExclusionDependencySelector( Set<Exclusion> exclusions )
+    private ExclusionDependencySelector( Exclusion[] exclusions )
     {
-        if ( exclusions != null && !exclusions.isEmpty() )
-        {
-            this.exclusions = exclusions;
-        }
-        else
-        {
-            this.exclusions = Collections.emptySet();
-        }
+        this.exclusions = exclusions;
     }
 
     public boolean selectDependency( Dependency dependency )
@@ -117,9 +115,40 @@ public final class ExclusionDependencySelector
             return this;
         }
 
-        Set<Exclusion> merged = new LinkedHashSet<Exclusion>();
-        merged.addAll( this.exclusions );
-        merged.addAll( exclusions );
+        Exclusion[] merged = this.exclusions;
+        int count = merged.length;
+        for ( Exclusion exclusion : exclusions )
+        {
+            int index = Arrays.binarySearch( merged, exclusion, ExclusionComparator.INSTANCE );
+            if ( index < 0 )
+            {
+                index = -( index + 1 );
+                if ( count >= merged.length )
+                {
+                    Exclusion[] tmp = new Exclusion[merged.length + exclusions.size()];
+                    System.arraycopy( merged, 0, tmp, 0, index );
+                    tmp[index] = exclusion;
+                    System.arraycopy( merged, index, tmp, index + 1, count - index );
+                    merged = tmp;
+                }
+                else
+                {
+                    System.arraycopy( merged, index, merged, index + 1, count - index );
+                    merged[index] = exclusion;
+                }
+                count++;
+            }
+        }
+        if ( merged == this.exclusions )
+        {
+            return this;
+        }
+        if ( merged.length != count )
+        {
+            Exclusion[] tmp = new Exclusion[count];
+            System.arraycopy( merged, 0, tmp, 0, count );
+            merged = tmp;
+        }
 
         return new ExclusionDependencySelector( merged );
     }
@@ -137,15 +166,53 @@ public final class ExclusionDependencySelector
         }
 
         ExclusionDependencySelector that = (ExclusionDependencySelector) obj;
-        return exclusions.equals( that.exclusions );
+        return Arrays.equals( exclusions, that.exclusions );
     }
 
     @Override
     public int hashCode()
     {
-        int hash = getClass().hashCode();
-        hash = hash * 31 + exclusions.hashCode();
-        return hash;
+        if ( hashCode == 0 )
+        {
+            int hash = getClass().hashCode();
+            hash = hash * 31 + Arrays.hashCode( exclusions );
+            hashCode = hash;
+        }
+        return hashCode;
+    }
+
+    private static class ExclusionComparator
+        implements Comparator<Exclusion>
+    {
+
+        static final ExclusionComparator INSTANCE = new ExclusionComparator();
+
+        public int compare( Exclusion e1, Exclusion e2 )
+        {
+            if ( e1 == null )
+            {
+                return ( e2 == null ) ? 0 : 1;
+            }
+            else if ( e2 == null )
+            {
+                return -1;
+            }
+            int rel = e1.getArtifactId().compareTo( e2.getArtifactId() );
+            if ( rel == 0 )
+            {
+                rel = e1.getGroupId().compareTo( e2.getGroupId() );
+                if ( rel == 0 )
+                {
+                    rel = e1.getExtension().compareTo( e2.getExtension() );
+                    if ( rel == 0 )
+                    {
+                        rel = e1.getClassifier().compareTo( e2.getClassifier() );
+                    }
+                }
+            }
+            return rel;
+        }
+
     }
 
 }

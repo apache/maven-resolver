@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -41,6 +41,8 @@ public final class ClassicDependencyManager
     private final Map<Object, String> managedLocalPaths;
 
     private final Map<Object, Collection<Exclusion>> managedExclusions;
+
+    private int hashCode;
 
     /**
      * Creates a new dependency manager without any management information.
@@ -230,12 +232,16 @@ public final class ClassicDependencyManager
     @Override
     public int hashCode()
     {
-        int hash = 17;
-        hash = hash * 31 + depth;
-        hash = hash * 31 + managedVersions.hashCode();
-        hash = hash * 31 + managedScopes.hashCode();
-        hash = hash * 31 + managedExclusions.hashCode();
-        return hash;
+        if ( hashCode == 0 )
+        {
+            int hash = 17;
+            hash = hash * 31 + depth;
+            hash = hash * 31 + managedVersions.hashCode();
+            hash = hash * 31 + managedScopes.hashCode();
+            hash = hash * 31 + managedExclusions.hashCode();
+            hashCode = hash;
+        }
+        return hashCode;
     }
 
     static class Key
