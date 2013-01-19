@@ -185,7 +185,7 @@ class IniArtifactDataReader
 
         Collection<Exclusion> exclusions = new ArrayList<Exclusion>();
 
-        boolean optional = false;
+        Boolean optional = null;
         Artifact artifact = null;
         String scope = null;
 
@@ -210,7 +210,7 @@ class IniArtifactDataReader
 
                 ArtifactDefinition def = new ArtifactDefinition( coords );
 
-                optional = def.isOptional();
+                optional = def.getOptional();
 
                 scope = "".equals( def.getScope() ) ? defaultScope : def.getScope();
 

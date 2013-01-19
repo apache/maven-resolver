@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,6 +27,8 @@ public final class DependencyManagement
     private String version;
 
     private String scope;
+
+    private Boolean optional;
 
     private Collection<Exclusion> exclusions;
 
@@ -83,6 +85,29 @@ public final class DependencyManagement
     public DependencyManagement setScope( String scope )
     {
         this.scope = scope;
+        return this;
+    }
+
+    /**
+     * Gets the new optional flag to apply to the dependency.
+     * 
+     * @return The new optional flag or {@code null} if the flag is not managed and the existing optional flag of the
+     *         dependency should remain unchanged.
+     */
+    public Boolean getOptional()
+    {
+        return optional;
+    }
+
+    /**
+     * Sets the new optional flag to apply to the dependency.
+     * 
+     * @param optional The optional flag, may be {@code null} if the flag is not managed.
+     * @return This management update for chaining, never {@code null}.
+     */
+    public DependencyManagement setOptional( Boolean optional )
+    {
+        this.optional = optional;
         return this;
     }
 

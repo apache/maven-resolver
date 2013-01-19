@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,11 +24,11 @@ class ArtifactDefinition
 
     private String definition;
 
-    private String id = null;
+    private String id;
 
-    private String reference = null;
+    private String reference;
 
-    private boolean optional = false;
+    private Boolean optional;
 
     public ArtifactDefinition( String def )
     {
@@ -60,9 +60,16 @@ class ArtifactDefinition
         {
             scope = split[4];
         }
-        if ( split.length > 5 && "optional".equalsIgnoreCase( split[5] ) )
+        if ( split.length > 5 )
         {
-            optional = true;
+            if ( "optional".equalsIgnoreCase( split[5] ) )
+            {
+                optional = true;
+            }
+            else if ( "!optional".equalsIgnoreCase( split[5] ) )
+            {
+                optional = false;
+            }
         }
     }
 
@@ -117,7 +124,7 @@ class ArtifactDefinition
         return id != null;
     }
 
-    public boolean isOptional()
+    public Boolean getOptional()
     {
         return optional;
     }

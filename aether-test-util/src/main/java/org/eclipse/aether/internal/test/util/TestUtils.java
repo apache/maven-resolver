@@ -10,9 +10,13 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.test.util;
 
+import java.util.List;
+
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.graph.Dependency;
 
 /**
  * Utility methods to help unit testing.
@@ -34,6 +38,16 @@ public class TestUtils
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
         session.setLocalRepositoryManager( new TestLocalRepositoryManager() );
         return session;
+    }
+
+    /**
+     * Creates a new dependency collection context.
+     */
+    public static DependencyCollectionContext newCollectionContext( RepositorySystemSession session,
+                                                                    Dependency dependency,
+                                                                    List<Dependency> managedDependencies )
+    {
+        return new TestDependencyCollectionContext( session, dependency, managedDependencies );
     }
 
     /**

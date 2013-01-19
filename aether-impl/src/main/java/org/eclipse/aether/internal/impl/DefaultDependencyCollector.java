@@ -360,6 +360,7 @@ public class DefaultDependencyCollector
                 DependencyManagement depMngt = depManager.manageDependency( dependency );
                 String premanagedVersion = null;
                 String premanagedScope = null;
+                Boolean premanagedOptional = null;
 
                 if ( depMngt != null )
                 {
@@ -378,6 +379,11 @@ public class DefaultDependencyCollector
                     {
                         premanagedScope = dependency.getScope();
                         dependency = dependency.setScope( depMngt.getScope() );
+                    }
+                    if ( depMngt.getOptional() != null )
+                    {
+                        premanagedOptional = dependency.getOptional();
+                        dependency = dependency.setOptional( depMngt.getOptional() );
                     }
                     if ( depMngt.getExclusions() != null )
                     {
@@ -473,6 +479,7 @@ public class DefaultDependencyCollector
                         DefaultDependencyNode child = new DefaultDependencyNode( d );
                         child.setChildren( cycleNode.getChildren() );
                         child.setPremanagedScope( premanagedScope );
+                        child.setPremanagedOptional( premanagedOptional );
                         child.setPremanagedVersion( premanagedVersion );
                         child.setRelocations( relocations );
                         child.setVersionConstraint( rangeResult.getVersionConstraint() );
@@ -505,6 +512,7 @@ public class DefaultDependencyCollector
 
                     DefaultDependencyNode child = new DefaultDependencyNode( d );
                     child.setPremanagedScope( premanagedScope );
+                    child.setPremanagedOptional( premanagedOptional );
                     child.setPremanagedVersion( premanagedVersion );
                     child.setRelocations( relocations );
                     child.setVersionConstraint( rangeResult.getVersionConstraint() );

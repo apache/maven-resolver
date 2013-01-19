@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -115,6 +115,14 @@ public interface DependencyNode
     void setScope( String scope );
 
     /**
+     * Sets the optional flag of the dependency. This method may only be invoked if this node actually has a dependency,
+     * i.e. if {@link #getDependency()} is not null.
+     * 
+     * @param optional The optional flag, may be {@code null}.
+     */
+    void setOptional( Boolean optional );
+
+    /**
      * Gets the version or version range for the dependency before dependency management was applied (if any).
      * 
      * @return The dependency version before dependency management or {@code null} if the version was not managed.
@@ -127,6 +135,14 @@ public interface DependencyNode
      * @return The dependency scope before dependency management or {@code null} if the scope was not managed.
      */
     String getPremanagedScope();
+
+    /**
+     * Gets the optional flag for the dependency before dependency management was applied (if any).
+     * 
+     * @return The optional flag before dependency management or {@code null} if the flag was not managed or was
+     *         originally unspecified.
+     */
+    Boolean getPremanagedOptional();
 
     /**
      * Gets the remote repositories from which this node's artifact shall be resolved.

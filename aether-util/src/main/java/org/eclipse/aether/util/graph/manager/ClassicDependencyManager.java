@@ -38,6 +38,8 @@ public final class ClassicDependencyManager
 
     private final Map<Object, String> managedScopes;
 
+    private final Map<Object, Boolean> managedOptionals;
+
     private final Map<Object, String> managedLocalPaths;
 
     private final Map<Object, Collection<Exclusion>> managedExclusions;
@@ -50,16 +52,19 @@ public final class ClassicDependencyManager
     public ClassicDependencyManager()
     {
         this( 0, Collections.<Object, String> emptyMap(), Collections.<Object, String> emptyMap(),
-              Collections.<Object, String> emptyMap(), Collections.<Object, Collection<Exclusion>> emptyMap() );
+              Collections.<Object, Boolean> emptyMap(), Collections.<Object, String> emptyMap(),
+              Collections.<Object, Collection<Exclusion>> emptyMap() );
     }
 
     private ClassicDependencyManager( int depth, Map<Object, String> managedVersions,
-                                      Map<Object, String> managedScopes, Map<Object, String> managedLocalPaths,
+                                      Map<Object, String> managedScopes, Map<Object, Boolean> managedOptionals,
+                                      Map<Object, String> managedLocalPaths,
                                       Map<Object, Collection<Exclusion>> managedExclusions )
     {
         this.depth = depth;
         this.managedVersions = managedVersions;
         this.managedScopes = managedScopes;
+        this.managedOptionals = managedOptionals;
         this.managedLocalPaths = managedLocalPaths;
         this.managedExclusions = managedExclusions;
     }
@@ -72,12 +77,13 @@ public final class ClassicDependencyManager
         }
         else if ( depth == 1 )
         {
-            return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedLocalPaths,
-                                                 managedExclusions );
+            return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedOptionals,
+                                                 managedLocalPaths, managedExclusions );
         }
 
         Map<Object, String> managedVersions = this.managedVersions;
         Map<Object, String> managedScopes = this.managedScopes;
+        Map<Object, Boolean> managedOptionals = this.managedOptionals;
         Map<Object, String> managedLocalPaths = this.managedLocalPaths;
         Map<Object, Collection<Exclusion>> managedExclusions = this.managedExclusions;
 
@@ -104,6 +110,16 @@ public final class ClassicDependencyManager
                     managedScopes = new HashMap<Object, String>( this.managedScopes );
                 }
                 managedScopes.put( key, scope );
+            }
+
+            Boolean optional = managedDependency.getOptional();
+            if ( optional != null && !managedOptionals.containsKey( key ) )
+            {
+                if ( managedOptionals == this.managedOptionals )
+                {
+                    managedOptionals = new HashMap<Object, Boolean>( this.managedOptionals );
+                }
+                managedOptionals.put( key, optional );
             }
 
             String localPath = managedDependency.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null );
@@ -133,8 +149,8 @@ public final class ClassicDependencyManager
             }
         }
 
-        return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedLocalPaths,
-                                             managedExclusions );
+        return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedOptionals,
+                                             managedLocalPaths, managedExclusions );
     }
 
     public DependencyManagement manageDependency( Dependency dependency )
@@ -190,6 +206,16 @@ public final class ClassicDependencyManager
                     management.setProperties( properties );
                 }
             }
+
+            Boolean optional = managedOptionals.get( key );
+            if ( optional != null )
+            {
+                if ( management == null )
+                {
+                    management = new DependencyManagement();
+                }
+                management.setOptional( optional );
+            }
         }
 
         Collection<Exclusion> exclusions = managedExclusions.get( key );
@@ -226,7 +252,8 @@ public final class ClassicDependencyManager
 
         ClassicDependencyManager that = (ClassicDependencyManager) obj;
         return depth == that.depth && managedVersions.equals( that.managedVersions )
-            && managedScopes.equals( that.managedScopes ) && managedExclusions.equals( that.managedExclusions );
+            && managedScopes.equals( that.managedScopes ) && managedOptionals.equals( that.managedOptionals )
+            && managedExclusions.equals( that.managedExclusions );
     }
 
     @Override
@@ -238,6 +265,7 @@ public final class ClassicDependencyManager
             hash = hash * 31 + depth;
             hash = hash * 31 + managedVersions.hashCode();
             hash = hash * 31 + managedScopes.hashCode();
+            hash = hash * 31 + managedOptionals.hashCode();
             hash = hash * 31 + managedExclusions.hashCode();
             hashCode = hash;
         }

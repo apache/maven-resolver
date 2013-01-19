@@ -53,6 +53,7 @@ public class NodeDefinitionTest
         assertMatch( "compile<runtime", NodeDefinition.SCOPE, "compile", "runtime" );
 
         assertMatch( "optional", NodeDefinition.OPTIONAL, "optional" );
+        assertMatch( "!optional", NodeDefinition.OPTIONAL, "!optional" );
 
         assertMatch( "relocations  =  g:a:1", NodeDefinition.RELOCATIONS, "g:a:1" );
         assertMatch( "relocations=g:a:1 , g:a:2", NodeDefinition.RELOCATIONS, "g:a:1 , g:a:2" );
@@ -90,12 +91,12 @@ public class NodeDefinitionTest
         assertEquals( null, desc.premanagedVersion );
         assertEquals( null, desc.scope );
         assertEquals( null, desc.premanagedScope );
-        assertEquals( false, desc.optional );
+        assertEquals( null, desc.optional );
         assertEquals( null, desc.properties );
         assertEquals( null, desc.relocations );
         assertEquals( null, desc.id );
 
-        desc = new NodeDefinition( "gid1:aid1:ext1:ver1 scope1" );
+        desc = new NodeDefinition( "gid1:aid1:ext1:ver1 scope1 !optional" );
         assertEquals( null, desc.reference );
         assertEquals( "gid1:aid1:ext1:ver1", desc.coords );
         assertEquals( null, desc.range );

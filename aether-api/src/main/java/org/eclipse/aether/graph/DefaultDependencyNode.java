@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,6 +46,8 @@ public final class DefaultDependencyNode
     private String premanagedVersion;
 
     private String premanagedScope;
+
+    private Boolean premanagedOptional;
 
     private List<RemoteRepository> repositories;
 
@@ -219,6 +221,15 @@ public final class DefaultDependencyNode
         dependency = dependency.setScope( scope );
     }
 
+    public void setOptional( Boolean optional )
+    {
+        if ( dependency == null )
+        {
+            throw new UnsupportedOperationException( "node does not have a dependency" );
+        }
+        dependency = dependency.setOptional( optional );
+    }
+
     public String getPremanagedVersion()
     {
         return premanagedVersion;
@@ -248,6 +259,22 @@ public final class DefaultDependencyNode
     public void setPremanagedScope( String premanagedScope )
     {
         this.premanagedScope = premanagedScope;
+    }
+
+    public Boolean getPremanagedOptional()
+    {
+        return premanagedOptional;
+    }
+
+    /**
+     * Sets the optional flag for this dependency before dependency management was applied (if any).
+     * 
+     * @param premanagedOptional The originally declared optional flag or {@code null} if the flag was not managed or
+     *            was originally unspecified.
+     */
+    public void setPremanagedOptional( Boolean premanagedOptional )
+    {
+        this.premanagedOptional = premanagedOptional;
     }
 
     public List<RemoteRepository> getRepositories()

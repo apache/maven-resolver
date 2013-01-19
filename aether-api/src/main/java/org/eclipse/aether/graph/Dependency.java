@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ public final class Dependency
 
     private final String scope;
 
-    private final boolean optional;
+    private final Boolean optional;
 
     private final Set<Exclusion> exclusions;
 
@@ -51,9 +51,9 @@ public final class Dependency
      * 
      * @param artifact The artifact being depended on, must not be {@code null}.
      * @param scope The scope of the dependency, may be {@code null}.
-     * @param optional A flag whether the dependency is optional or mandatory.
+     * @param optional A flag whether the dependency is optional or mandatory, may be {@code null}.
      */
-    public Dependency( Artifact artifact, String scope, boolean optional )
+    public Dependency( Artifact artifact, String scope, Boolean optional )
     {
         this( artifact, scope, optional, null );
     }
@@ -63,15 +63,15 @@ public final class Dependency
      * 
      * @param artifact The artifact being depended on, must not be {@code null}.
      * @param scope The scope of the dependency, may be {@code null}.
-     * @param optional A flag whether the dependency is optional or mandatory.
+     * @param optional A flag whether the dependency is optional or mandatory, may be {@code null}.
      * @param exclusions The exclusions that apply to transitive dependencies, may be {@code null} if none.
      */
-    public Dependency( Artifact artifact, String scope, boolean optional, Collection<Exclusion> exclusions )
+    public Dependency( Artifact artifact, String scope, Boolean optional, Collection<Exclusion> exclusions )
     {
         this( artifact, scope, Exclusions.copy( exclusions ), optional );
     }
 
-    private Dependency( Artifact artifact, String scope, Set<Exclusion> exclusions, boolean optional )
+    private Dependency( Artifact artifact, String scope, Set<Exclusion> exclusions, Boolean optional )
     {
         // NOTE: This constructor assumes immutability of the provided exclusion collection, for internal use only
         if ( artifact == null )
@@ -135,12 +135,22 @@ public final class Dependency
     }
 
     /**
-     * Indicates whether this dependency is optional or not. Optional dependencies can usually be ignored during
-     * transitive dependency resolution.
+     * Indicates whether this dependency is optional or not. Optional dependencies can be ignored in some contexts.
      * 
-     * @return {@code true} if the dependency is optional, {@code false} otherwise.
+     * @return {@code true} if the dependency is (definitively) optional, {@code false} otherwise.
      */
     public boolean isOptional()
+    {
+        return Boolean.TRUE.equals( optional );
+    }
+
+    /**
+     * Gets the optional flag for the dependency. Note: Most clients will usually call {@link #isOptional()} to
+     * determine the optional flag, this method is for advanced use cases where three-valued logic is required.
+     * 
+     * @return The optional flag or {@code null} if unspecified.
+     */
+    public Boolean getOptional()
     {
         return optional;
     }
@@ -148,12 +158,13 @@ public final class Dependency
     /**
      * Sets the optional flag for the dependency.
      * 
-     * @param optional {@code true} if the dependency is optional, {@code false} if the dependency is mandatory.
+     * @param optional {@code true} if the dependency is optional, {@code false} if the dependency is mandatory, may be
+     *            {@code null} if unspecified.
      * @return The new dependency, never {@code null}.
      */
-    public Dependency setOptional( boolean optional )
+    public Dependency setOptional( Boolean optional )
     {
-        if ( this.optional == optional )
+        if ( eq( this.optional, optional ) )
         {
             return this;
         }
@@ -220,8 +231,13 @@ public final class Dependency
 
         Dependency that = (Dependency) obj;
 
-        return artifact.equals( that.artifact ) && scope.equals( that.scope ) && optional == that.optional
+        return artifact.equals( that.artifact ) && scope.equals( that.scope ) && eq( optional, that.optional )
             && exclusions.equals( that.exclusions );
+    }
+
+    private static <T> boolean eq( T o1, T o2 )
+    {
+        return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
     }
 
     @Override
@@ -230,7 +246,7 @@ public final class Dependency
         int hash = 17;
         hash = hash * 31 + artifact.hashCode();
         hash = hash * 31 + scope.hashCode();
-        hash = hash * 31 + ( optional ? 1 : 0 );
+        hash = hash * 31 + ( optional != null ? optional.hashCode() : 0 );
         hash = hash * 31 + exclusions.size();
         return hash;
     }

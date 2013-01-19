@@ -40,7 +40,7 @@ class NodeDefinition
 
     static final String SCOPE = "(?:scope\\s*=\\s*)?([-_a-zA-Z0-9]+)(?:<([-_a-zA-Z0-9]+))?";
 
-    static final String OPTIONAL = "(optional)";
+    static final String OPTIONAL = "(!?optional)";
 
     static final String RELOCATIONS = "relocations\\s*=\\s*(" + COORDS_NC + "(?:\\s*,\\s*" + COORDS_NC + ")*)";
 
@@ -71,7 +71,7 @@ class NodeDefinition
 
     String premanagedScope;
 
-    boolean optional;
+    Boolean optional;
 
     List<String> relocations;
 
@@ -114,7 +114,10 @@ class NodeDefinition
 
         scope = m.group( 6 );
         premanagedScope = m.group( 7 );
-        optional = m.group( 8 ) != null;
+        if ( m.group( 8 ) != null )
+        {
+            optional = !m.group( 8 ).startsWith( "!" );
+        }
 
         String relocs = m.group( 9 );
         if ( relocs != null )
