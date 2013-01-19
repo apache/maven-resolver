@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,10 +17,6 @@ import java.util.HashSet;
 
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.util.artifact.JavaScopes;
-import org.eclipse.aether.util.filter.AndDependencyFilter;
-import org.eclipse.aether.util.filter.NotDependencyFilter;
-import org.eclipse.aether.util.filter.OrDependencyFilter;
-import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 
 /**
  * A utility class assisting in the creation of dependency node filters.
