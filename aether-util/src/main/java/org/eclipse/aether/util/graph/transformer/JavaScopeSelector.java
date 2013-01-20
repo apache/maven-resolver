@@ -40,7 +40,7 @@ public final class JavaScopeSelector
     public void selectScope( ConflictContext context )
         throws RepositoryException
     {
-        String scope = context.getWinnerScope();
+        String scope = context.getWinner().getDependency().getScope();
         if ( !JavaScopes.SYSTEM.equals( scope ) )
         {
             scope = chooseEffectiveScope( context.getItems() );

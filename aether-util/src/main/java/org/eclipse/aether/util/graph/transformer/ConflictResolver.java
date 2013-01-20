@@ -954,19 +954,7 @@ public final class ConflictResolver
         }
 
         /**
-         * Gets the original scope of the winning dependency, not to be confused with {@link #getScope()} which returns
-         * the effective scope.
-         * 
-         * @return The original scope of the winning dependency or {@code null} if no winner has been selected yet.
-         */
-        public String getWinnerScope()
-        {
-            return ( winner != null ) ? winner.node.getDependency().getScope() : null;
-        }
-
-        /**
-         * Gets the effective scope of the winning dependency, not to be confused with {@link #getWinnerScope()} which
-         * returns the original scope.
+         * Gets the effective scope of the winning dependency.
          * 
          * @return The effective scope of the winning dependency or {@code null} if not set yet.
          */
