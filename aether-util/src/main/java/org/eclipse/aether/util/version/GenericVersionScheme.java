@@ -20,16 +20,21 @@ import org.eclipse.aether.version.VersionRange;
 import org.eclipse.aether.version.VersionScheme;
 
 /**
- * A version scheme using a generic version syntax and common sense sorting. This scheme accepts versions of any form,
+ * A version scheme using a generic version syntax and common sense sorting.
+ * 
+ * <p>This scheme accepts versions of any form,
  * interpreting a version as a sequence of numeric and alphabetic components. The characters '-', '_', and '.' as well
  * as the mere transitions from digit to letter and vice versa delimit the version components. Delimiters are treated as
- * equivalent. Numeric components are compared mathematically, alphabetic components are compared lexicographically and
- * case-insensitively. However, the following qualifier strings are recognized and treated specially: "alpha" < "beta" <
- * "milestone" < "cr" = "rc" < "snapshot" < "final" = "ga" < "sp". All of those well-known qualifiers are considered
- * smaller/older than other strings. An empty component/string is equivalent to 0. Numbers and strings are considered
+ * equivalent.</p>
+ * <p>Numeric components are compared mathematically, alphabetic components are compared lexicographically and
+ * case-insensitively. However, the following qualifier strings are recognized and treated specially: "alpha" = "a" &lt;
+ * "beta" = "b" &lt; "milestone" = "m" &lt; "cr" = "rc" &lt; "snapshot" &lt; "final" = "ga" &lt; "sp". All of those
+ * well-known qualifiers are considered
+ * smaller/older than other strings. An empty component/string is equivalent to 0.</p>
+ * <p>Numbers and strings are considered
  * incomparable against each other. Where version components of different kind would collide, comparison will instead
  * assume that the previous components are padded with 0 or "ga", respectively, until the kind mismatch is resolved,
- * i.e. 1-alpha = 1.0.0-alpha < 1.0.1-ga = 1.0.1.
+ * i.e. 1-alpha = 1.0.0-alpha &lt; 1.0.1-ga = 1.0.1.</p>
  */
 public final class GenericVersionScheme
     implements VersionScheme
