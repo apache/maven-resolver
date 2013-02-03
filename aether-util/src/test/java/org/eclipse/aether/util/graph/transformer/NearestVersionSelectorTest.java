@@ -28,7 +28,8 @@ public class NearestVersionSelectorTest
     @Override
     protected ConflictResolver newTransformer()
     {
-        return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
+        return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(),
+                                     new SimpleOptionalitySelector(), new JavaScopeDeriver() );
     }
 
     @Override
@@ -212,12 +213,14 @@ public class NearestVersionSelectorTest
         DependencyNode winner = root.getChildren().get( 0 ).getChildren().get( 0 );
         assertEquals( "test", winner.getDependency().getScope() );
         assertEquals( "compile", winner.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_SCOPE ) );
+        assertEquals( false, winner.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY) );
         assertEquals( 1, root.getChildren().get( 1 ).getChildren().size() );
         DependencyNode loser = root.getChildren().get( 1 ).getChildren().get( 0 );
         assertEquals( "test", loser.getDependency().getScope() );
         assertEquals( 0, loser.getChildren().size() );
         assertSame( winner, loser.getData().get( ConflictResolver.NODE_DATA_WINNER ) );
         assertEquals( "compile", loser.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_SCOPE ) );
+        assertEquals( false, loser.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY ) );
     }
 
 }

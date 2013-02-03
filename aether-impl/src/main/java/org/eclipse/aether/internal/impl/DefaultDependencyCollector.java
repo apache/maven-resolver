@@ -382,7 +382,7 @@ public class DefaultDependencyCollector
                     }
                     if ( depMngt.getOptional() != null )
                     {
-                        premanagedOptional = dependency.getOptional();
+                        premanagedOptional = dependency.isOptional();
                         dependency = dependency.setOptional( depMngt.getOptional() );
                     }
                     if ( depMngt.getExclusions() != null )

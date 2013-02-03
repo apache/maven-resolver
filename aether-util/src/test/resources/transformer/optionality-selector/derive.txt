@@ -1,0 +1,5 @@
+(null)
++- test:a:1 optional
+|  \- test:b:1
+\- test:c:1 !optional
+   \- test:d:1

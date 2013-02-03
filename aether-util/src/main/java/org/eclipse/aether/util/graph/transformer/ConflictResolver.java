@@ -36,15 +36,16 @@ import org.eclipse.aether.util.ConfigUtils;
  * A dependency graph transformer that resolves version and scope conflicts among dependencies. For a given set of
  * conflicting nodes, one node will be chosen as the winner and the other nodes are removed from the dependency graph.
  * The exact rules by which a winning node and its effective scope are determined are controlled by user-supplied
- * implementations of {@link VersionSelector}, {@link ScopeSelector} and {@link ScopeDeriver}.
+ * implementations of {@link VersionSelector}, {@link ScopeSelector}, {@link OptionalitySelector} and
+ * {@link ScopeDeriver}.
  * <p>
  * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
  * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
  * into a tree but all nodes participating in a conflict are retained. The nodes that were rejected during conflict
  * resolution have no children and link back to the winner node via the {@link #NODE_DATA_WINNER} key in their custom
- * data. Additionally, the key {@link #NODE_DATA_ORIGINAL_SCOPE} is used to store the original scope of each node.
- * Obviously, the resulting dependency tree is not suitable for artifact resolution unless a filter is employed to
- * exclude the duplicate dependencies.
+ * data. Additionally, the keys {@link #NODE_DATA_ORIGINAL_SCOPE} and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used
+ * to store the original scope and optionality of each node. Obviously, the resulting dependency tree is not suitable
+ * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
  * <p>
  * This transformer will query the keys {@link TransformationContextKeys#CONFLICT_IDS},
  * {@link TransformationContextKeys#SORTED_CONFLICT_IDS}, {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for
@@ -73,20 +74,30 @@ public final class ConflictResolver
      */
     public static final String NODE_DATA_ORIGINAL_SCOPE = "conflict.originalScope";
 
+    /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the optional flag of
+     * the dependency before derivation and conflict resolution is stored.
+     */
+    public static final String NODE_DATA_ORIGINAL_OPTIONALITY = "conflict.originalOptionality";
+
     private final VersionSelector versionSelector;
 
     private final ScopeSelector scopeSelector;
 
     private final ScopeDeriver scopeDeriver;
 
+    private final OptionalitySelector optionalitySelector;
+
     /**
      * Creates a new conflict resolver instance with the specified hooks.
      * 
      * @param versionSelector The version selector to use, must not be {@code null}.
      * @param scopeSelector The scope selector to use, must not be {@code null}.
+     * @param optionalitySelector The optionality selector ot use, must not be {@code null}.
      * @param scopeDeriver The scope deriver to use, must not be {@code null}.
      */
-    public ConflictResolver( VersionSelector versionSelector, ScopeSelector scopeSelector, ScopeDeriver scopeDeriver )
+    public ConflictResolver( VersionSelector versionSelector, ScopeSelector scopeSelector,
+                             OptionalitySelector optionalitySelector, ScopeDeriver scopeDeriver )
     {
         if ( versionSelector == null )
         {
@@ -103,6 +114,11 @@ public final class ConflictResolver
             throw new IllegalArgumentException( "scope deriver not specified" );
         }
         this.scopeDeriver = scopeDeriver;
+        if ( optionalitySelector == null )
+        {
+            throw new IllegalArgumentException( "optionality selector not specified" );
+        }
+        this.optionalitySelector = optionalitySelector;
     }
 
     public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
@@ -173,12 +189,22 @@ public final class ConflictResolver
                 {
                     throw new RepositoryException( "conflict resolver did not select winner among " + state.items );
                 }
+                DependencyNode winner = ctx.winner.node;
+
                 state.scopeSelector.selectScope( ctx );
                 if ( state.verbose )
                 {
-                    ctx.winner.node.setData( NODE_DATA_ORIGINAL_SCOPE, ctx.winner.node.getDependency().getScope() );
+                    winner.setData( NODE_DATA_ORIGINAL_SCOPE, winner.getDependency().getScope() );
                 }
-                ctx.winner.node.setScope( ctx.scope );
+                winner.setScope( ctx.scope );
+
+                state.optionalitySelector.selectOptionality( ctx );
+                if ( state.verbose )
+                {
+                    winner.setData( NODE_DATA_ORIGINAL_OPTIONALITY, winner.getDependency().isOptional() );
+                }
+                winner.setOptional( ctx.optional );
+
                 removeLosers( state );
             }
 
@@ -264,6 +290,7 @@ public final class ConflictResolver
                         DependencyNode loser = new DefaultDependencyNode( child );
                         loser.setData( NODE_DATA_WINNER, winner.node );
                         loser.setData( NODE_DATA_ORIGINAL_SCOPE, loser.getDependency().getScope() );
+                        loser.setData( NODE_DATA_ORIGINAL_OPTIONALITY, loser.getDependency().isOptional() );
                         loser.setScope( item.getScopes().iterator().next() );
                         loser.setChildren( Collections.<DependencyNode> emptyList() );
                         childIt.set( loser );
@@ -296,31 +323,48 @@ public final class ConflictResolver
         Object derivedScopes;
 
         /**
+         * The set of derived optionalities the node was visited with, used to check whether an already seen node needs
+         * to be revisited again in context of another optionality. To conserve memory, encoded as bit field (bit 0 ->
+         * optional=false, bit 1 -> optional=true).
+         */
+        int derivedOptionalities;
+
+        /**
          * The conflict items which are immediate children of the node, used to easily update those conflict items after
-         * a new parent scope was encountered.
+         * a new parent scope/optionality was encountered.
          */
         List<ConflictItem> children;
 
-        NodeInfo( int depth, String derivedScope )
+        static final int CHANGE_SCOPE = 0x01;
+
+        static final int CHANGE_OPTIONAL = 0x02;
+
+        private static final int OPT_FALSE = 0x01;
+
+        private static final int OPT_TRUE = 0x02;
+
+        NodeInfo( int depth, String derivedScope, boolean optional )
         {
             minDepth = depth;
             derivedScopes = derivedScope;
+            derivedOptionalities = optional ? OPT_TRUE : OPT_FALSE;
         }
 
         @SuppressWarnings( "unchecked" )
-        boolean update( int depth, String derivedScope )
+        int update( int depth, String derivedScope, boolean optional )
         {
             if ( depth < minDepth )
             {
                 minDepth = depth;
             }
+            int changes;
             if ( derivedScopes.equals( derivedScope ) )
             {
-                return false;
+                changes = 0;
             }
             else if ( derivedScopes instanceof Collection )
             {
-                return ( (Collection<String>) derivedScopes ).add( derivedScope );
+                changes = ( (Collection<String>) derivedScopes ).add( derivedScope ) ? CHANGE_SCOPE : 0;
             }
             else
             {
@@ -328,8 +372,15 @@ public final class ConflictResolver
                 scopes.add( (String) derivedScopes );
                 scopes.add( derivedScope );
                 derivedScopes = scopes;
-                return true;
+                changes = CHANGE_SCOPE;
             }
+            int bit = optional ? OPT_TRUE : OPT_FALSE;
+            if ( ( derivedOptionalities & bit ) == 0 )
+            {
+                derivedOptionalities |= bit;
+                changes |= CHANGE_OPTIONAL;
+            }
+            return changes;
         }
 
         void add( ConflictItem item )
@@ -362,8 +413,8 @@ public final class ConflictResolver
         final boolean verbose;
 
         /**
-         * A mapping from conflict id to winner node, helps to recognize nodes that have their effective scope set or
-         * are leftovers from previous removals.
+         * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
+         * scope&optionality set or are leftovers from previous removals.
          */
         final Map<Object, DependencyNode> resolvedIds;
 
@@ -407,14 +458,19 @@ public final class ConflictResolver
         final List<String> parentScopes;
 
         /**
+         * The stack of derived optional flags for parent nodes.
+         */
+        final List<Boolean> parentOptionals;
+
+        /**
          * The stack of node infos for parent nodes, may contain {@code null} which is used to disable creating new
          * conflict items when visiting their parent again (conflict items are meant to be unique by parent-node combo).
          */
         final List<NodeInfo> parentInfos;
 
         /**
-         * The conflict context passed to the version/scope selectors, updated as we move along rather than recreated to
-         * avoid tmp objects.
+         * The conflict context passed to the version/scope/optionality selectors, updated as we move along rather than
+         * recreated to avoid tmp objects.
          */
         final ConflictContext conflictCtx;
 
@@ -439,6 +495,11 @@ public final class ConflictResolver
          */
         final ScopeDeriver scopeDeriver;
 
+        /**
+         * The effective optionality selector, i.e. after initialization.
+         */
+        final OptionalitySelector optionalitySelector;
+
         State( DependencyNode root, Map<?, ?> conflictIds, int conflictIdCount,
                DependencyGraphTransformationContext context )
             throws RepositoryException
@@ -452,12 +513,14 @@ public final class ConflictResolver
             stack = new IdentityHashMap<List<DependencyNode>, Object>( 64 );
             parentNodes = new ArrayList<DependencyNode>( 64 );
             parentScopes = new ArrayList<String>( 64 );
+            parentOptionals = new ArrayList<Boolean>( 64 );
             parentInfos = new ArrayList<NodeInfo>( 64 );
             conflictCtx = new ConflictContext( root, conflictIds, items );
             scopeCtx = new ScopeContext( null, null );
             versionSelector = ConflictResolver.this.versionSelector.getInstance( root, context );
             scopeSelector = ConflictResolver.this.scopeSelector.getInstance( root, context );
             scopeDeriver = ConflictResolver.this.scopeDeriver.getInstance( root, context );
+            optionalitySelector = ConflictResolver.this.optionalitySelector.getInstance( root, context );
         }
 
         void prepare( Object conflictId, Collection<Object> cyclicPredecessors )
@@ -465,6 +528,7 @@ public final class ConflictResolver
             currentId = conflictCtx.conflictId = conflictId;
             conflictCtx.winner = null;
             conflictCtx.scope = null;
+            conflictCtx.optional = null;
             items.clear();
             infos.clear();
             if ( cyclicPredecessors != null )
@@ -533,33 +597,49 @@ public final class ConflictResolver
             }
 
             int depth = depth();
-            String scope = scope( node, conflictId );
+            String scope = deriveScope( node, conflictId );
+            boolean optional = deriveOptional( node, conflictId );
             NodeInfo info = infos.get( graphNode );
             if ( info == null )
             {
-                info = new NodeInfo( depth, scope );
+                info = new NodeInfo( depth, scope, optional );
                 infos.put( graphNode, info );
                 parentInfos.add( info );
                 parentNodes.add( node );
                 parentScopes.add( scope );
-            }
-            else if ( !info.update( depth, scope ) )
-            {
-                stack.remove( graphNode );
-                return false;
+                parentOptionals.add( optional );
             }
             else
             {
+                int changes = info.update( depth, scope, optional );
+                if ( changes == 0 )
+                {
+                    stack.remove( graphNode );
+                    return false;
+                }
                 parentInfos.add( null ); // disable creating new conflict items, we update the existing ones below
                 parentNodes.add( node );
                 parentScopes.add( scope );
+                parentOptionals.add( optional );
                 if ( info.children != null )
                 {
-                    for ( int i = info.children.size() - 1; i >= 0; i-- )
+                    if ( ( changes & NodeInfo.CHANGE_SCOPE ) != 0 )
                     {
-                        ConflictItem item = info.children.get( i );
-                        String childScope = scope( item.node, null );
-                        item.addScope( childScope );
+                        for ( int i = info.children.size() - 1; i >= 0; i-- )
+                        {
+                            ConflictItem item = info.children.get( i );
+                            String childScope = deriveScope( item.node, null );
+                            item.addScope( childScope );
+                        }
+                    }
+                    if ( ( changes & NodeInfo.CHANGE_OPTIONAL ) != 0 )
+                    {
+                        for ( int i = info.children.size() - 1; i >= 0; i-- )
+                        {
+                            ConflictItem item = info.children.get( i );
+                            boolean childOptional = deriveOptional( item.node, null );
+                            item.addOptional( childOptional );
+                        }
                     }
                 }
             }
@@ -572,6 +652,7 @@ public final class ConflictResolver
             int last = parentInfos.size() - 1;
             parentInfos.remove( last );
             parentScopes.remove( last );
+            parentOptionals.remove( last );
             DependencyNode node = parentNodes.remove( last );
             stack.remove( node.getChildren() );
         }
@@ -582,7 +663,7 @@ public final class ConflictResolver
             DependencyNode parent = parent();
             if ( parent == null )
             {
-                ConflictItem item = new ConflictItem( parent, node, scope( node, null ) );
+                ConflictItem item = newConflictItem( parent, node );
                 items.add( item );
             }
             else
@@ -590,11 +671,17 @@ public final class ConflictResolver
                 NodeInfo info = parentInfos.get( parentInfos.size() - 1 );
                 if ( info != null )
                 {
-                    ConflictItem item = new ConflictItem( parent, node, scope( node, null ) );
+                    ConflictItem item = newConflictItem( parent, node );
                     info.add( item );
                     items.add( item );
                 }
             }
+        }
+
+        private ConflictItem newConflictItem( DependencyNode parent, DependencyNode node )
+            throws RepositoryException
+        {
+            return new ConflictItem( parent, node, deriveScope( node, null ), deriveOptional( node, null ) );
         }
 
         private int depth()
@@ -608,7 +695,7 @@ public final class ConflictResolver
             return ( size <= 0 ) ? null : parentNodes.get( size - 1 );
         }
 
-        private String scope( DependencyNode node, Object conflictId )
+        private String deriveScope( DependencyNode node, Object conflictId )
             throws RepositoryException
         {
             if ( node.getPremanagedScope() != null || ( conflictId != null && resolvedIds.containsKey( conflictId ) ) )
@@ -634,6 +721,19 @@ public final class ConflictResolver
         private String scope( Dependency dependency )
         {
             return ( dependency != null ) ? dependency.getScope() : null;
+        }
+
+        private boolean deriveOptional( DependencyNode node, Object conflictId )
+        {
+            Dependency dep = node.getDependency();
+            boolean optional = ( dep != null ) ? dep.isOptional() : false;
+            if ( optional || node.getPremanagedOptional() != null
+                || ( conflictId != null && resolvedIds.containsKey( conflictId ) ) )
+            {
+                return optional;
+            }
+            int depth = parentNodes.size();
+            return ( depth > 0 ) ? parentOptionals.get( depth - 1 ) : false;
         }
 
     }
@@ -735,7 +835,20 @@ public final class ConflictResolver
         // we start with String and update to Set<String> if needed
         Object scopes;
 
-        ConflictItem( DependencyNode parent, DependencyNode node, String scope )
+        // bit field of OPTIONAL_FALSE and OPTIONAL_TRUE
+        int optionalities;
+
+        /**
+         * Bit flag indicating whether one or more paths consider the dependency non-optional.
+         */
+        public static final int OPTIONAL_FALSE = 0x01;
+
+        /**
+         * Bit flag indicating whether one or more paths consider the dependency optional.
+         */
+        public static final int OPTIONAL_TRUE = 0x02;
+
+        ConflictItem( DependencyNode parent, DependencyNode node, String scope, boolean optional )
         {
             if ( parent != null )
             {
@@ -749,6 +862,7 @@ public final class ConflictResolver
             }
             this.node = node;
             this.scopes = scope;
+            this.optionalities = optional ? OPTIONAL_TRUE : OPTIONAL_FALSE;
         }
 
         /**
@@ -757,16 +871,20 @@ public final class ConflictResolver
          * @param parent The parent node of the conflicting dependency, may be {@code null}.
          * @param node The conflicting dependency, must not be {@code null}.
          * @param depth The zero-based depth of the conflicting dependency.
+         * @param optionalities The optionalities the dependency was encountered with, encoded as a bit field consisting
+         *            of {@link ConflictResolver.ConflictItem#OPTIONAL_TRUE} and
+         *            {@link ConflictResolver.ConflictItem#OPTIONAL_FALSE}.
          * @param scopes The derived scopes of the conflicting dependency, must not be {@code null}.
          * @noreference This class is not intended to be instantiated by clients in production code, the constructor may
          *              change without notice and only exists to enable unit testing.
          */
-        public ConflictItem( DependencyNode parent, DependencyNode node, int depth, String... scopes )
+        public ConflictItem( DependencyNode parent, DependencyNode node, int depth, int optionalities, String... scopes )
         {
             this.parent = ( parent != null ) ? parent.getChildren() : null;
             this.artifact = ( parent != null ) ? parent.getArtifact() : null;
             this.node = node;
             this.depth = depth;
+            this.optionalities = optionalities;
             this.scopes = Arrays.asList( scopes );
         }
 
@@ -818,7 +936,7 @@ public final class ConflictResolver
          * different paths and each path might result in a different derived scope.
          * 
          * @see ScopeDeriver
-         * @return The derived scopes of the dependency, never {@code null}.
+         * @return The (read-only) set of derived scopes of the dependency, never {@code null}.
          */
         @SuppressWarnings( "unchecked" )
         public Collection<String> getScopes()
@@ -844,6 +962,24 @@ public final class ConflictResolver
                 set.add( scope );
                 scopes = set;
             }
+        }
+
+        /**
+         * Gets the derived optionalities of the dependency. In general, the same dependency node could be reached via
+         * different paths and each path might result in a different derived optionality.
+         * 
+         * @return A bit field consisting of {@link ConflictResolver.ConflictItem#OPTIONAL_FALSE} and/or
+         *         {@link ConflictResolver.ConflictItem#OPTIONAL_TRUE} indicating the derived optionalities the
+         *         dependency was encountered with.
+         */
+        public int getOptionalities()
+        {
+            return optionalities;
+        }
+
+        void addOptional( boolean optional )
+        {
+            optionalities |= optional ? OPTIONAL_TRUE : OPTIONAL_FALSE;
         }
 
         @Override
@@ -876,6 +1012,8 @@ public final class ConflictResolver
         ConflictItem winner;
 
         String scope;
+
+        Boolean optional;
 
         ConflictContext( DependencyNode root, Map<?, ?> conflictIds, Collection<ConflictItem> items )
         {
@@ -956,7 +1094,7 @@ public final class ConflictResolver
         /**
          * Gets the effective scope of the winning dependency.
          * 
-         * @return The effective scope of the winning dependency or {@code null} if not set yet.
+         * @return The effective scope of the winning dependency or {@code null} if none.
          */
         public String getScope()
         {
@@ -971,6 +1109,26 @@ public final class ConflictResolver
         public void setScope( String scope )
         {
             this.scope = scope;
+        }
+
+        /**
+         * Gets the effective optional flag of the winning dependency.
+         * 
+         * @return The effective optional flag or {@code null} if none.
+         */
+        public Boolean getOptional()
+        {
+            return optional;
+        }
+
+        /**
+         * Sets the effective optional flag of the winning dependency.
+         * 
+         * @param optional The effective optional flag, may be {@code null}.
+         */
+        public void setOptional( Boolean optional )
+        {
+            this.optional = optional;
         }
 
         @Override
@@ -1043,7 +1201,7 @@ public final class ConflictResolver
          * 
          * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
          * @param context The graph transformation context, must not be {@code null}.
-         * @return The scope deriver to use for the given graph transformation, never {@code null}.
+         * @return The scope selector to use for the given graph transformation, never {@code null}.
          * @throws RepositoryException If the instance could not be retrieved.
          */
         public ScopeSelector getInstance( DependencyNode root, DependencyGraphTransformationContext context )
@@ -1102,6 +1260,48 @@ public final class ConflictResolver
          * @throws RepositoryException If the scope deriviation failed.
          */
         public abstract void deriveScope( ScopeContext context )
+            throws RepositoryException;
+
+    }
+
+    /**
+     * An extension point of {@link ConflictResolver} that determines the effective optional flag of a dependency from a
+     * potentially conflicting set of derived optionalities. The optionality selector gets invoked after the
+     * {@link VersionSelector} has picked the winning node. Implementations must be stateless.
+     */
+    public static abstract class OptionalitySelector
+    {
+
+        /**
+         * Retrieves the optionality selector for use during the specified graph transformation. The conflict resolver
+         * calls this method once per
+         * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
+         * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
+         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * default implementation simply returns the current instance which is appropriate for implementations which do
+         * not require auxiliary data.
+         * 
+         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
+         * @param context The graph transformation context, must not be {@code null}.
+         * @return The optionality selector to use for the given graph transformation, never {@code null}.
+         * @throws RepositoryException If the instance could not be retrieved.
+         */
+        public OptionalitySelector getInstance( DependencyNode root, DependencyGraphTransformationContext context )
+            throws RepositoryException
+        {
+            return this;
+        }
+
+        /**
+         * Determines the effective optional flag of the dependency given by {@link ConflictContext#getWinner()}.
+         * Implementations will usually iterate {@link ConflictContext#getItems()}, inspect
+         * {@link ConflictItem#getOptionalities()} and eventually call {@link ConflictContext#setOptional(Boolean)} to
+         * deliver the effective optional flag.
+         * 
+         * @param context The conflict context, must not be {@code null}.
+         * @throws RepositoryException If the optionality selection failed.
+         */
+        public abstract void selectOptionality( ConflictContext context )
             throws RepositoryException;
 
     }

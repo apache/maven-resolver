@@ -37,7 +37,8 @@ public class JavaScopeSelectorTest
     @Override
     protected DependencyGraphTransformer newTransformer()
     {
-        return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(), new JavaScopeDeriver() );
+        return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(),
+                                     new SimpleOptionalitySelector(), new JavaScopeDeriver() );
     }
 
     @Override

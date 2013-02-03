@@ -139,8 +139,7 @@ public interface DependencyNode
     /**
      * Gets the optional flag for the dependency before dependency management was applied (if any).
      * 
-     * @return The optional flag before dependency management or {@code null} if the flag was not managed or was
-     *         originally unspecified.
+     * @return The optional flag before dependency management or {@code null} if the flag was not managed.
      */
     Boolean getPremanagedOptional();
 

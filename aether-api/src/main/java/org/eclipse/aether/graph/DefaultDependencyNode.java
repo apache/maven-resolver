@@ -269,8 +269,7 @@ public final class DefaultDependencyNode
     /**
      * Sets the optional flag for this dependency before dependency management was applied (if any).
      * 
-     * @param premanagedOptional The originally declared optional flag or {@code null} if the flag was not managed or
-     *            was originally unspecified.
+     * @param premanagedOptional The originally declared optional flag or {@code null} if the flag was not managed.
      */
     public void setPremanagedOptional( Boolean premanagedOptional )
     {
