@@ -25,7 +25,8 @@ import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
- * Creates local repository managers for repository types {@code "default"} or {@code "" (automatic)}.
+ * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}.
+ * @see EnhancedLocalRepositoryManager
  */
 @Named( "enhanced" )
 @Component( role = LocalRepositoryManagerFactory.class, hint = "enhanced" )
