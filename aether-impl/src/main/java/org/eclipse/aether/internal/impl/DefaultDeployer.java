@@ -74,7 +74,6 @@ public class DefaultDeployer
     implements Deployer, Service
 {
 
-    @SuppressWarnings( "unused" )
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 

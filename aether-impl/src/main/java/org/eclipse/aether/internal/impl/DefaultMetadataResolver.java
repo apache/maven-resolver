@@ -75,7 +75,6 @@ public class DefaultMetadataResolver
     implements MetadataResolver, Service
 {
 
-    @SuppressWarnings( "unused" )
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
