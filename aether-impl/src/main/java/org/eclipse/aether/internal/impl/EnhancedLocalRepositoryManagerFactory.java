@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,7 +26,6 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}.
- * @see EnhancedLocalRepositoryManager
  */
 @Named( "enhanced" )
 @Component( role = LocalRepositoryManagerFactory.class, hint = "enhanced" )
