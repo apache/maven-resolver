@@ -38,7 +38,7 @@ class NodeDefinition
 
     static final String RANGE = "(" + RANGE_NC + ")";
 
-    static final String SCOPE = "(?:scope\\s*=\\s*)?([-_a-zA-Z0-9]+)(?:<([-_a-zA-Z0-9]+))?";
+    static final String SCOPE = "(?:scope\\s*=\\s*)?((?!optional)[-_a-zA-Z0-9]+)(?:<([-_a-zA-Z0-9]+))?";
 
     static final String OPTIONAL = "(!?optional)";
 

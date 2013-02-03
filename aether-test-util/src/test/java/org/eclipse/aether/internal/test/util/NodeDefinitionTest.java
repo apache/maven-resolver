@@ -34,6 +34,13 @@ public class NodeDefinitionTest
         }
     }
 
+    private void assertNoMatch( String text, String regex )
+    {
+        Pattern pattern = Pattern.compile( regex );
+        Matcher matcher = pattern.matcher( text );
+        assertEquals( false, matcher.matches() );
+    }
+
     @Test
     public void testPatterns()
     {
@@ -51,6 +58,8 @@ public class NodeDefinitionTest
         assertMatch( "scope  =  compile", NodeDefinition.SCOPE, "compile", null );
         assertMatch( "scope=compile<runtime", NodeDefinition.SCOPE, "compile", "runtime" );
         assertMatch( "compile<runtime", NodeDefinition.SCOPE, "compile", "runtime" );
+        assertNoMatch( "optional", NodeDefinition.SCOPE );
+        assertNoMatch( "!optional", NodeDefinition.SCOPE );
 
         assertMatch( "optional", NodeDefinition.OPTIONAL, "optional" );
         assertMatch( "!optional", NodeDefinition.OPTIONAL, "!optional" );
@@ -104,6 +113,18 @@ public class NodeDefinitionTest
         assertEquals( "scope1", desc.scope );
         assertEquals( null, desc.premanagedScope );
         assertEquals( false, desc.optional );
+        assertEquals( null, desc.properties );
+        assertEquals( null, desc.relocations );
+        assertEquals( null, desc.id );
+
+        desc = new NodeDefinition( "g:a:1 optional" );
+        assertEquals( null, desc.reference );
+        assertEquals( "g:a:1", desc.coords );
+        assertEquals( null, desc.range );
+        assertEquals( null, desc.premanagedVersion );
+        assertEquals( null, desc.scope );
+        assertEquals( null, desc.premanagedScope );
+        assertEquals( true, desc.optional );
         assertEquals( null, desc.properties );
         assertEquals( null, desc.relocations );
         assertEquals( null, desc.id );
