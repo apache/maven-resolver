@@ -27,13 +27,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.log.Logger;
 
 /**
- * A local repository manager that builds upon the classical Maven 2.0 local repository structure but additionally keeps
- * track in <code>_maven.repositories</code> of from what repositories a cached artifact was resolved.
- * Resolution of locally cached artifacts will be rejected in case the current resolution request does not match the
- * known source repositories of an artifact, thereby emulating physically separated artifact caches per remote repository.
- * Tracking file is a properties file, with key as filename&gt;repo_id and value as empty string. If a file has been
- * installed in the repository, but not downloaded from a remote repository, it is tracked as empty repository id and
- * always resolved. For example
+ * These are implementation details for enhanced local repository manager, subject to change without prior notice.
+ * Repositories from which a cached artifact was resolved are tracked in a properties file named <code>_remote.repositories</code>,
+ * with content key as filename&gt;repo_id and value as empty string. If a file has been installed in the repository,
+ * but not downloaded from a remote repository, it is tracked as empty repository id and always resolved. For example:
  * <pre>artifact-1.0.pom>=
  *artifact-1.0.jar>=
  *artifact-1.0.pom>central=
@@ -41,11 +38,12 @@ import org.eclipse.aether.spi.log.Logger;
  *artifact-1.0.zip>central=
  *artifact-1.0-classifier.zip>central=
  *artifact-1.0.pom>my_repo_id=</pre>
+ * @see EnhancedLocalRepositoryManagerFactory
  */
 class EnhancedLocalRepositoryManager
     extends SimpleLocalRepositoryManager
 {
-    private static final String TRACKING_FILENAME = "_maven.repositories";
+    private static final String TRACKING_FILENAME = "_remote.repositories";
 
     private static final String LOCAL_REPO_ID = "";
 

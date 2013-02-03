@@ -26,6 +26,10 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}.
+ * Enhanced local repository manager is built upon the classical Maven 2.0 local repository structure but additionally keeps
+ * track of from what repositories a cached artifact was resolved.
+ * Resolution of locally cached artifacts will be rejected in case the current resolution request does not match the
+ * known source repositories of an artifact, thereby emulating physically separated artifact caches per remote repository.
  */
 @Named( "enhanced" )
 @Component( role = LocalRepositoryManagerFactory.class, hint = "enhanced" )
