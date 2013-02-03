@@ -64,7 +64,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Failed to read resolution tracking file " + file, e );
+                logger.warn( "Failed to read tracking file " + file, e );
             }
             finally
             {
@@ -85,7 +85,7 @@ class TrackingFileManager
             File directory = file.getParentFile();
             if ( !directory.mkdirs() && !directory.exists() )
             {
-                logger.warn( "Failed to create parent directories for resolution tracking file " + file );
+                logger.warn( "Failed to create parent directories for tracking file " + file );
                 return props;
             }
 
@@ -121,8 +121,8 @@ class TrackingFileManager
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream( 1024 * 2 );
 
-                logger.debug( "Writing resolution tracking file " + file );
-                props.store( stream, "NOTE: This is an internal implementation file"
+                logger.debug( "Writing tracking file " + file );
+                props.store( stream, "NOTE: This is an Aether internal implementation file"
                     + ", its format can be changed without prior notice." );
 
                 raf.seek( 0 );
@@ -131,7 +131,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Failed to write resolution tracking file " + file, e );
+                logger.warn( "Failed to write tracking file " + file, e );
             }
             finally
             {
@@ -153,7 +153,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Error releasing lock for resolution tracking file " + file, e );
+                logger.warn( "Error releasing lock for tracking file " + file, e );
             }
         }
     }
@@ -168,7 +168,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Error closing resolution tracking file " + file, e );
+                logger.warn( "Error closing tracking file " + file, e );
             }
         }
     }
