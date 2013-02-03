@@ -31,10 +31,14 @@ import org.eclipse.aether.spi.log.Logger;
  * track in <code>_maven.repositories</code> of from what repositories a cached artifact was resolved.
  * Resolution of locally cached artifacts will be rejected in case the current resolution request does not match the
  * known source repositories of an artifact, thereby emulating physically separated artifact caches per remote repository.
- * Tracking file is a properties file, with key as filename&gt;repo_id and value as empty string. For example
- * <pre>artifact-1.0.zip>central=
+ * Tracking file is a properties file, with key as filename&gt;repo_id and value as empty string. If a file has been
+ * installed in the repository, but not downloaded from a remote repository, it is tracked as empty repository id and
+ * always resolved. For example
+ * <pre>artifact-1.0.pom>=
+ *artifact-1.0.jar>=
  *artifact-1.0.pom>central=
  *artifact-1.0.jar>central=
+ *artifact-1.0.zip>central=
  *artifact-1.0-classifier.zip>central=
  *artifact-1.0.pom>my_repo_id=</pre>
  */
@@ -77,6 +81,7 @@ class EnhancedLocalRepositoryManager
 
             if ( props.get( getKey( file, LOCAL_REPO_ID ) ) != null )
             {
+                // artifact installed into the local repo is always accepted
                 result.setAvailable( true );
             }
             else
@@ -86,6 +91,7 @@ class EnhancedLocalRepositoryManager
                 {
                     if ( props.get( getKey( file, getRepositoryKey( repository, context ) ) ) != null )
                     {
+                        // artifact downloaded from remote repository is accepted only downloaded from request repositories
                         result.setAvailable( true );
                         result.setRepository( repository );
                         break;
@@ -151,6 +157,7 @@ class EnhancedLocalRepositoryManager
         File trackingFile = getTrackingFile( artifactFile );
 
         Properties props = trackingFileManager.read( trackingFile );
+
         return ( props != null ) ? props : new Properties();
     }
 
