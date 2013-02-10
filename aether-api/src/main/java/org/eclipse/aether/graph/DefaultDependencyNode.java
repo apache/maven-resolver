@@ -140,7 +140,7 @@ public final class DefaultDependencyNode
             throw new UnsupportedOperationException( "node does not have a dependency" );
         }
         dependency = dependency.setArtifact( artifact );
-        artifact = dependency.getArtifact();
+        this.artifact = dependency.getArtifact();
     }
 
     public List<Artifact> getRelocations()
