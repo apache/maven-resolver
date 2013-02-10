@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,25 +32,25 @@ public interface ResolutionErrorPolicy
      * Bit mask indicating that resolution errors should not be cached in the local repository. This forces the system
      * to always query the remote repository for locally missing artifacts/metadata.
      */
-    public static final int CACHE_DISABLED = 0x00;
+    int CACHE_DISABLED = 0x00;
 
     /**
      * Bit flag indicating whether missing artifacts/metadata should be cached in the local repository. If caching is
      * enabled, resolution will not be reattempted until the update policy for the affected resource has expired.
      */
-    public static final int CACHE_NOT_FOUND = 0x01;
+    int CACHE_NOT_FOUND = 0x01;
 
     /**
      * Bit flag indicating whether connectivity/transfer errors (e.g. unreachable host, bad authentication) should be
      * cached in the local repository. If caching is enabled, resolution will not be reattempted until the update policy
      * for the affected resource has expired.
      */
-    public static final int CACHE_TRANSFER_ERROR = 0x02;
+    int CACHE_TRANSFER_ERROR = 0x02;
 
     /**
      * Bit mask indicating that all resolution errors should be cached in the local repository.
      */
-    public static final int CACHE_ALL = CACHE_NOT_FOUND | CACHE_TRANSFER_ERROR;
+    int CACHE_ALL = CACHE_NOT_FOUND | CACHE_TRANSFER_ERROR;
 
     /**
      * Gets the error policy for an artifact.

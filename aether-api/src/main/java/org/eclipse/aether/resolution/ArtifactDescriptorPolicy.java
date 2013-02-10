@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,22 +23,22 @@ public interface ArtifactDescriptorPolicy
     /**
      * Bit mask indicating that errors while reading the artifact descriptor should not be tolerated.
      */
-    public static final int STRICT = 0x00;
+    int STRICT = 0x00;
 
     /**
      * Bit flag indicating that missing artifact descriptors should be silently ignored.
      */
-    public static final int IGNORE_MISSING = 0x01;
+    int IGNORE_MISSING = 0x01;
 
     /**
      * Bit flag indicating that existent but invalid artifact descriptors should be silently ignored.
      */
-    public static final int IGNORE_INVALID = 0x02;
+    int IGNORE_INVALID = 0x02;
 
     /**
      * Bit mask indicating that all errors should be silently ignored.
      */
-    public static final int IGNORE_ERRORS = IGNORE_MISSING | IGNORE_INVALID;
+    int IGNORE_ERRORS = IGNORE_MISSING | IGNORE_INVALID;
 
     /**
      * Gets the error policy for an artifact's descriptor.
