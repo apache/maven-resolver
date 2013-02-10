@@ -147,8 +147,8 @@ class IniArtifactDataReader
         }
 
         Artifact relocation = relocation( sections.get( State.RELOCATION ) );
-        List<Dependency> dependencies = dependencies( sections.get( State.DEPENDENCIES ), "compile" );
-        List<Dependency> managedDependencies = dependencies( sections.get( State.MANAGEDDEPENDENCIES ), "" );
+        List<Dependency> dependencies = dependencies( sections.get( State.DEPENDENCIES ), false );
+        List<Dependency> managedDependencies = dependencies( sections.get( State.MANAGEDDEPENDENCIES ), true );
         List<RemoteRepository> repositories = repositories( sections.get( State.REPOSITORIES ) );
 
         ArtifactDescription description =
@@ -175,7 +175,7 @@ class IniArtifactDataReader
         return ret;
     }
 
-    private List<Dependency> dependencies( List<String> list, String defaultScope )
+    private List<Dependency> dependencies( List<String> list, boolean managed )
     {
         List<Dependency> ret = new ArrayList<Dependency>();
         if ( list == null )
@@ -210,9 +210,9 @@ class IniArtifactDataReader
 
                 ArtifactDefinition def = new ArtifactDefinition( coords );
 
-                optional = def.getOptional();
+                optional = managed ? def.getOptional() : Boolean.valueOf( Boolean.TRUE.equals( def.getOptional() ) );
 
-                scope = "".equals( def.getScope() ) ? defaultScope : def.getScope();
+                scope = "".equals( def.getScope() ) && !managed ? "compile" : def.getScope();
 
                 artifact =
                     new DefaultArtifact( def.getGroupId(), def.getArtifactId(), "", def.getExtension(),

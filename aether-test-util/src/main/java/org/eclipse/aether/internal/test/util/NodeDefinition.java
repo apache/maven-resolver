@@ -114,10 +114,7 @@ class NodeDefinition
 
         scope = m.group( 6 );
         premanagedScope = m.group( 7 );
-        if ( m.group( 8 ) != null )
-        {
-            optional = !m.group( 8 ).startsWith( "!" );
-        }
+        optional = ( m.group( 8 ) != null ) ? !m.group( 8 ).startsWith( "!" ) : Boolean.FALSE;
 
         String relocs = m.group( 9 );
         if ( relocs != null )

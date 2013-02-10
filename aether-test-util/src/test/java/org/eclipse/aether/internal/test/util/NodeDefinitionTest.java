@@ -100,7 +100,7 @@ public class NodeDefinitionTest
         assertEquals( null, desc.premanagedVersion );
         assertEquals( null, desc.scope );
         assertEquals( null, desc.premanagedScope );
-        assertEquals( null, desc.optional );
+        assertEquals( false, desc.optional );
         assertEquals( null, desc.properties );
         assertEquals( null, desc.relocations );
         assertEquals( null, desc.id );

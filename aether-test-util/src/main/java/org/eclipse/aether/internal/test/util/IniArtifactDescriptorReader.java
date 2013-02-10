@@ -108,7 +108,7 @@ public class IniArtifactDescriptorReader
             }
             catch ( Exception e )
             {
-                throw new ArtifactDescriptorException( result, e.getMessage() );
+                throw new ArtifactDescriptorException( result, e.getMessage(), e );
             }
         }
     }

@@ -70,6 +70,11 @@ public class DefaultDependencyCollectorTest
         return new IniArtifactDescriptorReader( "artifact-descriptions/" + prefix );
     }
 
+    private Dependency newDep( String coords )
+    {
+        return newDep( coords, "" );
+    }
+
     private Dependency newDep( String coords, String scope )
     {
         return new Dependency( new DefaultArtifact( coords ), scope );
@@ -161,31 +166,30 @@ public class DefaultDependencyCollectorTest
     public void testSimpleCollection()
         throws IOException, DependencyCollectionException
     {
-        DependencyNode root = parser.parseLiteral( "gid:aid:ext:ver" );
-        Dependency dependency = root.getDependency();
+        Dependency dependency = newDep( "gid:aid:ext:ver", "compile" );
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
 
         assertEquals( 0, result.getExceptions().size() );
 
-        DependencyNode newRoot = result.getRoot();
-        Dependency newDependency = newRoot.getDependency();
+        DependencyNode root = result.getRoot();
+        Dependency newDependency = root.getDependency();
 
         assertEquals( dependency, newDependency );
         assertEquals( dependency.getArtifact(), newDependency.getArtifact() );
 
-        assertEquals( 1, newRoot.getChildren().size() );
+        assertEquals( 1, root.getChildren().size() );
 
-        DependencyNode expect = parser.parseLiteral( "gid:aid2:ext:ver compile" );
-        assertEquals( expect.getDependency(), newRoot.getChildren().get( 0 ).getDependency() );
+        Dependency expect = newDep( "gid:aid2:ext:ver", "compile" );
+        assertEquals( expect, root.getChildren().get( 0 ).getDependency() );
     }
 
     @Test
     public void testMissingDependencyDescription()
         throws IOException
     {
-        DependencyNode root = parser.parseLiteral( "missing:description:ext:ver" );
-        CollectRequest request = new CollectRequest( root.getDependency(), Arrays.asList( repository ) );
+        CollectRequest request =
+            new CollectRequest( newDep( "missing:description:ext:ver" ), Arrays.asList( repository ) );
         try
         {
             collector.collectDependencies( session, request );
@@ -208,31 +212,28 @@ public class DefaultDependencyCollectorTest
     public void testDuplicates()
         throws IOException, DependencyCollectionException
     {
-        DependencyNode root = parser.parseLiteral( "duplicate:transitive:ext:dependency" );
-        Dependency dependency = root.getDependency();
+        Dependency dependency = newDep( "duplicate:transitive:ext:dependency" );
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
 
         CollectResult result = collector.collectDependencies( session, request );
 
         assertEquals( 0, result.getExceptions().size() );
 
-        DependencyNode newRoot = result.getRoot();
-        Dependency newDependency = newRoot.getDependency();
+        DependencyNode root = result.getRoot();
+        Dependency newDependency = root.getDependency();
 
         assertEquals( dependency, newDependency );
         assertEquals( dependency.getArtifact(), newDependency.getArtifact() );
 
-        assertEquals( 2, newRoot.getChildren().size() );
+        assertEquals( 2, root.getChildren().size() );
 
-        DependencyNode expect = parser.parseLiteral( "gid:aid:ext:ver compile" );
-        Dependency dep = expect.getDependency();
-        assertEquals( dep, dep( newRoot, 0 ) );
+        Dependency dep = newDep( "gid:aid:ext:ver", "compile" );
+        assertEquals( dep, dep( root, 0 ) );
 
-        expect = parser.parseLiteral( "gid:aid2:ext:ver compile" );
-        dep = expect.getDependency();
-        assertEquals( dep, dep( newRoot, 1 ) );
-        assertEquals( dep, dep( newRoot, 0, 0 ) );
-        assertEquals( dep( newRoot, 1 ), dep( newRoot, 0, 0 ) );
+        dep = newDep( "gid:aid2:ext:ver", "compile" );
+        assertEquals( dep, dep( root, 1 ) );
+        assertEquals( dep, dep( root, 0, 0 ) );
+        assertEquals( dep( root, 1 ), dep( root, 0, 0 ) );
     }
 
     @Test
@@ -261,8 +262,7 @@ public class DefaultDependencyCollectorTest
     public void testCyclicDependenciesBig()
         throws Exception
     {
-        DependencyNode root = parser.parseLiteral( "1:2:pom:5.50-SNAPSHOT" );
-        CollectRequest request = new CollectRequest( root.getDependency(), Arrays.asList( repository ) );
+        CollectRequest request = new CollectRequest( newDep( "1:2:pom:5.50-SNAPSHOT" ), Arrays.asList( repository ) );
         collector.setArtifactDescriptorReader( newReader( "cycle-big/" ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertNotNull( result.getRoot() );
@@ -273,8 +273,7 @@ public class DefaultDependencyCollectorTest
     public void testCyclicProjects()
         throws Exception
     {
-        DependencyNode root = parser.parseLiteral( "test:a:2" );
-        CollectRequest request = new CollectRequest( root.getDependency(), Arrays.asList( repository ) );
+        CollectRequest request = new CollectRequest( newDep( "test:a:2" ), Arrays.asList( repository ) );
         collector.setArtifactDescriptorReader( newReader( "versionless-cycle/" ) );
         CollectResult result = collector.collectDependencies( session, request );
         DependencyNode a1 = path( result.getRoot(), 0, 0 );
@@ -319,21 +318,21 @@ public class DefaultDependencyCollectorTest
     public void testCollectMultipleDependencies()
         throws IOException, DependencyCollectionException
     {
-        DependencyNode root1 = parser.parseLiteral( "gid:aid:ext:ver compile" );
-        DependencyNode root2 = parser.parseLiteral( "gid:aid2:ext:ver compile" );
-        List<Dependency> dependencies = Arrays.asList( root1.getDependency(), root2.getDependency() );
+        Dependency root1 = newDep( "gid:aid:ext:ver", "compile" );
+        Dependency root2 = newDep( "gid:aid2:ext:ver", "compile" );
+        List<Dependency> dependencies = Arrays.asList( root1, root2 );
         CollectRequest request = new CollectRequest( dependencies, null, Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
 
         assertEquals( 0, result.getExceptions().size() );
         assertEquals( 2, result.getRoot().getChildren().size() );
-        assertEquals( root1.getDependency(), dep( result.getRoot(), 0 ) );
+        assertEquals( root1, dep( result.getRoot(), 0 ) );
 
         assertEquals( 1, path( result.getRoot(), 0 ).getChildren().size() );
-        assertEquals( root2.getDependency(), dep( result.getRoot(), 0, 0 ) );
+        assertEquals( root2, dep( result.getRoot(), 0, 0 ) );
 
         assertEquals( 0, path( result.getRoot(), 1 ).getChildren().size() );
-        assertEquals( root2.getDependency(), dep( result.getRoot(), 1 ) );
+        assertEquals( root2, dep( result.getRoot(), 1 ) );
     }
 
     @Test
@@ -355,8 +354,7 @@ public class DefaultDependencyCollectorTest
             }
         } );
 
-        DependencyNode root = parser.parseLiteral( "verrange:parent:jar:1[1,) compile" );
-        List<Dependency> dependencies = Arrays.asList( root.getDependency() );
+        List<Dependency> dependencies = Arrays.asList( newDep( "verrange:parent:jar:1[1,)", "compile" ) );
         CollectRequest request = new CollectRequest( dependencies, null, Arrays.asList( repository, repo2 ) );
         CollectResult result = collector.collectDependencies( session, request );
 
@@ -370,8 +368,7 @@ public class DefaultDependencyCollectorTest
     public void testManagedVersionScope()
         throws IOException, DependencyCollectionException
     {
-        DependencyNode root = parser.parseLiteral( "managed:aid:ext:ver" );
-        Dependency dependency = root.getDependency();
+        Dependency dependency = newDep( "managed:aid:ext:ver" );
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
 
         session.setDependencyManager( new ClassicDependencyManager() );
@@ -380,18 +377,18 @@ public class DefaultDependencyCollectorTest
 
         assertEquals( 0, result.getExceptions().size() );
 
-        DependencyNode newRoot = result.getRoot();
+        DependencyNode root = result.getRoot();
 
-        assertEquals( dependency, dep( newRoot ) );
-        assertEquals( dependency.getArtifact(), dep( newRoot ).getArtifact() );
+        assertEquals( dependency, dep( root ) );
+        assertEquals( dependency.getArtifact(), dep( root ).getArtifact() );
 
-        assertEquals( 1, newRoot.getChildren().size() );
-        DependencyNode expect = parser.parseLiteral( "gid:aid:ext:ver compile" );
-        assertEquals( dep( expect ), dep( newRoot, 0 ) );
+        assertEquals( 1, root.getChildren().size() );
+        Dependency expect = newDep( "gid:aid:ext:ver", "compile" );
+        assertEquals( expect, dep( root, 0 ) );
 
-        assertEquals( 1, path( newRoot, 0 ).getChildren().size() );
-        expect = parser.parseLiteral( "gid:aid2:ext:managedVersion managedScope" );
-        assertEquals( dep( expect ), dep( newRoot, 0, 0 ) );
+        assertEquals( 1, path( root, 0 ).getChildren().size() );
+        expect = newDep( "gid:aid2:ext:managedVersion", "managedScope" );
+        assertEquals( expect, dep( root, 0, 0 ) );
     }
 
     @Test
@@ -434,7 +431,7 @@ public class DefaultDependencyCollectorTest
         session.setDependencyManager( depMgmt );
         session.setConfigProperty( DependencyManagerUtils.CONFIG_PROP_VERBOSE, Boolean.TRUE );
 
-        CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:ver", "" ) );
+        CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:ver" ) );
         CollectResult result = collector.collectDependencies( session, request );
         DependencyNode node = result.getRoot().getChildren().get( 0 );
         assertEquals( DependencyNode.MANAGED_VERSION | DependencyNode.MANAGED_SCOPE | DependencyNode.MANAGED_OPTIONAL
