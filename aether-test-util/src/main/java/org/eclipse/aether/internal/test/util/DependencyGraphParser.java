@@ -321,8 +321,18 @@ public class DependencyGraphParser
             DefaultArtifact artifact = new DefaultArtifact( def.coords, def.properties );
             Dependency dependency = new Dependency( artifact, def.scope, def.optional );
             node = new DefaultDependencyNode( dependency );
-            node.setPremanagedScope( def.premanagedScope );
-            node.setPremanagedVersion( def.premanagedVersion );
+            int managedBits = 0;
+            if ( def.premanagedScope != null )
+            {
+                managedBits |= DependencyNode.MANAGED_SCOPE;
+                node.setData( "premanaged.scope", def.premanagedScope );
+            }
+            if ( def.premanagedVersion != null )
+            {
+                managedBits |= DependencyNode.MANAGED_VERSION;
+                node.setData( "premanaged.version", def.premanagedVersion );
+            }
+            node.setManagedBits( managedBits );
             if ( def.relocations != null )
             {
                 List<Artifact> relocations = new ArrayList<Artifact>();

@@ -15,6 +15,8 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,6 +27,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -33,6 +36,7 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.DefaultDependencyCollector;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
@@ -42,7 +46,9 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
+import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,6 +68,11 @@ public class DefaultDependencyCollectorTest
     private IniArtifactDescriptorReader newReader( String prefix )
     {
         return new IniArtifactDescriptorReader( "artifact-descriptions/" + prefix );
+    }
+
+    private Dependency newDep( String coords, String scope )
+    {
+        return new Dependency( new DefaultArtifact( coords ), scope );
     }
 
     @Before
@@ -391,9 +402,9 @@ public class DefaultDependencyCollectorTest
 
         DependencyNode root = parser.parseResource( "expectedSubtreeComparisonResult.txt" );
         TestDependencyManager depMgmt = new TestDependencyManager();
-        depMgmt.addManagedDependency( dep( root, 0 ), "managed", null, null );
-        depMgmt.addManagedDependency( dep( root, 0, 1 ), "managed", "managed", null );
-        depMgmt.addManagedDependency( dep( root, 1 ), null, null, "managed" );
+        depMgmt.add( dep( root, 0 ), "managed", null, null );
+        depMgmt.add( dep( root, 0, 1 ), "managed", "managed", null );
+        depMgmt.add( dep( root, 1 ), null, null, "managed" );
         session.setDependencyManager( depMgmt );
 
         // collect result will differ from expectedSubtreeComparisonResult.txt
@@ -409,36 +420,96 @@ public class DefaultDependencyCollectorTest
         assertEquals( "managed", dep( node, 0, 0 ).getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) );
     }
 
-    /*     */
-    public class TestDependencyManager
+    @Test
+    public void testDependencyManagement_VerboseMode()
+        throws Exception
+    {
+        String depId = "gid:aid2:ext";
+        TestDependencyManager depMgmt = new TestDependencyManager();
+        depMgmt.version( depId, "managedVersion" );
+        depMgmt.scope( depId, "managedScope" );
+        depMgmt.optional( depId, Boolean.TRUE );
+        depMgmt.path( depId, "managedPath" );
+        depMgmt.exclusions( depId, new Exclusion( "gid", "aid", "*", "*" ) );
+        session.setDependencyManager( depMgmt );
+        session.setConfigProperty( DependencyManagerUtils.CONFIG_PROP_VERBOSE, Boolean.TRUE );
+
+        CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:ver", "" ) );
+        CollectResult result = collector.collectDependencies( session, request );
+        DependencyNode node = result.getRoot().getChildren().get( 0 );
+        assertEquals( DependencyNode.MANAGED_VERSION | DependencyNode.MANAGED_SCOPE | DependencyNode.MANAGED_OPTIONAL
+            | DependencyNode.MANAGED_PROPERTIES | DependencyNode.MANAGED_EXCLUSIONS, node.getManagedBits() );
+        assertEquals( "ver", DependencyManagerUtils.getPremanagedVersion( node ) );
+        assertEquals( "compile", DependencyManagerUtils.getPremanagedScope( node ) );
+        assertEquals( Boolean.FALSE, DependencyManagerUtils.getPremanagedOptional( node ) );
+    }
+
+    static class TestDependencyManager
         implements DependencyManager
     {
-        private Map<Dependency, String> versions = new HashMap<Dependency, String>();
 
-        private Map<Dependency, String> scopes = new HashMap<Dependency, String>();
+        private Map<String, String> versions = new HashMap<String, String>();
 
-        private Map<Dependency, String> paths = new HashMap<Dependency, String>();
+        private Map<String, String> scopes = new HashMap<String, String>();
 
-        public void addManagedDependency( Dependency d, String version, String scope, String localPath )
+        private Map<String, Boolean> optionals = new HashMap<String, Boolean>();
+
+        private Map<String, String> paths = new HashMap<String, String>();
+
+        private Map<String, Collection<Exclusion>> exclusions = new HashMap<String, Collection<Exclusion>>();
+
+        public void add( Dependency d, String version, String scope, String localPath )
         {
-            versions.put( d, version );
-            scopes.put( d, scope );
-            paths.put( d, localPath );
+            String id = toKey( d );
+            version( id, version );
+            scope( id, scope );
+            path( id, localPath );
+        }
+
+        public void version( String id, String version )
+        {
+            versions.put( id, version );
+        }
+
+        public void scope( String id, String scope )
+        {
+            scopes.put( id, scope );
+        }
+
+        public void optional( String id, Boolean optional )
+        {
+            optionals.put( id, optional );
+        }
+
+        public void path( String id, String path )
+        {
+            paths.put( id, path );
+        }
+
+        public void exclusions( String id, Exclusion... exclusions )
+        {
+            this.exclusions.put( id, exclusions != null ? Arrays.asList( exclusions ) : null );
         }
 
         public DependencyManagement manageDependency( Dependency d )
         {
+            String id = toKey( d );
             DependencyManagement mgmt = new DependencyManagement();
-            mgmt.setVersion( versions.get( d ) );
-            mgmt.setScope( scopes.get( d ) );
-            String path = paths.get( d );
+            mgmt.setVersion( versions.get( id ) );
+            mgmt.setScope( scopes.get( id ) );
+            mgmt.setOptional( optionals.get( id ) );
+            String path = paths.get( id );
             if ( path != null )
             {
-                Map<String, String> p = new HashMap<String, String>();
-                p.put( ArtifactProperties.LOCAL_PATH, path );
-                mgmt.setProperties( p );
+                mgmt.setProperties( Collections.singletonMap( ArtifactProperties.LOCAL_PATH, path ) );
             }
+            mgmt.setExclusions( exclusions.get( id ) );
             return mgmt;
+        }
+
+        private String toKey( Dependency dependency )
+        {
+            return ArtifactIdUtils.toVersionlessId( dependency.getArtifact() );
         }
 
         public DependencyManager deriveChildManager( DependencyCollectionContext context )

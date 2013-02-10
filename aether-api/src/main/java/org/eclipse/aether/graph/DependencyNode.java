@@ -33,6 +33,41 @@ public interface DependencyNode
 {
 
     /**
+     * A bit flag indicating the dependency version was subject to dependency management
+     * 
+     * @see #getManagedBits()
+     */
+    int MANAGED_VERSION = 0x01;
+
+    /**
+     * A bit flag indicating the dependency scope was subject to dependency management
+     * 
+     * @see #getManagedBits()
+     */
+    int MANAGED_SCOPE = 0x02;
+
+    /**
+     * A bit flag indicating the optional flag was subject to dependency management
+     * 
+     * @see #getManagedBits()
+     */
+    int MANAGED_OPTIONAL = 0x04;
+
+    /**
+     * A bit flag indicating the artifact properties were subject to dependency management
+     * 
+     * @see #getManagedBits()
+     */
+    int MANAGED_PROPERTIES = 0x08;
+
+    /**
+     * A bit flag indicating the exclusions were subject to dependency management
+     * 
+     * @see #getManagedBits()
+     */
+    int MANAGED_EXCLUSIONS = 0x10;
+
+    /**
      * Gets the child nodes of this node. To conserve memory, dependency nodes with equal dependencies may share the
      * same child list instance. Hence clients mutating the child list need to be aware that these changes might affect
      * more than this node. Where this is not desired, the child list should be copied before mutation if the client
@@ -123,25 +158,13 @@ public interface DependencyNode
     void setOptional( Boolean optional );
 
     /**
-     * Gets the version or version range for the dependency before dependency management was applied (if any).
+     * Gets a bit field indicating which attributes of this node were subject to dependency management.
      * 
-     * @return The dependency version before dependency management or {@code null} if the version was not managed.
+     * @return A bit field containing any of the bits {@link #MANAGED_VERSION}, {@link #MANAGED_SCOPE},
+     *         {@link #MANAGED_OPTIONAL}, {@link #MANAGED_PROPERTIES} and {@link #MANAGED_EXCLUSIONS} if the
+     *         corresponding attribute was set via dependency management.
      */
-    String getPremanagedVersion();
-
-    /**
-     * Gets the scope for the dependency before dependency management was applied (if any).
-     * 
-     * @return The dependency scope before dependency management or {@code null} if the scope was not managed.
-     */
-    String getPremanagedScope();
-
-    /**
-     * Gets the optional flag for the dependency before dependency management was applied (if any).
-     * 
-     * @return The optional flag before dependency management or {@code null} if the flag was not managed.
-     */
-    Boolean getPremanagedOptional();
+    int getManagedBits();
 
     /**
      * Gets the remote repositories from which this node's artifact shall be resolved.

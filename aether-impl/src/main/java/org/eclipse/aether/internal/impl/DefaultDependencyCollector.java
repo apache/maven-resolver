@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,7 @@ import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
 
@@ -358,6 +359,7 @@ public class DefaultDependencyCollector
                 }
 
                 DependencyManagement depMngt = depManager.manageDependency( dependency );
+                int managedBits = 0;
                 String premanagedVersion = null;
                 String premanagedScope = null;
                 Boolean premanagedOptional = null;
@@ -369,25 +371,30 @@ public class DefaultDependencyCollector
                         Artifact artifact = dependency.getArtifact();
                         premanagedVersion = artifact.getVersion();
                         dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
+                        managedBits |= DependencyNode.MANAGED_VERSION;
                     }
                     if ( depMngt.getProperties() != null )
                     {
                         Artifact artifact = dependency.getArtifact();
                         dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
+                        managedBits |= DependencyNode.MANAGED_PROPERTIES;
                     }
                     if ( depMngt.getScope() != null )
                     {
                         premanagedScope = dependency.getScope();
                         dependency = dependency.setScope( depMngt.getScope() );
+                        managedBits |= DependencyNode.MANAGED_SCOPE;
                     }
                     if ( depMngt.getOptional() != null )
                     {
                         premanagedOptional = dependency.isOptional();
                         dependency = dependency.setOptional( depMngt.getOptional() );
+                        managedBits |= DependencyNode.MANAGED_OPTIONAL;
                     }
                     if ( depMngt.getExclusions() != null )
                     {
                         dependency = dependency.setExclusions( depMngt.getExclusions() );
+                        managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
                     }
                 }
                 disableVersionManagement = false;
@@ -478,9 +485,13 @@ public class DefaultDependencyCollector
                     {
                         DefaultDependencyNode child = new DefaultDependencyNode( d );
                         child.setChildren( cycleNode.getChildren() );
-                        child.setPremanagedScope( premanagedScope );
-                        child.setPremanagedOptional( premanagedOptional );
-                        child.setPremanagedVersion( premanagedVersion );
+                        child.setManagedBits( managedBits );
+                        if ( args.premanagedState )
+                        {
+                            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
+                            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
+                            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+                        }
                         child.setRelocations( relocations );
                         child.setVersionConstraint( rangeResult.getVersionConstraint() );
                         child.setVersion( version );
@@ -511,9 +522,13 @@ public class DefaultDependencyCollector
                         getRemoteRepositories( rangeResult.getRepository( version ), repositories );
 
                     DefaultDependencyNode child = new DefaultDependencyNode( d );
-                    child.setPremanagedScope( premanagedScope );
-                    child.setPremanagedOptional( premanagedOptional );
-                    child.setPremanagedVersion( premanagedVersion );
+                    child.setManagedBits( managedBits );
+                    if ( args.premanagedState )
+                    {
+                        child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
+                        child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
+                        child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+                    }
                     child.setRelocations( relocations );
                     child.setVersionConstraint( rangeResult.getVersionConstraint() );
                     child.setVersion( version );
@@ -633,6 +648,8 @@ public class DefaultDependencyCollector
 
         final int maxExceptions;
 
+        final boolean premanagedState;
+
         final RequestTrace trace;
 
         final DataPool pool;
@@ -650,6 +667,7 @@ public class DefaultDependencyCollector
             this.session = session;
             this.ignoreRepos = session.isIgnoreArtifactDescriptorRepositories();
             this.maxExceptions = ConfigUtils.getInteger( session, 50, "aether.dependencyCollector.maxExceptions" );
+            this.premanagedState = ConfigUtils.getBoolean( session, false, DependencyManagerUtils.CONFIG_PROP_VERBOSE );
             this.trace = trace;
             this.pool = pool;
             this.nodes = nodes;

@@ -698,7 +698,8 @@ public final class ConflictResolver
         private String deriveScope( DependencyNode node, Object conflictId )
             throws RepositoryException
         {
-            if ( node.getPremanagedScope() != null || ( conflictId != null && resolvedIds.containsKey( conflictId ) ) )
+            if ( ( node.getManagedBits() & DependencyNode.MANAGED_SCOPE ) != 0
+                || ( conflictId != null && resolvedIds.containsKey( conflictId ) ) )
             {
                 return scope( node.getDependency() );
             }
@@ -727,7 +728,7 @@ public final class ConflictResolver
         {
             Dependency dep = node.getDependency();
             boolean optional = ( dep != null ) ? dep.isOptional() : false;
-            if ( optional || node.getPremanagedOptional() != null
+            if ( optional || ( node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL ) != 0
                 || ( conflictId != null && resolvedIds.containsKey( conflictId ) ) )
             {
                 return optional;

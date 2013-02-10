@@ -43,11 +43,7 @@ public final class DefaultDependencyNode
 
     private Version version;
 
-    private String premanagedVersion;
-
-    private String premanagedScope;
-
-    private Boolean premanagedOptional;
+    private byte managedBits;
 
     private List<RemoteRepository> repositories;
 
@@ -101,8 +97,7 @@ public final class DefaultDependencyNode
         children = new ArrayList<DependencyNode>( 0 );
         setAliases( node.getAliases() );
         setRequestContext( node.getRequestContext() );
-        setPremanagedScope( node.getPremanagedScope() );
-        setPremanagedVersion( node.getPremanagedVersion() );
+        setManagedBits( node.getManagedBits() );
         setRelocations( node.getRelocations() );
         setRepositories( node.getRepositories() );
         setVersion( node.getVersion() );
@@ -230,50 +225,20 @@ public final class DefaultDependencyNode
         dependency = dependency.setOptional( optional );
     }
 
-    public String getPremanagedVersion()
+    public int getManagedBits()
     {
-        return premanagedVersion;
+        return managedBits;
     }
 
     /**
-     * Sets the version or version range for this dependency before dependency management was applied (if any).
+     * Sets a bit field indicating which attributes of this node were subject to dependency management.
      * 
-     * @param premanagedVersion The originally declared dependency version or {@code null} if the version was not
-     *            managed.
+     * @param managedBits The bit field indicating the managed attributes or {@code 0} if dependency management wasn't
+     *            applied.
      */
-    public void setPremanagedVersion( String premanagedVersion )
+    public void setManagedBits( int managedBits )
     {
-        this.premanagedVersion = premanagedVersion;
-    }
-
-    public String getPremanagedScope()
-    {
-        return premanagedScope;
-    }
-
-    /**
-     * Sets the scope for this dependency before dependency management was applied (if any).
-     * 
-     * @param premanagedScope The originally declared dependency scope or {@code null} if the scope was not managed.
-     */
-    public void setPremanagedScope( String premanagedScope )
-    {
-        this.premanagedScope = premanagedScope;
-    }
-
-    public Boolean getPremanagedOptional()
-    {
-        return premanagedOptional;
-    }
-
-    /**
-     * Sets the optional flag for this dependency before dependency management was applied (if any).
-     * 
-     * @param premanagedOptional The originally declared optional flag or {@code null} if the flag was not managed.
-     */
-    public void setPremanagedOptional( Boolean premanagedOptional )
-    {
-        this.premanagedOptional = premanagedOptional;
+        this.managedBits = (byte) ( managedBits & 0x1F );
     }
 
     public List<RemoteRepository> getRepositories()
@@ -348,7 +313,7 @@ public final class DefaultDependencyNode
         {
             if ( data.isEmpty() )
             {
-                data = new HashMap<Object, Object>();
+                data = new HashMap<Object, Object>( 1, 2 ); // nodes can be numerous so let's be space conservative
             }
             data.put( key, value );
         }
