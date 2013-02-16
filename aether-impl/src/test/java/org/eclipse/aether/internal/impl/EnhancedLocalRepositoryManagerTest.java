@@ -86,11 +86,10 @@ public class EnhancedLocalRepositoryManagerTest
                                  TestFileUtils.createTempFile( "metadata" ) );
 
         basedir = TestFileUtils.createTempDir( "enhanced-repo" );
-        manager = new EnhancedLocalRepositoryManager( basedir );
+        session = TestUtils.newSession();
+        manager = new EnhancedLocalRepositoryManager( basedir, session );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
-
-        session = TestUtils.newSession();
     }
 
     @After

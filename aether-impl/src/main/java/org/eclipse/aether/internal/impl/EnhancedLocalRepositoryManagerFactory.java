@@ -46,7 +46,7 @@ public class EnhancedLocalRepositoryManagerFactory
     {
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
-            return new EnhancedLocalRepositoryManager( repository.getBasedir() ).setLogger( logger );
+            return new EnhancedLocalRepositoryManager( repository.getBasedir(), session ).setLogger( logger );
         }
         else
         {

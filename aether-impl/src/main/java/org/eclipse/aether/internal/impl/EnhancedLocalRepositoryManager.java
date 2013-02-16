@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,33 +25,47 @@ import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * These are implementation details for enhanced local repository manager, subject to change without prior notice.
- * Repositories from which a cached artifact was resolved are tracked in a properties file named <code>_remote.repositories</code>,
- * with content key as filename&gt;repo_id and value as empty string. If a file has been installed in the repository,
- * but not downloaded from a remote repository, it is tracked as empty repository id and always resolved. For example:
- * <pre>artifact-1.0.pom>=
- *artifact-1.0.jar>=
- *artifact-1.0.pom>central=
- *artifact-1.0.jar>central=
- *artifact-1.0.zip>central=
- *artifact-1.0-classifier.zip>central=
- *artifact-1.0.pom>my_repo_id=</pre>
+ * Repositories from which a cached artifact was resolved are tracked in a properties file named
+ * <code>_remote.repositories</code>, with content key as filename&gt;repo_id and value as empty string. If a file has
+ * been installed in the repository, but not downloaded from a remote repository, it is tracked as empty repository id
+ * and always resolved. For example:
+ * 
+ * <pre>
+ * artifact-1.0.pom>=
+ * artifact-1.0.jar>=
+ * artifact-1.0.pom>central=
+ * artifact-1.0.jar>central=
+ * artifact-1.0.zip>central=
+ * artifact-1.0-classifier.zip>central=
+ * artifact-1.0.pom>my_repo_id=
+ * </pre>
+ * 
  * @see EnhancedLocalRepositoryManagerFactory
  */
 class EnhancedLocalRepositoryManager
     extends SimpleLocalRepositoryManager
 {
-    private static final String TRACKING_FILENAME = "_remote.repositories";
 
     private static final String LOCAL_REPO_ID = "";
 
-    private TrackingFileManager trackingFileManager;
+    private final String trackingFilename;
 
-    public EnhancedLocalRepositoryManager( File basedir )
+    private final TrackingFileManager trackingFileManager;
+
+    public EnhancedLocalRepositoryManager( File basedir, RepositorySystemSession session )
     {
         super( basedir, "enhanced" );
+        String filename = ConfigUtils.getString( session, "", "aether.enhancedLocalRepository.trackingFilename" );
+        if ( filename.length() <= 0 || filename.contains( "/" ) || filename.contains( "\\" )
+            || filename.contains( ".." ) )
+        {
+            filename = "_remote.repositories";
+        }
+        trackingFilename = filename;
         trackingFileManager = new TrackingFileManager();
     }
 
@@ -89,7 +103,8 @@ class EnhancedLocalRepositoryManager
                 {
                     if ( props.get( getKey( file, getRepositoryKey( repository, context ) ) ) != null )
                     {
-                        // artifact downloaded from remote repository is accepted only downloaded from request repositories
+                        // artifact downloaded from remote repository is accepted only downloaded from request
+                        // repositories
                         result.setAvailable( true );
                         result.setRepository( repository );
                         break;
@@ -98,8 +113,8 @@ class EnhancedLocalRepositoryManager
                 if ( !result.isAvailable() && !isTracked( props, file ) )
                 {
                     /*
-                     * NOTE: The artifact is present but not tracked at all, for inter-op with Maven 2.x, assume the
-                     * artifact was locally installed.
+                     * NOTE: The artifact is present but not tracked at all, for inter-op with simple local repo, assume
+                     * the artifact was locally installed.
                      */
                     result.setAvailable( true );
                 }
@@ -174,7 +189,7 @@ class EnhancedLocalRepositoryManager
 
     private File getTrackingFile( File artifactFile )
     {
-        return new File( artifactFile.getParentFile(), TRACKING_FILENAME );
+        return new File( artifactFile.getParentFile(), trackingFilename );
     }
 
     private String getKey( File file, String repository )
