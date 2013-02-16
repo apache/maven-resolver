@@ -19,8 +19,8 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
  * A factory to create managers for the local repository. A local repository manager needs to keep track of artifacts
  * and metadata and manage access. When the repository system needs a repository manager for a given local repository,
  * it iterates the registered factories in descending order of their priority and calls
- * {@link #newInstance(LocalRepository)} on them. The first manager returned by a factory will then be used for the
- * local repository.
+ * {@link #newInstance(RepositorySystemSession, LocalRepository)} on them. The first manager returned by a factory will
+ * then be used for the local repository.
  */
 public interface LocalRepositoryManagerFactory
 {
