@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,7 +33,7 @@ public class Booter
         MavenRepositorySystemSession session = new MavenRepositorySystemSession();
 
         LocalRepository localRepo = new LocalRepository( "target/local-repo" );
-        session.setLocalRepositoryManager( system.newLocalRepositoryManager( localRepo ) );
+        session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
 
         session.setTransferListener( new ConsoleTransferListener() );
         session.setRepositoryListener( new ConsoleRepositoryListener() );
