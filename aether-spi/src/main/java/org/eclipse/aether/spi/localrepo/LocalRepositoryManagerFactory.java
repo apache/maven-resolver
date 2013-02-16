@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.spi.localrepo;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
@@ -26,14 +27,16 @@ public interface LocalRepositoryManagerFactory
 
     /**
      * Tries to create a repository manager for the specified local repository. The distinguishing property of a local
-     * repository is its type, which may for example denote the used directory structure.
+     * repository is its {@link LocalRepository#getContentType() type}, which may for example denote the used directory
+     * structure.
      * 
+     * @param session The repository system session from which to configure the manager, must not be {@code null}.
      * @param repository The local repository to create a manager for, must not be {@code null}.
      * @return The manager for the given repository, never {@code null}.
      * @throws NoLocalRepositoryManagerException If the factory cannot create a manager for the specified local
      *             repository.
      */
-    LocalRepositoryManager newInstance( LocalRepository repository )
+    LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException;
 
     /**

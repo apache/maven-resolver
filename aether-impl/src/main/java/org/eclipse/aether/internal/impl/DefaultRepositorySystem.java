@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -413,11 +413,12 @@ public class DefaultRepositorySystem
         return deployer.deploy( session, request );
     }
 
-    public LocalRepositoryManager newLocalRepositoryManager( LocalRepository localRepository )
+    public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
+                                                             LocalRepository localRepository )
     {
         try
         {
-            return localRepositoryProvider.newLocalRepositoryManager( localRepository );
+            return localRepositoryProvider.newLocalRepositoryManager( session, localRepository );
         }
         catch ( NoLocalRepositoryManagerException e )
         {

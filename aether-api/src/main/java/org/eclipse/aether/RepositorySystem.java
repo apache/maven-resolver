@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -185,14 +185,17 @@ public interface RepositorySystem
 
     /**
      * Creates a new manager for the specified local repository. If the specified local repository has no type, the
-     * default repository type will be used.
+     * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
+     * invocation is one of the last steps of setting up a new session, in particular any configuration properties
+     * should have been set already.
      * 
+     * @param session The repository system session from which to configure the manager, must not be {@code null}.
      * @param localRepository The local repository to create a manager for, must not be {@code null}.
      * @return The local repository manager, never {@code null}.
      * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
      *             given.
      */
-    LocalRepositoryManager newLocalRepositoryManager( LocalRepository localRepository );
+    LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session, LocalRepository localRepository );
 
     /**
      * Creates a new synchronization context.
