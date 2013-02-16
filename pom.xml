@@ -730,7 +730,9 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <execute>
+                          <runOnConfiguration>true</runOnConfiguration>
+                        </execute>
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
