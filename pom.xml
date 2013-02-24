@@ -730,13 +730,20 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute>
-                          <runOnConfiguration>true</runOnConfiguration>
-                        </execute>
+                        <ignore />
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
                 </lifecycleMappingMetadata>
+              </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <configuration>
+                <instructions>
+                  <Bundle-Version>$(replace;${project.version};-SNAPSHOT;.qualifier)</Bundle-Version>
+                </instructions>
               </configuration>
             </plugin>
           </plugins>
