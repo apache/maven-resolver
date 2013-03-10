@@ -117,6 +117,25 @@ public class DefaultRemoteRepositoryManagerTest
     }
 
     @Test
+    public void testAggregateSimpleRepos_MustKeepDisabledRecessiveRepo()
+    {
+        RemoteRepository dominant = newRepo( "a", "file://", true, "", "" ).build();
+
+        RemoteRepository recessive1 = newRepo( "b", "http://", false, "", "" ).build();
+
+        List<RemoteRepository> result =
+            manager.aggregateRepositories( session, Arrays.asList( dominant ), Arrays.asList( recessive1 ), false );
+
+        RemoteRepository recessive2 = newRepo( recessive1.getId(), "http://", true, "", "" ).build();
+
+        result = manager.aggregateRepositories( session, result, Arrays.asList( recessive2 ), false );
+
+        assertEquals( 2, result.size() );
+        assertEqual( dominant, result.get( 0 ) );
+        assertEqual( recessive1, result.get( 1 ) );
+    }
+
+    @Test
     public void testAggregateMirrorRepos_DominantMirrorComplete()
     {
         RemoteRepository dominant1 = newRepo( "a", "http://", false, "", "" ).build();
@@ -163,9 +182,9 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testMirrorAuthentication()
     {
-        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" ).build();
+        final RemoteRepository repo = newRepo( "a", "http://", true, "", "" ).build();
         final RemoteRepository mirror =
-            newRepo( "a", "http://", false, "", "" ).setAuthentication( new AuthenticationBuilder().addUsername( "test" ).build() ).build();
+            newRepo( "a", "http://", true, "", "" ).setAuthentication( new AuthenticationBuilder().addUsername( "test" ).build() ).build();
         session.setMirrorSelector( new MirrorSelector()
         {
             public RemoteRepository getMirror( RemoteRepository repository )
@@ -185,9 +204,9 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testMirrorProxy()
     {
-        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" ).build();
+        final RemoteRepository repo = newRepo( "a", "http://", true, "", "" ).build();
         final RemoteRepository mirror =
-            newRepo( "a", "http://", false, "", "" ).setProxy( new Proxy( "http", "host", 2011, null ) ).build();
+            newRepo( "a", "http://", true, "", "" ).setProxy( new Proxy( "http", "host", 2011, null ) ).build();
         session.setMirrorSelector( new MirrorSelector()
         {
             public RemoteRepository getMirror( RemoteRepository repository )
@@ -209,7 +228,7 @@ public class DefaultRemoteRepositoryManagerTest
     @Test
     public void testProxySelector()
     {
-        final RemoteRepository repo = newRepo( "a", "http://", false, "", "" ).build();
+        final RemoteRepository repo = newRepo( "a", "http://", true, "", "" ).build();
         final Proxy proxy = new Proxy( "http", "host", 2011, null );
         session.setProxySelector( new ProxySelector()
         {
