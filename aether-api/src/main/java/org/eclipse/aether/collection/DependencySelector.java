@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import org.eclipse.aether.graph.Dependency;
 /**
  * Decides what dependencies to include in the dependency graph. <em>Note:</em> For the sake of good performance during
  * dependency collection, implementations should provide a semantic {@link Object#equals(Object) equals()} method.
+ * Implementations must be stateless.
  * 
  * @see org.eclipse.aether.RepositorySystemSession#getDependencySelector()
  * @see org.eclipse.aether.RepositorySystem#collectDependencies(org.eclipse.aether.RepositorySystemSession,
