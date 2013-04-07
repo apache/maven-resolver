@@ -52,7 +52,7 @@ final class GenericVersion
 
         for ( Tokenizer tokenizer = new Tokenizer( version ); tokenizer.next(); )
         {
-            Item item = new Item( tokenizer );
+            Item item = tokenizer.toItem();
             items.add( item );
         }
 
@@ -170,6 +170,29 @@ final class GenericVersion
     static final class Tokenizer
     {
 
+        private static final Integer QUALIFIER_ALPHA = Integer.valueOf( -5 );
+
+        private static final Integer QUALIFIER_BETA = Integer.valueOf( -4 );
+
+        private static final Integer QUALIFIER_MILESTONE = Integer.valueOf( -3 );
+
+        private static final Map<String, Integer> QUALIFIERS;
+
+        static
+        {
+            QUALIFIERS = new TreeMap<String, Integer>( String.CASE_INSENSITIVE_ORDER );
+            QUALIFIERS.put( "alpha", QUALIFIER_ALPHA );
+            QUALIFIERS.put( "beta", QUALIFIER_BETA );
+            QUALIFIERS.put( "milestone", QUALIFIER_MILESTONE );
+            QUALIFIERS.put( "cr", Integer.valueOf( -2 ) );
+            QUALIFIERS.put( "rc", Integer.valueOf( -2 ) );
+            QUALIFIERS.put( "snapshot", Integer.valueOf( -1 ) );
+            QUALIFIERS.put( "ga", Integer.valueOf( 0 ) );
+            QUALIFIERS.put( "final", Integer.valueOf( 0 ) );
+            QUALIFIERS.put( "", Integer.valueOf( 0 ) );
+            QUALIFIERS.put( "sp", Integer.valueOf( 1 ) );
+        }
+
         private final String version;
 
         private int index;
@@ -183,21 +206,6 @@ final class GenericVersion
         public Tokenizer( String version )
         {
             this.version = ( version.length() > 0 ) ? version : "0";
-        }
-
-        public String getToken()
-        {
-            return token;
-        }
-
-        public boolean isNumber()
-        {
-            return number;
-        }
-
-        public boolean isTerminatedByNumber()
-        {
-            return terminatedByNumber;
         }
 
         public boolean next()
@@ -275,56 +283,19 @@ final class GenericVersion
             return String.valueOf( token );
         }
 
-    }
-
-    static final class Item
-    {
-
-        private static final int KIND_BIGINT = 3;
-
-        private static final int KIND_INT = 2;
-
-        private static final int KIND_STRING = 1;
-
-        private static final int KIND_QUALIFIER = 0;
-
-        private static final Map<String, Integer> QUALIFIERS;
-
-        static
+        public Item toItem()
         {
-            QUALIFIERS = new TreeMap<String, Integer>( String.CASE_INSENSITIVE_ORDER );
-            QUALIFIERS.put( "alpha", Integer.valueOf( -5 ) );
-            QUALIFIERS.put( "beta", Integer.valueOf( -4 ) );
-            QUALIFIERS.put( "milestone", Integer.valueOf( -3 ) );
-            QUALIFIERS.put( "cr", Integer.valueOf( -2 ) );
-            QUALIFIERS.put( "rc", Integer.valueOf( -2 ) );
-            QUALIFIERS.put( "snapshot", Integer.valueOf( -1 ) );
-            QUALIFIERS.put( "ga", Integer.valueOf( 0 ) );
-            QUALIFIERS.put( "final", Integer.valueOf( 0 ) );
-            QUALIFIERS.put( "", Integer.valueOf( 0 ) );
-            QUALIFIERS.put( "sp", Integer.valueOf( 1 ) );
-        }
-
-        private final int kind;
-
-        private final Object value;
-
-        public Item( Tokenizer tokenizer )
-        {
-            String token = tokenizer.getToken();
-            if ( tokenizer.isNumber() )
+            if ( number )
             {
                 try
                 {
                     if ( token.length() < 10 )
                     {
-                        kind = KIND_INT;
-                        value = Integer.valueOf( Integer.parseInt( token ) );
+                        return new Item( Item.KIND_INT, Integer.valueOf( Integer.parseInt( token ) ) );
                     }
                     else
                     {
-                        kind = KIND_BIGINT;
-                        value = new BigInteger( token );
+                        return new Item( Item.KIND_BIGINT, new BigInteger( token ) );
                     }
                 }
                 catch ( NumberFormatException e )
@@ -334,41 +305,78 @@ final class GenericVersion
             }
             else
             {
-                if ( tokenizer.isTerminatedByNumber() && token.length() == 1 )
+                if ( token.charAt( 0 ) == '<' )
+                {
+                    if ( "<min>".equalsIgnoreCase( token ) )
+                    {
+                        return Item.MIN;
+                    }
+                    else if ( "<max>".equalsIgnoreCase( token ) )
+                    {
+                        return Item.MAX;
+                    }
+                }
+                else if ( terminatedByNumber && token.length() == 1 )
                 {
                     switch ( token.charAt( 0 ) )
                     {
                         case 'a':
                         case 'A':
-                            token = "alpha";
-                            break;
+                            return new Item( Item.KIND_QUALIFIER, QUALIFIER_ALPHA );
                         case 'b':
                         case 'B':
-                            token = "beta";
-                            break;
+                            return new Item( Item.KIND_QUALIFIER, QUALIFIER_BETA );
                         case 'm':
                         case 'M':
-                            token = "milestone";
-                            break;
+                            return new Item( Item.KIND_QUALIFIER, QUALIFIER_MILESTONE );
                     }
                 }
                 Integer qualifier = QUALIFIERS.get( token );
                 if ( qualifier != null )
                 {
-                    kind = KIND_QUALIFIER;
-                    value = qualifier;
+                    return new Item( Item.KIND_QUALIFIER, qualifier );
                 }
                 else
                 {
-                    kind = KIND_STRING;
-                    value = token.toLowerCase( Locale.ENGLISH );
+                    return new Item( Item.KIND_STRING, token.toLowerCase( Locale.ENGLISH ) );
                 }
             }
         }
 
+    }
+
+    static final class Item
+    {
+
+        static final int KIND_MAX = 8;
+
+        static final int KIND_BIGINT = 5;
+
+        static final int KIND_INT = 4;
+
+        static final int KIND_STRING = 3;
+
+        static final int KIND_QUALIFIER = 2;
+
+        static final int KIND_MIN = 0;
+
+        static final Item MAX = new Item( KIND_MAX, "max" );
+
+        static final Item MIN = new Item( KIND_MIN, "min" );
+
+        private final int kind;
+
+        private final Object value;
+
+        public Item( int kind, Object value )
+        {
+            this.kind = kind;
+            this.value = value;
+        }
+
         public boolean isNumber()
         {
-            return kind >= KIND_INT;
+            return ( kind & KIND_QUALIFIER ) == 0; // i.e. kind != string/qualifier
         }
 
         public int compareTo( Item that )
@@ -379,6 +387,10 @@ final class GenericVersion
                 // null in this context denotes the pad item (0 or "ga")
                 switch ( kind )
                 {
+                    case KIND_MIN:
+                        rel = -1;
+                        break;
+                    case KIND_MAX:
                     case KIND_BIGINT:
                     case KIND_STRING:
                         rel = 1;
@@ -398,6 +410,9 @@ final class GenericVersion
                 {
                     switch ( kind )
                     {
+                        case KIND_MAX:
+                        case KIND_MIN:
+                            break;
                         case KIND_BIGINT:
                             rel = ( (BigInteger) value ).compareTo( (BigInteger) that.value );
                             break;
