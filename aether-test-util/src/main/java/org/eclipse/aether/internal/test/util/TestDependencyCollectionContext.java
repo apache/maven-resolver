@@ -13,25 +13,29 @@ package org.eclipse.aether.internal.test.util;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.graph.Dependency;
 
 /**
  */
-class TestDependencyCollectionContext
+final class TestDependencyCollectionContext
     implements DependencyCollectionContext
 {
 
     private final RepositorySystemSession session;
 
+    private final Artifact artifact;
+
     private final Dependency dependency;
 
     private final List<Dependency> managedDependencies;
 
-    public TestDependencyCollectionContext( RepositorySystemSession session, Dependency dependency,
+    public TestDependencyCollectionContext( RepositorySystemSession session, Artifact artifact, Dependency dependency,
                                             List<Dependency> managedDependencies )
     {
         this.session = session;
+        this.artifact = ( dependency != null ) ? dependency.getArtifact() : artifact;
         this.dependency = dependency;
         this.managedDependencies = managedDependencies;
     }
@@ -39,6 +43,11 @@ class TestDependencyCollectionContext
     public RepositorySystemSession getSession()
     {
         return session;
+    }
+
+    public Artifact getArtifact()
+    {
+        return artifact;
     }
 
     public Dependency getDependency()

@@ -254,7 +254,7 @@ public class DefaultDependencyCollector
             nodes.push( node );
 
             DefaultDependencyCollectionContext context =
-                new DefaultDependencyCollectionContext( session, root, managedDependencies );
+                new DefaultDependencyCollectionContext( session, request.getRootArtifact(), root, managedDependencies );
 
             Args args = new Args( result, session, trace, pool, nodes, context );
 

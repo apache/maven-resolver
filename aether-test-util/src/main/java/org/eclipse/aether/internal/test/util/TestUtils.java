@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.graph.Dependency;
@@ -47,7 +48,17 @@ public class TestUtils
                                                                     Dependency dependency,
                                                                     List<Dependency> managedDependencies )
     {
-        return new TestDependencyCollectionContext( session, dependency, managedDependencies );
+        return new TestDependencyCollectionContext( session, null, dependency, managedDependencies );
+    }
+
+    /**
+     * Creates a new dependency collection context.
+     */
+    public static DependencyCollectionContext newCollectionContext( RepositorySystemSession session, Artifact artifact,
+                                                                    Dependency dependency,
+                                                                    List<Dependency> managedDependencies )
+    {
+        return new TestDependencyCollectionContext( session, artifact, dependency, managedDependencies );
     }
 
     /**
