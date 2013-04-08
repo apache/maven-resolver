@@ -308,29 +308,29 @@ public class GenericVersionTest
     @Test
     public void testMinimumSegment()
     {
-        assertOrder( X_LT_Y, "1.<min>", "1.0-alpha-1" );
-        assertOrder( X_LT_Y, "1.<min>", "1.0-SNAPSHOT" );
-        assertOrder( X_LT_Y, "1.<min>", "1.0" );
-        assertOrder( X_LT_Y, "1.<min>", "1.9999999999" );
+        assertOrder( X_LT_Y, "1.min", "1.0-alpha-1" );
+        assertOrder( X_LT_Y, "1.min", "1.0-SNAPSHOT" );
+        assertOrder( X_LT_Y, "1.min", "1.0" );
+        assertOrder( X_LT_Y, "1.min", "1.9999999999" );
 
-        assertOrder( X_EQ_Y, "1.<min>", "1.<MIN>" );
+        assertOrder( X_EQ_Y, "1.min", "1.MIN" );
 
-        assertOrder( X_GT_Y, "1.<min>", "0.99999" );
-        assertOrder( X_GT_Y, "1.<min>", "0.<max>" );
+        assertOrder( X_GT_Y, "1.min", "0.99999" );
+        assertOrder( X_GT_Y, "1.min", "0.max" );
     }
 
     @Test
     public void testMaximumSegment()
     {
-        assertOrder( X_GT_Y, "1.<max>", "1.0-alpha-1" );
-        assertOrder( X_GT_Y, "1.<max>", "1.0-SNAPSHOT" );
-        assertOrder( X_GT_Y, "1.<max>", "1.0" );
-        assertOrder( X_GT_Y, "1.<max>", "1.9999999999" );
+        assertOrder( X_GT_Y, "1.max", "1.0-alpha-1" );
+        assertOrder( X_GT_Y, "1.max", "1.0-SNAPSHOT" );
+        assertOrder( X_GT_Y, "1.max", "1.0" );
+        assertOrder( X_GT_Y, "1.max", "1.9999999999" );
 
-        assertOrder( X_EQ_Y, "1.<max>", "1.<MAX>" );
+        assertOrder( X_EQ_Y, "1.max", "1.MAX" );
 
-        assertOrder( X_LT_Y, "1.<max>", "2.0-alpha-1" );
-        assertOrder( X_LT_Y, "1.<max>", "2.<min>" );
+        assertOrder( X_LT_Y, "1.max", "2.0-alpha-1" );
+        assertOrder( X_LT_Y, "1.max", "2.min" );
     }
 
 }

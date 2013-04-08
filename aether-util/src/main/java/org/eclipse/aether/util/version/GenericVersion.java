@@ -305,18 +305,18 @@ final class GenericVersion
             }
             else
             {
-                if ( token.charAt( 0 ) == '<' )
+                if ( index >= version.length() )
                 {
-                    if ( "<min>".equalsIgnoreCase( token ) )
+                    if ( "min".equalsIgnoreCase( token ) )
                     {
                         return Item.MIN;
                     }
-                    else if ( "<max>".equalsIgnoreCase( token ) )
+                    else if ( "max".equalsIgnoreCase( token ) )
                     {
                         return Item.MAX;
                     }
                 }
-                else if ( terminatedByNumber && token.length() == 1 )
+                if ( terminatedByNumber && token.length() == 1 )
                 {
                     switch ( token.charAt( 0 ) )
                     {
