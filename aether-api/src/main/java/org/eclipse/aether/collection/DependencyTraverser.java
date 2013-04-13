@@ -13,9 +13,9 @@ package org.eclipse.aether.collection;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * Decides whether the dependencies of a dependency node should be traversed as well. <em>Note:</em> For the sake of
- * good performance during dependency collection, implementations should provide a semantic
- * {@link Object#equals(Object) equals()} method. Implementations must be stateless.
+ * Decides whether the dependencies of a dependency node should be traversed as well. Implementations must be stateless.
+ * <em>Note:</em> This hook is called from a hot spot and therefore implementations should pay attention to performance.
+ * Among others, implementations should provide a semantic {@link Object#equals(Object) equals()} method.
  * 
  * @see org.eclipse.aether.RepositorySystemSession#getDependencyTraverser()
  * @see org.eclipse.aether.RepositorySystem#collectDependencies(org.eclipse.aether.RepositorySystemSession,
