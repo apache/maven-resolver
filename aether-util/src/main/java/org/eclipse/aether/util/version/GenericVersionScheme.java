@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,20 +21,28 @@ import org.eclipse.aether.version.VersionScheme;
 
 /**
  * A version scheme using a generic version syntax and common sense sorting.
- * 
- * <p>This scheme accepts versions of any form,
- * interpreting a version as a sequence of numeric and alphabetic components. The characters '-', '_', and '.' as well
- * as the mere transitions from digit to letter and vice versa delimit the version components. Delimiters are treated as
- * equivalent.</p>
- * <p>Numeric components are compared mathematically, alphabetic components are compared lexicographically and
+ * <p>
+ * This scheme accepts versions of any form, interpreting a version as a sequence of numeric and alphabetic segments.
+ * The characters '-', '_', and '.' as well as the mere transitions from digit to letter and vice versa delimit the
+ * version segments. Delimiters are treated as equivalent.
+ * </p>
+ * <p>
+ * Numeric segments are compared mathematically, alphabetic segments are compared lexicographically and
  * case-insensitively. However, the following qualifier strings are recognized and treated specially: "alpha" = "a" &lt;
  * "beta" = "b" &lt; "milestone" = "m" &lt; "cr" = "rc" &lt; "snapshot" &lt; "final" = "ga" &lt; "sp". All of those
- * well-known qualifiers are considered
- * smaller/older than other strings. An empty component/string is equivalent to 0.</p>
- * <p>Numbers and strings are considered
- * incomparable against each other. Where version components of different kind would collide, comparison will instead
- * assume that the previous components are padded with 0 or "ga", respectively, until the kind mismatch is resolved,
- * i.e. 1-alpha = 1.0.0-alpha &lt; 1.0.1-ga = 1.0.1.</p>
+ * well-known qualifiers are considered smaller/older than other strings. An empty segment/string is equivalent to 0.
+ * </p>
+ * <p>
+ * In addition to the above mentioned qualifiers, the tokens "min" and "max" may be used as final version segment to
+ * denote the smallest/greatest version having a given prefix. For example, "1.2.min" denotes the smallest version in
+ * the 1.2 line, "1.2.max" denotes the greatest version in the 1.2 line. A version range of the form "[M.N.*]" is short
+ * for "[M.N.min, M.N.max]".
+ * </p>
+ * <p>
+ * Numbers and strings are considered incomparable against each other. Where version segments of different kind would
+ * collide, comparison will instead assume that the previous segments are padded with trailing 0 or "ga" segments,
+ * respectively, until the kind mismatch is resolved, e.g. "1-alpha" = "1.0.0-alpha" &lt; "1.0.1-ga" = "1.0.1".
+ * </p>
  */
 public final class GenericVersionScheme
     implements VersionScheme
