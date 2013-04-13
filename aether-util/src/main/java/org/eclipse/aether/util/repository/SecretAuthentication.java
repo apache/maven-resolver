@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ final class SecretAuthentication
 
     static
     {
-        KEYS = new Object[8];
+        KEYS = new Object[16];
         for ( int i = 0; i < KEYS.length; i++ )
         {
             KEYS[i] = new Object();
@@ -78,7 +78,7 @@ final class SecretAuthentication
             {
                 int key = KEYS[( i >> 1 ) % KEYS.length].hashCode();
                 key ^= mask;
-                chars[i] ^= ( ( i & 1 ) == 0 ) ? ( key & 0xFF ) : ( key >>> 16 );
+                chars[i] ^= ( ( i & 1 ) == 0 ) ? ( key & 0xFFFF ) : ( key >>> 16 );
             }
         }
         return chars;
