@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -79,7 +79,17 @@ final class GenericVersionRange
                     + ", single version must be surrounded by []" );
             }
 
-            lowerBound = upperBound = new GenericVersion( process.trim() );
+            String version = process.trim();
+            if ( version.endsWith( ".*" ) )
+            {
+                String prefix = version.substring( 0, version.length() - 1 );
+                lowerBound = parse( prefix + "min" );
+                upperBound = parse( prefix + "max" );
+            }
+            else
+            {
+                lowerBound = upperBound = parse( version );
+            }
         }
         else
         {
@@ -93,8 +103,8 @@ final class GenericVersionRange
                     + ", bounds may not contain additional ','" );
             }
 
-            lowerBound = parsedLowerBound.length() > 0 ? new GenericVersion( parsedLowerBound ) : null;
-            upperBound = parsedUpperBound.length() > 0 ? new GenericVersion( parsedUpperBound ) : null;
+            lowerBound = parsedLowerBound.length() > 0 ? parse( parsedLowerBound ) : null;
+            upperBound = parsedUpperBound.length() > 0 ? parse( parsedUpperBound ) : null;
 
             if ( upperBound != null && lowerBound != null )
             {
@@ -108,6 +118,11 @@ final class GenericVersionRange
 
         this.lowerBound = ( lowerBound != null ) ? new Bound( lowerBound, lowerBoundInclusive ) : null;
         this.upperBound = ( upperBound != null ) ? new Bound( upperBound, upperBoundInclusive ) : null;
+    }
+
+    private Version parse( String version )
+    {
+        return new GenericVersion( version );
     }
 
     public Bound getLowerBound()

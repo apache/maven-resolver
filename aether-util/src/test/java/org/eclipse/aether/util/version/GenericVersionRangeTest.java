@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -112,6 +112,18 @@ public class GenericVersionRangeTest
 
         range = parseValid( "[1,1]" );
         assertContains( range, "1" );
+        assertEquals( range, parseValid( range.toString() ) );
+    }
+
+    @Test
+    public void testSingleWildcardVersion()
+    {
+        VersionRange range = parseValid( "[1.2.*]" );
+        assertContains( range, "1.2-alpha-1" );
+        assertContains( range, "1.2-SNAPSHOT" );
+        assertContains( range, "1.2" );
+        assertContains( range, "1.2.9999999" );
+        assertNotContains( range, "1.3-rc-1" );
         assertEquals( range, parseValid( range.toString() ) );
     }
 
