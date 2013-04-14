@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.util.graph.selector;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -26,7 +27,7 @@ public final class AndDependencySelector
     implements DependencySelector
 {
 
-    private final Set<DependencySelector> selectors;
+    private final Set<? extends DependencySelector> selectors;
 
     private int hashCode;
 
@@ -39,8 +40,7 @@ public final class AndDependencySelector
     {
         if ( selectors != null && selectors.length > 0 )
         {
-            this.selectors = new LinkedHashSet<DependencySelector>();
-            Collections.addAll( this.selectors, selectors );
+            this.selectors = new LinkedHashSet<DependencySelector>( Arrays.asList( selectors ) );
         }
         else
         {
@@ -53,7 +53,7 @@ public final class AndDependencySelector
      * 
      * @param selectors The selectors to combine, may be {@code null}.
      */
-    public AndDependencySelector( Collection<DependencySelector> selectors )
+    public AndDependencySelector( Collection<? extends DependencySelector> selectors )
     {
         if ( selectors != null && !selectors.isEmpty() )
         {

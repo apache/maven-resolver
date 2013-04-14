@@ -35,9 +35,9 @@ public final class DefaultDependencyNode
 
     private Artifact artifact;
 
-    private List<Artifact> relocations;
+    private List<? extends Artifact> relocations;
 
-    private Collection<Artifact> aliases;
+    private Collection<? extends Artifact> aliases;
 
     private VersionConstraint versionConstraint;
 
@@ -102,7 +102,7 @@ public final class DefaultDependencyNode
         setRepositories( node.getRepositories() );
         setVersion( node.getVersion() );
         setVersionConstraint( node.getVersionConstraint() );
-        Map<Object, Object> data = node.getData();
+        Map<?, ?> data = node.getData();
         setData( data.isEmpty() ? null : new HashMap<Object, Object>( data ) );
     }
 
@@ -143,7 +143,7 @@ public final class DefaultDependencyNode
         this.artifact = dependency.getArtifact();
     }
 
-    public List<Artifact> getRelocations()
+    public List<? extends Artifact> getRelocations()
     {
         return relocations;
     }
@@ -153,7 +153,7 @@ public final class DefaultDependencyNode
      * 
      * @param relocations The sequence of relocations, may be {@code null}.
      */
-    public void setRelocations( List<Artifact> relocations )
+    public void setRelocations( List<? extends Artifact> relocations )
     {
         if ( relocations == null || relocations.isEmpty() )
         {
@@ -165,7 +165,7 @@ public final class DefaultDependencyNode
         }
     }
 
-    public Collection<Artifact> getAliases()
+    public Collection<? extends Artifact> getAliases()
     {
         return aliases;
     }
@@ -175,7 +175,7 @@ public final class DefaultDependencyNode
      * 
      * @param aliases The known aliases, may be {@code null}.
      */
-    public void setAliases( Collection<Artifact> aliases )
+    public void setAliases( Collection<? extends Artifact> aliases )
     {
         if ( aliases == null || aliases.isEmpty() )
         {

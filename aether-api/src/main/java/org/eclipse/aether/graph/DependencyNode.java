@@ -116,7 +116,7 @@ public interface DependencyNode
      * 
      * @return The (read-only) sequence of relocations, never {@code null}.
      */
-    List<Artifact> getRelocations();
+    List<? extends Artifact> getRelocations();
 
     /**
      * Gets the known aliases for this dependency's artifact. An alias can be used to mark a patched rebuild of some
@@ -125,7 +125,7 @@ public interface DependencyNode
      * 
      * @return The (read-only) set of known aliases, never {@code null}.
      */
-    Collection<Artifact> getAliases();
+    Collection<? extends Artifact> getAliases();
 
     /**
      * Gets the version constraint that was parsed from the dependency's version declaration.
@@ -194,7 +194,7 @@ public interface DependencyNode
      * 
      * @return The (read-only) key-value mappings, never {@code null}.
      */
-    Map<Object, Object> getData();
+    Map<?, ?> getData();
 
     /**
      * Sets the custom data associated with this dependency node.

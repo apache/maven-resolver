@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,7 +40,7 @@ final class ChainedAuthentication
         }
     }
 
-    public ChainedAuthentication( Collection<Authentication> authentications )
+    public ChainedAuthentication( Collection<? extends Authentication> authentications )
     {
         if ( authentications != null && !authentications.isEmpty() )
         {

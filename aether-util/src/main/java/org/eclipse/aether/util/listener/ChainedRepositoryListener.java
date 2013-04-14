@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,7 +69,7 @@ public final class ChainedRepositoryListener
      * 
      * @param listeners The listeners to delegate to, may be {@code null} or empty.
      */
-    public ChainedRepositoryListener( Collection<RepositoryListener> listeners )
+    public ChainedRepositoryListener( Collection<? extends RepositoryListener> listeners )
     {
         add( listeners );
     }
@@ -79,7 +79,7 @@ public final class ChainedRepositoryListener
      * 
      * @param listeners The listeners to add, may be {@code null} or empty.
      */
-    public void add( Collection<RepositoryListener> listeners )
+    public void add( Collection<? extends RepositoryListener> listeners )
     {
         if ( listeners != null )
         {

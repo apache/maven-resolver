@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,14 +40,15 @@ final class Utils
 
     };
 
-    public static List<MetadataGeneratorFactory> sortMetadataGeneratorFactories( Collection<MetadataGeneratorFactory> factories )
+    public static List<MetadataGeneratorFactory> sortMetadataGeneratorFactories( Collection<? extends MetadataGeneratorFactory> factories )
     {
         List<MetadataGeneratorFactory> result = new ArrayList<MetadataGeneratorFactory>( factories );
         Collections.sort( result, COMPARATOR );
         return result;
     }
 
-    public static List<Metadata> prepareMetadata( List<MetadataGenerator> generators, List<Artifact> artifacts )
+    public static List<Metadata> prepareMetadata( List<? extends MetadataGenerator> generators,
+                                                  List<? extends Artifact> artifacts )
     {
         List<Metadata> metadatas = new ArrayList<Metadata>();
 
@@ -59,7 +60,8 @@ final class Utils
         return metadatas;
     }
 
-    public static List<Metadata> finishMetadata( List<MetadataGenerator> generators, List<Artifact> artifacts )
+    public static List<Metadata> finishMetadata( List<? extends MetadataGenerator> generators,
+                                                 List<? extends Artifact> artifacts )
     {
         List<Metadata> metadatas = new ArrayList<Metadata>();
 

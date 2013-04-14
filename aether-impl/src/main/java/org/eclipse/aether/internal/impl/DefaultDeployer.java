@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -294,7 +294,7 @@ public class DefaultDeployer
 
         try
         {
-            List<MetadataGenerator> generators = getMetadataGenerators( session, request );
+            List<? extends MetadataGenerator> generators = getMetadataGenerators( session, request );
 
             List<ArtifactUpload> artifactUploads = new ArrayList<ArtifactUpload>();
             List<MetadataUpload> metadataUploads = new ArrayList<MetadataUpload>();
@@ -379,7 +379,8 @@ public class DefaultDeployer
         return result;
     }
 
-    private List<MetadataGenerator> getMetadataGenerators( RepositorySystemSession session, DeployRequest request )
+    private List<? extends MetadataGenerator> getMetadataGenerators( RepositorySystemSession session,
+                                                                     DeployRequest request )
     {
         List<MetadataGeneratorFactory> factories = Utils.sortMetadataGeneratorFactories( this.metadataFactories );
 

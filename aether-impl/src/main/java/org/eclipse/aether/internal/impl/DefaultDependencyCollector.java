@@ -174,7 +174,7 @@ public class DefaultDependencyCollector
         DefaultDependencyNode node = null;
         if ( root != null )
         {
-            List<Version> versions;
+            List<? extends Version> versions;
             VersionRangeResult rangeResult;
             try
             {
@@ -405,7 +405,7 @@ public class DefaultDependencyCollector
 
                 boolean traverse = !noDescriptor && depTraverser.traverseDependency( dependency );
 
-                List<Version> versions;
+                List<? extends Version> versions;
                 VersionRangeResult rangeResult;
                 try
                 {
@@ -638,8 +638,8 @@ public class DefaultDependencyCollector
         return repositories;
     }
 
-    private List<Version> filterVersions( Dependency dependency, VersionRangeResult rangeResult,
-                                          VersionFilter verFilter, DefaultVersionFilterContext verContext )
+    private List<? extends Version> filterVersions( Dependency dependency, VersionRangeResult rangeResult,
+                                                    VersionFilter verFilter, DefaultVersionFilterContext verContext )
         throws VersionRangeResolutionException
     {
         if ( rangeResult.getVersions().isEmpty() )
@@ -648,7 +648,7 @@ public class DefaultDependencyCollector
                 + dependency.getArtifact() + " within specified range" );
         }
 
-        List<Version> versions;
+        List<? extends Version> versions;
         if ( verFilter != null && rangeResult.getVersionConstraint().getRange() != null )
         {
             verContext.set( dependency, rangeResult );

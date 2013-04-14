@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,9 +30,9 @@ public class UnsolvableVersionConflictException
 
     private final transient Collection<String> versions;
 
-    private final transient Collection<List<DependencyNode>> paths;
+    private final transient Collection<? extends List<? extends DependencyNode>> paths;
 
-    public UnsolvableVersionConflictException( Collection<List<DependencyNode>> paths )
+    public UnsolvableVersionConflictException( Collection<? extends List<? extends DependencyNode>> paths )
     {
         super( "Could not resolve version conflict among " + toPaths( paths ) );
         if ( paths == null )
@@ -44,7 +44,7 @@ public class UnsolvableVersionConflictException
         {
             this.paths = paths;
             this.versions = new LinkedHashSet<String>();
-            for ( List<DependencyNode> path : paths )
+            for ( List<? extends DependencyNode> path : paths )
             {
                 VersionConstraint constraint = path.get( path.size() - 1 ).getVersionConstraint();
                 if ( constraint != null && constraint.getRange() != null )
@@ -55,7 +55,7 @@ public class UnsolvableVersionConflictException
         }
     }
 
-    private static String toPaths( Collection<List<DependencyNode>> paths )
+    private static String toPaths( Collection<? extends List<? extends DependencyNode>> paths )
     {
         String result = "";
 
@@ -63,7 +63,7 @@ public class UnsolvableVersionConflictException
         {
             Collection<String> strings = new LinkedHashSet<String>();
 
-            for ( List<DependencyNode> path : paths )
+            for ( List<? extends DependencyNode> path : paths )
             {
                 strings.add( toPath( path ) );
             }
@@ -74,11 +74,11 @@ public class UnsolvableVersionConflictException
         return result;
     }
 
-    private static String toPath( List<DependencyNode> path )
+    private static String toPath( List<? extends DependencyNode> path )
     {
         StringBuilder buffer = new StringBuilder( 256 );
 
-        for ( Iterator<DependencyNode> it = path.iterator(); it.hasNext(); )
+        for ( Iterator<? extends DependencyNode> it = path.iterator(); it.hasNext(); )
         {
             DependencyNode node = it.next();
             if ( node.getDependency() == null )
@@ -110,7 +110,7 @@ public class UnsolvableVersionConflictException
      * 
      * @return The (read-only) paths leading to the conflicting dependencies, never {@code null}.
      */
-    public Collection<List<DependencyNode>> getPaths()
+    public Collection<? extends List<? extends DependencyNode>> getPaths()
     {
         return paths;
     }
