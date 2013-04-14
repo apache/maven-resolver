@@ -49,6 +49,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -439,6 +440,16 @@ public class DefaultDependencyCollectorTest
         assertEquals( "ver", DependencyManagerUtils.getPremanagedVersion( node ) );
         assertEquals( "compile", DependencyManagerUtils.getPremanagedScope( node ) );
         assertEquals( Boolean.FALSE, DependencyManagerUtils.getPremanagedOptional( node ) );
+    }
+
+    @Test
+    public void testVersionFilter()
+        throws Exception
+    {
+        session.setVersionFilter( new HighestVersionFilter() );
+        CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:1" ) );
+        CollectResult result = collector.collectDependencies( session, request );
+        assertEquals( 1, result.getRoot().getChildren().size() );
     }
 
     static class TestDependencyManager

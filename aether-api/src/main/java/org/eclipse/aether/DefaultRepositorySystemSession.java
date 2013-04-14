@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,7 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.Authentication;
@@ -97,6 +98,8 @@ public final class DefaultRepositorySystemSession
 
     private DependencySelector dependencySelector;
 
+    private VersionFilter versionFilter;
+
     private DependencyGraphTransformer dependencyGraphTransformer;
 
     private SessionData data;
@@ -160,6 +163,7 @@ public final class DefaultRepositorySystemSession
         setDependencyTraverser( session.getDependencyTraverser() );
         setDependencyManager( session.getDependencyManager() );
         setDependencySelector( session.getDependencySelector() );
+        setVersionFilter( session.getVersionFilter() );
         setDependencyGraphTransformer( session.getDependencyGraphTransformer() );
         setData( session.getData() );
         setCache( session.getCache() );
@@ -680,6 +684,24 @@ public final class DefaultRepositorySystemSession
         {
             this.dependencySelector = NullDependencySelector.INSTANCE;
         }
+        return this;
+    }
+
+    public VersionFilter getVersionFilter()
+    {
+        return versionFilter;
+    }
+
+    /**
+     * Sets the version filter to use for building dependency graphs.
+     * 
+     * @param versionFilter The version filter to use for building dependency graphs, may be {@code null} to not filter
+     *            versions.
+     * @return This session for chaining, never {@code null}.
+     */
+    public DefaultRepositorySystemSession setVersionFilter( VersionFilter versionFilter )
+    {
+        this.versionFilter = versionFilter;
         return this;
     }
 

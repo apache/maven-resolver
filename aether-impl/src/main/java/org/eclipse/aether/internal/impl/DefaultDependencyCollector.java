@@ -37,6 +37,7 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -160,6 +161,7 @@ public class DefaultDependencyCollector
         DependencySelector depSelector = session.getDependencySelector();
         DependencyManager depManager = session.getDependencyManager();
         DependencyTraverser depTraverser = session.getDependencyTraverser();
+        VersionFilter verFilter = session.getVersionFilter();
 
         Dependency root = request.getRoot();
         List<RemoteRepository> repositories = request.getRepositories();
@@ -172,6 +174,7 @@ public class DefaultDependencyCollector
         DefaultDependencyNode node = null;
         if ( root != null )
         {
+            List<Version> versions;
             VersionRangeResult rangeResult;
             try
             {
@@ -179,12 +182,7 @@ public class DefaultDependencyCollector
                     new VersionRangeRequest( root.getArtifact(), request.getRepositories(), request.getRequestContext() );
                 rangeRequest.setTrace( trace );
                 rangeResult = versionRangeResolver.resolveVersionRange( session, rangeRequest );
-
-                if ( rangeResult.getVersions().isEmpty() )
-                {
-                    throw new VersionRangeResolutionException( rangeResult, "No versions available for "
-                        + root.getArtifact() + " within specified range" );
-                }
+                versions = filterVersions( root, rangeResult, verFilter, new DefaultVersionFilterContext( session ) );
             }
             catch ( VersionRangeResolutionException e )
             {
@@ -192,7 +190,7 @@ public class DefaultDependencyCollector
                 throw new DependencyCollectionException( result, e.getMessage() );
             }
 
-            Version version = rangeResult.getVersions().get( rangeResult.getVersions().size() - 1 );
+            Version version = versions.get( versions.size() - 1 );
             root = root.setArtifact( root.getArtifact().setVersion( version.toString() ) );
 
             ArtifactDescriptorResult descriptorResult;
@@ -256,10 +254,13 @@ public class DefaultDependencyCollector
             DefaultDependencyCollectionContext context =
                 new DefaultDependencyCollectionContext( session, request.getRootArtifact(), root, managedDependencies );
 
-            Args args = new Args( result, session, trace, pool, nodes, context );
+            DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
+
+            Args args = new Args( result, session, trace, pool, nodes, context, versionContext );
 
             process( args, dependencies, repositories, depSelector.deriveChildSelector( context ),
-                     depManager.deriveChildManager( context ), depTraverser.deriveChildTraverser( context ) );
+                     depManager.deriveChildManager( context ), depTraverser.deriveChildTraverser( context ),
+                     ( verFilter != null ) ? verFilter.deriveChildFilter( context ) : null );
 
             errorPath = args.errorPath;
         }
@@ -343,7 +344,8 @@ public class DefaultDependencyCollector
     }
 
     private void process( final Args args, List<Dependency> dependencies, List<RemoteRepository> repositories,
-                          DependencySelector depSelector, DependencyManager depManager, DependencyTraverser depTraverser )
+                          DependencySelector depSelector, DependencyManager depManager,
+                          DependencyTraverser depTraverser, VersionFilter verFilter )
     {
         nextDependency: for ( Dependency dependency : dependencies )
         {
@@ -403,6 +405,7 @@ public class DefaultDependencyCollector
 
                 boolean traverse = !noDescriptor && depTraverser.traverseDependency( dependency );
 
+                List<Version> versions;
                 VersionRangeResult rangeResult;
                 try
                 {
@@ -420,11 +423,7 @@ public class DefaultDependencyCollector
                         args.pool.putConstraint( key, rangeResult );
                     }
 
-                    if ( rangeResult.getVersions().isEmpty() )
-                    {
-                        throw new VersionRangeResolutionException( rangeResult, "No versions available for "
-                            + dependency.getArtifact() + " within specified range" );
-                    }
+                    versions = filterVersions( dependency, rangeResult, verFilter, args.versionContext );
                 }
                 catch ( VersionRangeResolutionException e )
                 {
@@ -432,7 +431,6 @@ public class DefaultDependencyCollector
                     continue nextDependency;
                 }
 
-                List<Version> versions = rangeResult.getVersions();
                 for ( Version version : versions )
                 {
                     Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
@@ -547,6 +545,8 @@ public class DefaultDependencyCollector
                         DependencySelector childSelector = depSelector.deriveChildSelector( context );
                         DependencyManager childManager = depManager.deriveChildManager( context );
                         DependencyTraverser childTraverser = depTraverser.deriveChildTraverser( context );
+                        VersionFilter childFilter =
+                            ( verFilter != null ) ? verFilter.deriveChildFilter( context ) : null;
 
                         List<RemoteRepository> childRepos = null;
                         if ( args.ignoreRepos )
@@ -561,7 +561,8 @@ public class DefaultDependencyCollector
                         }
 
                         Object key =
-                            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser );
+                            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser,
+                                             childFilter );
 
                         List<DependencyNode> children = args.pool.getChildren( key );
                         if ( children == null )
@@ -571,7 +572,7 @@ public class DefaultDependencyCollector
                             args.nodes.push( child );
 
                             process( args, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
-                                     childTraverser );
+                                     childTraverser, childFilter );
 
                             args.nodes.pop();
                         }
@@ -637,6 +638,43 @@ public class DefaultDependencyCollector
         return repositories;
     }
 
+    private List<Version> filterVersions( Dependency dependency, VersionRangeResult rangeResult,
+                                          VersionFilter verFilter, DefaultVersionFilterContext verContext )
+        throws VersionRangeResolutionException
+    {
+        if ( rangeResult.getVersions().isEmpty() )
+        {
+            throw new VersionRangeResolutionException( rangeResult, "No versions available for "
+                + dependency.getArtifact() + " within specified range" );
+        }
+
+        List<Version> versions;
+        if ( verFilter != null && rangeResult.getVersionConstraint().getRange() != null )
+        {
+            verContext.set( dependency, rangeResult );
+            try
+            {
+                verFilter.filterVersions( verContext );
+            }
+            catch ( RepositoryException e )
+            {
+                throw new VersionRangeResolutionException( rangeResult, "Failed to filter versions for "
+                    + dependency.getArtifact() + ": " + e.getMessage(), e );
+            }
+            versions = verContext.get();
+            if ( versions.isEmpty() )
+            {
+                throw new VersionRangeResolutionException( rangeResult, "No acceptable versions for "
+                    + dependency.getArtifact() + ": " + rangeResult.getVersions() );
+            }
+        }
+        else
+        {
+            versions = rangeResult.getVersions();
+        }
+        return versions;
+    }
+
     static class Args
     {
 
@@ -658,10 +696,13 @@ public class DefaultDependencyCollector
 
         final DefaultDependencyCollectionContext collectionContext;
 
+        final DefaultVersionFilterContext versionContext;
+
         String errorPath;
 
         public Args( CollectResult result, RepositorySystemSession session, RequestTrace trace, DataPool pool,
-                     NodeStack nodes, DefaultDependencyCollectionContext collectionContext )
+                     NodeStack nodes, DefaultDependencyCollectionContext collectionContext,
+                     DefaultVersionFilterContext versionContext )
         {
             this.result = result;
             this.session = session;
@@ -672,6 +713,7 @@ public class DefaultDependencyCollector
             this.pool = pool;
             this.nodes = nodes;
             this.collectionContext = collectionContext;
+            this.versionContext = versionContext;
         }
 
     }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,6 +17,7 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -214,6 +215,13 @@ public interface RepositorySystemSession
      * @return The dependency selector to use for building dependency graphs, never {@code null}.
      */
     DependencySelector getDependencySelector();
+
+    /**
+     * Gets the version filter to use for building dependency graphs.
+     * 
+     * @return The version filter to use for building dependency graphs or {@code null} if versions aren't filtered.
+     */
+    VersionFilter getVersionFilter();
 
     /**
      * Gets the dependency graph transformer to use for building dependency graphs.

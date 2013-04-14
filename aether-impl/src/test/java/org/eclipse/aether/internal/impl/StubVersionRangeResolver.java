@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import java.util.Arrays;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.resolution.VersionRangeRequest;
@@ -20,6 +18,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
+import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionScheme;
 
 /**
@@ -33,24 +32,29 @@ public class StubVersionRangeResolver
     public VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
         throws VersionRangeResolutionException
     {
-        String version = request.getArtifact().getVersion();
-        boolean range = false;
-
-        if ( version.matches( "\\[[^,]+,.*" ) )
-        {
-            version = version.substring( 1, version.indexOf( ',', 1 ) );
-            range = true;
-        }
-
         VersionRangeResult result = new VersionRangeResult( request );
         try
         {
-            Version ver = versionScheme.parseVersion( version );
-            result.setVersionConstraint( versionScheme.parseVersionConstraint( request.getArtifact().getVersion() ) );
-            result.setVersions( Arrays.asList( (Version) ver ) );
-            if ( range && !request.getRepositories().isEmpty() )
+            VersionConstraint constraint = versionScheme.parseVersionConstraint( request.getArtifact().getVersion() );
+            result.setVersionConstraint( constraint );
+            if ( constraint.getRange() == null )
             {
-                result.setRepository( ver, request.getRepositories().get( 0 ) );
+                result.addVersion( constraint.getVersion() );
+            }
+            else
+            {
+                for ( int i = 1; i < 10; i++ )
+                {
+                    Version ver = versionScheme.parseVersion( Integer.toString( i ) );
+                    if ( constraint.containsVersion( ver ) )
+                    {
+                        result.addVersion( ver );
+                        if ( !request.getRepositories().isEmpty() )
+                        {
+                            result.setRepository( ver, request.getRepositories().get( 0 ) );
+                        }
+                    }
+                }
             }
         }
         catch ( InvalidVersionSpecificationException e )

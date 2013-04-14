@@ -17,6 +17,7 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -154,6 +155,11 @@ public abstract class AbstractForwardingRepositorySystemSession
     public DependencySelector getDependencySelector()
     {
         return getSession().getDependencySelector();
+    }
+
+    public VersionFilter getVersionFilter()
+    {
+        return getSession().getVersionFilter();
     }
 
     public DependencyGraphTransformer getDependencyGraphTransformer()

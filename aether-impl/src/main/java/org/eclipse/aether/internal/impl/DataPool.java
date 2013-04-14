@@ -23,6 +23,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -155,9 +156,9 @@ final class DataPool
     }
 
     public Object toKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
-                         DependencyManager manager, DependencyTraverser traverser )
+                         DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
     {
-        return new GraphKey( artifact, repositories, selector, manager, traverser );
+        return new GraphKey( artifact, repositories, selector, manager, traverser, filter );
     }
 
     public List<DependencyNode> getChildren( Object key )
@@ -367,16 +368,19 @@ final class DataPool
 
         private final DependencyTraverser traverser;
 
+        private final VersionFilter filter;
+
         private final int hashCode;
 
         public GraphKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
-                         DependencyManager manager, DependencyTraverser traverser )
+                         DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
         {
             this.artifact = artifact;
             this.repositories = repositories;
             this.selector = selector;
             this.manager = manager;
             this.traverser = traverser;
+            this.filter = filter;
 
             int hash = 17;
             hash = hash * 31 + artifact.hashCode();
@@ -384,6 +388,7 @@ final class DataPool
             hash = hash * 31 + selector.hashCode();
             hash = hash * 31 + manager.hashCode();
             hash = hash * 31 + traverser.hashCode();
+            hash = hash * 31 + hash( filter );
             hashCode = hash;
         }
 
@@ -401,13 +406,23 @@ final class DataPool
             GraphKey that = (GraphKey) obj;
             return artifact.equals( that.artifact ) && repositories.equals( that.repositories )
                 && selector.equals( that.selector ) && manager.equals( that.manager )
-                && traverser.equals( that.traverser );
+                && traverser.equals( that.traverser ) && eq( filter, that.filter );
         }
 
         @Override
         public int hashCode()
         {
             return hashCode;
+        }
+
+        private static <T> boolean eq( T o1, T o2 )
+        {
+            return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
+        }
+
+        private static int hash( Object o )
+        {
+            return ( o != null ) ? o.hashCode() : 0;
         }
 
     }
