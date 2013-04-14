@@ -27,7 +27,7 @@ public final class SimpleOptionalitySelector
 {
 
     /**
-     * Creates a new instance of this scope selector.
+     * Creates a new instance of this optionality selector.
      */
     public SimpleOptionalitySelector()
     {
