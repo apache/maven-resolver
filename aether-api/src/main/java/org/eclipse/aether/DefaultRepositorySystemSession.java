@@ -701,6 +701,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setVersionFilter( VersionFilter versionFilter )
     {
+        failIfReadOnly();
         this.versionFilter = versionFilter;
         return this;
     }
