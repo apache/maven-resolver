@@ -38,7 +38,8 @@ public interface DependencySelector
      * implementors are strongly advised to simply return the current instance if nothing changed to help save memory.
      * 
      * @param context The dependency collection context, must not be {@code null}.
-     * @return The dependency selector for the target node, must not be {@code null}.
+     * @return The dependency selector for the target node or {@code null} if dependencies should be unconditionally
+     *         included in the sub graph.
      */
     DependencySelector deriveChildSelector( DependencyCollectionContext context );
 

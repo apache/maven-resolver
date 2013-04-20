@@ -16,16 +16,11 @@ import java.util.Map;
 
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
-import org.eclipse.aether.collection.DependencyCollectionContext;
-import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
-import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
@@ -123,10 +118,6 @@ public final class DefaultRepositorySystemSession
         proxySelector = NullProxySelector.INSTANCE;
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
-        dependencyTraverser = NullDependencyTraverser.INSTANCE;
-        dependencyManager = NullDependencyManager.INSTANCE;
-        dependencySelector = NullDependencySelector.INSTANCE;
-        dependencyGraphTransformer = NullDependencyGraphTransformer.INSTANCE;
         data = new DefaultSessionData();
     }
 
@@ -636,10 +627,6 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.dependencyTraverser = dependencyTraverser;
-        if ( this.dependencyTraverser == null )
-        {
-            this.dependencyTraverser = NullDependencyTraverser.INSTANCE;
-        }
         return this;
     }
 
@@ -658,10 +645,6 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.dependencyManager = dependencyManager;
-        if ( this.dependencyManager == null )
-        {
-            this.dependencyManager = NullDependencyManager.INSTANCE;
-        }
         return this;
     }
 
@@ -680,10 +663,6 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.dependencySelector = dependencySelector;
-        if ( this.dependencySelector == null )
-        {
-            this.dependencySelector = NullDependencySelector.INSTANCE;
-        }
         return this;
     }
 
@@ -722,10 +701,6 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.dependencyGraphTransformer = dependencyGraphTransformer;
-        if ( this.dependencyGraphTransformer == null )
-        {
-            this.dependencyGraphTransformer = NullDependencyGraphTransformer.INSTANCE;
-        }
         return this;
     }
 
@@ -835,74 +810,6 @@ public final class DefaultRepositorySystemSession
         public ArtifactType get( String typeId )
         {
             return null;
-        }
-
-    }
-
-    static class NullDependencyGraphTransformer
-        implements DependencyGraphTransformer
-    {
-
-        public static final DependencyGraphTransformer INSTANCE = new NullDependencyGraphTransformer();
-
-        public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
-            throws RepositoryException
-        {
-            return node;
-        }
-
-    }
-
-    static class NullDependencyManager
-        implements DependencyManager
-    {
-
-        public static final DependencyManager INSTANCE = new NullDependencyManager();
-
-        public DependencyManager deriveChildManager( DependencyCollectionContext context )
-        {
-            return this;
-        }
-
-        public DependencyManagement manageDependency( Dependency dependency )
-        {
-            return null;
-        }
-
-    }
-
-    static class NullDependencySelector
-        implements DependencySelector
-    {
-
-        public static final DependencySelector INSTANCE = new NullDependencySelector();
-
-        public DependencySelector deriveChildSelector( DependencyCollectionContext context )
-        {
-            return this;
-        }
-
-        public boolean selectDependency( Dependency dependency )
-        {
-            return true;
-        }
-
-    }
-
-    static class NullDependencyTraverser
-        implements DependencyTraverser
-    {
-
-        public static final DependencyTraverser INSTANCE = new NullDependencyTraverser();
-
-        public DependencyTraverser deriveChildTraverser( DependencyCollectionContext context )
-        {
-            return this;
-        }
-
-        public boolean traverseDependency( Dependency dependency )
-        {
-            return true;
         }
 
     }

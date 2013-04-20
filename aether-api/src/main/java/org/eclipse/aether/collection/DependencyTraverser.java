@@ -39,7 +39,8 @@ public interface DependencyTraverser
      * strongly advised to simply return the current instance if nothing changed to help save memory.
      * 
      * @param context The dependency collection context, must not be {@code null}.
-     * @return The dependency traverser for the target node, must not be {@code null}.
+     * @return The dependency traverser for the target node or {@code null} if dependencies should be unconditionally
+     *         traversed in the sub graph.
      */
     DependencyTraverser deriveChildTraverser( DependencyCollectionContext context );
 

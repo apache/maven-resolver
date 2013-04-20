@@ -119,9 +119,12 @@ public final class AndDependencySelector
             DependencySelector childSelector = selector.deriveChildSelector( context );
             if ( childSelectors != null )
             {
-                childSelectors.add( childSelector );
+                if ( childSelector != null )
+                {
+                    childSelectors.add( childSelector );
+                }
             }
-            else if ( !selector.equals( childSelector ) )
+            else if ( selector != childSelector )
             {
                 childSelectors = new LinkedHashSet<DependencySelector>();
                 if ( seen > 0 )
@@ -135,7 +138,10 @@ public final class AndDependencySelector
                         childSelectors.add( s );
                     }
                 }
-                childSelectors.add( childSelector );
+                if ( childSelector != null )
+                {
+                    childSelectors.add( childSelector );
+                }
             }
             else
             {
@@ -143,7 +149,19 @@ public final class AndDependencySelector
             }
         }
 
-        return childSelectors != null ? new AndDependencySelector( childSelectors ) : this;
+        if ( childSelectors == null )
+        {
+            return this;
+        }
+        if ( childSelectors.size() <= 1 )
+        {
+            if ( childSelectors.isEmpty() )
+            {
+                return null;
+            }
+            return childSelectors.iterator().next();
+        }
+        return new AndDependencySelector( childSelectors );
     }
 
     @Override

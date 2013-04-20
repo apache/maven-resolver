@@ -385,9 +385,9 @@ final class DataPool
             int hash = 17;
             hash = hash * 31 + artifact.hashCode();
             hash = hash * 31 + repositories.hashCode();
-            hash = hash * 31 + selector.hashCode();
-            hash = hash * 31 + manager.hashCode();
-            hash = hash * 31 + traverser.hashCode();
+            hash = hash * 31 + hash( selector );
+            hash = hash * 31 + hash( manager );
+            hash = hash * 31 + hash( traverser );
             hash = hash * 31 + hash( filter );
             hashCode = hash;
         }
@@ -405,8 +405,8 @@ final class DataPool
             }
             GraphKey that = (GraphKey) obj;
             return artifact.equals( that.artifact ) && repositories.equals( that.repositories )
-                && selector.equals( that.selector ) && manager.equals( that.manager )
-                && traverser.equals( that.traverser ) && eq( filter, that.filter );
+                && eq( selector, that.selector ) && eq( manager, that.manager ) && eq( traverser, that.traverser )
+                && eq( filter, that.filter );
         }
 
         @Override

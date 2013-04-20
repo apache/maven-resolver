@@ -242,7 +242,7 @@ public class DefaultDependencyCollector
 
         result.setRoot( node );
 
-        boolean traverse = ( root == null ) || depTraverser.traverseDependency( root );
+        boolean traverse = root == null || depTraverser == null || depTraverser.traverseDependency( root );
         String errorPath = null;
         if ( traverse && !dependencies.isEmpty() )
         {
@@ -258,8 +258,10 @@ public class DefaultDependencyCollector
 
             Args args = new Args( result, session, trace, pool, nodes, context, versionContext );
 
-            process( args, dependencies, repositories, depSelector.deriveChildSelector( context ),
-                     depManager.deriveChildManager( context ), depTraverser.deriveChildTraverser( context ),
+            process( args, dependencies, repositories,
+                     ( depSelector != null ) ? depSelector.deriveChildSelector( context ) : null,
+                     ( depManager != null ) ? depManager.deriveChildManager( context ) : null,
+                     ( depTraverser != null ) ? depTraverser.deriveChildTraverser( context ) : null,
                      ( verFilter != null ) ? verFilter.deriveChildFilter( context ) : null );
 
             errorPath = args.errorPath;
@@ -268,16 +270,19 @@ public class DefaultDependencyCollector
         long time2 = System.currentTimeMillis();
 
         DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
-        try
+        if ( transformer != null )
         {
-            DefaultDependencyGraphTransformationContext context =
-                new DefaultDependencyGraphTransformationContext( session );
-            context.put( TransformationContextKeys.STATS, stats );
-            result.setRoot( transformer.transformGraph( node, context ) );
-        }
-        catch ( RepositoryException e )
-        {
-            result.addException( e );
+            try
+            {
+                DefaultDependencyGraphTransformationContext context =
+                    new DefaultDependencyGraphTransformationContext( session );
+                context.put( TransformationContextKeys.STATS, stats );
+                result.setRoot( transformer.transformGraph( node, context ) );
+            }
+            catch ( RepositoryException e )
+            {
+                result.addException( e );
+            }
         }
 
         if ( stats != null )
@@ -355,12 +360,13 @@ public class DefaultDependencyCollector
 
             thisDependency: while ( true )
             {
-                if ( !depSelector.selectDependency( dependency ) )
+                if ( depSelector != null && !depSelector.selectDependency( dependency ) )
                 {
                     continue nextDependency;
                 }
 
-                DependencyManagement depMngt = depManager.manageDependency( dependency );
+                DependencyManagement depMngt =
+                    ( depManager != null ) ? depManager.manageDependency( dependency ) : null;
                 int managedBits = 0;
                 String premanagedVersion = null;
                 String premanagedScope = null;
@@ -403,7 +409,8 @@ public class DefaultDependencyCollector
 
                 boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
 
-                boolean traverse = !noDescriptor && depTraverser.traverseDependency( dependency );
+                boolean traverse =
+                    !noDescriptor && ( depTraverser == null || depTraverser.traverseDependency( dependency ) );
 
                 List<? extends Version> versions;
                 VersionRangeResult rangeResult;
@@ -542,9 +549,12 @@ public class DefaultDependencyCollector
                         DefaultDependencyCollectionContext context = args.collectionContext;
                         context.set( d, descriptorResult.getManagedDependencies() );
 
-                        DependencySelector childSelector = depSelector.deriveChildSelector( context );
-                        DependencyManager childManager = depManager.deriveChildManager( context );
-                        DependencyTraverser childTraverser = depTraverser.deriveChildTraverser( context );
+                        DependencySelector childSelector =
+                            ( depSelector != null ) ? depSelector.deriveChildSelector( context ) : null;
+                        DependencyManager childManager =
+                            ( depManager != null ) ? depManager.deriveChildManager( context ) : null;
+                        DependencyTraverser childTraverser =
+                            ( depTraverser != null ) ? depTraverser.deriveChildTraverser( context ) : null;
                         VersionFilter childFilter =
                             ( verFilter != null ) ? verFilter.deriveChildFilter( context ) : null;
 

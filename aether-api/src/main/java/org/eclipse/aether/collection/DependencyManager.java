@@ -37,7 +37,8 @@ public interface DependencyManager
      * implementors are strongly advised to simply return the current instance if nothing changed to help save memory.
      * 
      * @param context The dependency collection context, must not be {@code null}.
-     * @return The dependency manager for the dependencies of the target node, must not be {@code null}.
+     * @return The dependency manager for the dependencies of the target node or {@code null} if dependency management
+     *         should no longer be applied.
      */
     DependencyManager deriveChildManager( DependencyCollectionContext context );
 

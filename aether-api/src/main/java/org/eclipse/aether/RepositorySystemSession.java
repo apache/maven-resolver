@@ -198,21 +198,24 @@ public interface RepositorySystemSession
     /**
      * Gets the dependency traverser to use for building dependency graphs.
      * 
-     * @return The dependency traverser to use for building dependency graphs, never {@code null}.
+     * @return The dependency traverser to use for building dependency graphs or {@code null} if dependencies are
+     *         unconditionally traversed.
      */
     DependencyTraverser getDependencyTraverser();
 
     /**
      * Gets the dependency manager to use for building dependency graphs.
      * 
-     * @return The dependency manager to use for building dependency graphs, never {@code null}.
+     * @return The dependency manager to use for building dependency graphs or {@code null} if dependency management is
+     *         not performed.
      */
     DependencyManager getDependencyManager();
 
     /**
      * Gets the dependency selector to use for building dependency graphs.
      * 
-     * @return The dependency selector to use for building dependency graphs, never {@code null}.
+     * @return The dependency selector to use for building dependency graphs or {@code null} if dependencies are
+     *         unconditionally included.
      */
     DependencySelector getDependencySelector();
 
@@ -226,7 +229,7 @@ public interface RepositorySystemSession
     /**
      * Gets the dependency graph transformer to use for building dependency graphs.
      * 
-     * @return The dependency graph transformer to use for building dependency graphs, never {@code null}.
+     * @return The dependency graph transformer to use for building dependency graphs or {@code null} if none.
      */
     DependencyGraphTransformer getDependencyGraphTransformer();
 
