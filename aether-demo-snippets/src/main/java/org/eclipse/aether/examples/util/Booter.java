@@ -10,10 +10,9 @@
  *******************************************************************************/
 package org.eclipse.aether.examples.util;
 
-import org.apache.maven.repository.internal.MavenRepositorySystemSession;
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.examples.manual.ManualRepositorySystemFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -25,12 +24,13 @@ public class Booter
 
     public static RepositorySystem newRepositorySystem()
     {
-        return ManualRepositorySystemFactory.newRepositorySystem();
+        return org.eclipse.aether.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
+        // return org.eclipse.aether.examples.plexus.PlexusRepositorySystemFactory.newRepositorySystem();
     }
 
     public static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )
     {
-        MavenRepositorySystemSession session = new MavenRepositorySystemSession();
+        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
         LocalRepository localRepo = new LocalRepository( "target/local-repo" );
         session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
