@@ -25,6 +25,7 @@ public class Booter
     public static RepositorySystem newRepositorySystem()
     {
         return org.eclipse.aether.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
+        // return org.eclipse.aether.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
         // return org.eclipse.aether.examples.plexus.PlexusRepositorySystemFactory.newRepositorySystem();
     }
 
