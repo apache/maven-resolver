@@ -17,7 +17,9 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.VersionRangeResult;
 
 /**
  * Utility methods to help unit testing.
@@ -67,6 +69,15 @@ public class TestUtils
     public static DependencyGraphTransformationContext newTransformationContext( RepositorySystemSession session )
     {
         return new TestDependencyGraphTransformationContext( session );
+    }
+
+    /**
+     * Creates a new version filter context from the specified session and version range result.
+     */
+    public static VersionFilter.VersionFilterContext newVersionFilterContext( RepositorySystemSession session,
+                                                                              VersionRangeResult rangeResult )
+    {
+        return new TestVersionFilterContext( session, rangeResult );
     }
 
 }
