@@ -21,6 +21,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
@@ -112,6 +113,11 @@ final class DefaultVersionFilterContext
     public ArtifactRepository getRepository( Version version )
     {
         return result.getRepository( version );
+    }
+
+    public List<RemoteRepository> getRepositories()
+    {
+        return Collections.unmodifiableList( result.getRequest().getRepositories() );
     }
 
     public Iterator<Version> iterator()

@@ -11,11 +11,13 @@
 package org.eclipse.aether.collection;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -85,6 +87,13 @@ public interface VersionFilter
          * @return The repository from which the version was resolved or {@code null} if unknown.
          */
         ArtifactRepository getRepository( Version version );
+
+        /**
+         * Gets the remote repositories from which the versions were resolved.
+         * 
+         * @return The (read-only) list of repositories, never {@code null}.
+         */
+        List<RemoteRepository> getRepositories();
 
     }
 
