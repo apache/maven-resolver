@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -198,30 +198,28 @@ public class DefaultUpdateCheckManager
         else
         {
             int errorPolicy = Utils.getPolicy( session, artifact, repository );
-            if ( error == null || error.length() <= 0 )
+            int cacheFlag = getCacheFlag( error );
+            if ( ( errorPolicy & cacheFlag ) != 0 )
             {
-                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_NOT_FOUND ) != 0 )
-                {
-                    check.setRequired( false );
-                    check.setException( newException( error, artifact, repository ) );
-                }
-                else
-                {
-                    check.setRequired( true );
-                }
+                check.setRequired( false );
+                check.setException( newException( error, artifact, repository ) );
             }
             else
             {
-                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_TRANSFER_ERROR ) != 0 )
-                {
-                    check.setRequired( false );
-                    check.setException( newException( error, artifact, repository ) );
-                }
-                else
-                {
-                    check.setRequired( true );
-                }
+                check.setRequired( true );
             }
+        }
+    }
+
+    private static int getCacheFlag( String error )
+    {
+        if ( error == null || error.length() <= 0 )
+        {
+            return ResolutionErrorPolicy.CACHE_NOT_FOUND;
+        }
+        else
+        {
+            return ResolutionErrorPolicy.CACHE_TRANSFER_ERROR;
         }
     }
 
@@ -338,29 +336,15 @@ public class DefaultUpdateCheckManager
         else
         {
             int errorPolicy = Utils.getPolicy( session, metadata, repository );
-            if ( error == null || error.length() <= 0 )
+            int cacheFlag = getCacheFlag( error );
+            if ( ( errorPolicy & cacheFlag ) != 0 )
             {
-                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_NOT_FOUND ) != 0 )
-                {
-                    check.setRequired( false );
-                    check.setException( newException( error, metadata, repository ) );
-                }
-                else
-                {
-                    check.setRequired( true );
-                }
+                check.setRequired( false );
+                check.setException( newException( error, metadata, repository ) );
             }
             else
             {
-                if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_TRANSFER_ERROR ) != 0 )
-                {
-                    check.setRequired( false );
-                    check.setException( newException( error, metadata, repository ) );
-                }
-                else
-                {
-                    check.setRequired( true );
-                }
+                check.setRequired( true );
             }
         }
     }
