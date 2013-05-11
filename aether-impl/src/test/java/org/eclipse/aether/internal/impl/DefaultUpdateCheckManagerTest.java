@@ -342,6 +342,26 @@ public class DefaultUpdateCheckManagerTest
     }
 
     @Test
+    public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl()
+        throws Exception
+    {
+        UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
+        check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
+        check.setFileValid( false );
+
+        // first check
+        manager.checkMetadata( session, check );
+        assertEquals( true, check.isRequired() );
+
+        manager.touchMetadata( session, check );
+
+        // second check in same session but for repo with different id
+        check.setRepository( new RemoteRepository.Builder( check.getRepository() ).setId( "check" ).build() );
+        manager.checkMetadata( session, check );
+        assertEquals( true, check.isRequired() );
+    }
+
+    @Test
     public void testCheckMetadataWhenLocallyMissingEvenIfUpdatePolicyIsNever()
         throws Exception
     {
@@ -631,6 +651,25 @@ public class DefaultUpdateCheckManagerTest
         // second check in same session
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );
+    }
+
+    @Test
+    public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl()
+        throws Exception
+    {
+        UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
+        check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
+
+        // first check
+        manager.checkArtifact( session, check );
+        assertEquals( true, check.isRequired() );
+
+        manager.touchArtifact( session, check );
+
+        // second check in same session but for repo with different id
+        check.setRepository( new RemoteRepository.Builder( check.getRepository() ).setId( "check" ).build() );
+        manager.checkArtifact( session, check );
+        assertEquals( true, check.isRequired() );
     }
 
     @Test
