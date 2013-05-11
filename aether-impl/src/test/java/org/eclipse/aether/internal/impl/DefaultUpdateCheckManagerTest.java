@@ -323,6 +323,25 @@ public class DefaultUpdateCheckManagerTest
     }
 
     @Test
+    public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile()
+        throws Exception
+    {
+        UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
+        check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
+        check.setFileValid( false );
+
+        // first check
+        manager.checkMetadata( session, check );
+        assertEquals( true, check.isRequired() );
+
+        manager.touchMetadata( session, check );
+
+        // second check in same session
+        manager.checkMetadata( session, check );
+        assertEquals( false, check.isRequired() );
+    }
+
+    @Test
     public void testCheckMetadataWhenLocallyMissingEvenIfUpdatePolicyIsNever()
         throws Exception
     {
@@ -583,6 +602,25 @@ public class DefaultUpdateCheckManagerTest
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
+
+        // first check
+        manager.checkArtifact( session, check );
+        assertEquals( true, check.isRequired() );
+
+        manager.touchArtifact( session, check );
+
+        // second check in same session
+        manager.checkArtifact( session, check );
+        assertEquals( false, check.isRequired() );
+    }
+
+    @Test
+    public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile()
+        throws Exception
+    {
+        UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
+        check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
+        check.setFileValid( false );
 
         // first check
         manager.checkArtifact( session, check );
