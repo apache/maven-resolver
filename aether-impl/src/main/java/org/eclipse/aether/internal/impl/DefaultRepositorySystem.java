@@ -470,22 +470,6 @@ public class DefaultRepositorySystem
         {
             invalidSession( "ArtifactTypeRegistry" );
         }
-        if ( session.getDependencyTraverser() == null )
-        {
-            invalidSession( "DependencyTraverser" );
-        }
-        if ( session.getDependencyManager() == null )
-        {
-            invalidSession( "DependencyManager" );
-        }
-        if ( session.getDependencySelector() == null )
-        {
-            invalidSession( "DependencySelector" );
-        }
-        if ( session.getDependencyGraphTransformer() == null )
-        {
-            invalidSession( "DependencyGraphTransformer" );
-        }
         if ( session.getData() == null )
         {
             invalidSession( "Data" );
