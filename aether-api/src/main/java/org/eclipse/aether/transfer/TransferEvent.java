@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -267,7 +267,35 @@ public final class TransferEvent
         }
 
         /**
-         * Sets the type of the event.
+         * Sets the type of the event and resets event-specific fields. In more detail, the data buffer and the
+         * exception fields are set to {@code null}. Furthermore, the total number of transferred bytes is set to
+         * {@code 0} if the event type is {@link EventType#STARTED}.
+         * 
+         * @param type The type of the event, must not be {@code null}.
+         * @return This event builder for chaining, never {@code null}.
+         */
+        public Builder resetType( EventType type )
+        {
+            if ( type == null )
+            {
+                throw new IllegalArgumentException( "event type not specified" );
+            }
+            this.type = type;
+            dataBuffer = null;
+            exception = null;
+            switch ( type )
+            {
+                case INITIATED:
+                case STARTED:
+                    transferredBytes = 0;
+                default:
+            }
+            return this;
+        }
+
+        /**
+         * Sets the type of the event. When re-using the same builder to generate a sequence of events for one transfer,
+         * {@link #resetType(TransferEvent.EventType)} might be more handy.
          * 
          * @param type The type of the event, must not be {@code null}.
          * @return This event builder for chaining, never {@code null}.
