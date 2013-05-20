@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,8 +47,8 @@ public final class ConfigurationProperties
     public static final String DEFAULT_USER_AGENT = "Aether";
 
     /**
-     * The timeout (in milliseconds) to wait for a successful connection to a remote server. Non-positive values
-     * indicate no timeout.
+     * The maximum amount of time (in milliseconds) to wait for a successful connection to a remote server. Non-positive
+     * values indicate no timeout.
      * 
      * @see #DEFAULT_CONNECT_TIMEOUT
      */
@@ -60,8 +60,9 @@ public final class ConfigurationProperties
     public static final int DEFAULT_CONNECT_TIMEOUT = 10 * 1000;
 
     /**
-     * The timeout (in milliseconds) to wait for a response from a remote server. Non-positive values indicate no
-     * timeout.
+     * The maximum amount of time (in milliseconds) to wait for remaining data to arrive from a remote server. Note that
+     * this timeout does not restrict the overall duration of a request, it only restricts the duration of inactivity
+     * between consecutive data packets. Non-positive values indicate no timeout.
      * 
      * @see #DEFAULT_REQUEST_TIMEOUT
      */
