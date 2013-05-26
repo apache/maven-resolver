@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -163,6 +163,16 @@ public class ChecksumUtilTest
         assertEquals( "", ChecksumUtils.read( file ) );
 
         assertTrue( "ChecksumUtils leaks file handles (cannot delete checksum.empty)", file.delete() );
+    }
+
+    @Test
+    public void testToHexString()
+    {
+        assertEquals( null, ChecksumUtils.toHexString( null ) );
+        assertEquals( "", ChecksumUtils.toHexString( new byte[] {} ) );
+        assertEquals( "00", ChecksumUtils.toHexString( new byte[] { 0 } ) );
+        assertEquals( "ff", ChecksumUtils.toHexString( new byte[] { -1 } ) );
+        assertEquals( "00017f", ChecksumUtils.toHexString( new byte[] { 0, 1, 127 } ) );
     }
 
 }

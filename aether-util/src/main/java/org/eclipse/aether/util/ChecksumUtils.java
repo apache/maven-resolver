@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -173,8 +173,20 @@ public final class ChecksumUtils
         return results;
     }
 
-    private static String toHexString( byte[] bytes )
+    /**
+     * Creates a hexadecimal representation of the specified bytes. Each byte is converted into a two-digit hex number
+     * and appended to the result with no separator between consecutive byte.
+     * 
+     * @param bytes The bytes to represent in hex notation, may be be {@code null}.
+     * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
+     */
+    public static String toHexString( byte[] bytes )
     {
+        if ( bytes == null )
+        {
+            return null;
+        }
+
         StringBuilder buffer = new StringBuilder( bytes.length * 2 );
 
         for ( int i = 0; i < bytes.length; i++ )
