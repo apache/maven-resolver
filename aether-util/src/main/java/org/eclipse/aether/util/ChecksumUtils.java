@@ -175,7 +175,7 @@ public final class ChecksumUtils
 
     /**
      * Creates a hexadecimal representation of the specified bytes. Each byte is converted into a two-digit hex number
-     * and appended to the result with no separator between consecutive byte.
+     * and appended to the result with no separator between consecutive bytes.
      * 
      * @param bytes The bytes to represent in hex notation, may be be {@code null}.
      * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
