@@ -84,9 +84,10 @@ public final class PutRequest
     }
 
     /**
-     * Sets the file with the data to be uploaded.
+     * Sets the file with the data to be uploaded. To upload some data residing already in memory, use
+     * {@link #setDataString(String)} or {@link #setDataBytes(byte[])}.
      * 
-     * @param dataFile The data file, may be {@code null}.
+     * @param dataFile The data file, may be {@code null} if the resource data is provided directly from memory.
      * @return This request for chaining, never {@code null}.
      */
     public PutRequest setDataFile( File dataFile )
