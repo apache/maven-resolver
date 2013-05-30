@@ -330,6 +330,10 @@
                 <packages>org.eclipse.aether.connector*</packages>
               </group>
               <group>
+                <title>Transporters</title>
+                <packages>org.eclipse.aether.transport*</packages>
+              </group>
+              <group>
                 <title>Implementation</title>
                 <packages>org.eclipse.aether.impl*</packages>
               </group>
