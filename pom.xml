@@ -118,6 +118,7 @@
     <module>aether-util</module>
     <module>aether-impl</module>
     <module>aether-test-util</module>
+    <module>aether-connector-basic</module>
     <module>aether-connector-file</module>
     <module>aether-connector-wagon</module>
     <module>aether-connector-asynchttpclient</module>

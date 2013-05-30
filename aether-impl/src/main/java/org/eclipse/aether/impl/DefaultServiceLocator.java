@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,11 +34,13 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
+import org.eclipse.aether.internal.impl.DefaultTransporterProvider;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Slf4jLoggerFactory;
+import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
@@ -48,8 +50,8 @@ import org.eclipse.aether.spi.log.LoggerFactory;
 /**
  * A simple service locator that is already setup with all components from this library. To acquire a complete
  * repository system, clients need to add an artifact descriptor reader, a version resolver, a version range resolver
- * and optionally some repository connectors to access remote repositories. Once the locator is fully populated, the
- * repository system can be created like this:
+ * and optionally some repository connector and transporter factories to access remote repositories. Once the locator is
+ * fully populated, the repository system can be created like this:
  * 
  * <pre>
  * RepositorySystem repoSystem = serviceLocator.getService( RepositorySystem.class );
@@ -194,6 +196,7 @@ public final class DefaultServiceLocator
         addService( Deployer.class, DefaultDeployer.class );
         addService( Installer.class, DefaultInstaller.class );
         addService( MetadataResolver.class, DefaultMetadataResolver.class );
+        addService( TransporterProvider.class, DefaultTransporterProvider.class );
         addService( RepositoryConnectorProvider.class, DefaultRepositoryConnectorProvider.class );
         addService( RemoteRepositoryManager.class, DefaultRemoteRepositoryManager.class );
         addService( UpdateCheckManager.class, DefaultUpdateCheckManager.class );
