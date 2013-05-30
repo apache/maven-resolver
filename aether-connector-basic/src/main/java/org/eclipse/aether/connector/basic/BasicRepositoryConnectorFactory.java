@@ -31,7 +31,7 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 /**
  * A repository connector factory that uses pluggable transporters for the transfers.
  */
-@Named
+@Named( "basic" )
 @Component( role = RepositoryConnectorFactory.class, hint = "basic" )
 public final class BasicRepositoryConnectorFactory
     implements RepositoryConnectorFactory, Service
