@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.transport.classpath;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +27,7 @@ import org.eclipse.aether.spi.connector.transport.GetRequest;
 import org.eclipse.aether.spi.connector.transport.NoTransporterException;
 import org.eclipse.aether.spi.connector.transport.PeekRequest;
 import org.eclipse.aether.spi.connector.transport.PutRequest;
+import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.spi.connector.transport.TransportRequest;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
@@ -139,26 +141,41 @@ final class ClasspathTransporter
             OutputStream os = request.newOutputStream();
             try
             {
-                ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
-                byte[] array = buffer.array();
-                for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
-                {
-                    os.write( array, 0, read );
-                    buffer.rewind();
-                    buffer.limit( read );
-                    request.getListener().transportProgressed( buffer );
-                }
+                copy( os, is, request.getListener() );
+                os.close();
             }
             finally
             {
-                os.close();
+                close( os );
             }
         }
         finally
         {
+            close( is );
+        }
+    }
+
+    private static void copy( OutputStream os, InputStream is, TransportListener listener )
+        throws Exception
+    {
+        ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
+        byte[] array = buffer.array();
+        for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
+        {
+            os.write( array, 0, read );
+            buffer.rewind();
+            buffer.limit( read );
+            listener.transportProgressed( buffer );
+        }
+    }
+
+    private static void close( Closeable file )
+    {
+        if ( file != null )
+        {
             try
             {
-                is.close();
+                file.close();
             }
             catch ( IOException e )
             {
