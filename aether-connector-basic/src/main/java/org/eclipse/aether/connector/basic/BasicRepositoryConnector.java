@@ -172,7 +172,7 @@ final class BasicRepositoryConnector
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            GetTask task = new GetTask( path, transfer.getFile(), transfer.getChecksumPolicy(), listener );
+            GetTask task = new GetTask( path, transfer.getFile(), false, transfer.getChecksumPolicy(), listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -184,7 +184,9 @@ final class BasicRepositoryConnector
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            GetTask task = new GetTask( path, transfer.getFile(), transfer.getChecksumPolicy(), listener );
+            GetTask task =
+                new GetTask( path, transfer.getFile(), transfer.isExistenceCheck(), transfer.getChecksumPolicy(),
+                             listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -262,14 +264,17 @@ final class BasicRepositoryConnector
 
         private final File file;
 
+        private final boolean peek;
+
         private final String checksumPolicy;
 
         private final TransferTransportListener<?> listener;
 
-        public GetTask( URI path, File file, String checksumPolicy, TransferTransportListener<?> listener )
+        public GetTask( URI path, File file, boolean peek, String checksumPolicy, TransferTransportListener<?> listener )
         {
             this.path = path;
             this.file = file;
+            this.peek = peek;
             this.checksumPolicy = checksumPolicy;
             this.listener = listener;
         }
@@ -279,12 +284,16 @@ final class BasicRepositoryConnector
             try
             {
                 listener.transferInitiated();
-                if ( file == null )
+                if ( peek )
                 {
                     transporter.peek( new PeekRequest( path ) );
                 }
                 else
                 {
+                    if ( file == null )
+                    {
+                        throw new IllegalArgumentException( "destination file has not been specified" );
+                    }
                     if ( !RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( checksumPolicy ) )
                     {
                         listener.setDigests( checksumAlgos.keySet() );
@@ -443,6 +452,10 @@ final class BasicRepositoryConnector
             try
             {
                 listener.transferInitiated();
+                if ( file == null )
+                {
+                    throw new IllegalArgumentException( "source file has not been specified" );
+                }
                 transporter.put( new PutRequest( path ).setDataFile( file ).setListener( listener ) );
                 uploadChecksums( file, path );
                 listener.transferSucceeded();
