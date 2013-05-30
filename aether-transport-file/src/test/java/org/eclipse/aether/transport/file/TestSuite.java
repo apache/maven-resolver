@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.connector.file;
+package org.eclipse.aether.transport.file;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,13 +16,17 @@ import java.net.MalformedURLException;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.connector.file.FileRepositoryConnectorFactory;
+import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.connector.suite.ConnectorTestSuite;
 import org.eclipse.aether.internal.test.util.connector.suite.ConnectorTestSetup.AbstractConnectorTestSetup;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.transport.NoTransporterException;
+import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 
 /**
  */
@@ -37,7 +41,17 @@ public class TestSuite
 
         public RepositoryConnectorFactory factory()
         {
-            return new FileRepositoryConnectorFactory().setFileProcessor( new TestFileProcessor() );
+            BasicRepositoryConnectorFactory factory = new BasicRepositoryConnectorFactory();
+            factory.setFileProcessor( new TestFileProcessor() );
+            factory.setTransporterProvider( new TransporterProvider()
+            {
+                public Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
+                    throws NoTransporterException
+                {
+                    return new FileTransporter( repository, new TestLoggerFactory().getLogger( "file" ) );
+                }
+            } );
+            return factory;
         }
 
         @Override

@@ -120,7 +120,7 @@
     <module>aether-test-util</module>
     <module>aether-connector-basic</module>
     <module>aether-transport-classpath</module>
-    <module>aether-connector-file</module>
+    <module>aether-transport-file</module>
     <module>aether-transport-wagon</module>
     <module>aether-connector-asynchttpclient</module>
   </modules>
@@ -153,11 +153,6 @@
       <dependency>
         <groupId>org.eclipse.aether</groupId>
         <artifactId>aether-impl</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.aether</groupId>
-        <artifactId>aether-connector-file</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
