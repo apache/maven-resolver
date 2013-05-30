@@ -12,10 +12,12 @@ package org.eclipse.aether.transport.classpath;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URI;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -121,7 +123,7 @@ public class ClasspathTransporterTest
     }
 
     @Test
-    public void testGet()
+    public void testGet_ToMemory()
         throws Exception
     {
         newTransporter( "repository/a" );
@@ -134,6 +136,23 @@ public class ClasspathTransporterTest
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( request.getDataString(), listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_ToFile()
+        throws Exception
+    {
+        newTransporter( "repository/a" );
+        File file = TestFileUtils.createTempFile( "failure" );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetRequest request = new GetRequest( URI.create( "file.txt" ) ).setDataFile( file ).setListener( listener );
+        transporter.get( request );
+        TestFileUtils.assertContent( "test", file );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 4, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "test", listener.baos.toString( "UTF-8" ) );
     }
 
     @Test
