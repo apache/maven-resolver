@@ -703,9 +703,9 @@
                   <pluginExecutions>
                     <pluginExecution>
                       <pluginExecutionFilter>
-                        <groupId>org.sonatype.plugins</groupId>
+                        <groupId>org.eclipse.sisu</groupId>
                         <artifactId>sisu-maven-plugin</artifactId>
-                        <versionRange>[1.1,)</versionRange>
+                        <versionRange>[0.0.0.M2,)</versionRange>
                         <goals>
                           <goal>test-index</goal>
                           <goal>main-index</goal>
