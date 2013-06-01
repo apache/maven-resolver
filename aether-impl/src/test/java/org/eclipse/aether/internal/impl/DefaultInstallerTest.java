@@ -117,10 +117,10 @@ public class DefaultInstallerTest
         InstallResult result = installer.install( session, request );
 
         assertTrue( artifactFile.exists() );
-        TestFileUtils.assertContent( "artifact".getBytes( "UTF-8" ), artifactFile );
+        assertEquals( "artifact", TestFileUtils.getString( artifactFile ) );
 
         assertTrue( metadataFile.exists() );
-        TestFileUtils.assertContent( "metadata".getBytes( "UTF-8" ), metadataFile );
+        assertEquals( "metadata", TestFileUtils.getString( metadataFile ) );
 
         assertEquals( result.getRequest(), request );
 

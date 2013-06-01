@@ -355,8 +355,7 @@ public class DefaultArtifactResolverTest
         Artifact resolved = result.getArtifact();
         assertNotNull( resolved.getFile() );
 
-        byte[] expected = resolved.toString().getBytes( "UTF-8" );
-        TestFileUtils.assertContent( expected, resolved.getFile() );
+        assertEquals( resolved.toString(), TestFileUtils.getString( resolved.getFile() ) );
 
         resolved = resolved.setFile( null );
         assertEquals( artifact, resolved );

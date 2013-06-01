@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.junit.Assert;
-
 public class TestFileUtils
 {
 
@@ -220,22 +218,11 @@ public class TestFileUtils
         }
     }
 
-    public static void assertContent( byte[] expected, File file )
-        throws IOException
-    {
-        Assert.assertArrayEquals( expected, getContent( file ) );
-    }
-
-    public static void assertContent( String expected, File file )
+    public static String getString( File file )
         throws IOException
     {
         byte[] content = getContent( file );
-        String msg = new String( content, "UTF-8" );
-        if ( msg.length() > 10 )
-        {
-            msg = msg.substring( 0, 10 ) + "...";
-        }
-        Assert.assertArrayEquals( "content was '" + msg + "'\n", expected.getBytes( "UTF-8" ), content );
+        return new String( content, "UTF-8" );
     }
 
     public static boolean mkdirs( File directory )

@@ -147,7 +147,7 @@ public class ClasspathTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         GetRequest request = new GetRequest( URI.create( "file.txt" ) ).setDataFile( file ).setListener( listener );
         transporter.get( request );
-        TestFileUtils.assertContent( "test", file );
+        assertEquals( "test", TestFileUtils.getString( file ) );
         assertEquals( 0, listener.dataOffset );
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );

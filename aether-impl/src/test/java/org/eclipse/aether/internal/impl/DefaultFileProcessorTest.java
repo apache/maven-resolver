@@ -53,12 +53,13 @@ public class DefaultFileProcessorTest
     public void testCopy()
         throws IOException
     {
-        File file = TestFileUtils.createTempFile( "testCopy\nasdf" );
+        String data = "testCopy\nasdf";
+        File file = TestFileUtils.createTempFile( data );
         File target = new File( targetDir, "testCopy.txt" );
 
         fileProcessor.copy( file, target );
 
-        TestFileUtils.assertContent( "testCopy\nasdf".getBytes( "UTF-8" ), file );
+        assertEquals( data, TestFileUtils.getString( file ) );
 
         file.delete();
     }
@@ -67,13 +68,14 @@ public class DefaultFileProcessorTest
     public void testOverwrite()
         throws IOException
     {
-        File file = TestFileUtils.createTempFile( "testCopy\nasdf" );
+        String data = "testCopy\nasdf";
+        File file = TestFileUtils.createTempFile( data );
 
         for ( int i = 0; i < 5; i++ )
         {
             File target = new File( targetDir, "testCopy.txt" );
             fileProcessor.copy( file, target );
-            TestFileUtils.assertContent( "testCopy\nasdf".getBytes( "UTF-8" ), file );
+            assertEquals( data, TestFileUtils.getString( file ) );
         }
 
         file.delete();

@@ -51,7 +51,7 @@ public class GetTest
         c.get( downs, null );
 
         assertNull( String.valueOf( down.getException() ), down.getException() );
-        TestFileUtils.assertContent( "artifact", f );
+        assertEquals( "artifact", TestFileUtils.getString( f ) );
     }
 
     @Test
@@ -85,7 +85,7 @@ public class GetTest
         Collection<? extends ArtifactDownload> downs = Arrays.asList( down );
         connector().get( downs, null );
 
-        TestFileUtils.assertContent( "", f );
+        assertEquals( "", TestFileUtils.getString( f ) );
         assertNotNull( down.getException() );
     }
 
@@ -135,8 +135,8 @@ public class GetTest
         connector().get( downs, null );
 
         assertNull( String.valueOf( down.getException() ), down.getException() );
-        TestFileUtils.assertContent( "foo", a.getFile() );
-        TestFileUtils.assertContent( "artifact", f );
+        assertEquals( "foo", TestFileUtils.getString( a.getFile() ) );
+        assertEquals( "artifact", TestFileUtils.getString( f ) );
     }
 
     @Test
