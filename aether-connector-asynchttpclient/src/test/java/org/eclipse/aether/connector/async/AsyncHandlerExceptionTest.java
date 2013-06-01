@@ -68,7 +68,7 @@ public class AsyncHandlerExceptionTest
                 for ( int i = 0; i < 16; i++ )
                 {
                     System.out.println( "RUN #" + i );
-                    TestFileUtils.delete( baseDir );
+                    TestFileUtils.deleteFile( baseDir );
 
                     ArtifactDownload download =
                         new ArtifactDownload( artifact, "project", new File( baseDir, "a.jar" ), "ignore" );
@@ -102,7 +102,7 @@ public class AsyncHandlerExceptionTest
     public void tearDown()
         throws IOException
     {
-        TestFileUtils.delete( baseDir );
+        TestFileUtils.deleteFile( baseDir );
     }
 
 }

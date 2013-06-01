@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -76,7 +76,7 @@ class RecordingRepositoryConnector
                     artifactDownload.setState( State.ACTIVE );
                     Artifact artifact = artifactDownload.getArtifact();
                     this.actualGet.add( artifact );
-                    TestFileUtils.write( artifact.toString(), artifactDownload.getFile() );
+                    TestFileUtils.writeString( artifactDownload.getFile(), artifact.toString() );
                     artifactDownload.setState( State.DONE );
                 }
             }
@@ -87,7 +87,7 @@ class RecordingRepositoryConnector
                     metadataDownload.setState( State.ACTIVE );
                     Metadata metadata = metadataDownload.getMetadata();
                     this.actualGetMD.add( metadata );
-                    TestFileUtils.write( metadata.toString(), metadataDownload.getFile() );
+                    TestFileUtils.writeString( metadataDownload.getFile(), metadata.toString() );
                     metadataDownload.setState( State.DONE );
                 }
             }

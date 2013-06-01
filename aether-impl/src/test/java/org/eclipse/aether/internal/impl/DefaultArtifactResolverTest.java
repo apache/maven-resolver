@@ -111,7 +111,7 @@ public class DefaultArtifactResolverTest
     {
         if ( session.getLocalRepository() != null )
         {
-            TestFileUtils.delete( session.getLocalRepository().getBasedir() );
+            TestFileUtils.deleteFile( session.getLocalRepository().getBasedir() );
         }
     }
 
@@ -290,8 +290,8 @@ public class DefaultArtifactResolverTest
             connector.assertSeenExpected();
         }
 
-        TestFileUtils.write( "artifact",
-                             new File( lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact( artifact2 ) ) );
+        TestFileUtils.writeString( new File( lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact( artifact2 ) ),
+                             "artifact" );
         lrm.setArtifactAvailability( artifact2, false );
 
         DefaultUpdateCheckManagerTest.resetSessionData( session );
@@ -355,7 +355,7 @@ public class DefaultArtifactResolverTest
         Artifact resolved = result.getArtifact();
         assertNotNull( resolved.getFile() );
 
-        assertEquals( resolved.toString(), TestFileUtils.getString( resolved.getFile() ) );
+        assertEquals( resolved.toString(), TestFileUtils.readString( resolved.getFile() ) );
 
         resolved = resolved.setFile( null );
         assertEquals( artifact, resolved );

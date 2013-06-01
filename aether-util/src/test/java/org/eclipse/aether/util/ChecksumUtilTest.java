@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.util;
 
+import static org.eclipse.aether.internal.test.util.TestFileUtils.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -19,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -59,16 +59,14 @@ public class ChecksumUtilTest
     {
         sums.clear();
 
-        emptyFile = TestFileUtils.createTempFile( new byte[] {}, 0 );
+        emptyFile = createTempFile( new byte[] {}, 0 );
         sums.put( emptyFile, emptyFileChecksums );
 
         patternFile =
-            TestFileUtils.createTempFile( new byte[] { 0, 1, 2, 4, 8, 16, 32, 64, 127, -1, -2, -4, -8, -16, -32, -64,
-                -127 }, 1000 );
+            createTempFile( new byte[] { 0, 1, 2, 4, 8, 16, 32, 64, 127, -1, -2, -4, -8, -16, -32, -64, -127 }, 1000 );
         sums.put( patternFile, patternFileChecksums );
 
-        textFile =
-            TestFileUtils.createTempFile( "the quick brown fox jumps over the lazy dog\n".getBytes( "UTF-8" ), 500 );
+        textFile = createTempFile( "the quick brown fox jumps over the lazy dog\n".getBytes( "UTF-8" ), 500 );
         sums.put( textFile, textFileChecksums );
 
     }
@@ -123,8 +121,8 @@ public class ChecksumUtilTest
             String sha1 = checksums.get( "SHA-1" );
             String md5 = checksums.get( "MD5" );
 
-            File sha1File = TestFileUtils.createTempFile( sha1 );
-            File md5File = TestFileUtils.createTempFile( md5 );
+            File sha1File = createTempFile( sha1 );
+            File md5File = createTempFile( md5 );
 
             assertEquals( sha1, ChecksumUtils.read( sha1File ) );
             assertEquals( md5, ChecksumUtils.read( md5File ) );
@@ -143,8 +141,8 @@ public class ChecksumUtilTest
             String sha1 = checksums.get( "SHA-1" );
             String md5 = checksums.get( "MD5" );
 
-            File sha1File = TestFileUtils.createTempFile( "sha1-checksum = " + sha1 );
-            File md5File = TestFileUtils.createTempFile( md5 + " test" );
+            File sha1File = createTempFile( "sha1-checksum = " + sha1 );
+            File md5File = createTempFile( md5 + " test" );
 
             assertEquals( sha1, ChecksumUtils.read( sha1File ) );
             assertEquals( md5, ChecksumUtils.read( md5File ) );
@@ -158,7 +156,7 @@ public class ChecksumUtilTest
     public void testReadEmptyFile()
         throws IOException
     {
-        File file = TestFileUtils.createTempFile( "" );
+        File file = createTempFile( "" );
 
         assertEquals( "", ChecksumUtils.read( file ) );
 

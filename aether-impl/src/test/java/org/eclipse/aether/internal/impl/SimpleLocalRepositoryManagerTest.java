@@ -52,7 +52,7 @@ public class SimpleLocalRepositoryManagerTest
     public void tearDown()
         throws Exception
     {
-        TestFileUtils.delete( basedir );
+        TestFileUtils.deleteFile( basedir );
         manager = null;
         session = null;
     }
@@ -96,7 +96,7 @@ public class SimpleLocalRepositoryManagerTest
     {
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         File file = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
-        TestFileUtils.write( "test", file );
+        TestFileUtils.writeString( file, "test" );
 
         artifact = artifact.setVersion( "1.0-20110329.221805-4" );
         LocalArtifactRequest request = new LocalArtifactRequest();

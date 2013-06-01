@@ -38,7 +38,7 @@ public class TestFileUtils
             {
                 try
                 {
-                    delete( TMP );
+                    deleteFile( TMP );
                 }
                 catch ( IOException e )
                 {
@@ -56,105 +56,10 @@ public class TestFileUtils
     public static void deleteTempFiles()
         throws IOException
     {
-        delete( TMP );
+        deleteFile( TMP );
     }
 
-    public static File createTempFile( String contents )
-        throws IOException
-    {
-        return createTempFile( contents.getBytes( "UTF-8" ), 1 );
-    }
-
-    public static File createTempFile( byte[] pattern, int repeat )
-        throws IOException
-    {
-        mkdirs( TMP );
-        File tmpFile = File.createTempFile( "tmpfile-", ".data", TMP );
-        write( pattern, repeat, tmpFile );
-
-        return tmpFile;
-    }
-
-    public static void write( String content, File file )
-        throws IOException
-    {
-        write( content.getBytes( "UTF-8" ), 1, file );
-    }
-
-    public static void write( byte[] pattern, int repeat, File file )
-        throws IOException
-    {
-        file.deleteOnExit();
-        file.getParentFile().mkdirs();
-        OutputStream out = null;
-        try
-        {
-            out = new BufferedOutputStream( new FileOutputStream( file ) );
-            for ( int i = 0; i < repeat; i++ )
-            {
-                out.write( pattern );
-            }
-        }
-        finally
-        {
-            close( out );
-        }
-    }
-
-    public static long copy( File source, File target )
-        throws IOException
-    {
-        long total = 0;
-
-        FileInputStream fis = null;
-        OutputStream fos = null;
-        try
-        {
-            fis = new FileInputStream( source );
-
-            mkdirs( target.getParentFile() );
-
-            fos = new BufferedOutputStream( new FileOutputStream( target ) );
-
-            for ( byte[] buffer = new byte[1024 * 32];; )
-            {
-                int bytes = fis.read( buffer );
-                if ( bytes < 0 )
-                {
-                    break;
-                }
-
-                fos.write( buffer, 0, bytes );
-
-                total += bytes;
-            }
-        }
-        finally
-        {
-            close( fis );
-            close( fos );
-        }
-
-        return total;
-    }
-
-    private static void close( Closeable c )
-        throws IOException
-    {
-        if ( c != null )
-        {
-            try
-            {
-                c.close();
-            }
-            catch ( IOException e )
-            {
-                // ignore
-            }
-        }
-    }
-
-    public static void delete( File file )
+    public static void deleteFile( File file )
         throws IOException
     {
         if ( file == null )
@@ -201,30 +106,6 @@ public class TestFileUtils
         return false;
     }
 
-    public static byte[] getContent( File file )
-        throws IOException
-    {
-        RandomAccessFile in = null;
-        try
-        {
-            in = new RandomAccessFile( file, "r" );
-            byte[] actual = new byte[(int) in.length()];
-            in.readFully( actual );
-            return actual;
-        }
-        finally
-        {
-            close( in );
-        }
-    }
-
-    public static String getString( File file )
-        throws IOException
-    {
-        byte[] content = getContent( file );
-        return new String( content, "UTF-8" );
-    }
-
     public static boolean mkdirs( File directory )
     {
         if ( directory == null )
@@ -255,6 +136,21 @@ public class TestFileUtils
         return ( parentDir != null && ( mkdirs( parentDir ) || parentDir.exists() ) && canonDir.mkdir() );
     }
 
+    public static File createTempFile( String contents )
+        throws IOException
+    {
+        return createTempFile( contents.getBytes( "UTF-8" ), 1 );
+    }
+
+    public static File createTempFile( byte[] pattern, int repeat )
+        throws IOException
+    {
+        mkdirs( TMP );
+        File tmpFile = File.createTempFile( "tmpfile-", ".data", TMP );
+        writeBytes( tmpFile, pattern, repeat );
+        return tmpFile;
+    }
+
     public static File createTempDir()
         throws IOException
     {
@@ -265,16 +161,119 @@ public class TestFileUtils
         throws IOException
     {
         mkdirs( TMP );
-
         File tmpFile = File.createTempFile( "tmpdir-", suffix, TMP );
-
-        delete( tmpFile );
+        deleteFile( tmpFile );
         mkdirs( tmpFile );
-
         return tmpFile;
     }
 
-    public static void read( Properties props, File file )
+    private static void close( Closeable c )
+        throws IOException
+    {
+        if ( c != null )
+        {
+            try
+            {
+                c.close();
+            }
+            catch ( IOException e )
+            {
+                // ignore
+            }
+        }
+    }
+
+    public static long copyFile( File source, File target )
+        throws IOException
+    {
+        long total = 0;
+
+        FileInputStream fis = null;
+        OutputStream fos = null;
+        try
+        {
+            fis = new FileInputStream( source );
+
+            mkdirs( target.getParentFile() );
+
+            fos = new BufferedOutputStream( new FileOutputStream( target ) );
+
+            for ( byte[] buffer = new byte[1024 * 32];; )
+            {
+                int bytes = fis.read( buffer );
+                if ( bytes < 0 )
+                {
+                    break;
+                }
+
+                fos.write( buffer, 0, bytes );
+
+                total += bytes;
+            }
+
+            fos.close();
+        }
+        finally
+        {
+            close( fis );
+            close( fos );
+        }
+
+        return total;
+    }
+
+    public static byte[] readBytes( File file )
+        throws IOException
+    {
+        RandomAccessFile in = null;
+        try
+        {
+            in = new RandomAccessFile( file, "r" );
+            byte[] actual = new byte[(int) in.length()];
+            in.readFully( actual );
+            return actual;
+        }
+        finally
+        {
+            close( in );
+        }
+    }
+
+    public static void writeBytes( File file, byte[] pattern, int repeat )
+        throws IOException
+    {
+        file.deleteOnExit();
+        file.getParentFile().mkdirs();
+        OutputStream out = null;
+        try
+        {
+            out = new BufferedOutputStream( new FileOutputStream( file ) );
+            for ( int i = 0; i < repeat; i++ )
+            {
+                out.write( pattern );
+            }
+            out.close();
+        }
+        finally
+        {
+            close( out );
+        }
+    }
+
+    public static String readString( File file )
+        throws IOException
+    {
+        byte[] content = readBytes( file );
+        return new String( content, "UTF-8" );
+    }
+
+    public static void writeString( File file, String content )
+        throws IOException
+    {
+        writeBytes( file, content.getBytes( "UTF-8" ), 1 );
+    }
+
+    public static void readProps( File file, Properties props )
         throws IOException
     {
         FileInputStream fis = null;
@@ -289,7 +288,7 @@ public class TestFileUtils
         }
     }
 
-    public static void write( Properties props, File file )
+    public static void writeProps( File file, Properties props )
         throws IOException
     {
         file.getParentFile().mkdirs();
@@ -299,6 +298,7 @@ public class TestFileUtils
         {
             fos = new FileOutputStream( file );
             props.store( fos, "aether-test" );
+            fos.close();
         }
         finally
         {

@@ -83,8 +83,8 @@ public class DefaultMetadataResolverTest
     public void teardown()
         throws Exception
     {
-        TestFileUtils.delete( new File( new URI( repository.getUrl() ) ) );
-        TestFileUtils.delete( session.getLocalRepository().getBasedir() );
+        TestFileUtils.deleteFile( new File( new URI( repository.getUrl() ) ) );
+        TestFileUtils.deleteFile( session.getLocalRepository().getBasedir() );
     }
 
     @Test
@@ -115,7 +115,7 @@ public class DefaultMetadataResolverTest
             new File( session.getLocalRepository().getBasedir(),
                       session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository, "" ) );
 
-        TestFileUtils.write( file.getAbsolutePath(), file );
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
 
         MetadataRequest request = new MetadataRequest( metadata, repository, "" );
         List<MetadataResult> results = resolver.resolveMetadata( session, Arrays.asList( request ) );
@@ -162,7 +162,7 @@ public class DefaultMetadataResolverTest
         File file =
             new File( session.getLocalRepository().getBasedir(),
                       session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository, "" ) );
-        TestFileUtils.write( file.getAbsolutePath(), file );
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
         metadata.setFile( file );
 
         MetadataRequest request = new MetadataRequest( metadata, repository, "" );
@@ -201,7 +201,7 @@ public class DefaultMetadataResolverTest
 
         String path = session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository, "" );
         File file = new File( session.getLocalRepository().getBasedir(), path );
-        TestFileUtils.write( file.getAbsolutePath(), file );
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
 
         // set file to use in TestLRM find()
         metadata = metadata.setFile( file );
@@ -229,7 +229,7 @@ public class DefaultMetadataResolverTest
         lrm.add( session, new LocalMetadataRegistration( metadata ) );
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata( metadata );
         File file = new File( session.getLocalRepository().getBasedir(), path );
-        TestFileUtils.write( file.getAbsolutePath(), file );
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
 
         MetadataRequest request = new MetadataRequest( metadata, repository, "" );
         request.setFavorLocalRepository( true );

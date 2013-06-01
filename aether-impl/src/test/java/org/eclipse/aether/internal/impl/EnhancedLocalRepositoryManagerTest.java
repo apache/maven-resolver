@@ -96,8 +96,8 @@ public class EnhancedLocalRepositoryManagerTest
     public void tearDown()
         throws Exception
     {
-        TestFileUtils.delete( basedir );
-        TestFileUtils.delete( new File( new URI( repository.getUrl() ) ) );
+        TestFileUtils.deleteFile( basedir );
+        TestFileUtils.deleteFile( new File( new URI( repository.getUrl() ) ) );
 
         session = null;
         manager = null;
@@ -130,7 +130,7 @@ public class EnhancedLocalRepositoryManagerTest
         {
             return -1;
         }
-        return TestFileUtils.copy( metadata.getFile(), new File( basedir, path ) );
+        return TestFileUtils.copyFile( metadata.getFile(), new File( basedir, path ) );
     }
 
     private long copy( Artifact artifact, String path )
@@ -141,7 +141,7 @@ public class EnhancedLocalRepositoryManagerTest
             return -1;
         }
         File artifactFile = new File( basedir, path );
-        return TestFileUtils.copy( artifact.getFile(), artifactFile );
+        return TestFileUtils.copyFile( artifact.getFile(), artifactFile );
     }
 
     @Test
@@ -320,7 +320,7 @@ public class EnhancedLocalRepositoryManagerTest
     {
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         File file = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
-        TestFileUtils.write( "test", file );
+        TestFileUtils.writeString( file, "test" );
         addLocalArtifact( artifact );
 
         artifact = artifact.setVersion( "1.0-20110329.221805-4" );

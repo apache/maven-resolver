@@ -108,7 +108,7 @@ public class DefaultDeployerTest
     {
         if ( session.getLocalRepository() != null )
         {
-            TestFileUtils.delete( session.getLocalRepository().getBasedir() );
+            TestFileUtils.deleteFile( session.getLocalRepository().getBasedir() );
         }
         session = null;
         listener = null;
@@ -427,12 +427,12 @@ public class DefaultDeployerTest
                 {
                     if ( current.isFile() )
                     {
-                        TestFileUtils.read( props, current );
+                        TestFileUtils.readProps( current, props );
                     }
 
                     props.setProperty( "new", "value" );
 
-                    TestFileUtils.write( props, result );
+                    TestFileUtils.writeProps( result, props );
                 }
                 catch ( IOException e )
                 {
@@ -479,12 +479,12 @@ public class DefaultDeployerTest
                                                                                     "" ) );
         Properties props = new Properties();
         props.setProperty( "old", "value" );
-        TestFileUtils.write( props, metadataFile );
+        TestFileUtils.writeProps( metadataFile, props );
 
         deployer.deploy( session, request );
 
         props = new Properties();
-        TestFileUtils.read( props, metadataFile );
+        TestFileUtils.readProps( metadataFile, props );
         assertNull( props.toString(), props.get( "old" ) );
     }
 

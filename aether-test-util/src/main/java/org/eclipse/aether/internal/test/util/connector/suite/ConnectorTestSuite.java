@@ -223,7 +223,7 @@ public abstract class ConnectorTestSuite
                 assertEquals( State.DONE, metaDown.getState() );
             }
 
-            TestFileUtils.delete( localRepo );
+            TestFileUtils.deleteFile( localRepo );
         }
 
         connector.close();

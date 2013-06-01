@@ -58,7 +58,7 @@ public class TestSuite
         public void after( RepositorySystemSession session, RemoteRepository repository, Map<String, Object> context )
             throws Exception
         {
-            TestFileUtils.delete( repoFile );
+            TestFileUtils.deleteFile( repoFile );
         }
 
         public RemoteRepository before( RepositorySystemSession session, Map<String, Object> context )

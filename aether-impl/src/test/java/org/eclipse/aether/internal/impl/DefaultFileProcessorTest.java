@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,7 +45,7 @@ public class DefaultFileProcessorTest
     public void teardown()
         throws Exception
     {
-        TestFileUtils.delete( targetDir );
+        TestFileUtils.deleteFile( targetDir );
         fileProcessor = null;
     }
 
@@ -59,7 +59,7 @@ public class DefaultFileProcessorTest
 
         fileProcessor.copy( file, target );
 
-        assertEquals( data, TestFileUtils.getString( file ) );
+        assertEquals( data, TestFileUtils.readString( file ) );
 
         file.delete();
     }
@@ -75,7 +75,7 @@ public class DefaultFileProcessorTest
         {
             File target = new File( targetDir, "testCopy.txt" );
             fileProcessor.copy( file, target );
-            assertEquals( data, TestFileUtils.getString( file ) );
+            assertEquals( data, TestFileUtils.readString( file ) );
         }
 
         file.delete();

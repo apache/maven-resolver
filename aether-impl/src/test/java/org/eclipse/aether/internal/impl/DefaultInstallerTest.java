@@ -89,14 +89,14 @@ public class DefaultInstallerTest
 
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
 
-        TestFileUtils.delete( session.getLocalRepository().getBasedir() );
+        TestFileUtils.deleteFile( session.getLocalRepository().getBasedir() );
     }
 
     @After
     public void teardown()
         throws Exception
     {
-        TestFileUtils.delete( session.getLocalRepository().getBasedir() );
+        TestFileUtils.deleteFile( session.getLocalRepository().getBasedir() );
     }
 
     @Test
@@ -117,10 +117,10 @@ public class DefaultInstallerTest
         InstallResult result = installer.install( session, request );
 
         assertTrue( artifactFile.exists() );
-        assertEquals( "artifact", TestFileUtils.getString( artifactFile ) );
+        assertEquals( "artifact", TestFileUtils.readString( artifactFile ) );
 
         assertTrue( metadataFile.exists() );
-        assertEquals( "metadata", TestFileUtils.getString( metadataFile ) );
+        assertEquals( "metadata", TestFileUtils.readString( metadataFile ) );
 
         assertEquals( result.getRequest(), request );
 

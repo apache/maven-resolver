@@ -61,12 +61,12 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         File dir = TestFileUtils.createTempFile( "" );
-        TestFileUtils.delete( dir );
+        TestFileUtils.deleteFile( dir );
 
         File metadataFile = new File( dir, "metadata.txt" );
-        TestFileUtils.write( "metadata", metadataFile );
+        TestFileUtils.writeString( metadataFile, "metadata" );
         File artifactFile = new File( dir, "artifact.txt" );
-        TestFileUtils.write( "artifact", artifactFile );
+        TestFileUtils.writeString( artifactFile, "artifact" );
 
         session = TestUtils.newSession();
         repository = new RemoteRepository.Builder( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
@@ -85,7 +85,7 @@ public class DefaultUpdateCheckManagerTest
         new File( artifact.getFile().getPath() + ".lastUpdated" ).delete();
         metadata.getFile().delete();
         artifact.getFile().delete();
-        TestFileUtils.delete( new File( new URI( repository.getUrl() ) ) );
+        TestFileUtils.deleteFile( new File( new URI( repository.getUrl() ) ) );
     }
 
     static void resetSessionData( RepositorySystemSession session )
