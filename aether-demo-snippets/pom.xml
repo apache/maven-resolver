@@ -97,7 +97,7 @@
     <dependency>
       <groupId>org.eclipse.sisu</groupId>
       <artifactId>org.eclipse.sisu.plexus</artifactId>
-      <version>0.0.0.M1</version>
+      <version>0.0.0.M2a</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
@@ -111,6 +111,10 @@
         <exclusion>
           <groupId>org.sonatype.sisu</groupId>
           <artifactId>sisu-guice</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.enterprise</groupId>
+          <artifactId>cdi-api</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
