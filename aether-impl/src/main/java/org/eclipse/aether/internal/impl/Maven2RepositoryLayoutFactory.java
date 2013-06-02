@@ -13,6 +13,7 @@ package org.eclipse.aether.internal.impl;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Named;
@@ -25,6 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.layout.NoRepositoryLayoutException;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Provides a Maven-2 repository layout for repositories with content type {@code "default"}.
@@ -34,6 +36,8 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 public final class Maven2RepositoryLayoutFactory
     implements RepositoryLayoutFactory
 {
+
+    static final String CONFIG_PROP_SIGNATURE_CHECKSUMS = "aether.checksums.forSignature";
 
     private float priority;
 
@@ -61,10 +65,11 @@ public final class Maven2RepositoryLayoutFactory
         {
             throw new NoRepositoryLayoutException( repository );
         }
-        return Maven2RepositoryLayout.INSTANCE;
+        boolean forSignature = ConfigUtils.getBoolean( session, false, CONFIG_PROP_SIGNATURE_CHECKSUMS );
+        return forSignature ? Maven2RepositoryLayout.INSTANCE : Maven2RepositoryLayoutEx.INSTANCE;
     }
 
-    private static final class Maven2RepositoryLayout
+    private static class Maven2RepositoryLayout
         implements RepositoryLayout
     {
 
@@ -144,6 +149,29 @@ public final class Maven2RepositoryLayoutFactory
         private List<Checksum> getChecksums( URI location )
         {
             return Arrays.asList( Checksum.forLocation( location, "SHA-1" ), Checksum.forLocation( location, "MD5" ) );
+        }
+
+    }
+
+    private static class Maven2RepositoryLayoutEx
+        extends Maven2RepositoryLayout
+    {
+
+        public static final RepositoryLayout INSTANCE = new Maven2RepositoryLayoutEx();
+
+        @Override
+        public List<Checksum> getChecksums( Artifact artifact, URI location, boolean create )
+        {
+            if ( isSignature( artifact.getExtension() ) )
+            {
+                return Collections.emptyList();
+            }
+            return super.getChecksums( artifact, location, create );
+        }
+
+        private boolean isSignature( String extension )
+        {
+            return extension.endsWith( ".asc" );
         }
 
     }

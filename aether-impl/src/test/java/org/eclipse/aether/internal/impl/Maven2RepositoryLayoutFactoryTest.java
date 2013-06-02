@@ -14,6 +14,7 @@ import static org.junit.Assert.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -45,6 +46,16 @@ public class Maven2RepositoryLayoutFactoryTest
     {
         assertEquals( expectedUri, actual.getLocation().toString() );
         assertEquals( expectedAlgo, actual.getAlgorithm() );
+    }
+
+    private void assertChecksums( List<Checksum> actual, String baseUri, String... algos )
+    {
+        assertEquals( algos.length, actual.size() );
+        for ( int i = 0; i < algos.length; i++ )
+        {
+            String uri = baseUri + '.' + algos[i].replace( "-", "" ).toLowerCase( Locale.ENGLISH );
+            assertChecksum( actual.get( i ), uri, algos[i] );
+        }
     }
 
     @Before
@@ -160,6 +171,46 @@ public class Maven2RepositoryLayoutFactoryTest
         assertChecksum( checksums.get( 0 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha1",
                         "SHA-1" );
         assertChecksum( checksums.get( 1 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.md5", "MD5" );
+    }
+
+    @Test
+    public void testSignatureChecksums_Download()
+    {
+        DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "asc", "1.0" );
+        URI uri = layout.getLocation( artifact );
+        List<Checksum> checksums = layout.getChecksums( artifact, uri, false );
+        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-1", "MD5" );
+
+        artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
+        uri = layout.getLocation( artifact );
+        checksums = layout.getChecksums( artifact, uri, false );
+        assertEquals( 0, checksums.size() );
+    }
+
+    @Test
+    public void testSignatureChecksums_Upload()
+    {
+        DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "asc", "1.0" );
+        URI uri = layout.getLocation( artifact );
+        List<Checksum> checksums = layout.getChecksums( artifact, uri, true );
+        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-1", "MD5" );
+
+        artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
+        uri = layout.getLocation( artifact );
+        checksums = layout.getChecksums( artifact, uri, true );
+        assertEquals( 0, checksums.size() );
+    }
+
+    @Test
+    public void testSignatureChecksums_Force()
+        throws Exception
+    {
+        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_SIGNATURE_CHECKSUMS, "true" );
+        layout = factory.newInstance( session, newRepo( "default" ) );
+        DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
+        URI uri = layout.getLocation( artifact );
+        List<Checksum> checksums = layout.getChecksums( artifact, uri, true );
+        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.jar.asc", "SHA-1", "MD5" );
     }
 
 }
