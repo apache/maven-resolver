@@ -23,12 +23,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.transport.GetRequest;
+import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.NoTransporterException;
-import org.eclipse.aether.spi.connector.transport.PeekRequest;
-import org.eclipse.aether.spi.connector.transport.PutRequest;
+import org.eclipse.aether.spi.connector.transport.PeekTask;
+import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
-import org.eclipse.aether.spi.connector.transport.TransportRequest;
+import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.util.ConfigUtils;
@@ -90,10 +90,10 @@ final class ClasspathTransporter
         }
     }
 
-    private URL getResource( TransportRequest request )
+    private URL getResource( TransportTask task )
         throws Exception
     {
-        String resource = resourceBase + request.getLocation().getPath();
+        String resource = resourceBase + task.getLocation().getPath();
         URL url = classLoader.getResource( resource );
         if ( url == null )
         {
@@ -111,37 +111,37 @@ final class ClasspathTransporter
         return ERROR_OTHER;
     }
 
-    private void failIfClosed( TransportRequest request )
+    private void failIfClosed( TransportTask task )
     {
         if ( closed.get() )
         {
-            throw new IllegalStateException( "transporter closed, cannot execute request " + request );
+            throw new IllegalStateException( "transporter closed, cannot execute task " + task );
         }
     }
 
-    public void peek( PeekRequest request )
+    public void peek( PeekTask task )
         throws Exception
     {
-        failIfClosed( request );
+        failIfClosed( task );
 
-        getResource( request );
+        getResource( task );
     }
 
-    public void get( GetRequest request )
+    public void get( GetTask task )
         throws Exception
     {
-        failIfClosed( request );
+        failIfClosed( task );
 
-        URL url = getResource( request );
+        URL url = getResource( task );
         URLConnection conn = url.openConnection();
         InputStream is = conn.getInputStream();
         try
         {
-            request.getListener().transportStarted( 0, conn.getContentLength() );
-            OutputStream os = request.newOutputStream();
+            task.getListener().transportStarted( 0, conn.getContentLength() );
+            OutputStream os = task.newOutputStream();
             try
             {
-                copy( os, is, request.getListener() );
+                copy( os, is, task.getListener() );
                 os.close();
             }
             finally
@@ -184,10 +184,10 @@ final class ClasspathTransporter
         }
     }
 
-    public void put( PutRequest request )
+    public void put( PutTask task )
         throws Exception
     {
-        failIfClosed( request );
+        failIfClosed( task );
 
         throw new UnsupportedOperationException( "Uploading to a classpath: repository is not supported" );
     }

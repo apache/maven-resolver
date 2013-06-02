@@ -20,12 +20,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 /**
- * A request to download a resource from the remote repository.
+ * A task to download a resource from the remote repository.
  * 
- * @see Transporter#get(GetRequest)
+ * @see Transporter#get(GetTask)
  */
-public final class GetRequest
-    extends TransportRequest
+public final class GetTask
+    extends TransportTask
 {
 
     private File dataFile;
@@ -35,11 +35,11 @@ public final class GetRequest
     private ByteArrayOutputStream dataBytes;
 
     /**
-     * Creates a new request for the specified remote resource.
+     * Creates a new task for the specified remote resource.
      * 
      * @param location The relative location of the resource in the remote repository, must not be {@code null}.
      */
-    public GetRequest( URI location )
+    public GetTask( URI location )
     {
         setLocation( location );
     }
@@ -103,9 +103,9 @@ public final class GetRequest
      * recommended to avoid exhausting heap memory during the download.
      * 
      * @param dataFile The file to store the downloaded data, may be {@code null} to store the data in memory.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    public GetRequest setDataFile( File dataFile )
+    public GetTask setDataFile( File dataFile )
     {
         return setDataFile( dataFile, false );
     }
@@ -119,9 +119,9 @@ public final class GetRequest
      * @param dataFile The file to store the downloaded data, may be {@code null} to store the data in memory.
      * @param resume {@code true} to request resuming a previous download attempt, starting from the current length of
      *            the data file, {@code false} to download the resource from its beginning.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    public GetRequest setDataFile( File dataFile, boolean resume )
+    public GetTask setDataFile( File dataFile, boolean resume )
     {
         this.dataFile = dataFile;
         this.resume = resume;
@@ -192,9 +192,9 @@ public final class GetRequest
      * Sets the listener that is to be notified during the transfer.
      * 
      * @param listener The listener to notify of progress, may be {@code null}.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    public GetRequest setListener( TransportListener listener )
+    public GetTask setListener( TransportListener listener )
     {
         super.setListener( listener );
         return this;

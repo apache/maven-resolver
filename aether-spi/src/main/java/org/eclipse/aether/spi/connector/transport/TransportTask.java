@@ -13,11 +13,11 @@ package org.eclipse.aether.spi.connector.transport;
 import java.net.URI;
 
 /**
- * A transport request.
+ * A transport task.
  * 
  * @noextend This class is not intended to be extended by clients.
  */
-public abstract class TransportRequest
+public abstract class TransportTask
 {
 
     static final TransportListener NOOP = new TransportListener()
@@ -30,7 +30,7 @@ public abstract class TransportRequest
 
     private TransportListener listener = NOOP;
 
-    TransportRequest()
+    TransportTask()
     {
         // hide
     }
@@ -45,7 +45,7 @@ public abstract class TransportRequest
         return location;
     }
 
-    TransportRequest setLocation( URI location )
+    TransportTask setLocation( URI location )
     {
         if ( location == null )
         {
@@ -69,9 +69,9 @@ public abstract class TransportRequest
      * Sets the listener that is to be notified during the transfer.
      * 
      * @param listener The listener to notify of progress, may be {@code null}.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    TransportRequest setListener( TransportListener listener )
+    TransportTask setListener( TransportListener listener )
     {
         this.listener = ( listener != null ) ? listener : NOOP;
         return this;

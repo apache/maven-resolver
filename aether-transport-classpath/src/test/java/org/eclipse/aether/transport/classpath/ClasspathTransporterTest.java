@@ -21,9 +21,9 @@ import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.transport.GetRequest;
-import org.eclipse.aether.spi.connector.transport.PeekRequest;
-import org.eclipse.aether.spi.connector.transport.PutRequest;
+import org.eclipse.aether.spi.connector.transport.GetTask;
+import org.eclipse.aether.spi.connector.transport.PeekTask;
+import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.junit.After;
 import org.junit.Before;
@@ -88,7 +88,7 @@ public class ClasspathTransporterTest
         throws Exception
     {
         newTransporter( "repository/a" );
-        transporter.peek( new PeekRequest( URI.create( "file.txt" ) ) );
+        transporter.peek( new PeekTask( URI.create( "file.txt" ) ) );
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ClasspathTransporterTest
         newTransporter( "repository/a" );
         try
         {
-            transporter.peek( new PeekRequest( URI.create( "missing.txt" ) ) );
+            transporter.peek( new PeekTask( URI.create( "missing.txt" ) ) );
         }
         catch ( ResourceNotFoundException e )
         {
@@ -114,7 +114,7 @@ public class ClasspathTransporterTest
         transporter.close();
         try
         {
-            transporter.peek( new PeekRequest( URI.create( "missing.txt" ) ) );
+            transporter.peek( new PeekTask( URI.create( "missing.txt" ) ) );
         }
         catch ( IllegalStateException e )
         {
@@ -128,14 +128,14 @@ public class ClasspathTransporterTest
     {
         newTransporter( "repository/a" );
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetRequest request = new GetRequest( URI.create( "file.txt" ) ).setListener( listener );
-        transporter.get( request );
-        assertEquals( "test", request.getDataString() );
+        GetTask task = new GetTask( URI.create( "file.txt" ) ).setListener( listener );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
         assertEquals( 0, listener.dataOffset );
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( request.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
     }
 
     @Test
@@ -145,8 +145,8 @@ public class ClasspathTransporterTest
         newTransporter( "repository/a" );
         File file = TestFileUtils.createTempFile( "failure" );
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetRequest request = new GetRequest( URI.create( "file.txt" ) ).setDataFile( file ).setListener( listener );
-        transporter.get( request );
+        GetTask task = new GetTask( URI.create( "file.txt" ) ).setDataFile( file ).setListener( listener );
+        transporter.get( task );
         assertEquals( "test", TestFileUtils.readString( file ) );
         assertEquals( 0, listener.dataOffset );
         assertEquals( 4, listener.dataLength );
@@ -162,7 +162,7 @@ public class ClasspathTransporterTest
         newTransporter( "repository/a" );
         try
         {
-            transporter.get( new GetRequest( URI.create( "missing.txt" ) ) );
+            transporter.get( new GetTask( URI.create( "missing.txt" ) ) );
         }
         catch ( ResourceNotFoundException e )
         {
@@ -178,7 +178,7 @@ public class ClasspathTransporterTest
         transporter.close();
         try
         {
-            transporter.get( new GetRequest( URI.create( "file.txt" ) ) );
+            transporter.get( new GetTask( URI.create( "file.txt" ) ) );
         }
         catch ( IllegalStateException e )
         {
@@ -193,7 +193,7 @@ public class ClasspathTransporterTest
         newTransporter( "repository/a" );
         try
         {
-            transporter.put( new PutRequest( URI.create( "missing.txt" ) ) );
+            transporter.put( new PutTask( URI.create( "missing.txt" ) ) );
         }
         catch ( UnsupportedOperationException e )
         {
@@ -209,7 +209,7 @@ public class ClasspathTransporterTest
         transporter.close();
         try
         {
-            transporter.put( new PutRequest( URI.create( "missing.txt" ) ) );
+            transporter.put( new PutTask( URI.create( "missing.txt" ) ) );
         }
         catch ( IllegalStateException e )
         {

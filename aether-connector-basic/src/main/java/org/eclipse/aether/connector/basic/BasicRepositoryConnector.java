@@ -33,10 +33,10 @@ import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.connector.transport.GetRequest;
+import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.NoTransporterException;
-import org.eclipse.aether.spi.connector.transport.PeekRequest;
-import org.eclipse.aether.spi.connector.transport.PutRequest;
+import org.eclipse.aether.spi.connector.transport.PeekTask;
+import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
@@ -172,7 +172,8 @@ final class BasicRepositoryConnector
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            GetTask task = new GetTask( path, transfer.getFile(), false, transfer.getChecksumPolicy(), listener );
+            GetTaskRunner task =
+                new GetTaskRunner( path, transfer.getFile(), false, transfer.getChecksumPolicy(), listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -184,9 +185,9 @@ final class BasicRepositoryConnector
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            GetTask task =
-                new GetTask( path, transfer.getFile(), transfer.isExistenceCheck(), transfer.getChecksumPolicy(),
-                             listener );
+            GetTaskRunner task =
+                new GetTaskRunner( path, transfer.getFile(), transfer.isExistenceCheck(), transfer.getChecksumPolicy(),
+                                   listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -209,7 +210,7 @@ final class BasicRepositoryConnector
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            PutTask task = new PutTask( path, transfer.getFile(), listener );
+            PutTaskRunner task = new PutTaskRunner( path, transfer.getFile(), listener );
             task.run();
         }
 
@@ -221,7 +222,7 @@ final class BasicRepositoryConnector
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            PutTask task = new PutTask( path, transfer.getFile(), listener );
+            PutTaskRunner task = new PutTaskRunner( path, transfer.getFile(), listener );
             task.run();
         }
     }
@@ -256,7 +257,7 @@ final class BasicRepositoryConnector
         return String.valueOf( repository );
     }
 
-    class GetTask
+    class GetTaskRunner
         implements Runnable
     {
 
@@ -270,7 +271,8 @@ final class BasicRepositoryConnector
 
         private final TransferTransportListener<?> listener;
 
-        public GetTask( URI path, File file, boolean peek, String checksumPolicy, TransferTransportListener<?> listener )
+        public GetTaskRunner( URI path, File file, boolean peek, String checksumPolicy,
+                              TransferTransportListener<?> listener )
         {
             this.path = path;
             this.file = file;
@@ -286,7 +288,7 @@ final class BasicRepositoryConnector
                 listener.transferInitiated();
                 if ( peek )
                 {
-                    transporter.peek( new PeekRequest( path ) );
+                    transporter.peek( new PeekTask( path ) );
                 }
                 else
                 {
@@ -304,7 +306,7 @@ final class BasicRepositoryConnector
                     {
                         for ( int trial = 1; trial >= 0; trial-- )
                         {
-                            transporter.get( new GetRequest( path ).setDataFile( tmp ).setListener( listener ) );
+                            transporter.get( new GetTask( path ).setDataFile( tmp ).setListener( listener ) );
                             if ( RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( checksumPolicy ) )
                             {
                                 break;
@@ -387,7 +389,7 @@ final class BasicRepositoryConnector
                 tmp = newTempFile( checksumFile );
                 try
                 {
-                    transporter.get( new GetRequest( new URI( path.toString() + ext ) ).setDataFile( tmp ) );
+                    transporter.get( new GetTask( new URI( path.toString() + ext ) ).setDataFile( tmp ) );
                 }
                 catch ( Exception e )
                 {
@@ -430,7 +432,7 @@ final class BasicRepositoryConnector
 
     }
 
-    class PutTask
+    class PutTaskRunner
         implements Runnable
     {
 
@@ -440,7 +442,7 @@ final class BasicRepositoryConnector
 
         private final TransferTransportListener<?> listener;
 
-        public PutTask( URI path, File file, TransferTransportListener<?> listener )
+        public PutTaskRunner( URI path, File file, TransferTransportListener<?> listener )
         {
             this.path = path;
             this.file = file;
@@ -456,7 +458,7 @@ final class BasicRepositoryConnector
                 {
                     throw new IllegalArgumentException( "source file has not been specified" );
                 }
-                transporter.put( new PutRequest( path ).setDataFile( file ).setListener( listener ) );
+                transporter.put( new PutTask( path ).setDataFile( file ).setListener( listener ) );
                 uploadChecksums( file, path );
                 listener.transferSucceeded();
             }
@@ -503,7 +505,7 @@ final class BasicRepositoryConnector
                 URI dst = new URI( path.toString() + ext );
                 String sum = String.valueOf( checksum );
 
-                transporter.put( new PutRequest( dst ).setDataString( sum ) );
+                transporter.put( new PutTask( dst ).setDataString( sum ) );
             }
             catch ( Exception e )
             {

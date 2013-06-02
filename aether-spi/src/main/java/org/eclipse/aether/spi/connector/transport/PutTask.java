@@ -20,12 +20,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 /**
- * A request to upload a resource to the remote repository.
+ * A task to upload a resource to the remote repository.
  * 
- * @see Transporter#put(PutRequest)
+ * @see Transporter#put(PutTask)
  */
-public final class PutRequest
-    extends TransportRequest
+public final class PutTask
+    extends TransportTask
 {
 
     private File dataFile;
@@ -33,11 +33,11 @@ public final class PutRequest
     private byte[] dataBytes = EMPTY;
 
     /**
-     * Creates a new request for the specified remote resource.
+     * Creates a new task for the specified remote resource.
      * 
      * @param location The relative location of the resource in the remote repository, must not be {@code null}.
      */
-    public PutRequest( URI location )
+    public PutTask( URI location )
     {
         setLocation( location );
     }
@@ -88,9 +88,9 @@ public final class PutRequest
      * {@link #setDataString(String)} or {@link #setDataBytes(byte[])}.
      * 
      * @param dataFile The data file, may be {@code null} if the resource data is provided directly from memory.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    public PutRequest setDataFile( File dataFile )
+    public PutTask setDataFile( File dataFile )
     {
         this.dataFile = dataFile;
         dataBytes = EMPTY;
@@ -101,9 +101,9 @@ public final class PutRequest
      * Sets the binary data to be uploaded.
      * 
      * @param bytes The binary data, may be {@code null}.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    public PutRequest setDataBytes( byte[] bytes )
+    public PutTask setDataBytes( byte[] bytes )
     {
         this.dataBytes = ( bytes != null ) ? bytes : EMPTY;
         dataFile = null;
@@ -114,9 +114,9 @@ public final class PutRequest
      * Sets the textual data to be uploaded. The text is encoded using UTF-8 before transmission.
      * 
      * @param str The textual data, may be {@code null}.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    public PutRequest setDataString( String str )
+    public PutTask setDataString( String str )
     {
         try
         {
@@ -132,9 +132,9 @@ public final class PutRequest
      * Sets the listener that is to be notified during the transfer.
      * 
      * @param listener The listener to notify of progress, may be {@code null}.
-     * @return This request for chaining, never {@code null}.
+     * @return This task for chaining, never {@code null}.
      */
-    public PutRequest setListener( TransportListener listener )
+    public PutTask setListener( TransportListener listener )
     {
         super.setListener( listener );
         return this;

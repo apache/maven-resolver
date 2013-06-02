@@ -15,7 +15,7 @@ import java.io.Closeable;
 /**
  * A transporter for a remote repository. A transporter is responsible for transferring resources between the remote
  * repository and the local system. During its operation, the transporter must provide progress feedback via the
- * {@link TransportListener} configured on the underlying request.
+ * {@link TransportListener} configured on the underlying task.
  * <p>
  * If applicable, a transporter should obey connect/request timeouts and other relevant settings from the
  * {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties() configuration properties} of the repository
@@ -59,30 +59,30 @@ public interface Transporter
      * indicates the resource specified in the request does not exist, an exception is thrown such that invoking
      * {@link #classify(Throwable)} with that exception yields {@link #ERROR_NOT_FOUND}.
      * 
-     * @param request The existence check to perform, must not be {@code null}.
+     * @param task The existence check to perform, must not be {@code null}.
      * @throws Exception If the existence of the specified resource could not be confirmed.
      */
-    void peek( PeekRequest request )
+    void peek( PeekTask task )
         throws Exception;
 
     /**
      * Downloads a resource from the repository. If the resource is downloaded to a file as given by
-     * {@link GetRequest#getDataFile()} and the operation fails midway, the transporter should not delete the partial
-     * file but leave its management to the caller.
+     * {@link GetTask#getDataFile()} and the operation fails midway, the transporter should not delete the partial file
+     * but leave its management to the caller.
      * 
-     * @param request The download to perform, must not be {@code null}.
+     * @param task The download to perform, must not be {@code null}.
      * @throws Exception If the transfer failed.
      */
-    void get( GetRequest request )
+    void get( GetTask task )
         throws Exception;
 
     /**
      * Uploads a resource to the repository.
      * 
-     * @param request The upload to perform, must not be {@code null}.
+     * @param task The upload to perform, must not be {@code null}.
      * @throws Exception If the transfer failed.
      */
-    void put( PutRequest request )
+    void put( PutTask task )
         throws Exception;
 
     /**

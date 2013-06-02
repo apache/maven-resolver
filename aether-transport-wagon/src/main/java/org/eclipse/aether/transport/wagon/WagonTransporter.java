@@ -39,11 +39,11 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.transport.GetRequest;
+import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.NoTransporterException;
-import org.eclipse.aether.spi.connector.transport.PeekRequest;
-import org.eclipse.aether.spi.connector.transport.PutRequest;
-import org.eclipse.aether.spi.connector.transport.TransportRequest;
+import org.eclipse.aether.spi.connector.transport.PeekTask;
+import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.util.ConfigUtils;
@@ -392,39 +392,39 @@ final class WagonTransporter
         return ERROR_OTHER;
     }
 
-    public void peek( PeekRequest request )
+    public void peek( PeekTask task )
         throws Exception
     {
-        execute( request, new PeekTask( request ) );
+        execute( task, new PeekTaskRunner( task ) );
     }
 
-    public void get( GetRequest request )
+    public void get( GetTask task )
         throws Exception
     {
-        execute( request, new GetTask( request ) );
+        execute( task, new GetTaskRunner( task ) );
     }
 
-    public void put( PutRequest request )
+    public void put( PutTask task )
         throws Exception
     {
-        execute( request, new PutTask( request ) );
+        execute( task, new PutTaskRunner( task ) );
     }
 
-    private void execute( TransportRequest request, Task task )
+    private void execute( TransportTask task, TaskRunner runner )
         throws Exception
     {
         if ( closed.get() )
         {
-            throw new IllegalStateException( "transporter closed, cannot execute request " + request );
+            throw new IllegalStateException( "transporter closed, cannot execute task " + task );
         }
         try
         {
-            WagonTransferListener listener = new WagonTransferListener( request.getListener() );
+            WagonTransferListener listener = new WagonTransferListener( task.getListener() );
             Wagon wagon = pollWagon();
             try
             {
                 wagon.addTransferListener( listener );
-                task.run( wagon );
+                runner.run( wagon );
             }
             finally
             {
@@ -484,7 +484,7 @@ final class WagonTransporter
         }
     }
 
-    private interface Task
+    private interface TaskRunner
     {
 
         public void run( Wagon wagon )
@@ -492,21 +492,21 @@ final class WagonTransporter
 
     }
 
-    private static class PeekTask
-        implements Task
+    private static class PeekTaskRunner
+        implements TaskRunner
     {
 
-        private final PeekRequest request;
+        private final PeekTask task;
 
-        public PeekTask( PeekRequest request )
+        public PeekTaskRunner( PeekTask task )
         {
-            this.request = request;
+            this.task = task;
         }
 
         public void run( Wagon wagon )
             throws Exception
         {
-            String src = request.getLocation().toString();
+            String src = task.getLocation().toString();
             if ( !wagon.resourceExists( src ) )
             {
                 throw new ResourceDoesNotExistException( "Could not find " + src + " in "
@@ -516,25 +516,25 @@ final class WagonTransporter
 
     }
 
-    private static class GetTask
-        implements Task
+    private static class GetTaskRunner
+        implements TaskRunner
     {
 
-        private final GetRequest request;
+        private final GetTask task;
 
-        public GetTask( GetRequest request )
+        public GetTaskRunner( GetTask task )
         {
-            this.request = request;
+            this.task = task;
         }
 
         public void run( Wagon wagon )
             throws Exception
         {
-            String src = request.getLocation().toString();
-            File file = request.getDataFile();
+            String src = task.getLocation().toString();
+            File file = task.getDataFile();
             if ( file == null && wagon instanceof StreamingWagon )
             {
-                OutputStream dst = request.newOutputStream();
+                OutputStream dst = task.newOutputStream();
                 try
                 {
                     ( (StreamingWagon) wagon ).getToStream( src, dst );
@@ -580,7 +580,7 @@ final class WagonTransporter
             FileInputStream fis = new FileInputStream( dst );
             try
             {
-                OutputStream os = request.newOutputStream();
+                OutputStream os = task.newOutputStream();
                 try
                 {
                     copy( os, fis );
@@ -598,28 +598,28 @@ final class WagonTransporter
 
     }
 
-    private static class PutTask
-        implements Task
+    private static class PutTaskRunner
+        implements TaskRunner
     {
 
-        private final PutRequest request;
+        private final PutTask task;
 
-        public PutTask( PutRequest request )
+        public PutTaskRunner( PutTask task )
         {
-            this.request = request;
+            this.task = task;
         }
 
         public void run( Wagon wagon )
             throws Exception
         {
-            String dst = request.getLocation().toString();
-            File file = request.getDataFile();
+            String dst = task.getLocation().toString();
+            File file = task.getDataFile();
             if ( file == null && wagon instanceof StreamingWagon )
             {
-                InputStream src = request.newInputStream();
+                InputStream src = task.newInputStream();
                 try
                 {
-                    ( (StreamingWagon) wagon ).putFromStream( src, dst, request.getDataLength(), -1 );
+                    ( (StreamingWagon) wagon ).putFromStream( src, dst, task.getDataLength(), -1 );
                 }
                 finally
                 {
@@ -652,7 +652,7 @@ final class WagonTransporter
                 FileOutputStream fos = new FileOutputStream( tmp );
                 try
                 {
-                    InputStream is = request.newInputStream();
+                    InputStream is = task.newInputStream();
                     try
                     {
                         copy( fos, is );

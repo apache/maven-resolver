@@ -13,21 +13,21 @@ package org.eclipse.aether.spi.connector.transport;
 import java.net.URI;
 
 /**
- * A request to check the existence of a resource in the remote repository. <em>Note:</em> The listener returned from
- * {@link #getListener()} is always a noop given that none of its event methods are relevant in context of this request.
+ * A task to check the existence of a resource in the remote repository. <em>Note:</em> The listener returned from
+ * {@link #getListener()} is always a noop given that none of its event methods are relevant in context of this task.
  * 
- * @see Transporter#peek(PeekRequest)
+ * @see Transporter#peek(PeekTask)
  */
-public final class PeekRequest
-    extends TransportRequest
+public final class PeekTask
+    extends TransportTask
 {
 
     /**
-     * Creates a new request for the specified remote resource.
+     * Creates a new task for the specified remote resource.
      * 
      * @param location The relative location of the resource in the remote repository, must not be {@code null}.
      */
-    public PeekRequest( URI location )
+    public PeekTask( URI location )
     {
         setLocation( location );
     }

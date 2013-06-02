@@ -21,12 +21,12 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.transport.GetRequest;
+import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.NoTransporterException;
-import org.eclipse.aether.spi.connector.transport.PeekRequest;
-import org.eclipse.aether.spi.connector.transport.PutRequest;
+import org.eclipse.aether.spi.connector.transport.PeekTask;
+import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
-import org.eclipse.aether.spi.connector.transport.TransportRequest;
+import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
 
@@ -64,28 +64,28 @@ final class FileTransporter
         return ERROR_OTHER;
     }
 
-    public void peek( PeekRequest request )
+    public void peek( PeekTask task )
         throws Exception
     {
-        failIfClosed( request );
+        failIfClosed( task );
 
-        getFile( request, true );
+        getFile( task, true );
     }
 
-    public void get( GetRequest request )
+    public void get( GetTask task )
         throws Exception
     {
-        failIfClosed( request );
+        failIfClosed( task );
 
-        File file = getFile( request, true );
-        request.getListener().transportStarted( 0, file.length() );
+        File file = getFile( task, true );
+        task.getListener().transportStarted( 0, file.length() );
         InputStream is = new FileInputStream( file );
         try
         {
-            OutputStream os = request.newOutputStream();
+            OutputStream os = task.newOutputStream();
             try
             {
-                copy( os, is, request.getListener() );
+                copy( os, is, task.getListener() );
                 os.close();
             }
             finally
@@ -99,23 +99,23 @@ final class FileTransporter
         }
     }
 
-    public void put( PutRequest request )
+    public void put( PutTask task )
         throws Exception
     {
-        failIfClosed( request );
+        failIfClosed( task );
 
-        File file = getFile( request, false );
-        request.getListener().transportStarted( 0, request.getDataLength() );
+        File file = getFile( task, false );
+        task.getListener().transportStarted( 0, task.getDataLength() );
         file.getParentFile().mkdirs();
         OutputStream os = new FileOutputStream( file );
         try
         {
             try
             {
-                InputStream is = request.newInputStream();
+                InputStream is = task.newInputStream();
                 try
                 {
-                    copy( os, is, request.getListener() );
+                    copy( os, is, task.getListener() );
                 }
                 finally
                 {
@@ -138,10 +138,10 @@ final class FileTransporter
         }
     }
 
-    private File getFile( TransportRequest request, boolean required )
+    private File getFile( TransportTask task, boolean required )
         throws Exception
     {
-        String path = request.getLocation().getPath();
+        String path = task.getLocation().getPath();
         if ( path.contains( "../" ) )
         {
             throw new IllegalArgumentException( "Illegal resource path: " + path );
@@ -183,11 +183,11 @@ final class FileTransporter
         }
     }
 
-    private void failIfClosed( TransportRequest request )
+    private void failIfClosed( TransportTask task )
     {
         if ( closed.get() )
         {
-            throw new IllegalStateException( "transporter closed, cannot execute request " + request );
+            throw new IllegalStateException( "transporter closed, cannot execute task " + task );
         }
     }
 
