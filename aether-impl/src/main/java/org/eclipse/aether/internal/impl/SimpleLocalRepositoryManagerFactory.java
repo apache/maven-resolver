@@ -37,6 +37,8 @@ public class SimpleLocalRepositoryManagerFactory
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
+    private float priority;
+
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
@@ -69,7 +71,19 @@ public class SimpleLocalRepositoryManagerFactory
 
     public float getPriority()
     {
-        return 0;
+        return priority;
+    }
+
+    /**
+     * Sets the priority of this component.
+     * 
+     * @param priority The priority.
+     * @return This component for chaining, never {@code null}.
+     */
+    public SimpleLocalRepositoryManagerFactory setPriority( float priority )
+    {
+        this.priority = priority;
+        return this;
     }
 
 }
