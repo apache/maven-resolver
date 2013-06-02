@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -78,9 +78,9 @@ public interface Artifact
     String getClassifier();
 
     /**
-     * Gets the (file) extension of this artifact, for example "jar".
+     * Gets the (file) extension of this artifact, for example "jar" or "tar.gz".
      * 
-     * @return The file extension, never {@code null}.
+     * @return The file extension (without leading period), never {@code null}.
      */
     String getExtension();
 
