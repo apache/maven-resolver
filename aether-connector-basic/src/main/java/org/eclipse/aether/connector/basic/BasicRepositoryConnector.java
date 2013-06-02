@@ -15,8 +15,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +36,9 @@ import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
+import org.eclipse.aether.spi.connector.layout.NoRepositoryLayoutException;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.NoTransporterException;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
@@ -48,8 +54,6 @@ import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.repository.layout.MavenDefaultLayout;
-import org.eclipse.aether.util.repository.layout.RepositoryLayout;
 
 /**
  */
@@ -73,20 +77,21 @@ final class BasicRepositoryConnector
 
     private final Executor executor;
 
-    private final Map<String, String> checksumAlgos;
-
     private boolean closed;
 
     public BasicRepositoryConnector( RepositorySystemSession session, RemoteRepository repository,
-                                     TransporterProvider transporterProvider, FileProcessor fileProcessor, Logger logger )
+                                     TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
+                                     FileProcessor fileProcessor, Logger logger )
         throws NoRepositoryConnectorException
     {
-        if ( !"default".equals( repository.getContentType() ) )
+        try
         {
-            throw new NoRepositoryConnectorException( repository );
+            layout = layoutProvider.newRepositoryLayout( session, repository );
         }
-        layout = new MavenDefaultLayout();
-
+        catch ( NoRepositoryLayoutException e )
+        {
+            throw new NoRepositoryConnectorException( repository, e );
+        }
         try
         {
             transporter = transporterProvider.newTransporter( session, repository );
@@ -103,10 +108,6 @@ final class BasicRepositoryConnector
 
         int threads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
         executor = getExecutor( threads );
-
-        checksumAlgos = new LinkedHashMap<String, String>();
-        checksumAlgos.put( "SHA-1", ".sha1" );
-        checksumAlgos.put( "MD5", ".md5" );
     }
 
     private Executor getExecutor( int threads )
@@ -166,28 +167,47 @@ final class BasicRepositoryConnector
 
         for ( MetadataDownload transfer : safe( metadataDownloads ) )
         {
-            URI path = layout.getPath( transfer.getMetadata() );
+            URI location = layout.getLocation( transfer.getMetadata() );
+            List<RepositoryLayout.Checksum> checksums;
+            if ( RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( transfer.getChecksumPolicy() ) )
+            {
+                checksums = null;
+            }
+            else
+            {
+                checksums = layout.getChecksums( transfer.getMetadata(), location, false );
+            }
 
-            TransferEvent.Builder builder = newEventBuilder( path, transfer.getFile(), false, transfer.getTrace() );
+            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), false, transfer.getTrace() );
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
             GetTaskRunner task =
-                new GetTaskRunner( path, transfer.getFile(), false, transfer.getChecksumPolicy(), listener );
+                new GetTaskRunner( location, transfer.getFile(), false, transfer.getChecksumPolicy(), checksums,
+                                   listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
         for ( ArtifactDownload transfer : safe( artifactDownloads ) )
         {
-            URI path = layout.getPath( transfer.getArtifact() );
+            URI location = layout.getLocation( transfer.getArtifact() );
+            List<RepositoryLayout.Checksum> checksums;
+            if ( RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( transfer.getChecksumPolicy() ) )
+            {
+                checksums = null;
+            }
+            else
+            {
+                checksums = layout.getChecksums( transfer.getArtifact(), location, false );
+            }
 
-            TransferEvent.Builder builder = newEventBuilder( path, transfer.getFile(), false, transfer.getTrace() );
+            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), false, transfer.getTrace() );
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
             GetTaskRunner task =
-                new GetTaskRunner( path, transfer.getFile(), transfer.isExistenceCheck(), transfer.getChecksumPolicy(),
-                                   listener );
+                new GetTaskRunner( location, transfer.getFile(), transfer.isExistenceCheck(),
+                                   transfer.getChecksumPolicy(), checksums, listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -204,30 +224,32 @@ final class BasicRepositoryConnector
 
         for ( ArtifactUpload transfer : safe( artifactUploads ) )
         {
-            URI path = layout.getPath( transfer.getArtifact() );
+            URI location = layout.getLocation( transfer.getArtifact() );
+            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getArtifact(), location, true );
 
-            TransferEvent.Builder builder = newEventBuilder( path, transfer.getFile(), true, transfer.getTrace() );
+            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), true, transfer.getTrace() );
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            PutTaskRunner task = new PutTaskRunner( path, transfer.getFile(), listener );
+            PutTaskRunner task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
             task.run();
         }
 
         for ( MetadataUpload transfer : safe( metadataUploads ) )
         {
-            URI path = layout.getPath( transfer.getMetadata() );
+            URI location = layout.getLocation( transfer.getMetadata() );
+            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getMetadata(), location, true );
 
-            TransferEvent.Builder builder = newEventBuilder( path, transfer.getFile(), true, transfer.getTrace() );
+            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), true, transfer.getTrace() );
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            PutTaskRunner task = new PutTaskRunner( path, transfer.getFile(), listener );
+            PutTaskRunner task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
             task.run();
         }
     }
 
-    private <T> Collection<T> safe( Collection<T> items )
+    private static <T> Collection<T> safe( Collection<T> items )
     {
         return ( items != null ) ? items : Collections.<T> emptyList();
     }
@@ -269,15 +291,18 @@ final class BasicRepositoryConnector
 
         private final String checksumPolicy;
 
+        private final Collection<RepositoryLayout.Checksum> checksums;
+
         private final TransferTransportListener<?> listener;
 
         public GetTaskRunner( URI path, File file, boolean peek, String checksumPolicy,
-                              TransferTransportListener<?> listener )
+                              List<RepositoryLayout.Checksum> checksums, TransferTransportListener<?> listener )
         {
             this.path = path;
             this.file = file;
             this.peek = peek;
             this.checksumPolicy = checksumPolicy;
+            this.checksums = safe( checksums );
             this.listener = listener;
         }
 
@@ -296,9 +321,12 @@ final class BasicRepositoryConnector
                     {
                         throw new IllegalArgumentException( "destination file has not been specified" );
                     }
-                    if ( !RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( checksumPolicy ) )
+                    if ( !checksums.isEmpty() )
                     {
-                        listener.setDigests( checksumAlgos.keySet() );
+                        for ( RepositoryLayout.Checksum checksum : checksums )
+                        {
+                            listener.addDigest( checksum.getAlgorithm() );
+                        }
                     }
                     fileProcessor.mkdirs( file.getParentFile() );
                     File tmp = newTempFile( file );
@@ -307,30 +335,23 @@ final class BasicRepositoryConnector
                         for ( int trial = 1; trial >= 0; trial-- )
                         {
                             transporter.get( new GetTask( path ).setDataFile( tmp ).setListener( listener ) );
-                            if ( RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( checksumPolicy ) )
+                            try
                             {
+                                if ( !verifyChecksum() )
+                                {
+                                    trial = 0;
+                                    throw new ChecksumFailureException( "Checksum validation failed"
+                                        + ", no checksums available from the repository" );
+                                }
                                 break;
                             }
-                            else
+                            catch ( ChecksumFailureException e )
                             {
-                                try
+                                if ( trial <= 0 && RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( checksumPolicy ) )
                                 {
-                                    if ( !verifyChecksum() )
-                                    {
-                                        trial = 0;
-                                        throw new ChecksumFailureException( "Checksum validation failed"
-                                            + ", no checksums available from the repository" );
-                                    }
-                                    break;
+                                    throw e;
                                 }
-                                catch ( ChecksumFailureException e )
-                                {
-                                    if ( trial <= 0 && RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( checksumPolicy ) )
-                                    {
-                                        throw e;
-                                    }
-                                    listener.transferCorrupted( e );
-                                }
+                                listener.transferCorrupted( e );
                             }
                         }
                         fileProcessor.move( tmp, file );
@@ -366,11 +387,15 @@ final class BasicRepositoryConnector
         private boolean verifyChecksum()
             throws ChecksumFailureException
         {
-            for ( Map.Entry<String, String> entry : checksumAlgos.entrySet() )
+            if ( checksums.isEmpty() )
             {
-                String algo = entry.getKey(), ext = entry.getValue();
-                String actual = listener.getDigest( algo );
-                if ( actual != null && verifyChecksum( actual, ext ) )
+                return true;
+            }
+            Map<String, String> sumsByAlgo = listener.getDigests();
+            for ( RepositoryLayout.Checksum checksum : checksums )
+            {
+                String actual = sumsByAlgo.get( checksum.getAlgorithm() );
+                if ( actual != null && verifyChecksum( checksum, actual ) )
                 {
                     return true;
                 }
@@ -378,9 +403,10 @@ final class BasicRepositoryConnector
             return false;
         }
 
-        private boolean verifyChecksum( String actual, String ext )
+        private boolean verifyChecksum( RepositoryLayout.Checksum checksum, String actual )
             throws ChecksumFailureException
         {
+            String ext = checksum.getAlgorithm().replace( "-", "" ).toLowerCase( Locale.ENGLISH );
             File checksumFile = new File( file.getPath() + ext );
             File tmp = null;
 
@@ -389,7 +415,7 @@ final class BasicRepositoryConnector
                 tmp = newTempFile( checksumFile );
                 try
                 {
-                    transporter.get( new GetTask( new URI( path.toString() + ext ) ).setDataFile( tmp ) );
+                    transporter.get( new GetTask( checksum.getLocation() ).setDataFile( tmp ) );
                 }
                 catch ( Exception e )
                 {
@@ -409,8 +435,7 @@ final class BasicRepositoryConnector
                     }
                     catch ( IOException e )
                     {
-                        logger.debug( "Failed to write checksum file " + file.getPath() + ext + ": " + e.getMessage(),
-                                      e );
+                        logger.debug( "Failed to write checksum file " + checksumFile + ": " + e.getMessage(), e );
                     }
                 }
                 else
@@ -440,12 +465,16 @@ final class BasicRepositoryConnector
 
         private final File file;
 
+        private final Collection<RepositoryLayout.Checksum> checksums;
+
         private final TransferTransportListener<?> listener;
 
-        public PutTaskRunner( URI path, File file, TransferTransportListener<?> listener )
+        public PutTaskRunner( URI path, File file, List<RepositoryLayout.Checksum> checksums,
+                              TransferTransportListener<?> listener )
         {
             this.path = path;
             this.file = file;
+            this.checksums = safe( checksums );
             this.listener = listener;
         }
 
@@ -468,14 +497,23 @@ final class BasicRepositoryConnector
             }
         }
 
-        private void uploadChecksums( File file, URI path )
+        private void uploadChecksums( File file, URI location )
         {
+            if ( checksums.isEmpty() )
+            {
+                return;
+            }
             try
             {
-                Map<String, Object> checksums = ChecksumUtils.calc( file, checksumAlgos.keySet() );
-                for ( Map.Entry<String, Object> entry : checksums.entrySet() )
+                Set<String> algos = new HashSet<String>();
+                for ( RepositoryLayout.Checksum checksum : checksums )
                 {
-                    uploadChecksum( file, path, entry.getKey(), entry.getValue() );
+                    algos.add( checksum.getAlgorithm() );
+                }
+                Map<String, Object> sumsByAlgo = ChecksumUtils.calc( file, algos );
+                for ( RepositoryLayout.Checksum checksum : checksums )
+                {
+                    uploadChecksum( checksum.getLocation(), sumsByAlgo.get( checksum.getAlgorithm() ) );
                 }
             }
             catch ( IOException e )
@@ -492,7 +530,7 @@ final class BasicRepositoryConnector
             }
         }
 
-        private void uploadChecksum( File file, URI path, String algo, Object checksum )
+        private void uploadChecksum( URI location, Object checksum )
         {
             try
             {
@@ -500,16 +538,11 @@ final class BasicRepositoryConnector
                 {
                     throw (Exception) checksum;
                 }
-
-                String ext = checksumAlgos.get( algo );
-                URI dst = new URI( path.toString() + ext );
-                String sum = String.valueOf( checksum );
-
-                transporter.put( new PutTask( dst ).setDataString( sum ) );
+                transporter.put( new PutTask( location ).setDataString( (String) checksum ) );
             }
             catch ( Exception e )
             {
-                String msg = "Failed to upload " + algo + " checksum for " + file + ": " + e.getMessage();
+                String msg = "Failed to upload checksum " + location + ": " + e.getMessage();
                 if ( logger.isDebugEnabled() )
                 {
                     logger.warn( msg, e );

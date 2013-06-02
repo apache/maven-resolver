@@ -19,6 +19,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
@@ -44,6 +45,9 @@ public final class BasicRepositoryConnectorFactory
     private TransporterProvider transporterProvider;
 
     @Requirement
+    private RepositoryLayoutProvider layoutProvider;
+
+    @Requirement
     private FileProcessor fileProcessor;
 
     private float priority;
@@ -59,10 +63,11 @@ public final class BasicRepositoryConnectorFactory
     }
 
     @Inject
-    BasicRepositoryConnectorFactory( TransporterProvider transporterProvider, FileProcessor fileProcessor,
-                                     LoggerFactory loggerFactory )
+    BasicRepositoryConnectorFactory( TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
+                                     FileProcessor fileProcessor, LoggerFactory loggerFactory )
     {
         setTransporterProvider( transporterProvider );
+        setRepositoryLayoutProvider( layoutProvider );
         setFileProcessor( fileProcessor );
         setLoggerFactory( loggerFactory );
     }
@@ -71,6 +76,7 @@ public final class BasicRepositoryConnectorFactory
     {
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setTransporterProvider( locator.getService( TransporterProvider.class ) );
+        setRepositoryLayoutProvider( locator.getService( RepositoryLayoutProvider.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
     }
 
@@ -105,6 +111,22 @@ public final class BasicRepositoryConnectorFactory
             throw new IllegalArgumentException( "transporter provider has not been specified" );
         }
         this.transporterProvider = transporterProvider;
+        return this;
+    }
+
+    /**
+     * Sets the repository layout provider to use for this component.
+     * 
+     * @param layoutProvider The repository layout provider to use, must not be {@code null}.
+     * @return This component for chaining, never {@code null}.
+     */
+    public BasicRepositoryConnectorFactory setRepositoryLayoutProvider( RepositoryLayoutProvider layoutProvider )
+    {
+        if ( layoutProvider == null )
+        {
+            throw new IllegalArgumentException( "repository layout provider has not been specified" );
+        }
+        this.layoutProvider = layoutProvider;
         return this;
     }
 
@@ -144,7 +166,8 @@ public final class BasicRepositoryConnectorFactory
     public RepositoryConnector newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {
-        return new BasicRepositoryConnector( session, repository, transporterProvider, fileProcessor, logger );
+        return new BasicRepositoryConnector( session, repository, transporterProvider, layoutProvider, fileProcessor,
+                                             logger );
     }
 
 }

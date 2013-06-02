@@ -30,14 +30,18 @@ import org.eclipse.aether.internal.impl.DefaultOfflineController;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
+import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.DefaultTransporterProvider;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
+import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Slf4jLoggerFactory;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
@@ -74,6 +78,10 @@ public final class AetherModule
         .to( DefaultInstaller.class ).in( Singleton.class );
         bind( MetadataResolver.class ) //
         .to( DefaultMetadataResolver.class ).in( Singleton.class );
+        bind( RepositoryLayoutProvider.class ) //
+        .to( DefaultRepositoryLayoutProvider.class ).in( Singleton.class );
+        bind( RepositoryLayoutFactory.class ).annotatedWith( Names.named( "maven2" ) ) //
+        .to( Maven2RepositoryLayoutFactory.class ).in( Singleton.class );
         bind( TransporterProvider.class ) //
         .to( DefaultTransporterProvider.class ).in( Singleton.class );
         bind( RepositoryConnectorProvider.class ) //
@@ -123,6 +131,15 @@ public final class AetherModule
         Set<LocalRepositoryManagerFactory> factories = new HashSet<LocalRepositoryManagerFactory>();
         factories.add( simple );
         factories.add( enhanced );
+        return Collections.unmodifiableSet( factories );
+    }
+
+    @Provides
+    @Singleton
+    Set<RepositoryLayoutFactory> provideRepositoryLayoutFactories( @Named( "maven2" ) RepositoryLayoutFactory maven2 )
+    {
+        Set<RepositoryLayoutFactory> factories = new HashSet<RepositoryLayoutFactory>();
+        factories.add( maven2 );
         return Collections.unmodifiableSet( factories );
     }
 

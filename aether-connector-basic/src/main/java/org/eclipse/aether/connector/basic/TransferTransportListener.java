@@ -16,7 +16,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
@@ -126,39 +125,34 @@ class TransferTransportListener<T extends Transfer>
         transfer.setState( Transfer.State.DONE );
     }
 
-    public void setDigests( Set<String> algos )
+    public void addDigest( String algo )
     {
-        if ( algos == null || algos.isEmpty() )
+        try
         {
-            digests = Collections.emptyMap();
-        }
-        else
-        {
-            digests = new HashMap<String, MessageDigest>();
-            for ( String algo : algos )
+            if ( !digests.containsKey( algo ) )
             {
-                try
+                MessageDigest digest = MessageDigest.getInstance( algo );
+                if ( digests.isEmpty() )
                 {
-                    MessageDigest digest = MessageDigest.getInstance( algo );
-                    digests.put( algo, digest );
+                    digests = new HashMap<String, MessageDigest>();
                 }
-                catch ( NoSuchAlgorithmException e )
-                {
-                    // treat this checksum as missing
-                }
+                digests.put( algo, digest );
             }
+        }
+        catch ( NoSuchAlgorithmException e )
+        {
+            // treat this checksum as missing
         }
     }
 
-    public String getDigest( String algo )
+    public Map<String, String> getDigests()
     {
-        MessageDigest digest = digests.get( algo );
-        if ( digest == null )
+        Map<String, String> results = new HashMap<String, String>();
+        for ( Map.Entry<String, MessageDigest> entry : digests.entrySet() )
         {
-            return null;
+            results.put( entry.getKey(), ChecksumUtils.toHexString( entry.getValue().digest() ) );
         }
-        // NOTE: digest() is a destructive read, acceptable for our case with one-time calls
-        return ChecksumUtils.toHexString( digest.digest() );
+        return results;
     }
 
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,11 @@ import org.eclipse.aether.metadata.Metadata;
 
 /**
  * The layout for a Maven remote repository of type "default".
+ * 
+ * @deprecated Repository connectors should use the
+ *             {@code org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider} instead.
  */
+@Deprecated
 public final class MavenDefaultLayout
     implements RepositoryLayout
 {
