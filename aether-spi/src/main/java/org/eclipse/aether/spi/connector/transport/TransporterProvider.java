@@ -28,7 +28,8 @@ public interface TransporterProvider
      * @param session The repository system session from which to configure the transporter, must not be {@code null}.
      * @param repository The remote repository to create a transporter for, must not be {@code null}.
      * @return The transporter for the given repository, never {@code null}.
-     * @throws NoTransporterException If the factory cannot create a transporter for the specified remote repository.
+     * @throws NoTransporterException If none of the installed transporter factories can provide a transporter for the
+     *             specified remote repository.
      */
     Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException;
