@@ -18,6 +18,9 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.VersionResolver;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
+import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 
 /**
@@ -46,6 +49,18 @@ public class PlexusSupportTest
         List<LocalRepositoryManagerFactory> lrmfs = getContainer().lookupList( LocalRepositoryManagerFactory.class );
         assertNotNull( lrmfs );
         assertEquals( 2, lrmfs.size() );
+
+        List<RepositoryLayoutFactory> rlfs = getContainer().lookupList( RepositoryLayoutFactory.class );
+        assertNotNull( rlfs );
+        assertEquals( 1, rlfs.size() );
+
+        RepositoryLayoutProvider rlp = lookup( RepositoryLayoutProvider.class );
+        assertNotNull( rlp );
+        assertSame( rlp, lookup( RepositoryLayoutProvider.class ) );
+
+        TransporterProvider tp = lookup( TransporterProvider.class );
+        assertNotNull( tp );
+        assertSame( tp, lookup( TransporterProvider.class ) );
     }
 
 }

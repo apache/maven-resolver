@@ -57,7 +57,7 @@ public final class Maven2RepositoryLayoutFactory
     public RepositoryLayout newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryLayoutException
     {
-        if ( !"default".equalsIgnoreCase( repository.getContentType() ) )
+        if ( !"default".equals( repository.getContentType() ) )
         {
             throw new NoRepositoryLayoutException( repository );
         }
