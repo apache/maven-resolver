@@ -307,7 +307,7 @@ public final class ConflictResolver
         // those will be nuked during future graph walks when we include the winner in the recursion
     }
 
-    final class NodeInfo
+    static final class NodeInfo
     {
 
         /**
