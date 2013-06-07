@@ -444,6 +444,14 @@ final class WagonTransporter
         return File.createTempFile( "wagon-" + UUID.randomUUID().toString().replace( "-", "" ), ".tmp" );
     }
 
+    private void delTempFile( File path )
+    {
+        if ( path != null && !path.delete() && path.exists() )
+        {
+            logger.debug( "Could not delete temorary file " + path );
+        }
+    }
+
     private static void copy( OutputStream os, InputStream is )
         throws IOException
     {
@@ -516,7 +524,7 @@ final class WagonTransporter
 
     }
 
-    private static class GetTaskRunner
+    private class GetTaskRunner
         implements TaskRunner
     {
 
@@ -568,7 +576,7 @@ final class WagonTransporter
                 {
                     if ( file == null )
                     {
-                        dst.delete();
+                        delTempFile( dst );
                     }
                 }
             }
@@ -598,7 +606,7 @@ final class WagonTransporter
 
     }
 
-    private static class PutTaskRunner
+    private class PutTaskRunner
         implements TaskRunner
     {
 
@@ -637,7 +645,7 @@ final class WagonTransporter
                 {
                     if ( file == null )
                     {
-                        src.delete();
+                        delTempFile( src );
                     }
                 }
             }
@@ -669,7 +677,7 @@ final class WagonTransporter
             }
             catch ( IOException e )
             {
-                tmp.delete();
+                delTempFile( tmp );
                 throw e;
             }
             return tmp;
