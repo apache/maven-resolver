@@ -104,22 +104,22 @@ public class TestSuiteHttpWagon
                     {
                         private final MavenDefaultLayout layout = new MavenDefaultLayout();
 
-                        public URI getLocation( Metadata metadata )
+                        public URI getLocation( Metadata metadata, boolean upload )
                         {
                             return layout.getPath( metadata );
                         }
 
-                        public URI getLocation( Artifact artifact )
+                        public URI getLocation( Artifact artifact, boolean upload )
                         {
                             return layout.getPath( artifact );
                         }
 
-                        public List<Checksum> getChecksums( Metadata metadata, URI location, boolean create )
+                        public List<Checksum> getChecksums( Metadata metadata, boolean upload, URI location )
                         {
                             return Collections.emptyList();
                         }
 
-                        public List<Checksum> getChecksums( Artifact artifact, URI location, boolean create )
+                        public List<Checksum> getChecksums( Artifact artifact, boolean upload, URI location )
                         {
                             return Collections.emptyList();
                         }

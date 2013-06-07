@@ -123,43 +123,45 @@ public interface RepositoryLayout
      * root directory of the repository.
      * 
      * @param artifact The artifact to get the URI for, must not be {@code null}.
+     * @param upload {@code false} if the artifact is being downloaded, {@code true} if the artifact is being uploaded.
      * @return The relative URI to the artifact, never {@code null}.
      */
-    URI getLocation( Artifact artifact );
+    URI getLocation( Artifact artifact, boolean upload );
 
     /**
      * Gets the location within a remote repository where the specified metadata resides. The URI is relative to the
      * root directory of the repository.
      * 
      * @param metadata The metadata to get the URI for, must not be {@code null}.
+     * @param upload {@code false} if the metadata is being downloaded, {@code true} if the metadata is being uploaded.
      * @return The relative URI to the metadata, never {@code null}.
      */
-    URI getLocation( Metadata metadata );
+    URI getLocation( Metadata metadata, boolean upload );
 
     /**
      * Gets the checksums files that a remote repository keeps to help detect data corruption during transfers of the
      * specified artifact.
      * 
      * @param artifact The artifact to get the checksum files for, must not be {@code null}.
+     * @param upload {@code false} if the checksums are being downloaded/verified, {@code true} if the checksums are
+     *            being uploaded/created.
      * @param location The relative URI to the artifact within the repository as previously obtained from
-     *            {@link #getLocation(Artifact)}, must not be {@code null}.
-     * @param create {@code false} if the checksum files are being downloaded/verified, {@code true} if the checksums
-     *            file are being created/uploaded.
+     *            {@link #getLocation(Artifact, boolean)}, must not be {@code null}.
      * @return The checksum files for the given artifact, possibly empty but never {@code null}.
      */
-    List<Checksum> getChecksums( Artifact artifact, URI location, boolean create );
+    List<Checksum> getChecksums( Artifact artifact, boolean upload, URI location );
 
     /**
      * Gets the checksums files that a remote repository keeps to help detect data corruption during transfers of the
      * specified metadata.
      * 
      * @param metadata The metadata to get the checksum files for, must not be {@code null}.
+     * @param upload {@code false} if the checksums are being downloaded/verified, {@code true} if the checksums are
+     *            being uploaded/created.
      * @param location The relative URI to the metadata within the repository as previously obtained from
-     *            {@link #getLocation(Metadata)}, must not be {@code null}.
-     * @param create {@code false} if the checksum files are being downloaded/verified, {@code true} if the checksums
-     *            file are being created/uploaded.
+     *            {@link #getLocation(Metadata, boolean)}, must not be {@code null}.
      * @return The checksum files for the given metadata, possibly empty but never {@code null}.
      */
-    List<Checksum> getChecksums( Metadata metadata, URI location, boolean create );
+    List<Checksum> getChecksums( Metadata metadata, boolean upload, URI location );
 
 }

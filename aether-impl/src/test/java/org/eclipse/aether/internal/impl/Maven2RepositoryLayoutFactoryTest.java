@@ -77,49 +77,65 @@ public class Maven2RepositoryLayoutFactoryTest
     @Test
     public void testArtifactLocation_Release()
     {
-        URI uri = layout.getLocation( new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" ) );
+        DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" );
+        URI uri = layout.getLocation( artifact, false );
+        assertEquals( "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext", uri.toString() );
+        uri = layout.getLocation( artifact, true );
         assertEquals( "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext", uri.toString() );
     }
 
     @Test
     public void testArtifactLocation_Snapshot()
     {
-        URI uri = layout.getLocation( new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0-20110329.221805-4" ) );
+        DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0-20110329.221805-4" );
+        URI uri = layout.getLocation( artifact, false );
+        assertEquals( "g/i/d/a-i.d/1.0-SNAPSHOT/a-i.d-1.0-20110329.221805-4-cls.ext", uri.toString() );
+        uri = layout.getLocation( artifact, true );
         assertEquals( "g/i/d/a-i.d/1.0-SNAPSHOT/a-i.d-1.0-20110329.221805-4-cls.ext", uri.toString() );
     }
 
     @Test
     public void testMetadataLocation_RootLevel()
     {
-        URI uri =
-            layout.getLocation( new DefaultMetadata( "archetype-catalog.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT ) );
+        DefaultMetadata metadata = new DefaultMetadata( "archetype-catalog.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
+        URI uri = layout.getLocation( metadata, false );
+        assertEquals( "archetype-catalog.xml", uri.toString() );
+        uri = layout.getLocation( metadata, true );
         assertEquals( "archetype-catalog.xml", uri.toString() );
     }
 
     @Test
     public void testMetadataLocation_GroupLevel()
     {
-        URI uri =
-            layout.getLocation( new DefaultMetadata( "org.apache.maven.plugins", "maven-metadata.xml",
-                                                     Metadata.Nature.RELEASE_OR_SNAPSHOT ) );
+        DefaultMetadata metadata =
+            new DefaultMetadata( "org.apache.maven.plugins", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
+        URI uri = layout.getLocation( metadata, false );
+        assertEquals( "org/apache/maven/plugins/maven-metadata.xml", uri.toString() );
+        uri = layout.getLocation( metadata, true );
         assertEquals( "org/apache/maven/plugins/maven-metadata.xml", uri.toString() );
     }
 
     @Test
     public void testMetadataLocation_ArtifactLevel()
     {
-        URI uri =
-            layout.getLocation( new DefaultMetadata( "org.apache.maven.plugins", "maven-jar-plugin",
-                                                     "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT ) );
+        DefaultMetadata metadata =
+            new DefaultMetadata( "org.apache.maven.plugins", "maven-jar-plugin", "maven-metadata.xml",
+                                 Metadata.Nature.RELEASE_OR_SNAPSHOT );
+        URI uri = layout.getLocation( metadata, false );
+        assertEquals( "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml", uri.toString() );
+        uri = layout.getLocation( metadata, true );
         assertEquals( "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml", uri.toString() );
     }
 
     @Test
     public void testMetadataLocation_VersionLevel()
     {
-        URI uri =
-            layout.getLocation( new DefaultMetadata( "org.apache.maven.plugins", "maven-jar-plugin", "1.0-SNAPSHOT",
-                                                     "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT ) );
+        DefaultMetadata metadata =
+            new DefaultMetadata( "org.apache.maven.plugins", "maven-jar-plugin", "1.0-SNAPSHOT", "maven-metadata.xml",
+                                 Metadata.Nature.RELEASE_OR_SNAPSHOT );
+        URI uri = layout.getLocation( metadata, false );
+        assertEquals( "org/apache/maven/plugins/maven-jar-plugin/1.0-SNAPSHOT/maven-metadata.xml", uri.toString() );
+        uri = layout.getLocation( metadata, true );
         assertEquals( "org/apache/maven/plugins/maven-jar-plugin/1.0-SNAPSHOT/maven-metadata.xml", uri.toString() );
     }
 
@@ -127,8 +143,8 @@ public class Maven2RepositoryLayoutFactoryTest
     public void testArtifactChecksums_Download()
     {
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" );
-        URI uri = layout.getLocation( artifact );
-        List<Checksum> checksums = layout.getChecksums( artifact, uri, false );
+        URI uri = layout.getLocation( artifact, false );
+        List<Checksum> checksums = layout.getChecksums( artifact, false, uri );
         assertEquals( 2, checksums.size() );
         assertChecksum( checksums.get( 0 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", "SHA-1" );
         assertChecksum( checksums.get( 1 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.md5", "MD5" );
@@ -138,8 +154,8 @@ public class Maven2RepositoryLayoutFactoryTest
     public void testArtifactChecksums_Upload()
     {
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" );
-        URI uri = layout.getLocation( artifact );
-        List<Checksum> checksums = layout.getChecksums( artifact, uri, true );
+        URI uri = layout.getLocation( artifact, true );
+        List<Checksum> checksums = layout.getChecksums( artifact, true, uri );
         assertEquals( 2, checksums.size() );
         assertChecksum( checksums.get( 0 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", "SHA-1" );
         assertChecksum( checksums.get( 1 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.md5", "MD5" );
@@ -151,8 +167,8 @@ public class Maven2RepositoryLayoutFactoryTest
         DefaultMetadata metadata =
             new DefaultMetadata( "org.apache.maven.plugins", "maven-jar-plugin", "maven-metadata.xml",
                                  Metadata.Nature.RELEASE_OR_SNAPSHOT );
-        URI uri = layout.getLocation( metadata );
-        List<Checksum> checksums = layout.getChecksums( metadata, uri, false );
+        URI uri = layout.getLocation( metadata, false );
+        List<Checksum> checksums = layout.getChecksums( metadata, false, uri );
         assertEquals( 2, checksums.size() );
         assertChecksum( checksums.get( 0 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha1",
                         "SHA-1" );
@@ -165,8 +181,8 @@ public class Maven2RepositoryLayoutFactoryTest
         DefaultMetadata metadata =
             new DefaultMetadata( "org.apache.maven.plugins", "maven-jar-plugin", "maven-metadata.xml",
                                  Metadata.Nature.RELEASE_OR_SNAPSHOT );
-        URI uri = layout.getLocation( metadata );
-        List<Checksum> checksums = layout.getChecksums( metadata, uri, true );
+        URI uri = layout.getLocation( metadata, true );
+        List<Checksum> checksums = layout.getChecksums( metadata, true, uri );
         assertEquals( 2, checksums.size() );
         assertChecksum( checksums.get( 0 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha1",
                         "SHA-1" );
@@ -177,13 +193,13 @@ public class Maven2RepositoryLayoutFactoryTest
     public void testSignatureChecksums_Download()
     {
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "asc", "1.0" );
-        URI uri = layout.getLocation( artifact );
-        List<Checksum> checksums = layout.getChecksums( artifact, uri, false );
+        URI uri = layout.getLocation( artifact, false );
+        List<Checksum> checksums = layout.getChecksums( artifact, false, uri );
         assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-1", "MD5" );
 
         artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
-        uri = layout.getLocation( artifact );
-        checksums = layout.getChecksums( artifact, uri, false );
+        uri = layout.getLocation( artifact, false );
+        checksums = layout.getChecksums( artifact, false, uri );
         assertEquals( 0, checksums.size() );
     }
 
@@ -191,13 +207,13 @@ public class Maven2RepositoryLayoutFactoryTest
     public void testSignatureChecksums_Upload()
     {
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "asc", "1.0" );
-        URI uri = layout.getLocation( artifact );
-        List<Checksum> checksums = layout.getChecksums( artifact, uri, true );
+        URI uri = layout.getLocation( artifact, true );
+        List<Checksum> checksums = layout.getChecksums( artifact, true, uri );
         assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-1", "MD5" );
 
         artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
-        uri = layout.getLocation( artifact );
-        checksums = layout.getChecksums( artifact, uri, true );
+        uri = layout.getLocation( artifact, true );
+        checksums = layout.getChecksums( artifact, true, uri );
         assertEquals( 0, checksums.size() );
     }
 
@@ -208,8 +224,8 @@ public class Maven2RepositoryLayoutFactoryTest
         session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_SIGNATURE_CHECKSUMS, "true" );
         layout = factory.newInstance( session, newRepo( "default" ) );
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
-        URI uri = layout.getLocation( artifact );
-        List<Checksum> checksums = layout.getChecksums( artifact, uri, true );
+        URI uri = layout.getLocation( artifact, true );
+        List<Checksum> checksums = layout.getChecksums( artifact, true, uri );
         assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.jar.asc", "SHA-1", "MD5" );
     }
 

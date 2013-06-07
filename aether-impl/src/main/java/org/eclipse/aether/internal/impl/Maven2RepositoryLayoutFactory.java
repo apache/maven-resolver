@@ -87,7 +87,7 @@ public final class Maven2RepositoryLayoutFactory
             }
         }
 
-        public URI getLocation( Artifact artifact )
+        public URI getLocation( Artifact artifact, boolean upload )
         {
             StringBuilder path = new StringBuilder( 128 );
 
@@ -112,7 +112,7 @@ public final class Maven2RepositoryLayoutFactory
             return toUri( path.toString() );
         }
 
-        public URI getLocation( Metadata metadata )
+        public URI getLocation( Metadata metadata, boolean upload )
         {
             StringBuilder path = new StringBuilder( 128 );
 
@@ -136,12 +136,12 @@ public final class Maven2RepositoryLayoutFactory
             return toUri( path.toString() );
         }
 
-        public List<Checksum> getChecksums( Artifact artifact, URI location, boolean create )
+        public List<Checksum> getChecksums( Artifact artifact, boolean upload, URI location )
         {
             return getChecksums( location );
         }
 
-        public List<Checksum> getChecksums( Metadata metadata, URI location, boolean create )
+        public List<Checksum> getChecksums( Metadata metadata, boolean upload, URI location )
         {
             return getChecksums( location );
         }
@@ -160,13 +160,13 @@ public final class Maven2RepositoryLayoutFactory
         public static final RepositoryLayout INSTANCE = new Maven2RepositoryLayoutEx();
 
         @Override
-        public List<Checksum> getChecksums( Artifact artifact, URI location, boolean create )
+        public List<Checksum> getChecksums( Artifact artifact, boolean upload, URI location )
         {
             if ( isSignature( artifact.getExtension() ) )
             {
                 return Collections.emptyList();
             }
-            return super.getChecksums( artifact, location, create );
+            return super.getChecksums( artifact, upload, location );
         }
 
         private boolean isSignature( String extension )

@@ -167,7 +167,7 @@ final class BasicRepositoryConnector
 
         for ( MetadataDownload transfer : safe( metadataDownloads ) )
         {
-            URI location = layout.getLocation( transfer.getMetadata() );
+            URI location = layout.getLocation( transfer.getMetadata(), false );
             List<RepositoryLayout.Checksum> checksums;
             if ( RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( transfer.getChecksumPolicy() ) )
             {
@@ -175,7 +175,7 @@ final class BasicRepositoryConnector
             }
             else
             {
-                checksums = layout.getChecksums( transfer.getMetadata(), location, false );
+                checksums = layout.getChecksums( transfer.getMetadata(), false, location );
             }
 
             TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), false, transfer.getTrace() );
@@ -190,7 +190,7 @@ final class BasicRepositoryConnector
 
         for ( ArtifactDownload transfer : safe( artifactDownloads ) )
         {
-            URI location = layout.getLocation( transfer.getArtifact() );
+            URI location = layout.getLocation( transfer.getArtifact(), false );
             List<RepositoryLayout.Checksum> checksums;
             if ( RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( transfer.getChecksumPolicy() ) )
             {
@@ -198,7 +198,7 @@ final class BasicRepositoryConnector
             }
             else
             {
-                checksums = layout.getChecksums( transfer.getArtifact(), location, false );
+                checksums = layout.getChecksums( transfer.getArtifact(), false, location );
             }
 
             TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), false, transfer.getTrace() );
@@ -224,8 +224,8 @@ final class BasicRepositoryConnector
 
         for ( ArtifactUpload transfer : safe( artifactUploads ) )
         {
-            URI location = layout.getLocation( transfer.getArtifact() );
-            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getArtifact(), location, true );
+            URI location = layout.getLocation( transfer.getArtifact(), true );
+            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getArtifact(), true, location );
 
             TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), true, transfer.getTrace() );
             ArtifactTransportListener listener =
@@ -237,8 +237,8 @@ final class BasicRepositoryConnector
 
         for ( MetadataUpload transfer : safe( metadataUploads ) )
         {
-            URI location = layout.getLocation( transfer.getMetadata() );
-            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getMetadata(), location, true );
+            URI location = layout.getLocation( transfer.getMetadata(), true );
+            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getMetadata(), true, location );
 
             TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), true, transfer.getTrace() );
             MetadataTransportListener listener =
