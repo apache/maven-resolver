@@ -30,6 +30,10 @@ class RecordingTransportListener
 
     public int progressedCount;
 
+    public boolean cancelStart;
+
+    public boolean cancelProgress;
+
     @Override
     public void transportStarted( long dataOffset, long dataLength )
         throws TransferCancelledException
@@ -39,6 +43,10 @@ class RecordingTransportListener
         this.dataLength = dataLength;
         this.dataOffset = dataOffset;
         baos.reset();
+        if ( cancelStart )
+        {
+            throw new TransferCancelledException();
+        }
     }
 
     @Override
@@ -47,6 +55,10 @@ class RecordingTransportListener
     {
         progressedCount++;
         baos.write( data.array(), data.arrayOffset() + data.position(), data.remaining() );
+        if ( cancelProgress )
+        {
+            throw new TransferCancelledException();
+        }
     }
 
 }

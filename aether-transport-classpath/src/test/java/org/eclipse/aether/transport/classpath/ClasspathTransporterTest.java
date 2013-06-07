@@ -25,6 +25,8 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.transfer.TransferCancelledException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +38,7 @@ public class ClasspathTransporterTest
 
     private DefaultRepositorySystemSession session;
 
-    private ClasspathTransporterFactory factory;
+    private TransporterFactory factory;
 
     private Transporter transporter;
 
@@ -57,9 +59,11 @@ public class ClasspathTransporterTest
 
     @Before
     public void setUp()
+        throws Exception
     {
         session = TestUtils.newSession();
         factory = new ClasspathTransporterFactory( new TestLoggerFactory() );
+        newTransporter( "repository" );
     }
 
     @After
@@ -78,7 +82,6 @@ public class ClasspathTransporterTest
     public void testClassify()
         throws Exception
     {
-        newTransporter( "test" );
         assertEquals( Transporter.ERROR_OTHER, transporter.classify( new FileNotFoundException() ) );
         assertEquals( Transporter.ERROR_NOT_FOUND, transporter.classify( new ResourceNotFoundException( "test" ) ) );
     }
@@ -87,7 +90,6 @@ public class ClasspathTransporterTest
     public void testPeek()
         throws Exception
     {
-        newTransporter( "repository/a" );
         transporter.peek( new PeekTask( URI.create( "file.txt" ) ) );
     }
 
@@ -95,7 +97,6 @@ public class ClasspathTransporterTest
     public void testPeek_NotFound()
         throws Exception
     {
-        newTransporter( "repository/a" );
         try
         {
             transporter.peek( new PeekTask( URI.create( "missing.txt" ) ) );
@@ -110,7 +111,6 @@ public class ClasspathTransporterTest
     public void testPeek_Closed()
         throws Exception
     {
-        newTransporter( "repository/a" );
         transporter.close();
         try
         {
@@ -126,7 +126,6 @@ public class ClasspathTransporterTest
     public void testGet_ToMemory()
         throws Exception
     {
-        newTransporter( "repository/a" );
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask( URI.create( "file.txt" ) ).setListener( listener );
         transporter.get( task );
@@ -142,7 +141,6 @@ public class ClasspathTransporterTest
     public void testGet_ToFile()
         throws Exception
     {
-        newTransporter( "repository/a" );
         File file = TestFileUtils.createTempFile( "failure" );
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask( URI.create( "file.txt" ) ).setDataFile( file ).setListener( listener );
@@ -156,10 +154,37 @@ public class ClasspathTransporterTest
     }
 
     @Test
+    public void testGet_EmptyResource()
+        throws Exception
+    {
+        File file = TestFileUtils.createTempFile( "failure" );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask( URI.create( "empty.txt" ) ).setDataFile( file ).setListener( listener );
+        transporter.get( task );
+        assertEquals( "", TestFileUtils.readString( file ) );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 0, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertEquals( 0, listener.progressedCount );
+        assertEquals( "", listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_FileHandleLeak()
+        throws Exception
+    {
+        for ( int i = 0; i < 100; i++ )
+        {
+            File file = TestFileUtils.createTempFile( "failure" );
+            transporter.get( new GetTask( URI.create( "file.txt" ) ).setDataFile( file ) );
+            assertTrue( i + ", " + file.getAbsolutePath(), file.delete() );
+        }
+    }
+
+    @Test
     public void testGet_NotFound()
         throws Exception
     {
-        newTransporter( "repository/a" );
         try
         {
             transporter.get( new GetTask( URI.create( "missing.txt" ) ) );
@@ -174,7 +199,6 @@ public class ClasspathTransporterTest
     public void testGet_Closed()
         throws Exception
     {
-        newTransporter( "repository/a" );
         transporter.close();
         try
         {
@@ -187,10 +211,53 @@ public class ClasspathTransporterTest
     }
 
     @Test
+    public void testGet_StartCancelled()
+        throws Exception
+    {
+        RecordingTransportListener listener = new RecordingTransportListener();
+        listener.cancelStart = true;
+        GetTask task = new GetTask( URI.create( "file.txt" ) ).setListener( listener );
+        try
+        {
+            transporter.get( task );
+        }
+        catch ( TransferCancelledException e )
+        {
+            assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
+        }
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 4, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertEquals( 0, listener.progressedCount );
+        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_ProgressCancelled()
+        throws Exception
+    {
+        RecordingTransportListener listener = new RecordingTransportListener();
+        listener.cancelProgress = true;
+        GetTask task = new GetTask( URI.create( "file.txt" ) ).setListener( listener );
+        try
+        {
+            transporter.get( task );
+        }
+        catch ( TransferCancelledException e )
+        {
+            assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
+        }
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 4, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
     public void testPut()
         throws Exception
     {
-        newTransporter( "repository/a" );
         try
         {
             transporter.put( new PutTask( URI.create( "missing.txt" ) ) );
@@ -205,7 +272,6 @@ public class ClasspathTransporterTest
     public void testPut_Closed()
         throws Exception
     {
-        newTransporter( "repository/a" );
         transporter.close();
         try
         {
