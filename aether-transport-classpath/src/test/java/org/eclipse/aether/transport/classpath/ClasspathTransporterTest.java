@@ -266,7 +266,7 @@ public class ClasspathTransporterTest
         assertEquals( 0, listener.dataOffset );
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
-        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( 1, listener.progressedCount );
     }
 
     @Test
