@@ -71,11 +71,6 @@
       <artifactId>aether-test-util</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.eclipse.aether</groupId>
-      <artifactId>aether-connector-basic</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>

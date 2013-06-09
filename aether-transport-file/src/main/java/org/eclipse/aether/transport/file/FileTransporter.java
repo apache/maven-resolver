@@ -41,7 +41,7 @@ final class FileTransporter
 
     private final File basedir;
 
-    private final AtomicBoolean closed = new AtomicBoolean();
+    private final AtomicBoolean closed;
 
     public FileTransporter( RemoteRepository repository, Logger logger )
         throws NoTransporterException
@@ -51,8 +51,13 @@ final class FileTransporter
             throw new NoTransporterException( repository );
         }
         this.logger = logger;
-
         basedir = new File( PathUtils.basedir( repository.getUrl() ) ).getAbsoluteFile();
+        closed = new AtomicBoolean();
+    }
+
+    File getBasedir()
+    {
+        return basedir;
     }
 
     public int classify( Throwable error )
@@ -78,10 +83,10 @@ final class FileTransporter
         failIfClosed( task );
 
         File file = getFile( task, true );
-        task.getListener().transportStarted( 0, file.length() );
         InputStream is = new FileInputStream( file );
         try
         {
+            task.getListener().transportStarted( 0, file.length() );
             OutputStream os = task.newOutputStream();
             try
             {
@@ -105,13 +110,13 @@ final class FileTransporter
         failIfClosed( task );
 
         File file = getFile( task, false );
-        task.getListener().transportStarted( 0, task.getDataLength() );
         file.getParentFile().mkdirs();
         OutputStream os = new FileOutputStream( file );
         try
         {
             try
             {
+                task.getListener().transportStarted( 0, task.getDataLength() );
                 InputStream is = task.newInputStream();
                 try
                 {
