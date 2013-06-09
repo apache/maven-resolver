@@ -592,10 +592,11 @@ final class WagonTransporter
                 try
                 {
                     copy( os, fis );
+                    os.close();
                 }
                 finally
                 {
-                    os.close();
+                    close( os );
                 }
             }
             finally
@@ -664,6 +665,7 @@ final class WagonTransporter
                     try
                     {
                         copy( fos, is );
+                        fos.close();
                     }
                     finally
                     {
@@ -672,7 +674,7 @@ final class WagonTransporter
                 }
                 finally
                 {
-                    fos.close();
+                    close( fos );
                 }
             }
             catch ( IOException e )
