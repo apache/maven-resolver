@@ -22,6 +22,7 @@ import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.GetTask;
+import org.eclipse.aether.spi.connector.transport.NoTransporterException;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
@@ -42,19 +43,20 @@ public class ClasspathTransporterTest
 
     private Transporter transporter;
 
-    private RemoteRepository newRepo( String base )
+    private RemoteRepository newRepo( String url )
     {
-        return new RemoteRepository.Builder( "test", "default", "classpath:/" + base ).build();
+        return new RemoteRepository.Builder( "test", "default", url ).build();
     }
 
-    private void newTransporter( String repoBase )
+    private void newTransporter( String url )
         throws Exception
     {
         if ( transporter != null )
         {
             transporter.close();
+            transporter = null;
         }
-        transporter = factory.newInstance( session, newRepo( repoBase ) );
+        transporter = factory.newInstance( session, newRepo( url ) );
     }
 
     @Before
@@ -63,7 +65,7 @@ public class ClasspathTransporterTest
     {
         session = TestUtils.newSession();
         factory = new ClasspathTransporterFactory( new TestLoggerFactory() );
-        newTransporter( "repository" );
+        newTransporter( "classpath:/repository" );
     }
 
     @After
@@ -167,6 +169,15 @@ public class ClasspathTransporterTest
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
         assertEquals( "", listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_EncodedResourcePath()
+        throws Exception
+    {
+        GetTask task = new GetTask( URI.create( "some%20space.txt" ) );
+        transporter.get( task );
+        assertEquals( "space", task.getDataString() );
     }
 
     @Test
@@ -281,6 +292,87 @@ public class ClasspathTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
+    }
+
+    @Test( expected = NoTransporterException.class )
+    public void testInit_BadProtocol()
+        throws Exception
+    {
+        newTransporter( "bad:/void" );
+    }
+
+    @Test
+    public void testInit_CaseInsensitiveProtocol()
+        throws Exception
+    {
+        newTransporter( "classpath:/void" );
+        newTransporter( "CLASSPATH:/void" );
+        newTransporter( "ClassPath:/void" );
+    }
+
+    @Test
+    public void testInit_OpaqueUrl()
+        throws Exception
+    {
+        testInit( "classpath:repository" );
+    }
+
+    @Test
+    public void testInit_OpaqueUrlTrailingSlash()
+        throws Exception
+    {
+        testInit( "classpath:repository/" );
+    }
+
+    @Test
+    public void testInit_OpaqueUrlSpaces()
+        throws Exception
+    {
+        testInit( "classpath:repo%20space" );
+    }
+
+    @Test
+    public void testInit_HierarchicalUrl()
+        throws Exception
+    {
+        testInit( "classpath:/repository" );
+    }
+
+    @Test
+    public void testInit_HierarchicalUrlTrailingSlash()
+        throws Exception
+    {
+        testInit( "classpath:/repository/" );
+    }
+
+    @Test
+    public void testInit_HierarchicalUrlSpaces()
+        throws Exception
+    {
+        testInit( "classpath:/repo%20space" );
+    }
+
+    @Test
+    public void testInit_HierarchicalUrlRoot()
+        throws Exception
+    {
+        testInit( "classpath:/" );
+    }
+
+    @Test
+    public void testInit_HierarchicalUrlNoPath()
+        throws Exception
+    {
+        testInit( "classpath://reserved" );
+    }
+
+    private void testInit( String base )
+        throws Exception
+    {
+        newTransporter( base );
+        GetTask task = new GetTask( URI.create( "file.txt" ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
     }
 
 }

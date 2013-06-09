@@ -56,26 +56,32 @@ final class ClasspathTransporter
         String base;
         try
         {
-            base = new URI( repository.getUrl() ).getPath();
-        }
-        catch ( URISyntaxException e )
-        {
-            throw new NoTransporterException( repository, e );
-        }
-        if ( base == null )
-        {
-            base = "";
-        }
-        else
-        {
-            if ( base.startsWith( "/" ) )
+            URI uri = new URI( repository.getUrl() );
+            String ssp = uri.getSchemeSpecificPart();
+            if ( ssp.startsWith( "/" ) )
             {
-                base = base.substring( 1 );
+                base = uri.getPath();
+                if ( base == null )
+                {
+                    base = "";
+                }
+                else if ( base.startsWith( "/" ) )
+                {
+                    base = base.substring( 1 );
+                }
+            }
+            else
+            {
+                base = ssp;
             }
             if ( base.length() > 0 && !base.endsWith( "/" ) )
             {
                 base += '/';
             }
+        }
+        catch ( URISyntaxException e )
+        {
+            throw new NoTransporterException( repository, e );
         }
         resourceBase = base;
 
