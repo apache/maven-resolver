@@ -40,11 +40,11 @@ final class ClasspathTransporter
     implements Transporter
 {
 
-    private final AtomicBoolean closed = new AtomicBoolean();
+    private final String resourceBase;
 
     private final ClassLoader classLoader;
 
-    private final String resourceBase;
+    private final AtomicBoolean closed;
 
     public ClasspathTransporter( RepositorySystemSession session, RemoteRepository repository, Logger logger )
         throws NoTransporterException
@@ -53,6 +53,7 @@ final class ClasspathTransporter
         {
             throw new NoTransporterException( repository );
         }
+
         String base;
         try
         {
@@ -94,6 +95,8 @@ final class ClasspathTransporter
         {
             classLoader = Thread.currentThread().getContextClassLoader();
         }
+
+        closed = new AtomicBoolean();
     }
 
     private URL getResource( TransportTask task )

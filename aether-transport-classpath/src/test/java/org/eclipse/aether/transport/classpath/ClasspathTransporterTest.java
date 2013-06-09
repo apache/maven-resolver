@@ -102,6 +102,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.peek( new PeekTask( URI.create( "missing.txt" ) ) );
+            fail( "Expected error" );
         }
         catch ( ResourceNotFoundException e )
         {
@@ -117,6 +118,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.peek( new PeekTask( URI.create( "missing.txt" ) ) );
+            fail( "Expected error" );
         }
         catch ( IllegalStateException e )
         {
@@ -199,6 +201,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.get( new GetTask( URI.create( "missing.txt" ) ) );
+            fail( "Expected error" );
         }
         catch ( ResourceNotFoundException e )
         {
@@ -214,6 +217,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.get( new GetTask( URI.create( "file.txt" ) ) );
+            fail( "Expected error" );
         }
         catch ( IllegalStateException e )
         {
@@ -231,6 +235,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.get( task );
+            fail( "Expected error" );
         }
         catch ( TransferCancelledException e )
         {
@@ -240,7 +245,6 @@ public class ClasspathTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
     }
 
     @Test
@@ -253,6 +257,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.get( task );
+            fail( "Expected error" );
         }
         catch ( TransferCancelledException e )
         {
@@ -262,7 +267,6 @@ public class ClasspathTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
     }
 
     @Test
@@ -272,6 +276,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.put( new PutTask( URI.create( "missing.txt" ) ) );
+            fail( "Expected error" );
         }
         catch ( UnsupportedOperationException e )
         {
@@ -287,6 +292,7 @@ public class ClasspathTransporterTest
         try
         {
             transporter.put( new PutTask( URI.create( "missing.txt" ) ) );
+            fail( "Expected error" );
         }
         catch ( IllegalStateException e )
         {
