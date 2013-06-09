@@ -12,6 +12,7 @@ package org.eclipse.aether.spi.connector.transport;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
  * Retrieves a transporter from the installed transporter factories.

@@ -12,6 +12,7 @@ package org.eclipse.aether.spi.connector.transport;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
  * A factory to create transporters. A transporter is responsible for uploads/downloads to/from a remote repository

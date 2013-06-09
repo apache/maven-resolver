@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.spi.connector.layout;
+package org.eclipse.aether.transfer;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.repository.RemoteRepository;

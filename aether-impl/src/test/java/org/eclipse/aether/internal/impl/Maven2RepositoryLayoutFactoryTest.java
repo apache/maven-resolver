@@ -22,9 +22,9 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.layout.NoRepositoryLayoutException;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.Checksum;
+import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.junit.Before;
 import org.junit.Test;
 

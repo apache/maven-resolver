@@ -23,9 +23,9 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.layout.NoRepositoryLayoutException;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
+import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**

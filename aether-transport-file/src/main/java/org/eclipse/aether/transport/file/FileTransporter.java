@@ -22,13 +22,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.GetTask;
-import org.eclipse.aether.spi.connector.transport.NoTransporterException;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
+import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
  * A transporter using {@link java.io.File}.

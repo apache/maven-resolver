@@ -12,6 +12,7 @@ package org.eclipse.aether.spi.connector.layout;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 
 /**
  * Retrieves a repository layout from the installed layout factories.

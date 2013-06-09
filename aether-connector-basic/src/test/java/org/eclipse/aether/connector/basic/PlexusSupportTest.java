@@ -17,10 +17,8 @@ import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.layout.NoRepositoryLayoutException;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
-import org.eclipse.aether.spi.connector.transport.NoTransporterException;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
@@ -44,7 +42,6 @@ public class PlexusSupportTest
         RepositoryLayoutProvider layoutProvider = new RepositoryLayoutProvider()
         {
             public RepositoryLayout newRepositoryLayout( RepositorySystemSession session, RemoteRepository repository )
-                throws NoRepositoryLayoutException
             {
                 return null;
             }
@@ -52,7 +49,6 @@ public class PlexusSupportTest
         TransporterProvider transporterProvider = new TransporterProvider()
         {
             public Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
-                throws NoTransporterException
             {
                 return null;
             }

@@ -12,6 +12,7 @@ package org.eclipse.aether.spi.connector.layout;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 
 /**
  * A factory to obtain repository layouts. A repository layout is responsible to map an artifact or some metadata to a

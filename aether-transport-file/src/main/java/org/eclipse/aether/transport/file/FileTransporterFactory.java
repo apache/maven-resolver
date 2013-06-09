@@ -17,7 +17,6 @@ import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.transport.NoTransporterException;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.locator.Service;
@@ -25,6 +24,7 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
+import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
  * A transporter factory for repositories using the {@code file:} protocol.

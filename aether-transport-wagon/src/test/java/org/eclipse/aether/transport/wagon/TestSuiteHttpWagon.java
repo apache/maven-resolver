@@ -28,12 +28,12 @@ import org.eclipse.aether.internal.test.util.connector.suite.ConnectorTestSetup.
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.layout.NoRepositoryLayoutException;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
-import org.eclipse.aether.spi.connector.transport.NoTransporterException;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
+import org.eclipse.aether.transfer.NoRepositoryLayoutException;
+import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.repository.layout.MavenDefaultLayout;
 import org.sonatype.tests.http.server.jetty.behaviour.ResourceServer;
 import org.sonatype.tests.http.server.jetty.impl.JettyServerProvider;
