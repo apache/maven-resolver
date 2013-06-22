@@ -188,9 +188,23 @@
       </dependency>
 
       <dependency>
-        <groupId>org.sonatype.sisu</groupId>
-        <artifactId>sisu-inject-plexus</artifactId>
-        <version>2.3.0</version>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>org.eclipse.sisu.plexus</artifactId>
+        <version>0.0.0.M3</version>
+        <exclusions>
+          <exclusion>
+            <groupId>aopalliance</groupId>
+            <artifactId>aopalliance</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.enterprise</groupId>
+            <artifactId>cdi-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -479,6 +493,7 @@
                   </excludes>
                   <includes>
                     <include>org.eclipse.aether</include>
+                    <include>org.eclipse.sisu</include>
                     <!-- CQ #5627 -->
                     <include>org.slf4j:slf4j-api:1.6.2</include>
                     <!-- CQ #5628 -->
@@ -495,16 +510,12 @@
                     <include>com.ning:async-http-client:1.7.6</include>
                     <!-- CQ #6817 -->
                     <include>io.netty:netty:3.4.4.Final</include>
-                    <!-- CQ #5635 -->
-                    <include>org.sonatype.sisu:sisu-inject-plexus:2.3.0</include>
                     <!-- CQ #5636 -->
                     <include>org.sonatype.sisu:sisu-guice:3.1.0</include>
-                    <!-- CQ #5637 -->
-                    <include>org.sonatype.sisu:sisu-guava:0.9.9</include>
+                    <!-- CQ #7328 -->
+                    <include>com.google.guava:guava:10.0.1</include>
                     <!-- CQ #5639 -->
                     <include>javax.inject:javax.inject:1</include>
-                    <!-- CQ #5641, #5638, #5639, #5640 -->
-                    <include>org.sonatype.sisu:sisu-inject-bean:2.3.0</include>
                     <!-- CQ #5660 -->
                     <include>ch.qos.logback:*:*:*:test</include>
                     <include>org.apache.maven.wagon:wagon-http-lightweight:*:*:test</include>
