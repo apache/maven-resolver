@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,8 @@ package org.eclipse.aether.util.repository;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.net.ssl.HostnameVerifier;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -129,6 +131,24 @@ public final class AuthenticationBuilder
         {
             addString( AuthenticationContext.PRIVATE_KEY_PATH, pathname );
             addSecret( AuthenticationContext.PRIVATE_KEY_PASSPHRASE, passphrase );
+        }
+        return this;
+    }
+
+    /**
+     * Adds a hostname verifier for SSL. <strong>Note:</strong> This method assumes that all possible instances of the
+     * verifier's runtime type exhibit the exact same behavior, i.e. the behavior of the verifier depends solely on the
+     * runtime type and not on any configuration. For verifiers that do not fit this assumption, use
+     * {@link #addCustom(Authentication)} with a suitable implementation instead.
+     * 
+     * @param verifier The hostname verifier, may be {@code null}.
+     * @return This builder for chaining, never {@code null}.
+     */
+    public AuthenticationBuilder addHostnameVerifier( HostnameVerifier verifier )
+    {
+        if ( verifier != null )
+        {
+            authentications.add( new ComponentAuthentication( AuthenticationContext.SSL_HOSTNAME_VERIFIER, verifier ) );
         }
         return this;
     }
