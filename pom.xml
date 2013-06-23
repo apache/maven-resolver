@@ -121,8 +121,8 @@
     <module>aether-connector-basic</module>
     <module>aether-transport-classpath</module>
     <module>aether-transport-file</module>
+    <module>aether-transport-http</module>
     <module>aether-transport-wagon</module>
-    <module>aether-connector-asynchttpclient</module>
   </modules>
 
   <properties>
@@ -506,16 +506,20 @@
                     <include>org.codehaus.plexus:plexus-classworlds:2.4</include>
                     <!-- CQ #5632 -->
                     <include>org.apache.maven.wagon:wagon-provider-api:1.0</include>
-                    <!-- CQ #6816 -->
-                    <include>com.ning:async-http-client:1.7.6</include>
-                    <!-- CQ #6817 -->
-                    <include>io.netty:netty:3.4.4.Final</include>
                     <!-- CQ #5636 -->
                     <include>org.sonatype.sisu:sisu-guice:3.1.0</include>
                     <!-- CQ #7328 -->
                     <include>com.google.guava:guava:10.0.1</include>
                     <!-- CQ #5639 -->
                     <include>javax.inject:javax.inject:1</include>
+                    <!-- CQ #7344 -->
+                    <include>org.apache.httpcomponents:httpclient:4.2.5</include>
+                    <!-- CQ #7345 -->
+                    <include>org.apache.httpcomponents:httpcore:4.2.4</include>
+                    <!-- CQ #7346 -->
+                    <include>commons-codec:commons-codec:1.6</include>
+                    <!-- CQ #7347 -->
+                    <include>org.slf4j:jcl-over-slf4j:1.6.2</include>
                     <!-- CQ #5660 -->
                     <include>ch.qos.logback:*:*:*:test</include>
                     <include>org.apache.maven.wagon:wagon-http-lightweight:*:*:test</include>
