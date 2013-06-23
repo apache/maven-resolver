@@ -30,7 +30,9 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
- * A repository connector factory that uses pluggable transporters for the transfers.
+ * A repository connector factory that employs pluggable
+ * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory transporters} and
+ * {@link org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory repository layouts} for the transfers.
  */
 @Named( "basic" )
 @Component( role = RepositoryConnectorFactory.class, hint = "basic" )
