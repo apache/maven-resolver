@@ -128,7 +128,7 @@ final class HttpTransporter
     {
         SchemeRegistry schemeReg = new SchemeRegistry();
         schemeReg.register( new Scheme( "http", 80, PlainSocketFactory.getSocketFactory() ) );
-        schemeReg.register( new Scheme( "https", 443, newSSLSocketFactory( repoAuthContext ) ) );
+        schemeReg.register( new Scheme( "https", 443, newSSLSocketFactory( session, repoAuthContext ) ) );
 
         PoolingClientConnectionManager connMgr = new PoolingClientConnectionManager( schemeReg );
         connMgr.setDefaultMaxPerRoute( connMgr.getMaxTotal() );
@@ -171,7 +171,8 @@ final class HttpTransporter
         return new DecompressingHttpClient( client );
     }
 
-    private static SchemeSocketFactory newSSLSocketFactory( AuthenticationContext authContext )
+    private static SchemeSocketFactory newSSLSocketFactory( RepositorySystemSession session,
+                                                            AuthenticationContext authContext )
     {
         SSLContext sslContext =
             ( authContext != null ) ? authContext.get( AuthenticationContext.SSL_CONTEXT, SSLContext.class ) : null;
@@ -198,7 +199,7 @@ final class HttpTransporter
             hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
         }
 
-        return new org.apache.http.conn.ssl.SSLSocketFactory( socketFactory, hostnameVerifier );
+        return new SslSocketFactory( socketFactory, hostnameVerifier, session );
     }
 
     private static HttpHost toHost( Proxy proxy )
