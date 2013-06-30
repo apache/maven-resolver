@@ -522,11 +522,8 @@
                     <include>org.slf4j:jcl-over-slf4j:1.6.2</include>
                     <!-- CQ #5660 -->
                     <include>ch.qos.logback:*:*:*:test</include>
-                    <include>org.apache.maven.wagon:wagon-http-lightweight:*:*:test</include>
                     <include>org.eclipse.jetty:*:*:*:test</include>
-                    <include>org.mortbay.jetty:*:*:*:test</include>
-                    <include>org.sonatype.http-testing-harness:*:*:*:test</include>
-                    <include>javax.servlet:*:*:*:test</include>
+                    <include>*:javax.servlet:*:*:test</include>
                   </includes>
                 </bannedDependencies>
               </rules>
