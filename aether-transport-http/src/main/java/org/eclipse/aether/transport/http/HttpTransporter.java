@@ -22,10 +22,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpMessage;
@@ -43,8 +39,6 @@ import org.apache.http.conn.params.ConnRouteParams;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.scheme.SchemeSocketFactory;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DecompressingHttpClient;
@@ -128,7 +122,7 @@ final class HttpTransporter
     {
         SchemeRegistry schemeReg = new SchemeRegistry();
         schemeReg.register( new Scheme( "http", 80, PlainSocketFactory.getSocketFactory() ) );
-        schemeReg.register( new Scheme( "https", 443, newSSLSocketFactory( session, repoAuthContext ) ) );
+        schemeReg.register( new Scheme( "https", 443, SslSocketFactory.newInstance( session, repoAuthContext ) ) );
 
         PoolingClientConnectionManager connMgr = new PoolingClientConnectionManager( schemeReg );
         connMgr.setDefaultMaxPerRoute( connMgr.getMaxTotal() );
@@ -169,37 +163,6 @@ final class HttpTransporter
         client.setCredentialsProvider( credsProvider );
 
         return new DecompressingHttpClient( client );
-    }
-
-    private static SchemeSocketFactory newSSLSocketFactory( RepositorySystemSession session,
-                                                            AuthenticationContext authContext )
-    {
-        SSLContext sslContext =
-            ( authContext != null ) ? authContext.get( AuthenticationContext.SSL_CONTEXT, SSLContext.class ) : null;
-        SSLSocketFactory socketFactory;
-        if ( sslContext != null )
-        {
-            socketFactory = sslContext.getSocketFactory();
-        }
-        else
-        {
-            socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        }
-
-        HostnameVerifier verifier =
-            ( authContext != null ) ? authContext.get( AuthenticationContext.SSL_HOSTNAME_VERIFIER,
-                                                       HostnameVerifier.class ) : null;
-        X509HostnameVerifier hostnameVerifier;
-        if ( verifier != null )
-        {
-            hostnameVerifier = X509HostnameVerifierAdapter.adapt( verifier );
-        }
-        else
-        {
-            hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
-        }
-
-        return new SslSocketFactory( socketFactory, hostnameVerifier, session );
     }
 
     private static HttpHost toHost( Proxy proxy )

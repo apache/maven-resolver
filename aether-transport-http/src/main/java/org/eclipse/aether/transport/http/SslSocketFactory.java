@@ -12,11 +12,14 @@ package org.eclipse.aether.transport.http;
 
 import java.io.IOException;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
@@ -27,7 +30,7 @@ import org.eclipse.aether.util.ConfigUtils;
  *      Reference Guide, Customization</a>
  */
 final class SslSocketFactory
-    extends SSLSocketFactory
+    extends org.apache.http.conn.ssl.SSLSocketFactory
 {
 
     private static final String CIPHER_SUITES = "https.cipherSuites";
@@ -38,13 +41,37 @@ final class SslSocketFactory
 
     private final String[] protocols;
 
-    public SslSocketFactory( javax.net.ssl.SSLSocketFactory socketfactory, X509HostnameVerifier hostnameVerifier,
-                             RepositorySystemSession session )
+    public static SslSocketFactory newInstance( RepositorySystemSession session, AuthenticationContext authContext )
     {
-        super( socketfactory, hostnameVerifier );
+        SSLContext sslContext =
+            ( authContext != null ) ? authContext.get( AuthenticationContext.SSL_CONTEXT, SSLContext.class ) : null;
+        SSLSocketFactory socketFactory;
+        if ( sslContext != null )
+        {
+            socketFactory = sslContext.getSocketFactory();
+        }
+        else
+        {
+            socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        }
 
-        cipherSuites = split( get( session, CIPHER_SUITES ) );
-        protocols = split( get( session, PROTOCOLS ) );
+        HostnameVerifier verifier =
+            ( authContext != null ) ? authContext.get( AuthenticationContext.SSL_HOSTNAME_VERIFIER,
+                                                       HostnameVerifier.class ) : null;
+        X509HostnameVerifier hostnameVerifier;
+        if ( verifier != null )
+        {
+            hostnameVerifier = X509HostnameVerifierAdapter.adapt( verifier );
+        }
+        else
+        {
+            hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
+        }
+
+        String[] cipherSuites = split( get( session, CIPHER_SUITES ) );
+        String[] protocols = split( get( session, PROTOCOLS ) );
+
+        return new SslSocketFactory( socketFactory, hostnameVerifier, cipherSuites, protocols );
     }
 
     private static String get( RepositorySystemSession session, String key )
@@ -64,6 +91,15 @@ final class SslSocketFactory
             return null;
         }
         return value.split( ",+" );
+    }
+
+    private SslSocketFactory( SSLSocketFactory socketfactory, X509HostnameVerifier hostnameVerifier,
+                              String[] cipherSuites, String[] protocols )
+    {
+        super( socketfactory, hostnameVerifier );
+
+        this.cipherSuites = cipherSuites;
+        this.protocols = protocols;
     }
 
     @Override
