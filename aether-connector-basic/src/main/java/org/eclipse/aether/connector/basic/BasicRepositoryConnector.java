@@ -182,9 +182,8 @@ final class BasicRepositoryConnector
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            GetTaskRunner task =
-                new GetTaskRunner( location, transfer.getFile(), false, transfer.getChecksumPolicy(), checksums,
-                                   listener );
+            Runnable task =
+                new GetTaskRunner( location, transfer.getFile(), transfer.getChecksumPolicy(), checksums, listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -205,9 +204,16 @@ final class BasicRepositoryConnector
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            GetTaskRunner task =
-                new GetTaskRunner( location, transfer.getFile(), transfer.isExistenceCheck(),
-                                   transfer.getChecksumPolicy(), checksums, listener );
+            Runnable task;
+            if ( transfer.isExistenceCheck() )
+            {
+                task = new PeekTaskRunner( location, listener );
+            }
+            else
+            {
+                task =
+                    new GetTaskRunner( location, transfer.getFile(), transfer.getChecksumPolicy(), checksums, listener );
+            }
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -231,7 +237,7 @@ final class BasicRepositoryConnector
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            PutTaskRunner task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
+            Runnable task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
             task.run();
         }
 
@@ -244,7 +250,7 @@ final class BasicRepositoryConnector
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
-            PutTaskRunner task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
+            Runnable task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
             task.run();
         }
     }
@@ -279,6 +285,36 @@ final class BasicRepositoryConnector
         return String.valueOf( repository );
     }
 
+    class PeekTaskRunner
+        implements Runnable
+    {
+
+        private final URI path;
+
+        private final TransferTransportListener<?> listener;
+
+        public PeekTaskRunner( URI path, TransferTransportListener<?> listener )
+        {
+            this.path = path;
+            this.listener = listener;
+        }
+
+        public void run()
+        {
+            try
+            {
+                listener.transferInitiated();
+                transporter.peek( new PeekTask( path ) );
+                listener.transferSucceeded();
+            }
+            catch ( Exception e )
+            {
+                listener.transferFailed( e, transporter.classify( e ) );
+            }
+        }
+
+    }
+
     class GetTaskRunner
         implements Runnable
     {
@@ -287,20 +323,17 @@ final class BasicRepositoryConnector
 
         private final File file;
 
-        private final boolean peek;
-
         private final String checksumPolicy;
 
         private final Collection<RepositoryLayout.Checksum> checksums;
 
         private final TransferTransportListener<?> listener;
 
-        public GetTaskRunner( URI path, File file, boolean peek, String checksumPolicy,
-                              List<RepositoryLayout.Checksum> checksums, TransferTransportListener<?> listener )
+        public GetTaskRunner( URI path, File file, String checksumPolicy, List<RepositoryLayout.Checksum> checksums,
+                              TransferTransportListener<?> listener )
         {
             this.path = path;
             this.file = file;
-            this.peek = peek;
             this.checksumPolicy = checksumPolicy;
             this.checksums = safe( checksums );
             this.listener = listener;
@@ -311,55 +344,48 @@ final class BasicRepositoryConnector
             try
             {
                 listener.transferInitiated();
-                if ( peek )
+                if ( file == null )
                 {
-                    transporter.peek( new PeekTask( path ) );
+                    throw new IllegalArgumentException( "destination file has not been specified" );
                 }
-                else
+                if ( !checksums.isEmpty() )
                 {
-                    if ( file == null )
+                    for ( RepositoryLayout.Checksum checksum : checksums )
                     {
-                        throw new IllegalArgumentException( "destination file has not been specified" );
+                        listener.addDigest( checksum.getAlgorithm() );
                     }
-                    if ( !checksums.isEmpty() )
+                }
+                fileProcessor.mkdirs( file.getParentFile() );
+                File tmp = newTempFile( file );
+                try
+                {
+                    for ( int trial = 1; trial >= 0; trial-- )
                     {
-                        for ( RepositoryLayout.Checksum checksum : checksums )
+                        transporter.get( new GetTask( path ).setDataFile( tmp ).setListener( listener ) );
+                        try
                         {
-                            listener.addDigest( checksum.getAlgorithm() );
+                            if ( !verifyChecksum() )
+                            {
+                                trial = 0;
+                                throw new ChecksumFailureException( "Checksum validation failed"
+                                    + ", no checksums available from the repository" );
+                            }
+                            break;
+                        }
+                        catch ( ChecksumFailureException e )
+                        {
+                            if ( trial <= 0 && RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( checksumPolicy ) )
+                            {
+                                throw e;
+                            }
+                            listener.transferCorrupted( e );
                         }
                     }
-                    fileProcessor.mkdirs( file.getParentFile() );
-                    File tmp = newTempFile( file );
-                    try
-                    {
-                        for ( int trial = 1; trial >= 0; trial-- )
-                        {
-                            transporter.get( new GetTask( path ).setDataFile( tmp ).setListener( listener ) );
-                            try
-                            {
-                                if ( !verifyChecksum() )
-                                {
-                                    trial = 0;
-                                    throw new ChecksumFailureException( "Checksum validation failed"
-                                        + ", no checksums available from the repository" );
-                                }
-                                break;
-                            }
-                            catch ( ChecksumFailureException e )
-                            {
-                                if ( trial <= 0 && RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( checksumPolicy ) )
-                                {
-                                    throw e;
-                                }
-                                listener.transferCorrupted( e );
-                            }
-                        }
-                        fileProcessor.move( tmp, file );
-                    }
-                    finally
-                    {
-                        delTempFile( tmp );
-                    }
+                    fileProcessor.move( tmp, file );
+                }
+                finally
+                {
+                    delTempFile( tmp );
                 }
                 listener.transferSucceeded();
             }
