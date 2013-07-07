@@ -11,11 +11,6 @@
 package org.eclipse.aether.connector.basic;
 
 import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
@@ -23,7 +18,6 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferEvent.EventType;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.util.ChecksumUtils;
 
 class TransferTransportListener<T extends Transfer>
     extends TransportListener
@@ -35,14 +29,13 @@ class TransferTransportListener<T extends Transfer>
 
     private final TransferEvent.Builder eventBuilder;
 
-    private Map<String, MessageDigest> digests;
+    private ChecksumCalculator checksums;
 
     protected TransferTransportListener( T transfer, TransferListener listener, TransferEvent.Builder eventBuilder )
     {
         this.transfer = transfer;
         this.listener = listener;
         this.eventBuilder = eventBuilder;
-        this.digests = Collections.emptyMap();
     }
 
     protected T getTransfer()
@@ -65,9 +58,9 @@ class TransferTransportListener<T extends Transfer>
     public void transportStarted( long dataOffset, long dataLength )
         throws TransferCancelledException
     {
-        for ( MessageDigest digest : digests.values() )
+        if ( checksums != null )
         {
-            digest.reset();
+            checksums.init( dataOffset );
         }
         if ( listener != null )
         {
@@ -82,11 +75,9 @@ class TransferTransportListener<T extends Transfer>
     public void transportProgressed( ByteBuffer data )
         throws TransferCancelledException
     {
-        for ( MessageDigest digest : digests.values() )
+        if ( checksums != null )
         {
-            data.mark();
-            digest.update( data );
-            data.reset();
+            checksums.update( data );
         }
         if ( listener != null )
         {
@@ -125,34 +116,14 @@ class TransferTransportListener<T extends Transfer>
         transfer.setState( Transfer.State.DONE );
     }
 
-    public void addDigest( String algo )
+    public ChecksumCalculator getChecksums()
     {
-        try
-        {
-            if ( !digests.containsKey( algo ) )
-            {
-                MessageDigest digest = MessageDigest.getInstance( algo );
-                if ( digests.isEmpty() )
-                {
-                    digests = new HashMap<String, MessageDigest>();
-                }
-                digests.put( algo, digest );
-            }
-        }
-        catch ( NoSuchAlgorithmException e )
-        {
-            // treat this checksum as missing
-        }
+        return checksums;
     }
 
-    public Map<String, String> getDigests()
+    public void setChecksums( ChecksumCalculator checksums )
     {
-        Map<String, String> results = new HashMap<String, String>();
-        for ( Map.Entry<String, MessageDigest> entry : digests.entrySet() )
-        {
-            results.put( entry.getKey(), ChecksumUtils.toHexString( entry.getValue().digest() ) );
-        }
-        return results;
+        this.checksums = checksums;
     }
 
 }

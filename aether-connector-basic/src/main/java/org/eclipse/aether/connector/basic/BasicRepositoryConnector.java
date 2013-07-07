@@ -27,6 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -63,6 +64,10 @@ final class BasicRepositoryConnector
 
     private static final String PROP_THREADS = "aether.connector.basic.threads";
 
+    private static final String PROP_RESUME = "aether.connector.resumeDownloads";
+
+    private static final String PROP_RESUME_THRESHOLD = "aether.connector.resumeThreshold";
+
     private final Logger logger;
 
     private final FileProcessor fileProcessor;
@@ -76,6 +81,8 @@ final class BasicRepositoryConnector
     private final RepositoryLayout layout;
 
     private final Executor executor;
+
+    private final PartialFile.Factory partialFileFactory;
 
     private boolean closed;
 
@@ -108,6 +115,15 @@ final class BasicRepositoryConnector
 
         int threads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
         executor = getExecutor( threads );
+
+        boolean resumeDownloads =
+            ConfigUtils.getBoolean( session, true, PROP_RESUME + '.' + repository.getId(), PROP_RESUME );
+        int resumeThreshold = ConfigUtils.getInteger( session, 64 * 1024, PROP_RESUME_THRESHOLD );
+        int requestTimeout =
+            ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
+                                    ConfigurationProperties.REQUEST_TIMEOUT + '.' + repository.getId(),
+                                    ConfigurationProperties.REQUEST_TIMEOUT );
+        partialFileFactory = new PartialFile.Factory( resumeDownloads, resumeThreshold, requestTimeout, logger );
     }
 
     private Executor getExecutor( int threads )
@@ -348,50 +364,56 @@ final class BasicRepositoryConnector
                 {
                     throw new IllegalArgumentException( "destination file has not been specified" );
                 }
-                if ( !checksums.isEmpty() )
-                {
-                    for ( RepositoryLayout.Checksum checksum : checksums )
-                    {
-                        listener.addDigest( checksum.getAlgorithm() );
-                    }
-                }
                 fileProcessor.mkdirs( file.getParentFile() );
-                File tmp = newTempFile( file );
-                try
-                {
-                    for ( int trial = 1; trial >= 0; trial-- )
-                    {
-                        transporter.get( new GetTask( path ).setDataFile( tmp ).setListener( listener ) );
-                        try
-                        {
-                            if ( !verifyChecksum() )
-                            {
-                                trial = 0;
-                                throw new ChecksumFailureException( "Checksum validation failed"
-                                    + ", no checksums available from the repository" );
-                            }
-                            break;
-                        }
-                        catch ( ChecksumFailureException e )
-                        {
-                            if ( trial <= 0 && RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( checksumPolicy ) )
-                            {
-                                throw e;
-                            }
-                            listener.transferCorrupted( e );
-                        }
-                    }
-                    fileProcessor.move( tmp, file );
-                }
-                finally
-                {
-                    delTempFile( tmp );
-                }
+                download( partialFileFactory.newInstance( file ) );
                 listener.transferSucceeded();
             }
             catch ( Exception e )
             {
                 listener.transferFailed( e, transporter.classify( e ) );
+            }
+        }
+
+        private void download( PartialFile partFile )
+            throws Exception
+        {
+            if ( partFile == null )
+            {
+                logger.debug( "Concurrent download of " + file + " just finished, skipping download" );
+                return;
+            }
+            try
+            {
+                File tmp = partFile.getFile();
+                listener.setChecksums( ChecksumCalculator.newInstance( tmp, checksums ) );
+                for ( int firstTrial = 0, lastTrial = 1, trial = firstTrial; trial <= lastTrial; trial++ )
+                {
+                    boolean resume = partFile.isResume() && trial <= firstTrial;
+                    transporter.get( new GetTask( path ).setDataFile( tmp, resume ).setListener( listener ) );
+                    try
+                    {
+                        if ( !verifyChecksum() )
+                        {
+                            trial = lastTrial;
+                            throw new ChecksumFailureException( "Checksum validation failed"
+                                + ", no checksums available from the repository" );
+                        }
+                        break;
+                    }
+                    catch ( ChecksumFailureException e )
+                    {
+                        if ( trial >= lastTrial && RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( checksumPolicy ) )
+                        {
+                            throw e;
+                        }
+                        listener.transferCorrupted( e );
+                    }
+                }
+                fileProcessor.move( tmp, file );
+            }
+            finally
+            {
+                partFile.close();
             }
         }
 
@@ -413,14 +435,15 @@ final class BasicRepositoryConnector
         private boolean verifyChecksum()
             throws ChecksumFailureException
         {
-            if ( checksums.isEmpty() )
+            ChecksumCalculator calculator = listener.getChecksums();
+            if ( calculator == null )
             {
                 return true;
             }
-            Map<String, String> sumsByAlgo = listener.getDigests();
+            Map<String, Object> sumsByAlgo = calculator.get();
             for ( RepositoryLayout.Checksum checksum : checksums )
             {
-                String actual = sumsByAlgo.get( checksum.getAlgorithm() );
+                Object actual = sumsByAlgo.get( checksum.getAlgorithm() );
                 if ( actual != null && verifyChecksum( checksum, actual ) )
                 {
                     return true;
@@ -429,15 +452,20 @@ final class BasicRepositoryConnector
             return false;
         }
 
-        private boolean verifyChecksum( RepositoryLayout.Checksum checksum, String actual )
+        private boolean verifyChecksum( RepositoryLayout.Checksum checksum, Object actual )
             throws ChecksumFailureException
         {
             String ext = checksum.getAlgorithm().replace( "-", "" ).toLowerCase( Locale.ENGLISH );
-            File checksumFile = new File( file.getPath() + ext );
+            File checksumFile = new File( file.getPath() + '.' + ext );
             File tmp = null;
 
             try
             {
+                if ( actual instanceof Exception )
+                {
+                    throw new ChecksumFailureException( (Exception) actual );
+                }
+
                 tmp = newTempFile( checksumFile );
                 try
                 {
@@ -452,8 +480,9 @@ final class BasicRepositoryConnector
                     throw new ChecksumFailureException( e );
                 }
 
+                String act = String.valueOf( actual );
                 String expected = ChecksumUtils.read( tmp );
-                if ( expected.equalsIgnoreCase( actual ) )
+                if ( expected.equalsIgnoreCase( act ) )
                 {
                     try
                     {
@@ -466,7 +495,7 @@ final class BasicRepositoryConnector
                 }
                 else
                 {
-                    throw new ChecksumFailureException( expected, actual );
+                    throw new ChecksumFailureException( expected, act );
                 }
             }
             catch ( IOException e )
