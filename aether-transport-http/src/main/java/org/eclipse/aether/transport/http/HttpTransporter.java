@@ -19,13 +19,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.params.AuthParams;
 import org.apache.http.client.HttpClient;
@@ -44,6 +50,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DecompressingHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.cookie.DateUtils;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
@@ -70,6 +77,9 @@ import org.eclipse.aether.util.ConfigUtils;
 final class HttpTransporter
     implements Transporter
 {
+
+    private static final Pattern CONTENT_RANGE_PATTERN =
+        Pattern.compile( "\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*" );
 
     private final AuthenticationContext repoAuthContext;
 
@@ -215,7 +225,8 @@ final class HttpTransporter
 
     public int classify( Throwable error )
     {
-        if ( error instanceof HttpResponseException && ( (HttpResponseException) error ).getStatusCode() == 404 )
+        if ( error instanceof HttpResponseException
+            && ( (HttpResponseException) error ).getStatusCode() == HttpStatus.SC_NOT_FOUND )
         {
             return ERROR_NOT_FOUND;
         }
@@ -236,8 +247,28 @@ final class HttpTransporter
     {
         failIfClosed( task );
 
+        EntityGetter getter = new EntityGetter( task );
         HttpGet request = new HttpGet( resolve( task ) );
-        execute( request, new EntityGetter( task ) );
+        long resumeOffset = task.getResumeOffset();
+        if ( resumeOffset > 0 && task.getDataFile() != null )
+        {
+            request.setHeader( HttpHeaders.RANGE, "bytes=" + Long.toString( resumeOffset ) + '-' );
+            request.setHeader( HttpHeaders.IF_UNMODIFIED_SINCE,
+                               DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60 * 1000 ) ) );
+            request.setHeader( HttpHeaders.ACCEPT_ENCODING, "identity" );
+        }
+        try
+        {
+            execute( request, getter );
+        }
+        catch ( HttpResponseException e )
+        {
+            if ( e.getStatusCode() != HttpStatus.SC_PRECONDITION_FAILED || !request.containsHeader( HttpHeaders.RANGE ) )
+            {
+                throw e;
+            }
+            execute( new HttpGet( request.getURI() ), getter );
+        }
     }
 
     public void put( PutTask task )
@@ -262,7 +293,7 @@ final class HttpTransporter
                 handleStatus( response );
                 if ( getter != null )
                 {
-                    getter.handle( response.getEntity() );
+                    getter.handle( response );
                 }
             }
             finally
@@ -282,8 +313,8 @@ final class HttpTransporter
 
     private void applyHeaders( HttpMessage msg )
     {
-        msg.setHeader( "Cache-Control", "no-cache, no-store" );
-        msg.setHeader( "Pragma", "no-cache" );
+        msg.setHeader( HttpHeaders.CACHE_CONTROL, "no-cache, no-store" );
+        msg.setHeader( HttpHeaders.PRAGMA, "no-cache" );
         for ( Map.Entry<?, ?> entry : headers.entrySet() )
         {
             msg.setHeader( entry.getKey().toString(), entry.getValue().toString() );
@@ -358,18 +389,37 @@ final class HttpTransporter
             this.task = task;
         }
 
-        public void handle( HttpEntity entity )
+        public void handle( HttpResponse response )
             throws IOException, TransferCancelledException
         {
+            HttpEntity entity = response.getEntity();
             if ( entity == null )
             {
                 entity = new ByteArrayEntity( new byte[0] );
             }
+
+            long offset = 0, length = entity.getContentLength();
+            Header range = response.getFirstHeader( HttpHeaders.CONTENT_RANGE );
+            if ( range != null && range.getValue() != null )
+            {
+                Matcher m = CONTENT_RANGE_PATTERN.matcher( range.getValue() );
+                if ( !m.matches() )
+                {
+                    throw new IOException( "Invalid Content-Range header for partial download: " + range.getValue() );
+                }
+                offset = Long.parseLong( m.group( 1 ) );
+                length = Long.parseLong( m.group( 2 ) ) + 1;
+                if ( offset < 0 || offset >= length || offset != task.getResumeOffset() )
+                {
+                    throw new IOException( "Invalid Content-Range header for partial download: " + range.getValue() );
+                }
+            }
+
             InputStream is = entity.getContent();
             try
             {
-                task.getListener().transportStarted( 0, entity.getContentLength() );
-                OutputStream os = task.newOutputStream();
+                task.getListener().transportStarted( offset, length );
+                OutputStream os = task.newOutputStream( offset > 0 );
                 try
                 {
                     copy( os, is, task.getListener() );

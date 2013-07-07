@@ -21,6 +21,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -72,6 +74,8 @@ public class HttpServer
     private static final Logger log = LoggerFactory.getLogger( HttpServer.class );
 
     private File repoDir;
+
+    private boolean rangeSupport = true;
 
     private Server server;
 
@@ -146,6 +150,12 @@ public class HttpServer
     public HttpServer setRepoDir( File repoDir )
     {
         this.repoDir = repoDir;
+        return this;
+    }
+
+    public HttpServer setRangeSupport( boolean rangeSupport )
+    {
+        this.rangeSupport = rangeSupport;
         return this;
     }
 
@@ -235,6 +245,8 @@ public class HttpServer
         extends AbstractHandler
     {
 
+        private final Pattern SIMPLE_RANGE = Pattern.compile( "bytes=([0-9])+-" );
+
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
             throws IOException
         {
@@ -247,7 +259,7 @@ public class HttpServer
             req.setHandled( true );
             if ( path.endsWith( URIUtil.SLASH ) )
             {
-                response.sendError( HttpServletResponse.SC_NOT_FOUND );
+                response.setStatus( HttpServletResponse.SC_NOT_FOUND );
                 return;
             }
 
@@ -256,12 +268,44 @@ public class HttpServer
             {
                 if ( !file.isFile() )
                 {
-                    response.sendError( HttpServletResponse.SC_NOT_FOUND );
+                    response.setStatus( HttpServletResponse.SC_NOT_FOUND );
                     return;
                 }
-                response.setStatus( HttpServletResponse.SC_OK );
-                response.setHeader( HttpHeaders.CONTENT_LENGTH, Long.toString( file.length() ) );
+                long ifUnmodifiedSince = request.getDateHeader( HttpHeaders.IF_UNMODIFIED_SINCE );
+                if ( ifUnmodifiedSince != -1 && file.lastModified() > ifUnmodifiedSince )
+                {
+                    response.setStatus( HttpServletResponse.SC_PRECONDITION_FAILED );
+                    return;
+                }
+                long offset = 0;
+                String range = request.getHeader( HttpHeaders.RANGE );
+                if ( range != null && rangeSupport )
+                {
+                    Matcher m = SIMPLE_RANGE.matcher( range );
+                    if ( m.matches() )
+                    {
+                        offset = Long.parseLong( m.group( 1 ) );
+                        if ( offset >= file.length() )
+                        {
+                            response.setStatus( HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE );
+                            return;
+                        }
+                    }
+                    String encoding = request.getHeader( HttpHeaders.ACCEPT_ENCODING );
+                    if ( ( encoding != null && !"identity".equals( encoding ) ) || ifUnmodifiedSince == -1 )
+                    {
+                        response.setStatus( HttpServletResponse.SC_BAD_REQUEST );
+                        return;
+                    }
+                }
+                response.setStatus( ( offset > 0 ) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK );
                 response.setDateHeader( HttpHeaders.LAST_MODIFIED, file.lastModified() );
+                response.setHeader( HttpHeaders.CONTENT_LENGTH, Long.toString( file.length() - offset ) );
+                if ( offset > 0 )
+                {
+                    response.setHeader( HttpHeaders.CONTENT_RANGE, "bytes " + offset + "-" + ( file.length() - 1 )
+                        + "/" + file.length() );
+                }
                 if ( HttpMethods.HEAD.equals( req.getMethod() ) )
                 {
                     return;
@@ -269,6 +313,14 @@ public class HttpServer
                 FileInputStream is = new FileInputStream( file );
                 try
                 {
+                    if ( offset > 0 )
+                    {
+                        long skipped = is.skip( offset );
+                        while ( skipped < offset && is.read() >= 0 )
+                        {
+                            skipped++;
+                        }
+                    }
                     IO.copy( is, response.getOutputStream() );
                 }
                 finally
@@ -300,7 +352,7 @@ public class HttpServer
             }
             else
             {
-                response.sendError( HttpServletResponse.SC_METHOD_NOT_ALLOWED );
+                response.setStatus( HttpServletResponse.SC_METHOD_NOT_ALLOWED );
             }
         }
 
@@ -359,7 +411,7 @@ public class HttpServer
                 }
                 req.setHandled( true );
                 response.setHeader( HttpHeaders.WWW_AUTHENTICATE, "basic realm=\"Test-Realm\"" );
-                response.sendError( HttpServletResponse.SC_UNAUTHORIZED );
+                response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
             }
         }
 
@@ -380,7 +432,7 @@ public class HttpServer
                 }
                 req.setHandled( true );
                 response.setHeader( HttpHeaders.PROXY_AUTHENTICATE, "basic realm=\"Test-Realm\"" );
-                response.sendError( HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED );
+                response.setStatus( HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED );
             }
         }
 

@@ -105,6 +105,9 @@ public class HttpTransporterTest
         TestFileUtils.writeString( new File( repoDir, "file.txt" ), "test" );
         TestFileUtils.writeString( new File( repoDir, "empty.txt" ), "" );
         TestFileUtils.writeString( new File( repoDir, "some space.txt" ), "space" );
+        File resumable = new File( repoDir, "resume.txt" );
+        TestFileUtils.writeString( resumable, "resumable" );
+        resumable.setLastModified( System.currentTimeMillis() - 90 * 1000 );
         httpServer = new HttpServer().setRepoDir( repoDir ).start();
         newTransporter( httpServer.getHttpUrl() );
     }
@@ -458,6 +461,56 @@ public class HttpTransporterTest
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_Resume()
+        throws Exception
+    {
+        File file = TestFileUtils.createTempFile( "re" );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask( URI.create( "repo/resume.txt" ) ).setDataFile( file, true ).setListener( listener );
+        transporter.get( task );
+        assertEquals( "resumable", TestFileUtils.readString( file ) );
+        assertEquals( 1, listener.startedCount );
+        assertEquals( 2, listener.dataOffset );
+        assertEquals( 9, listener.dataLength );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "sumable", listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_ResumeLocalContentsOutdated()
+        throws Exception
+    {
+        File file = TestFileUtils.createTempFile( "re" );
+        file.setLastModified( System.currentTimeMillis() - 5 * 60 * 1000 );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask( URI.create( "repo/resume.txt" ) ).setDataFile( file, true ).setListener( listener );
+        transporter.get( task );
+        assertEquals( "resumable", TestFileUtils.readString( file ) );
+        assertEquals( 1, listener.startedCount );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 9, listener.dataLength );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "resumable", listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_ResumeRangesNotSupportedByServer()
+        throws Exception
+    {
+        httpServer.setRangeSupport( false );
+        File file = TestFileUtils.createTempFile( "re" );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask( URI.create( "repo/resume.txt" ) ).setDataFile( file, true ).setListener( listener );
+        transporter.get( task );
+        assertEquals( "resumable", TestFileUtils.readString( file ) );
+        assertEquals( 1, listener.startedCount );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 9, listener.dataLength );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "resumable", listener.baos.toString( "UTF-8" ) );
     }
 
     @Test
