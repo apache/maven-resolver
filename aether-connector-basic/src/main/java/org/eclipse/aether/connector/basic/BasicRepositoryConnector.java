@@ -303,15 +303,15 @@ final class BasicRepositoryConnector
         return String.valueOf( repository );
     }
 
-    class PeekTaskRunner
+    abstract class TaskRunner
         implements Runnable
     {
 
-        private final URI path;
+        protected final URI path;
 
-        private final TransferTransportListener<?> listener;
+        protected final TransferTransportListener<?> listener;
 
-        public PeekTaskRunner( URI path, TransferTransportListener<?> listener )
+        public TaskRunner( URI path, TransferTransportListener<?> listener )
         {
             this.path = path;
             this.listener = listener;
@@ -322,7 +322,7 @@ final class BasicRepositoryConnector
             try
             {
                 listener.transferInitiated();
-                transporter.peek( new PeekTask( path ) );
+                runTask();
                 listener.transferSucceeded();
             }
             catch ( Exception e )
@@ -331,13 +331,31 @@ final class BasicRepositoryConnector
             }
         }
 
+        protected abstract void runTask()
+            throws Exception;
+
+    }
+
+    class PeekTaskRunner
+        extends TaskRunner
+    {
+
+        public PeekTaskRunner( URI path, TransferTransportListener<?> listener )
+        {
+            super( path, listener );
+        }
+
+        protected void runTask()
+            throws Exception
+        {
+            transporter.peek( new PeekTask( path ) );
+        }
+
     }
 
     class GetTaskRunner
-        implements Runnable
+        extends TaskRunner
     {
-
-        private final URI path;
 
         private final File file;
 
@@ -345,45 +363,31 @@ final class BasicRepositoryConnector
 
         private final Collection<RepositoryLayout.Checksum> checksums;
 
-        private final TransferTransportListener<?> listener;
-
         public GetTaskRunner( URI path, File file, String checksumPolicy, List<RepositoryLayout.Checksum> checksums,
                               TransferTransportListener<?> listener )
         {
-            this.path = path;
+            super( path, listener );
             this.file = file;
             this.checksumPolicy = checksumPolicy;
             this.checksums = safe( checksums );
-            this.listener = listener;
         }
 
-        public void run()
-        {
-            try
-            {
-                listener.transferInitiated();
-                if ( file == null )
-                {
-                    throw new IllegalArgumentException( "destination file has not been specified" );
-                }
-                fileProcessor.mkdirs( file.getParentFile() );
-                download( partialFileFactory.newInstance( file ) );
-                listener.transferSucceeded();
-            }
-            catch ( Exception e )
-            {
-                listener.transferFailed( e, transporter.classify( e ) );
-            }
-        }
-
-        private void download( PartialFile partFile )
+        protected void runTask()
             throws Exception
         {
+            if ( file == null )
+            {
+                throw new IllegalArgumentException( "destination file has not been specified" );
+            }
+            fileProcessor.mkdirs( file.getParentFile() );
+
+            PartialFile partFile = partialFileFactory.newInstance( file );
             if ( partFile == null )
             {
                 logger.debug( "Concurrent download of " + file + " just finished, skipping download" );
                 return;
             }
+
             try
             {
                 File tmp = partFile.getFile();
@@ -515,43 +519,30 @@ final class BasicRepositoryConnector
     }
 
     class PutTaskRunner
-        implements Runnable
+        extends TaskRunner
     {
-
-        private final URI path;
 
         private final File file;
 
         private final Collection<RepositoryLayout.Checksum> checksums;
 
-        private final TransferTransportListener<?> listener;
-
         public PutTaskRunner( URI path, File file, List<RepositoryLayout.Checksum> checksums,
                               TransferTransportListener<?> listener )
         {
-            this.path = path;
+            super( path, listener );
             this.file = file;
             this.checksums = safe( checksums );
-            this.listener = listener;
         }
 
-        public void run()
+        protected void runTask()
+            throws Exception
         {
-            try
+            if ( file == null )
             {
-                listener.transferInitiated();
-                if ( file == null )
-                {
-                    throw new IllegalArgumentException( "source file has not been specified" );
-                }
-                transporter.put( new PutTask( path ).setDataFile( file ).setListener( listener ) );
-                uploadChecksums( file, path );
-                listener.transferSucceeded();
+                throw new IllegalArgumentException( "source file has not been specified" );
             }
-            catch ( Exception e )
-            {
-                listener.transferFailed( e, transporter.classify( e ) );
-            }
+            transporter.put( new PutTask( path ).setDataFile( file ).setListener( listener ) );
+            uploadChecksums( file, path );
         }
 
         private void uploadChecksums( File file, URI location )
