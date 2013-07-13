@@ -55,6 +55,7 @@ import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
+import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 
 /**
  */
@@ -114,7 +115,7 @@ final class BasicRepositoryConnector
         this.logger = logger;
 
         int threads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
-        executor = getExecutor( threads );
+        executor = getExecutor( threads, repository );
 
         boolean resumeDownloads =
             ConfigUtils.getBoolean( session, true, PROP_RESUME + '.' + repository.getId(), PROP_RESUME );
@@ -128,7 +129,7 @@ final class BasicRepositoryConnector
         partialFileFactory = new PartialFile.Factory( resumeDownloads, resumeThreshold, requestTimeout, logger );
     }
 
-    private Executor getExecutor( int threads )
+    private Executor getExecutor( int threads, RemoteRepository repository )
     {
         if ( threads <= 1 )
         {
@@ -142,7 +143,9 @@ final class BasicRepositoryConnector
         }
         else
         {
-            return new ThreadPoolExecutor( threads, threads, 3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>() );
+            return new ThreadPoolExecutor( threads, threads, 3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+                                           new WorkerThreadFactory( getClass().getSimpleName() + '-'
+                                               + repository.getHost() + '-' ) );
         }
     }
 
