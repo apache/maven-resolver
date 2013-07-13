@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,6 +31,8 @@ public final class TransferResource
     private final RequestTrace trace;
 
     private long contentLength = -1;
+
+    private long resumeOffset;
 
     /**
      * Creates a new transfer resource with the specified properties.
@@ -130,6 +132,33 @@ public final class TransferResource
     public TransferResource setContentLength( long contentLength )
     {
         this.contentLength = contentLength;
+        return this;
+    }
+
+    /**
+     * Gets the byte offset within the resource from which the download starts. A positive offset indicates a previous
+     * download attempt is being resumed, {@code 0} means the transfer starts at the first byte.
+     * 
+     * @return The zero-based index of the first byte being transferred, never negative.
+     */
+    public long getResumeOffset()
+    {
+        return resumeOffset;
+    }
+
+    /**
+     * Sets the byte offset within the resource at which the download starts.
+     * 
+     * @param resumeOffset The zero-based index of the first byte being transferred, must not be negative.
+     * @return This resource for chaining, never {@code null}.
+     */
+    public TransferResource setResumeOffset( long resumeOffset )
+    {
+        if ( resumeOffset < 0 )
+        {
+            throw new IllegalArgumentException( "resume offset cannot be negative" );
+        }
+        this.resumeOffset = resumeOffset;
         return this;
     }
 

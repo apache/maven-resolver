@@ -66,7 +66,7 @@ class TransferTransportListener<T extends Transfer>
         {
             eventBuilder.resetType( EventType.STARTED ).setTransferredBytes( dataOffset );
             TransferEvent event = eventBuilder.build();
-            event.getResource().setContentLength( dataLength );
+            event.getResource().setContentLength( dataLength ).setResumeOffset( dataOffset );
             listener.transferStarted( event );
         }
     }
