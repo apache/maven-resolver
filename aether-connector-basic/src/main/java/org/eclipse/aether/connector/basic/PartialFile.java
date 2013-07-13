@@ -36,14 +36,19 @@ final class PartialFile
 
         private final FileLock lock;
 
+        private final boolean concurrent;
+
         public LockFile( File partFile, int requestTimeout, Logger logger )
             throws IOException
         {
             lockFile = new File( partFile.getPath() + ".lock" );
-            lock = lock( lockFile, partFile, requestTimeout, logger );
+            boolean[] concurrent = { false };
+            lock = lock( lockFile, partFile, requestTimeout, logger, concurrent );
+            this.concurrent = concurrent[0];
         }
 
-        private static FileLock lock( File lockFile, File partFile, int requestTimeout, Logger logger )
+        private static FileLock lock( File lockFile, File partFile, int requestTimeout, Logger logger,
+                                      boolean[] concurrent )
             throws IOException
         {
             boolean interrupted = false;
@@ -63,6 +68,7 @@ final class PartialFile
                     {
                         if ( lastLength < 0 )
                         {
+                            concurrent[0] = true;
                             logger.debug( "Concurrent download of " + partFile + " in progress, awaiting completion" );
                         }
                         lastLength = currentLength;
@@ -137,6 +143,11 @@ final class PartialFile
             }
         }
 
+        public boolean isConcurrent()
+        {
+            return concurrent;
+        }
+
         public void close()
         {
             close( lock.channel() );
@@ -185,8 +196,7 @@ final class PartialFile
 
             long reqTimestamp = System.currentTimeMillis();
             LockFile lockFile = new LockFile( partFile, requestTimeout, logger );
-            long dstTimestamp = dstFile.lastModified();
-            if ( dstTimestamp >= reqTimestamp - 2 * 1000 )
+            if ( lockFile.isConcurrent() && dstFile.lastModified() >= reqTimestamp - 100 )
             {
                 lockFile.close();
                 return null;
