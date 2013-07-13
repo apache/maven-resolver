@@ -199,7 +199,8 @@ final class BasicRepositoryConnector
                 checksums = layout.getChecksums( transfer.getMetadata(), false, location );
             }
 
-            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), false, transfer.getTrace() );
+            TransferEvent.Builder builder =
+                newEventBuilder( location, transfer.getFile(), false, false, transfer.getTrace() );
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
@@ -221,7 +222,8 @@ final class BasicRepositoryConnector
                 checksums = layout.getChecksums( transfer.getArtifact(), false, location );
             }
 
-            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), false, transfer.getTrace() );
+            TransferEvent.Builder builder =
+                newEventBuilder( location, transfer.getFile(), false, transfer.isExistenceCheck(), transfer.getTrace() );
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
@@ -254,7 +256,8 @@ final class BasicRepositoryConnector
             URI location = layout.getLocation( transfer.getArtifact(), true );
             List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getArtifact(), true, location );
 
-            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), true, transfer.getTrace() );
+            TransferEvent.Builder builder =
+                newEventBuilder( location, transfer.getFile(), true, false, transfer.getTrace() );
             ArtifactTransportListener listener =
                 new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
 
@@ -267,7 +270,8 @@ final class BasicRepositoryConnector
             URI location = layout.getLocation( transfer.getMetadata(), true );
             List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getMetadata(), true, location );
 
-            TransferEvent.Builder builder = newEventBuilder( location, transfer.getFile(), true, transfer.getTrace() );
+            TransferEvent.Builder builder =
+                newEventBuilder( location, transfer.getFile(), true, false, transfer.getTrace() );
             MetadataTransportListener listener =
                 new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
 
@@ -281,7 +285,7 @@ final class BasicRepositoryConnector
         return ( items != null ) ? items : Collections.<T> emptyList();
     }
 
-    private TransferEvent.Builder newEventBuilder( URI path, File file, boolean upload, RequestTrace trace )
+    private TransferEvent.Builder newEventBuilder( URI path, File file, boolean upload, boolean peek, RequestTrace trace )
     {
         TransferResource resource = new TransferResource( repository.getUrl(), path.toString(), file, trace );
         TransferEvent.Builder builder = new TransferEvent.Builder( session, resource );
@@ -289,7 +293,7 @@ final class BasicRepositoryConnector
         {
             builder.setRequestType( TransferEvent.RequestType.PUT );
         }
-        else if ( file != null )
+        else if ( !peek )
         {
             builder.setRequestType( TransferEvent.RequestType.GET );
         }
