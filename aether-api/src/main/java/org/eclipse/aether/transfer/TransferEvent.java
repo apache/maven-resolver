@@ -150,10 +150,14 @@ public final class TransferEvent
     }
 
     /**
-     * Gets the total number of bytes that have been transferred since the download/upload was started.
+     * Gets the total number of bytes that have been transferred since the download/upload of the resource was started.
+     * If a download has been resumed, the returned count includes the bytes that were already downloaded during the
+     * previous attempt. In other words, the ratio of transferred bytes to the content length of the resource indicates
+     * the percentage of transfer completion.
      * 
      * @return The total number of bytes that have been transferred since the transfer started, never negative.
      * @see #getDataLength()
+     * @see TransferResource#getResumeOffset()
      */
     public long getTransferredBytes()
     {
@@ -327,11 +331,15 @@ public final class TransferEvent
         }
 
         /**
-         * Sets the total number of bytes that have been transferred so far during the download/upload.
+         * Sets the total number of bytes that have been transferred so far during the download/upload of the resource.
+         * If a download is being resumed, the count must include the bytes that were already downloaded in the previous
+         * attempt and from which the current transfer started. In this case, the event type {@link EventType#STARTED}
+         * should indicate from what byte the download resumes.
          * 
          * @param transferredBytes The total number of bytes that have been transferred so far during the
-         *            download/upload, must not be negative.
+         *            download/upload of the resource, must not be negative.
          * @return This event builder for chaining, never {@code null}.
+         * @see TransferResource#setResumeOffset(long)
          */
         public Builder setTransferredBytes( long transferredBytes )
         {
