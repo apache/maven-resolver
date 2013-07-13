@@ -118,7 +118,9 @@ final class BasicRepositoryConnector
 
         boolean resumeDownloads =
             ConfigUtils.getBoolean( session, true, PROP_RESUME + '.' + repository.getId(), PROP_RESUME );
-        int resumeThreshold = ConfigUtils.getInteger( session, 64 * 1024, PROP_RESUME_THRESHOLD );
+        long resumeThreshold =
+            ConfigUtils.getLong( session, 64 * 1024, PROP_RESUME_THRESHOLD + '.' + repository.getId(),
+                                 PROP_RESUME_THRESHOLD );
         int requestTimeout =
             ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                                     ConfigurationProperties.REQUEST_TIMEOUT + '.' + repository.getId(),
