@@ -81,9 +81,11 @@ final class BasicRepositoryConnector
 
     private final RepositoryLayout layout;
 
-    private final Executor executor;
-
     private final PartialFile.Factory partialFileFactory;
+
+    private Executor executor;
+
+    private int maxThreads;
 
     private boolean closed;
 
@@ -114,8 +116,7 @@ final class BasicRepositoryConnector
         this.fileProcessor = fileProcessor;
         this.logger = logger;
 
-        int threads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
-        executor = getExecutor( threads, repository );
+        maxThreads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
 
         boolean resumeDownloads =
             ConfigUtils.getBoolean( session, true, PROP_RESUME + '.' + repository.getId(), PROP_RESUME );
@@ -129,24 +130,26 @@ final class BasicRepositoryConnector
         partialFileFactory = new PartialFile.Factory( resumeDownloads, resumeThreshold, requestTimeout, logger );
     }
 
-    private Executor getExecutor( int threads, RemoteRepository repository )
+    private Executor getExecutor( Collection<?> artifacts, Collection<?> metadatas )
     {
-        if ( threads <= 1 )
+        if ( maxThreads <= 1 )
         {
-            return new Executor()
-            {
-                public void execute( Runnable command )
-                {
-                    command.run();
-                }
-            };
+            return DirectExecutor.INSTANCE;
         }
-        else
+        int tasks = safe( artifacts ).size() + safe( metadatas ).size();
+        if ( tasks <= 1 )
         {
-            return new ThreadPoolExecutor( threads, threads, 3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                                           new WorkerThreadFactory( getClass().getSimpleName() + '-'
-                                               + repository.getHost() + '-' ) );
+            return DirectExecutor.INSTANCE;
         }
+        if ( executor == null )
+        {
+            executor =
+                new ThreadPoolExecutor( maxThreads, maxThreads, 3, TimeUnit.SECONDS,
+                                        new LinkedBlockingQueue<Runnable>(),
+                                        new WorkerThreadFactory( getClass().getSimpleName() + '-'
+                                            + repository.getHost() + '-' ) );
+        }
+        return executor;
     }
 
     @Override
@@ -184,6 +187,7 @@ final class BasicRepositoryConnector
             throw new IllegalStateException( "connector closed" );
         }
 
+        Executor executor = getExecutor( artifactDownloads, metadataDownloads );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
         for ( MetadataDownload transfer : safe( metadataDownloads ) )
@@ -607,6 +611,19 @@ final class BasicRepositoryConnector
                     logger.warn( msg );
                 }
             }
+        }
+
+    }
+
+    private static class DirectExecutor
+        implements Executor
+    {
+
+        static final Executor INSTANCE = new DirectExecutor();
+
+        public void execute( Runnable command )
+        {
+            command.run();
         }
 
     }
