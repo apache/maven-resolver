@@ -29,7 +29,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
@@ -95,6 +94,8 @@ final class HttpTransporter
 
     private final Map<String, Object> context;
 
+    private volatile boolean expectContinue;
+
     public HttpTransporter( RemoteRepository repository, RepositorySystemSession session, Logger logger )
         throws NoTransporterException
     {
@@ -123,6 +124,7 @@ final class HttpTransporter
         headers =
             ConfigUtils.getMap( session, Collections.emptyMap(), ConfigurationProperties.HTTP_HEADERS + "."
                 + repository.getId(), ConfigurationProperties.HTTP_HEADERS );
+        expectContinue = true;
         context = SharingHttpContext.newGlobals();
         client = newClient( session, repository, repoAuthContext, proxyAuthContext );
     }
@@ -238,7 +240,7 @@ final class HttpTransporter
     {
         failIfClosed( task );
 
-        HttpHead request = new HttpHead( resolve( task ) );
+        HttpHead request = commonHeaders( new HttpHead( resolve( task ) ) );
         execute( request, null );
     }
 
@@ -248,26 +250,21 @@ final class HttpTransporter
         failIfClosed( task );
 
         EntityGetter getter = new EntityGetter( task );
-        HttpGet request = new HttpGet( resolve( task ) );
-        long resumeOffset = task.getResumeOffset();
-        if ( resumeOffset > 0 && task.getDataFile() != null )
-        {
-            request.setHeader( HttpHeaders.RANGE, "bytes=" + Long.toString( resumeOffset ) + '-' );
-            request.setHeader( HttpHeaders.IF_UNMODIFIED_SINCE,
-                               DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60 * 1000 ) ) );
-            request.setHeader( HttpHeaders.ACCEPT_ENCODING, "identity" );
-        }
+        HttpGet request = commonHeaders( new HttpGet( resolve( task ) ) );
+        resume( request, task );
         try
         {
             execute( request, getter );
         }
         catch ( HttpResponseException e )
         {
-            if ( e.getStatusCode() != HttpStatus.SC_PRECONDITION_FAILED || !request.containsHeader( HttpHeaders.RANGE ) )
+            if ( e.getStatusCode() == HttpStatus.SC_PRECONDITION_FAILED && request.containsHeader( HttpHeaders.RANGE ) )
             {
-                throw e;
+                request = commonHeaders( new HttpGet( request.getURI() ) );
+                execute( request, getter );
+                return;
             }
-            execute( new HttpGet( request.getURI() ), getter );
+            throw e;
         }
     }
 
@@ -276,9 +273,25 @@ final class HttpTransporter
     {
         failIfClosed( task );
 
-        HttpPut request = new HttpPut( resolve( task ) );
-        request.setEntity( new PutTaskEntity( task ) );
-        execute( request, null );
+        PutTaskEntity entity = new PutTaskEntity( task );
+        HttpPut request = commonHeaders( expectContinue( new HttpPut( resolve( task ) ) ) );
+        request.setEntity( entity );
+        try
+        {
+            execute( request, null );
+        }
+        catch ( HttpResponseException e )
+        {
+            if ( e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader( HttpHeaders.EXPECT ) )
+            {
+                expectContinue = false;
+                request = commonHeaders( new HttpPut( request.getURI() ) );
+                request.setEntity( entity );
+                execute( request, null );
+                return;
+            }
+            throw e;
+        }
     }
 
     private void execute( HttpUriRequest request, EntityGetter getter )
@@ -286,7 +299,6 @@ final class HttpTransporter
     {
         try
         {
-            applyHeaders( request );
             HttpResponse response = client.execute( request, new SharingHttpContext( context ) );
             try
             {
@@ -311,14 +323,48 @@ final class HttpTransporter
         }
     }
 
-    private void applyHeaders( HttpMessage msg )
+    private <T extends HttpUriRequest> T commonHeaders( T request )
     {
-        msg.setHeader( HttpHeaders.CACHE_CONTROL, "no-cache, no-store" );
-        msg.setHeader( HttpHeaders.PRAGMA, "no-cache" );
+        request.setHeader( HttpHeaders.CACHE_CONTROL, "no-cache, no-store" );
+        request.setHeader( HttpHeaders.PRAGMA, "no-cache" );
         for ( Map.Entry<?, ?> entry : headers.entrySet() )
         {
-            msg.setHeader( entry.getKey().toString(), entry.getValue().toString() );
+            if ( !( entry.getKey() instanceof String ) )
+            {
+                continue;
+            }
+            if ( entry.getValue() instanceof String )
+            {
+                request.setHeader( entry.getKey().toString(), entry.getValue().toString() );
+            }
+            else
+            {
+                request.removeHeaders( entry.getKey().toString() );
+            }
         }
+        return request;
+    }
+
+    private <T extends HttpUriRequest> T resume( T request, GetTask task )
+    {
+        long resumeOffset = task.getResumeOffset();
+        if ( resumeOffset > 0 && task.getDataFile() != null )
+        {
+            request.setHeader( HttpHeaders.RANGE, "bytes=" + Long.toString( resumeOffset ) + '-' );
+            request.setHeader( HttpHeaders.IF_UNMODIFIED_SINCE,
+                               DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60 * 1000 ) ) );
+            request.setHeader( HttpHeaders.ACCEPT_ENCODING, "identity" );
+        }
+        return request;
+    }
+
+    private <T extends HttpUriRequest> T expectContinue( T request )
+    {
+        if ( expectContinue )
+        {
+            request.setHeader( HttpHeaders.EXPECT, "100-continue" );
+        }
+        return request;
     }
 
     private void handleStatus( HttpResponse response )

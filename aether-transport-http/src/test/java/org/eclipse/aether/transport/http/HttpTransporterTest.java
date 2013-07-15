@@ -660,7 +660,7 @@ public class HttpTransporterTest
     }
 
     @Test
-    public void testPut_Authenticated()
+    public void testPut_Authenticated_ExpectContinue()
         throws Exception
     {
         httpServer.setAuthentication( "testuser", "testpass" );
@@ -671,7 +671,25 @@ public class HttpTransporterTest
         transporter.put( task );
         assertEquals( 0, listener.dataOffset );
         assertEquals( 6, listener.dataLength );
-        assertEquals( 2, listener.startedCount );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
+    }
+
+    @Test
+    public void testPut_Authenticated_NoExpectContinue()
+        throws Exception
+    {
+        httpServer.setAuthentication( "testuser", "testpass" );
+        httpServer.setExpectSupport( false );
+        auth = new AuthenticationBuilder().addUsername( "testuser" ).addPassword( "testpass" ).build();
+        newTransporter( httpServer.getHttpUrl() );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
+        transporter.put( task );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 6, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
     }
@@ -693,10 +711,8 @@ public class HttpTransporterTest
             assertEquals( 401, e.getStatusCode() );
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
-        assertEquals( 1, listener.startedCount );
-        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( 0, listener.startedCount );
+        assertEquals( 0, listener.progressedCount );
     }
 
     @Test
@@ -712,7 +728,7 @@ public class HttpTransporterTest
         transporter.put( task );
         assertEquals( 0, listener.dataOffset );
         assertEquals( 6, listener.dataLength );
-        assertEquals( 2, listener.startedCount );
+        assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
     }
@@ -736,10 +752,8 @@ public class HttpTransporterTest
             assertEquals( 407, e.getStatusCode() );
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
-        assertEquals( 1, listener.startedCount );
-        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( 0, listener.startedCount );
+        assertEquals( 0, listener.progressedCount );
     }
 
     @Test
@@ -755,7 +769,7 @@ public class HttpTransporterTest
         transporter.put( task );
         assertEquals( 0, listener.dataOffset );
         assertEquals( 6, listener.dataLength );
-        assertEquals( 2, listener.startedCount );
+        assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
     }

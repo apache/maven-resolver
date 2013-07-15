@@ -77,6 +77,8 @@ public class HttpServer
 
     private boolean rangeSupport = true;
 
+    private boolean expectSupport = true;
+
     private Server server;
 
     private Connector httpConnector;
@@ -156,6 +158,12 @@ public class HttpServer
     public HttpServer setRangeSupport( boolean rangeSupport )
     {
         this.rangeSupport = rangeSupport;
+        return this;
+    }
+
+    public HttpServer setExpectSupport( boolean expectSupport )
+    {
+        this.expectSupport = expectSupport;
         return this;
     }
 
@@ -260,6 +268,12 @@ public class HttpServer
             if ( path.endsWith( URIUtil.SLASH ) )
             {
                 response.setStatus( HttpServletResponse.SC_NOT_FOUND );
+                return;
+            }
+
+            if ( !expectSupport && request.getHeader( HttpHeaders.EXPECT ) != null )
+            {
+                response.setStatus( HttpServletResponse.SC_EXPECTATION_FAILED );
                 return;
             }
 
