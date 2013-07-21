@@ -696,6 +696,27 @@ public class HttpTransporterTest
     }
 
     @Test
+    public void testPut_Authenticated_NoExpectContinue_ExplicitlyConfiguredHeader()
+        throws Exception
+    {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put( "Expect", "100-continue" );
+        session.setConfigProperty( ConfigurationProperties.HTTP_HEADERS + ".test", headers );
+        httpServer.setAuthentication( "testuser", "testpass" );
+        httpServer.setExpectSupport( false );
+        auth = new AuthenticationBuilder().addUsername( "testuser" ).addPassword( "testpass" ).build();
+        newTransporter( httpServer.getHttpUrl() );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
+        transporter.put( task );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 6, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
+    }
+
+    @Test
     public void testPut_Unauthenticated()
         throws Exception
     {

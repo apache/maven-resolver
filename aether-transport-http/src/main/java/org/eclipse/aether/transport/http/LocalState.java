@@ -90,7 +90,8 @@ final class LocalState
     {
         if ( expectContinue == null )
         {
-            expectContinue = ( global != null ) ? global.isExpectContinue( expectContinueKey ) : true;
+            expectContinue =
+                !Boolean.FALSE.equals( ( global != null ) ? global.getExpectContinue( expectContinueKey ) : null );
         }
         return expectContinue;
     }

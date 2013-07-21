@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -271,8 +272,7 @@ final class HttpTransporter
         failIfClosed( task );
 
         PutTaskEntity entity = new PutTaskEntity( task );
-        HttpPut request = commonHeaders( expectContinue( new HttpPut( resolve( task ) ) ) );
-        request.setEntity( entity );
+        HttpPut request = commonHeaders( entity( new HttpPut( resolve( task ) ), entity ) );
         try
         {
             execute( request, null );
@@ -282,8 +282,7 @@ final class HttpTransporter
             if ( e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader( HttpHeaders.EXPECT ) )
             {
                 state.setExpectContinue( false );
-                request = commonHeaders( new HttpPut( request.getURI() ) );
-                request.setEntity( entity );
+                request = commonHeaders( entity( new HttpPut( request.getURI() ), entity ) );
                 execute( request, null );
                 return;
             }
@@ -322,10 +321,32 @@ final class HttpTransporter
         }
     }
 
+    private <T extends HttpEntityEnclosingRequest> T entity( T request, HttpEntity entity )
+    {
+        request.setEntity( entity );
+        return request;
+    }
+
+    private boolean isPayloadPresent( HttpUriRequest request )
+    {
+        if ( request instanceof HttpEntityEnclosingRequest )
+        {
+            HttpEntity entity = ( (HttpEntityEnclosingRequest) request ).getEntity();
+            return entity != null && entity.getContentLength() != 0;
+        }
+        return false;
+    }
+
     private <T extends HttpUriRequest> T commonHeaders( T request )
     {
         request.setHeader( HttpHeaders.CACHE_CONTROL, "no-cache, no-store" );
         request.setHeader( HttpHeaders.PRAGMA, "no-cache" );
+
+        if ( state.isExpectContinue() && isPayloadPresent( request ) )
+        {
+            request.setHeader( HttpHeaders.EXPECT, "100-continue" );
+        }
+
         for ( Map.Entry<?, ?> entry : headers.entrySet() )
         {
             if ( !( entry.getKey() instanceof String ) )
@@ -341,6 +362,12 @@ final class HttpTransporter
                 request.removeHeaders( entry.getKey().toString() );
             }
         }
+
+        if ( !state.isExpectContinue() )
+        {
+            request.removeHeaders( HttpHeaders.EXPECT );
+        }
+
         return request;
     }
 
@@ -353,15 +380,6 @@ final class HttpTransporter
             request.setHeader( HttpHeaders.IF_UNMODIFIED_SINCE,
                                DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60 * 1000 ) ) );
             request.setHeader( HttpHeaders.ACCEPT_ENCODING, "identity" );
-        }
-        return request;
-    }
-
-    private <T extends HttpUriRequest> T expectContinue( T request )
-    {
-        if ( state.isExpectContinue() )
-        {
-            request.setHeader( HttpHeaders.EXPECT, "100-continue" );
         }
         return request;
     }

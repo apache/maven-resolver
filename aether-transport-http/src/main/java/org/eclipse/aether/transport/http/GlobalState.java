@@ -191,10 +191,9 @@ final class GlobalState
         return authSchemePools;
     }
 
-    public boolean isExpectContinue( CompoundKey key )
+    public Boolean getExpectContinue( CompoundKey key )
     {
-        Boolean support = expectContinues.get( key );
-        return ( support != null ) ? support.booleanValue() : true;
+        return expectContinues.get( key );
     }
 
     public void setExpectContinue( CompoundKey key, boolean enabled )
