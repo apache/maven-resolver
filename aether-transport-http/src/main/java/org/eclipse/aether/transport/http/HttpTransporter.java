@@ -41,14 +41,10 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.conn.params.ConnRouteParams;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DecompressingHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.impl.cookie.DateUtils;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
@@ -88,13 +84,15 @@ final class HttpTransporter
 
     private final URI baseUri;
 
+    private final HttpHost server;
+
+    private final HttpHost proxy;
+
     private final HttpClient client;
 
     private final Map<?, ?> headers;
 
-    private final Map<String, Object> context;
-
-    private volatile boolean expectContinue;
+    private final LocalState state;
 
     public HttpTransporter( RemoteRepository repository, RepositorySystemSession session, Logger logger )
         throws NoTransporterException
@@ -111,44 +109,62 @@ final class HttpTransporter
             {
                 throw new URISyntaxException( repository.getUrl(), "URL must not be opaque" );
             }
+            server = URIUtils.extractHost( baseUri );
+            if ( server == null )
+            {
+                throw new URISyntaxException( repository.getUrl(), "URL lacks host name" );
+            }
         }
         catch ( URISyntaxException e )
         {
             throw new NoTransporterException( repository, e );
         }
+        proxy = toHost( repository.getProxy() );
 
         repoAuthContext = AuthenticationContext.forRepository( session, repository );
         proxyAuthContext = AuthenticationContext.forProxy( session, repository );
         closed = new AtomicBoolean();
 
+        state = new LocalState( session, repository, new SslConfig( session, repoAuthContext ) );
+
         headers =
             ConfigUtils.getMap( session, Collections.emptyMap(), ConfigurationProperties.HTTP_HEADERS + "."
                 + repository.getId(), ConfigurationProperties.HTTP_HEADERS );
-        expectContinue = true;
-        context = SharingHttpContext.newGlobals();
-        client = newClient( session, repository, repoAuthContext, proxyAuthContext );
+
+        DefaultHttpClient client = new DefaultHttpClient( state.getConnectionManager() );
+
+        configureClient( client.getParams(), session, repository, proxy );
+
+        DeferredCredentialsProvider credsProvider = new DeferredCredentialsProvider();
+        addCredentials( credsProvider, server.getHostName(), AuthScope.ANY_PORT, repoAuthContext );
+        if ( proxy != null )
+        {
+            addCredentials( credsProvider, proxy.getHostName(), proxy.getPort(), proxyAuthContext );
+        }
+        client.setCredentialsProvider( credsProvider );
+
+        this.client = new DecompressingHttpClient( client );
     }
 
-    private static HttpClient newClient( RepositorySystemSession session, RemoteRepository repository,
-                                         AuthenticationContext repoAuthContext, AuthenticationContext proxyAuthContext )
+    private static HttpHost toHost( Proxy proxy )
     {
-        SchemeRegistry schemeReg = new SchemeRegistry();
-        schemeReg.register( new Scheme( "http", 80, PlainSocketFactory.getSocketFactory() ) );
-        schemeReg.register( new Scheme( "https", 443, SslSocketFactory.newInstance( session, repoAuthContext ) ) );
+        HttpHost host = null;
+        if ( proxy != null )
+        {
+            host = new HttpHost( proxy.getHost(), proxy.getPort() );
+        }
+        return host;
+    }
 
-        PoolingClientConnectionManager connMgr = new PoolingClientConnectionManager( schemeReg );
-        connMgr.setDefaultMaxPerRoute( connMgr.getMaxTotal() );
-
-        DefaultHttpClient client = new DefaultHttpClient( connMgr );
-
-        HttpParams params = client.getParams();
+    private static void configureClient( HttpParams params, RepositorySystemSession session,
+                                         RemoteRepository repository, HttpHost proxy )
+    {
         AuthParams.setCredentialCharset( params,
                                          ConfigUtils.getString( session,
                                                                 ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
                                                                 ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "."
                                                                     + repository.getId(),
                                                                 ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
-        HttpHost proxy = toHost( repository.getProxy() );
         ConnRouteParams.setDefaultProxy( params, proxy );
         HttpConnectionParams.setConnectionTimeout( params,
                                                    ConfigUtils.getInteger( session,
@@ -165,36 +181,17 @@ final class HttpTransporter
         HttpProtocolParams.setUserAgent( params, ConfigUtils.getString( session,
                                                                         ConfigurationProperties.DEFAULT_USER_AGENT,
                                                                         ConfigurationProperties.USER_AGENT ) );
-
-        DeferredCredentialsProvider credsProvider = new DeferredCredentialsProvider();
-        addCredentials( credsProvider, URI.create( repository.getUrl() ).getHost(), repoAuthContext );
-        if ( proxy != null )
-        {
-            addCredentials( credsProvider, proxy.getHostName(), proxyAuthContext );
-        }
-        client.setCredentialsProvider( credsProvider );
-
-        return new DecompressingHttpClient( client );
     }
 
-    private static HttpHost toHost( Proxy proxy )
-    {
-        HttpHost host = null;
-        if ( proxy != null )
-        {
-            host = new HttpHost( proxy.getHost(), proxy.getPort() );
-        }
-        return host;
-    }
-
-    private static void addCredentials( DeferredCredentialsProvider provider, String host, AuthenticationContext ctx )
+    private static void addCredentials( DeferredCredentialsProvider provider, String host, int port,
+                                        AuthenticationContext ctx )
     {
         if ( ctx != null )
         {
-            AuthScope basicScope = new AuthScope( host, AuthScope.ANY_PORT );
+            AuthScope basicScope = new AuthScope( host, port );
             provider.setCredentials( basicScope, new DeferredCredentialsProvider.BasicFactory( ctx ) );
 
-            AuthScope ntlmScope = new AuthScope( host, AuthScope.ANY_PORT, AuthScope.ANY_REALM, "ntlm" );
+            AuthScope ntlmScope = new AuthScope( host, port, AuthScope.ANY_REALM, "ntlm" );
             provider.setCredentials( ntlmScope, new DeferredCredentialsProvider.NtlmFactory( ctx ) );
         }
     }
@@ -284,7 +281,7 @@ final class HttpTransporter
         {
             if ( e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader( HttpHeaders.EXPECT ) )
             {
-                expectContinue = false;
+                state.setExpectContinue( false );
                 request = commonHeaders( new HttpPut( request.getURI() ) );
                 request.setEntity( entity );
                 execute( request, null );
@@ -299,9 +296,11 @@ final class HttpTransporter
     {
         try
         {
-            HttpResponse response = client.execute( request, new SharingHttpContext( context ) );
+            SharingHttpContext context = new SharingHttpContext( state );
+            HttpResponse response = client.execute( server, request, context );
             try
             {
+                context.close();
                 handleStatus( response );
                 if ( getter != null )
                 {
@@ -360,7 +359,7 @@ final class HttpTransporter
 
     private <T extends HttpUriRequest> T expectContinue( T request )
     {
-        if ( expectContinue )
+        if ( state.isExpectContinue() )
         {
             request.setHeader( HttpHeaders.EXPECT, "100-continue" );
         }
@@ -421,7 +420,7 @@ final class HttpTransporter
             AuthenticationContext.close( repoAuthContext );
             AuthenticationContext.close( proxyAuthContext );
 
-            client.getConnectionManager().shutdown();
+            state.close();
         }
     }
 

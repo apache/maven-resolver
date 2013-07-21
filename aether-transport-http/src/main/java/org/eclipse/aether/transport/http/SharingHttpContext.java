@@ -10,40 +10,39 @@
  *******************************************************************************/
 package org.eclipse.aether.transport.http;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.Closeable;
 
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.protocol.BasicHttpContext;
 
 /**
- * HTTP context that shares certain (thread-safe) attributes globally.
+ * HTTP context that shares certain attributes among requests to optimize the communication with the server.
  * 
  * @see <a href="http://hc.apache.org/httpcomponents-client-ga/tutorial/html/advanced.html#stateful_conn">Stateful HTTP
  *      connections</a>
  */
 final class SharingHttpContext
     extends BasicHttpContext
+    implements Closeable
 {
 
-    private final Map<String, Object> globals;
+    private final LocalState state;
 
-    public SharingHttpContext( Map<String, Object> globals )
-    {
-        this.globals = globals;
-    }
+    private final SharingAuthCache authCache;
 
-    private boolean isGlobalAttribute( String id )
+    public SharingHttpContext( LocalState state )
     {
-        return ClientContext.USER_TOKEN.equals( id ) || ClientContext.AUTH_CACHE.equals( id );
+        this.state = state;
+        authCache = new SharingAuthCache( state );
+        super.setAttribute( ClientContext.AUTH_CACHE, authCache );
     }
 
     @Override
     public Object getAttribute( String id )
     {
-        if ( isGlobalAttribute( id ) )
+        if ( ClientContext.USER_TOKEN.equals( id ) )
         {
-            return globals.get( id );
+            return state.getUserToken();
         }
         return super.getAttribute( id );
     }
@@ -51,16 +50,9 @@ final class SharingHttpContext
     @Override
     public void setAttribute( String id, Object obj )
     {
-        if ( isGlobalAttribute( id ) )
+        if ( ClientContext.USER_TOKEN.equals( id ) )
         {
-            if ( obj != null )
-            {
-                globals.put( id, obj );
-            }
-            else
-            {
-                globals.remove( id );
-            }
+            state.setUserToken( obj );
         }
         else
         {
@@ -71,18 +63,17 @@ final class SharingHttpContext
     @Override
     public Object removeAttribute( String id )
     {
-        if ( isGlobalAttribute( id ) )
+        if ( ClientContext.USER_TOKEN.equals( id ) )
         {
-            return globals.remove( id );
+            state.setUserToken( null );
+            return null;
         }
         return super.removeAttribute( id );
     }
 
-    public static Map<String, Object> newGlobals()
+    public void close()
     {
-        Map<String, Object> globals = new ConcurrentHashMap<String, Object>();
-        globals.put( ClientContext.AUTH_CACHE, new ConcurrentAuthCache() );
-        return globals;
+        authCache.clear();
     }
 
 }

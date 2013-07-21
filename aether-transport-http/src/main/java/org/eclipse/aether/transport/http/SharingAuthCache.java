@@ -10,28 +10,32 @@
  *******************************************************************************/
 package org.eclipse.aether.transport.http;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScheme;
 import org.apache.http.client.AuthCache;
 
 /**
- * Auth cache that can be shared among multiple threads.
+ * Auth scheme cache that upon clearing releases all cached schemes into a pool for future reuse by other requests,
+ * thereby reducing challenge-response roundtrips.
  */
-final class ConcurrentAuthCache
+final class SharingAuthCache
     implements AuthCache
 {
 
-    private final Map<HttpHost, AuthScheme> schemes;
+    private final LocalState state;
 
-    public ConcurrentAuthCache()
+    private final Map<HttpHost, AuthScheme> authSchemes;
+
+    public SharingAuthCache( LocalState state )
     {
-        schemes = new ConcurrentHashMap<HttpHost, AuthScheme>();
+        this.state = state;
+        authSchemes = new HashMap<HttpHost, AuthScheme>();
     }
 
-    private HttpHost toKey( HttpHost host )
+    private static HttpHost toKey( HttpHost host )
     {
         if ( host.getPort() <= 0 )
         {
@@ -43,14 +47,21 @@ final class ConcurrentAuthCache
 
     public AuthScheme get( HttpHost host )
     {
-        return schemes.get( toKey( host ) );
+        host = toKey( host );
+        AuthScheme authScheme = authSchemes.get( host );
+        if ( authScheme == null )
+        {
+            authScheme = state.getAuthScheme( host );
+            authSchemes.put( host, authScheme );
+        }
+        return authScheme;
     }
 
     public void put( HttpHost host, AuthScheme authScheme )
     {
         if ( authScheme != null )
         {
-            schemes.put( toKey( host ), authScheme );
+            authSchemes.put( toKey( host ), authScheme );
         }
         else
         {
@@ -60,18 +71,27 @@ final class ConcurrentAuthCache
 
     public void remove( HttpHost host )
     {
-        schemes.remove( toKey( host ) );
+        authSchemes.remove( toKey( host ) );
     }
 
     public void clear()
     {
-        schemes.clear();
+        share();
+        authSchemes.clear();
+    }
+
+    private void share()
+    {
+        for ( Map.Entry<HttpHost, AuthScheme> entry : authSchemes.entrySet() )
+        {
+            state.setAuthScheme( entry.getKey(), entry.getValue() );
+        }
     }
 
     @Override
     public String toString()
     {
-        return schemes.toString();
+        return authSchemes.toString();
     }
 
 }

@@ -25,6 +25,7 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.HttpHostConnectException;
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLoggerFactory;
@@ -990,6 +991,31 @@ public class HttpTransporterTest
                 assertEquals( entry.getKey(), entry.getValue(), log.headers.get( entry.getKey() ) );
             }
         }
+    }
+
+    @Test
+    public void testAuthSchemeReuse()
+        throws Exception
+    {
+        httpServer.setAuthentication( "testuser", "testpass" );
+        httpServer.setProxyAuthentication( "proxyuser", "proxypass" );
+        session.setCache( new DefaultRepositoryCache() );
+        auth = new AuthenticationBuilder().addUsername( "testuser" ).addPassword( "testpass" ).build();
+        Authentication auth = new AuthenticationBuilder().addUsername( "proxyuser" ).addPassword( "proxypass" ).build();
+        proxy = new Proxy( Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort(), auth );
+        newTransporter( "http://bad.localhost:1/" );
+        GetTask task = new GetTask( URI.create( "repo/file.txt" ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+        assertEquals( 3, httpServer.getLogEntries().size() );
+        httpServer.getLogEntries().clear();
+        newTransporter( "http://bad.localhost:1/" );
+        task = new GetTask( URI.create( "repo/file.txt" ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+        assertEquals( 1, httpServer.getLogEntries().size() );
+        assertNotNull( httpServer.getLogEntries().get( 0 ).headers.get( "Authorization" ) );
+        assertNotNull( httpServer.getLogEntries().get( 0 ).headers.get( "Proxy-Authorization" ) );
     }
 
     @Test( expected = NoTransporterException.class )
