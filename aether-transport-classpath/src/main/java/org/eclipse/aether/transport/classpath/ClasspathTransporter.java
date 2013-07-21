@@ -10,25 +10,18 @@
  *******************************************************************************/
 package org.eclipse.aether.transport.classpath;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
-import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
-import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
@@ -37,14 +30,12 @@ import org.eclipse.aether.util.ConfigUtils;
  * A transporter reading from the classpath.
  */
 final class ClasspathTransporter
-    implements Transporter
+    extends AbstractTransporter
 {
 
     private final String resourceBase;
 
     private final ClassLoader classLoader;
-
-    private final AtomicBoolean closed;
 
     public ClasspathTransporter( RepositorySystemSession session, RemoteRepository repository, Logger logger )
         throws NoTransporterException
@@ -95,8 +86,6 @@ final class ClasspathTransporter
         {
             classLoader = Thread.currentThread().getContextClassLoader();
         }
-
-        closed = new AtomicBoolean();
     }
 
     private URL getResource( TransportTask task )
@@ -120,90 +109,32 @@ final class ClasspathTransporter
         return ERROR_OTHER;
     }
 
-    private void failIfClosed( TransportTask task )
-    {
-        if ( closed.get() )
-        {
-            throw new IllegalStateException( "transporter closed, cannot execute task " + task );
-        }
-    }
-
-    public void peek( PeekTask task )
+    @Override
+    protected void implPeek( PeekTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         getResource( task );
     }
 
-    public void get( GetTask task )
+    @Override
+    protected void implGet( GetTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         URL url = getResource( task );
         URLConnection conn = url.openConnection();
-        InputStream is = conn.getInputStream();
-        try
-        {
-            task.getListener().transportStarted( 0, conn.getContentLength() );
-            OutputStream os = task.newOutputStream();
-            try
-            {
-                copy( os, is, task.getListener() );
-                os.close();
-            }
-            finally
-            {
-                close( os );
-            }
-        }
-        finally
-        {
-            close( is );
-        }
+        utilGet( task, conn.getInputStream(), true, conn.getContentLength(), false );
     }
 
-    private static void copy( OutputStream os, InputStream is, TransportListener listener )
+    @Override
+    protected void implPut( PutTask task )
         throws Exception
     {
-        ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
-        byte[] array = buffer.array();
-        for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
-        {
-            os.write( array, 0, read );
-            buffer.rewind();
-            buffer.limit( read );
-            listener.transportProgressed( buffer );
-        }
-    }
-
-    private static void close( Closeable file )
-    {
-        if ( file != null )
-        {
-            try
-            {
-                file.close();
-            }
-            catch ( IOException e )
-            {
-                // irrelevant
-            }
-        }
-    }
-
-    public void put( PutTask task )
-        throws Exception
-    {
-        failIfClosed( task );
-
         throw new UnsupportedOperationException( "Uploading to a classpath: repository is not supported" );
     }
 
-    public void close()
+    @Override
+    protected void implClose()
     {
-        closed.set( true );
     }
 
 }

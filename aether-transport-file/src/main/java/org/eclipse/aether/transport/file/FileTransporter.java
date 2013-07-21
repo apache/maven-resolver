@@ -10,23 +10,16 @@
  *******************************************************************************/
 package org.eclipse.aether.transport.file;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
-import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
-import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.NoTransporterException;
 
@@ -34,14 +27,12 @@ import org.eclipse.aether.transfer.NoTransporterException;
  * A transporter using {@link java.io.File}.
  */
 final class FileTransporter
-    implements Transporter
+    extends AbstractTransporter
 {
 
     private final Logger logger;
 
     private final File basedir;
-
-    private final AtomicBoolean closed;
 
     public FileTransporter( RemoteRepository repository, Logger logger )
         throws NoTransporterException
@@ -52,7 +43,6 @@ final class FileTransporter
         }
         this.logger = logger;
         basedir = new File( PathUtils.basedir( repository.getUrl() ) ).getAbsoluteFile();
-        closed = new AtomicBoolean();
     }
 
     File getBasedir()
@@ -69,69 +59,30 @@ final class FileTransporter
         return ERROR_OTHER;
     }
 
-    public void peek( PeekTask task )
+    @Override
+    protected void implPeek( PeekTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         getFile( task, true );
     }
 
-    public void get( GetTask task )
+    @Override
+    protected void implGet( GetTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         File file = getFile( task, true );
-        InputStream is = new FileInputStream( file );
-        try
-        {
-            task.getListener().transportStarted( 0, file.length() );
-            OutputStream os = task.newOutputStream();
-            try
-            {
-                copy( os, is, task.getListener() );
-                os.close();
-            }
-            finally
-            {
-                close( os );
-            }
-        }
-        finally
-        {
-            close( is );
-        }
+        utilGet( task, new FileInputStream( file ), true, file.length(), false );
     }
 
-    public void put( PutTask task )
+    @Override
+    protected void implPut( PutTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         File file = getFile( task, false );
         file.getParentFile().mkdirs();
-        OutputStream os = new FileOutputStream( file );
         try
         {
-            try
-            {
-                task.getListener().transportStarted( 0, task.getDataLength() );
-                InputStream is = task.newInputStream();
-                try
-                {
-                    copy( os, is, task.getListener() );
-                }
-                finally
-                {
-                    close( is );
-                }
-                os.close();
-            }
-            finally
-            {
-                close( os );
-            }
+            utilPut( task, new FileOutputStream( file ), true );
         }
         catch ( Exception e )
         {
@@ -159,46 +110,9 @@ final class FileTransporter
         return file;
     }
 
-    private static void copy( OutputStream os, InputStream is, TransportListener listener )
-        throws Exception
+    @Override
+    protected void implClose()
     {
-        ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
-        byte[] array = buffer.array();
-        for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
-        {
-            os.write( array, 0, read );
-            buffer.rewind();
-            buffer.limit( read );
-            listener.transportProgressed( buffer );
-        }
-    }
-
-    private static void close( Closeable file )
-    {
-        if ( file != null )
-        {
-            try
-            {
-                file.close();
-            }
-            catch ( IOException e )
-            {
-                // irrelevant
-            }
-        }
-    }
-
-    private void failIfClosed( TransportTask task )
-    {
-        if ( closed.get() )
-        {
-            throw new IllegalStateException( "transporter closed, cannot execute task " + task );
-        }
-    }
-
-    public void close()
-    {
-        closed.set( true );
     }
 
 }

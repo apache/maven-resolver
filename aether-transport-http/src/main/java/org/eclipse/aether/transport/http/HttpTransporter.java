@@ -10,18 +10,15 @@
  *******************************************************************************/
 package org.eclipse.aether.transport.http;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,12 +53,11 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
-import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
-import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -71,7 +67,7 @@ import org.eclipse.aether.util.ConfigUtils;
  * A transporter for HTTP/HTTPS.
  */
 final class HttpTransporter
-    implements Transporter
+    extends AbstractTransporter
 {
 
     private static final Pattern CONTENT_RANGE_PATTERN =
@@ -80,8 +76,6 @@ final class HttpTransporter
     private final AuthenticationContext repoAuthContext;
 
     private final AuthenticationContext proxyAuthContext;
-
-    private final AtomicBoolean closed;
 
     private final URI baseUri;
 
@@ -124,7 +118,6 @@ final class HttpTransporter
 
         repoAuthContext = AuthenticationContext.forRepository( session, repository );
         proxyAuthContext = AuthenticationContext.forProxy( session, repository );
-        closed = new AtomicBoolean();
 
         state = new LocalState( session, repository, new SslConfig( session, repoAuthContext ) );
 
@@ -233,20 +226,18 @@ final class HttpTransporter
         return ERROR_OTHER;
     }
 
-    public void peek( PeekTask task )
+    @Override
+    protected void implPeek( PeekTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         HttpHead request = commonHeaders( new HttpHead( resolve( task ) ) );
         execute( request, null );
     }
 
-    public void get( GetTask task )
+    @Override
+    protected void implGet( GetTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         EntityGetter getter = new EntityGetter( task );
         HttpGet request = commonHeaders( new HttpGet( resolve( task ) ) );
         resume( request, task );
@@ -266,11 +257,10 @@ final class HttpTransporter
         }
     }
 
-    public void put( PutTask task )
+    @Override
+    protected void implPut( PutTask task )
         throws Exception
     {
-        failIfClosed( task );
-
         PutTaskEntity entity = new PutTaskEntity( task );
         HttpPut request = commonHeaders( entity( new HttpPut( resolve( task ) ), entity ) );
         try
@@ -394,52 +384,12 @@ final class HttpTransporter
         }
     }
 
-    private static void copy( OutputStream os, InputStream is, TransportListener listener )
-        throws IOException, TransferCancelledException
+    @Override
+    protected void implClose()
     {
-        ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
-        byte[] array = buffer.array();
-        for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
-        {
-            os.write( array, 0, read );
-            buffer.rewind();
-            buffer.limit( read );
-            listener.transportProgressed( buffer );
-        }
-    }
-
-    private static void close( Closeable file )
-    {
-        if ( file != null )
-        {
-            try
-            {
-                file.close();
-            }
-            catch ( IOException e )
-            {
-                // irrelevant
-            }
-        }
-    }
-
-    private void failIfClosed( TransportTask task )
-    {
-        if ( closed.get() )
-        {
-            throw new IllegalStateException( "transporter closed, cannot execute task " + task );
-        }
-    }
-
-    public void close()
-    {
-        if ( closed.compareAndSet( false, true ) )
-        {
-            AuthenticationContext.close( repoAuthContext );
-            AuthenticationContext.close( proxyAuthContext );
-
-            state.close();
-        }
+        AuthenticationContext.close( repoAuthContext );
+        AuthenticationContext.close( proxyAuthContext );
+        state.close();
     }
 
     private class EntityGetter
@@ -472,31 +422,15 @@ final class HttpTransporter
                 }
                 offset = Long.parseLong( m.group( 1 ) );
                 length = Long.parseLong( m.group( 2 ) ) + 1;
-                if ( offset < 0 || offset >= length || offset != task.getResumeOffset() )
+                if ( offset < 0 || offset >= length || ( offset > 0 && offset != task.getResumeOffset() ) )
                 {
-                    throw new IOException( "Invalid Content-Range header for partial download: " + range.getValue() );
+                    throw new IOException( "Invalid Content-Range header for partial download from offset "
+                        + task.getResumeOffset() + ": " + range.getValue() );
                 }
             }
 
             InputStream is = entity.getContent();
-            try
-            {
-                task.getListener().transportStarted( offset, length );
-                OutputStream os = task.newOutputStream( offset > 0 );
-                try
-                {
-                    copy( os, is, task.getListener() );
-                    os.close();
-                }
-                finally
-                {
-                    close( os );
-                }
-            }
-            finally
-            {
-                close( is );
-            }
+            utilGet( task, is, true, length, offset > 0 );
         }
 
     }
@@ -538,17 +472,7 @@ final class HttpTransporter
         {
             try
             {
-                task.getListener().transportStarted( 0, task.getDataLength() );
-                InputStream is = task.newInputStream();
-                try
-                {
-                    copy( os, is, task.getListener() );
-                    os.flush();
-                }
-                finally
-                {
-                    close( is );
-                }
+                utilPut( task, os, false );
             }
             catch ( TransferCancelledException e )
             {
