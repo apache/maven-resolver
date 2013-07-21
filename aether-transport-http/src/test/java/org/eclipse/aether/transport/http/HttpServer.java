@@ -72,6 +72,11 @@ public class HttpServer
 
     }
 
+    public enum ExpectContinue
+    {
+        FAIL, PROPER, BROKEN
+    }
+
     public enum ChecksumHeader
     {
         NEXUS
@@ -83,7 +88,9 @@ public class HttpServer
 
     private boolean rangeSupport = true;
 
-    private boolean expectSupport = true;
+    private ExpectContinue expectContinue = ExpectContinue.PROPER;
+
+    private ChecksumHeader checksumHeader;
 
     private Server server;
 
@@ -100,8 +107,6 @@ public class HttpServer
     private String proxyPassword;
 
     private List<LogEntry> logEntries = Collections.synchronizedList( new ArrayList<LogEntry>() );
-
-    private ChecksumHeader checksumHeader;
 
     public String getHost()
     {
@@ -169,9 +174,15 @@ public class HttpServer
         return this;
     }
 
-    public HttpServer setExpectSupport( boolean expectSupport )
+    public HttpServer setExpectSupport( ExpectContinue expectContinue )
     {
-        this.expectSupport = expectSupport;
+        this.expectContinue = expectContinue;
+        return this;
+    }
+
+    public HttpServer setChecksumHeader( ChecksumHeader checksumHeader )
+    {
+        this.checksumHeader = checksumHeader;
         return this;
     }
 
@@ -186,12 +197,6 @@ public class HttpServer
     {
         proxyUsername = username;
         proxyPassword = password;
-        return this;
-    }
-
-    public HttpServer setChecksumHeader( ChecksumHeader checksumHeader )
-    {
-        this.checksumHeader = checksumHeader;
         return this;
     }
 
@@ -285,7 +290,7 @@ public class HttpServer
                 return;
             }
 
-            if ( !expectSupport && request.getHeader( HttpHeaders.EXPECT ) != null )
+            if ( ExpectContinue.FAIL.equals( expectContinue ) && request.getHeader( HttpHeaders.EXPECT ) != null )
             {
                 response.setStatus( HttpServletResponse.SC_EXPECTATION_FAILED );
                 return;
@@ -388,6 +393,11 @@ public class HttpServer
                 }
                 response.setStatus( HttpServletResponse.SC_NO_CONTENT );
             }
+            else if ( HttpMethods.OPTIONS.equals( req.getMethod() ) )
+            {
+                response.setHeader( HttpHeaders.ALLOW, "GET, PUT, HEAD, OPTIONS" );
+                response.setStatus( HttpServletResponse.SC_OK );
+            }
             else
             {
                 response.setStatus( HttpServletResponse.SC_METHOD_NOT_ALLOWED );
@@ -441,6 +451,12 @@ public class HttpServer
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
             throws IOException
         {
+            if ( ExpectContinue.BROKEN.equals( expectContinue )
+                && "100-continue".equalsIgnoreCase( request.getHeader( HttpHeaders.EXPECT ) ) )
+            {
+                request.getInputStream();
+            }
+
             if ( username != null && password != null )
             {
                 if ( checkBasicAuth( request.getHeader( HttpHeaders.AUTHORIZATION ), username, password ) )

@@ -35,6 +35,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
@@ -73,6 +74,8 @@ final class HttpTransporter
     private static final Pattern CONTENT_RANGE_PATTERN =
         Pattern.compile( "\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*" );
 
+    private final Logger logger;
+
     private final AuthenticationContext repoAuthContext;
 
     private final AuthenticationContext proxyAuthContext;
@@ -97,6 +100,7 @@ final class HttpTransporter
         {
             throw new NoTransporterException( repository );
         }
+        this.logger = logger;
         try
         {
             baseUri = new URI( repository.getUrl() );
@@ -286,6 +290,7 @@ final class HttpTransporter
         try
         {
             SharingHttpContext context = new SharingHttpContext( state );
+            prepare( request, context );
             HttpResponse response = client.execute( server, request, context );
             try
             {
@@ -308,6 +313,22 @@ final class HttpTransporter
                 throw (Exception) e.getCause();
             }
             throw e;
+        }
+    }
+
+    private void prepare( HttpUriRequest request, SharingHttpContext context )
+    {
+        if ( state.setFirstRequest() && isPayloadPresent( request ) )
+        {
+            try
+            {
+                HttpOptions req = commonHeaders( new HttpOptions( request.getURI() ) );
+                EntityUtils.consumeQuietly( client.execute( server, req, context ).getEntity() );
+            }
+            catch ( IOException e )
+            {
+                logger.debug( "Failed to prepare HTTP context", e );
+            }
         }
     }
 

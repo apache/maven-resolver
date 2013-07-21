@@ -13,6 +13,7 @@ package org.eclipse.aether.transport.http;
 import java.io.Closeable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScheme;
@@ -43,10 +44,13 @@ final class LocalState
 
     private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
 
+    private final AtomicBoolean firstRequest;
+
     public LocalState( RepositorySystemSession session, RemoteRepository repo, SslConfig sslConfig )
     {
         global = GlobalState.get( session );
         userToken = this;
+        firstRequest = new AtomicBoolean( true );
         if ( global == null )
         {
             connMgr = GlobalState.newConnectionManager( sslConfig );
@@ -128,6 +132,11 @@ final class LocalState
             }
         }
         pool.put( authScheme );
+    }
+
+    public boolean setFirstRequest()
+    {
+        return firstRequest.compareAndSet( true, false );
     }
 
     public void close()
