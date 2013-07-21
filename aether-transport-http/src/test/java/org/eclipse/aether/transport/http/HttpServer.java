@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.jetty.http.HttpHeaders;
 import org.eclipse.jetty.http.HttpMethods;
 import org.eclipse.jetty.server.Connector;
@@ -71,6 +72,11 @@ public class HttpServer
 
     }
 
+    public enum ChecksumHeader
+    {
+        NEXUS
+    }
+
     private static final Logger log = LoggerFactory.getLogger( HttpServer.class );
 
     private File repoDir;
@@ -94,6 +100,8 @@ public class HttpServer
     private String proxyPassword;
 
     private List<LogEntry> logEntries = Collections.synchronizedList( new ArrayList<LogEntry>() );
+
+    private ChecksumHeader checksumHeader;
 
     public String getHost()
     {
@@ -178,6 +186,12 @@ public class HttpServer
     {
         proxyUsername = username;
         proxyPassword = password;
+        return this;
+    }
+
+    public HttpServer setChecksumHeader( ChecksumHeader checksumHeader )
+    {
+        this.checksumHeader = checksumHeader;
         return this;
     }
 
@@ -320,6 +334,16 @@ public class HttpServer
                     response.setHeader( HttpHeaders.CONTENT_RANGE, "bytes " + offset + "-" + ( file.length() - 1 )
                         + "/" + file.length() );
                 }
+                if ( checksumHeader != null )
+                {
+                    Map<String, Object> checksums = ChecksumUtils.calc( file, Collections.singleton( "SHA-1" ) );
+                    switch ( checksumHeader )
+                    {
+                        case NEXUS:
+                            response.setHeader( HttpHeaders.ETAG, "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
+                            break;
+                    }
+                }
                 if ( HttpMethods.HEAD.equals( req.getMethod() ) )
                 {
                     return;
@@ -452,7 +476,7 @@ public class HttpServer
 
     }
 
-    private static boolean checkBasicAuth( String credentials, String username, String password )
+    static boolean checkBasicAuth( String credentials, String username, String password )
     {
         if ( credentials != null )
         {

@@ -412,25 +412,46 @@ final class HttpTransporter
             }
 
             long offset = 0, length = entity.getContentLength();
-            Header range = response.getFirstHeader( HttpHeaders.CONTENT_RANGE );
-            if ( range != null && range.getValue() != null )
+            String range = getHeader( response, HttpHeaders.CONTENT_RANGE );
+            if ( range != null )
             {
-                Matcher m = CONTENT_RANGE_PATTERN.matcher( range.getValue() );
+                Matcher m = CONTENT_RANGE_PATTERN.matcher( range );
                 if ( !m.matches() )
                 {
-                    throw new IOException( "Invalid Content-Range header for partial download: " + range.getValue() );
+                    throw new IOException( "Invalid Content-Range header for partial download: " + range );
                 }
                 offset = Long.parseLong( m.group( 1 ) );
                 length = Long.parseLong( m.group( 2 ) ) + 1;
                 if ( offset < 0 || offset >= length || ( offset > 0 && offset != task.getResumeOffset() ) )
                 {
                     throw new IOException( "Invalid Content-Range header for partial download from offset "
-                        + task.getResumeOffset() + ": " + range.getValue() );
+                        + task.getResumeOffset() + ": " + range );
                 }
             }
 
             InputStream is = entity.getContent();
             utilGet( task, is, true, length, offset > 0 );
+            extractChecksums( response );
+        }
+
+        private void extractChecksums( HttpResponse response )
+        {
+            // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
+            String etag = getHeader( response, HttpHeaders.ETAG );
+            if ( etag != null )
+            {
+                int start = etag.indexOf( "SHA1{" ), end = etag.indexOf( "}", start + 5 );
+                if ( start >= 0 && end > start )
+                {
+                    task.setChecksum( "SHA-1", etag.substring( start + 5, end ) );
+                }
+            }
+        }
+
+        private String getHeader( HttpResponse response, String name )
+        {
+            Header header = response.getFirstHeader( name );
+            return ( header != null ) ? header.getValue() : null;
         }
 
     }

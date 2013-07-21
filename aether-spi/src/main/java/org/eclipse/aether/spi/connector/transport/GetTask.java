@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A task to download a resource from the remote repository.
@@ -34,6 +37,8 @@ public final class GetTask
 
     private ByteArrayOutputStream dataBytes;
 
+    private Map<String, String> checksums;
+
     /**
      * Creates a new task for the specified remote resource.
      * 
@@ -41,6 +46,7 @@ public final class GetTask
      */
     public GetTask( URI location )
     {
+        checksums = Collections.emptyMap();
         setLocation( location );
     }
 
@@ -197,6 +203,49 @@ public final class GetTask
     public GetTask setListener( TransportListener listener )
     {
         super.setListener( listener );
+        return this;
+    }
+
+    /**
+     * Gets the checksums which the remote repository advertises for the resource. The map is keyed by algorithm name
+     * (cf. {@link java.security.MessageDigest#getInstance(String)}) and the values are hexadecimal representations of
+     * the corresponding value. <em>Note:</em> This is optional data that a transporter may return if the underlying
+     * transport protocol provides metadata (e.g. HTTP headers) along with the actual resource data.
+     * 
+     * @return The (read-only) checksums advertised for the downloaded resource, possibly empty but never {@code null}.
+     */
+    public Map<String, String> getChecksums()
+    {
+        return checksums;
+    }
+
+    /**
+     * Sets a checksum which the remote repository advertises for the resource. <em>Note:</em> Transporters should only
+     * use this method to record checksum information which is readily available while performing the actual download,
+     * they should not perform additional transfers to gather this data.
+     * 
+     * @param algorithm The name of the checksum algorithm (e.g. {@code "SHA-1"}, cf.
+     *            {@link java.security.MessageDigest#getInstance(String)} ), may be {@code null}.
+     * @param value The hexadecimal representation of the checksum, may be {@code null}.
+     * @return This task for chaining, never {@code null}.
+     */
+    public GetTask setChecksum( String algorithm, String value )
+    {
+        if ( algorithm != null )
+        {
+            if ( checksums.isEmpty() )
+            {
+                checksums = new HashMap<String, String>();
+            }
+            if ( value != null && value.length() > 0 )
+            {
+                checksums.put( algorithm, value );
+            }
+            else
+            {
+                checksums.remove( algorithm );
+            }
+        }
         return this;
     }
 

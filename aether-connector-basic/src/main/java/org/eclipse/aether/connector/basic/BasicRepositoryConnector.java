@@ -406,10 +406,11 @@ final class BasicRepositoryConnector
                 for ( int firstTrial = 0, lastTrial = 1, trial = firstTrial; trial <= lastTrial; trial++ )
                 {
                     boolean resume = partFile.isResume() && trial <= firstTrial;
-                    transporter.get( new GetTask( path ).setDataFile( tmp, resume ).setListener( listener ) );
+                    GetTask task = new GetTask( path ).setDataFile( tmp, resume ).setListener( listener );
+                    transporter.get( task );
                     try
                     {
-                        if ( !verifyChecksum() )
+                        if ( !verifyChecksums( task.getChecksums() ) )
                         {
                             trial = lastTrial;
                             throw new ChecksumFailureException( "Checksum validation failed"
@@ -449,7 +450,7 @@ final class BasicRepositoryConnector
             }
         }
 
-        private boolean verifyChecksum()
+        private boolean verifyChecksums( Map<String, String> inlinedChecksums )
             throws ChecksumFailureException
         {
             ChecksumCalculator calculator = listener.getChecksums();
@@ -461,7 +462,8 @@ final class BasicRepositoryConnector
             for ( RepositoryLayout.Checksum checksum : checksums )
             {
                 Object actual = sumsByAlgo.get( checksum.getAlgorithm() );
-                if ( actual != null && verifyChecksum( checksum, actual ) )
+                String inlinedChecksum = inlinedChecksums.get( checksum.getAlgorithm() );
+                if ( actual != null && verifyChecksum( checksum, actual, inlinedChecksum ) )
                 {
                     return true;
                 }
@@ -469,20 +471,34 @@ final class BasicRepositoryConnector
             return false;
         }
 
-        private boolean verifyChecksum( RepositoryLayout.Checksum checksum, Object actual )
+        private boolean verifyChecksum( RepositoryLayout.Checksum checksum, Object actual, String inlinedChecksum )
             throws ChecksumFailureException
         {
             String ext = checksum.getAlgorithm().replace( "-", "" ).toLowerCase( Locale.ENGLISH );
             File checksumFile = new File( file.getPath() + '.' + ext );
-            File tmp = null;
 
+            if ( actual instanceof Exception )
+            {
+                throw new ChecksumFailureException( (Exception) actual );
+            }
+            String act = String.valueOf( actual );
+
+            if ( inlinedChecksum != null && inlinedChecksum.equalsIgnoreCase( act ) )
+            {
+                try
+                {
+                    fileProcessor.write( checksumFile, inlinedChecksum );
+                }
+                catch ( IOException e )
+                {
+                    logger.debug( "Failed to write checksum file " + checksumFile + ": " + e.getMessage(), e );
+                }
+                return true;
+            }
+
+            File tmp = null;
             try
             {
-                if ( actual instanceof Exception )
-                {
-                    throw new ChecksumFailureException( (Exception) actual );
-                }
-
                 tmp = newTempFile( checksumFile );
                 try
                 {
@@ -497,7 +513,6 @@ final class BasicRepositoryConnector
                     throw new ChecksumFailureException( e );
                 }
 
-                String act = String.valueOf( actual );
                 String expected = ChecksumUtils.read( tmp );
                 if ( expected.equalsIgnoreCase( act ) )
                 {
