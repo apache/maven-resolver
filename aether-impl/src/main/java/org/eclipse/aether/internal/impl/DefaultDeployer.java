@@ -329,6 +329,7 @@ public class DefaultDeployer
                 artifacts.set( i, artifact );
 
                 ArtifactUpload upload = new ArtifactUpload( artifact, artifact.getFile() );
+                upload.setTrace( trace );
                 upload.setListener( ChainedTransferListener.newInstance( session.getTransferListener(),
                                                                          new ArtifactUploadListener( catapult, upload ) ) );
                 artifactUploads.add( upload );
@@ -438,6 +439,7 @@ public class DefaultDeployer
                 download.setFile( dstFile );
                 download.setChecksumPolicy( policy.getChecksumPolicy() );
                 download.setListener( session.getTransferListener() );
+                download.setTrace( catapult.getTrace() );
                 connector.get( null, Arrays.asList( download ) );
 
                 Exception error = download.getException();
@@ -506,6 +508,7 @@ public class DefaultDeployer
         updateCheckManager.touchMetadata( session, check );
 
         MetadataUpload upload = new MetadataUpload( metadata, dstFile );
+        upload.setTrace( catapult.getTrace() );
         upload.setListener( ChainedTransferListener.newInstance( session.getTransferListener(),
                                                                  new MetadataUploadListener( catapult, upload ) ) );
         metadataUploads.add( upload );

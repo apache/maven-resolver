@@ -612,6 +612,7 @@ public class DefaultMetadataResolver
                 download.setChecksumPolicy( policy );
                 download.setRepositories( repositories );
                 download.setListener( session.getTransferListener() );
+                download.setTrace( trace );
 
                 RepositoryConnector connector =
                     repositoryConnectorProvider.newRepositoryConnector( session, requestRepository );
