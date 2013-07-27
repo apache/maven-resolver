@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,8 @@ public interface TransferListener
 
     /**
      * Notifies the listener about the initiation of a transfer. This event gets fired before any actual network access
-     * to the remote repository.
+     * to the remote repository and usually indicates some thread is now about to perform the transfer. For a given
+     * transfer request, this event is the first one being fired and it must be emitted exactly once.
      * 
      * @param event The event details, must not be {@code null}.
      * @throws TransferCancelledException If the transfer should be aborted.
@@ -39,8 +40,10 @@ public interface TransferListener
         throws TransferCancelledException;
 
     /**
-     * Notifies the listener about the start of a data transfer, i.e. the successful connection to the remote
-     * repository.
+     * Notifies the listener about the start of a data transfer. This event indicates a successful connection to the
+     * remote repository. In case of a download, the requested remote resource exists and its size is given by
+     * {@link TransferResource#getContentLength()} if possible. This event may be fired multiple times for given
+     * transfer request if said transfer needs to be repeated (e.g. in response to an authentication challenge).
      * 
      * @param event The event details, must not be {@code null}.
      * @throws TransferCancelledException If the transfer should be aborted.
@@ -69,7 +72,8 @@ public interface TransferListener
         throws TransferCancelledException;
 
     /**
-     * Notifies the listener about the successful completion of a transfer.
+     * Notifies the listener about the successful completion of a transfer. This event must be fired exactly once for a
+     * given transfer request unless said request failed.
      * 
      * @param event The event details, must not be {@code null}.
      */
