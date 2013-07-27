@@ -51,6 +51,13 @@ public abstract class Transfer
     }
 
     /**
+     * Gets the exception that occurred during the transfer (if any).
+     * 
+     * @return The exception or {@code null} if the transfer was successful.
+     */
+    public abstract Exception getException();
+
+    /**
      * Gets the state of this transfer.
      * 
      * @return The state of this transfer, never {@code null}.
