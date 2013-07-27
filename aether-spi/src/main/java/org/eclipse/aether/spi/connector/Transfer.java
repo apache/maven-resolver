@@ -131,7 +131,7 @@ public abstract class Transfer
      * @param trace The trace information about the higher level operation, may be {@code null}.
      * @return This transfer for chaining, never {@code null}.
      */
-    public Transfer setTrace( RequestTrace trace )
+    Transfer setTrace( RequestTrace trace )
     {
         this.trace = trace;
         return this;
