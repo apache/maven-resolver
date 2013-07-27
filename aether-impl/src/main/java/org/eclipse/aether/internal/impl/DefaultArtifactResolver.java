@@ -568,7 +568,7 @@ public class DefaultArtifactResolver
             ArtifactDownload download = new ArtifactDownload();
             download.setArtifact( artifact );
             download.setRequestContext( item.request.getRequestContext() );
-            download.setListener( session.getTransferListener() );
+            download.setListener( SafeTransferListener.wrap( session, logger ) );
             download.setTrace( item.trace );
             if ( item.local.getFile() != null )
             {

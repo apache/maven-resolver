@@ -59,7 +59,6 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
-import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
@@ -67,7 +66,6 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.util.listener.ChainedTransferListener;
 
 /**
  */
@@ -330,8 +328,7 @@ public class DefaultDeployer
 
                 ArtifactUpload upload = new ArtifactUpload( artifact, artifact.getFile() );
                 upload.setTrace( trace );
-                upload.setListener( ChainedTransferListener.newInstance( session.getTransferListener(),
-                                                                         new ArtifactUploadListener( catapult, upload ) ) );
+                upload.setListener( new ArtifactUploadListener( catapult, upload, logger ) );
                 artifactUploads.add( upload );
             }
 
@@ -438,7 +435,7 @@ public class DefaultDeployer
                 download.setMetadata( metadata );
                 download.setFile( dstFile );
                 download.setChecksumPolicy( policy.getChecksumPolicy() );
-                download.setListener( session.getTransferListener() );
+                download.setListener( SafeTransferListener.wrap( session, logger ) );
                 download.setTrace( catapult.getTrace() );
                 connector.get( null, Arrays.asList( download ) );
 
@@ -509,8 +506,7 @@ public class DefaultDeployer
 
         MetadataUpload upload = new MetadataUpload( metadata, dstFile );
         upload.setTrace( catapult.getTrace() );
-        upload.setListener( ChainedTransferListener.newInstance( session.getTransferListener(),
-                                                                 new MetadataUploadListener( catapult, upload ) ) );
+        upload.setListener( new MetadataUploadListener( catapult, upload, logger ) );
         metadataUploads.add( upload );
     }
 
@@ -540,6 +536,11 @@ public class DefaultDeployer
             this.trace = trace;
             this.repository = repository;
             this.dispatcher = dispatcher;
+        }
+
+        public RepositorySystemSession getSession()
+        {
+            return session;
         }
 
         public RequestTrace getTrace()
@@ -596,15 +597,16 @@ public class DefaultDeployer
     }
 
     static final class ArtifactUploadListener
-        extends AbstractTransferListener
+        extends SafeTransferListener
     {
 
         private final EventCatapult catapult;
 
         private final ArtifactUpload transfer;
 
-        public ArtifactUploadListener( EventCatapult catapult, ArtifactUpload transfer )
+        public ArtifactUploadListener( EventCatapult catapult, ArtifactUpload transfer, Logger logger )
         {
+            super( catapult.getSession(), logger );
             this.catapult = catapult;
             this.transfer = transfer;
         }
@@ -613,33 +615,37 @@ public class DefaultDeployer
         public void transferInitiated( TransferEvent event )
             throws TransferCancelledException
         {
+            super.transferInitiated( event );
             catapult.artifactDeploying( transfer.getArtifact(), transfer.getFile() );
         }
 
         @Override
         public void transferFailed( TransferEvent event )
         {
+            super.transferFailed( event );
             catapult.artifactDeployed( transfer.getArtifact(), transfer.getFile(), transfer.getException() );
         }
 
         @Override
         public void transferSucceeded( TransferEvent event )
         {
+            super.transferSucceeded( event );
             catapult.artifactDeployed( transfer.getArtifact(), transfer.getFile(), null );
         }
 
     }
 
     static final class MetadataUploadListener
-        extends AbstractTransferListener
+        extends SafeTransferListener
     {
 
         private final EventCatapult catapult;
 
         private final MetadataUpload transfer;
 
-        public MetadataUploadListener( EventCatapult catapult, MetadataUpload transfer )
+        public MetadataUploadListener( EventCatapult catapult, MetadataUpload transfer, Logger logger )
         {
+            super( catapult.getSession(), logger );
             this.catapult = catapult;
             this.transfer = transfer;
         }
@@ -648,18 +654,21 @@ public class DefaultDeployer
         public void transferInitiated( TransferEvent event )
             throws TransferCancelledException
         {
+            super.transferInitiated( event );
             catapult.metadataDeploying( transfer.getMetadata(), transfer.getFile() );
         }
 
         @Override
         public void transferFailed( TransferEvent event )
         {
+            super.transferFailed( event );
             catapult.metadataDeployed( transfer.getMetadata(), transfer.getFile(), transfer.getException() );
         }
 
         @Override
         public void transferSucceeded( TransferEvent event )
         {
+            super.transferSucceeded( event );
             catapult.metadataDeployed( transfer.getMetadata(), transfer.getFile(), null );
         }
 
