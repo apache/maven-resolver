@@ -646,6 +646,10 @@ public class DefaultMetadataResolver
                 exception = new MetadataTransferException( metadata, requestRepository, e );
             }
 
+            /*
+             * NOTE: Touch after registration with local repo to ensure concurrent resolution is not rejected with
+             * "already updated" via session data when actual update to local repo is still pending.
+             */
             for ( UpdateCheck<Metadata, MetadataTransferException> check : checks )
             {
                 updateCheckManager.touchMetadata( session, check.setException( exception ) );

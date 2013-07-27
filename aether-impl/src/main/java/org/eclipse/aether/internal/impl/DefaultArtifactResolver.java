@@ -626,40 +626,44 @@ public class DefaultArtifactResolver
                 continue;
             }
 
+            Artifact artifact = download.getArtifact();
+            if ( download.getException() == null )
+            {
+                item.resolved.set( true );
+                item.result.setRepository( group.repository );
+                try
+                {
+                    artifact = artifact.setFile( getFile( session, artifact, download.getFile() ) );
+                    item.result.setArtifact( artifact );
+
+                    lrm.add( session,
+                             new LocalArtifactRegistration( artifact, group.repository, download.getSupportedContexts() ) );
+                }
+                catch ( ArtifactTransferException e )
+                {
+                    download.setException( e );
+                    item.result.addException( e );
+                }
+            }
+            else
+            {
+                item.result.addException( download.getException() );
+            }
+
+            /*
+             * NOTE: Touch after registration with local repo to ensure concurrent resolution is not rejected with
+             * "already updated" via session data when actual update to local repo is still pending.
+             */
             if ( item.updateCheck != null )
             {
                 item.updateCheck.setException( download.getException() );
                 updateCheckManager.touchArtifact( session, item.updateCheck );
             }
 
+            artifactDownloaded( session, download.getTrace(), artifact, group.repository, download.getException() );
             if ( download.getException() == null )
             {
-                item.resolved.set( true );
-                item.result.setRepository( group.repository );
-                Artifact artifact = download.getArtifact();
-                try
-                {
-                    artifact = artifact.setFile( getFile( session, artifact, download.getFile() ) );
-                    item.result.setArtifact( artifact );
-                }
-                catch ( ArtifactTransferException e )
-                {
-                    item.result.addException( e );
-                    continue;
-                }
-                lrm.add( session,
-                         new LocalArtifactRegistration( artifact, group.repository, download.getSupportedContexts() ) );
-
-                artifactDownloaded( session, download.getTrace(), artifact, group.repository, null );
-
                 artifactResolved( session, download.getTrace(), artifact, group.repository, null );
-            }
-            else
-            {
-                item.result.addException( download.getException() );
-
-                artifactDownloaded( session, download.getTrace(), download.getArtifact(), group.repository,
-                                    download.getException() );
             }
         }
     }
