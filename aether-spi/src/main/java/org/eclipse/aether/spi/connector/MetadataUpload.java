@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,14 +15,13 @@ import java.io.File;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.transfer.MetadataTransferException;
+import org.eclipse.aether.transfer.TransferListener;
 
 /**
  * An upload of metadata to a remote repository. A repository connector processing this upload has to use
- * {@link #setState(State)} and {@link #setException(MetadataTransferException)} to report the results of the transfer.
- * 
- * @noextend This class is not intended to be extended by clients.
+ * {@link #setException(MetadataTransferException)} to report the results of the transfer.
  */
-public class MetadataUpload
+public final class MetadataUpload
     extends MetadataTransfer
 {
 
@@ -68,6 +67,13 @@ public class MetadataUpload
     }
 
     @Override
+    public MetadataUpload setListener( TransferListener listener )
+    {
+        super.setListener( listener );
+        return this;
+    }
+
+    @Override
     public MetadataUpload setTrace( RequestTrace trace )
     {
         super.setTrace( trace );
@@ -77,7 +83,7 @@ public class MetadataUpload
     @Override
     public String toString()
     {
-        return getState() + " " + getMetadata() + " - " + getFile();
+        return getMetadata() + " - " + getFile();
     }
 
 }

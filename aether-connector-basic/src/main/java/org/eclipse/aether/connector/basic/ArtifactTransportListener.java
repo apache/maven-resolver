@@ -16,7 +16,6 @@ import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.transfer.TransferListener;
 
 final class ArtifactTransportListener
     extends TransferTransportListener<ArtifactTransfer>
@@ -25,9 +24,9 @@ final class ArtifactTransportListener
     private final RemoteRepository repository;
 
     public ArtifactTransportListener( ArtifactTransfer transfer, RemoteRepository repository,
-                                      TransferListener listener, TransferEvent.Builder eventBuilder )
+                                      TransferEvent.Builder eventBuilder )
     {
-        super( transfer, listener, eventBuilder );
+        super( transfer, eventBuilder );
         this.repository = repository;
     }
 

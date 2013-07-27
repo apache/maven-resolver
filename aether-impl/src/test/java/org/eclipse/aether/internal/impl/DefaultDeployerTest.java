@@ -44,10 +44,7 @@ import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.connector.Transfer.State;
-import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
-import org.eclipse.aether.transfer.MetadataTransferException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,7 +92,7 @@ public class DefaultDeployerTest
 
         request = new DeployRequest();
         request.setRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
-        connector = new RecordingRepositoryConnector();
+        connector = new RecordingRepositoryConnector( session );
         connectorProvider.setConnector( connector );
 
         listener = new RecordingRepositoryListener();
@@ -178,54 +175,7 @@ public class DefaultDeployerTest
     @Test
     public void testFailingArtifactEvents()
     {
-        connector = new RecordingRepositoryConnector()
-        {
-
-            @Override
-            public void get( Collection<? extends ArtifactDownload> artifactDownloads,
-                             Collection<? extends MetadataDownload> metadataDownloads )
-            {
-                metadataDownloads =
-                    metadataDownloads == null ? Collections.<MetadataDownload> emptyList() : metadataDownloads;
-                artifactDownloads =
-                    artifactDownloads == null ? Collections.<ArtifactDownload> emptyList() : artifactDownloads;
-                for ( MetadataDownload d : metadataDownloads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new MetadataTransferException( d.getMetadata(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-                for ( ArtifactDownload d : artifactDownloads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new ArtifactTransferException( d.getArtifact(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-            }
-
-            @Override
-            public void put( Collection<? extends ArtifactUpload> artifactUploads,
-                             Collection<? extends MetadataUpload> metadataUploads )
-            {
-                metadataUploads = metadataUploads == null ? Collections.<MetadataUpload> emptyList() : metadataUploads;
-                artifactUploads = artifactUploads == null ? Collections.<ArtifactUpload> emptyList() : artifactUploads;
-                for ( MetadataUpload d : metadataUploads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new MetadataTransferException( d.getMetadata(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-                for ( ArtifactUpload d : artifactUploads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new ArtifactTransferException( d.getArtifact(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-            }
-
-        };
-
-        connectorProvider.setConnector( connector );
+        connector.fail = true;
 
         request.addArtifact( artifact );
 
@@ -284,54 +234,7 @@ public class DefaultDeployerTest
     @Test
     public void testFailingMetdataEvents()
     {
-        connector = new RecordingRepositoryConnector()
-        {
-
-            @Override
-            public void get( Collection<? extends ArtifactDownload> artifactDownloads,
-                             Collection<? extends MetadataDownload> metadataDownloads )
-            {
-                metadataDownloads =
-                    metadataDownloads == null ? Collections.<MetadataDownload> emptyList() : metadataDownloads;
-                artifactDownloads =
-                    artifactDownloads == null ? Collections.<ArtifactDownload> emptyList() : artifactDownloads;
-                for ( MetadataDownload d : metadataDownloads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new MetadataTransferException( d.getMetadata(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-                for ( ArtifactDownload d : artifactDownloads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new ArtifactTransferException( d.getArtifact(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-            }
-
-            @Override
-            public void put( Collection<? extends ArtifactUpload> artifactUploads,
-                             Collection<? extends MetadataUpload> metadataUploads )
-            {
-                metadataUploads = metadataUploads == null ? Collections.<MetadataUpload> emptyList() : metadataUploads;
-                artifactUploads = artifactUploads == null ? Collections.<ArtifactUpload> emptyList() : artifactUploads;
-                for ( MetadataUpload d : metadataUploads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new MetadataTransferException( d.getMetadata(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-                for ( ArtifactUpload d : artifactUploads )
-                {
-                    d.setState( State.ACTIVE );
-                    d.setException( new ArtifactTransferException( d.getArtifact(), null, "failed" ) );
-                    d.setState( State.DONE );
-                }
-            }
-
-        };
-
-        connectorProvider.setConnector( connector );
+        connector.fail = true;
 
         request.addMetadata( metadata );
 

@@ -205,8 +205,7 @@ final class BasicRepositoryConnector
 
             TransferEvent.Builder builder =
                 newEventBuilder( location, transfer.getFile(), false, false, transfer.getTrace() );
-            MetadataTransportListener listener =
-                new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
+            MetadataTransportListener listener = new MetadataTransportListener( transfer, repository, builder );
 
             Runnable task =
                 new GetTaskRunner( location, transfer.getFile(), transfer.getChecksumPolicy(), checksums, listener );
@@ -228,8 +227,7 @@ final class BasicRepositoryConnector
 
             TransferEvent.Builder builder =
                 newEventBuilder( location, transfer.getFile(), false, transfer.isExistenceCheck(), transfer.getTrace() );
-            ArtifactTransportListener listener =
-                new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
+            ArtifactTransportListener listener = new ArtifactTransportListener( transfer, repository, builder );
 
             Runnable task;
             if ( transfer.isExistenceCheck() )
@@ -262,8 +260,7 @@ final class BasicRepositoryConnector
 
             TransferEvent.Builder builder =
                 newEventBuilder( location, transfer.getFile(), true, false, transfer.getTrace() );
-            ArtifactTransportListener listener =
-                new ArtifactTransportListener( transfer, repository, session.getTransferListener(), builder );
+            ArtifactTransportListener listener = new ArtifactTransportListener( transfer, repository, builder );
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
             task.run();
@@ -276,8 +273,7 @@ final class BasicRepositoryConnector
 
             TransferEvent.Builder builder =
                 newEventBuilder( location, transfer.getFile(), true, false, transfer.getTrace() );
-            MetadataTransportListener listener =
-                new MetadataTransportListener( transfer, repository, session.getTransferListener(), builder );
+            MetadataTransportListener listener = new MetadataTransportListener( transfer, repository, builder );
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
             task.run();

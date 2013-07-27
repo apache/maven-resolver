@@ -16,7 +16,6 @@ import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.transfer.TransferListener;
 
 final class MetadataTransportListener
     extends TransferTransportListener<MetadataTransfer>
@@ -25,9 +24,9 @@ final class MetadataTransportListener
     private final RemoteRepository repository;
 
     public MetadataTransportListener( MetadataTransfer transfer, RemoteRepository repository,
-                                      TransferListener listener, TransferEvent.Builder eventBuilder )
+                                      TransferEvent.Builder eventBuilder )
     {
-        super( transfer, listener, eventBuilder );
+        super( transfer, eventBuilder );
         this.repository = repository;
     }
 

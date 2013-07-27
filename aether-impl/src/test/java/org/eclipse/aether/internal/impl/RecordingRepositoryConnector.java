@@ -12,11 +12,11 @@ package org.eclipse.aether.internal.impl;
 
 import static junit.framework.Assert.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.metadata.Metadata;
@@ -25,9 +25,12 @@ import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.connector.Transfer.State;
+import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataTransferException;
+import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transfer.TransferResource;
 
 /**
  * A repository connector recording all get/put-requests and faking the results.
@@ -35,6 +38,11 @@ import org.eclipse.aether.transfer.MetadataTransferException;
 class RecordingRepositoryConnector
     implements RepositoryConnector
 {
+
+    RepositorySystemSession session;
+
+    boolean fail;
+
     private Artifact[] expectGet;
 
     private Artifact[] expectPut;
@@ -51,13 +59,19 @@ class RecordingRepositoryConnector
 
     private List<Metadata> actualPutMD = new ArrayList<Metadata>();
 
-    public RecordingRepositoryConnector( Artifact[] expectGet, Artifact[] expectPut, Metadata[] expectGetMD,
-                                         Metadata[] expectPutMD )
+    public RecordingRepositoryConnector( RepositorySystemSession session, Artifact[] expectGet, Artifact[] expectPut,
+                                         Metadata[] expectGetMD, Metadata[] expectPutMD )
     {
+        this.session = session;
         this.expectGet = expectGet;
         this.expectPut = expectPut;
         this.expectGetMD = expectGetMD;
         this.expectPutMD = expectPutMD;
+    }
+
+    public RecordingRepositoryConnector( RepositorySystemSession session )
+    {
+        this.session = session;
     }
 
     public RecordingRepositoryConnector()
@@ -71,68 +85,130 @@ class RecordingRepositoryConnector
         {
             if ( artifactDownloads != null )
             {
-                for ( ArtifactDownload artifactDownload : artifactDownloads )
+                for ( ArtifactDownload download : artifactDownloads )
                 {
-                    artifactDownload.setState( State.ACTIVE );
-                    Artifact artifact = artifactDownload.getArtifact();
+                    fireInitiated( download );
+                    Artifact artifact = download.getArtifact();
                     this.actualGet.add( artifact );
-                    TestFileUtils.writeString( artifactDownload.getFile(), artifact.toString() );
-                    artifactDownload.setState( State.DONE );
+                    if ( fail )
+                    {
+                        download.setException( new ArtifactTransferException( artifact, null, "forced failure" ) );
+                    }
+                    else
+                    {
+                        TestFileUtils.writeString( download.getFile(), artifact.toString() );
+                    }
+                    fireDone( download );
                 }
             }
             if ( metadataDownloads != null )
             {
-                for ( MetadataDownload metadataDownload : metadataDownloads )
+                for ( MetadataDownload download : metadataDownloads )
                 {
-                    metadataDownload.setState( State.ACTIVE );
-                    Metadata metadata = metadataDownload.getMetadata();
+                    fireInitiated( download );
+                    Metadata metadata = download.getMetadata();
                     this.actualGetMD.add( metadata );
-                    TestFileUtils.writeString( metadataDownload.getFile(), metadata.toString() );
-                    metadataDownload.setState( State.DONE );
+                    if ( fail )
+                    {
+                        download.setException( new MetadataTransferException( metadata, null, "forced failure" ) );
+                    }
+                    else
+                    {
+                        TestFileUtils.writeString( download.getFile(), metadata.toString() );
+                    }
+                    fireDone( download );
                 }
             }
         }
-        catch ( IOException e )
+        catch ( Exception e )
         {
-            throw new IllegalStateException( "Cannot create temporary file", e );
+            throw new IllegalStateException( e );
         }
-
     }
 
     public void put( Collection<? extends ArtifactUpload> artifactUploads,
                      Collection<? extends MetadataUpload> metadataUploads )
     {
-        if ( artifactUploads != null )
+        try
         {
-            for ( ArtifactUpload artifactUpload : artifactUploads )
+            if ( artifactUploads != null )
             {
-                // mimic "real" connector
-                artifactUpload.setState( State.ACTIVE );
-                if ( artifactUpload.getFile() == null )
+                for ( ArtifactUpload upload : artifactUploads )
                 {
-                    artifactUpload.setException( new ArtifactTransferException( artifactUpload.getArtifact(), null,
-                                                                                "no file" ) );
+                    // mimic "real" connector
+                    fireInitiated( upload );
+                    if ( upload.getFile() == null )
+                    {
+                        upload.setException( new ArtifactTransferException( upload.getArtifact(), null, "no file" ) );
+                    }
+                    else if ( fail )
+                    {
+                        upload.setException( new ArtifactTransferException( upload.getArtifact(), null,
+                                                                            "forced failure" ) );
+                    }
+                    this.actualPut.add( upload.getArtifact() );
+                    fireDone( upload );
                 }
-                this.actualPut.add( artifactUpload.getArtifact() );
-                artifactUpload.setState( State.DONE );
+            }
+            if ( metadataUploads != null )
+            {
+                for ( MetadataUpload upload : metadataUploads )
+                {
+                    // mimic "real" connector
+                    fireInitiated( upload );
+                    if ( upload.getFile() == null )
+                    {
+                        upload.setException( new MetadataTransferException( upload.getMetadata(), null, "no file" ) );
+                    }
+                    else if ( fail )
+                    {
+                        upload.setException( new MetadataTransferException( upload.getMetadata(), null,
+                                                                            "forced failure" ) );
+                    }
+                    this.actualPutMD.add( upload.getMetadata() );
+                    fireDone( upload );
+                }
             }
         }
-        if ( metadataUploads != null )
+        catch ( Exception e )
         {
-            for ( MetadataUpload metadataUpload : metadataUploads )
-            {
-                // mimic "real" connector
-                metadataUpload.setState( State.ACTIVE );
-                if ( metadataUpload.getFile() == null )
-                {
-                    metadataUpload.setException( new MetadataTransferException( metadataUpload.getMetadata(), null,
-                                                                                "no file" ) );
-                }
-                this.actualPutMD.add( metadataUpload.getMetadata() );
-                metadataUpload.setState( State.DONE );
-            }
+            throw new IllegalStateException( e );
         }
+    }
 
+    private void fireInitiated( Transfer transfer )
+        throws Exception
+    {
+        TransferListener listener = transfer.getListener();
+        if ( listener == null )
+        {
+            return;
+        }
+        TransferEvent.Builder event =
+            new TransferEvent.Builder( session, new TransferResource( null, null, null, transfer.getTrace() ) );
+        event.setType( TransferEvent.EventType.INITIATED );
+        listener.transferInitiated( event.build() );
+    }
+
+    private void fireDone( Transfer transfer )
+        throws Exception
+    {
+        TransferListener listener = transfer.getListener();
+        if ( listener == null )
+        {
+            return;
+        }
+        TransferEvent.Builder event =
+            new TransferEvent.Builder( session, new TransferResource( null, null, null, transfer.getTrace() ) );
+        event.setException( transfer.getException() );
+        if ( transfer.getException() != null )
+        {
+            listener.transferFailed( event.setType( TransferEvent.EventType.FAILED ).build() );
+        }
+        else
+        {
+            listener.transferSucceeded( event.setType( TransferEvent.EventType.SUCCEEDED ).build() );
+        }
     }
 
     public void close()

@@ -15,26 +15,27 @@ import java.util.Collection;
 
 /**
  * A connector for a remote repository. The connector is responsible for downloading/uploading of artifacts and metadata
- * from/to a remote repository. Besides performing the actual transfer and recording any exception encountered in the
- * provided upload/download objects, a connector must also use
- * {@link Transfer#setState(org.eclipse.aether.spi.connector.Transfer.State)} to update the state of a transfer during
- * its processing. Furthermore, the connector must notify any {@link org.eclipse.aether.transfer.TransferListener
- * TransferListener} configured on its associated {@link org.eclipse.aether.RepositorySystemSession
- * RepositorySystemSession}. If applicable, a connector should obey connect/request timeouts and other relevant settings
- * from the configuration properties of the repository system session. While a connector itself can use multiple threads
- * internally to performs the transfers, clients must not call a connector concurrently, i.e. connectors are generally
- * not thread-safe.
- * 
- * @see org.eclipse.aether.RepositorySystemSession#getConfigProperties()
+ * from/to a remote repository.
+ * <p>
+ * If applicable, a connector should obey connect/request timeouts and other relevant settings from the
+ * {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties() configuration properties} of the repository
+ * session it has been obtained for. However, a connector must not emit any events to the transfer listener configured
+ * for the session. Instead, transfer events must be emitted only to the listener (if any) specified for a given
+ * download/upload request.
+ * <p>
+ * <strong>Note:</strong> While a connector itself can use multiple threads internally to performs the transfers,
+ * clients must not call a connector concurrently, i.e. connectors are generally not thread-safe.
  */
 public interface RepositoryConnector
     extends Closeable
 {
 
     /**
-     * Performs the specified downloads. Any error encountered during a transfer can later be queried via
-     * {@link ArtifactDownload#getException()} and {@link MetadataDownload#getException()}, respectively. The connector
-     * may perform the transfers concurrently and in any order.
+     * Performs the specified downloads. If a download fails, the connector stores the underlying exception in the
+     * download object such that callers can inspect the result via {@link ArtifactDownload#getException()} and
+     * {@link MetadataDownload#getException()}, respectively. If reasonable, a connector should continue to process the
+     * remaining downloads after an error to retrieve as many items as possible. The connector may perform the transfers
+     * concurrently and in any order.
      * 
      * @param artifactDownloads The artifact downloads to perform, may be {@code null} or empty.
      * @param metadataDownloads The metadata downloads to perform, may be {@code null} or empty.
@@ -43,9 +44,10 @@ public interface RepositoryConnector
               Collection<? extends MetadataDownload> metadataDownloads );
 
     /**
-     * Performs the specified uploads. Any error encountered during a transfer can later be queried via
-     * {@link ArtifactDownload#getException()} and {@link MetadataDownload#getException()}, respectively. The connector
-     * may perform the transfers concurrently and in any order.
+     * Performs the specified uploads. If an upload fails, the connector stores the underlying exception in the upload
+     * object such that callers can inspect the result via {@link ArtifactUpload#getException()} and
+     * {@link MetadataUpload#getException()}, respectively. The connector may perform the transfers concurrently and in
+     * any order.
      * 
      * @param artifactUploads The artifact uploads to perform, may be {@code null} or empty.
      * @param metadataUploads The metadata uploads to perform, may be {@code null} or empty.

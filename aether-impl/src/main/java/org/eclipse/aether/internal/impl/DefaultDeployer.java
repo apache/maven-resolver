@@ -53,18 +53,21 @@ import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.log.NullLoggerFactory;
+import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
+import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.util.listener.ChainedTransferListener;
 
 /**
  */
@@ -325,7 +328,10 @@ public class DefaultDeployer
 
                 artifacts.set( i, artifact );
 
-                artifactUploads.add( new ArtifactUploadEx( artifact, artifact.getFile(), catapult ) );
+                ArtifactUpload upload = new ArtifactUpload( artifact, artifact.getFile() );
+                upload.setListener( ChainedTransferListener.newInstance( session.getTransferListener(),
+                                                                         new ArtifactUploadListener( catapult, upload ) ) );
+                artifactUploads.add( upload );
             }
 
             connector.put( artifactUploads, null );
@@ -431,6 +437,7 @@ public class DefaultDeployer
                 download.setMetadata( metadata );
                 download.setFile( dstFile );
                 download.setChecksumPolicy( policy.getChecksumPolicy() );
+                download.setListener( session.getTransferListener() );
                 connector.get( null, Arrays.asList( download ) );
 
                 Exception error = download.getException();
@@ -498,7 +505,10 @@ public class DefaultDeployer
         check.setAuthoritativeRepository( repository );
         updateCheckManager.touchMetadata( session, check );
 
-        metadataUploads.add( new MetadataUploadEx( metadata, dstFile, catapult ) );
+        MetadataUpload upload = new MetadataUpload( metadata, dstFile );
+        upload.setListener( ChainedTransferListener.newInstance( session.getTransferListener(),
+                                                                 new MetadataUploadListener( catapult, upload ) ) );
+        metadataUploads.add( upload );
     }
 
     private RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository,
@@ -509,7 +519,7 @@ public class DefaultDeployer
         return remoteRepositoryManager.getPolicy( session, repository, releases, snapshots );
     }
 
-    static class EventCatapult
+    static final class EventCatapult
     {
 
         private final RepositorySystemSession session;
@@ -582,64 +592,72 @@ public class DefaultDeployer
 
     }
 
-    static class ArtifactUploadEx
-        extends ArtifactUpload
+    static final class ArtifactUploadListener
+        extends AbstractTransferListener
     {
 
         private final EventCatapult catapult;
 
-        public ArtifactUploadEx( Artifact artifact, File file, EventCatapult catapult )
+        private final ArtifactUpload transfer;
+
+        public ArtifactUploadListener( EventCatapult catapult, ArtifactUpload transfer )
         {
-            super( artifact, file );
             this.catapult = catapult;
+            this.transfer = transfer;
         }
 
         @Override
-        public Transfer setState( State state )
+        public void transferInitiated( TransferEvent event )
+            throws TransferCancelledException
         {
-            super.setState( state );
+            catapult.artifactDeploying( transfer.getArtifact(), transfer.getFile() );
+        }
 
-            if ( State.ACTIVE.equals( state ) )
-            {
-                catapult.artifactDeploying( getArtifact(), getFile() );
-            }
-            else if ( State.DONE.equals( state ) )
-            {
-                catapult.artifactDeployed( getArtifact(), getFile(), getException() );
-            }
+        @Override
+        public void transferFailed( TransferEvent event )
+        {
+            catapult.artifactDeployed( transfer.getArtifact(), transfer.getFile(), transfer.getException() );
+        }
 
-            return this;
+        @Override
+        public void transferSucceeded( TransferEvent event )
+        {
+            catapult.artifactDeployed( transfer.getArtifact(), transfer.getFile(), null );
         }
 
     }
 
-    static class MetadataUploadEx
-        extends MetadataUpload
+    static final class MetadataUploadListener
+        extends AbstractTransferListener
     {
 
         private final EventCatapult catapult;
 
-        public MetadataUploadEx( Metadata metadata, File file, EventCatapult catapult )
+        private final MetadataUpload transfer;
+
+        public MetadataUploadListener( EventCatapult catapult, MetadataUpload transfer )
         {
-            super( metadata, file );
             this.catapult = catapult;
+            this.transfer = transfer;
         }
 
         @Override
-        public Transfer setState( State state )
+        public void transferInitiated( TransferEvent event )
+            throws TransferCancelledException
         {
-            super.setState( state );
+            catapult.metadataDeploying( transfer.getMetadata(), transfer.getFile() );
+        }
 
-            if ( State.ACTIVE.equals( state ) )
-            {
-                catapult.metadataDeploying( getMetadata(), getFile() );
-            }
-            else if ( State.DONE.equals( state ) )
-            {
-                catapult.metadataDeployed( getMetadata(), getFile(), getException() );
-            }
+        @Override
+        public void transferFailed( TransferEvent event )
+        {
+            catapult.metadataDeployed( transfer.getMetadata(), transfer.getFile(), transfer.getException() );
+        }
 
-            return this;
+        @Override
+        public void transferSucceeded( TransferEvent event )
+        {
+            catapult.metadataDeployed( transfer.getMetadata(), transfer.getFile(), null );
         }
 
     }

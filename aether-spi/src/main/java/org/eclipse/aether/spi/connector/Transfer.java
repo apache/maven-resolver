@@ -11,6 +11,7 @@
 package org.eclipse.aether.spi.connector;
 
 import org.eclipse.aether.RequestTrace;
+import org.eclipse.aether.transfer.TransferListener;
 
 /**
  * An artifact/metadata transfer.
@@ -22,7 +23,10 @@ public abstract class Transfer
 
     /**
      * The state of a transfer.
+     * 
+     * @deprecated
      */
+    @Deprecated
     public enum State
     {
         /**
@@ -43,11 +47,13 @@ public abstract class Transfer
 
     private State state = State.NEW;
 
+    private TransferListener listener;
+
     private RequestTrace trace;
 
     Transfer()
     {
-        // hide
+        // hide from public
     }
 
     /**
@@ -61,7 +67,9 @@ public abstract class Transfer
      * Gets the state of this transfer.
      * 
      * @return The state of this transfer, never {@code null}.
+     * @deprecated
      */
+    @Deprecated
     public State getState()
     {
         return state;
@@ -72,7 +80,9 @@ public abstract class Transfer
      * 
      * @param state The new state, must not be {@code null}.
      * @return This transfer for chaining, never {@code null}.
+     * @deprecated
      */
+    @Deprecated
     public Transfer setState( State state )
     {
         if ( state == null )
@@ -80,6 +90,28 @@ public abstract class Transfer
             throw new IllegalArgumentException( "no transfer state specified" );
         }
         this.state = state;
+        return this;
+    }
+
+    /**
+     * Gets the listener that is to be notified during the transfer.
+     * 
+     * @return The transfer listener or {@code null} if none.
+     */
+    public TransferListener getListener()
+    {
+        return listener;
+    }
+
+    /**
+     * Sets the listener that is to be notified during the transfer.
+     * 
+     * @param listener The transfer listener to notify, may be {@code null} if none.
+     * @return This transfer for chaining, never {@code null}.
+     */
+    Transfer setListener( TransferListener listener )
+    {
+        this.listener = listener;
         return this;
     }
 

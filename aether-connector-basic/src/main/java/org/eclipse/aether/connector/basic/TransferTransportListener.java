@@ -31,10 +31,10 @@ class TransferTransportListener<T extends Transfer>
 
     private ChecksumCalculator checksums;
 
-    protected TransferTransportListener( T transfer, TransferListener listener, TransferEvent.Builder eventBuilder )
+    protected TransferTransportListener( T transfer, TransferEvent.Builder eventBuilder )
     {
         this.transfer = transfer;
-        this.listener = listener;
+        this.listener = transfer.getListener();
         this.eventBuilder = eventBuilder;
     }
 
@@ -51,7 +51,6 @@ class TransferTransportListener<T extends Transfer>
             eventBuilder.resetType( EventType.INITIATED );
             listener.transferInitiated( eventBuilder.build() );
         }
-        transfer.setState( Transfer.State.ACTIVE );
     }
 
     @Override
@@ -103,7 +102,6 @@ class TransferTransportListener<T extends Transfer>
             eventBuilder.resetType( EventType.FAILED ).setException( exception );
             listener.transferFailed( eventBuilder.build() );
         }
-        transfer.setState( Transfer.State.DONE );
     }
 
     public void transferSucceeded()
@@ -113,7 +111,6 @@ class TransferTransportListener<T extends Transfer>
             eventBuilder.resetType( EventType.SUCCEEDED );
             listener.transferSucceeded( eventBuilder.build() );
         }
-        transfer.setState( Transfer.State.DONE );
     }
 
     public ChecksumCalculator getChecksums()

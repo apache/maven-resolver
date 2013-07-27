@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,15 +19,14 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.ArtifactTransferException;
+import org.eclipse.aether.transfer.TransferListener;
 
 /**
  * A download of an artifact from a remote repository. A repository connector processing this download has to use
- * {@link #setState(State)}, {@link #setException(ArtifactTransferException)} and
- * {@link #setSupportedContexts(Collection)} (if applicable) to report the results of the transfer.
- * 
- * @noextend This class is not intended to be extended by clients.
+ * {@link #setException(ArtifactTransferException)} and {@link #setSupportedContexts(Collection)} (if applicable) to
+ * report the results of the transfer.
  */
-public class ArtifactDownload
+public final class ArtifactDownload
     extends ArtifactTransfer
 {
 
@@ -37,7 +36,7 @@ public class ArtifactDownload
 
     private String context = "";
 
-    private Collection<String> contexts = Collections.emptySet();
+    private Collection<String> contexts;
 
     private List<RemoteRepository> repositories = Collections.emptyList();
 
@@ -158,10 +157,6 @@ public class ArtifactDownload
     public ArtifactDownload setRequestContext( String context )
     {
         this.context = ( context != null ) ? context : "";
-        if ( State.NEW.equals( getState() ) )
-        {
-            contexts = Collections.singleton( context );
-        }
         return this;
     }
 
@@ -174,7 +169,7 @@ public class ArtifactDownload
      */
     public Collection<String> getSupportedContexts()
     {
-        return contexts;
+        return ( contexts != null ) ? contexts : Collections.singleton( context );
     }
 
     /**
@@ -238,6 +233,13 @@ public class ArtifactDownload
     }
 
     @Override
+    public ArtifactDownload setListener( TransferListener listener )
+    {
+        super.setListener( listener );
+        return this;
+    }
+
+    @Override
     public ArtifactDownload setTrace( RequestTrace trace )
     {
         super.setTrace( trace );
@@ -247,7 +249,7 @@ public class ArtifactDownload
     @Override
     public String toString()
     {
-        return getState() + " " + getArtifact() + " - " + ( isExistenceCheck() ? "?" : "" ) + getFile();
+        return getArtifact() + " - " + ( isExistenceCheck() ? "?" : "" ) + getFile();
     }
 
 }
