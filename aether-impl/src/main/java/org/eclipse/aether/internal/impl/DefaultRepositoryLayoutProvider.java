@@ -129,6 +129,7 @@ public final class DefaultRepositoryLayoutProvider
         List<RepositoryLayoutFactory> factories = new ArrayList<RepositoryLayoutFactory>( this.factories );
         Collections.sort( factories, COMPARATOR );
 
+        List<NoRepositoryLayoutException> errors = new ArrayList<NoRepositoryLayoutException>();
         for ( RepositoryLayoutFactory factory : factories )
         {
             try
@@ -139,25 +140,41 @@ public final class DefaultRepositoryLayoutProvider
             catch ( NoRepositoryLayoutException e )
             {
                 // continue and try next factory
+                errors.add( e );
+            }
+        }
+        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        {
+            String msg = "Could not obtain layout factory for " + repository;
+            for ( Exception e : errors )
+            {
+                logger.debug( msg, e );
             }
         }
 
         StringBuilder buffer = new StringBuilder( 256 );
-        buffer.append( "No layout available to access repository " );
-        buffer.append( repository.getId() );
-        buffer.append( " (" ).append( repository.getUrl() );
-        buffer.append( ") using the available factories " );
-        for ( ListIterator<RepositoryLayoutFactory> it = factories.listIterator(); it.hasNext(); )
+        if ( factories.isEmpty() )
         {
-            RepositoryLayoutFactory factory = it.next();
-            buffer.append( factory.getClass().getSimpleName() );
-            if ( it.hasNext() )
+            buffer.append( "No layout factories registered" );
+        }
+        else
+        {
+            buffer.append( "Cannot access " ).append( repository.getUrl() );
+            buffer.append( " with type " ).append( repository.getContentType() );
+            buffer.append( " using the available layout factories: " );
+            for ( ListIterator<RepositoryLayoutFactory> it = factories.listIterator(); it.hasNext(); )
             {
-                buffer.append( ", " );
+                RepositoryLayoutFactory factory = it.next();
+                buffer.append( factory.getClass().getSimpleName() );
+                if ( it.hasNext() )
+                {
+                    buffer.append( ", " );
+                }
             }
         }
 
-        throw new NoRepositoryLayoutException( repository, buffer.toString() );
+        throw new NoRepositoryLayoutException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 )
+                        : null );
     }
 
 }

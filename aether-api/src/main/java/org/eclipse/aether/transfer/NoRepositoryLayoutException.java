@@ -50,8 +50,7 @@ public class NoRepositoryLayoutException
     {
         if ( repository != null )
         {
-            return "Unsupported repository layout used by repository " + repository.getUrl() + " with content type "
-                + repository.getContentType();
+            return "Unsupported repository layout " + repository.getContentType();
         }
         else
         {

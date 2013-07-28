@@ -129,6 +129,7 @@ public final class DefaultTransporterProvider
         List<TransporterFactory> factories = new ArrayList<TransporterFactory>( this.factories );
         Collections.sort( factories, COMPARATOR );
 
+        List<NoTransporterException> errors = new ArrayList<NoTransporterException>();
         for ( TransporterFactory factory : factories )
         {
             try
@@ -149,25 +150,39 @@ public final class DefaultTransporterProvider
             catch ( NoTransporterException e )
             {
                 // continue and try next factory
+                errors.add( e );
+            }
+        }
+        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        {
+            String msg = "Could not obtain transporter factory for " + repository;
+            for ( Exception e : errors )
+            {
+                logger.debug( msg, e );
             }
         }
 
         StringBuilder buffer = new StringBuilder( 256 );
-        buffer.append( "No transporter available to access repository " );
-        buffer.append( repository.getId() );
-        buffer.append( " (" ).append( repository.getUrl() );
-        buffer.append( ") using the available factories " );
-        for ( ListIterator<TransporterFactory> it = factories.listIterator(); it.hasNext(); )
+        if ( factories.isEmpty() )
         {
-            TransporterFactory factory = it.next();
-            buffer.append( factory.getClass().getSimpleName() );
-            if ( it.hasNext() )
+            buffer.append( "No transporter factories registered" );
+        }
+        else
+        {
+            buffer.append( "Cannot access " ).append( repository.getUrl() );
+            buffer.append( " using the registered transporter factories: " );
+            for ( ListIterator<TransporterFactory> it = factories.listIterator(); it.hasNext(); )
             {
-                buffer.append( ", " );
+                TransporterFactory factory = it.next();
+                buffer.append( factory.getClass().getSimpleName() );
+                if ( it.hasNext() )
+                {
+                    buffer.append( ", " );
+                }
             }
         }
 
-        throw new NoTransporterException( repository, buffer.toString() );
+        throw new NoTransporterException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 ) : null );
     }
 
 }

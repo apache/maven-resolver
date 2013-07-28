@@ -104,7 +104,7 @@ final class BasicRepositoryConnector
         }
         catch ( NoRepositoryLayoutException e )
         {
-            throw new NoRepositoryConnectorException( repository, e );
+            throw new NoRepositoryConnectorException( repository, e.getMessage(), e );
         }
         try
         {
@@ -112,7 +112,7 @@ final class BasicRepositoryConnector
         }
         catch ( NoTransporterException e )
         {
-            throw new NoRepositoryConnectorException( repository, e );
+            throw new NoRepositoryConnectorException( repository, e.getMessage(), e );
         }
 
         this.session = session;

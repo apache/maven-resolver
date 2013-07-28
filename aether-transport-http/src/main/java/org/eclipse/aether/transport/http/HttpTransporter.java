@@ -116,7 +116,7 @@ final class HttpTransporter
         }
         catch ( URISyntaxException e )
         {
-            throw new NoTransporterException( repository, e );
+            throw new NoTransporterException( repository, e.getMessage(), e );
         }
         proxy = toHost( repository.getProxy() );
 

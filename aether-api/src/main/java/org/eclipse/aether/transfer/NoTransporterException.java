@@ -50,11 +50,11 @@ public class NoTransporterException
     {
         if ( repository != null )
         {
-            return "No transporter available to access repository " + repository.getUrl();
+            return "Unsupported transport protocol " + repository.getProtocol();
         }
         else
         {
-            return "No transporter available to access repository";
+            return "Unsupported transport protocol";
         }
     }
 

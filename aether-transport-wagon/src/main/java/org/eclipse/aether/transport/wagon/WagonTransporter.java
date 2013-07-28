@@ -117,7 +117,7 @@ final class WagonTransporter
         catch ( Exception e )
         {
             logger.debug( e.getMessage(), e );
-            throw new NoTransporterException( repository );
+            throw new NoTransporterException( repository, e.getMessage(), e );
         }
 
         repoAuthContext = AuthenticationContext.forRepository( session, repository );

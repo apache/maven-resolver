@@ -203,6 +203,7 @@ public final class RemoteRepository
         StringBuilder buffer = new StringBuilder( 256 );
         buffer.append( getId() );
         buffer.append( " (" ).append( getUrl() );
+        buffer.append( ", " ).append( getContentType() );
         boolean r = getPolicy( false ).isEnabled(), s = getPolicy( true ).isEnabled();
         if ( r && s )
         {

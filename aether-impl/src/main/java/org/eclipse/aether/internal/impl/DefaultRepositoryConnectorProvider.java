@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -132,6 +132,7 @@ public class DefaultRepositoryConnectorProvider
         List<RepositoryConnectorFactory> factories = new ArrayList<RepositoryConnectorFactory>( connectorFactories );
         Collections.sort( factories, COMPARATOR );
 
+        List<NoRepositoryConnectorException> errors = new ArrayList<NoRepositoryConnectorException>();
         for ( RepositoryConnectorFactory factory : factories )
         {
             try
@@ -171,26 +172,41 @@ public class DefaultRepositoryConnectorProvider
             catch ( NoRepositoryConnectorException e )
             {
                 // continue and try next factory
+                errors.add( e );
+            }
+        }
+        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        {
+            String msg = "Could not obtain connector factory for " + repository;
+            for ( Exception e : errors )
+            {
+                logger.debug( msg, e );
             }
         }
 
         StringBuilder buffer = new StringBuilder( 256 );
-        buffer.append( "No connector available to access repository " );
-        buffer.append( repository.getId() );
-        buffer.append( " (" ).append( repository.getUrl() );
-        buffer.append( ") of type " ).append( repository.getContentType() );
-        buffer.append( " using the available factories " );
-        for ( ListIterator<RepositoryConnectorFactory> it = factories.listIterator(); it.hasNext(); )
+        if ( factories.isEmpty() )
         {
-            RepositoryConnectorFactory factory = it.next();
-            buffer.append( factory.getClass().getSimpleName() );
-            if ( it.hasNext() )
+            buffer.append( "No connector factories available" );
+        }
+        else
+        {
+            buffer.append( "Cannot access " ).append( repository.getUrl() );
+            buffer.append( " with type " ).append( repository.getContentType() );
+            buffer.append( " using the available connector factories: " );
+            for ( ListIterator<RepositoryConnectorFactory> it = factories.listIterator(); it.hasNext(); )
             {
-                buffer.append( ", " );
+                RepositoryConnectorFactory factory = it.next();
+                buffer.append( factory.getClass().getSimpleName() );
+                if ( it.hasNext() )
+                {
+                    buffer.append( ", " );
+                }
             }
         }
 
-        throw new NoRepositoryConnectorException( repository, buffer.toString() );
+        throw new NoRepositoryConnectorException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 )
+                        : null );
     }
 
 }
