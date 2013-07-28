@@ -367,6 +367,7 @@ final class BasicRepositoryConnector
 
     class GetTaskRunner
         extends TaskRunner
+        implements PartialFile.RemoteAccessChecker
     {
 
         private final File file;
@@ -384,6 +385,12 @@ final class BasicRepositoryConnector
             this.checksums = safe( checksums );
         }
 
+        public void checkRemoteAccess()
+            throws Exception
+        {
+            transporter.peek( new PeekTask( path ) );
+        }
+
         protected void runTask()
             throws Exception
         {
@@ -393,7 +400,7 @@ final class BasicRepositoryConnector
             }
             fileProcessor.mkdirs( file.getParentFile() );
 
-            PartialFile partFile = partialFileFactory.newInstance( file );
+            PartialFile partFile = partialFileFactory.newInstance( file, this );
             if ( partFile == null )
             {
                 logger.debug( "Concurrent download of " + file + " just finished, skipping download" );

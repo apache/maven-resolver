@@ -29,6 +29,14 @@ final class PartialFile
     implements Closeable
 {
 
+    interface RemoteAccessChecker
+    {
+
+        void checkRemoteAccess()
+            throws Exception;
+
+    }
+
     static class LockFile
     {
 
@@ -38,18 +46,18 @@ final class PartialFile
 
         private final boolean concurrent;
 
-        public LockFile( File partFile, int requestTimeout, Logger logger )
-            throws IOException
+        public LockFile( File partFile, int requestTimeout, RemoteAccessChecker checker, Logger logger )
+            throws Exception
         {
             lockFile = new File( partFile.getPath() + ".lock" );
             boolean[] concurrent = { false };
-            lock = lock( lockFile, partFile, requestTimeout, logger, concurrent );
+            lock = lock( lockFile, partFile, requestTimeout, checker, logger, concurrent );
             this.concurrent = concurrent[0];
         }
 
-        private static FileLock lock( File lockFile, File partFile, int requestTimeout, Logger logger,
-                                      boolean[] concurrent )
-            throws IOException
+        private static FileLock lock( File lockFile, File partFile, int requestTimeout, RemoteAccessChecker checker,
+                                      Logger logger, boolean[] concurrent )
+            throws Exception
         {
             boolean interrupted = false;
             try
@@ -69,6 +77,12 @@ final class PartialFile
                         if ( lastLength < 0 )
                         {
                             concurrent[0] = true;
+                            /*
+                             * NOTE: We're going with the optimistic assumption that the other thread is downloading the
+                             * file from an equivalent repository. As a bare minimum, ensure the repository we are given
+                             * at least knows about the file and is accessible to us.
+                             */
+                            checker.checkRemoteAccess();
                             logger.debug( "Concurrent download of " + partFile + " in progress, awaiting completion" );
                         }
                         lastLength = currentLength;
@@ -181,8 +195,8 @@ final class PartialFile
             this.logger = logger;
         }
 
-        public PartialFile newInstance( File dstFile )
-            throws IOException
+        public PartialFile newInstance( File dstFile, RemoteAccessChecker checker )
+            throws Exception
         {
             if ( !resume )
             {
@@ -195,7 +209,7 @@ final class PartialFile
             File partFile = new File( dstFile.getPath() + ".part" );
 
             long reqTimestamp = System.currentTimeMillis();
-            LockFile lockFile = new LockFile( partFile, requestTimeout, logger );
+            LockFile lockFile = new LockFile( partFile, requestTimeout, checker, logger );
             if ( lockFile.isConcurrent() && dstFile.lastModified() >= reqTimestamp - 100 )
             {
                 lockFile.close();
