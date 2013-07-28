@@ -389,6 +389,7 @@ public class DefaultArtifactResolver
                 logger.debug( "Verifying availability of " + local.getFile() + " from " + repos );
             }
 
+            AtomicBoolean resolved = new AtomicBoolean( false );
             Iterator<ResolutionGroup> groupIt = groups.iterator();
             for ( RemoteRepository repo : repos )
             {
@@ -427,7 +428,7 @@ public class DefaultArtifactResolver
                     groups.add( group );
                     groupIt = Collections.<ResolutionGroup> emptyList().iterator();
                 }
-                group.items.add( new ResolutionItem( trace, artifact, result, local, repo ) );
+                group.items.add( new ResolutionItem( trace, artifact, resolved, result, local, repo ) );
             }
         }
 
@@ -762,12 +763,12 @@ public class DefaultArtifactResolver
 
         UpdateCheck<Artifact, ArtifactTransferException> updateCheck;
 
-        ResolutionItem( RequestTrace trace, Artifact artifact, ArtifactResult result, LocalArtifactResult local,
-                        RemoteRepository repository )
+        ResolutionItem( RequestTrace trace, Artifact artifact, AtomicBoolean resolved, ArtifactResult result,
+                        LocalArtifactResult local, RemoteRepository repository )
         {
             this.trace = trace;
             this.artifact = artifact;
-            this.resolved = new AtomicBoolean( false );
+            this.resolved = resolved;
             this.result = result;
             this.request = result.getRequest();
             this.local = local;
