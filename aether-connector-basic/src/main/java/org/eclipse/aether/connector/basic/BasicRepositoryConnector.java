@@ -69,6 +69,8 @@ final class BasicRepositoryConnector
 
     private static final String PROP_RESUME_THRESHOLD = "aether.connector.resumeThreshold";
 
+    private static final String PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
+
     private final Logger logger;
 
     private final FileProcessor fileProcessor;
@@ -83,9 +85,11 @@ final class BasicRepositoryConnector
 
     private final PartialFile.Factory partialFileFactory;
 
-    private Executor executor;
+    private final int maxThreads;
 
-    private int maxThreads;
+    private final boolean smartChecksums;
+
+    private Executor executor;
 
     private boolean closed;
 
@@ -117,6 +121,7 @@ final class BasicRepositoryConnector
         this.logger = logger;
 
         maxThreads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
+        smartChecksums = ConfigUtils.getBoolean( session, true, PROP_SMART_CHECKSUMS );
 
         boolean resumeDownloads =
             ConfigUtils.getBoolean( session, true, PROP_RESUME + '.' + repository.getId(), PROP_RESUME );
@@ -479,7 +484,7 @@ final class BasicRepositoryConnector
             }
             String act = String.valueOf( actual );
 
-            if ( inlinedChecksum != null && inlinedChecksum.equalsIgnoreCase( act ) )
+            if ( smartChecksums && inlinedChecksum != null && inlinedChecksum.equalsIgnoreCase( act ) )
             {
                 try
                 {
