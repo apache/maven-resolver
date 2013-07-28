@@ -114,7 +114,7 @@ public class DefaultUpdateCheckManager
         {
             if ( logger.isDebugEnabled() )
             {
-                logger.debug( "Skipped remote update check for " + check.getItem()
+                logger.debug( "Skipped remote request for " + check.getItem()
                     + ", locally installed artifact up-to-date." );
             }
 
@@ -142,14 +142,18 @@ public class DefaultUpdateCheckManager
         String error = getError( props, dataKey );
 
         long lastUpdated;
-        if ( fileExists )
+        if ( error == null )
         {
-            lastUpdated = artifactFile.lastModified();
-        }
-        else if ( error == null )
-        {
-            // this is the first attempt ever
-            lastUpdated = 0;
+            if ( fileExists )
+            {
+                // last update was successful
+                lastUpdated = artifactFile.lastModified();
+            }
+            else
+            {
+                // this is the first attempt ever
+                lastUpdated = 0;
+            }
         }
         else if ( error.length() <= 0 )
         {
@@ -163,11 +167,15 @@ public class DefaultUpdateCheckManager
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
-        if ( isAlreadyUpdated( session.getData(), updateKey ) )
+        if ( lastUpdated == 0 )
+        {
+            check.setRequired( true );
+        }
+        else if ( isAlreadyUpdated( session.getData(), updateKey ) )
         {
             if ( logger.isDebugEnabled() )
             {
-                logger.debug( "Skipped remote update check for " + check.getItem()
+                logger.debug( "Skipped remote request for " + check.getItem()
                     + ", already updated during this session." );
             }
 
@@ -177,10 +185,6 @@ public class DefaultUpdateCheckManager
                 check.setException( newException( error, artifact, repository ) );
             }
         }
-        else if ( lastUpdated == 0 )
-        {
-            check.setRequired( true );
-        }
         else if ( isUpdatedRequired( session, lastUpdated, check.getPolicy() ) )
         {
             check.setRequired( true );
@@ -189,8 +193,7 @@ public class DefaultUpdateCheckManager
         {
             if ( logger.isDebugEnabled() )
             {
-                logger.debug( "Skipped remote update check for " + check.getItem()
-                    + ", locally cached artifact up-to-date." );
+                logger.debug( "Skipped remote request for " + check.getItem() + ", locally cached artifact up-to-date." );
             }
 
             check.setRequired( false );
@@ -248,7 +251,7 @@ public class DefaultUpdateCheckManager
         {
             if ( logger.isDebugEnabled() )
             {
-                logger.debug( "Skipped remote update check for " + check.getItem()
+                logger.debug( "Skipped remote request for " + check.getItem()
                     + ", locally installed metadata up-to-date." );
             }
 
@@ -301,11 +304,15 @@ public class DefaultUpdateCheckManager
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
-        if ( isAlreadyUpdated( session.getData(), updateKey ) )
+        if ( lastUpdated == 0 )
+        {
+            check.setRequired( true );
+        }
+        else if ( isAlreadyUpdated( session.getData(), updateKey ) )
         {
             if ( logger.isDebugEnabled() )
             {
-                logger.debug( "Skipped remote update check for " + check.getItem()
+                logger.debug( "Skipped remote request for " + check.getItem()
                     + ", already updated during this session." );
             }
 
@@ -315,10 +322,6 @@ public class DefaultUpdateCheckManager
                 check.setException( newException( error, metadata, repository ) );
             }
         }
-        else if ( lastUpdated == 0 )
-        {
-            check.setRequired( true );
-        }
         else if ( isUpdatedRequired( session, lastUpdated, check.getPolicy() ) )
         {
             check.setRequired( true );
@@ -327,8 +330,7 @@ public class DefaultUpdateCheckManager
         {
             if ( logger.isDebugEnabled() )
             {
-                logger.debug( "Skipped remote update check for " + check.getItem()
-                    + ", locally cached metadata up-to-date." );
+                logger.debug( "Skipped remote request for " + check.getItem() + ", locally cached metadata up-to-date." );
             }
 
             check.setRequired( false );

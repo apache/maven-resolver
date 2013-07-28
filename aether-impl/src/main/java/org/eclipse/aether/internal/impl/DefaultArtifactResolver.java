@@ -594,7 +594,7 @@ public class DefaultArtifactResolver
                     new UpdateCheck<Artifact, ArtifactTransferException>();
                 check.setItem( artifact );
                 check.setFile( download.getFile() );
-                check.setFileValid( !download.isExistenceCheck() );
+                check.setFileValid( false );
                 check.setRepository( group.repository );
                 check.setPolicy( policy.getUpdatePolicy() );
                 item.updateCheck = check;

@@ -69,7 +69,8 @@ public class DefaultUpdateCheckManagerTest
         TestFileUtils.writeString( artifactFile, "artifact" );
 
         session = TestUtils.newSession();
-        repository = new RemoteRepository.Builder( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
+        repository =
+            new RemoteRepository.Builder( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
         manager = new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() );
         metadata =
             new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT,
@@ -334,9 +335,18 @@ public class DefaultUpdateCheckManagerTest
         manager.checkMetadata( session, check );
         assertEquals( true, check.isRequired() );
 
+        // first touch, without exception
         manager.touchMetadata( session, check );
 
-        // second check in same session
+        // another check in same session
+        manager.checkMetadata( session, check );
+        assertEquals( true, check.isRequired() );
+
+        // another touch, with exception
+        check.setException( new MetadataNotFoundException( check.getItem(), check.getRepository() ) );
+        manager.touchMetadata( session, check );
+
+        // another check in same session
         manager.checkMetadata( session, check );
         assertEquals( false, check.isRequired() );
     }
@@ -646,9 +656,18 @@ public class DefaultUpdateCheckManagerTest
         manager.checkArtifact( session, check );
         assertEquals( true, check.isRequired() );
 
+        // first touch, without exception
         manager.touchArtifact( session, check );
 
-        // second check in same session
+        // another check in same session
+        manager.checkArtifact( session, check );
+        assertEquals( true, check.isRequired() );
+
+        // another touch, with exception
+        check.setException( new ArtifactNotFoundException( check.getItem(), check.getRepository() ) );
+        manager.touchArtifact( session, check );
+
+        // another check in same session
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );
     }
