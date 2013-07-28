@@ -66,6 +66,10 @@ class SafeTransferListener
             {
                 logError( event, e );
             }
+            catch ( LinkageError e )
+            {
+                logError( event, e );
+            }
         }
     }
 
@@ -80,6 +84,10 @@ class SafeTransferListener
                 listener.transferStarted( event );
             }
             catch ( RuntimeException e )
+            {
+                logError( event, e );
+            }
+            catch ( LinkageError e )
             {
                 logError( event, e );
             }
@@ -100,6 +108,10 @@ class SafeTransferListener
             {
                 logError( event, e );
             }
+            catch ( LinkageError e )
+            {
+                logError( event, e );
+            }
         }
     }
 
@@ -114,6 +126,10 @@ class SafeTransferListener
                 listener.transferCorrupted( event );
             }
             catch ( RuntimeException e )
+            {
+                logError( event, e );
+            }
+            catch ( LinkageError e )
             {
                 logError( event, e );
             }
@@ -133,6 +149,10 @@ class SafeTransferListener
             {
                 logError( event, e );
             }
+            catch ( LinkageError e )
+            {
+                logError( event, e );
+            }
         }
     }
 
@@ -146,6 +166,10 @@ class SafeTransferListener
                 listener.transferFailed( event );
             }
             catch ( RuntimeException e )
+            {
+                logError( event, e );
+            }
+            catch ( LinkageError e )
             {
                 logError( event, e );
             }
