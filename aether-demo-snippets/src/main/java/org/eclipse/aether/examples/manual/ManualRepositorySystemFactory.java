@@ -12,11 +12,12 @@ package org.eclipse.aether.examples.manual;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.connector.file.FileRepositoryConnectorFactory;
-import org.eclipse.aether.connector.wagon.WagonProvider;
-import org.eclipse.aether.connector.wagon.WagonRepositoryConnectorFactory;
+import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
 /**
  * A factory for repository system instances that employs Aether's built-in service locator infrastructure to wire up
@@ -29,12 +30,13 @@ public class ManualRepositorySystemFactory
     {
         /*
          * Aether's components implement org.eclipse.aether.spi.locator.Service to ease manual wiring and using the
-         * prepopulated DefaultServiceLocator, we only need to register the repository connector factories.
+         * prepopulated DefaultServiceLocator, we only need to register the repository connector and transporter
+         * factories.
          */
         DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-        locator.addService( RepositoryConnectorFactory.class, FileRepositoryConnectorFactory.class );
-        locator.addService( RepositoryConnectorFactory.class, WagonRepositoryConnectorFactory.class );
-        locator.setServices( WagonProvider.class, new ManualWagonProvider() );
+        locator.addService( RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class );
+        locator.addService( TransporterFactory.class, FileTransporterFactory.class );
+        locator.addService( TransporterFactory.class, HttpTransporterFactory.class );
 
         return locator.getService( RepositorySystem.class );
     }

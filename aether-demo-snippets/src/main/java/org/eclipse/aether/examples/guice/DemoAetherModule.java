@@ -18,13 +18,11 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.maven.repository.internal.MavenAetherModule;
-import org.eclipse.aether.connector.file.FileRepositoryConnectorFactory;
-import org.eclipse.aether.connector.wagon.WagonConfigurator;
-import org.eclipse.aether.connector.wagon.WagonProvider;
-import org.eclipse.aether.connector.wagon.WagonRepositoryConnectorFactory;
-import org.eclipse.aether.examples.manual.ManualWagonConfigurator;
-import org.eclipse.aether.examples.manual.ManualWagonProvider;
+import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -39,20 +37,28 @@ class DemoAetherModule
     {
         install( new MavenAetherModule() );
         // alternatively, use the Guice Multibindings extensions
-        bind( RepositoryConnectorFactory.class ).annotatedWith( Names.named( "file" ) ).to( FileRepositoryConnectorFactory.class );
-        bind( RepositoryConnectorFactory.class ).annotatedWith( Names.named( "wagon" ) ).to( WagonRepositoryConnectorFactory.class );
-        bind( WagonProvider.class ).to( ManualWagonProvider.class );
-        bind( WagonConfigurator.class ).to( ManualWagonConfigurator.class );
+        bind( RepositoryConnectorFactory.class ).annotatedWith( Names.named( "basic" ) ).to( BasicRepositoryConnectorFactory.class );
+        bind( TransporterFactory.class ).annotatedWith( Names.named( "file" ) ).to( FileTransporterFactory.class );
+        bind( TransporterFactory.class ).annotatedWith( Names.named( "http" ) ).to( HttpTransporterFactory.class );
     }
 
     @Provides
     @Singleton
-    Set<RepositoryConnectorFactory> provideRepositoryConnectorFactories( @Named( "file" ) RepositoryConnectorFactory file,
-                                                                         @Named( "wagon" ) RepositoryConnectorFactory wagon )
+    Set<RepositoryConnectorFactory> provideRepositoryConnectorFactories( @Named( "basic" ) RepositoryConnectorFactory basic )
     {
         Set<RepositoryConnectorFactory> factories = new HashSet<RepositoryConnectorFactory>();
+        factories.add( basic );
+        return Collections.unmodifiableSet( factories );
+    }
+
+    @Provides
+    @Singleton
+    Set<TransporterFactory> provideTransporterFactories( @Named( "file" ) TransporterFactory file,
+                                                         @Named( "http" ) TransporterFactory http )
+    {
+        Set<TransporterFactory> factories = new HashSet<TransporterFactory>();
         factories.add( file );
-        factories.add( wagon );
+        factories.add( http );
         return Collections.unmodifiableSet( factories );
     }
 
