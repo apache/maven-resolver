@@ -130,8 +130,10 @@
       <outputDirectory>apidocs</outputDirectory>
     </fileSet>
     <fileSet>
-      <directory>src/main/assembly/resources</directory>
-      <outputDirectory>.</outputDirectory>
+      <directory>.</directory>
+      <includes>
+        <include>*.html</include>
+      </includes>
     </fileSet>
   </fileSets>
 </assembly>
