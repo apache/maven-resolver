@@ -113,6 +113,7 @@
   </developers>
 
   <modules>
+    <!-- NOTE: Be sure to update the bin assembly descriptor as well if the module list changes -->
     <module>aether-api</module>
     <module>aether-spi</module>
     <module>aether-util</module>
