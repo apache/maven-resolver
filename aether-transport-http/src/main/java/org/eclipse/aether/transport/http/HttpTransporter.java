@@ -103,7 +103,7 @@ final class HttpTransporter
         this.logger = logger;
         try
         {
-            baseUri = new URI( repository.getUrl() );
+            baseUri = new URI( repository.getUrl() ).parseServerAuthority();
             if ( baseUri.isOpaque() )
             {
                 throw new URISyntaxException( repository.getUrl(), "URL must not be opaque" );

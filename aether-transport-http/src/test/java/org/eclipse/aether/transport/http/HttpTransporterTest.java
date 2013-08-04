@@ -1075,6 +1075,13 @@ public class HttpTransporterTest
         newTransporter( "bad:/void" );
     }
 
+    @Test( expected = NoTransporterException.class )
+    public void testInit_BadUrl()
+        throws Exception
+    {
+        newTransporter( "http://localhost:NaN" );
+    }
+
     @Test
     public void testInit_CaseInsensitiveProtocol()
         throws Exception
