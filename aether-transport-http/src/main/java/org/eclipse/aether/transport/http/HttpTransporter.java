@@ -194,6 +194,11 @@ final class HttpTransporter
         }
     }
 
+    LocalState getState()
+    {
+        return state;
+    }
+
     private URI resolve( TransportTask task )
     {
         return resolve( baseUri, task.getLocation() );

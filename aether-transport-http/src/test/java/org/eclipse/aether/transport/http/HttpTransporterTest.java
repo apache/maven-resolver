@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.HttpHostConnectException;
+import org.apache.http.pool.ConnPoolControl;
+import org.apache.http.pool.PoolStats;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -1066,6 +1068,24 @@ public class HttpTransporterTest
         assertEquals( 1, httpServer.getLogEntries().size() );
         assertNotNull( httpServer.getLogEntries().get( 0 ).headers.get( "Authorization" ) );
         assertNotNull( httpServer.getLogEntries().get( 0 ).headers.get( "Proxy-Authorization" ) );
+    }
+
+    @Test
+    public void testConnectionReuse()
+        throws Exception
+    {
+        httpServer.addSslConnector();
+        session.setCache( new DefaultRepositoryCache() );
+        for ( int i = 0; i < 3; i++ )
+        {
+            newTransporter( httpServer.getHttpsUrl() );
+            GetTask task = new GetTask( URI.create( "repo/file.txt" ) );
+            transporter.get( task );
+            assertEquals( "test", task.getDataString() );
+        }
+        PoolStats stats =
+            ( (ConnPoolControl<?>) ( (HttpTransporter) transporter ).getState().getConnectionManager() ).getTotalStats();
+        assertEquals( stats.toString(), 1, stats.getAvailable() );
     }
 
     @Test( expected = NoTransporterException.class )

@@ -18,9 +18,10 @@
     </encoder>
   </appender>
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="STDOUT" />
   </root>
 
   <logger name="org.apache.http.wire" level="DEBUG" />
+  <logger name="org.eclipse.jetty" level="INFO" />
 </configuration>
