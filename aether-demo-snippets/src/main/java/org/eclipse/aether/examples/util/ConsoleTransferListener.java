@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 
@@ -123,8 +124,9 @@ public class ConsoleTransferListener
             long duration = System.currentTimeMillis() - resource.getTransferStartTime();
             if ( duration > 0 )
             {
+                long bytes = contentLength - resource.getResumeOffset();
                 DecimalFormat format = new DecimalFormat( "0.0", new DecimalFormatSymbols( Locale.ENGLISH ) );
-                double kbPerSec = ( contentLength / 1024.0 ) / ( duration / 1000.0 );
+                double kbPerSec = ( bytes / 1024.0 ) / ( duration / 1000.0 );
                 throughput = " at " + format.format( kbPerSec ) + " KB/sec";
             }
 
@@ -138,7 +140,10 @@ public class ConsoleTransferListener
     {
         transferCompleted( event );
 
-        event.getException().printStackTrace( out );
+        if ( !( event.getException() instanceof MetadataNotFoundException ) )
+        {
+            event.getException().printStackTrace( out );
+        }
     }
 
     private void transferCompleted( TransferEvent event )

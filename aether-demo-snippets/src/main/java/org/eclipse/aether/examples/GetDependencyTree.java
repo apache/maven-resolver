@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,7 +37,7 @@ public class GetDependencyTree
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.0.2" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.1.0" );
 
         RemoteRepository repo = Booter.newCentralRepository();
 
