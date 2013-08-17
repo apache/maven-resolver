@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package org.eclipse.aether.util.artifact;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * A utility class to create identifiers for artifacts.
+ * A utility class for artifact identifiers.
  */
 public final class ArtifactIdUtils
 {
@@ -211,6 +211,41 @@ public final class ArtifactIdUtils
             return false;
         }
         if ( !eq( artifact1.getBaseVersion(), artifact2.getBaseVersion() ) )
+        {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Determines whether two artifacts have the same versionless identifier. This method is equivalent to calling
+     * {@link String#equals(Object)} on the return values from {@link #toVersionlessId(Artifact)} for the artifacts but
+     * does not incur the overhead of creating temporary strings.
+     * 
+     * @param artifact1 The first artifact, may be {@code null}.
+     * @param artifact2 The second artifact, may be {@code null}.
+     * @return {@code true} if both artifacts are not {@code null} and have equal versionless ids, {@code false}
+     *         otherwise.
+     */
+    public static boolean equalsVersionlessId( Artifact artifact1, Artifact artifact2 )
+    {
+        if ( artifact1 == null || artifact2 == null )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getGroupId(), artifact2.getGroupId() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getExtension(), artifact2.getExtension() ) )
+        {
+            return false;
+        }
+        if ( !eq( artifact1.getClassifier(), artifact2.getClassifier() ) )
         {
             return false;
         }

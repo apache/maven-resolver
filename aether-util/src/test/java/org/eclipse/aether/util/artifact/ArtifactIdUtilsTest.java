@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -81,7 +81,7 @@ public class ArtifactIdUtilsTest
     }
 
     @Test
-    public void testEqualsIdArtifact()
+    public void testEqualsId()
     {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
@@ -116,7 +116,7 @@ public class ArtifactIdUtilsTest
     }
 
     @Test
-    public void testEqualsBaseIdArtifact()
+    public void testEqualsBaseId()
     {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
@@ -152,6 +152,41 @@ public class ArtifactIdUtilsTest
         assertEquals( true, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         assertEquals( true, ArtifactIdUtils.equalsBaseId( artifact1, artifact1 ) );
+    }
+
+    @Test
+    public void testEqualsVersionlessId()
+    {
+        Artifact artifact1 = null;
+        Artifact artifact2 = null;
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+
+        artifact1 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+
+        artifact2 = new DefaultArtifact( "gidX", "aid", "ext", "1.0-20110205.132618-23" );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+
+        artifact2 = new DefaultArtifact( "gid", "aidX", "ext", "1.0-20110205.132618-23" );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+
+        artifact2 = new DefaultArtifact( "gid", "aid", "extX", "1.0-20110205.132618-23" );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+
+        artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-24" );
+        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+
+        artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
+        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+
+        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact1 ) );
     }
 
 }
