@@ -120,7 +120,7 @@ public class DefaultFileProcessor
         OutputStream fos = null;
         try
         {
-            fos = new BufferedOutputStream( new FileOutputStream( target ) );
+            fos = new FileOutputStream( target );
 
             copy( fos, source, null );
 
@@ -152,7 +152,7 @@ public class DefaultFileProcessor
 
             mkdirs( target.getAbsoluteFile().getParentFile() );
 
-            fos = new BufferedOutputStream( new FileOutputStream( target ) );
+            fos = new FileOutputStream( target );
 
             total = copy( fos, fis, listener );
 
