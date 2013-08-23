@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -74,7 +73,7 @@ public class DefaultFileProcessor
             return true;
         }
 
-        File canonDir = null;
+        File canonDir;
         try
         {
             canonDir = directory.getCanonicalFile();

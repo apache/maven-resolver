@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.spi.connector.transport;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -55,7 +54,7 @@ public final class GetTask
      * either to a file on disk or a growable buffer in memory. It's the responsibility of the caller to close the
      * provided stream.
      * 
-     * @return The output stream for the data, never {@code null}.
+     * @return The output stream for the data, never {@code null}. The stream is unbuffered.
      * @throws IOException If the stream could not be opened.
      */
     public OutputStream newOutputStream()
@@ -71,7 +70,7 @@ public final class GetTask
      * 
      * @param resume {@code true} if the download resumes from the byte offset given by {@link #getResumeOffset()},
      *            {@code false} if the download starts at the first byte of the resource.
-     * @return The output stream for the data, never {@code null}.
+     * @return The output stream for the data, never {@code null}. The stream is unbuffered.
      * @throws IOException If the stream could not be opened.
      */
     public OutputStream newOutputStream( boolean resume )
@@ -79,7 +78,7 @@ public final class GetTask
     {
         if ( dataFile != null )
         {
-            return new BufferedOutputStream( new FileOutputStream( dataFile, this.resume && resume ) );
+            return new FileOutputStream( dataFile, this.resume && resume );
         }
         if ( dataBytes == null )
         {

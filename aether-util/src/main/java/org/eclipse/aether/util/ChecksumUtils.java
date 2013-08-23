@@ -47,7 +47,7 @@ public final class ChecksumUtils
         FileInputStream fis = new FileInputStream( checksumFile );
         try
         {
-            BufferedReader br = new BufferedReader( new InputStreamReader( fis, "UTF-8" ) );
+            BufferedReader br = new BufferedReader( new InputStreamReader( fis, "UTF-8" ), 512 );
             try
             {
                 while ( true )
@@ -189,9 +189,9 @@ public final class ChecksumUtils
 
         StringBuilder buffer = new StringBuilder( bytes.length * 2 );
 
-        for ( int i = 0; i < bytes.length; i++ )
+        for ( byte aByte : bytes )
         {
-            int b = bytes[i] & 0xFF;
+            int b = aByte & 0xFF;
             if ( b < 0x10 )
             {
                 buffer.append( '0' );

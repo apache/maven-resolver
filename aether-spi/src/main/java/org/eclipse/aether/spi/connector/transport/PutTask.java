@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.spi.connector.transport;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,7 +45,7 @@ public final class PutTask
      * Opens an input stream for the data to be uploaded. The length of the stream can be queried via
      * {@link #getDataLength()}. It's the responsibility of the caller to close the provided stream.
      * 
-     * @return The input stream for the data, never {@code null}.
+     * @return The input stream for the data, never {@code null}. The stream is unbuffered.
      * @throws IOException If the stream could not be opened.
      */
     public InputStream newInputStream()
@@ -54,7 +53,7 @@ public final class PutTask
     {
         if ( dataFile != null )
         {
-            return new BufferedInputStream( new FileInputStream( dataFile ) );
+            return new FileInputStream( dataFile );
         }
         return new ByteArrayInputStream( dataBytes );
     }

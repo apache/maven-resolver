@@ -455,7 +455,7 @@ final class WagonTransporter
     private static void copy( OutputStream os, InputStream is )
         throws IOException
     {
-        byte[] buffer = new byte[1024 * 16];
+        byte[] buffer = new byte[1024 * 32];
         for ( int read = is.read( buffer ); read >= 0; read = is.read( buffer ) )
         {
             os.write( buffer, 0, read );
@@ -628,6 +628,7 @@ final class WagonTransporter
                 InputStream src = task.newInputStream();
                 try
                 {
+                    // StreamingWagon uses an internal buffer on src input stream.
                     ( (StreamingWagon) wagon ).putFromStream( src, dst, task.getDataLength(), -1 );
                 }
                 finally
