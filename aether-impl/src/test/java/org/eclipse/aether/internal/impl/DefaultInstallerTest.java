@@ -45,7 +45,7 @@ public class DefaultInstallerTest
 
     private Artifact artifact;
 
-    private DefaultMetadata metadata;
+    private Metadata metadata;
 
     private DefaultRepositorySystemSession session;
 
@@ -198,6 +198,32 @@ public class DefaultInstallerTest
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata( metadata );
         assertTrue( "failed to setup test: could not create " + path,
                     new File( session.getLocalRepository().getBasedir(), path ).mkdirs() );
+
+        request.addMetadata( metadata );
+        installer.install( session, request );
+    }
+
+    @Test( expected = InstallationException.class )
+    public void testArtifactDestinationEqualsSource()
+        throws Exception
+    {
+        String path = session.getLocalRepositoryManager().getPathForLocalArtifact( artifact );
+        File file = new File( session.getLocalRepository().getBasedir(), path );
+        artifact = artifact.setFile( file );
+        TestFileUtils.writeString( file, "test" );
+
+        request.addArtifact( artifact );
+        installer.install( session, request );
+    }
+
+    @Test( expected = InstallationException.class )
+    public void testMetadataDestinationEqualsSource()
+        throws Exception
+    {
+        String path = session.getLocalRepositoryManager().getPathForLocalMetadata( metadata );
+        File file = new File( session.getLocalRepository().getBasedir(), path );
+        metadata = metadata.setFile( file );
+        TestFileUtils.writeString( file, "test" );
 
         request.addMetadata( metadata );
         installer.install( session, request );

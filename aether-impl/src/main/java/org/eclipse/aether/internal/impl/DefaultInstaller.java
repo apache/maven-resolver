@@ -278,6 +278,11 @@ public class DefaultInstaller
         Exception exception = null;
         try
         {
+            if ( dstFile.equals( srcFile ) )
+            {
+                throw new IllegalArgumentException( "Cannot install " + dstFile + " to same path" );
+            }
+
             boolean copy =
                 "pom".equals( artifact.getExtension() ) || srcFile.lastModified() != dstFile.lastModified()
                     || srcFile.length() != dstFile.length() || !srcFile.exists();
@@ -323,6 +328,10 @@ public class DefaultInstaller
             }
             else
             {
+                if ( dstFile.equals( metadata.getFile() ) )
+                {
+                    throw new IllegalArgumentException( "Cannot install " + dstFile + " to same path" );
+                }
                 fileProcessor.copy( metadata.getFile(), dstFile );
             }
 
