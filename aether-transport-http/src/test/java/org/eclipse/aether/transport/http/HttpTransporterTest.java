@@ -106,6 +106,7 @@ public class HttpTransporterTest
         factory = new HttpTransporterFactory( new TestLoggerFactory() );
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString( new File( repoDir, "file.txt" ), "test" );
+        TestFileUtils.writeString( new File( repoDir, "dir/file.txt" ), "test" );
         TestFileUtils.writeString( new File( repoDir, "empty.txt" ), "" );
         TestFileUtils.writeString( new File( repoDir, "some space.txt" ), "space" );
         File resumable = new File( repoDir, "resume.txt" );
@@ -131,55 +132,6 @@ public class HttpTransporterTest
         }
         factory = null;
         session = null;
-    }
-
-    private String resolve( URI base, String ref )
-    {
-        return HttpTransporter.resolve( base, URI.create( ref ) ).toString();
-    }
-
-    @Test
-    public void testResolve_BaseEmptyPath()
-    {
-        URI base = URI.create( "http://host" );
-        assertEquals( "http://host/file.jar", resolve( base, "file.jar" ) );
-        assertEquals( "http://host/dir/file.jar", resolve( base, "dir/file.jar" ) );
-        assertEquals( "http://host?arg=val", resolve( base, "?arg=val" ) );
-        assertEquals( "http://host/file?arg=val", resolve( base, "file?arg=val" ) );
-        assertEquals( "http://host/dir/file?arg=val", resolve( base, "dir/file?arg=val" ) );
-    }
-
-    @Test
-    public void testResolve_BaseRootPath()
-    {
-        URI base = URI.create( "http://host/" );
-        assertEquals( "http://host/file.jar", resolve( base, "file.jar" ) );
-        assertEquals( "http://host/dir/file.jar", resolve( base, "dir/file.jar" ) );
-        assertEquals( "http://host/?arg=val", resolve( base, "?arg=val" ) );
-        assertEquals( "http://host/file?arg=val", resolve( base, "file?arg=val" ) );
-        assertEquals( "http://host/dir/file?arg=val", resolve( base, "dir/file?arg=val" ) );
-    }
-
-    @Test
-    public void testResolve_BasePathTrailingSlash()
-    {
-        URI base = URI.create( "http://host/sub/dir/" );
-        assertEquals( "http://host/sub/dir/file.jar", resolve( base, "file.jar" ) );
-        assertEquals( "http://host/sub/dir/dir/file.jar", resolve( base, "dir/file.jar" ) );
-        assertEquals( "http://host/sub/dir/?arg=val", resolve( base, "?arg=val" ) );
-        assertEquals( "http://host/sub/dir/file?arg=val", resolve( base, "file?arg=val" ) );
-        assertEquals( "http://host/sub/dir/dir/file?arg=val", resolve( base, "dir/file?arg=val" ) );
-    }
-
-    @Test
-    public void testResolve_BasePathNoTrailingSlash()
-    {
-        URI base = URI.create( "http://host/sub/d%20r" );
-        assertEquals( "http://host/sub/d%20r/file.jar", resolve( base, "file.jar" ) );
-        assertEquals( "http://host/sub/d%20r/dir/file.jar", resolve( base, "dir/file.jar" ) );
-        assertEquals( "http://host/sub/d%20r?arg=val", resolve( base, "?arg=val" ) );
-        assertEquals( "http://host/sub/d%20r/file?arg=val", resolve( base, "file?arg=val" ) );
-        assertEquals( "http://host/sub/d%20r/dir/file?arg=val", resolve( base, "dir/file?arg=val" ) );
     }
 
     @Test
@@ -448,6 +400,24 @@ public class HttpTransporterTest
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+    }
+
+    @Test
+    public void testGet_WebDav()
+        throws Exception
+    {
+        httpServer.setWebDav( true );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask( URI.create( "repo/dir/file.txt" ) ).setListener( listener );
+        ( (HttpTransporter) transporter ).getState().setWebDav( true );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 4, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( httpServer.getLogEntries().toString(), 1, httpServer.getLogEntries().size() );
     }
 
     @Test
@@ -825,6 +795,32 @@ public class HttpTransporterTest
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
+    }
+
+    @Test
+    public void testPut_WebDav()
+        throws Exception
+    {
+        httpServer.setWebDav( true );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        PutTask task =
+            new PutTask( URI.create( "repo/dir1/dir2/file.txt" ) ).setListener( listener ).setDataString( "upload" );
+        transporter.put( task );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 6, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "dir1/dir2/file.txt" ) ) );
+
+        assertEquals( 5, httpServer.getLogEntries().size() );
+        assertEquals( "OPTIONS", httpServer.getLogEntries().get( 0 ).method );
+        assertEquals( "MKCOL", httpServer.getLogEntries().get( 1 ).method );
+        assertEquals( "/repo/dir1/dir2/", httpServer.getLogEntries().get( 1 ).path );
+        assertEquals( "MKCOL", httpServer.getLogEntries().get( 2 ).method );
+        assertEquals( "/repo/dir1/", httpServer.getLogEntries().get( 2 ).path );
+        assertEquals( "MKCOL", httpServer.getLogEntries().get( 3 ).method );
+        assertEquals( "/repo/dir1/dir2/", httpServer.getLogEntries().get( 3 ).path );
+        assertEquals( "PUT", httpServer.getLogEntries().get( 4 ).method );
     }
 
     @Test

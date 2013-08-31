@@ -88,6 +88,8 @@ public class HttpServer
 
     private boolean rangeSupport = true;
 
+    private boolean webDav;
+
     private ExpectContinue expectContinue = ExpectContinue.PROPER;
 
     private ChecksumHeader checksumHeader;
@@ -171,6 +173,12 @@ public class HttpServer
     public HttpServer setRangeSupport( boolean rangeSupport )
     {
         this.rangeSupport = rangeSupport;
+        return this;
+    }
+
+    public HttpServer setWebDav( boolean webDav )
+    {
+        this.webDav = webDav;
         return this;
     }
 
@@ -284,11 +292,6 @@ public class HttpServer
                 return;
             }
             req.setHandled( true );
-            if ( path.endsWith( URIUtil.SLASH ) )
-            {
-                response.setStatus( HttpServletResponse.SC_NOT_FOUND );
-                return;
-            }
 
             if ( ExpectContinue.FAIL.equals( expectContinue ) && request.getHeader( HttpHeaders.EXPECT ) != null )
             {
@@ -299,7 +302,7 @@ public class HttpServer
             File file = new File( repoDir, path.substring( 5 ) );
             if ( HttpMethods.GET.equals( req.getMethod() ) || HttpMethods.HEAD.equals( req.getMethod() ) )
             {
-                if ( !file.isFile() )
+                if ( !file.isFile() || path.endsWith( URIUtil.SLASH ) )
                 {
                     response.setStatus( HttpServletResponse.SC_NOT_FOUND );
                     return;
@@ -373,30 +376,59 @@ public class HttpServer
             }
             else if ( HttpMethods.PUT.equals( req.getMethod() ) )
             {
-                file.getParentFile().mkdirs();
-                try
+                if ( !webDav )
                 {
-                    FileOutputStream os = new FileOutputStream( file );
+                    file.getParentFile().mkdirs();
+                }
+                if ( file.getParentFile().exists() )
+                {
                     try
                     {
-                        IO.copy( request.getInputStream(), os );
+                        FileOutputStream os = new FileOutputStream( file );
+                        try
+                        {
+                            IO.copy( request.getInputStream(), os );
+                        }
+                        finally
+                        {
+                            os.close();
+                        }
                     }
-                    finally
+                    catch ( IOException e )
                     {
-                        os.close();
+                        file.delete();
+                        throw e;
                     }
+                    response.setStatus( HttpServletResponse.SC_NO_CONTENT );
                 }
-                catch ( IOException e )
+                else
                 {
-                    file.delete();
-                    throw e;
+                    response.setStatus( HttpServletResponse.SC_FORBIDDEN );
                 }
-                response.setStatus( HttpServletResponse.SC_NO_CONTENT );
             }
             else if ( HttpMethods.OPTIONS.equals( req.getMethod() ) )
             {
+                if ( webDav )
+                {
+                    response.setHeader( "DAV", "1,2" );
+                }
                 response.setHeader( HttpHeaders.ALLOW, "GET, PUT, HEAD, OPTIONS" );
                 response.setStatus( HttpServletResponse.SC_OK );
+            }
+            else if ( webDav && "MKCOL".equals( req.getMethod() ) )
+            {
+                if ( file.exists() )
+                {
+                    response.setStatus( HttpServletResponse.SC_METHOD_NOT_ALLOWED );
+                }
+                else if ( file.mkdir() )
+                {
+                    response.setStatus( HttpServletResponse.SC_CREATED );
+                }
+                else
+                {
+                    response.setStatus( HttpServletResponse.SC_CONFLICT );
+                }
             }
             else
             {

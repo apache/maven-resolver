@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -201,28 +202,7 @@ final class HttpTransporter
 
     private URI resolve( TransportTask task )
     {
-        return resolve( baseUri, task.getLocation() );
-    }
-
-    static URI resolve( URI base, URI ref )
-    {
-        String path = ref.getRawPath();
-        if ( path != null && path.length() > 0 )
-        {
-            path = base.getRawPath();
-            if ( path == null || !path.endsWith( "/" ) )
-            {
-                try
-                {
-                    base = new URI( base.getScheme(), base.getAuthority(), base.getPath() + '/', null, null );
-                }
-                catch ( URISyntaxException e )
-                {
-                    throw new IllegalStateException( e );
-                }
-            }
-        }
-        return URIUtils.resolve( base, ref );
+        return UriUtils.resolve( baseUri, task.getLocation() );
     }
 
     public int classify( Throwable error )
@@ -323,16 +303,85 @@ final class HttpTransporter
 
     private void prepare( HttpUriRequest request, SharingHttpContext context )
     {
-        if ( state.setFirstRequest() && isPayloadPresent( request ) )
+        boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase( request.getMethod() );
+        if ( state.getWebDav() == null && ( put || isPayloadPresent( request ) ) )
         {
             try
             {
                 HttpOptions req = commonHeaders( new HttpOptions( request.getURI() ) );
-                EntityUtils.consumeQuietly( client.execute( server, req, context ).getEntity() );
+                HttpResponse response = client.execute( server, req, context );
+                state.setWebDav( isWebDav( response ) );
+                EntityUtils.consumeQuietly( response.getEntity() );
             }
             catch ( IOException e )
             {
                 logger.debug( "Failed to prepare HTTP context", e );
+            }
+        }
+        if ( put && Boolean.TRUE.equals( state.getWebDav() ) )
+        {
+            mkdirs( request.getURI(), context );
+        }
+    }
+
+    private boolean isWebDav( HttpResponse response )
+    {
+        return response.containsHeader( HttpHeaders.DAV );
+    }
+
+    private void mkdirs( URI uri, SharingHttpContext context )
+    {
+        List<URI> dirs = UriUtils.getDirectories( baseUri, uri );
+        int index = 0;
+        for ( ; index < dirs.size(); index++ )
+        {
+            try
+            {
+                HttpResponse response =
+                    client.execute( server, commonHeaders( new HttpMkCol( dirs.get( index ) ) ), context );
+                try
+                {
+                    int status = response.getStatusLine().getStatusCode();
+                    if ( status < 300 || status == HttpStatus.SC_METHOD_NOT_ALLOWED )
+                    {
+                        break;
+                    }
+                    else if ( status == HttpStatus.SC_CONFLICT )
+                    {
+                        continue;
+                    }
+                    handleStatus( response );
+                }
+                finally
+                {
+                    EntityUtils.consumeQuietly( response.getEntity() );
+                }
+            }
+            catch ( IOException e )
+            {
+                logger.debug( "Failed to create parent directory " + dirs.get( index ), e );
+                return;
+            }
+        }
+        for ( index--; index >= 0; index-- )
+        {
+            try
+            {
+                HttpResponse response =
+                    client.execute( server, commonHeaders( new HttpMkCol( dirs.get( index ) ) ), context );
+                try
+                {
+                    handleStatus( response );
+                }
+                finally
+                {
+                    EntityUtils.consumeQuietly( response.getEntity() );
+                }
+            }
+            catch ( IOException e )
+            {
+                logger.debug( "Failed to create parent directory " + dirs.get( index ), e );
+                return;
             }
         }
     }

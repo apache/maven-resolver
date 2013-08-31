@@ -27,7 +27,8 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
- * A transporter factory for repositories using the {@code http:} or {@code https:} protocol.
+ * A transporter factory for repositories using the {@code http:} or {@code https:} protocol. The provided transporters
+ * support uploads to WebDAV servers and resumable downloads.
  */
 @Named( "http" )
 @Component( role = TransporterFactory.class, hint = "http" )

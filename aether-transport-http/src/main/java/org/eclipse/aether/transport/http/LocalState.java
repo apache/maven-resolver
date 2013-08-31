@@ -13,7 +13,6 @@ package org.eclipse.aether.transport.http;
 import java.io.Closeable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScheme;
@@ -42,15 +41,14 @@ final class LocalState
 
     private volatile Boolean expectContinue;
 
-    private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
+    private volatile Boolean webDav;
 
-    private final AtomicBoolean firstRequest;
+    private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
 
     public LocalState( RepositorySystemSession session, RemoteRepository repo, SslConfig sslConfig )
     {
         global = GlobalState.get( session );
         userToken = this;
-        firstRequest = new AtomicBoolean( true );
         if ( global == null )
         {
             connMgr = GlobalState.newConnectionManager( sslConfig );
@@ -109,6 +107,16 @@ final class LocalState
         }
     }
 
+    public Boolean getWebDav()
+    {
+        return webDav;
+    }
+
+    public void setWebDav( boolean webDav )
+    {
+        this.webDav = webDav;
+    }
+
     public AuthScheme getAuthScheme( HttpHost host )
     {
         AuthSchemePool pool = authSchemePools.get( host );
@@ -132,11 +140,6 @@ final class LocalState
             }
         }
         pool.put( authScheme );
-    }
-
-    public boolean setFirstRequest()
-    {
-        return firstRequest.compareAndSet( true, false );
     }
 
     public void close()
