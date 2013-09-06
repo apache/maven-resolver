@@ -189,7 +189,8 @@ public interface RepositorySystemSession
     AuthenticationSelector getAuthenticationSelector();
 
     /**
-     * Gets the registry of artifact types recognized by this session.
+     * Gets the registry of artifact types recognized by this session, for instance when processing artifact
+     * descriptors.
      * 
      * @return The artifact type registry, never {@code null}.
      */

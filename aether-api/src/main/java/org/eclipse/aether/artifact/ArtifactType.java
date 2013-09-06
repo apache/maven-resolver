@@ -19,6 +19,8 @@ import java.util.Map;
  * 
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
+ * @see ArtifactTypeRegistry
+ * @see DefaultArtifact#DefaultArtifact(String, String, String, String, String, ArtifactType)
  */
 public interface ArtifactType
 {
