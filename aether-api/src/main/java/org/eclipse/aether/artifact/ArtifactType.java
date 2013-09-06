@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,20 +27,21 @@ public interface ArtifactType
      * Gets the identifier of this type, e.g. "maven-plugin" or "test-jar".
      * 
      * @return The identifier of this type, never {@code null}.
+     * @see ArtifactProperties#TYPE
      */
     String getId();
 
     /**
      * Gets the file extension to use for artifacts of this type (unless explicitly overridden by the artifact).
      * 
-     * @return The file extension, never {@code null}.
+     * @return The usual file extension, never {@code null}.
      */
     String getExtension();
 
     /**
      * Gets the classifier to use for artifacts of this type (unless explicitly overridden by the artifact).
      * 
-     * @return The classifier or an empty string if none, never {@code null}.
+     * @return The usual classifier or an empty string if none, never {@code null}.
      */
     String getClassifier();
 
@@ -48,6 +49,7 @@ public interface ArtifactType
      * Gets the properties to use for artifacts of this type (unless explicitly overridden by the artifact).
      * 
      * @return The (read-only) properties, never {@code null}.
+     * @see ArtifactProperties
      */
     Map<String, String> getProperties();
 
