@@ -192,6 +192,11 @@ public final class DefaultDependencyNode
         return versionConstraint;
     }
 
+    /**
+     * Sets the version constraint that was parsed from the dependency's version declaration.
+     * 
+     * @param versionConstraint The version constraint for this node, may be {@code null}.
+     */
     public void setVersionConstraint( VersionConstraint versionConstraint )
     {
         this.versionConstraint = versionConstraint;
@@ -202,6 +207,11 @@ public final class DefaultDependencyNode
         return version;
     }
 
+    /**
+     * Sets the version that was selected for the dependency's target artifact.
+     * 
+     * @param version The parsed version, may be {@code null}.
+     */
     public void setVersion( Version version )
     {
         this.version = version;
