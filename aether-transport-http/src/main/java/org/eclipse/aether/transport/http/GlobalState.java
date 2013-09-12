@@ -77,6 +77,8 @@ final class GlobalState
 
     private static final String KEY = GlobalState.class.getName();
 
+    private static final String CONFIG_PROP_CACHE_STATE = "aether.connector.http.cacheState";
+
     private final ConcurrentMap<SslConfig, ClientConnectionManager> connectionManagers;
 
     private final ConcurrentMap<CompoundKey, Object> userTokens;
@@ -89,7 +91,7 @@ final class GlobalState
     {
         GlobalState cache;
         RepositoryCache repoCache = session.getCache();
-        if ( repoCache == null || !ConfigUtils.getBoolean( session, true, "aether.connector.http.cacheState" ) )
+        if ( repoCache == null || !ConfigUtils.getBoolean( session, true, CONFIG_PROP_CACHE_STATE ) )
         {
             cache = null;
         }

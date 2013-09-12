@@ -78,6 +78,8 @@ public class DefaultArtifactResolver
     implements ArtifactResolver, Service
 {
 
+    private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
+
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
@@ -489,7 +491,7 @@ public class DefaultArtifactResolver
         throws ArtifactTransferException
     {
         if ( artifact.isSnapshot() && !artifact.getVersion().equals( artifact.getBaseVersion() )
-            && ConfigUtils.getBoolean( session, true, "aether.artifactResolver.snapshotNormalization" ) )
+            && ConfigUtils.getBoolean( session, true, CONFIG_PROP_SNAPSHOT_NORMALIZATION ) )
         {
             String name = file.getName().replace( artifact.getVersion(), artifact.getBaseVersion() );
             File dst = new File( file.getParent(), name );

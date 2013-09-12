@@ -76,6 +76,8 @@ public class DefaultMetadataResolver
     implements MetadataResolver, Service
 {
 
+    private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
+
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
@@ -385,7 +387,7 @@ public class DefaultMetadataResolver
 
         if ( !tasks.isEmpty() )
         {
-            int threads = ConfigUtils.getInteger( session, 4, "aether.metadataResolver.threads" );
+            int threads = ConfigUtils.getInteger( session, 4, CONFIG_PROP_THREADS );
             Executor executor = getExecutor( Math.min( tasks.size(), threads ) );
             try
             {

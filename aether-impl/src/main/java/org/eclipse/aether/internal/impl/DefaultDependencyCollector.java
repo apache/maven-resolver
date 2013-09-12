@@ -71,6 +71,8 @@ public class DefaultDependencyCollector
     implements DependencyCollector, Service
 {
 
+    private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
+
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
@@ -717,7 +719,7 @@ public class DefaultDependencyCollector
             this.result = result;
             this.session = session;
             this.ignoreRepos = session.isIgnoreArtifactDescriptorRepositories();
-            this.maxExceptions = ConfigUtils.getInteger( session, 50, "aether.dependencyCollector.maxExceptions" );
+            this.maxExceptions = ConfigUtils.getInteger( session, 50, CONFIG_PROP_MAX_EXCEPTIONS );
             this.premanagedState = ConfigUtils.getBoolean( session, false, DependencyManagerUtils.CONFIG_PROP_VERBOSE );
             this.trace = trace;
             this.pool = pool;

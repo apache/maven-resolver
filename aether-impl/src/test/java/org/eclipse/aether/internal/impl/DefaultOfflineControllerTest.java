@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,8 +26,8 @@ public class DefaultOfflineControllerTest
     {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
         session.setOffline( offline );
-        session.setConfigProperty( "aether.offline.protocols", protocols );
-        session.setConfigProperty( "aether.offline.hosts", hosts );
+        session.setConfigProperty( DefaultOfflineController.CONFIG_PROP_OFFLINE_PROTOCOLS, protocols );
+        session.setConfigProperty( DefaultOfflineController.CONFIG_PROP_OFFLINE_HOSTS, hosts );
         return session;
     }
 

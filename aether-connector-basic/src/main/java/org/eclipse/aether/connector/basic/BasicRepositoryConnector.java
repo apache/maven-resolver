@@ -63,13 +63,13 @@ final class BasicRepositoryConnector
     implements RepositoryConnector
 {
 
-    private static final String PROP_THREADS = "aether.connector.basic.threads";
+    private static final String CONFIG_PROP_THREADS = "aether.connector.basic.threads";
 
-    private static final String PROP_RESUME = "aether.connector.resumeDownloads";
+    private static final String CONFIG_PROP_RESUME = "aether.connector.resumeDownloads";
 
-    private static final String PROP_RESUME_THRESHOLD = "aether.connector.resumeThreshold";
+    private static final String CONFIG_PROP_RESUME_THRESHOLD = "aether.connector.resumeThreshold";
 
-    private static final String PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
+    private static final String CONFIG_PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
 
     private final Logger logger;
 
@@ -120,14 +120,14 @@ final class BasicRepositoryConnector
         this.fileProcessor = fileProcessor;
         this.logger = logger;
 
-        maxThreads = ConfigUtils.getInteger( session, 5, PROP_THREADS, "maven.artifact.threads" );
-        smartChecksums = ConfigUtils.getBoolean( session, true, PROP_SMART_CHECKSUMS );
+        maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
+        smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
 
         boolean resumeDownloads =
-            ConfigUtils.getBoolean( session, true, PROP_RESUME + '.' + repository.getId(), PROP_RESUME );
+            ConfigUtils.getBoolean( session, true, CONFIG_PROP_RESUME + '.' + repository.getId(), CONFIG_PROP_RESUME );
         long resumeThreshold =
-            ConfigUtils.getLong( session, 64 * 1024, PROP_RESUME_THRESHOLD + '.' + repository.getId(),
-                                 PROP_RESUME_THRESHOLD );
+            ConfigUtils.getLong( session, 64 * 1024, CONFIG_PROP_RESUME_THRESHOLD + '.' + repository.getId(),
+                                 CONFIG_PROP_RESUME_THRESHOLD );
         int requestTimeout =
             ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                                     ConfigurationProperties.REQUEST_TIMEOUT + '.' + repository.getId(),

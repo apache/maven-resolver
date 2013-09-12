@@ -55,13 +55,13 @@ final class WagonTransporter
     implements Transporter
 {
 
-    private static final String PROP_CONFIG = "aether.connector.wagon.config";
+    private static final String CONFIG_PROP_CONFIG = "aether.connector.wagon.config";
 
-    private static final String PROP_FILE_MODE = "aether.connector.perms.fileMode";
+    private static final String CONFIG_PROP_FILE_MODE = "aether.connector.perms.fileMode";
 
-    private static final String PROP_DIR_MODE = "aether.connector.perms.dirMode";
+    private static final String CONFIG_PROP_DIR_MODE = "aether.connector.perms.dirMode";
 
-    private static final String PROP_GROUP = "aether.connector.perms.group";
+    private static final String CONFIG_PROP_GROUP = "aether.connector.perms.group";
 
     private final Logger logger;
 
@@ -146,21 +146,21 @@ final class WagonTransporter
 
         String suffix = '.' + repoId;
 
-        String fileMode = ConfigUtils.getString( session, (String) null, PROP_FILE_MODE + suffix );
+        String fileMode = ConfigUtils.getString( session, (String) null, CONFIG_PROP_FILE_MODE + suffix );
         if ( fileMode != null )
         {
             perms.setFileMode( fileMode );
             result = perms;
         }
 
-        String dirMode = ConfigUtils.getString( session, (String) null, PROP_DIR_MODE + suffix );
+        String dirMode = ConfigUtils.getString( session, (String) null, CONFIG_PROP_DIR_MODE + suffix );
         if ( dirMode != null )
         {
             perms.setDirectoryMode( dirMode );
             result = perms;
         }
 
-        String group = ConfigUtils.getString( session, (String) null, PROP_GROUP + suffix );
+        String group = ConfigUtils.getString( session, (String) null, CONFIG_PROP_GROUP + suffix );
         if ( group != null )
         {
             perms.setGroup( group );
@@ -308,7 +308,7 @@ final class WagonTransporter
         wagon.setInteractive( ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_INTERACTIVE,
                                                       ConfigurationProperties.INTERACTIVE ) );
 
-        Object configuration = ConfigUtils.getObject( session, null, PROP_CONFIG + "." + repository.getId() );
+        Object configuration = ConfigUtils.getObject( session, null, CONFIG_PROP_CONFIG + "." + repository.getId() );
         if ( configuration != null && wagonConfigurator != null )
         {
             try

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,6 +33,10 @@ import org.eclipse.aether.util.ConfigUtils;
 public class DefaultOfflineController
     implements OfflineController, Service
 {
+
+    static final String CONFIG_PROP_OFFLINE_PROTOCOLS = "aether.offline.protocols";
+
+    static final String CONFIG_PROP_OFFLINE_HOSTS = "aether.offline.hosts";
 
     private static final Pattern SEP = Pattern.compile( "\\s*,\\s*" );
 
@@ -85,7 +89,7 @@ public class DefaultOfflineController
 
     private boolean isOfflineProtocol( RepositorySystemSession session, RemoteRepository repository )
     {
-        String[] protocols = getConfig( session, "aether.offline.protocols" );
+        String[] protocols = getConfig( session, CONFIG_PROP_OFFLINE_PROTOCOLS );
         if ( protocols != null )
         {
             String protocol = repository.getProtocol();
@@ -105,7 +109,7 @@ public class DefaultOfflineController
 
     private boolean isOfflineHost( RepositorySystemSession session, RemoteRepository repository )
     {
-        String[] hosts = getConfig( session, "aether.offline.hosts" );
+        String[] hosts = getConfig( session, CONFIG_PROP_OFFLINE_HOSTS );
         if ( hosts != null )
         {
             String host = repository.getHost();
