@@ -44,6 +44,7 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  */
@@ -66,6 +67,14 @@ public class DefaultUpdateCheckManager
     private static final String NOT_FOUND = "";
 
     private static final String SESSION_CHECKS = "updateCheckManager.checks";
+
+    static final String CONFIG_PROP_SESSION_STATE = "aether.updateCheckManager.sessionState";
+
+    private static final int STATE_ENABLED = 0;
+
+    private static final int STATE_BYPASS = 1;
+
+    private static final int STATE_DISABLED = 2;
 
     public DefaultUpdateCheckManager()
     {
@@ -171,7 +180,7 @@ public class DefaultUpdateCheckManager
         {
             check.setRequired( true );
         }
-        else if ( isAlreadyUpdated( session.getData(), updateKey ) )
+        else if ( isAlreadyUpdated( session, updateKey ) )
         {
             if ( logger.isDebugEnabled() )
             {
@@ -308,7 +317,7 @@ public class DefaultUpdateCheckManager
         {
             check.setRequired( true );
         }
-        else if ( isAlreadyUpdated( session.getData(), updateKey ) )
+        else if ( isAlreadyUpdated( session, updateKey ) )
         {
             if ( logger.isDebugEnabled() )
             {
@@ -473,8 +482,33 @@ public class DefaultUpdateCheckManager
         return file.getAbsolutePath() + '|' + getRepoKey( session, repository );
     }
 
-    private boolean isAlreadyUpdated( SessionData data, Object updateKey )
+    private int getSessionState( RepositorySystemSession session )
     {
+        String mode = ConfigUtils.getString( session, "true", CONFIG_PROP_SESSION_STATE );
+        if ( Boolean.parseBoolean( mode ) )
+        {
+            // perform update check at most once per session, regardless of update policy
+            return STATE_ENABLED;
+        }
+        else if ( "bypass".equalsIgnoreCase( mode ) )
+        {
+            // evaluate update policy but record update in session to prevent potential future checks
+            return STATE_BYPASS;
+        }
+        else
+        {
+            // no session state at all, always evaluate update policy
+            return STATE_DISABLED;
+        }
+    }
+
+    private boolean isAlreadyUpdated( RepositorySystemSession session, Object updateKey )
+    {
+        if ( getSessionState( session ) >= STATE_BYPASS )
+        {
+            return false;
+        }
+        SessionData data = session.getData();
         Object checkedFiles = data.get( SESSION_CHECKS );
         if ( !( checkedFiles instanceof Map ) )
         {
@@ -484,8 +518,13 @@ public class DefaultUpdateCheckManager
     }
 
     @SuppressWarnings( "unchecked" )
-    private void setUpdated( SessionData data, Object updateKey )
+    private void setUpdated( RepositorySystemSession session, Object updateKey )
     {
+        if ( getSessionState( session ) >= STATE_DISABLED )
+        {
+            return;
+        }
+        SessionData data = session.getData();
         Object checkedFiles = data.get( SESSION_CHECKS );
         while ( !( checkedFiles instanceof Map ) )
         {
@@ -521,7 +560,7 @@ public class DefaultUpdateCheckManager
         String dataKey = getDataKey( artifact, artifactFile, check.getAuthoritativeRepository() );
         String transferKey = getTransferKey( session, artifact, artifactFile, check.getRepository() );
 
-        setUpdated( session.getData(), updateKey );
+        setUpdated( session, updateKey );
         Properties props = write( touchFile, dataKey, transferKey, check.getException() );
 
         if ( artifactFile.exists() && !hasErrors( props ) )
@@ -552,7 +591,7 @@ public class DefaultUpdateCheckManager
         String dataKey = getDataKey( metadata, metadataFile, check.getAuthoritativeRepository() );
         String transferKey = getTransferKey( session, metadata, metadataFile, check.getRepository() );
 
-        setUpdated( session.getData(), updateKey );
+        setUpdated( session, updateKey );
         write( touchFile, dataKey, transferKey, check.getException() );
     }
 

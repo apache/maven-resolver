@@ -324,6 +324,30 @@ public class DefaultUpdateCheckManagerTest
     }
 
     @Test
+    public void testCheckMetadataSessionStateModes()
+        throws Exception
+    {
+        UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
+        check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
+        manager.touchMetadata( session, check );
+
+        session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "bypass" );
+        manager.checkMetadata( session, check );
+        assertEquals( true, check.isRequired() );
+
+        resetSessionData( session );
+        manager.touchMetadata( session, check );
+
+        session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "true" );
+        manager.checkMetadata( session, check );
+        assertEquals( false, check.isRequired() );
+
+        session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "false" );
+        manager.checkMetadata( session, check );
+        assertEquals( true, check.isRequired() );
+    }
+
+    @Test
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile()
         throws Exception
     {
@@ -642,6 +666,30 @@ public class DefaultUpdateCheckManagerTest
         // second check in same session
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );
+    }
+
+    @Test
+    public void testCheckArtifactSessionStateModes()
+        throws Exception
+    {
+        UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
+        check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
+        manager.touchArtifact( session, check );
+
+        session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "bypass" );
+        manager.checkArtifact( session, check );
+        assertEquals( true, check.isRequired() );
+
+        resetSessionData( session );
+        manager.touchArtifact( session, check );
+
+        session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "true" );
+        manager.checkArtifact( session, check );
+        assertEquals( false, check.isRequired() );
+
+        session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "false" );
+        manager.checkArtifact( session, check );
+        assertEquals( true, check.isRequired() );
     }
 
     @Test
