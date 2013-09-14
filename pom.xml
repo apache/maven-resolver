@@ -68,7 +68,7 @@
 
   <issueManagement>
     <system>bugzilla</system>
-    <url>https://bugs.eclipse.org/bugs/buglist.cgi?query_format=specific&amp;order=relevance+desc&amp;bug_status=__open__&amp;product=Aether</url>
+    <url>https://bugs.eclipse.org/bugs/buglist.cgi?query_format=specific&amp;bug_status=__open__&amp;product=Aether</url>
   </issueManagement>
 
   <ciManagement>
