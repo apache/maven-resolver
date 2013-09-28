@@ -1,8 +1,8 @@
 cycle:root:1
-+- cycle:a:1:compile         (a)
-|  \- cycle:b:1:compile
-|     \- cycle:c:1:compile
++- cycle:a:1                 (a)
+|  \- cycle:b:1
+|     \- cycle:c:1
 |        \- ^a
-\- cycle:b:1:compile         (b)
-   \- cycle:c:1:compile
+\- cycle:b:1                 (b)
+   \- cycle:c:1
       \- ^b
