@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,9 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
@@ -30,6 +32,8 @@ public final class PathRecordingDependencyVisitor
     private final List<List<DependencyNode>> paths;
 
     private final Stack<DependencyNode> parents;
+
+    private final Map<DependencyNode, Object> visited;
 
     private final boolean excludeChildrenOfMatches;
 
@@ -59,6 +63,7 @@ public final class PathRecordingDependencyVisitor
         this.excludeChildrenOfMatches = excludeChildrenOfMatches;
         paths = new ArrayList<List<DependencyNode>>();
         parents = new Stack<DependencyNode>();
+        visited = new IdentityHashMap<DependencyNode, Object>( 128 );
     }
 
     /**
@@ -73,7 +78,7 @@ public final class PathRecordingDependencyVisitor
 
     /**
      * Gets the paths leading to nodes matching the filter that have been recorded during the graph visit. A path is
-     * given as a sequence of nodes, starting with the root node of the graph and ending with the node that matched the
+     * given as a sequence of nodes, starting with the root node of the graph and ending with a node that matched the
      * filter.
      * 
      * @return The recorded paths, never {@code null}.
@@ -97,14 +102,25 @@ public final class PathRecordingDependencyVisitor
                 path[n - i - 1] = parents.get( i );
             }
             paths.add( Arrays.asList( path ) );
+
+            if ( excludeChildrenOfMatches )
+            {
+                return false;
+            }
         }
 
-        return !( excludeChildrenOfMatches && accept );
+        if ( visited.put( node, Boolean.TRUE ) != null )
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean visitLeave( DependencyNode node )
     {
         parents.pop();
+        visited.remove( node );
 
         return true;
     }

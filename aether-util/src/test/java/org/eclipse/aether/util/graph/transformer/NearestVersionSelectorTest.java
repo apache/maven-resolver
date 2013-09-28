@@ -110,6 +110,15 @@ public class NearestVersionSelectorTest
         assertSame( root, transform( root ) );
     }
 
+    @Test( expected = UnsolvableVersionConflictException.class )
+    public void testUnsolvableRangeConflictWithUnrelatedCycle()
+        throws Exception
+    {
+        DependencyNode root = parseResource( "unsolvable-with-cycle.txt" );
+
+        transform( root );
+    }
+
     @Test
     public void testSolvableConflictBetweenHardConstraints()
         throws Exception

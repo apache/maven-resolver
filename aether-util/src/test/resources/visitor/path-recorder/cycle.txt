@@ -1,0 +1,7 @@
+gid:a:1 (a)
++- gid:b:1 (b)
+|  \- match:x:1
+\- match:x:2 (x)
+   +- ^a
+   +- ^b
+   \- ^x

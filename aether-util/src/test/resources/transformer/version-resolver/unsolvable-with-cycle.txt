@@ -1,0 +1,10 @@
+# Conflict id "a" will be resolved before "x" such that the cycle formed by "x" is still in place when processing "a".
+# So in order to report the conflicting paths to "a" the code better supports cyclic graphs. 
+
+cycle:root:1
++- cycle:x:1       (x)
+|  \- ^x
++- cycle:a:1[1]
+\- cycle:b:1
+   \- cycle:a:2[2]
+      \- cycle:x:1
