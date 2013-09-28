@@ -258,7 +258,6 @@ public class DependencyGraphParser
                     throw new IllegalArgumentException( "undefined reference " + reference );
                 }
                 node.getChildren().add( child );
-                node = child;
             }
             else
             {
