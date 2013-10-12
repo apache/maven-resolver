@@ -239,7 +239,8 @@ public class DefaultUpdateCheckManagerTest
         check = newMetadataCheck().setPolicy( RepositoryPolicy.UPDATE_POLICY_DAILY );
         manager.checkMetadata( session, check );
         assertEquals( false, check.isRequired() );
-        assertNotNull( check.getException() );
+        assertTrue( check.getException() instanceof MetadataNotFoundException );
+        assertTrue( check.getException().isFromCache() );
     }
 
     @Test
@@ -263,7 +264,7 @@ public class DefaultUpdateCheckManagerTest
     }
 
     @Test
-    public void testCheckMetadataErrorFromRepo()
+    public void testCheckMetadataErrorFromRepoCachingEnabled()
         throws Exception
     {
         metadata.getFile().delete();
@@ -282,10 +283,11 @@ public class DefaultUpdateCheckManagerTest
         assertEquals( false, check.isRequired() );
         assertTrue( check.getException() instanceof MetadataTransferException );
         assertTrue( String.valueOf( check.getException() ), check.getException().getMessage().contains( "some error" ) );
+        assertTrue( check.getException().isFromCache() );
     }
 
     @Test
-    public void testCheckMetadataErrorFromRepoNoCaching()
+    public void testCheckMetadataErrorFromRepoCachingDisabled()
         throws Exception
     {
         metadata.getFile().delete();
@@ -589,6 +591,7 @@ public class DefaultUpdateCheckManagerTest
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );
         assertTrue( check.getException() instanceof ArtifactNotFoundException );
+        assertTrue( check.getException().isFromCache() );
     }
 
     @Test
@@ -628,6 +631,7 @@ public class DefaultUpdateCheckManagerTest
         manager.checkArtifact( session, check );
         assertEquals( false, check.isRequired() );
         assertTrue( check.getException() instanceof ArtifactTransferException );
+        assertTrue( check.getException().isFromCache() );
     }
 
     @Test

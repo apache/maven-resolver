@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,6 +25,8 @@ public class ArtifactTransferException
 
     private final transient RemoteRepository repository;
 
+    private final boolean fromCache;
+
     static String getString( String prefix, RemoteRepository repository )
     {
         if ( repository == null )
@@ -39,19 +41,22 @@ public class ArtifactTransferException
 
     public ArtifactTransferException( Artifact artifact, RemoteRepository repository, String message )
     {
+        this( artifact, repository, message, false );
+    }
+
+    public ArtifactTransferException( Artifact artifact, RemoteRepository repository, String message, boolean fromCache )
+    {
         super( message );
 
         this.artifact = artifact;
         this.repository = repository;
+        this.fromCache = fromCache;
     }
 
     public ArtifactTransferException( Artifact artifact, RemoteRepository repository, Throwable cause )
     {
-        super( "Could not transfer artifact " + artifact + getString( " from/to ", repository )
+        this( artifact, repository, "Could not transfer artifact " + artifact + getString( " from/to ", repository )
             + getMessage( ": ", cause ), cause );
-
-        this.artifact = artifact;
-        this.repository = repository;
     }
 
     public ArtifactTransferException( Artifact artifact, RemoteRepository repository, String message, Throwable cause )
@@ -60,6 +65,7 @@ public class ArtifactTransferException
 
         this.artifact = artifact;
         this.repository = repository;
+        this.fromCache = false;
     }
 
     public Artifact getArtifact()
@@ -70,6 +76,11 @@ public class ArtifactTransferException
     public RemoteRepository getRepository()
     {
         return repository;
+    }
+
+    public boolean isFromCache()
+    {
+        return fromCache;
     }
 
 }

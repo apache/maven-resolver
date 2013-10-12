@@ -242,14 +242,14 @@ public class DefaultUpdateCheckManager
             return new ArtifactNotFoundException( artifact, repository, "Failure to find " + artifact + " in "
                 + repository.getUrl() + " was cached in the local repository, "
                 + "resolution will not be reattempted until the update interval of " + repository.getId()
-                + " has elapsed or updates are forced" );
+                + " has elapsed or updates are forced", true );
         }
         else
         {
             return new ArtifactTransferException( artifact, repository, "Failure to transfer " + artifact + " from "
                 + repository.getUrl() + " was cached in the local repository, "
                 + "resolution will not be reattempted until the update interval of " + repository.getId()
-                + " has elapsed or updates are forced. Original error: " + error );
+                + " has elapsed or updates are forced. Original error: " + error, true );
         }
     }
 
@@ -367,14 +367,14 @@ public class DefaultUpdateCheckManager
             return new MetadataNotFoundException( metadata, repository, "Failure to find " + metadata + " in "
                 + repository.getUrl() + " was cached in the local repository, "
                 + "resolution will not be reattempted until the update interval of " + repository.getId()
-                + " has elapsed or updates are forced" );
+                + " has elapsed or updates are forced", true );
         }
         else
         {
             return new MetadataTransferException( metadata, repository, "Failure to transfer " + metadata + " from "
                 + repository.getUrl() + " was cached in the local repository, "
                 + "resolution will not be reattempted until the update interval of " + repository.getId()
-                + " has elapsed or updates are forced. Original error: " + error );
+                + " has elapsed or updates are forced. Original error: " + error, true );
         }
     }
 
