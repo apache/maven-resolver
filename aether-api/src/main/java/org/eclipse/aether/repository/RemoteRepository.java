@@ -56,8 +56,6 @@ public final class RemoteRepository
             id = ( builder.delta & Builder.ID ) != 0 ? builder.id : builder.prototype.id;
             type = ( builder.delta & Builder.TYPE ) != 0 ? builder.type : builder.prototype.type;
             url = ( builder.delta & Builder.URL ) != 0 ? builder.url : builder.prototype.url;
-            host = getHostImpl();
-            protocol = getProtocolImpl();
             releasePolicy =
                 ( builder.delta & Builder.RELEASES ) != 0 ? builder.releasePolicy : builder.prototype.releasePolicy;
             snapshotPolicy =
@@ -83,6 +81,18 @@ public final class RemoteRepository
             authentication = builder.authentication;
             repositoryManager = builder.repositoryManager;
             mirroredRepositories = copy( builder.mirroredRepositories );
+        }
+
+        Matcher m = URL_PATTERN.matcher( url );
+        if ( m.matches() )
+        {
+            protocol = m.group( 1 );
+            String host = m.group( 5 );
+            this.host = ( host != null ) ? host : "";
+        }
+        else
+        {
+            protocol = host = "";
         }
     }
 
@@ -126,17 +136,6 @@ public final class RemoteRepository
         return protocol;
     }
 
-    public String getProtocolImpl()
-    {
-        Matcher m = URL_PATTERN.matcher( this.url );
-
-        if ( m.matches() )
-        {
-            return m.group( 1 );
-        }
-        return "";
-    }
-
     /**
      * Gets the host part from the repository's URL.
      * 
@@ -145,21 +144,6 @@ public final class RemoteRepository
     public String getHost()
     {
         return host;
-    }
-
-    private String getHostImpl()
-    {
-        Matcher m = URL_PATTERN.matcher( this.url );
-
-        if ( m.matches() )
-        {
-            String host = m.group( 5 );
-            if ( host != null )
-            {
-                return host;
-            }
-        }
-        return "";
     }
 
     /**
