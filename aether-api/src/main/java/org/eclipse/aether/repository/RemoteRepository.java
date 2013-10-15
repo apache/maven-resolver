@@ -33,6 +33,10 @@ public final class RemoteRepository
 
     private final String url;
 
+    private final String host;
+
+    private final String protocol;
+
     private final RepositoryPolicy releasePolicy;
 
     private final RepositoryPolicy snapshotPolicy;
@@ -52,6 +56,8 @@ public final class RemoteRepository
             id = ( builder.delta & Builder.ID ) != 0 ? builder.id : builder.prototype.id;
             type = ( builder.delta & Builder.TYPE ) != 0 ? builder.type : builder.prototype.type;
             url = ( builder.delta & Builder.URL ) != 0 ? builder.url : builder.prototype.url;
+            host = getHostImpl();
+            protocol = getProtocolImpl();
             releasePolicy =
                 ( builder.delta & Builder.RELEASES ) != 0 ? builder.releasePolicy : builder.prototype.releasePolicy;
             snapshotPolicy =
@@ -117,6 +123,11 @@ public final class RemoteRepository
      */
     public String getProtocol()
     {
+        return protocol;
+    }
+
+    public String getProtocolImpl()
+    {
         Matcher m = URL_PATTERN.matcher( this.url );
 
         if ( m.matches() )
@@ -132,6 +143,11 @@ public final class RemoteRepository
      * @return The host or an empty string if none, never {@code null}.
      */
     public String getHost()
+    {
+        return host;
+    }
+
+    private String getHostImpl()
     {
         Matcher m = URL_PATTERN.matcher( this.url );
 
