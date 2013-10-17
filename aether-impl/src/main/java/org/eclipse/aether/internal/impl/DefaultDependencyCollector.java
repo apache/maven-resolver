@@ -354,181 +354,152 @@ public class DefaultDependencyCollector
                           DependencySelector depSelector, DependencyManager depManager,
                           DependencyTraverser depTraverser, VersionFilter verFilter )
     {
-        nextDependency: for ( Dependency dependency : dependencies )
+        for ( Dependency dependency : dependencies )
         {
-            boolean disableVersionManagement = false;
+            processDependency( args, repositories, depSelector, depManager, depTraverser, verFilter, dependency );
+        }
+    }
 
-            List<Artifact> relocations = Collections.emptyList();
+    private void processDependency( Args args, List<RemoteRepository> repositories, DependencySelector depSelector,
+                                    DependencyManager depManager, DependencyTraverser depTraverser,
+                                    VersionFilter verFilter, Dependency dependency )
+    {
+        boolean disableVersionManagement = false;
 
-            thisDependency: while ( true )
+        List<Artifact> relocations = Collections.emptyList();
+
+        thisDependency: while ( true )
+        {
+            if ( depSelector != null && !depSelector.selectDependency( dependency ) )
             {
-                if ( depSelector != null && !depSelector.selectDependency( dependency ) )
+                return;
+            }
+
+            DependencyManagement depMngt =
+                ( depManager != null ) ? depManager.manageDependency( dependency ) : null;
+            int managedBits = 0;
+            String premanagedVersion = null;
+            String premanagedScope = null;
+            Boolean premanagedOptional = null;
+
+            if ( depMngt != null )
+            {
+                if ( depMngt.getVersion() != null && !disableVersionManagement )
                 {
-                    continue nextDependency;
+                    Artifact artifact = dependency.getArtifact();
+                    premanagedVersion = artifact.getVersion();
+                    dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
+                    managedBits |= DependencyNode.MANAGED_VERSION;
+                }
+                if ( depMngt.getProperties() != null )
+                {
+                    Artifact artifact = dependency.getArtifact();
+                    dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
+                    managedBits |= DependencyNode.MANAGED_PROPERTIES;
+                }
+                if ( depMngt.getScope() != null )
+                {
+                    premanagedScope = dependency.getScope();
+                    dependency = dependency.setScope( depMngt.getScope() );
+                    managedBits |= DependencyNode.MANAGED_SCOPE;
+                }
+                if ( depMngt.getOptional() != null )
+                {
+                    premanagedOptional = dependency.isOptional();
+                    dependency = dependency.setOptional( depMngt.getOptional() );
+                    managedBits |= DependencyNode.MANAGED_OPTIONAL;
+                }
+                if ( depMngt.getExclusions() != null )
+                {
+                    dependency = dependency.setExclusions( depMngt.getExclusions() );
+                    managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
+                }
+            }
+            disableVersionManagement = false;
+
+            boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
+
+            boolean traverse =
+                !noDescriptor && ( depTraverser == null || depTraverser.traverseDependency( dependency ) );
+
+            List<? extends Version> versions;
+            VersionRangeResult rangeResult;
+            try
+            {
+                VersionRangeRequest rangeRequest = new VersionRangeRequest();
+                rangeRequest.setArtifact( dependency.getArtifact() );
+                rangeRequest.setRepositories( repositories );
+                rangeRequest.setRequestContext( args.result.getRequest().getRequestContext() );
+                rangeRequest.setTrace( args.trace );
+
+                Object key = args.pool.toKey( rangeRequest );
+                rangeResult = args.pool.getConstraint( key, rangeRequest );
+                if ( rangeResult == null )
+                {
+                    rangeResult = versionRangeResolver.resolveVersionRange( args.session, rangeRequest );
+                    args.pool.putConstraint( key, rangeResult );
                 }
 
-                DependencyManagement depMngt =
-                    ( depManager != null ) ? depManager.manageDependency( dependency ) : null;
-                int managedBits = 0;
-                String premanagedVersion = null;
-                String premanagedScope = null;
-                Boolean premanagedOptional = null;
+                versions = filterVersions( dependency, rangeResult, verFilter, args.versionContext );
+            }
+            catch ( VersionRangeResolutionException e )
+            {
+                addException( args, dependency, e );
+                return;
+            }
 
-                if ( depMngt != null )
+            for ( Version version : versions )
+            {
+                Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
+                Dependency d = dependency.setArtifact( originalArtifact );
+
+                ArtifactDescriptorResult descriptorResult;
                 {
-                    if ( depMngt.getVersion() != null && !disableVersionManagement )
+                    ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+                    descriptorRequest.setArtifact( d.getArtifact() );
+                    descriptorRequest.setRepositories( repositories );
+                    descriptorRequest.setRequestContext( args.result.getRequest().getRequestContext() );
+                    descriptorRequest.setTrace( args.trace );
+
+                    if ( noDescriptor )
                     {
-                        Artifact artifact = dependency.getArtifact();
-                        premanagedVersion = artifact.getVersion();
-                        dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
-                        managedBits |= DependencyNode.MANAGED_VERSION;
+                        descriptorResult = new ArtifactDescriptorResult( descriptorRequest );
                     }
-                    if ( depMngt.getProperties() != null )
+                    else
                     {
-                        Artifact artifact = dependency.getArtifact();
-                        dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
-                        managedBits |= DependencyNode.MANAGED_PROPERTIES;
-                    }
-                    if ( depMngt.getScope() != null )
-                    {
-                        premanagedScope = dependency.getScope();
-                        dependency = dependency.setScope( depMngt.getScope() );
-                        managedBits |= DependencyNode.MANAGED_SCOPE;
-                    }
-                    if ( depMngt.getOptional() != null )
-                    {
-                        premanagedOptional = dependency.isOptional();
-                        dependency = dependency.setOptional( depMngt.getOptional() );
-                        managedBits |= DependencyNode.MANAGED_OPTIONAL;
-                    }
-                    if ( depMngt.getExclusions() != null )
-                    {
-                        dependency = dependency.setExclusions( depMngt.getExclusions() );
-                        managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
-                    }
-                }
-                disableVersionManagement = false;
-
-                boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
-
-                boolean traverse =
-                    !noDescriptor && ( depTraverser == null || depTraverser.traverseDependency( dependency ) );
-
-                List<? extends Version> versions;
-                VersionRangeResult rangeResult;
-                try
-                {
-                    VersionRangeRequest rangeRequest = new VersionRangeRequest();
-                    rangeRequest.setArtifact( dependency.getArtifact() );
-                    rangeRequest.setRepositories( repositories );
-                    rangeRequest.setRequestContext( args.result.getRequest().getRequestContext() );
-                    rangeRequest.setTrace( args.trace );
-
-                    Object key = args.pool.toKey( rangeRequest );
-                    rangeResult = args.pool.getConstraint( key, rangeRequest );
-                    if ( rangeResult == null )
-                    {
-                        rangeResult = versionRangeResolver.resolveVersionRange( args.session, rangeRequest );
-                        args.pool.putConstraint( key, rangeResult );
-                    }
-
-                    versions = filterVersions( dependency, rangeResult, verFilter, args.versionContext );
-                }
-                catch ( VersionRangeResolutionException e )
-                {
-                    addException( args, dependency, e );
-                    continue nextDependency;
-                }
-
-                for ( Version version : versions )
-                {
-                    Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
-                    Dependency d = dependency.setArtifact( originalArtifact );
-
-                    ArtifactDescriptorResult descriptorResult;
-                    {
-                        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-                        descriptorRequest.setArtifact( d.getArtifact() );
-                        descriptorRequest.setRepositories( repositories );
-                        descriptorRequest.setRequestContext( args.result.getRequest().getRequestContext() );
-                        descriptorRequest.setTrace( args.trace );
-
-                        if ( noDescriptor )
+                        Object key = args.pool.toKey( descriptorRequest );
+                        descriptorResult = args.pool.getDescriptor( key, descriptorRequest );
+                        if ( descriptorResult == null )
                         {
-                            descriptorResult = new ArtifactDescriptorResult( descriptorRequest );
-                        }
-                        else
-                        {
-                            Object key = args.pool.toKey( descriptorRequest );
-                            descriptorResult = args.pool.getDescriptor( key, descriptorRequest );
-                            if ( descriptorResult == null )
+                            try
                             {
-                                try
-                                {
-                                    descriptorResult =
-                                        descriptorReader.readArtifactDescriptor( args.session, descriptorRequest );
-                                    args.pool.putDescriptor( key, descriptorResult );
-                                }
-                                catch ( ArtifactDescriptorException e )
-                                {
-                                    addException( args, d, e );
-                                    args.pool.putDescriptor( key, e );
-                                    continue;
-                                }
+                                descriptorResult =
+                                    descriptorReader.readArtifactDescriptor( args.session, descriptorRequest );
+                                args.pool.putDescriptor( key, descriptorResult );
                             }
-                            else if ( descriptorResult == DataPool.NO_DESCRIPTOR )
+                            catch ( ArtifactDescriptorException e )
                             {
+                                addException( args, d, e );
+                                args.pool.putDescriptor( key, e );
                                 continue;
                             }
                         }
-                    }
-
-                    d = d.setArtifact( descriptorResult.getArtifact() );
-
-                    DependencyNode node = args.nodes.top();
-
-                    DependencyNode cycleNode = args.nodes.find( d.getArtifact() );
-                    if ( cycleNode != null )
-                    {
-                        DefaultDependencyNode child = new DefaultDependencyNode( d );
-                        child.setChildren( cycleNode.getChildren() );
-                        child.setManagedBits( managedBits );
-                        if ( args.premanagedState )
+                        else if ( descriptorResult == DataPool.NO_DESCRIPTOR )
                         {
-                            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
-                            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
-                            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+                            continue;
                         }
-                        child.setRelocations( relocations );
-                        child.setVersionConstraint( rangeResult.getVersionConstraint() );
-                        child.setVersion( version );
-                        child.setAliases( descriptorResult.getAliases() );
-                        child.setRepositories( cycleNode.getRepositories() );
-                        child.setRequestContext( cycleNode.getRequestContext() );
-
-                        node.getChildren().add( child );
-
-                        continue;
                     }
+                }
 
-                    if ( !descriptorResult.getRelocations().isEmpty() )
-                    {
-                        relocations = descriptorResult.getRelocations();
+                d = d.setArtifact( descriptorResult.getArtifact() );
 
-                        disableVersionManagement =
-                            originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
-                                && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
+                DependencyNode node = args.nodes.top();
 
-                        dependency = d;
-                        continue thisDependency;
-                    }
-
-                    d = args.pool.intern( d.setArtifact( args.pool.intern( d.getArtifact() ) ) );
-
-                    List<RemoteRepository> repos =
-                        getRemoteRepositories( rangeResult.getRepository( version ), repositories );
-
+                DependencyNode cycleNode = args.nodes.find( d.getArtifact() );
+                if ( cycleNode != null )
+                {
                     DefaultDependencyNode child = new DefaultDependencyNode( d );
+                    child.setChildren( cycleNode.getChildren() );
                     child.setManagedBits( managedBits );
                     if ( args.premanagedState )
                     {
@@ -540,63 +511,99 @@ public class DefaultDependencyCollector
                     child.setVersionConstraint( rangeResult.getVersionConstraint() );
                     child.setVersion( version );
                     child.setAliases( descriptorResult.getAliases() );
-                    child.setRepositories( repos );
-                    child.setRequestContext( args.result.getRequest().getRequestContext() );
+                    child.setRepositories( cycleNode.getRepositories() );
+                    child.setRequestContext( cycleNode.getRequestContext() );
 
                     node.getChildren().add( child );
 
-                    boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
-                    if ( recurse )
-                    {
-                        DefaultDependencyCollectionContext context = args.collectionContext;
-                        context.set( d, descriptorResult.getManagedDependencies() );
-
-                        DependencySelector childSelector =
-                            ( depSelector != null ) ? depSelector.deriveChildSelector( context ) : null;
-                        DependencyManager childManager =
-                            ( depManager != null ) ? depManager.deriveChildManager( context ) : null;
-                        DependencyTraverser childTraverser =
-                            ( depTraverser != null ) ? depTraverser.deriveChildTraverser( context ) : null;
-                        VersionFilter childFilter =
-                            ( verFilter != null ) ? verFilter.deriveChildFilter( context ) : null;
-
-                        List<RemoteRepository> childRepos = null;
-                        if ( args.ignoreRepos )
-                        {
-                            childRepos = repositories;
-                        }
-                        else
-                        {
-                            childRepos =
-                                remoteRepositoryManager.aggregateRepositories( args.session, repositories,
-                                                                               descriptorResult.getRepositories(), true );
-                        }
-
-                        Object key =
-                            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser,
-                                             childFilter );
-
-                        List<DependencyNode> children = args.pool.getChildren( key );
-                        if ( children == null )
-                        {
-                            args.pool.putChildren( key, child.getChildren() );
-
-                            args.nodes.push( child );
-
-                            process( args, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
-                                     childTraverser, childFilter );
-
-                            args.nodes.pop();
-                        }
-                        else
-                        {
-                            child.setChildren( children );
-                        }
-                    }
+                    continue;
                 }
 
-                break;
+                if ( !descriptorResult.getRelocations().isEmpty() )
+                {
+                    relocations = descriptorResult.getRelocations();
+
+                    disableVersionManagement =
+                        originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
+                            && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
+
+                    dependency = d;
+                    continue thisDependency;
+                }
+
+                d = args.pool.intern( d.setArtifact( args.pool.intern( d.getArtifact() ) ) );
+
+                List<RemoteRepository> repos =
+                    getRemoteRepositories( rangeResult.getRepository( version ), repositories );
+
+                DefaultDependencyNode child = new DefaultDependencyNode( d );
+                child.setManagedBits( managedBits );
+                if ( args.premanagedState )
+                {
+                    child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
+                    child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
+                    child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+                }
+                child.setRelocations( relocations );
+                child.setVersionConstraint( rangeResult.getVersionConstraint() );
+                child.setVersion( version );
+                child.setAliases( descriptorResult.getAliases() );
+                child.setRepositories( repos );
+                child.setRequestContext( args.result.getRequest().getRequestContext() );
+
+                node.getChildren().add( child );
+
+                boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
+                if ( recurse )
+                {
+                    DefaultDependencyCollectionContext context = args.collectionContext;
+                    context.set( d, descriptorResult.getManagedDependencies() );
+
+                    DependencySelector childSelector =
+                        ( depSelector != null ) ? depSelector.deriveChildSelector( context ) : null;
+                    DependencyManager childManager =
+                        ( depManager != null ) ? depManager.deriveChildManager( context ) : null;
+                    DependencyTraverser childTraverser =
+                        ( depTraverser != null ) ? depTraverser.deriveChildTraverser( context ) : null;
+                    VersionFilter childFilter =
+                        ( verFilter != null ) ? verFilter.deriveChildFilter( context ) : null;
+
+                    List<RemoteRepository> childRepos = null;
+                    if ( args.ignoreRepos )
+                    {
+                        childRepos = repositories;
+                    }
+                    else
+                    {
+                        childRepos =
+                            remoteRepositoryManager.aggregateRepositories( args.session, repositories,
+                                                                           descriptorResult.getRepositories(), true );
+                    }
+
+                    Object key =
+                        args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser,
+                                         childFilter );
+
+                    List<DependencyNode> children = args.pool.getChildren( key );
+                    if ( children == null )
+                    {
+                        args.pool.putChildren( key, child.getChildren() );
+
+                        args.nodes.push( child );
+
+                        process( args, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+                                 childTraverser, childFilter );
+
+                        args.nodes.pop();
+                    }
+                    else
+                    {
+                        child.setChildren( children );
+                    }
+                }
             }
+
+            break;
         }
     }
 
