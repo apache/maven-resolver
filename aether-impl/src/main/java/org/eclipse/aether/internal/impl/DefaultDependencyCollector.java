@@ -375,48 +375,9 @@ public class DefaultDependencyCollector
                 return;
             }
 
-            DependencyManagement depMngt =
-                ( depManager != null ) ? depManager.manageDependency( dependency ) : null;
-            int managedBits = 0;
-            String premanagedVersion = null;
-            String premanagedScope = null;
-            Boolean premanagedOptional = null;
-
-            if ( depMngt != null )
-            {
-                if ( depMngt.getVersion() != null && !disableVersionManagement )
-                {
-                    Artifact artifact = dependency.getArtifact();
-                    premanagedVersion = artifact.getVersion();
-                    dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
-                    managedBits |= DependencyNode.MANAGED_VERSION;
-                }
-                if ( depMngt.getProperties() != null )
-                {
-                    Artifact artifact = dependency.getArtifact();
-                    dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
-                    managedBits |= DependencyNode.MANAGED_PROPERTIES;
-                }
-                if ( depMngt.getScope() != null )
-                {
-                    premanagedScope = dependency.getScope();
-                    dependency = dependency.setScope( depMngt.getScope() );
-                    managedBits |= DependencyNode.MANAGED_SCOPE;
-                }
-                if ( depMngt.getOptional() != null )
-                {
-                    premanagedOptional = dependency.isOptional();
-                    dependency = dependency.setOptional( depMngt.getOptional() );
-                    managedBits |= DependencyNode.MANAGED_OPTIONAL;
-                }
-                if ( depMngt.getExclusions() != null )
-                {
-                    dependency = dependency.setExclusions( depMngt.getExclusions() );
-                    managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
-                }
-            }
-            disableVersionManagement = false;
-
+            PremanagedDepency preManaged =
+                PremanagedDepency.create( depManager, dependency, disableVersionManagement, args.premanagedState);
+            dependency = preManaged.managedDependency;
             boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
 
             boolean traverse =
@@ -500,13 +461,7 @@ public class DefaultDependencyCollector
                 {
                     DefaultDependencyNode child = new DefaultDependencyNode( d );
                     child.setChildren( cycleNode.getChildren() );
-                    child.setManagedBits( managedBits );
-                    if ( args.premanagedState )
-                    {
-                        child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
-                        child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
-                        child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
-                    }
+                    preManaged.applyTo( child );
                     child.setRelocations( relocations );
                     child.setVersionConstraint( rangeResult.getVersionConstraint() );
                     child.setVersion( version );
@@ -537,13 +492,7 @@ public class DefaultDependencyCollector
                     getRemoteRepositories( rangeResult.getRepository( version ), repositories );
 
                 DefaultDependencyNode child = new DefaultDependencyNode( d );
-                child.setManagedBits( managedBits );
-                if ( args.premanagedState )
-                {
-                    child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
-                    child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
-                    child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
-                }
+                preManaged.applyTo( child );
                 child.setRelocations( relocations );
                 child.setVersionConstraint( rangeResult.getVersionConstraint() );
                 child.setVersion( version );
@@ -736,5 +685,93 @@ public class DefaultDependencyCollector
         }
 
     }
+
+    static class PremanagedDepency
+    {
+        final String premanagedVersion;
+
+        final String premanagedScope;
+
+        final Boolean premanagedOptional;
+
+        final int managedBits;
+
+        final Dependency managedDependency;
+
+        final boolean premanagedState;
+
+        PremanagedDepency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
+                           int managedBits, Dependency managedDependency, boolean premanagedState )
+        {
+            this.premanagedVersion = premanagedVersion;
+            this.premanagedScope = premanagedScope;
+            this.premanagedOptional = premanagedOptional;
+            this.managedBits = managedBits;
+            this.managedDependency = managedDependency;
+            this.premanagedState = premanagedState;
+        }
+
+        static PremanagedDepency create( DependencyManager depManager, Dependency dependency,
+                                         boolean disableVersionManagement, boolean premanagedState )
+        {
+            DependencyManagement depMngt = depManager != null ? depManager.manageDependency( dependency ) : null;
+
+            int managedBits = 0;
+            String premanagedVersion = null;
+            String premanagedScope = null;
+            Boolean premanagedOptional = null;
+
+            if ( depMngt != null )
+            {
+                if ( depMngt.getVersion() != null && !disableVersionManagement )
+                {
+                    Artifact artifact = dependency.getArtifact();
+                    premanagedVersion = artifact.getVersion();
+                    dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
+                    managedBits |= DependencyNode.MANAGED_VERSION;
+                }
+                if ( depMngt.getProperties() != null )
+                {
+                    Artifact artifact = dependency.getArtifact();
+                    dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
+                    managedBits |= DependencyNode.MANAGED_PROPERTIES;
+                }
+                if ( depMngt.getScope() != null )
+                {
+                    premanagedScope = dependency.getScope();
+                    dependency = dependency.setScope( depMngt.getScope() );
+                    managedBits |= DependencyNode.MANAGED_SCOPE;
+                }
+                if ( depMngt.getOptional() != null )
+                {
+                    premanagedOptional = dependency.isOptional();
+                    dependency = dependency.setOptional( depMngt.getOptional() );
+                    managedBits |= DependencyNode.MANAGED_OPTIONAL;
+                }
+                if ( depMngt.getExclusions() != null )
+                {
+                    dependency = dependency.setExclusions( depMngt.getExclusions() );
+                    managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
+                }
+            }
+            return new PremanagedDepency( premanagedVersion, premanagedScope, premanagedOptional, managedBits,
+                                          dependency, premanagedState );
+
+        }
+
+        public void applyTo( DefaultDependencyNode child )
+        {
+            child.setManagedBits(  managedBits );
+            if ( premanagedState )
+            {
+                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
+                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
+                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+            }
+
+        }
+    }
+
+
 
 }
