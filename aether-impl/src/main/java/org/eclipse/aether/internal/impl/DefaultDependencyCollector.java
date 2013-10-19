@@ -259,7 +259,7 @@ public class DefaultDependencyCollector
             DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
 
             Args args = new Args( session, trace, pool, nodes, context, versionContext, request );
-            Results results = new Results( result, session, trace, pool, context, versionContext );
+            Results results = new Results( result, session );
 
             process( args, results, dependencies, repositories,
                      ( depSelector != null ) ? depSelector.deriveChildSelector( context ) : null,
@@ -371,8 +371,6 @@ public class DefaultDependencyCollector
         boolean disableVersionManagement = false;
         processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter, dependency,
                            relocations, disableVersionManagement );
-
-
     }
 
     private void processDependency( Args args, Results results, List<RemoteRepository> repositories,
@@ -386,8 +384,8 @@ public class DefaultDependencyCollector
             return;
         }
 
-        PremanagedDepency preManaged =
-            PremanagedDepency.create( depManager, dependency, disableVersionManagement, args.premanagedState );
+        PremanagedDependency preManaged =
+            PremanagedDependency.create( depManager, dependency, disableVersionManagement, args.premanagedState );
         dependency = preManaged.managedDependency;
 
         boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
@@ -510,7 +508,7 @@ public class DefaultDependencyCollector
         }
     }
 
-    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations, PremanagedDepency preManaged,
+    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations, PremanagedDependency preManaged,
                                                                VersionRangeResult rangeResult, Version version,
                                                                Dependency d, ArtifactDescriptorResult descriptorResult,
                                                                List<RemoteRepository> repos, String requestContext )
@@ -526,7 +524,7 @@ public class DefaultDependencyCollector
         return child;
     }
 
-    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations, PremanagedDepency preManaged,
+    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations, PremanagedDependency preManaged,
                                                                VersionRangeResult rangeResult, Version version,
                                                                Dependency d, ArtifactDescriptorResult descriptorResult,
                                                                DependencyNode cycleNode )
@@ -713,9 +711,7 @@ public class DefaultDependencyCollector
 
         String errorPath;
 
-        public Results( CollectResult result, RepositorySystemSession session, RequestTrace trace, DataPool pool,
-                        DefaultDependencyCollectionContext collectionContext,
-                        DefaultVersionFilterContext versionContext )
+        public Results( CollectResult result, RepositorySystemSession session )
         {
             this.result = result;
             this.maxExceptions = ConfigUtils.getInteger( session, 50, CONFIG_PROP_MAX_EXCEPTIONS );
@@ -753,7 +749,7 @@ public class DefaultDependencyCollector
 
     }
 
-    static class PremanagedDepency
+    static class PremanagedDependency
     {
         final String premanagedVersion;
 
@@ -767,8 +763,8 @@ public class DefaultDependencyCollector
 
         final boolean premanagedState;
 
-        PremanagedDepency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
-                           int managedBits, Dependency managedDependency, boolean premanagedState )
+        PremanagedDependency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
+                              int managedBits, Dependency managedDependency, boolean premanagedState )
         {
             this.premanagedVersion = premanagedVersion;
             this.premanagedScope = premanagedScope;
@@ -778,8 +774,8 @@ public class DefaultDependencyCollector
             this.premanagedState = premanagedState;
         }
 
-        static PremanagedDepency create( DependencyManager depManager, Dependency dependency,
-                                         boolean disableVersionManagement, boolean premanagedState )
+        static PremanagedDependency create( DependencyManager depManager, Dependency dependency,
+                                            boolean disableVersionManagement, boolean premanagedState )
         {
             DependencyManagement depMngt = depManager != null ? depManager.manageDependency( dependency ) : null;
 
@@ -821,9 +817,8 @@ public class DefaultDependencyCollector
                     managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
                 }
             }
-            return new PremanagedDepency( premanagedVersion, premanagedScope, premanagedOptional, managedBits,
-                                          dependency, premanagedState );
-
+            return new PremanagedDependency( premanagedVersion, premanagedScope, premanagedOptional, managedBits,
+                                             dependency, premanagedState );
         }
 
         public void applyTo( DefaultDependencyNode child )
@@ -835,7 +830,7 @@ public class DefaultDependencyCollector
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
             }
-
         }
     }
+
 }
