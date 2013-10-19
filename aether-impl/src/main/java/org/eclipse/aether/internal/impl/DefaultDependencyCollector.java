@@ -136,7 +136,7 @@ public class DefaultDependencyCollector
         {
             throw new IllegalArgumentException( "artifact descriptor reader has not been specified" );
         }
-        this.descriptorReader = artifactDescriptorReader;
+        descriptorReader = artifactDescriptorReader;
         return this;
     }
 
@@ -172,7 +172,7 @@ public class DefaultDependencyCollector
         Map<String, Object> stats = logger.isDebugEnabled() ? new LinkedHashMap<String, Object>() : null;
         long time1 = System.currentTimeMillis();
 
-        DefaultDependencyNode node = null;
+        DefaultDependencyNode node;
         if ( root != null )
         {
             List<? extends Version> versions;
@@ -262,10 +262,10 @@ public class DefaultDependencyCollector
             Results results = new Results( result, session );
 
             process( args, results, dependencies, repositories,
-                     ( depSelector != null ) ? depSelector.deriveChildSelector( context ) : null,
-                     ( depManager != null ) ? depManager.deriveChildManager( context ) : null,
-                     ( depTraverser != null ) ? depTraverser.deriveChildTraverser( context ) : null,
-                     ( verFilter != null ) ? verFilter.deriveChildFilter( context ) : null );
+                     depSelector != null ? depSelector.deriveChildSelector( context ) : null,
+                     depManager != null ? depManager.deriveChildManager( context ) : null,
+                     depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null,
+                     verFilter != null ? verFilter.deriveChildFilter( context ) : null );
 
             errorPath = results.errorPath;
         }
@@ -308,7 +308,7 @@ public class DefaultDependencyCollector
         return result;
     }
 
-    private RepositorySystemSession optimizeSession( RepositorySystemSession session )
+    private static RepositorySystemSession optimizeSession( RepositorySystemSession session )
     {
         DefaultRepositorySystemSession optimized = new DefaultRepositorySystemSession( session );
         optimized.setArtifactTypeRegistry( CachingArtifactTypeRegistry.newInstance( session ) );
@@ -328,8 +328,9 @@ public class DefaultDependencyCollector
         }
         else
         {
-            result = new ArrayList<Dependency>( dominant.size() + recessive.size() );
-            Collection<String> ids = new HashSet<String>();
+            int initialCapacity = dominant.size() + recessive.size();
+            result = new ArrayList<Dependency>( initialCapacity );
+            Collection<String> ids = new HashSet<String>(initialCapacity, 1.0f);
             for ( Dependency dependency : dominant )
             {
                 ids.add( getId( dependency.getArtifact() ) );
@@ -346,7 +347,7 @@ public class DefaultDependencyCollector
         return result;
     }
 
-    private String getId( Artifact a )
+    private static String getId( Artifact a )
     {
         return a.getGroupId() + ':' + a.getArtifactId() + ':' + a.getClassifier() + ':' + a.getExtension();
     }
