@@ -415,19 +415,11 @@ public class DefaultDependencyCollector
 
             ArtifactDescriptorRequest descriptorRequest = createArtifactDescriptorRequest( args, repositories, d );
 
-            final ArtifactDescriptorResult descriptorResult;
-            if ( noDescriptor )
+            final ArtifactDescriptorResult descriptorResult =
+                getArtifactDescriptorResult( args, results, noDescriptor, d, descriptorRequest );
+            if ( descriptorResult == null )
             {
-                descriptorResult = new ArtifactDescriptorResult( descriptorRequest );
-            }
-            else
-            {
-                descriptorResult =
-                    resolveCachedArtifactDescriptor( args.pool, descriptorRequest, args.session, d, results, args );
-                if ( descriptorResult == null )
-                {
-                    continue;
-                }
+                continue;
             }
 
             d = d.setArtifact( descriptorResult.getArtifact() );
@@ -506,6 +498,23 @@ public class DefaultDependencyCollector
                 }
             }
         }
+    }
+
+    private ArtifactDescriptorResult getArtifactDescriptorResult( Args args, Results results, boolean noDescriptor,
+                                                                  Dependency d,
+                                                                  ArtifactDescriptorRequest descriptorRequest )
+    {
+        ArtifactDescriptorResult descriptorResult;
+        if ( noDescriptor )
+        {
+            descriptorResult = new ArtifactDescriptorResult( descriptorRequest );
+        }
+        else
+        {
+            descriptorResult =
+                resolveCachedArtifactDescriptor( args.pool, descriptorRequest, args.session, d, results, args );
+        }
+        return descriptorResult;
     }
 
     private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations, PremanagedDependency preManaged,
