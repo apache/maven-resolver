@@ -419,7 +419,6 @@ public class DefaultDependencyCollector
                 getArtifactDescriptorResult( args, results, noDescriptor, d, descriptorRequest );
             if ( descriptorResult != null )
             {
-
                 d = d.setArtifact( descriptorResult.getArtifact() );
 
                 DependencyNode node = args.nodes.top();
@@ -433,20 +432,18 @@ public class DefaultDependencyCollector
 
                     node.getChildren().add( child );
                 }
+                else if ( !descriptorResult.getRelocations().isEmpty() )
+                {
+                    boolean disableVersionManagementSubsequently =
+                        originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
+                            && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
+
+                    processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter, d,
+                                       descriptorResult.getRelocations(), disableVersionManagementSubsequently );
+                    return;
+                }
                 else
                 {
-                    if ( !descriptorResult.getRelocations().isEmpty() )
-                    {
-                        boolean disableVersionManagementSubsequently =
-                            originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
-                                && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
-
-                        processDependency( args, results, repositories, depSelector, depManager, depTraverser,
-                                           verFilter, d, descriptorResult.getRelocations(),
-                                           disableVersionManagementSubsequently );
-                        return;
-                    }
-
                     d = args.pool.intern( d.setArtifact( args.pool.intern( d.getArtifact() ) ) );
 
                     List<RemoteRepository> repos =
@@ -477,12 +474,9 @@ public class DefaultDependencyCollector
         DefaultDependencyCollectionContext context = args.collectionContext;
         context.set( d, descriptorResult.getManagedDependencies() );
 
-        DependencySelector childSelector =
-            depSelector != null ? depSelector.deriveChildSelector( context ) : null;
-        DependencyManager childManager =
-            depManager != null ? depManager.deriveChildManager( context ) : null;
-        DependencyTraverser childTraverser =
-            depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null;
+        DependencySelector childSelector = depSelector != null ? depSelector.deriveChildSelector( context ) : null;
+        DependencyManager childManager = depManager != null ? depManager.deriveChildManager( context ) : null;
+        DependencyTraverser childTraverser = depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null;
         VersionFilter childFilter = verFilter != null ? verFilter.deriveChildFilter( context ) : null;
 
         final List<RemoteRepository> childRepos = args.ignoreRepos
@@ -491,8 +485,7 @@ public class DefaultDependencyCollector
                                                              descriptorResult.getRepositories(), true );
 
         Object key =
-            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser,
-                             childFilter );
+            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter );
 
         List<DependencyNode> children = args.pool.getChildren( key );
         if ( children == null )
@@ -501,8 +494,8 @@ public class DefaultDependencyCollector
 
             args.nodes.push( child );
 
-            process( args, results, descriptorResult.getDependencies(), childRepos, childSelector,
-                     childManager, childTraverser, childFilter );
+            process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+                     childTraverser, childFilter );
 
             args.nodes.pop();
         }
