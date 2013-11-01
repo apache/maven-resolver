@@ -146,9 +146,9 @@ public class DefaultDependencyCollectorTest
         try
         {
             DependencyNode node = root;
-            for ( int i = 0; i < coords.length; i++ )
+            for ( int coord : coords )
             {
-                node = node.getChildren().get( coords[i] );
+                node = node.getChildren().get( coord );
             }
 
             return node;

@@ -77,9 +77,9 @@ public class JavaScopeSelectorTest
 
     private DependencyNode path( DependencyNode node, int... coords )
     {
-        for ( int i = 0; i < coords.length; i++ )
+        for ( int coord : coords )
         {
-            node = node.getChildren().get( coords[i] );
+            node = node.getChildren().get( coord );
         }
         return node;
     }

@@ -71,7 +71,7 @@ final class GenericVersion
             if ( !Boolean.valueOf( item.isNumber() ).equals( number ) )
             {
                 end = i;
-                number = Boolean.valueOf( item.isNumber() );
+                number = item.isNumber();
             }
             if ( end == i && ( i == items.size() - 1 || items.get( i - 1 ).isNumber() == item.isNumber() )
                 && item.compareTo( null ) == 0 )
@@ -111,11 +111,11 @@ final class GenericVersion
             {
                 if ( number == thisItem.isNumber() )
                 {
-                    return comparePadding( these, index, Boolean.valueOf( number ) );
+                    return comparePadding( these, index, number );
                 }
                 else
                 {
-                    return -comparePadding( those, index, Boolean.valueOf( number ) );
+                    return -comparePadding( those, index, number );
                 }
             }
             else
@@ -136,7 +136,7 @@ final class GenericVersion
         for ( int i = index; i < items.length; i++ )
         {
             Item item = items[i];
-            if ( number != null && number.booleanValue() != item.isNumber() )
+            if ( number != null && number != item.isNumber() )
             {
                 break;
             }
@@ -170,11 +170,11 @@ final class GenericVersion
     static final class Tokenizer
     {
 
-        private static final Integer QUALIFIER_ALPHA = Integer.valueOf( -5 );
+        private static final Integer QUALIFIER_ALPHA = -5;
 
-        private static final Integer QUALIFIER_BETA = Integer.valueOf( -4 );
+        private static final Integer QUALIFIER_BETA = -4;
 
-        private static final Integer QUALIFIER_MILESTONE = Integer.valueOf( -3 );
+        private static final Integer QUALIFIER_MILESTONE = -3;
 
         private static final Map<String, Integer> QUALIFIERS;
 
@@ -184,13 +184,13 @@ final class GenericVersion
             QUALIFIERS.put( "alpha", QUALIFIER_ALPHA );
             QUALIFIERS.put( "beta", QUALIFIER_BETA );
             QUALIFIERS.put( "milestone", QUALIFIER_MILESTONE );
-            QUALIFIERS.put( "cr", Integer.valueOf( -2 ) );
-            QUALIFIERS.put( "rc", Integer.valueOf( -2 ) );
-            QUALIFIERS.put( "snapshot", Integer.valueOf( -1 ) );
-            QUALIFIERS.put( "ga", Integer.valueOf( 0 ) );
-            QUALIFIERS.put( "final", Integer.valueOf( 0 ) );
-            QUALIFIERS.put( "", Integer.valueOf( 0 ) );
-            QUALIFIERS.put( "sp", Integer.valueOf( 1 ) );
+            QUALIFIERS.put( "cr", -2 );
+            QUALIFIERS.put( "rc", -2 );
+            QUALIFIERS.put( "snapshot", -1 );
+            QUALIFIERS.put( "ga", 0 );
+            QUALIFIERS.put( "final", 0 );
+            QUALIFIERS.put( "", 0 );
+            QUALIFIERS.put( "sp", 1 );
         }
 
         private final String version;
@@ -291,7 +291,7 @@ final class GenericVersion
                 {
                     if ( token.length() < 10 )
                     {
-                        return new Item( Item.KIND_INT, Integer.valueOf( Integer.parseInt( token ) ) );
+                        return new Item( Item.KIND_INT, Integer.parseInt( token ) );
                     }
                     else
                     {
@@ -397,7 +397,7 @@ final class GenericVersion
                         break;
                     case KIND_INT:
                     case KIND_QUALIFIER:
-                        rel = ( (Integer) value ).intValue();
+                        rel = (Integer) value;
                         break;
                     default:
                         throw new IllegalStateException( "unknown version item kind " + kind );

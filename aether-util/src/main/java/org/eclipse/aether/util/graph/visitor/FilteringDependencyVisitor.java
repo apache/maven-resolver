@@ -72,7 +72,7 @@ public final class FilteringDependencyVisitor
     {
         boolean accept = filter == null || filter.accept( node, parents );
 
-        accepts.push( Boolean.valueOf( accept ) );
+        accepts.push( accept );
 
         parents.push( node );
 
@@ -92,7 +92,7 @@ public final class FilteringDependencyVisitor
 
         Boolean accept = accepts.pop();
 
-        if ( accept.booleanValue() )
+        if ( accept )
         {
             return visitor.visitLeave( node );
         }

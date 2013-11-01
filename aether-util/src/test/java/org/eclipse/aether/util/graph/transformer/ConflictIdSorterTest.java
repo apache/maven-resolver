@@ -46,14 +46,14 @@ public class ConflictIdSorterTest
     {
         Queue<String> queue = new LinkedList<String>( sorted );
 
-        for ( int i = 0; i < ids.length; i++ )
+        for ( String id : ids )
         {
             String item = queue.poll();
-            assertNotNull( String.format( "not enough conflict groups (no match for '%s'", ids[i] ), item );
+            assertNotNull( String.format( "not enough conflict groups (no match for '%s'", id ), item );
 
-            if ( !"*".equals( ids[i] ) )
+            if ( !"*".equals( id ) )
             {
-                assertEquals( ids[i], item );
+                assertEquals( id, item );
             }
         }
 

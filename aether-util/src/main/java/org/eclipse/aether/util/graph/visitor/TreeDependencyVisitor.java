@@ -51,7 +51,7 @@ public final class TreeDependencyVisitor
     {
         boolean visited = visitedNodes.put( node, Boolean.TRUE ) != null;
 
-        visits.push( Boolean.valueOf( visited ) );
+        visits.push( visited );
 
         if ( visited )
         {
@@ -65,7 +65,7 @@ public final class TreeDependencyVisitor
     {
         Boolean visited = visits.pop();
 
-        if ( visited.booleanValue() )
+        if ( visited )
         {
             return true;
         }

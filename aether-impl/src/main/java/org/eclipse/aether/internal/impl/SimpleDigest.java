@@ -74,9 +74,9 @@ class SimpleDigest
             StringBuilder buffer = new StringBuilder( 64 );
 
             byte[] bytes = digest.digest();
-            for ( int i = 0; i < bytes.length; i++ )
+            for ( byte aByte : bytes )
             {
-                int b = bytes[i] & 0xFF;
+                int b = aByte & 0xFF;
 
                 if ( b < 0x10 )
                 {

@@ -313,7 +313,7 @@ public class DefaultMetadataResolver
                 localLastUpdate = localLastUpdates.get( localFile );
                 if ( localLastUpdate == null )
                 {
-                    localLastUpdate = Long.valueOf( localFile != null ? localFile.lastModified() : 0 );
+                    localLastUpdate = localFile != null ? localFile.lastModified() : 0;
                     localLastUpdates.put( localFile, localLastUpdate );
                 }
             }
@@ -325,7 +325,7 @@ public class DefaultMetadataResolver
             {
                 UpdateCheck<Metadata, MetadataTransferException> check =
                     new UpdateCheck<Metadata, MetadataTransferException>();
-                check.setLocalLastUpdated( ( localLastUpdate != null ) ? localLastUpdate.longValue() : 0 );
+                check.setLocalLastUpdated( ( localLastUpdate != null ) ? localLastUpdate : 0 );
                 check.setItem( metadata );
 
                 // use 'main' installation file for the check (-> use requested repository)

@@ -87,21 +87,19 @@ public final class DefaultMirrorSelector
 
         if ( repoId != null && !mirrors.isEmpty() )
         {
-            for ( int i = 0, n = mirrors.size(); i < n; i++ )
+            for ( MirrorDef mirror : mirrors )
             {
-                MirrorDef mirror = mirrors.get( i );
-                if ( repoId.equals( mirror.mirrorOfIds )
-                    && matchesType( repository.getContentType(), mirror.mirrorOfTypes ) )
+                if ( repoId.equals( mirror.mirrorOfIds ) && matchesType( repository.getContentType(),
+                                                                         mirror.mirrorOfTypes ) )
                 {
                     return mirror;
                 }
             }
 
-            for ( int i = 0, n = mirrors.size(); i < n; i++ )
+            for ( MirrorDef mirror : mirrors )
             {
-                MirrorDef mirror = mirrors.get( i );
-                if ( matchPattern( repository, mirror.mirrorOfIds )
-                    && matchesType( repository.getContentType(), mirror.mirrorOfTypes ) )
+                if ( matchPattern( repository, mirror.mirrorOfIds ) && matchesType( repository.getContentType(),
+                                                                                    mirror.mirrorOfTypes ) )
                 {
                     return mirror;
                 }

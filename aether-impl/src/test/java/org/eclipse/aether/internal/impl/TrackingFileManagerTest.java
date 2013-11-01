@@ -143,14 +143,14 @@ public class TrackingFileManagerTest
             };
         }
 
-        for ( int i = 0; i < threads.length; i++ )
+        for ( Thread thread1 : threads )
         {
-            threads[i].start();
+            thread1.start();
         }
 
-        for ( int i = 0; i < threads.length; i++ )
+        for ( Thread thread : threads )
         {
-            threads[i].join();
+            thread.join();
         }
 
         assertEquals( Collections.emptyList(), errors );

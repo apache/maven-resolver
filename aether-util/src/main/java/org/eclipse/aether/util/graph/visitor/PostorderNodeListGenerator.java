@@ -36,7 +36,7 @@ public final class PostorderNodeListGenerator
     {
         boolean visited = !setVisited( node );
 
-        visits.push( Boolean.valueOf( visited ) );
+        visits.push( visited );
 
         if ( visited )
         {
@@ -51,7 +51,7 @@ public final class PostorderNodeListGenerator
     {
         Boolean visited = visits.pop();
 
-        if ( visited.booleanValue() )
+        if ( visited )
         {
             return true;
         }

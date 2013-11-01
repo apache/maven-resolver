@@ -195,9 +195,9 @@ public final class AuthenticationDigest
     {
         byte[] bytes = digest.digest();
         StringBuilder buffer = new StringBuilder( bytes.length * 2 );
-        for ( int i = 0; i < bytes.length; i++ )
+        for ( byte aByte : bytes )
         {
-            int b = bytes[i] & 0xFF;
+            int b = aByte & 0xFF;
             if ( b < 0x10 )
             {
                 buffer.append( '0' );

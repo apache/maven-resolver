@@ -222,7 +222,7 @@ public final class ConfigUtils
 
             if ( value instanceof Boolean )
             {
-                return ( (Boolean) value ).booleanValue();
+                return (Boolean) value;
             }
             else if ( value instanceof String )
             {
