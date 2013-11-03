@@ -86,6 +86,10 @@ public interface RepositoryLayout
             {
                 throw new IllegalArgumentException( "checksum location has not been specified" );
             }
+            if ( location.isAbsolute() )
+            {
+                throw new IllegalArgumentException( "checksum location must be relative" );
+            }
         }
 
         /**
