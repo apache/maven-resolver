@@ -25,6 +25,10 @@ import java.util.Collection;
  * <p>
  * <strong>Note:</strong> While a connector itself can use multiple threads internally to performs the transfers,
  * clients must not call a connector concurrently, i.e. connectors are generally not thread-safe.
+ * 
+ * @see org.eclipse.aether.spi.connector.transport.TransporterProvider
+ * @see org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider
+ * @see org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider
  */
 public interface RepositoryConnector
     extends Closeable
