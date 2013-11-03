@@ -19,6 +19,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
@@ -50,6 +51,9 @@ public final class BasicRepositoryConnectorFactory
     private RepositoryLayoutProvider layoutProvider;
 
     @Requirement
+    private ChecksumPolicyProvider checksumPolicyProvider;
+
+    @Requirement
     private FileProcessor fileProcessor;
 
     private float priority;
@@ -66,10 +70,12 @@ public final class BasicRepositoryConnectorFactory
 
     @Inject
     BasicRepositoryConnectorFactory( TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
-                                     FileProcessor fileProcessor, LoggerFactory loggerFactory )
+                                     ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor,
+                                     LoggerFactory loggerFactory )
     {
         setTransporterProvider( transporterProvider );
         setRepositoryLayoutProvider( layoutProvider );
+        setChecksumPolicyProvider( checksumPolicyProvider );
         setFileProcessor( fileProcessor );
         setLoggerFactory( loggerFactory );
     }
@@ -79,6 +85,7 @@ public final class BasicRepositoryConnectorFactory
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setTransporterProvider( locator.getService( TransporterProvider.class ) );
         setRepositoryLayoutProvider( locator.getService( RepositoryLayoutProvider.class ) );
+        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
     }
 
@@ -133,6 +140,22 @@ public final class BasicRepositoryConnectorFactory
     }
 
     /**
+     * Sets the checksum policy provider to use for this component.
+     * 
+     * @param checksumPolicyProvider The checksum policy provider to use, must not be {@code null}.
+     * @return This component for chaining, never {@code null}.
+     */
+    public BasicRepositoryConnectorFactory setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
+    {
+        if ( checksumPolicyProvider == null )
+        {
+            throw new IllegalArgumentException( "checksum policy provider has not been specified" );
+        }
+        this.checksumPolicyProvider = checksumPolicyProvider;
+        return this;
+    }
+
+    /**
      * Sets the file processor to use for this component.
      * 
      * @param fileProcessor The file processor to use, must not be {@code null}.
@@ -168,8 +191,8 @@ public final class BasicRepositoryConnectorFactory
     public RepositoryConnector newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {
-        return new BasicRepositoryConnector( session, repository, transporterProvider, layoutProvider, fileProcessor,
-                                             logger );
+        return new BasicRepositoryConnector( session, repository, transporterProvider, layoutProvider,
+                                             checksumPolicyProvider, fileProcessor, logger );
     }
 
 }

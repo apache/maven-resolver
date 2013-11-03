@@ -29,6 +29,7 @@ import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
@@ -50,15 +51,20 @@ public class DefaultRemoteRepositoryManager
     @Requirement
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
+    @Requirement
+    private ChecksumPolicyProvider checksumPolicyProvider;
+
     public DefaultRemoteRepositoryManager()
     {
         // enables default constructor
     }
 
     @Inject
-    DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer, LoggerFactory loggerFactory )
+    DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer,
+                                    ChecksumPolicyProvider checksumPolicyProvider, LoggerFactory loggerFactory )
     {
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
+        setChecksumPolicyProvider( checksumPolicyProvider );
         setLoggerFactory( loggerFactory );
     }
 
@@ -66,6 +72,7 @@ public class DefaultRemoteRepositoryManager
     {
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
+        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
     }
 
     public DefaultRemoteRepositoryManager setLoggerFactory( LoggerFactory loggerFactory )
@@ -87,6 +94,16 @@ public class DefaultRemoteRepositoryManager
             throw new IllegalArgumentException( "update policy analyzer has not been specified" );
         }
         this.updatePolicyAnalyzer = updatePolicyAnalyzer;
+        return this;
+    }
+
+    public DefaultRemoteRepositoryManager setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
+    {
+        if ( checksumPolicyProvider == null )
+        {
+            throw new IllegalArgumentException( "checksum policy provider has not been specified" );
+        }
+        this.checksumPolicyProvider = checksumPolicyProvider;
         return this;
     }
 
@@ -282,13 +299,11 @@ public class DefaultRemoteRepositoryManager
             {
                 // use global override
             }
-            else if ( ordinalOfChecksumPolicy( policy2.getChecksumPolicy() ) < ordinalOfChecksumPolicy( policy1.getChecksumPolicy() ) )
-            {
-                checksums = policy2.getChecksumPolicy();
-            }
             else
             {
-                checksums = policy1.getChecksumPolicy();
+                checksums =
+                    checksumPolicyProvider.getEffectiveChecksumPolicy( session, policy1.getChecksumPolicy(),
+                                                                       policy2.getChecksumPolicy() );
             }
 
             String updates = session.getUpdatePolicy();
@@ -327,22 +342,6 @@ public class DefaultRemoteRepositoryManager
             }
         }
         return policy;
-    }
-
-    private int ordinalOfChecksumPolicy( String policy )
-    {
-        if ( RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( policy ) )
-        {
-            return 2;
-        }
-        else if ( RepositoryPolicy.CHECKSUM_POLICY_IGNORE.equals( policy ) )
-        {
-            return 0;
-        }
-        else
-        {
-            return 1;
-        }
     }
 
 }

@@ -16,24 +16,85 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.util.ChecksumUtils;
 
 /**
- * Calculates checksums for downloaded files.
+ * Calculates checksums for a downloaded file.
  */
 final class ChecksumCalculator
 {
 
-    private final Map<String, MessageDigest> digests;
+    static class Checksum
+    {
+        final String algorithm;
+
+        final MessageDigest digest;
+
+        Exception error;
+
+        public Checksum( String algorithm )
+        {
+            this.algorithm = algorithm;
+            MessageDigest digest = null;
+            try
+            {
+                digest = MessageDigest.getInstance( algorithm );
+            }
+            catch ( NoSuchAlgorithmException e )
+            {
+                error = e;
+            }
+            this.digest = digest;
+        }
+
+        public void update( ByteBuffer buffer )
+        {
+            if ( digest != null )
+            {
+                digest.update( buffer );
+            }
+        }
+
+        public void reset()
+        {
+            if ( digest != null )
+            {
+                digest.reset();
+                error = null;
+            }
+        }
+
+        public void error( Exception error )
+        {
+            if ( digest != null )
+            {
+                this.error = error;
+            }
+        }
+
+        public Object get()
+        {
+            if ( error != null )
+            {
+                return error;
+            }
+            return ChecksumUtils.toHexString( digest.digest() );
+        }
+
+    }
+
+    private final List<Checksum> checksums;
 
     private final File targetFile;
-
-    private Exception targetFileError;
 
     public static ChecksumCalculator newInstance( File targetFile, Collection<RepositoryLayout.Checksum> checksums )
     {
@@ -46,21 +107,14 @@ final class ChecksumCalculator
 
     private ChecksumCalculator( File targetFile, Collection<RepositoryLayout.Checksum> checksums )
     {
-        digests = new HashMap<String, MessageDigest>();
+        this.checksums = new ArrayList<Checksum>();
+        Set<String> algos = new HashSet<String>();
         for ( RepositoryLayout.Checksum checksum : checksums )
         {
             String algo = checksum.getAlgorithm();
-            try
+            if ( algos.add( algo ) )
             {
-                if ( !digests.containsKey( algo ) )
-                {
-                    MessageDigest digest = MessageDigest.getInstance( algo );
-                    digests.put( algo, digest );
-                }
-            }
-            catch ( NoSuchAlgorithmException e )
-            {
-                // treat this checksum as missing
+                this.checksums.add( new Checksum( algo ) );
             }
         }
         this.targetFile = targetFile;
@@ -68,11 +122,10 @@ final class ChecksumCalculator
 
     public void init( long dataOffset )
     {
-        for ( MessageDigest digest : digests.values() )
+        for ( Checksum checksum : checksums )
         {
-            digest.reset();
+            checksum.reset();
         }
-        targetFileError = null;
         if ( dataOffset <= 0 )
         {
             return;
@@ -83,9 +136,10 @@ final class ChecksumCalculator
             try
             {
                 long total = 0;
-                for ( byte[] buffer = new byte[32 * 1024]; total < dataOffset; )
+                ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
+                for ( byte[] array = buffer.array(); total < dataOffset; )
                 {
-                    int read = fis.read( buffer );
+                    int read = fis.read( array );
                     if ( read < 0 )
                     {
                         if ( total < dataOffset )
@@ -100,10 +154,9 @@ final class ChecksumCalculator
                     {
                         read -= total - dataOffset;
                     }
-                    for ( MessageDigest digest : digests.values() )
-                    {
-                        digest.update( buffer, 0, read );
-                    }
+                    buffer.rewind();
+                    buffer.limit( read );
+                    update( buffer );
                 }
             }
             finally
@@ -120,16 +173,19 @@ final class ChecksumCalculator
         }
         catch ( IOException e )
         {
-            targetFileError = e;
+            for ( Checksum checksum : checksums )
+            {
+                checksum.error( e );
+            }
         }
     }
 
     public void update( ByteBuffer data )
     {
-        for ( MessageDigest digest : digests.values() )
+        for ( Checksum checksum : checksums )
         {
             data.mark();
-            digest.update( data );
+            checksum.update( data );
             data.reset();
         }
     }
@@ -137,19 +193,9 @@ final class ChecksumCalculator
     public Map<String, Object> get()
     {
         Map<String, Object> results = new HashMap<String, Object>();
-        if ( targetFileError != null )
+        for ( Checksum checksum : checksums )
         {
-            for ( String algo : digests.keySet() )
-            {
-                results.put( algo, targetFileError );
-            }
-        }
-        else
-        {
-            for ( Map.Entry<String, MessageDigest> entry : digests.entrySet() )
-            {
-                results.put( entry.getKey(), ChecksumUtils.toHexString( entry.getValue().digest() ) );
-            }
+            results.put( checksum.algorithm, checksum.get() );
         }
         return results;
     }

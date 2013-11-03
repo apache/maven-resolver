@@ -28,6 +28,7 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,9 +51,11 @@ public class DefaultRemoteRepositoryManagerTest
         session.setUpdatePolicy( null );
         manager = new DefaultRemoteRepositoryManager();
         manager.setUpdatePolicyAnalyzer( new StubUpdatePolicyAnalyzer() );
+        manager.setChecksumPolicyProvider( new DefaultChecksumPolicyProvider() );
         manager.setLoggerFactory( new TestLoggerFactory() );
     }
 
+    @After
     public void teardown()
         throws Exception
     {

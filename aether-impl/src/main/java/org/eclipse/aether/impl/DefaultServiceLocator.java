@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
+import org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider;
 import org.eclipse.aether.internal.impl.DefaultDependencyCollector;
 import org.eclipse.aether.internal.impl.DefaultDeployer;
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
@@ -42,6 +43,7 @@ import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Slf4jLoggerFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
@@ -203,6 +205,7 @@ public final class DefaultServiceLocator
         addService( RepositoryLayoutProvider.class, DefaultRepositoryLayoutProvider.class );
         addService( RepositoryLayoutFactory.class, Maven2RepositoryLayoutFactory.class );
         addService( TransporterProvider.class, DefaultTransporterProvider.class );
+        addService( ChecksumPolicyProvider.class, DefaultChecksumPolicyProvider.class );
         addService( RepositoryConnectorProvider.class, DefaultRepositoryConnectorProvider.class );
         addService( RemoteRepositoryManager.class, DefaultRemoteRepositoryManager.class );
         addService( UpdateCheckManager.class, DefaultUpdateCheckManager.class );

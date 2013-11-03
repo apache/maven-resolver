@@ -17,12 +17,15 @@ import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.log.LoggerFactory;
+import org.eclipse.aether.transfer.TransferResource;
 
 /**
  */
@@ -53,10 +56,24 @@ public class PlexusSupportTest
                 return null;
             }
         };
+        ChecksumPolicyProvider checksumPolicyProvider = new ChecksumPolicyProvider()
+        {
+            public ChecksumPolicy newChecksumPolicy( RepositorySystemSession session, RemoteRepository repository,
+                                                     TransferResource resource, String policy )
+            {
+                return null;
+            }
+
+            public String getEffectiveChecksumPolicy( RepositorySystemSession session, String policy1, String policy2 )
+            {
+                return null;
+            }
+        };
         getContainer().addComponent( new TestLoggerFactory(), LoggerFactory.class, null );
         getContainer().addComponent( new TestFileProcessor(), FileProcessor.class, null );
         getContainer().addComponent( layoutProvider, RepositoryLayoutProvider.class, null );
         getContainer().addComponent( transporterProvider, TransporterProvider.class, null );
+        getContainer().addComponent( checksumPolicyProvider, ChecksumPolicyProvider.class, null );
 
         RepositoryConnectorFactory factory = lookup( RepositoryConnectorFactory.class, "basic" );
         assertNotNull( factory );
