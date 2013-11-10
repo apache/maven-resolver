@@ -434,7 +434,7 @@ final class BasicRepositoryConnector
             try
             {
                 File tmp = partFile.getFile();
-                listener.setChecksums( checksumValidator.init( tmp ) );
+                listener.setChecksumCalculator( checksumValidator.newChecksumCalculator( tmp ) );
                 for ( int firstTrial = 0, lastTrial = 1, trial = firstTrial;; trial++ )
                 {
                     boolean resume = partFile.isResume() && trial <= firstTrial;
@@ -442,7 +442,8 @@ final class BasicRepositoryConnector
                     transporter.get( task );
                     try
                     {
-                        checksumValidator.validate( smartChecksums ? task.getChecksums() : null );
+                        checksumValidator.validate( listener.getChecksums(), smartChecksums ? task.getChecksums()
+                                        : null );
                         break;
                     }
                     catch ( ChecksumFailureException e )

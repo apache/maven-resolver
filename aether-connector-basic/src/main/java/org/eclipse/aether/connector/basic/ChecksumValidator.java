@@ -14,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -58,8 +57,6 @@ final class ChecksumValidator
 
     private final Map<File, Object> checksumFiles;
 
-    private ChecksumCalculator checksumCalculator;
-
     public ChecksumValidator( Logger logger, File dataFile, FileProcessor fileProcessor,
                               ChecksumFetcher checksumFetcher, ChecksumPolicy checksumPolicy,
                               Collection<Checksum> checksums )
@@ -74,24 +71,22 @@ final class ChecksumValidator
         checksumFiles = new HashMap<File, Object>();
     }
 
-    public ChecksumCalculator init( File targetFile )
+    public ChecksumCalculator newChecksumCalculator( File targetFile )
     {
         if ( checksumPolicy != null )
         {
-            checksumCalculator = ChecksumCalculator.newInstance( targetFile, checksums );
+            return ChecksumCalculator.newInstance( targetFile, checksums );
         }
-        return checksumCalculator;
+        return null;
     }
 
-    public void validate( Map<String, String> inlinedChecksums )
+    public void validate( Map<String, ?> actualChecksums, Map<String, ?> inlinedChecksums )
         throws ChecksumFailureException
     {
         if ( checksumPolicy == null )
         {
             return;
         }
-        Map<String, Object> actualChecksums =
-            ( checksumCalculator != null ) ? checksumCalculator.get() : Collections.<String, Object> emptyMap();
         if ( inlinedChecksums != null && validateInlinedChecksums( actualChecksums, inlinedChecksums ) )
         {
             return;
@@ -103,10 +98,10 @@ final class ChecksumValidator
         checksumPolicy.onNoMoreChecksums();
     }
 
-    private boolean validateInlinedChecksums( Map<String, Object> actualChecksums, Map<String, String> inlinedChecksums )
+    private boolean validateInlinedChecksums( Map<String, ?> actualChecksums, Map<String, ?> inlinedChecksums )
         throws ChecksumFailureException
     {
-        for ( Map.Entry<String, String> entry : inlinedChecksums.entrySet() )
+        for ( Map.Entry<String, ?> entry : inlinedChecksums.entrySet() )
         {
             String algo = entry.getKey();
             Object calculated = actualChecksums.get( algo );
@@ -116,7 +111,7 @@ final class ChecksumValidator
             }
 
             String actual = String.valueOf( calculated );
-            String expected = entry.getValue();
+            String expected = entry.getValue().toString();
             checksumFiles.put( getChecksumFile( algo ), expected );
 
             if ( !isEqualChecksum( expected, actual ) )
@@ -132,7 +127,7 @@ final class ChecksumValidator
         return false;
     }
 
-    private boolean validateExternalChecksums( Map<String, Object> actualChecksums )
+    private boolean validateExternalChecksums( Map<String, ?> actualChecksums )
         throws ChecksumFailureException
     {
         for ( Checksum checksum : checksums )
@@ -197,8 +192,8 @@ final class ChecksumValidator
         throws IOException
     {
         File file =
-            File.createTempFile( path.getName() + "-" + UUID.randomUUID().toString().replace( "-", "" ), ".tmp",
-                                 path.getParentFile() );
+            File.createTempFile( path.getName() + "-"
+                + UUID.randomUUID().toString().replace( "-", "" ).substring( 0, 8 ), ".tmp", path.getParentFile() );
         tempFiles.add( file );
         return file;
     }

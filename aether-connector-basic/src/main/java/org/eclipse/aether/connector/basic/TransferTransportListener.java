@@ -11,6 +11,8 @@
 package org.eclipse.aether.connector.basic;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.Map;
 
 import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
@@ -29,7 +31,7 @@ class TransferTransportListener<T extends Transfer>
 
     private final TransferEvent.Builder eventBuilder;
 
-    private ChecksumCalculator checksums;
+    private ChecksumCalculator checksumCalculator;
 
     protected TransferTransportListener( T transfer, TransferEvent.Builder eventBuilder )
     {
@@ -57,9 +59,9 @@ class TransferTransportListener<T extends Transfer>
     public void transportStarted( long dataOffset, long dataLength )
         throws TransferCancelledException
     {
-        if ( checksums != null )
+        if ( checksumCalculator != null )
         {
-            checksums.init( dataOffset );
+            checksumCalculator.init( dataOffset );
         }
         if ( listener != null )
         {
@@ -74,9 +76,9 @@ class TransferTransportListener<T extends Transfer>
     public void transportProgressed( ByteBuffer data )
         throws TransferCancelledException
     {
-        if ( checksums != null )
+        if ( checksumCalculator != null )
         {
-            checksums.update( data );
+            checksumCalculator.update( data );
         }
         if ( listener != null )
         {
@@ -113,14 +115,18 @@ class TransferTransportListener<T extends Transfer>
         }
     }
 
-    public ChecksumCalculator getChecksums()
+    public Map<String, Object> getChecksums()
     {
-        return checksums;
+        if ( checksumCalculator == null )
+        {
+            return Collections.emptyMap();
+        }
+        return checksumCalculator.get();
     }
 
-    public void setChecksums( ChecksumCalculator checksums )
+    public void setChecksumCalculator( ChecksumCalculator checksumCalculator )
     {
-        this.checksums = checksums;
+        this.checksumCalculator = checksumCalculator;
     }
 
 }
