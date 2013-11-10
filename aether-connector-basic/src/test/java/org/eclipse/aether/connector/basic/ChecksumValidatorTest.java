@@ -313,6 +313,17 @@ public class ChecksumValidatorTest
     }
 
     @Test
+    public void testValidate_CaseInsensitive()
+        throws Exception
+    {
+        policy.inspectAll = true;
+        ChecksumValidator validator = newValidator( SHA1 );
+        fetcher.mock( SHA1, "FOO" );
+        validator.validate( checksums( SHA1, "foo" ), checksums( SHA1, "foo" ) );
+        policy.assertCallbacks( "match(SHA-1, 0001)", "match(SHA-1, 0000)", "noMore()" );
+    }
+
+    @Test
     public void testValidate_MissingRemoteChecksum()
         throws Exception
     {
