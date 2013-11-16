@@ -29,6 +29,10 @@ final class PartialFile
     implements Closeable
 {
 
+    static final String EXT_PART = ".part";
+
+    static final String EXT_LOCK = ".lock";
+
     interface RemoteAccessChecker
     {
 
@@ -49,7 +53,7 @@ final class PartialFile
         public LockFile( File partFile, int requestTimeout, RemoteAccessChecker checker, Logger logger )
             throws Exception
         {
-            lockFile = new File( partFile.getPath() + ".lock" );
+            lockFile = new File( partFile.getPath() + EXT_LOCK );
             boolean[] concurrent = { false };
             lock = lock( lockFile, partFile, requestTimeout, checker, logger, concurrent );
             this.concurrent = concurrent[0];
@@ -198,34 +202,37 @@ final class PartialFile
         public PartialFile newInstance( File dstFile, RemoteAccessChecker checker )
             throws Exception
         {
-            if ( !resume )
+            if ( resume )
             {
-                File tempFile =
-                    File.createTempFile( dstFile.getName() + '-' + UUID.randomUUID().toString().replace( "-", "" ),
-                                         ".tmp", dstFile.getParentFile() );
-                return new PartialFile( tempFile, logger );
+                File partFile = new File( dstFile.getPath() + EXT_PART );
+
+                long reqTimestamp = System.currentTimeMillis();
+                LockFile lockFile = new LockFile( partFile, requestTimeout, checker, logger );
+                if ( lockFile.isConcurrent() && dstFile.lastModified() >= reqTimestamp - 100 )
+                {
+                    lockFile.close();
+                    return null;
+                }
+                try
+                {
+                    if ( !partFile.createNewFile() && !partFile.isFile() )
+                    {
+                        throw new IOException( partFile.exists() ? "Path exists but is not a file" : "Unknown error" );
+                    }
+                    return new PartialFile( partFile, lockFile, resumeThreshold, logger );
+                }
+                catch ( IOException e )
+                {
+                    lockFile.close();
+                    logger.debug( "Cannot create resumable file " + partFile.getAbsolutePath() + ": " + e );
+                    // fall through and try non-resumable/temporary file location
+                }
             }
 
-            File partFile = new File( dstFile.getPath() + ".part" );
-
-            long reqTimestamp = System.currentTimeMillis();
-            LockFile lockFile = new LockFile( partFile, requestTimeout, checker, logger );
-            if ( lockFile.isConcurrent() && dstFile.lastModified() >= reqTimestamp - 100 )
-            {
-                lockFile.close();
-                return null;
-            }
-            try
-            {
-                partFile.createNewFile();
-            }
-            catch ( IOException e )
-            {
-                lockFile.close();
-                throw e;
-            }
-
-            return new PartialFile( partFile, lockFile, resumeThreshold, logger );
+            File tempFile =
+                File.createTempFile( dstFile.getName() + '-' + UUID.randomUUID().toString().replace( "-", "" ), ".tmp",
+                                     dstFile.getParentFile() );
+            return new PartialFile( tempFile, logger );
         }
 
     }
