@@ -90,6 +90,8 @@ final class BasicRepositoryConnector
 
     private final boolean smartChecksums;
 
+    private final boolean persistedChecksums;
+
     private Executor executor;
 
     private boolean closed;
@@ -125,6 +127,9 @@ final class BasicRepositoryConnector
 
         maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
+        persistedChecksums =
+            ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
+                                    ConfigurationProperties.PERSISTED_CHECKSUMS );
 
         boolean resumeDownloads =
             ConfigUtils.getBoolean( session, true, CONFIG_PROP_RESUME + '.' + repository.getId(), CONFIG_PROP_RESUME );
@@ -465,7 +470,10 @@ final class BasicRepositoryConnector
                     }
                 }
                 fileProcessor.move( tmp, file );
-                checksumValidator.commit();
+                if ( persistedChecksums )
+                {
+                    checksumValidator.commit();
+                }
             }
             finally
             {

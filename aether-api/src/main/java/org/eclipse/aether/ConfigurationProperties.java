@@ -96,6 +96,19 @@ public final class ConfigurationProperties
      */
     public static final String DEFAULT_HTTP_CREDENTIAL_ENCODING = "ISO-8859-1";
 
+    /**
+     * A flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
+     * local filesystem next to the file they provide the checksum for.
+     * 
+     * @see #DEFAULT_PERSISTED_CHECKSUMS
+     */
+    public static final String PERSISTED_CHECKSUMS = PREFIX_CONNECTOR + "persistedChecksums";
+
+    /**
+     * The default checksum persistence mode if {@link #PERSISTED_CHECKSUMS} isn't set.
+     */
+    public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
+
     private ConfigurationProperties()
     {
         // hide constructor
