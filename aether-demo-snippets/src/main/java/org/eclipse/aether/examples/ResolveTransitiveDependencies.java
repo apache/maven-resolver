@@ -20,7 +20,6 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.examples.util.Booter;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.util.artifact.JavaScopes;
@@ -44,13 +43,11 @@ public class ResolveTransitiveDependencies
 
         Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-impl:0.9.0.M3" );
 
-        RemoteRepository repo = Booter.newCentralRepository();
-
         DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter( JavaScopes.COMPILE );
 
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRoot( new Dependency( artifact, JavaScopes.COMPILE ) );
-        collectRequest.addRepository( repo );
+        collectRequest.setRepositories( Booter.newRepositories( system, session ) );
 
         DependencyRequest dependencyRequest = new DependencyRequest( collectRequest, classpathFlter );
 

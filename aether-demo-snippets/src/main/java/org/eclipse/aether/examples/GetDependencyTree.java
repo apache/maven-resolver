@@ -19,7 +19,6 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.examples.util.Booter;
 import org.eclipse.aether.examples.util.ConsoleDependencyGraphDumper;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * Collects the transitive dependencies of an artifact.
@@ -39,11 +38,9 @@ public class GetDependencyTree
 
         Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.1.0" );
 
-        RemoteRepository repo = Booter.newCentralRepository();
-
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRoot( new Dependency( artifact, "" ) );
-        collectRequest.addRepository( repo );
+        collectRequest.setRepositories( Booter.newRepositories( system, session ) );
 
         CollectResult collectResult = system.collectDependencies( session, collectRequest );
 

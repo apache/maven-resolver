@@ -15,7 +15,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.examples.util.Booter;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
@@ -38,11 +37,9 @@ public class FindNewestVersion
 
         Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-util:[0,)" );
 
-        RemoteRepository repo = Booter.newCentralRepository();
-
         VersionRangeRequest rangeRequest = new VersionRangeRequest();
         rangeRequest.setArtifact( artifact );
-        rangeRequest.addRepository( repo );
+        rangeRequest.setRepositories( Booter.newRepositories( system, session ) );
 
         VersionRangeResult rangeResult = system.resolveVersionRange( session, rangeRequest );
 

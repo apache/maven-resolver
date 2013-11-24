@@ -10,9 +10,14 @@
  *******************************************************************************/
 package org.eclipse.aether.examples.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -45,9 +50,14 @@ public class Booter
         return session;
     }
 
-    public static RemoteRepository newCentralRepository()
+    public static List<RemoteRepository> newRepositories( RepositorySystem system, RepositorySystemSession session )
     {
-        return new RemoteRepository.Builder( "central", "default", "http://repo1.maven.org/maven2/" ).build();
+        return new ArrayList<RemoteRepository>( Arrays.asList( newCentralRepository() ) );
+    }
+
+    private static RemoteRepository newCentralRepository()
+    {
+        return new RemoteRepository.Builder( "central", "default", "http://central.maven.org/maven2/" ).build();
     }
 
 }

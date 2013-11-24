@@ -15,7 +15,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.examples.util.Booter;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
 
@@ -37,11 +36,9 @@ public class ResolveArtifact
 
         Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-util:0.9.0.M3" );
 
-        RemoteRepository repo = Booter.newCentralRepository();
-
         ArtifactRequest artifactRequest = new ArtifactRequest();
         artifactRequest.setArtifact( artifact );
-        artifactRequest.addRepository( repo );
+        artifactRequest.setRepositories( Booter.newRepositories( system, session ) );
 
         ArtifactResult artifactResult = system.resolveArtifact( session, artifactRequest );
 

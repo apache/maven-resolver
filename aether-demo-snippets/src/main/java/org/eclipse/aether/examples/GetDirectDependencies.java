@@ -16,7 +16,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.examples.util.Booter;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
@@ -38,11 +37,9 @@ public class GetDirectDependencies
 
         Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-impl:0.9.0.M3" );
 
-        RemoteRepository repo = Booter.newCentralRepository();
-
         ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
         descriptorRequest.setArtifact( artifact );
-        descriptorRequest.addRepository( repo );
+        descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
 
         ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
 

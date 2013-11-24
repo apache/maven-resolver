@@ -18,7 +18,6 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.examples.util.Booter;
 import org.eclipse.aether.examples.util.ConsoleDependencyGraphDumper;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
@@ -45,17 +44,16 @@ public class GetDependencyHierarchy
 
         Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.1.0" );
 
-        RemoteRepository repo = Booter.newCentralRepository();
-
-        ArtifactDescriptorResult descriptorResult =
-            system.readArtifactDescriptor( session,
-                                           new ArtifactDescriptorRequest().setArtifact( artifact ).addRepository( repo ) );
+        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+        descriptorRequest.setArtifact( artifact );
+        descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
+        ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
 
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRootArtifact( descriptorResult.getArtifact() );
         collectRequest.setDependencies( descriptorResult.getDependencies() );
         collectRequest.setManagedDependencies( descriptorResult.getManagedDependencies() );
-        collectRequest.addRepository( repo );
+        collectRequest.setRepositories( descriptorRequest.getRepositories() );
 
         CollectResult collectResult = system.collectDependencies( session, collectRequest );
 
