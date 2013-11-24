@@ -26,6 +26,7 @@ import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
@@ -46,6 +47,9 @@ import org.eclipse.aether.resolution.VersionResult;
 
 /**
  * The main entry point to the repository system.
+ * 
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface RepositorySystem
 {
@@ -61,6 +65,7 @@ public interface RepositorySystem
      * @return The version range result, never {@code null}.
      * @throws VersionRangeResolutionException If the requested range could not be parsed. Note that an empty range does
      *             not raise an exception.
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
         throws VersionRangeResolutionException;
@@ -73,6 +78,7 @@ public interface RepositorySystem
      * @param request The version request, must not be {@code null}.
      * @return The version result, never {@code null}.
      * @throws VersionResolutionException If the metaversion could not be resolved.
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
         throws VersionResolutionException;
@@ -85,6 +91,7 @@ public interface RepositorySystem
      * @return The descriptor result, never {@code null}.
      * @throws ArtifactDescriptorException If the artifact descriptor could not be read.
      * @see RepositorySystemSession#getArtifactDescriptorPolicy()
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session, ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException;
@@ -103,6 +110,7 @@ public interface RepositorySystem
      * @see RepositorySystemSession#getDependencySelector()
      * @see RepositorySystemSession#getVersionFilter()
      * @see RepositorySystemSession#getDependencyGraphTransformer()
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
         throws DependencyCollectionException;
@@ -117,6 +125,7 @@ public interface RepositorySystem
      * @return The dependency result, never {@code null}.
      * @throws DependencyResolutionException If the dependency tree could not be built or any dependency artifact could
      *             not be resolved.
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     DependencyResult resolveDependencies( RepositorySystemSession session, DependencyRequest request )
         throws DependencyResolutionException;
@@ -132,6 +141,7 @@ public interface RepositorySystem
      * @return The resolution result, never {@code null}.
      * @throws ArtifactResolutionException If the artifact could not be resolved.
      * @see Artifact#getFile()
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
         throws ArtifactResolutionException;
@@ -147,6 +157,7 @@ public interface RepositorySystem
      * @return The resolution results (in request order), never {@code null}.
      * @throws ArtifactResolutionException If any artifact could not be resolved.
      * @see Artifact#getFile()
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     List<ArtifactResult> resolveArtifacts( RepositorySystemSession session,
                                            Collection<? extends ArtifactRequest> requests )
@@ -160,6 +171,7 @@ public interface RepositorySystem
      * @param requests The resolution requests, must not be {@code null}.
      * @return The resolution results (in request order), never {@code null}.
      * @see Metadata#getFile()
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
     List<MetadataResult> resolveMetadata( RepositorySystemSession session,
                                           Collection<? extends MetadataRequest> requests );
@@ -182,6 +194,7 @@ public interface RepositorySystem
      * @param request The deployment request, must not be {@code null}.
      * @return The deployment result, never {@code null}.
      * @throws DeploymentException If any artifact/metadata from the request could not be deployed.
+     * @see #newDeploymentRepository(RepositorySystemSession, RemoteRepository)
      */
     DeployResult deploy( RepositorySystemSession session, DeployRequest request )
         throws DeploymentException;
@@ -209,5 +222,42 @@ public interface RepositorySystem
      * @return The synchronization context, never {@code null}.
      */
     SyncContext newSyncContext( RepositorySystemSession session, boolean shared );
+
+    /**
+     * Forms remote repositories suitable for artifact resolution by applying the session's authentication selector and
+     * similar network configuration to the given repository prototypes. As noted for
+     * {@link RepositorySystemSession#getAuthenticationSelector()} etc. the remote repositories passed to e.g.
+     * {@link #resolveArtifact(RepositorySystemSession, ArtifactRequest) resolveArtifact()} are used as is and expected
+     * to already carry any required authentication or proxy configuration. This method can be used to apply the
+     * authentication/proxy configuration from a session to a bare repository definition to obtain the complete
+     * repository definition for use in the resolution request.
+     * 
+     * @param session The repository system session from which to configure the repositories, must not be {@code null}.
+     * @param repositories The repository prototypes from which to derive the resolution repositories, must not be
+     *            {@code null} or contain {@code null} elements.
+     * @return The resolution repositories, never {@code null}. Note that there is generally no 1:1 relationship of the
+     *         obtained repositories to the original inputs due to mirror selection potentially aggregating multiple
+     *         repositories.
+     * @see #newDeploymentRepository(RepositorySystemSession, RemoteRepository)
+     */
+    List<RemoteRepository> newResolutionRepositories( RepositorySystemSession session,
+                                                      List<RemoteRepository> repositories );
+
+    /**
+     * Forms a remote repository suitable for artifact deployment by applying the session's authentication selector and
+     * similar network configuration to the given repository prototype. As noted for
+     * {@link RepositorySystemSession#getAuthenticationSelector()} etc. the remote repository passed to
+     * {@link #deploy(RepositorySystemSession, DeployRequest) deploy()} is used as is and expected to already carry any
+     * required authentication or proxy configuration. This method can be used to apply the authentication/proxy
+     * configuration from a session to a bare repository definition to obtain the complete repository definition for use
+     * in the deploy request.
+     * 
+     * @param session The repository system session from which to configure the repository, must not be {@code null}.
+     * @param repository The repository prototype from which to derive the deployment repository, must not be
+     *            {@code null}.
+     * @return The deployment repository, never {@code null}.
+     * @see #newResolutionRepositories(RepositorySystemSession, List)
+     */
+    RemoteRepository newDeploymentRepository( RepositorySystemSession session, RemoteRepository repository );
 
 }

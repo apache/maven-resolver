@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -38,15 +39,19 @@ import org.eclipse.aether.impl.Deployer;
 import org.eclipse.aether.impl.Installer;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
 import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.SyncContextFactory;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
+import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
+import org.eclipse.aether.repository.Proxy;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
@@ -113,6 +118,9 @@ public class DefaultRepositorySystem
     @Requirement
     private SyncContextFactory syncContextFactory;
 
+    @Requirement
+    private RemoteRepositoryManager remoteRepositoryManager;
+
     public DefaultRepositorySystem()
     {
         // enables default constructor
@@ -124,7 +132,7 @@ public class DefaultRepositorySystem
                              ArtifactDescriptorReader artifactDescriptorReader,
                              DependencyCollector dependencyCollector, Installer installer, Deployer deployer,
                              LocalRepositoryProvider localRepositoryProvider, SyncContextFactory syncContextFactory,
-                             LoggerFactory loggerFactory )
+                             RemoteRepositoryManager remoteRepositoryManager, LoggerFactory loggerFactory )
     {
         setVersionResolver( versionResolver );
         setVersionRangeResolver( versionRangeResolver );
@@ -136,6 +144,7 @@ public class DefaultRepositorySystem
         setDeployer( deployer );
         setLocalRepositoryProvider( localRepositoryProvider );
         setSyncContextFactory( syncContextFactory );
+        setRemoteRepositoryManager( remoteRepositoryManager );
         setLoggerFactory( loggerFactory );
     }
 
@@ -151,6 +160,7 @@ public class DefaultRepositorySystem
         setInstaller( locator.getService( Installer.class ) );
         setDeployer( locator.getService( Deployer.class ) );
         setLocalRepositoryProvider( locator.getService( LocalRepositoryProvider.class ) );
+        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
@@ -263,6 +273,16 @@ public class DefaultRepositorySystem
             throw new IllegalArgumentException( "sync context factory has not been specified" );
         }
         this.syncContextFactory = syncContextFactory;
+        return this;
+    }
+
+    public DefaultRepositorySystem setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
+    {
+        if ( remoteRepositoryManager == null )
+        {
+            throw new IllegalArgumentException( "remote repository manager has not been specified" );
+        }
+        this.remoteRepositoryManager = remoteRepositoryManager;
         return this;
     }
 
@@ -430,6 +450,27 @@ public class DefaultRepositorySystem
     {
         validateSession( session );
         return syncContextFactory.newInstance( session, shared );
+    }
+
+    public List<RemoteRepository> newResolutionRepositories( RepositorySystemSession session,
+                                                             List<RemoteRepository> repositories )
+    {
+        validateSession( session );
+        repositories =
+            remoteRepositoryManager.aggregateRepositories( session, new ArrayList<RemoteRepository>(), repositories,
+                                                           true );
+        return repositories;
+    }
+
+    public RemoteRepository newDeploymentRepository( RepositorySystemSession session, RemoteRepository repository )
+    {
+        validateSession( session );
+        RemoteRepository.Builder builder = new RemoteRepository.Builder( repository );
+        Authentication auth = session.getAuthenticationSelector().getAuthentication( repository );
+        builder.setAuthentication( auth );
+        Proxy proxy = session.getProxySelector().getProxy( repository );
+        builder.setProxy( proxy );
+        return builder.build();
     }
 
     private void validateSession( RepositorySystemSession session )

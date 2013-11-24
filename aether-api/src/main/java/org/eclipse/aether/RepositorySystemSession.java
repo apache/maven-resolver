@@ -165,6 +165,7 @@ public interface RepositorySystemSession
      * repositories are supposed to denote the effective repositories.
      * 
      * @return The mirror selector to use, never {@code null}.
+     * @see RepositorySystem#newResolutionRepositories(RepositorySystemSession, java.util.List)
      */
     MirrorSelector getMirrorSelector();
 
@@ -175,6 +176,7 @@ public interface RepositorySystemSession
      * 
      * @return The proxy selector to use, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getProxy()
+     * @see RepositorySystem#newResolutionRepositories(RepositorySystemSession, java.util.List)
      */
     ProxySelector getProxySelector();
 
@@ -185,6 +187,7 @@ public interface RepositorySystemSession
      * 
      * @return The authentication selector to use, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getAuthentication()
+     * @see RepositorySystem#newResolutionRepositories(RepositorySystemSession, java.util.List)
      */
     AuthenticationSelector getAuthenticationSelector();
 
