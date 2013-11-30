@@ -241,6 +241,7 @@
               <Bundle-Name>${project.name} (Incubation)</Bundle-Name>
               <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
               <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
+              <Export-Package>org.eclipse.aether.internal.*;x-internal:=true,org.eclipse.aether.*</Export-Package>
             </instructions>
           </configuration>
           <executions>
