@@ -189,6 +189,24 @@ public class FileTransporterTest
     }
 
     @Test
+    public void testGet_Fragment()
+        throws Exception
+    {
+        GetTask task = new GetTask( URI.create( "file.txt#ignored" ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+    }
+
+    @Test
+    public void testGet_Query()
+        throws Exception
+    {
+        GetTask task = new GetTask( URI.create( "file.txt?ignored" ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+    }
+
+    @Test
     public void testGet_FileHandleLeak()
         throws Exception
     {
