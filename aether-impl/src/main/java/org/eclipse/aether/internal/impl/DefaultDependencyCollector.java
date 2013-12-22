@@ -72,6 +72,8 @@ public class DefaultDependencyCollector
 
     private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
 
+    private static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
+
     @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
@@ -424,14 +426,16 @@ public class DefaultDependencyCollector
 
                 DependencyNode node = args.nodes.top();
 
-                DependencyNode cycleNode = args.nodes.find( d.getArtifact() );
-                if ( cycleNode != null )
+                int cycleEntry = args.nodes.find( d.getArtifact() );
+                if ( cycleEntry >= 0 )
                 {
+                    DependencyNode cycleNode = args.nodes.get( cycleEntry );
                     DefaultDependencyNode child =
                         createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult,
                                               cycleNode );
 
                     node.getChildren().add( child );
+                    results.addCycle( args.nodes, cycleEntry, d );
                 }
                 else if ( !descriptorResult.getRelocations().isEmpty() )
                 {
@@ -719,12 +723,15 @@ public class DefaultDependencyCollector
 
         final int maxExceptions;
 
+        final int maxCycles;
+
         String errorPath;
 
         public Results( CollectResult result, RepositorySystemSession session )
         {
             this.result = result;
             this.maxExceptions = ConfigUtils.getInteger( session, 50, CONFIG_PROP_MAX_EXCEPTIONS );
+            this.maxCycles = ConfigUtils.getInteger( session, 10, CONFIG_PROP_MAX_CYCLES );
         }
 
         public void addException( Dependency dependency, Exception e, NodeStack nodes )
@@ -754,6 +761,14 @@ public class DefaultDependencyCollector
                     buffer.append( dependency.getArtifact() );
                     errorPath = buffer.toString();
                 }
+            }
+        }
+
+        public void addCycle( NodeStack nodes, int cycleEntry, Dependency dependency )
+        {
+            if ( maxCycles < 0 || result.getCycles().size() < maxCycles )
+            {
+                result.addCycle( new DefaultDependencyCycle( nodes, cycleEntry, dependency ) );
             }
         }
 

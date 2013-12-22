@@ -35,10 +35,10 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
-import org.eclipse.aether.internal.impl.DefaultDependencyCollector;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -277,13 +277,20 @@ public class DefaultDependencyCollectorTest
         CollectRequest request = new CollectRequest( newDep( "test:a:2" ), Arrays.asList( repository ) );
         collector.setArtifactDescriptorReader( newReader( "versionless-cycle/" ) );
         CollectResult result = collector.collectDependencies( session, request );
-        DependencyNode a1 = path( result.getRoot(), 0, 0 );
+        DependencyNode root = result.getRoot();
+        DependencyNode a1 = path( root, 0, 0 );
         assertEquals( "a", a1.getArtifact().getArtifactId() );
         assertEquals( "1", a1.getArtifact().getVersion() );
         for ( DependencyNode child : a1.getChildren() )
         {
             assertFalse( "1".equals( child.getArtifact().getVersion() ) );
         }
+
+        assertEquals( 1, result.getCycles().size() );
+        DependencyCycle cycle = result.getCycles().get( 0 );
+        assertEquals( Arrays.asList(), cycle.getPrecedingDependencies() );
+        assertEquals( Arrays.asList( root.getDependency(), path( root, 0 ).getDependency(), a1.getDependency() ),
+                      cycle.getCyclicDependencies() );
     }
 
     @Test

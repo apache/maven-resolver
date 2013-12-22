@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -28,6 +29,8 @@ public final class DependencyResult
     private final DependencyRequest request;
 
     private DependencyNode root;
+
+    private List<DependencyCycle> cycles;
 
     private List<Exception> collectExceptions;
 
@@ -46,6 +49,7 @@ public final class DependencyResult
         }
         this.request = request;
         root = request.getRoot();
+        cycles = Collections.emptyList();
         collectExceptions = Collections.emptyList();
         artifactResults = Collections.emptyList();
     }
@@ -80,6 +84,38 @@ public final class DependencyResult
     public DependencyResult setRoot( DependencyNode root )
     {
         this.root = root;
+        return this;
+    }
+
+    /**
+     * Gets the dependency cycles that were encountered while building the dependency graph. Note that dependency cycles
+     * will only be reported here if the underlying request was created from a
+     * {@link org.eclipse.aether.collection.CollectRequest CollectRequest}. If the underlying {@link DependencyRequest}
+     * was created from an existing dependency graph, information about cycles will not be available in this result.
+     * 
+     * @return The dependency cycles in the (raw) graph, never {@code null}.
+     */
+    public List<DependencyCycle> getCycles()
+    {
+        return cycles;
+    }
+
+    /**
+     * Records the specified dependency cycles while building the dependency graph.
+     * 
+     * @param cycles The dependency cycles to record, may be {@code null}.
+     * @return This result for chaining, never {@code null}.
+     */
+    public DependencyResult setCycles( List<DependencyCycle> cycles )
+    {
+        if ( cycles == null )
+        {
+            this.cycles = Collections.emptyList();
+        }
+        else
+        {
+            this.cycles = cycles;
+        }
         return this;
     }
 

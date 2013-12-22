@@ -55,7 +55,7 @@ final class NodeStack
         size--;
     }
 
-    public DependencyNode find( Artifact artifact )
+    public int find( Artifact artifact )
     {
         for ( int i = size - 1; i >= 0; i-- )
         {
@@ -92,10 +92,10 @@ final class NodeStack
              * a:1.
              */
 
-            return node;
+            return i;
         }
 
-        return null;
+        return -1;
     }
 
     public int size()

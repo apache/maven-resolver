@@ -367,6 +367,7 @@ public class DefaultRepositorySystem
                 collectResult = e.getResult();
             }
             result.setRoot( collectResult.getRoot() );
+            result.setCycles( collectResult.getCycles() );
             result.setCollectExceptions( collectResult.getExceptions() );
         }
         else
