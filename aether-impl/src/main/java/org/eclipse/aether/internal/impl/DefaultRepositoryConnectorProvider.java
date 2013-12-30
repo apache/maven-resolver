@@ -12,10 +12,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -50,17 +47,6 @@ public class DefaultRepositoryConnectorProvider
 
     @Requirement( role = RepositoryConnectorFactory.class )
     private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<RepositoryConnectorFactory>();
-
-    private static final Comparator<RepositoryConnectorFactory> COMPARATOR =
-        new Comparator<RepositoryConnectorFactory>()
-        {
-
-            public int compare( RepositoryConnectorFactory o1, RepositoryConnectorFactory o2 )
-            {
-                return Float.compare( o2.getPriority(), o1.getPriority() );
-            }
-
-        };
 
     public DefaultRepositoryConnectorProvider()
     {
@@ -129,15 +115,19 @@ public class DefaultRepositoryConnectorProvider
             throw new IllegalArgumentException( "remote repository has not been specified" );
         }
 
-        List<RepositoryConnectorFactory> factories = new ArrayList<RepositoryConnectorFactory>( connectorFactories );
-        Collections.sort( factories, COMPARATOR );
+        PrioritizedComponents<RepositoryConnectorFactory> factories =
+            new PrioritizedComponents<RepositoryConnectorFactory>( session );
+        for ( RepositoryConnectorFactory factory : this.connectorFactories )
+        {
+            factories.add( factory, factory.getPriority() );
+        }
 
         List<NoRepositoryConnectorException> errors = new ArrayList<NoRepositoryConnectorException>();
-        for ( RepositoryConnectorFactory factory : factories )
+        for ( PrioritizedComponent<RepositoryConnectorFactory> factory : factories.getEnabled() )
         {
             try
             {
-                RepositoryConnector connector = factory.newInstance( session, repository );
+                RepositoryConnector connector = factory.getComponent().newInstance( session, repository );
 
                 if ( logger.isDebugEnabled() )
                 {
@@ -194,15 +184,7 @@ public class DefaultRepositoryConnectorProvider
             buffer.append( "Cannot access " ).append( repository.getUrl() );
             buffer.append( " with type " ).append( repository.getContentType() );
             buffer.append( " using the available connector factories: " );
-            for ( ListIterator<RepositoryConnectorFactory> it = factories.listIterator(); it.hasNext(); )
-            {
-                RepositoryConnectorFactory factory = it.next();
-                buffer.append( factory.getClass().getSimpleName() );
-                if ( it.hasNext() )
-                {
-                    buffer.append( ", " );
-                }
-            }
+            factories.list( buffer );
         }
 
         throw new NoRepositoryConnectorException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 )

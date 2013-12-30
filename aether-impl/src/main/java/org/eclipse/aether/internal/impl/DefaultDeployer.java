@@ -386,13 +386,14 @@ public class DefaultDeployer
     private List<? extends MetadataGenerator> getMetadataGenerators( RepositorySystemSession session,
                                                                      DeployRequest request )
     {
-        List<MetadataGeneratorFactory> factories = Utils.sortMetadataGeneratorFactories( this.metadataFactories );
+        PrioritizedComponents<MetadataGeneratorFactory> factories =
+            Utils.sortMetadataGeneratorFactories( session, this.metadataFactories );
 
         List<MetadataGenerator> generators = new ArrayList<MetadataGenerator>();
 
-        for ( MetadataGeneratorFactory factory : factories )
+        for ( PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled() )
         {
-            MetadataGenerator generator = factory.newInstance( session, request );
+            MetadataGenerator generator = factory.getComponent().newInstance( session, request );
             if ( generator != null )
             {
                 generators.add( generator );

@@ -12,10 +12,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -48,16 +45,6 @@ public final class DefaultTransporterProvider
 
     @Requirement( role = TransporterFactory.class )
     private Collection<TransporterFactory> factories = new ArrayList<TransporterFactory>();
-
-    private static final Comparator<TransporterFactory> COMPARATOR = new Comparator<TransporterFactory>()
-    {
-
-        public int compare( TransporterFactory o1, TransporterFactory o2 )
-        {
-            return Float.compare( o2.getPriority(), o1.getPriority() );
-        }
-
-    };
 
     public DefaultTransporterProvider()
     {
@@ -126,15 +113,18 @@ public final class DefaultTransporterProvider
             throw new IllegalArgumentException( "remote repository has not been specified" );
         }
 
-        List<TransporterFactory> factories = new ArrayList<TransporterFactory>( this.factories );
-        Collections.sort( factories, COMPARATOR );
+        PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<TransporterFactory>( session );
+        for ( TransporterFactory factory : this.factories )
+        {
+            factories.add( factory, factory.getPriority() );
+        }
 
         List<NoTransporterException> errors = new ArrayList<NoTransporterException>();
-        for ( TransporterFactory factory : factories )
+        for ( PrioritizedComponent<TransporterFactory> factory : factories.getEnabled() )
         {
             try
             {
-                Transporter transporter = factory.newInstance( session, repository );
+                Transporter transporter = factory.getComponent().newInstance( session, repository );
 
                 if ( logger.isDebugEnabled() )
                 {
@@ -171,15 +161,7 @@ public final class DefaultTransporterProvider
         {
             buffer.append( "Cannot access " ).append( repository.getUrl() );
             buffer.append( " using the registered transporter factories: " );
-            for ( ListIterator<TransporterFactory> it = factories.listIterator(); it.hasNext(); )
-            {
-                TransporterFactory factory = it.next();
-                buffer.append( factory.getClass().getSimpleName() );
-                if ( it.hasNext() )
-                {
-                    buffer.append( ", " );
-                }
-            }
+            factories.list( buffer);
         }
 
         throw new NoTransporterException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 ) : null );

@@ -23,6 +23,16 @@ public final class ConfigurationProperties
     private static final String PREFIX_CONNECTOR = PREFIX_AETHER + "connector.";
 
     /**
+     * The prefix for properties that control the priority of pluggable extensions like transporters. For example, for
+     * an extension with the fully qualified class name "org.eclipse.MyExtensionFactory", the configuration properties
+     * "aether.priority.org.eclipse.MyExtensionFactory", "aether.priority.MyExtensionFactory" and
+     * "aether.priority.MyExtension" will be consulted for the priority, in that order (obviously, the last key is only
+     * tried if the class name ends with "Factory"). The corresponding value is a float and the special value
+     * {@link Float#NaN} or "NaN" (case-sensitive) can be used to disable the extension.
+     */
+    public static final String PREFIX_PRIORITY = PREFIX_AETHER + "priority.";
+
+    /**
      * A flag indicating whether interaction with the user is allowed.
      * 
      * @see #DEFAULT_INTERACTIVE

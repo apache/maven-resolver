@@ -12,10 +12,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -48,17 +45,6 @@ public class DefaultLocalRepositoryProvider
 
     @Requirement( role = LocalRepositoryManagerFactory.class )
     private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<LocalRepositoryManagerFactory>();
-
-    private static final Comparator<LocalRepositoryManagerFactory> COMPARATOR =
-        new Comparator<LocalRepositoryManagerFactory>()
-        {
-
-            public int compare( LocalRepositoryManagerFactory o1, LocalRepositoryManagerFactory o2 )
-            {
-                return Float.compare( o2.getPriority(), o1.getPriority() );
-            }
-
-        };
 
     public DefaultLocalRepositoryProvider()
     {
@@ -123,14 +109,18 @@ public class DefaultLocalRepositoryProvider
                                                              LocalRepository localRepository )
         throws NoLocalRepositoryManagerException
     {
-        List<LocalRepositoryManagerFactory> factories = new ArrayList<LocalRepositoryManagerFactory>( managerFactories );
-        Collections.sort( factories, COMPARATOR );
+        PrioritizedComponents<LocalRepositoryManagerFactory> factories =
+            new PrioritizedComponents<LocalRepositoryManagerFactory>( session );
+        for ( LocalRepositoryManagerFactory factory : this.managerFactories )
+        {
+            factories.add( factory, factory.getPriority() );
+        }
 
-        for ( LocalRepositoryManagerFactory factory : factories )
+        for ( PrioritizedComponent<LocalRepositoryManagerFactory> factory : factories.getEnabled() )
         {
             try
             {
-                LocalRepositoryManager manager = factory.newInstance( session, localRepository );
+                LocalRepositoryManager manager = factory.getComponent().newInstance( session, localRepository );
 
                 if ( logger.isDebugEnabled() )
                 {
@@ -155,15 +145,7 @@ public class DefaultLocalRepositoryProvider
         buffer.append( localRepository.getBasedir() );
         buffer.append( " of type " ).append( localRepository.getContentType() );
         buffer.append( " using the available factories " );
-        for ( ListIterator<LocalRepositoryManagerFactory> it = factories.listIterator(); it.hasNext(); )
-        {
-            LocalRepositoryManagerFactory factory = it.next();
-            buffer.append( factory.getClass().getSimpleName() );
-            if ( it.hasNext() )
-            {
-                buffer.append( ", " );
-            }
-        }
+        factories.list( buffer );
 
         throw new NoLocalRepositoryManagerException( localRepository, buffer.toString() );
     }

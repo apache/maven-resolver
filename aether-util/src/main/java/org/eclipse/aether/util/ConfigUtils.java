@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2013 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -203,6 +203,54 @@ public final class ConfigUtils
     public static long getLong( RepositorySystemSession session, long defaultValue, String... keys )
     {
         return getLong( session.getConfigProperties(), defaultValue, keys );
+    }
+
+    /**
+     * Gets the specified configuration property.
+     * 
+     * @param properties The configuration properties to read, must not be {@code null}.
+     * @param defaultValue The default value to return in case the property isn't set.
+     * @param keys The properties to read, must not be {@code null}. The specified keys are read one after one until a
+     *            valid value is found.
+     * @return The property value.
+     */
+    public static float getFloat( Map<?, ?> properties, float defaultValue, String... keys )
+    {
+        for ( String key : keys )
+        {
+            Object value = properties.get( key );
+
+            if ( value instanceof Number )
+            {
+                return ( (Number) value ).floatValue();
+            }
+
+            try
+            {
+                return Float.valueOf( (String) value );
+            }
+            catch ( Exception e )
+            {
+                // try next key
+            }
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Gets the specified configuration property.
+     * 
+     * @param session The repository system session from which to read the configuration property, must not be
+     *            {@code null}.
+     * @param defaultValue The default value to return in case the property isn't set.
+     * @param keys The properties to read, must not be {@code null}. The specified keys are read one after one until a
+     *            valid value is found.
+     * @return The property value.
+     */
+    public static float getFloat( RepositorySystemSession session, float defaultValue, String... keys )
+    {
+        return getFloat( session.getConfigProperties(), defaultValue, keys );
     }
 
     /**

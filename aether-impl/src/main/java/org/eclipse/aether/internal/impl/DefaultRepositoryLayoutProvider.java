@@ -12,10 +12,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -48,16 +45,6 @@ public final class DefaultRepositoryLayoutProvider
 
     @Requirement( role = RepositoryLayoutFactory.class )
     private Collection<RepositoryLayoutFactory> factories = new ArrayList<RepositoryLayoutFactory>();
-
-    private static final Comparator<RepositoryLayoutFactory> COMPARATOR = new Comparator<RepositoryLayoutFactory>()
-    {
-
-        public int compare( RepositoryLayoutFactory o1, RepositoryLayoutFactory o2 )
-        {
-            return Float.compare( o2.getPriority(), o1.getPriority() );
-        }
-
-    };
 
     public DefaultRepositoryLayoutProvider()
     {
@@ -126,15 +113,19 @@ public final class DefaultRepositoryLayoutProvider
             throw new IllegalArgumentException( "remote repository has not been specified" );
         }
 
-        List<RepositoryLayoutFactory> factories = new ArrayList<RepositoryLayoutFactory>( this.factories );
-        Collections.sort( factories, COMPARATOR );
+        PrioritizedComponents<RepositoryLayoutFactory> factories =
+            new PrioritizedComponents<RepositoryLayoutFactory>( session );
+        for ( RepositoryLayoutFactory factory : this.factories )
+        {
+            factories.add( factory, factory.getPriority() );
+        }
 
         List<NoRepositoryLayoutException> errors = new ArrayList<NoRepositoryLayoutException>();
-        for ( RepositoryLayoutFactory factory : factories )
+        for ( PrioritizedComponent<RepositoryLayoutFactory> factory : factories.getEnabled() )
         {
             try
             {
-                RepositoryLayout layout = factory.newInstance( session, repository );
+                RepositoryLayout layout = factory.getComponent().newInstance( session, repository );
                 return layout;
             }
             catch ( NoRepositoryLayoutException e )
@@ -162,15 +153,7 @@ public final class DefaultRepositoryLayoutProvider
             buffer.append( "Cannot access " ).append( repository.getUrl() );
             buffer.append( " with type " ).append( repository.getContentType() );
             buffer.append( " using the available layout factories: " );
-            for ( ListIterator<RepositoryLayoutFactory> it = factories.listIterator(); it.hasNext(); )
-            {
-                RepositoryLayoutFactory factory = it.next();
-                buffer.append( factory.getClass().getSimpleName() );
-                if ( it.hasNext() )
-                {
-                    buffer.append( ", " );
-                }
-            }
+            factories.list( buffer );
         }
 
         throw new NoRepositoryLayoutException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 )

@@ -12,8 +12,6 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -30,20 +28,15 @@ import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
 final class Utils
 {
 
-    private static final Comparator<MetadataGeneratorFactory> COMPARATOR = new Comparator<MetadataGeneratorFactory>()
+    public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories( RepositorySystemSession session,
+                                                                                                  Collection<? extends MetadataGeneratorFactory> factories )
     {
-
-        public int compare( MetadataGeneratorFactory o1, MetadataGeneratorFactory o2 )
+        PrioritizedComponents<MetadataGeneratorFactory> result =
+            new PrioritizedComponents<MetadataGeneratorFactory>( session );
+        for ( MetadataGeneratorFactory factory : factories )
         {
-            return Float.compare( o2.getPriority(), o1.getPriority() );
+            result.add( factory, factory.getPriority() );
         }
-
-    };
-
-    public static List<MetadataGeneratorFactory> sortMetadataGeneratorFactories( Collection<? extends MetadataGeneratorFactory> factories )
-    {
-        List<MetadataGeneratorFactory> result = new ArrayList<MetadataGeneratorFactory>( factories );
-        Collections.sort( result, COMPARATOR );
         return result;
     }
 
