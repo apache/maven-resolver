@@ -105,8 +105,7 @@ public class DefaultLocalRepositoryProvider
         return setLocalRepositoryManagerFactories( factories );
     }
 
-    public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
-                                                             LocalRepository localRepository )
+    public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
         PrioritizedComponents<LocalRepositoryManagerFactory> factories =
@@ -116,18 +115,19 @@ public class DefaultLocalRepositoryProvider
             factories.add( factory, factory.getPriority() );
         }
 
+        List<NoLocalRepositoryManagerException> errors = new ArrayList<NoLocalRepositoryManagerException>();
         for ( PrioritizedComponent<LocalRepositoryManagerFactory> factory : factories.getEnabled() )
         {
             try
             {
-                LocalRepositoryManager manager = factory.getComponent().newInstance( session, localRepository );
+                LocalRepositoryManager manager = factory.getComponent().newInstance( session, repository );
 
                 if ( logger.isDebugEnabled() )
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
                     buffer.append( "Using manager " ).append( manager.getClass().getSimpleName() );
                     buffer.append( " with priority " ).append( factory.getPriority() );
-                    buffer.append( " for " ).append( localRepository.getBasedir() );
+                    buffer.append( " for " ).append( repository.getBasedir() );
 
                     logger.debug( buffer.toString() );
                 }
@@ -137,17 +137,33 @@ public class DefaultLocalRepositoryProvider
             catch ( NoLocalRepositoryManagerException e )
             {
                 // continue and try next factory
+                errors.add( e );
+            }
+        }
+        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        {
+            String msg = "Could not obtain local repository manager for " + repository;
+            for ( Exception e : errors )
+            {
+                logger.debug( msg, e );
             }
         }
 
         StringBuilder buffer = new StringBuilder( 256 );
-        buffer.append( "No manager available for local repository " );
-        buffer.append( localRepository.getBasedir() );
-        buffer.append( " of type " ).append( localRepository.getContentType() );
-        buffer.append( " using the available factories " );
-        factories.list( buffer );
+        if ( factories.isEmpty() )
+        {
+            buffer.append( "No local repository managers registered" );
+        }
+        else
+        {
+            buffer.append( "Cannot access " ).append( repository.getBasedir() );
+            buffer.append( " with type " ).append( repository.getContentType() );
+            buffer.append( " using the available factories " );
+            factories.list( buffer );
+        }
 
-        throw new NoLocalRepositoryManagerException( localRepository, buffer.toString() );
+        throw new NoLocalRepositoryManagerException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 )
+                        : null );
     }
 
 }
