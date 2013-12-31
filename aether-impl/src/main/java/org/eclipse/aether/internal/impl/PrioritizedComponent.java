@@ -20,11 +20,14 @@ final class PrioritizedComponent<T>
 
     private final float priority;
 
-    public PrioritizedComponent( T component, Class<?> type, float priority )
+    private final int index;
+
+    public PrioritizedComponent( T component, Class<?> type, float priority, int index )
     {
         this.component = component;
         this.type = type;
         this.priority = priority;
+        this.index = index;
     }
 
     public T getComponent()
@@ -55,7 +58,7 @@ final class PrioritizedComponent<T>
             rel = Float.compare( o.priority, priority );
             if ( rel == 0 )
             {
-                rel = getComponent().getClass().getName().compareTo( o.getComponent().getClass().getName() );
+                rel = index - o.index;
             }
         }
         return rel;
@@ -64,7 +67,7 @@ final class PrioritizedComponent<T>
     @Override
     public String toString()
     {
-        return priority + ": " + String.valueOf( component );
+        return priority + " (#" + index + "): " + String.valueOf( component );
     }
 
 }

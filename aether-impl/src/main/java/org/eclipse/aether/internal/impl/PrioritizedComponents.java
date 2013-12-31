@@ -55,7 +55,7 @@ final class PrioritizedComponents<T>
         Class<?> type = getImplClass( component );
         int index = components.size();
         priority = useInsertionOrder ? -index : ConfigUtils.getFloat( configProps, priority, getConfigKeys( type ) );
-        PrioritizedComponent<T> pc = new PrioritizedComponent<T>( component, type, priority );
+        PrioritizedComponent<T> pc = new PrioritizedComponent<T>( component, type, priority, index );
 
         if ( !useInsertionOrder )
         {
