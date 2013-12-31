@@ -126,6 +126,7 @@ public class DefaultLocalRepositoryProvider
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
                     buffer.append( "Using manager " ).append( manager.getClass().getSimpleName() );
+                    Utils.appendClassLoader( buffer, manager );
                     buffer.append( " with priority " ).append( factory.getPriority() );
                     buffer.append( " for " ).append( repository.getBasedir() );
 

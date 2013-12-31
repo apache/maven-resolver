@@ -130,6 +130,7 @@ public final class DefaultTransporterProvider
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
                     buffer.append( "Using transporter " ).append( transporter.getClass().getSimpleName() );
+                    Utils.appendClassLoader( buffer, transporter );
                     buffer.append( " with priority " ).append( factory.getPriority() );
                     buffer.append( " for " ).append( repository.getUrl() );
                     logger.debug( buffer.toString() );

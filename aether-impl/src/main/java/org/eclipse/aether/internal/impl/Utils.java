@@ -94,4 +94,13 @@ final class Utils
         return rep.getMetadataPolicy( session, new ResolutionErrorPolicyRequest<Metadata>( metadata, repository ) );
     }
 
+    public static void appendClassLoader( StringBuilder buffer, Object component )
+    {
+        ClassLoader loader = component.getClass().getClassLoader();
+        if ( loader != null && !loader.equals( Utils.class.getClassLoader() ) )
+        {
+            buffer.append( " from " ).append( loader );
+        }
+    }
+
 }

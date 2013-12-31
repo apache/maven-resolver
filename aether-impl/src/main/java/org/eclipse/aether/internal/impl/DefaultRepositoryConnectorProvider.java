@@ -133,6 +133,7 @@ public class DefaultRepositoryConnectorProvider
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
                     buffer.append( "Using connector " ).append( connector.getClass().getSimpleName() );
+                    Utils.appendClassLoader( buffer, connector );
                     buffer.append( " with priority " ).append( factory.getPriority() );
                     buffer.append( " for " ).append( repository.getUrl() );
 
