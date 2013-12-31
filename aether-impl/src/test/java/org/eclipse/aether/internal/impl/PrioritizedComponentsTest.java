@@ -60,6 +60,22 @@ public class PrioritizedComponentsTest
     }
 
     @Test
+    public void testAdd_ImplicitPriority()
+    {
+        Exception comp1 = new IllegalArgumentException();
+        Exception comp2 = new NullPointerException();
+        Map<Object, Object> config = new HashMap<Object, Object>();
+        config.put( ConfigurationProperties.IMPLICIT_PRIORITIES, true );
+        PrioritizedComponents<Exception> components = new PrioritizedComponents<Exception>( config );
+        components.add( comp1, 1 );
+        components.add( comp2, 2 );
+        List<PrioritizedComponent<Exception>> sorted = components.getEnabled();
+        assertEquals( 2, sorted.size() );
+        assertSame( comp1, sorted.get( 0 ).getComponent() );
+        assertSame( comp2, sorted.get( 1 ).getComponent() );
+    }
+
+    @Test
     public void testAdd_Disabled()
     {
         Exception comp1 = new IllegalArgumentException();

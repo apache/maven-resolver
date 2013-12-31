@@ -29,6 +29,8 @@ final class PrioritizedComponents<T>
 
     private final Map<?, ?> configProps;
 
+    private final boolean useInsertionOrder;
+
     private final List<PrioritizedComponent<T>> components;
 
     private int firstDisabled;
@@ -41,6 +43,9 @@ final class PrioritizedComponents<T>
     PrioritizedComponents( Map<?, ?> configurationProperties )
     {
         configProps = configurationProperties;
+        useInsertionOrder =
+            ConfigUtils.getBoolean( configProps, ConfigurationProperties.DEFAULT_IMPLICIT_PRIORITIES,
+                                    ConfigurationProperties.IMPLICIT_PRIORITIES );
         components = new ArrayList<PrioritizedComponent<T>>();
         firstDisabled = 0;
     }
@@ -48,17 +53,21 @@ final class PrioritizedComponents<T>
     public void add( T component, float priority )
     {
         Class<?> type = getImplClass( component );
-        priority = ConfigUtils.getFloat( configProps, priority, getConfigKeys( type ) );
+        int index = components.size();
+        priority = useInsertionOrder ? -index : ConfigUtils.getFloat( configProps, priority, getConfigKeys( type ) );
         PrioritizedComponent<T> pc = new PrioritizedComponent<T>( component, type, priority );
 
-        int index = Collections.binarySearch( components, pc );
-        if ( index < 0 )
+        if ( !useInsertionOrder )
         {
-            index = -index - 1;
-        }
-        else
-        {
-            index++;
+            index = Collections.binarySearch( components, pc );
+            if ( index < 0 )
+            {
+                index = -index - 1;
+            }
+            else
+            {
+                index++;
+            }
         }
         components.add( index, pc );
 

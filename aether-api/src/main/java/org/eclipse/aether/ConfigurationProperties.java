@@ -33,6 +33,22 @@ public final class ConfigurationProperties
     public static final String PREFIX_PRIORITY = PREFIX_AETHER + "priority.";
 
     /**
+     * A flag indicating whether the priorities of pluggable extensions are implicitly given by their iteration order
+     * such that the first extension has the highest priority. If set, an extension's built-in priority as well as any
+     * corresponding {@code aether.priority.*} configuration properties are ignored when searching for a suitable
+     * implementation among the available extensions. This priority mode is meant for cases where the application will
+     * present/inject extensions in the desired search order.
+     * 
+     * @see #DEFAULT_IMPLICIT_PRIORITIES
+     */
+    public static final String IMPLICIT_PRIORITIES = PREFIX_PRIORITY + "implicit";
+
+    /**
+     * The default extension priority mode if {@link #IMPLICIT_PRIORITIES} isn't set.
+     */
+    public static final boolean DEFAULT_IMPLICIT_PRIORITIES = false;
+
+    /**
      * A flag indicating whether interaction with the user is allowed.
      * 
      * @see #DEFAULT_INTERACTIVE
