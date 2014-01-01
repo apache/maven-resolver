@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 /**
@@ -31,11 +32,18 @@ final class DefaultDependencyCycle
 
     public DefaultDependencyCycle( NodeStack nodes, int cycleEntry, Dependency dependency )
     {
-        int offset = ( nodes.get( 0 ).getDependency() == null ) ? 1 : 0;
+        // skip root node unless it actually has a dependency or is considered the cycle entry (due to its label)
+        int offset = ( cycleEntry > 0 && nodes.get( 0 ).getDependency() == null ) ? 1 : 0;
         Dependency[] dependencies = new Dependency[nodes.size() - offset + 1];
         for ( int i = 0, n = dependencies.length - 1; i < n; i++ )
         {
-            dependencies[i] = nodes.get( i + offset ).getDependency();
+            DependencyNode node = nodes.get( i + offset );
+            dependencies[i] = node.getDependency();
+            // when cycle starts at root artifact as opposed to root dependency, synthesize a dependency
+            if ( dependencies[i] == null )
+            {
+                dependencies[i] = new Dependency( node.getArtifact(), null );
+            }
         }
         dependencies[dependencies.length - 1] = dependency;
         this.dependencies = Collections.unmodifiableList( Arrays.asList( dependencies ) );

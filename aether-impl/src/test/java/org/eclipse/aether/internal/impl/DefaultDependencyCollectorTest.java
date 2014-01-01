@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -290,6 +290,29 @@ public class DefaultDependencyCollectorTest
         DependencyCycle cycle = result.getCycles().get( 0 );
         assertEquals( Arrays.asList(), cycle.getPrecedingDependencies() );
         assertEquals( Arrays.asList( root.getDependency(), path( root, 0 ).getDependency(), a1.getDependency() ),
+                      cycle.getCyclicDependencies() );
+    }
+
+    @Test
+    public void testCyclicProjects_ConsiderLabelOfRootlessGraph()
+        throws Exception
+    {
+        Dependency dep = newDep( "gid:aid:ver", "compile" );
+        CollectRequest request =
+            new CollectRequest().addDependency( dep ).addRepository( repository ).setRootArtifact( dep.getArtifact() );
+        CollectResult result = collector.collectDependencies( session, request );
+        DependencyNode root = result.getRoot();
+        DependencyNode a1 = root.getChildren().get( 0 );
+        assertEquals( "aid", a1.getArtifact().getArtifactId() );
+        assertEquals( "ver", a1.getArtifact().getVersion() );
+        DependencyNode a2 = a1.getChildren().get( 0 );
+        assertEquals( "aid2", a2.getArtifact().getArtifactId() );
+        assertEquals( "ver", a2.getArtifact().getVersion() );
+
+        assertEquals( 1, result.getCycles().size() );
+        DependencyCycle cycle = result.getCycles().get( 0 );
+        assertEquals( Arrays.asList(), cycle.getPrecedingDependencies() );
+        assertEquals( Arrays.asList( new Dependency( dep.getArtifact(), null ), a1.getDependency() ),
                       cycle.getCyclicDependencies() );
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -429,15 +429,19 @@ public class DefaultDependencyCollector
                 int cycleEntry = args.nodes.find( d.getArtifact() );
                 if ( cycleEntry >= 0 )
                 {
-                    DependencyNode cycleNode = args.nodes.get( cycleEntry );
-                    DefaultDependencyNode child =
-                        createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult,
-                                              cycleNode );
-
-                    node.getChildren().add( child );
                     results.addCycle( args.nodes, cycleEntry, d );
+                    DependencyNode cycleNode = args.nodes.get( cycleEntry );
+                    if ( cycleNode.getDependency() != null )
+                    {
+                        DefaultDependencyNode child =
+                            createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult,
+                                                  cycleNode );
+                        node.getChildren().add( child );
+                        continue;
+                    }
                 }
-                else if ( !descriptorResult.getRelocations().isEmpty() )
+
+                if ( !descriptorResult.getRelocations().isEmpty() )
                 {
                     boolean disableVersionManagementSubsequently =
                         originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )

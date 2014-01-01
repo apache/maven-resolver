@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,6 @@ package org.eclipse.aether.internal.impl;
 import java.util.Arrays;
 
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -61,13 +60,12 @@ final class NodeStack
         {
             DependencyNode node = nodes[i];
 
-            Dependency dependency = node.getDependency();
-            if ( dependency == null )
+            Artifact a = node.getArtifact();
+            if ( a == null )
             {
                 break;
             }
 
-            Artifact a = dependency.getArtifact();
             if ( !a.getArtifactId().equals( artifact.getArtifactId() ) )
             {
                 continue;
