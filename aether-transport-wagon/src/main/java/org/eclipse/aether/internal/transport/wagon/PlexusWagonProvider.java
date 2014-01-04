@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,31 @@ public class PlexusWagonProvider
 
     @Requirement
     private PlexusContainer container;
+
+    /**
+     * Creates an uninitialized wagon provider.
+     * 
+     * @noreference This constructor only supports the Plexus IoC container and should not be called directly by
+     *              clients.
+     */
+    public PlexusWagonProvider()
+    {
+        // enables no-arg constructor
+    }
+
+    /**
+     * Creates a wagon provider using the specified Plexus container.
+     * 
+     * @param container The Plexus container instance to use, must not be {@code null}.
+     */
+    public PlexusWagonProvider( PlexusContainer container )
+    {
+        if ( container == null )
+        {
+            throw new IllegalArgumentException( "plexus container has not been specified" );
+        }
+        this.container = container;
+    }
 
     public Wagon lookup( String roleHint )
         throws Exception

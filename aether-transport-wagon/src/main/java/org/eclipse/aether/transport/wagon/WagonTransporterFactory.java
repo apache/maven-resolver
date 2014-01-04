@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,9 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
- * A transporter factory using Maven Wagon.
+ * A transporter factory using <a href="http://maven.apache.org/wagon/" target="_blank">Apache Maven Wagon</a>. Note
+ * that this factory merely serves as an adapter to the Wagon API and by itself does not provide any transport services
+ * unless one or more wagon implementations are registered at runtime.
  */
 @Named( "wagon" )
 @Component( role = TransporterFactory.class, hint = "wagon" )
