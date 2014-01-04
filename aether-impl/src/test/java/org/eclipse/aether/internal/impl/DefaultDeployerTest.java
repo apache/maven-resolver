@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import static org.eclipse.aether.internal.test.util.RecordingRepositoryListener.Type.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -23,17 +22,16 @@ import java.util.Properties;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
+import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.internal.impl.DefaultDeployer;
-import org.eclipse.aether.internal.test.util.RecordingRepositoryListener;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.EventWrapper;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.MergeableMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -154,20 +152,16 @@ public class DefaultDeployerTest
 
         deployer.deploy( session, request );
 
-        List<EventWrapper> events = listener.getEvents();
+        List<RepositoryEvent> events = listener.getEvents();
         assertEquals( 2, events.size() );
 
-        EventWrapper wrapper = events.get( 0 );
-        assertEquals( ARTIFACT_DEPLOYING, wrapper.getType() );
-
-        RepositoryEvent event = wrapper.getEvent();
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( EventType.ARTIFACT_DEPLOYING, event.getType() );
         assertEquals( artifact, event.getArtifact() );
         assertNull( event.getException() );
 
-        wrapper = events.get( 1 );
-        assertEquals( ARTIFACT_DEPLOYED, wrapper.getType() );
-
-        event = wrapper.getEvent();
+        event = events.get( 1 );
+        assertEquals( EventType.ARTIFACT_DEPLOYED, event.getType() );
         assertEquals( artifact, event.getArtifact() );
         assertNull( event.getException() );
     }
@@ -186,20 +180,16 @@ public class DefaultDeployerTest
         }
         catch ( DeploymentException e )
         {
-            List<EventWrapper> events = listener.getEvents();
+            List<RepositoryEvent> events = listener.getEvents();
             assertEquals( 2, events.size() );
 
-            EventWrapper wrapper = events.get( 0 );
-            assertEquals( ARTIFACT_DEPLOYING, wrapper.getType() );
-
-            RepositoryEvent event = wrapper.getEvent();
+            RepositoryEvent event = events.get( 0 );
+            assertEquals( EventType.ARTIFACT_DEPLOYING, event.getType() );
             assertEquals( artifact, event.getArtifact() );
             assertNull( event.getException() );
 
-            wrapper = events.get( 1 );
-            assertEquals( ARTIFACT_DEPLOYED, wrapper.getType() );
-
-            event = wrapper.getEvent();
+            event = events.get( 1 );
+            assertEquals( EventType.ARTIFACT_DEPLOYED, event.getType() );
             assertEquals( artifact, event.getArtifact() );
             assertNotNull( event.getException() );
         }
@@ -213,20 +203,16 @@ public class DefaultDeployerTest
 
         deployer.deploy( session, request );
 
-        List<EventWrapper> events = listener.getEvents();
+        List<RepositoryEvent> events = listener.getEvents();
         assertEquals( 2, events.size() );
 
-        EventWrapper wrapper = events.get( 0 );
-        assertEquals( METADATA_DEPLOYING, wrapper.getType() );
-
-        RepositoryEvent event = wrapper.getEvent();
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( EventType.METADATA_DEPLOYING, event.getType() );
         assertEquals( metadata, event.getMetadata() );
         assertNull( event.getException() );
 
-        wrapper = events.get( 1 );
-        assertEquals( METADATA_DEPLOYED, wrapper.getType() );
-
-        event = wrapper.getEvent();
+        event = events.get( 1 );
+        assertEquals( EventType.METADATA_DEPLOYED, event.getType() );
         assertEquals( metadata, event.getMetadata() );
         assertNull( event.getException() );
     }
@@ -245,20 +231,16 @@ public class DefaultDeployerTest
         }
         catch ( DeploymentException e )
         {
-            List<EventWrapper> events = listener.getEvents();
+            List<RepositoryEvent> events = listener.getEvents();
             assertEquals( 2, events.size() );
 
-            EventWrapper wrapper = events.get( 0 );
-            assertEquals( METADATA_DEPLOYING, wrapper.getType() );
-
-            RepositoryEvent event = wrapper.getEvent();
+            RepositoryEvent event = events.get( 0 );
+            assertEquals( EventType.METADATA_DEPLOYING, event.getType() );
             assertEquals( metadata, event.getMetadata() );
             assertNull( event.getException() );
 
-            wrapper = events.get( 1 );
-            assertEquals( METADATA_DEPLOYED, wrapper.getType() );
-
-            event = wrapper.getEvent();
+            event = events.get( 1 );
+            assertEquals( EventType.METADATA_DEPLOYED, event.getType() );
             assertEquals( metadata, event.getMetadata() );
             assertNotNull( event.getException() );
         }

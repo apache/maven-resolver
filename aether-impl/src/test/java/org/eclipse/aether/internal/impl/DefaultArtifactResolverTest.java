@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -29,13 +31,10 @@ import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
-import org.eclipse.aether.internal.test.util.RecordingRepositoryListener;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.EventWrapper;
-import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.Type;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
@@ -421,17 +420,17 @@ public class DefaultArtifactResolverTest
         ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
         resolver.resolveArtifact( session, request );
 
-        List<EventWrapper> events = listener.getEvents();
+        List<RepositoryEvent> events = listener.getEvents();
         assertEquals( 2, events.size() );
-        EventWrapper event = events.get( 0 );
-        assertEquals( RecordingRepositoryListener.Type.ARTIFACT_RESOLVING, event.getType() );
-        assertNull( event.getEvent().getException() );
-        assertEquals( artifact, event.getEvent().getArtifact() );
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( EventType.ARTIFACT_RESOLVING, event.getType() );
+        assertNull( event.getException() );
+        assertEquals( artifact, event.getArtifact() );
 
         event = events.get( 1 );
-        assertEquals( RecordingRepositoryListener.Type.ARTIFACT_RESOLVED, event.getType() );
-        assertNull( event.getEvent().getException() );
-        assertEquals( artifact, event.getEvent().getArtifact().setFile( null ) );
+        assertEquals( EventType.ARTIFACT_RESOLVED, event.getType() );
+        assertNull( event.getException() );
+        assertEquals( artifact, event.getArtifact().setFile( null ) );
     }
 
     @Test
@@ -455,18 +454,18 @@ public class DefaultArtifactResolverTest
         {
         }
 
-        List<EventWrapper> events = listener.getEvents();
+        List<RepositoryEvent> events = listener.getEvents();
         assertEquals( 2, events.size() );
 
-        EventWrapper event = events.get( 0 );
-        assertEquals( artifact, event.getEvent().getArtifact() );
-        assertEquals( Type.ARTIFACT_RESOLVING, event.getType() );
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_RESOLVING, event.getType() );
 
         event = events.get( 1 );
-        assertEquals( artifact, event.getEvent().getArtifact() );
-        assertEquals( Type.ARTIFACT_RESOLVED, event.getType() );
-        assertNotNull( event.getEvent().getException() );
-        assertEquals( 1, event.getEvent().getExceptions().size() );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_RESOLVED, event.getType() );
+        assertNotNull( event.getException() );
+        assertEquals( 1, event.getExceptions().size() );
 
     }
 
@@ -482,17 +481,27 @@ public class DefaultArtifactResolverTest
 
         resolver.resolveArtifact( session, request );
 
-        List<EventWrapper> events = listener.getEvents();
-        assertEquals( 2, events.size() );
-        EventWrapper event = events.get( 0 );
-        assertEquals( RecordingRepositoryListener.Type.ARTIFACT_RESOLVING, event.getType() );
-        assertNull( event.getEvent().getException() );
-        assertEquals( artifact, event.getEvent().getArtifact() );
+        List<RepositoryEvent> events = listener.getEvents();
+        assertEquals( events.toString(), 4, events.size() );
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( EventType.ARTIFACT_RESOLVING, event.getType() );
+        assertNull( event.getException() );
+        assertEquals( artifact, event.getArtifact() );
 
         event = events.get( 1 );
-        assertEquals( RecordingRepositoryListener.Type.ARTIFACT_RESOLVED, event.getType() );
-        assertNull( event.getEvent().getException() );
-        assertEquals( artifact, event.getEvent().getArtifact().setFile( null ) );
+        assertEquals( EventType.ARTIFACT_DOWNLOADING, event.getType() );
+        assertNull( event.getException() );
+        assertEquals( artifact, event.getArtifact().setFile( null ) );
+
+        event = events.get( 2 );
+        assertEquals( EventType.ARTIFACT_DOWNLOADED, event.getType() );
+        assertNull( event.getException() );
+        assertEquals( artifact, event.getArtifact().setFile( null ) );
+
+        event = events.get( 3 );
+        assertEquals( EventType.ARTIFACT_RESOLVED, event.getType() );
+        assertNull( event.getException() );
+        assertEquals( artifact, event.getArtifact().setFile( null ) );
     }
 
     @Test
@@ -531,18 +540,28 @@ public class DefaultArtifactResolverTest
         {
         }
 
-        List<EventWrapper> events = listener.getEvents();
-        assertEquals( 2, events.size() );
+        List<RepositoryEvent> events = listener.getEvents();
+        assertEquals( events.toString(), 4, events.size() );
 
-        EventWrapper event = events.get( 0 );
-        assertEquals( artifact, event.getEvent().getArtifact() );
-        assertEquals( Type.ARTIFACT_RESOLVING, event.getType() );
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_RESOLVING, event.getType() );
 
         event = events.get( 1 );
-        assertEquals( artifact, event.getEvent().getArtifact() );
-        assertEquals( Type.ARTIFACT_RESOLVED, event.getType() );
-        assertNotNull( event.getEvent().getException() );
-        assertEquals( 1, event.getEvent().getExceptions().size() );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_DOWNLOADING, event.getType() );
+
+        event = events.get( 2 );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_DOWNLOADED, event.getType() );
+        assertNotNull( event.getException() );
+        assertEquals( 1, event.getExceptions().size() );
+
+        event = events.get( 3 );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_RESOLVED, event.getType() );
+        assertNotNull( event.getException() );
+        assertEquals( 1, event.getExceptions().size() );
     }
 
     @Test
@@ -608,18 +627,18 @@ public class DefaultArtifactResolverTest
         {
         }
 
-        List<EventWrapper> events = listener.getEvents();
+        List<RepositoryEvent> events = listener.getEvents();
         assertEquals( 2, events.size() );
 
-        EventWrapper event = events.get( 0 );
-        assertEquals( artifact, event.getEvent().getArtifact() );
-        assertEquals( Type.ARTIFACT_RESOLVING, event.getType() );
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_RESOLVING, event.getType() );
 
         event = events.get( 1 );
-        assertEquals( artifact, event.getEvent().getArtifact() );
-        assertEquals( Type.ARTIFACT_RESOLVED, event.getType() );
-        assertNotNull( event.getEvent().getException() );
-        assertEquals( 1, event.getEvent().getExceptions().size() );
+        assertEquals( artifact, event.getArtifact() );
+        assertEquals( EventType.ARTIFACT_RESOLVED, event.getType() );
+        assertNotNull( event.getException() );
+        assertEquals( 1, event.getExceptions().size() );
     }
 
     @Test

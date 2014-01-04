@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import static org.eclipse.aether.internal.test.util.RecordingRepositoryListener.Type.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -20,6 +19,7 @@ import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
+import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
@@ -27,12 +27,10 @@ import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
 import org.eclipse.aether.internal.impl.DefaultInstaller;
-import org.eclipse.aether.internal.test.util.RecordingRepositoryListener;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.eclipse.aether.internal.test.util.RecordingRepositoryListener.EventWrapper;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
@@ -300,18 +298,15 @@ public class DefaultInstallerTest
 
     private void checkEvents( String msg, Metadata metadata, boolean failed )
     {
-        List<EventWrapper> events = listener.getEvents();
+        List<RepositoryEvent> events = listener.getEvents();
         assertEquals( msg, 2, events.size() );
-        EventWrapper wrapper = events.get( 0 );
-        assertEquals( msg, METADATA_INSTALLING, wrapper.getType() );
-
-        RepositoryEvent event = wrapper.getEvent();
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( msg, EventType.METADATA_INSTALLING, event.getType() );
         assertEquals( msg, metadata, event.getMetadata() );
         assertNull( msg, event.getException() );
 
-        wrapper = events.get( 1 );
-        assertEquals( msg, METADATA_INSTALLED, wrapper.getType() );
-        event = wrapper.getEvent();
+        event = events.get( 1 );
+        assertEquals( msg, EventType.METADATA_INSTALLED, event.getType() );
         assertEquals( msg, metadata, event.getMetadata() );
         if ( failed )
         {
@@ -341,18 +336,15 @@ public class DefaultInstallerTest
 
     private void checkEvents( String msg, Artifact artifact, boolean failed )
     {
-        List<EventWrapper> events = listener.getEvents();
+        List<RepositoryEvent> events = listener.getEvents();
         assertEquals( msg, 2, events.size() );
-        EventWrapper wrapper = events.get( 0 );
-        assertEquals( msg, ARTIFACT_INSTALLING, wrapper.getType() );
-        
-        RepositoryEvent event = wrapper.getEvent();
+        RepositoryEvent event = events.get( 0 );
+        assertEquals( msg, EventType.ARTIFACT_INSTALLING, event.getType() );
         assertEquals( msg, artifact, event.getArtifact() );
         assertNull( msg, event.getException() );
         
-        wrapper = events.get( 1 );
-        assertEquals( msg, ARTIFACT_INSTALLED, wrapper.getType() );
-        event = wrapper.getEvent();
+        event = events.get( 1 );
+        assertEquals( msg, EventType.ARTIFACT_INSTALLED, event.getType() );
         assertEquals( msg, artifact, event.getArtifact() );
         if ( failed )
         {
