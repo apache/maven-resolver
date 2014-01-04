@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -112,7 +112,8 @@ public interface Artifact
     String getProperty( String key, String defaultValue );
 
     /**
-     * Gets the properties of this artifact.
+     * Gets the properties of this artifact. Clients may use these properties to associate non-persistent values with an
+     * artifact that help later processing when the artifact gets passed around within the application.
      * 
      * @return The (read-only) properties, never {@code null}.
      * @see ArtifactProperties
@@ -120,7 +121,8 @@ public interface Artifact
     Map<String, String> getProperties();
 
     /**
-     * Sets the properties for the artifact.
+     * Sets the properties for the artifact. Note that these properties exist merely in memory and are not persisted
+     * when the artifact gets installed/deployed to a repository.
      * 
      * @param properties The properties for the artifact, may be {@code null}.
      * @return The new artifact, never {@code null}.
