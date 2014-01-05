@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,7 +46,9 @@ import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 
 /**
- * The main entry point to the repository system.
+ * The main entry point to the repository system and its functionality. Note that obtaining a concrete implementation of
+ * this interface (e.g. via dependency injection, service locator, etc.) is dependent on the application and its
+ * specific needs, please consult the online documentation for examples and directions on booting the system.
  * 
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
