@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ public abstract class Transfer
     /**
      * The state of a transfer.
      * 
-     * @deprecated
+     * @deprecated A connector notifies the transfer listener instead.
      */
     @Deprecated
     public enum State
@@ -80,7 +80,7 @@ public abstract class Transfer
      * 
      * @param state The new state, must not be {@code null}.
      * @return This transfer for chaining, never {@code null}.
-     * @deprecated
+     * @deprecated A connector notifies the transfer listener instead.
      */
     @Deprecated
     public Transfer setState( State state )
