@@ -248,6 +248,7 @@
               <Bundle-DocURL>${project.url}</Bundle-DocURL>
               <Bundle-Name>${project.name} (Incubation)</Bundle-Name>
               <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
+              <Bundle-Vendor>Eclipse Aether</Bundle-Vendor>
               <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
               <Export-Package>org.eclipse.aether.internal.*;x-internal:=true,org.eclipse.aether.*</Export-Package>
             </instructions>
@@ -413,7 +414,7 @@
                 <Bundle-Name>${project.name} Sources (Incubation)</Bundle-Name>
                 <Bundle-License>http://www.eclipse.org/legal/epl-v10.html</Bundle-License>
                 <Bundle-SymbolicName>${bundle.symbolicName}.source</Bundle-SymbolicName>
-                <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+                <Bundle-Vendor>Eclipse Aether</Bundle-Vendor>
                 <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
                 <Eclipse-SourceBundle>${bundle.symbolicName};version="${bundle.osgiVersion}";roots:="."</Eclipse-SourceBundle>
               </manifestEntries>
