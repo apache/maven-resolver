@@ -518,39 +518,37 @@
                     <include>org.eclipse.sisu</include>
                     <include>org.eclipse.jetty:*:*:*:test</include>
                     <!-- CQ #5627 -->
-                    <include>org.slf4j:slf4j-api:1.6.2</include>
-                    <!-- CQ #5628 -->
-                    <include>junit:junit:4.8.2</include>
+                    <include>org.slf4j:slf4j-api:[1.6.2]</include>
                     <!-- CQ #5629 -->
-                    <include>org.codehaus.plexus:plexus-component-annotations:1.5.5</include>
+                    <include>org.codehaus.plexus:plexus-component-annotations:[1.5.5]</include>
                     <!-- CQ #5630 -->
-                    <include>org.codehaus.plexus:plexus-utils:2.1</include>
+                    <include>org.codehaus.plexus:plexus-utils:[2.1]</include>
                     <!-- CQ #5631 -->
-                    <include>org.codehaus.plexus:plexus-classworlds:2.4</include>
+                    <include>org.codehaus.plexus:plexus-classworlds:[2.4]</include>
                     <!-- CQ #5632 -->
-                    <include>org.apache.maven.wagon:wagon-provider-api:1.0</include>
+                    <include>org.apache.maven.wagon:wagon-provider-api:[1.0]</include>
                     <!-- CQ #5636 -->
-                    <include>org.sonatype.sisu:sisu-guice:3.1.6</include>
+                    <include>org.sonatype.sisu:sisu-guice:[3.1.6]</include>
                     <!-- CQ #7328 -->
-                    <include>com.google.guava:guava:11.0.2</include>
+                    <include>com.google.guava:guava:[11.0.2]</include>
                     <!-- CQ #5639 -->
-                    <include>javax.inject:javax.inject:1</include>
+                    <include>javax.inject:javax.inject:[1]</include>
                     <!-- CQ #7657 -->
-                    <include>org.apache.httpcomponents:httpclient:4.2.6</include>
+                    <include>org.apache.httpcomponents:httpclient:[4.2.6]</include>
                     <!-- CQ #7656 -->
-                    <include>org.apache.httpcomponents:httpcore:4.2.5</include>
+                    <include>org.apache.httpcomponents:httpcore:[4.2.5]</include>
                     <!-- CQ #7346 -->
-                    <include>commons-codec:commons-codec:1.6</include>
+                    <include>commons-codec:commons-codec:[1.6]</include>
                     <!-- CQ #7347 -->
-                    <include>org.slf4j:jcl-over-slf4j:1.6.2</include>
+                    <include>org.slf4j:jcl-over-slf4j:[1.6.2]</include>
                     <!-- CQ #7538 -->
-                    <include>junit:junit:4.11:*:test</include>
-                    <include>org.hamcrest:hamcrest-core:1.3:*:test</include>
-                    <include>org.hamcrest:hamcrest-library:1.3:*:test</include>
-                    <include>com.googlecode.jmockit:jmockit:1.3:*:test</include>
-                    <include>ch.qos.logback:logback-core:1.0.7:*:test</include>
-                    <include>ch.qos.logback:logback-classic:1.0.7:*:test</include>
-                    <include>org.eclipse.jetty.orbit:javax.servlet:2.5.0.v201103041518:*:test</include>
+                    <include>junit:junit:[4.11]:*:test</include>
+                    <include>org.hamcrest:hamcrest-core:[1.3]:*:test</include>
+                    <include>org.hamcrest:hamcrest-library:[1.3]:*:test</include>
+                    <include>com.googlecode.jmockit:jmockit:[1.3]:*:test</include>
+                    <include>ch.qos.logback:logback-core:[1.0.7]:*:test</include>
+                    <include>ch.qos.logback:logback-classic:[1.0.7]:*:test</include>
+                    <include>org.eclipse.jetty.orbit:javax.servlet:[2.5.0.v201103041518]:*:test</include>
                   </includes>
                 </bannedDependencies>
               </rules>
