@@ -91,23 +91,19 @@
     <dependency>
       <groupId>org.eclipse.sisu</groupId>
       <artifactId>org.eclipse.sisu.plexus</artifactId>
-      <version>0.0.0.M3</version>
+      <version>0.1.1</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
           <groupId>javax.enterprise</groupId>
           <artifactId>cdi-api</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>jsr305</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>org.sonatype.sisu</groupId>
       <artifactId>sisu-guice</artifactId>
-      <version>3.1.0</version>
+      <version>3.1.6</version>
       <classifier>no_aop</classifier>
       <optional>true</optional>
       <exclusions>
@@ -116,8 +112,8 @@
           <artifactId>aopalliance</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.sonatype.sisu</groupId>
-          <artifactId>sisu-guava</artifactId>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
