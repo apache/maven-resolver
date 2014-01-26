@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
- ~ Copyright (c) 2010, 2013 Sonatype, Inc.
+ ~ Copyright (c) 2010, 2014 Sonatype, Inc.
  ~ All rights reserved. This program and the accompanying materials
  ~ are made available under the terms of the Eclipse Public License v1.0
  ~ which accompanies this distribution, and is available at
@@ -203,7 +203,19 @@
       <dependency>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>org.eclipse.sisu.plexus</artifactId>
-        <version>0.0.0.M3</version>
+        <version>0.1.1</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.enterprise</groupId>
+            <artifactId>cdi-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.sonatype.sisu</groupId>
+        <artifactId>sisu-guice</artifactId>
+        <version>3.1.6</version>
+        <classifier>no_aop</classifier>
         <exclusions>
           <exclusion>
             <groupId>aopalliance</groupId>
@@ -212,10 +224,6 @@
           <exclusion>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.enterprise</groupId>
-            <artifactId>cdi-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -522,9 +530,9 @@
                     <!-- CQ #5632 -->
                     <include>org.apache.maven.wagon:wagon-provider-api:1.0</include>
                     <!-- CQ #5636 -->
-                    <include>org.sonatype.sisu:sisu-guice:3.1.0</include>
+                    <include>org.sonatype.sisu:sisu-guice:3.1.6</include>
                     <!-- CQ #7328 -->
-                    <include>com.google.guava:guava:10.0.1</include>
+                    <include>com.google.guava:guava:11.0.2</include>
                     <!-- CQ #5639 -->
                     <include>javax.inject:javax.inject:1</include>
                     <!-- CQ #7657 -->
