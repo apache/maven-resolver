@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,9 +33,9 @@ public interface DependencyCycle
     List<Dependency> getPrecedingDependencies();
 
     /**
-     * Gets the dependencies that actually form the cycle. For example, a -> b -> c -> a, i.e. the last dependency in
-     * this sequence duplicates the first element and closes the cycle. Hence the length of the cycle is the size of the
-     * returned sequence minus 1.
+     * Gets the dependencies that actually form the cycle. For example, a -&gt; b -&gt; c -&gt; a, i.e. the last
+     * dependency in this sequence duplicates the first element and closes the cycle. Hence the length of the cycle is
+     * the size of the returned sequence minus 1.
      * 
      * @return The (read-only) sequence of dependencies that forms the cycle, never {@code null}.
      */

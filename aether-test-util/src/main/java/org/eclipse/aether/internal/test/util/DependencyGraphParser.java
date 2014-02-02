@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,7 +43,7 @@ import org.eclipse.aether.version.VersionScheme;
  * comment   ::= "#" rest-of-line
  * indent    ::= "|  "*  ("+" | "\\") "- "
  * reference ::= "^" id
- * node      ::= coords (range)? space (scope("<" premanagedScope)?)? space "optional"? space ("relocations=" coords ("," coords)*)? ("(" id ")")?
+ * node      ::= coords (range)? space (scope("&lt;" premanagedScope)?)? space "optional"? space ("relocations=" coords ("," coords)*)? ("(" id ")")?
  * coords    ::= groupId ":" artifactId (":" extension (":" classifier)?)? ":" version
  * </pre>
  * 

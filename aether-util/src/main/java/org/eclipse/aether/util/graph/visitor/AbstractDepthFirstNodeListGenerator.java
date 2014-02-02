@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,8 @@ import java.util.Map;
 /**
  * Abstract base class for depth first dependency tree traversers. Subclasses of this visitor will visit each node
  * exactly once regardless how many paths within the dependency graph lead to the node such that the resulting node
- * sequence is free of duplicates.<br/>
+ * sequence is free of duplicates.
+ * <p>
  * Actual vertex ordering (preorder, inorder, postorder) needs to be defined by subclasses through appropriate
  * implementations for {@link #visitEnter(org.eclipse.aether.graph.DependencyNode)} and
  * {@link #visitLeave(org.eclipse.aether.graph.DependencyNode)}

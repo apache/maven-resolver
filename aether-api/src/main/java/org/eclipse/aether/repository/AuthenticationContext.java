@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Sonatype, Inc.
+ * Copyright (c) 2012, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -226,6 +226,7 @@ public final class AuthenticationContext
     /**
      * Gets the authentication data for the specified key.
      * 
+     * @param <T> The data type of the authentication data.
      * @param key The key whose authentication data should be retrieved, must not be {@code null}.
      * @param type The expected type of the authentication data, must not be {@code null}.
      * @return The requested authentication data or {@code null} if none or if the data doesn't match the expected type.
@@ -238,6 +239,7 @@ public final class AuthenticationContext
     /**
      * Gets the authentication data for the specified key.
      * 
+     * @param <T> The data type of the authentication data.
      * @param key The key whose authentication data should be retrieved, must not be {@code null}.
      * @param data Any (read-only) extra data in form of key value pairs that might be useful when getting the
      *            authentication data, may be {@code null}.
