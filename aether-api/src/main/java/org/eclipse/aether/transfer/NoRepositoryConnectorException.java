@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,27 +22,49 @@ public class NoRepositoryConnectorException
 
     private final transient RemoteRepository repository;
 
+    /**
+     * Creates a new exception with the specified repository.
+     * 
+     * @param repository The remote repository whose content type is not supported, may be {@code null}.
+     */
     public NoRepositoryConnectorException( RemoteRepository repository )
     {
         this( repository, toMessage( repository ) );
     }
 
+    /**
+     * Creates a new exception with the specified repository and detail message.
+     * 
+     * @param repository The remote repository whose content type is not supported, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     */
     public NoRepositoryConnectorException( RemoteRepository repository, String message )
     {
         super( message );
-
         this.repository = repository;
     }
 
+    /**
+     * Creates a new exception with the specified repository and cause.
+     * 
+     * @param repository The remote repository whose content type is not supported, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     */
     public NoRepositoryConnectorException( RemoteRepository repository, Throwable cause )
     {
         this( repository, toMessage( repository ), cause );
     }
 
+    /**
+     * Creates a new exception with the specified repository, detail message and cause.
+     * 
+     * @param repository The remote repository whose content type is not supported, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     */
     public NoRepositoryConnectorException( RemoteRepository repository, String message, Throwable cause )
     {
         super( message, cause );
-
         this.repository = repository;
     }
 
@@ -59,6 +81,11 @@ public class NoRepositoryConnectorException
         }
     }
 
+    /**
+     * Gets the remote repository whose content type is not supported.
+     * 
+     * @return The unsupported remote repository or {@code null} if unknown.
+     */
     public RemoteRepository getRepository()
     {
         return repository;

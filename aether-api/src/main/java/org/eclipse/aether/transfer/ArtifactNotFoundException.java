@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,6 +21,12 @@ public class ArtifactNotFoundException
     extends ArtifactTransferException
 {
 
+    /**
+     * Creates a new exception with the specified artifact and repository.
+     * 
+     * @param artifact The missing artifact, may be {@code null}.
+     * @param repository The involved remote repository, may be {@code null}.
+     */
     public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository )
     {
         super( artifact, repository, getMessage( artifact, repository ) );
@@ -47,16 +53,40 @@ public class ArtifactNotFoundException
         return buffer.toString();
     }
 
+    /**
+     * Creates a new exception with the specified artifact, repository and detail message.
+     * 
+     * @param artifact The missing artifact, may be {@code null}.
+     * @param repository The involved remote repository, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     */
     public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository, String message )
     {
         super( artifact, repository, message );
     }
 
+    /**
+     * Creates a new exception with the specified artifact, repository and detail message.
+     * 
+     * @param artifact The missing artifact, may be {@code null}.
+     * @param repository The involved remote repository, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     * @param fromCache {@code true} if the exception was played back from the error cache, {@code false} if the
+     *            exception actually just occurred.
+     */
     public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository, String message, boolean fromCache )
     {
         super( artifact, repository, message, fromCache );
     }
 
+    /**
+     * Creates a new exception with the specified artifact, repository, detail message and cause.
+     * 
+     * @param artifact The missing artifact, may be {@code null}.
+     * @param repository The involved remote repository, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     */
     public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository, String message, Throwable cause )
     {
         super( artifact, repository, message, cause );

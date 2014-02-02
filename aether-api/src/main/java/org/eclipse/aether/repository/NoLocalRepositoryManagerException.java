@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,27 +21,49 @@ public class NoLocalRepositoryManagerException
 
     private final transient LocalRepository repository;
 
+    /**
+     * Creates a new exception with the specified repository.
+     * 
+     * @param repository The local repository for which no support is available, may be {@code null}.
+     */
     public NoLocalRepositoryManagerException( LocalRepository repository )
     {
         this( repository, toMessage( repository ) );
     }
 
+    /**
+     * Creates a new exception with the specified repository and detail message.
+     * 
+     * @param repository The local repository for which no support is available, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     */
     public NoLocalRepositoryManagerException( LocalRepository repository, String message )
     {
         super( message );
-
         this.repository = repository;
     }
 
+    /**
+     * Creates a new exception with the specified repository and cause.
+     * 
+     * @param repository The local repository for which no support is available, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     */
     public NoLocalRepositoryManagerException( LocalRepository repository, Throwable cause )
     {
         this( repository, toMessage( repository ), cause );
     }
 
+    /**
+     * Creates a new exception with the specified repository, detail message and cause.
+     * 
+     * @param repository The local repository for which no support is available, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     */
     public NoLocalRepositoryManagerException( LocalRepository repository, String message, Throwable cause )
     {
         super( message, cause );
-
         this.repository = repository;
     }
 
@@ -54,10 +76,15 @@ public class NoLocalRepositoryManagerException
         }
         else
         {
-            return "No connector available to access repository";
+            return "No manager available for local repository";
         }
     }
 
+    /**
+     * Gets the local repository whose content type is not supported.
+     * 
+     * @return The unsupported local repository or {@code null} if unknown.
+     */
     public LocalRepository getRepository()
     {
         return repository;

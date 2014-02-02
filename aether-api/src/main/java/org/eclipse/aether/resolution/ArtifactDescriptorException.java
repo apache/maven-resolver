@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,6 +21,11 @@ public class ArtifactDescriptorException
 
     private final transient ArtifactDescriptorResult result;
 
+    /**
+     * Creates a new exception with the specified result.
+     * 
+     * @param result The descriptor result at the point the exception occurred, may be {@code null}.
+     */
     public ArtifactDescriptorException( ArtifactDescriptorResult result )
     {
         super( "Failed to read artifact descriptor"
@@ -28,18 +33,37 @@ public class ArtifactDescriptorException
         this.result = result;
     }
 
+    /**
+     * Creates a new exception with the specified result and detail message.
+     * 
+     * @param result The descriptor result at the point the exception occurred, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     */
     public ArtifactDescriptorException( ArtifactDescriptorResult result, String message )
     {
         super( message, getCause( result ) );
         this.result = result;
     }
 
+    /**
+     * Creates a new exception with the specified result, detail message and cause.
+     * 
+     * @param result The descriptor result at the point the exception occurred, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     */
     public ArtifactDescriptorException( ArtifactDescriptorResult result, String message, Throwable cause )
     {
         super( message, cause );
         this.result = result;
     }
 
+    /**
+     * Gets the descriptor result at the point the exception occurred. Despite being incomplete, callers might want to
+     * use this result to fail gracefully and continue their operation with whatever interim data has been gathered.
+     * 
+     * @return The descriptor result or {@code null} if unknown.
+     */
     public ArtifactDescriptorResult getResult()
     {
         return result;

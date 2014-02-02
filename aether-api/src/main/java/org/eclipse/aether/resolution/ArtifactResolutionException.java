@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,29 +26,59 @@ public class ArtifactResolutionException
 
     private final transient List<ArtifactResult> results;
 
+    /**
+     * Creates a new exception with the specified results.
+     * 
+     * @param results The resolution results at the point the exception occurred, may be {@code null}.
+     */
     public ArtifactResolutionException( List<ArtifactResult> results )
     {
         super( getMessage( results ), getCause( results ) );
         this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
     }
 
+    /**
+     * Creates a new exception with the specified results and detail message.
+     * 
+     * @param results The resolution results at the point the exception occurred, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     */
     public ArtifactResolutionException( List<ArtifactResult> results, String message )
     {
         super( message, getCause( results ) );
         this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
     }
 
+    /**
+     * Creates a new exception with the specified results, detail message and cause.
+     * 
+     * @param results The resolution results at the point the exception occurred, may be {@code null}.
+     * @param message The detail message, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     */
     public ArtifactResolutionException( List<ArtifactResult> results, String message, Throwable cause )
     {
         super( message, cause );
         this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
     }
 
+    /**
+     * Gets the resolution results at the point the exception occurred. Despite being incomplete, callers might want to
+     * use these results to fail gracefully and continue their operation with whatever interim data has been gathered.
+     * 
+     * @return The resolution results or {@code null} if unknown.
+     */
     public List<ArtifactResult> getResults()
     {
         return results;
     }
 
+    /**
+     * Gets the first result from {@link #getResults()}. This is a convenience method for cases where callers know only
+     * a single result/request is involved.
+     * 
+     * @return The (first) resolution result or {@code null} if none.
+     */
     public ArtifactResult getResult()
     {
         return ( results != null && !results.isEmpty() ) ? results.get( 0 ) : null;
