@@ -18,7 +18,6 @@ import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.sisu.launch.Main;
-import org.slf4j.ILoggerFactory;
 
 /**
  * A factory for repository system instances that employs Eclipse Sisu to wire up the system's components.
@@ -43,18 +42,6 @@ public class SisuRepositorySystemFactory
         public ModelBuilder get()
         {
             return new DefaultModelBuilderFactory().newInstance();
-        }
-
-    }
-
-    @Named
-    private static class LoggerFactoryProvider
-        implements Provider<ILoggerFactory>
-    {
-
-        public ILoggerFactory get()
-        {
-            return org.slf4j.LoggerFactory.getILoggerFactory();
         }
 
     }
