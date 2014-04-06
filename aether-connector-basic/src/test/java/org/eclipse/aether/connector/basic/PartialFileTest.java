@@ -107,7 +107,7 @@ public class PartialFileTest
                             fos.write( 65 );
                             fos.flush();
                             System.out.println( "  " + System.currentTimeMillis() + " Wrote byte " + ( i + 1 ) + "/"
-                                + n + " to " + partFile );
+                                + n );
                         }
                         if ( length >= 0 && !dstFile.setLastModified( System.currentTimeMillis() ) )
                         {
