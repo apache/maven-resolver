@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -100,13 +100,14 @@ public class PartialFileTest
                     {
                         for ( int i = 0, n = Math.abs( length ); i < n; i++ )
                         {
-                            long start = System.currentTimeMillis();
-                            while ( System.currentTimeMillis() - start < sleep )
+                            for ( long start = System.currentTimeMillis(); System.currentTimeMillis() - start < sleep; )
                             {
                                 Thread.sleep( 10 );
                             }
                             fos.write( 65 );
                             fos.flush();
+                            System.out.println( "  " + System.currentTimeMillis() + " Wrote byte " + ( i + 1 ) + "/"
+                                + n + " to " + partFile );
                         }
                         if ( length >= 0 && !dstFile.setLastModified( System.currentTimeMillis() ) )
                         {
@@ -247,7 +248,7 @@ public class PartialFileTest
         partialFile.close();
     }
 
-    @Test( timeout = 5000 )
+    @Test( timeout = 10000 )
     public void testResumeConcurrently_RequestTimeout()
         throws Exception
     {
@@ -266,7 +267,7 @@ public class PartialFileTest
         writer.join();
     }
 
-    @Test( timeout = 5000 )
+    @Test( timeout = 10000 )
     public void testResumeConcurrently_AwaitCompletion_ConcurrentWriterSucceeds()
         throws Exception
     {
@@ -279,7 +280,7 @@ public class PartialFileTest
         assertEquals( 1, remoteAccessChecker.invocations );
     }
 
-    @Test( timeout = 5000 )
+    @Test( timeout = 10000 )
     public void testResumeConcurrently_AwaitCompletion_ConcurrentWriterFails()
         throws Exception
     {
@@ -294,7 +295,7 @@ public class PartialFileTest
         assertEquals( 1, remoteAccessChecker.invocations );
     }
 
-    @Test( timeout = 5000 )
+    @Test( timeout = 10000 )
     public void testResumeConcurrently_CheckRemoteAccess()
         throws Exception
     {
