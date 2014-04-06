@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.internal.impl;
+package org.eclipse.aether.internal.impl.slf4j;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -22,7 +22,7 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.spi.LocationAwareLogger;
 
 /**
- * A logger factory that delegates to Slf4J logging.
+ * A logger factory that delegates to <a href="http://www.slf4j.org/">SLF4J</a> logging.
  */
 @Named
 public class Slf4jLoggerFactory
