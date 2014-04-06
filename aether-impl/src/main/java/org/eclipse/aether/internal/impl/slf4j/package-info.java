@@ -9,7 +9,7 @@
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
 /**
- * The integration with the logging framework <a href="http://www.slf4j.org/">SLF4J</a>. 
+ * The integration with the logging framework <a href="http://www.slf4j.org/" target="_blank">SLF4J</a>. 
  */
 package org.eclipse.aether.internal.impl.slf4j;
 
