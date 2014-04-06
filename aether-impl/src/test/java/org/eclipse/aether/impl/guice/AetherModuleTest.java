@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2013 Sonatype, Inc.
+ * Copyright (c) 2012, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *    Sonatype, Inc. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.aether.impl;
+package org.eclipse.aether.impl.guice;
 
 import static org.junit.Assert.*;
 
@@ -16,6 +16,13 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.impl.ArtifactDescriptorReader;
+import org.eclipse.aether.impl.MetadataGeneratorFactory;
+import org.eclipse.aether.impl.StubArtifactDescriptorReader;
+import org.eclipse.aether.impl.StubVersionRangeResolver;
+import org.eclipse.aether.impl.StubVersionResolver;
+import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.junit.Test;
