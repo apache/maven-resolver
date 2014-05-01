@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,14 +21,12 @@ import java.nio.ByteBuffer;
 
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
 import org.eclipse.aether.spi.io.FileProcessor;
 
 /**
  * A utility class helping with file-based operations.
  */
 @Named
-@Component( role = FileProcessor.class )
 public class DefaultFileProcessor
     implements FileProcessor
 {
@@ -49,9 +47,9 @@ public class DefaultFileProcessor
     }
 
     /**
-     * Thread-safe variant of {@link File#mkdirs()}. Adapted from Java 6. Creates the directory named by the given
-     * abstract pathname, including any necessary but nonexistent parent directories. Note that if this operation fails
-     * it may have succeeded in creating some of the necessary parent directories.
+     * Thread-safe variant of {@link File#mkdirs()}. Creates the directory named by the given abstract pathname,
+     * including any necessary but nonexistent parent directories. Note that if this operation fails it may have
+     * succeeded in creating some of the necessary parent directories.
      * 
      * @param directory The directory to create, may be {@code null}.
      * @return {@code true} if and only if the directory was created, along with all necessary parent directories;

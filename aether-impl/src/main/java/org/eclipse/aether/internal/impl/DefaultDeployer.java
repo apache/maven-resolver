@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,14 +22,12 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositoryEvent;
+import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeployResult;
@@ -70,36 +68,26 @@ import org.eclipse.aether.transfer.TransferEvent;
 /**
  */
 @Named
-@Component( role = Deployer.class )
 public class DefaultDeployer
     implements Deployer, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement
     private FileProcessor fileProcessor;
 
-    @Requirement
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
-    @Requirement
     private RepositoryConnectorProvider repositoryConnectorProvider;
 
-    @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
 
-    @Requirement
     private UpdateCheckManager updateCheckManager;
 
-    @Requirement( role = MetadataGeneratorFactory.class )
     private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<MetadataGeneratorFactory>();
 
-    @Requirement
     private SyncContextFactory syncContextFactory;
 
-    @Requirement
     private OfflineController offlineController;
 
     public DefaultDeployer()
@@ -142,12 +130,6 @@ public class DefaultDeployer
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public DefaultDeployer setFileProcessor( FileProcessor fileProcessor )
@@ -221,12 +203,6 @@ public class DefaultDeployer
             this.metadataFactories = metadataFactories;
         }
         return this;
-    }
-
-    DefaultDeployer setMetadataFactories( List<MetadataGeneratorFactory> metadataFactories )
-    {
-        // plexus support
-        return setMetadataGeneratorFactories( metadataFactories );
     }
 
     public DefaultDeployer setSyncContextFactory( SyncContextFactory syncContextFactory )

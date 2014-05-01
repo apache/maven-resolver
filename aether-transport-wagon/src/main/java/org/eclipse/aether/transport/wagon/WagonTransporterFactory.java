@@ -13,8 +13,6 @@ package org.eclipse.aether.transport.wagon;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
@@ -32,18 +30,14 @@ import org.eclipse.aether.transfer.NoTransporterException;
  * unless one or more wagon implementations are registered at runtime.
  */
 @Named( "wagon" )
-@Component( role = TransporterFactory.class, hint = "wagon" )
 public final class WagonTransporterFactory
     implements TransporterFactory, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement
     private WagonProvider wagonProvider;
 
-    @Requirement
     private WagonConfigurator wagonConfigurator;
 
     private float priority = -1;
@@ -84,12 +78,6 @@ public final class WagonTransporterFactory
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, WagonTransporter.class );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     /**

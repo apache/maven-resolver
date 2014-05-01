@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,6 @@ import java.util.Collection;
 
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
@@ -26,7 +25,6 @@ import org.eclipse.aether.metadata.Metadata;
  * synchronization but merely completes the repository system.
  */
 @Named
-@Component( role = SyncContextFactory.class )
 public class DefaultSyncContextFactory
     implements SyncContextFactory
 {

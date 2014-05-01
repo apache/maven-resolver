@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,6 @@ import java.util.Calendar;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.repository.RepositoryPolicy;
@@ -29,12 +27,10 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 /**
  */
 @Named
-@Component( role = UpdatePolicyAnalyzer.class )
 public class DefaultUpdatePolicyAnalyzer
     implements UpdatePolicyAnalyzer, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
     public DefaultUpdatePolicyAnalyzer()
@@ -57,12 +53,6 @@ public class DefaultUpdatePolicyAnalyzer
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )

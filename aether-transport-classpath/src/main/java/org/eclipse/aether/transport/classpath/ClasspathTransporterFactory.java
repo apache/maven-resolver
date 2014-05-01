@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,8 +13,6 @@ package org.eclipse.aether.transport.classpath;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
@@ -35,7 +33,6 @@ import org.eclipse.aether.transfer.NoTransporterException;
  * <em>Note:</em> Such repositories are read-only and uploads to them are generally not supported.
  */
 @Named( "classpath" )
-@Component( role = TransporterFactory.class, hint = "classpath" )
 public final class ClasspathTransporterFactory
     implements TransporterFactory, Service
 {
@@ -47,7 +44,6 @@ public final class ClasspathTransporterFactory
      */
     public static final String CONFIG_PROP_CLASS_LOADER = "aether.connector.classpath.loader";
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
     private float priority;
@@ -83,12 +79,6 @@ public final class ClasspathTransporterFactory
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, ClasspathTransporter.class );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public float getPriority()

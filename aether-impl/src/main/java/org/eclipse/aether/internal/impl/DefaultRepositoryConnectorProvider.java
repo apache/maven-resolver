@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2013 Sonatype, Inc.
+ * Copyright (c) 2012, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.repository.Authentication;
@@ -37,15 +35,12 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 /**
  */
 @Named
-@Component( role = RepositoryConnectorProvider.class )
 public class DefaultRepositoryConnectorProvider
     implements RepositoryConnectorProvider, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement( role = RepositoryConnectorFactory.class )
     private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<RepositoryConnectorFactory>();
 
     public DefaultRepositoryConnectorProvider()
@@ -72,12 +67,6 @@ public class DefaultRepositoryConnectorProvider
         return this;
     }
 
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
-    }
-
     public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory( RepositoryConnectorFactory factory )
     {
         if ( factory == null )
@@ -99,12 +88,6 @@ public class DefaultRepositoryConnectorProvider
             this.connectorFactories = factories;
         }
         return this;
-    }
-
-    DefaultRepositoryConnectorProvider setConnectorFactories( List<RepositoryConnectorFactory> factories )
-    {
-        // plexus support
-        return setRepositoryConnectorFactories( factories );
     }
 
     public RepositoryConnector newRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,13 +27,11 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositoryEvent;
+import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -71,32 +69,24 @@ import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 /**
  */
 @Named
-@Component( role = MetadataResolver.class )
 public class DefaultMetadataResolver
     implements MetadataResolver, Service
 {
 
     private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
-    @Requirement
     private UpdateCheckManager updateCheckManager;
 
-    @Requirement
     private RepositoryConnectorProvider repositoryConnectorProvider;
 
-    @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
 
-    @Requirement
     private SyncContextFactory syncContextFactory;
 
-    @Requirement
     private OfflineController offlineController;
 
     public DefaultMetadataResolver()
@@ -135,12 +125,6 @@ public class DefaultMetadataResolver
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )

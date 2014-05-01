@@ -13,8 +13,6 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -30,12 +28,10 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
  * Creates local repository managers for repository type {@code "simple"}.
  */
 @Named( "simple" )
-@Component( role = LocalRepositoryManagerFactory.class, hint = "simple" )
 public class SimpleLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
     private float priority;
@@ -73,12 +69,6 @@ public class SimpleLocalRepositoryManagerFactory
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, SimpleLocalRepositoryManager.class );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public float getPriority()

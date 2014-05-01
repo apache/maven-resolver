@@ -10,8 +10,17 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
@@ -52,20 +61,9 @@ import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  */
 @Named
-@Component( role = DependencyCollector.class )
 public class DefaultDependencyCollector
     implements DependencyCollector, Service
 {
@@ -74,16 +72,12 @@ public class DefaultDependencyCollector
 
     private static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
 
-    @Requirement
     private ArtifactDescriptorReader descriptorReader;
 
-    @Requirement
     private VersionRangeResolver versionRangeResolver;
 
     public DefaultDependencyCollector()
@@ -114,12 +108,6 @@ public class DefaultDependencyCollector
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )

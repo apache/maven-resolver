@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,14 +12,11 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
@@ -32,15 +29,12 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 /**
  */
 @Named
-@Component( role = RepositoryEventDispatcher.class )
 public class DefaultRepositoryEventDispatcher
     implements RepositoryEventDispatcher, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement( role = RepositoryListener.class )
     private Collection<RepositoryListener> listeners = new ArrayList<RepositoryListener>();
 
     public DefaultRepositoryEventDispatcher()
@@ -59,12 +53,6 @@ public class DefaultRepositoryEventDispatcher
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public DefaultRepositoryEventDispatcher addRepositoryListener( RepositoryListener listener )
@@ -90,16 +78,10 @@ public class DefaultRepositoryEventDispatcher
         return this;
     }
 
-    DefaultRepositoryEventDispatcher setListeners( List<RepositoryListener> listeners )
-    {
-        // plexus support
-        return setRepositoryListeners( listeners );
-    }
-
     public void initService( ServiceLocator locator )
     {
         setLoggerFactory( locator.getService( LoggerFactory.class ) );
-        setListeners( locator.getServices( RepositoryListener.class ) );
+        setRepositoryListeners( locator.getServices( RepositoryListener.class ) );
     }
 
     public void dispatch( RepositoryEvent event )

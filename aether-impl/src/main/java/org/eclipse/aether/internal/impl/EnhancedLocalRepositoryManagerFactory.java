@@ -13,8 +13,6 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -34,12 +32,10 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
  * emulating physically separated artifact caches per remote repository.
  */
 @Named( "enhanced" )
-@Component( role = LocalRepositoryManagerFactory.class, hint = "enhanced" )
 public class EnhancedLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
     private float priority = 10;
@@ -77,12 +73,6 @@ public class EnhancedLocalRepositoryManagerFactory
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, EnhancedLocalRepositoryManager.class );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public float getPriority()

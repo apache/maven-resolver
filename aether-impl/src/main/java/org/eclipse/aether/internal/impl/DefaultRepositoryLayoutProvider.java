@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
@@ -35,15 +33,12 @@ import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 /**
  */
 @Named
-@Component( role = RepositoryLayoutProvider.class )
 public final class DefaultRepositoryLayoutProvider
     implements RepositoryLayoutProvider, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement( role = RepositoryLayoutFactory.class )
     private Collection<RepositoryLayoutFactory> factories = new ArrayList<RepositoryLayoutFactory>();
 
     public DefaultRepositoryLayoutProvider()
@@ -70,12 +65,6 @@ public final class DefaultRepositoryLayoutProvider
         return this;
     }
 
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
-    }
-
     public DefaultRepositoryLayoutProvider addRepositoryLayoutFactory( RepositoryLayoutFactory factory )
     {
         if ( factory == null )
@@ -97,12 +86,6 @@ public final class DefaultRepositoryLayoutProvider
             this.factories = factories;
         }
         return this;
-    }
-
-    DefaultRepositoryLayoutProvider setFactories( List<RepositoryLayoutFactory> factories )
-    {
-        // plexus support
-        return setRepositoryLayoutFactories( factories );
     }
 
     public RepositoryLayout newRepositoryLayout( RepositorySystemSession session, RemoteRepository repository )

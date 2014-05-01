@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2013 Sonatype, Inc.
+ * Copyright (c) 2012, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,6 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -29,7 +27,6 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 
 @Named
-@Component( role = OfflineController.class )
 public class DefaultOfflineController
     implements OfflineController, Service
 {
@@ -40,7 +37,6 @@ public class DefaultOfflineController
 
     private static final Pattern SEP = Pattern.compile( "\\s*,\\s*" );
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
     public DefaultOfflineController()
@@ -63,12 +59,6 @@ public class DefaultOfflineController
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public void checkOffline( RepositorySystemSession session, RemoteRepository repository )

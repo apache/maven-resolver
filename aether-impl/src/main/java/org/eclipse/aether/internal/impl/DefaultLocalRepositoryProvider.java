@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
 import org.eclipse.aether.repository.LocalRepository;
@@ -35,15 +33,12 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
 /**
  */
 @Named
-@Component( role = LocalRepositoryProvider.class )
 public class DefaultLocalRepositoryProvider
     implements LocalRepositoryProvider, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement( role = LocalRepositoryManagerFactory.class )
     private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<LocalRepositoryManagerFactory>();
 
     public DefaultLocalRepositoryProvider()
@@ -70,12 +65,6 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
-    }
-
     public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )
     {
         if ( factory == null )
@@ -97,12 +86,6 @@ public class DefaultLocalRepositoryProvider
             managerFactories = factories;
         }
         return this;
-    }
-
-    DefaultLocalRepositoryProvider setManagerFactories( List<LocalRepositoryManagerFactory> factories )
-    {
-        // plexus support
-        return setLocalRepositoryManagerFactories( factories );
     }
 
     public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session, LocalRepository repository )

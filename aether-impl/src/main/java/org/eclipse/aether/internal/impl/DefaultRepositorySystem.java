@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,8 +17,6 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -80,45 +78,32 @@ import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 /**
  */
 @Named
-@Component( role = RepositorySystem.class )
 public class DefaultRepositorySystem
     implements RepositorySystem, Service
 {
 
-    @Requirement( role = LoggerFactory.class )
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    @Requirement
     private VersionResolver versionResolver;
 
-    @Requirement
     private VersionRangeResolver versionRangeResolver;
 
-    @Requirement
     private ArtifactResolver artifactResolver;
 
-    @Requirement
     private MetadataResolver metadataResolver;
 
-    @Requirement
     private ArtifactDescriptorReader artifactDescriptorReader;
 
-    @Requirement
     private DependencyCollector dependencyCollector;
 
-    @Requirement
     private Installer installer;
 
-    @Requirement
     private Deployer deployer;
 
-    @Requirement
     private LocalRepositoryProvider localRepositoryProvider;
 
-    @Requirement
     private SyncContextFactory syncContextFactory;
 
-    @Requirement
     private RemoteRepositoryManager remoteRepositoryManager;
 
     public DefaultRepositorySystem()
@@ -168,12 +153,6 @@ public class DefaultRepositorySystem
     {
         this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         return this;
-    }
-
-    void setLogger( LoggerFactory loggerFactory )
-    {
-        // plexus support
-        setLoggerFactory( loggerFactory );
     }
 
     public DefaultRepositorySystem setVersionResolver( VersionResolver versionResolver )
