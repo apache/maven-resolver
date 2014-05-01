@@ -24,7 +24,7 @@ import org.slf4j.spi.LocationAwareLogger;
 /**
  * A logger factory that delegates to <a href="http://www.slf4j.org/">SLF4J</a> logging.
  */
-@Named
+@Named( "slf4j" )
 public class Slf4jLoggerFactory
     implements LoggerFactory, Service
 {
