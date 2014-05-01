@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.aether.internal.impl;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.codehaus.plexus.component.annotations.Component;
@@ -42,6 +43,17 @@ public class EnhancedLocalRepositoryManagerFactory
     private Logger logger = NullLoggerFactory.LOGGER;
 
     private float priority = 10;
+
+    public EnhancedLocalRepositoryManagerFactory()
+    {
+        // enable no-arg constructor
+    }
+
+    @Inject
+    EnhancedLocalRepositoryManagerFactory( LoggerFactory loggerFactory )
+    {
+        setLoggerFactory( loggerFactory );
+    }
 
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
