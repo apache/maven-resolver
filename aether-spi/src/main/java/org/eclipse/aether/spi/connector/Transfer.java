@@ -21,32 +21,6 @@ import org.eclipse.aether.transfer.TransferListener;
 public abstract class Transfer
 {
 
-    /**
-     * The state of a transfer.
-     * 
-     * @deprecated A connector notifies the transfer listener instead.
-     */
-    @Deprecated
-    public enum State
-    {
-        /**
-         * Transfer has not started yet.
-         */
-        NEW,
-
-        /**
-         * Transfer is in progress.
-         */
-        ACTIVE,
-
-        /**
-         * Transfer is over, either successfully or not.
-         */
-        DONE
-    }
-
-    private State state = State.NEW;
-
     private TransferListener listener;
 
     private RequestTrace trace;
@@ -62,36 +36,6 @@ public abstract class Transfer
      * @return The exception or {@code null} if the transfer was successful.
      */
     public abstract Exception getException();
-
-    /**
-     * Gets the state of this transfer.
-     * 
-     * @return The state of this transfer, never {@code null}.
-     * @deprecated
-     */
-    @Deprecated
-    public State getState()
-    {
-        return state;
-    }
-
-    /**
-     * Sets the state of this transfer.
-     * 
-     * @param state The new state, must not be {@code null}.
-     * @return This transfer for chaining, never {@code null}.
-     * @deprecated A connector notifies the transfer listener instead.
-     */
-    @Deprecated
-    public Transfer setState( State state )
-    {
-        if ( state == null )
-        {
-            throw new IllegalArgumentException( "no transfer state specified" );
-        }
-        this.state = state;
-        return this;
-    }
 
     /**
      * Gets the listener that is to be notified during the transfer.
