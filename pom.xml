@@ -252,6 +252,7 @@
             <instructions>
               <Bundle-DocURL>${project.url}</Bundle-DocURL>
               <Bundle-Name>${project.name} (Incubation)</Bundle-Name>
+              <Bundle-RequiredExecutionEnvironment>J2SE-1.5</Bundle-RequiredExecutionEnvironment>
               <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
               <Bundle-Vendor>Eclipse Aether</Bundle-Vendor>
               <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
@@ -418,6 +419,7 @@
                 <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
                 <Bundle-Name>${project.name} Sources (Incubation)</Bundle-Name>
                 <Bundle-License>http://www.eclipse.org/legal/epl-v10.html</Bundle-License>
+                <Bundle-RequiredExecutionEnvironment>J2SE-1.5</Bundle-RequiredExecutionEnvironment>
                 <Bundle-SymbolicName>${bundle.symbolicName}.source</Bundle-SymbolicName>
                 <Bundle-Vendor>Eclipse Aether</Bundle-Vendor>
                 <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
