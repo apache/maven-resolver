@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,8 +17,11 @@ import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
 
 /**
+ * Publishes artifacts to a remote repository.
+ * 
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
+ * @provisional This type is provisional and can be changed, moved or removed without prior notice.
  */
 public interface Deployer
 {
@@ -31,6 +34,7 @@ public interface Deployer
      * @return The deployment result, never {@code null}.
      * @throws DeploymentException If any artifact/metadata from the request could not be deployed.
      * @see RepositorySystem#deploy(RepositorySystemSession, DeployRequest)
+     * @see MetadataGeneratorFactory#newInstance(RepositorySystemSession, DeployRequest)
      */
     DeployResult deploy( RepositorySystemSession session, DeployRequest request )
         throws DeploymentException;

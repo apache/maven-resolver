@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,8 @@ import org.eclipse.aether.transfer.ChecksumFailureException;
 /**
  * A checksum policy gets employed by repository connectors to validate the integrity of a downloaded file. For each
  * downloaded file, a checksum policy instance is obtained and presented with the available checksums to conclude
- * whether the download is valid or not. The following pseudo-code illustrates the usage of a checksum policy in some
- * more detail (the retry logic has been omitted for the sake of brevity):
+ * whether the download is valid or not. The following pseudo-code illustrates the usage of a checksum policy by a
+ * repository connector in some more detail (the retry logic has been omitted for the sake of brevity):
  * 
  * <pre>
  * void validateChecksums() throws ChecksumFailureException {

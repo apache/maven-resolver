@@ -354,6 +354,11 @@
                 <placement>a</placement>
                 <head>Restriction:</head>
               </tag>
+              <tag>
+                <name>provisional</name>
+                <placement>a</placement>
+                <head>Provisional:</head>
+              </tag>
             </tags>
             <groups>
               <group>

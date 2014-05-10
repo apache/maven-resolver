@@ -27,7 +27,7 @@ import org.eclipse.aether.transfer.NoTransporterException;
 /**
  * A transporter factory using <a href="http://maven.apache.org/wagon/" target="_blank">Apache Maven Wagon</a>. Note
  * that this factory merely serves as an adapter to the Wagon API and by itself does not provide any transport services
- * unless one or more wagon implementations are registered at runtime.
+ * unless one or more wagon implementations are registered with the {@link WagonProvider}.
  */
 @Named( "wagon" )
 public final class WagonTransporterFactory

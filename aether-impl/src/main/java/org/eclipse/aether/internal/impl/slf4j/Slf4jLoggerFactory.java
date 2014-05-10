@@ -22,7 +22,7 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.spi.LocationAwareLogger;
 
 /**
- * A logger factory that delegates to <a href="http://www.slf4j.org/">SLF4J</a> logging.
+ * A logger factory that delegates to <a href="http://www.slf4j.org/" target="_blank">SLF4J</a> logging.
  */
 @Named( "slf4j" )
 public class Slf4jLoggerFactory
@@ -57,6 +57,9 @@ public class Slf4jLoggerFactory
 
     private ILoggerFactory factory;
 
+    /**
+     * Creates an instance of this logger factory.
+     */
     public Slf4jLoggerFactory()
     {
         // enables no-arg constructor
