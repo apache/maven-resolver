@@ -384,7 +384,7 @@ public class DefaultArtifactResolver
 
                 try
                 {
-                    offlineController.checkOffline( session, repo );
+                    Utils.checkOffline( session, offlineController, repo );
                 }
                 catch ( RepositoryOfflineException e )
                 {

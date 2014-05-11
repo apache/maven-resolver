@@ -230,7 +230,7 @@ public class DefaultDeployer
     {
         try
         {
-            offlineController.checkOffline( session, request.getRepository() );
+            Utils.checkOffline( session, offlineController, request.getRepository() );
         }
         catch ( RepositoryOfflineException e )
         {

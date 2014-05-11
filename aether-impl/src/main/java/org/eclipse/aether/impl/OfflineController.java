@@ -25,11 +25,17 @@ public interface OfflineController
 {
 
     /**
-     * Determines whether the specified repository is accessible according to the offline policy of the given session.
+     * Determines whether the specified repository is accessible if the system was in offline mode. A simple
+     * implementation might unconditionally throw {@link RepositoryOfflineException} to block all remote repository
+     * access when in offline mode. More sophisticated implementations might inspect
+     * {@link RepositorySystemSession#getConfigProperties() configuration properties} of the session to check for some
+     * kind of whitelist that allows certain remote repositories even when offline. At any rate, the session's current
+     * {@link RepositorySystemSession#isOffline() offline state} is irrelevant to the outcome of the check.
      * 
      * @param session The repository session during which the check is made, must not be {@code null}.
-     * @param repository The remote repository to check for accessibility, must not be {@code null}.
-     * @throws RepositoryOfflineException If the session forbids access to the repository.
+     * @param repository The remote repository to check for offline access, must not be {@code null}.
+     * @throws RepositoryOfflineException If the repository is not accessible in offline mode. If the method returns
+     *             normally, the repository is considered accessible even in offline mode.
      * @see RepositorySystemSession#isOffline()
      */
     void checkOffline( RepositorySystemSession session, RemoteRepository repository )

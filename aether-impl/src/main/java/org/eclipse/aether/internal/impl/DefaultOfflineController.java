@@ -64,11 +64,6 @@ public class DefaultOfflineController
     public void checkOffline( RepositorySystemSession session, RemoteRepository repository )
         throws RepositoryOfflineException
     {
-        if ( !session.isOffline() )
-        {
-            return;
-        }
-
         if ( isOfflineProtocol( session, repository ) || isOfflineHost( session, repository ) )
         {
             return;

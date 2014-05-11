@@ -268,7 +268,7 @@ public class DefaultMetadataResolver
 
             try
             {
-                offlineController.checkOffline( session, repository );
+                Utils.checkOffline( session, offlineController, repository );
             }
             catch ( RepositoryOfflineException e )
             {
