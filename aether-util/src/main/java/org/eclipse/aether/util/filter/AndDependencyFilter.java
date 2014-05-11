@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,8 @@ import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * A dependency filter that combines zero or more other filters using a logical {@code AND}.
+ * A dependency filter that combines zero or more other filters using a logical {@code AND}. The resulting filter
+ * accepts a given dependency node if and only if all constituent filters accept it.
  */
 public final class AndDependencyFilter
     implements DependencyFilter
@@ -29,9 +30,10 @@ public final class AndDependencyFilter
     private final Set<DependencyFilter> filters = new LinkedHashSet<DependencyFilter>();
 
     /**
-     * Creates a new filter from the specified filters.
+     * Creates a new filter from the specified filters. Prefer {@link #newInstance(DependencyFilter, DependencyFilter)}
+     * if any of the input filters might be {@code null}.
      * 
-     * @param filters The filters to combine, may be {@code null}.
+     * @param filters The filters to combine, may be {@code null} but must not contain {@code null} elements.
      */
     public AndDependencyFilter( DependencyFilter... filters )
     {
@@ -44,7 +46,7 @@ public final class AndDependencyFilter
     /**
      * Creates a new filter from the specified filters.
      * 
-     * @param filters The filters to combine, may be {@code null}.
+     * @param filters The filters to combine, may be {@code null} but must not contain {@code null} elements.
      */
     public AndDependencyFilter( Collection<DependencyFilter> filters )
     {
@@ -58,7 +60,7 @@ public final class AndDependencyFilter
      * Creates a new filter from the specified filters.
      * 
      * @param filter1 The first filter to combine, may be {@code null}.
-     * @param filter2 The first filter to combine, may be {@code null}.
+     * @param filter2 The second filter to combine, may be {@code null}.
      * @return The combined filter or {@code null} if both filter were {@code null}.
      */
     public static DependencyFilter newInstance( DependencyFilter filter1, DependencyFilter filter2 )

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,8 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * A dependency selector that combines zero or more other selectors using a logical {@code AND}.
+ * A dependency selector that combines zero or more other selectors using a logical {@code AND}. The resulting selector
+ * selects a given dependency if and only if all constituent selectors do so.
  */
 public final class AndDependencySelector
     implements DependencySelector
@@ -32,9 +33,10 @@ public final class AndDependencySelector
     private int hashCode;
 
     /**
-     * Creates a new selector from the specified selectors.
+     * Creates a new selector from the specified selectors. Prefer
+     * {@link #newInstance(DependencySelector, DependencySelector)} if any of the input selectors might be {@code null}.
      * 
-     * @param selectors The selectors to combine, may be {@code null}.
+     * @param selectors The selectors to combine, may be {@code null} but must not contain {@code null} elements.
      */
     public AndDependencySelector( DependencySelector... selectors )
     {
@@ -51,7 +53,7 @@ public final class AndDependencySelector
     /**
      * Creates a new selector from the specified selectors.
      * 
-     * @param selectors The selectors to combine, may be {@code null}.
+     * @param selectors The selectors to combine, may be {@code null} but must not contain {@code null} elements.
      */
     public AndDependencySelector( Collection<? extends DependencySelector> selectors )
     {
@@ -81,7 +83,7 @@ public final class AndDependencySelector
      * Creates a new selector from the specified selectors.
      * 
      * @param selector1 The first selector to combine, may be {@code null}.
-     * @param selector2 The first selector to combine, may be {@code null}.
+     * @param selector2 The second selector to combine, may be {@code null}.
      * @return The combined selector or {@code null} if both selectors were {@code null}.
      */
     public static DependencySelector newInstance( DependencySelector selector1, DependencySelector selector2 )
