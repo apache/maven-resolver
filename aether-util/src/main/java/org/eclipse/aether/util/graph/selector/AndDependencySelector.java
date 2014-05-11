@@ -92,7 +92,7 @@ public final class AndDependencySelector
         {
             return selector2;
         }
-        else if ( selector2 == null )
+        else if ( selector2 == null || selector2.equals( selector1 ) )
         {
             return selector1;
         }
