@@ -73,7 +73,7 @@
 
   <ciManagement>
     <system>Hudson</system>
-    <url>https://hudson.eclipse.org/hudson/job/aether-core-nightly/</url>
+    <url>https://hudson.eclipse.org/aether/job/aether-core/</url>
   </ciManagement>
 
   <distributionManagement>
