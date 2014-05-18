@@ -127,6 +127,8 @@
   </modules>
 
   <properties>
+    <bundle.env>J2SE-1.5</bundle.env>
+    <bundle.vendor>Eclipse Aether</bundle.vendor>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
@@ -252,9 +254,9 @@
             <instructions>
               <Bundle-DocURL>${project.url}</Bundle-DocURL>
               <Bundle-Name>${project.name}</Bundle-Name>
-              <Bundle-RequiredExecutionEnvironment>J2SE-1.5</Bundle-RequiredExecutionEnvironment>
+              <Bundle-RequiredExecutionEnvironment>${bundle.env}</Bundle-RequiredExecutionEnvironment>
               <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
-              <Bundle-Vendor>Eclipse Aether</Bundle-Vendor>
+              <Bundle-Vendor>${bundle.vendor}</Bundle-Vendor>
               <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
               <Export-Package>org.eclipse.aether.internal.*;x-internal:=true,org.eclipse.aether.*</Export-Package>
             </instructions>
@@ -424,9 +426,9 @@
                 <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
                 <Bundle-Name>${project.name} Sources</Bundle-Name>
                 <Bundle-License>http://www.eclipse.org/legal/epl-v10.html</Bundle-License>
-                <Bundle-RequiredExecutionEnvironment>J2SE-1.5</Bundle-RequiredExecutionEnvironment>
+                <Bundle-RequiredExecutionEnvironment>${bundle.env}</Bundle-RequiredExecutionEnvironment>
                 <Bundle-SymbolicName>${bundle.symbolicName}.source</Bundle-SymbolicName>
-                <Bundle-Vendor>Eclipse Aether</Bundle-Vendor>
+                <Bundle-Vendor>${bundle.vendor}</Bundle-Vendor>
                 <Bundle-Version>${bundle.osgiVersion}</Bundle-Version>
                 <Eclipse-SourceBundle>${bundle.symbolicName};version="${bundle.osgiVersion}";roots:="."</Eclipse-SourceBundle>
               </manifestEntries>
