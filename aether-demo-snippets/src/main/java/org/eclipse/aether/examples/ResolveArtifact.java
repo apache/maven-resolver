@@ -34,7 +34,7 @@ public class ResolveArtifact
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-util:0.9.0.v20140226" );
+        Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-util:1.0.0.v20140518" );
 
         ArtifactRequest artifactRequest = new ArtifactRequest();
         artifactRequest.setArtifact( artifact );
