@@ -11,12 +11,12 @@
 package org.eclipse.aether.util.repository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import org.eclipse.aether.repository.Proxy;
@@ -53,9 +53,8 @@ public final class DefaultProxySelector
      * a given repository will be used.
      * 
      * @param proxy The proxy definition to add, must not be {@code null}.
-     * @param nonProxyHosts The list of (case-insensitive) host names to exclude from proxying, may be {@code null} but
-     *            must not contain {@code null} elements. The asterisk character ('*') may be used as wildcard in a host
-     *            name.
+     * @param nonProxyHosts The list of (case-insensitive) host names to exclude from proxying, may be {@code null}. The
+     *            asterisk character ('*') may be used as wildcard in a host name.
      * @return This proxy selector for chaining, never {@code null}.
      * @since 1.1.0
      */
@@ -123,6 +122,10 @@ public final class DefaultProxySelector
             {
                 for ( String nonProxyHost : nonProxyHosts )
                 {
+                    if ( nonProxyHost == null || nonProxyHost.length() <= 0 )
+                    {
+                        continue;
+                    }
                     String pattern = nonProxyHost;
                     pattern = pattern.replace( ".", "\\." ).replace( "*", ".*" );
                     patterns.add( Pattern.compile( pattern, Pattern.CASE_INSENSITIVE ) );
@@ -136,11 +139,7 @@ public final class DefaultProxySelector
             List<String> hosts = null;
             if ( nonProxyHosts != null )
             {
-                hosts = new ArrayList<String>();
-                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" ); tokenizer.hasMoreTokens(); )
-                {
-                    hosts.add( tokenizer.nextToken() );
-                }
+                hosts = Arrays.asList( nonProxyHosts.split( "\\|" ) );
             }
             return hosts;
         }
