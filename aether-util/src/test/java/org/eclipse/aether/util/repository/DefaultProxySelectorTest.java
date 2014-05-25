@@ -12,7 +12,9 @@ package org.eclipse.aether.util.repository;
 
 import static org.junit.Assert.*;
 
-import org.eclipse.aether.util.repository.DefaultProxySelector;
+import java.util.Arrays;
+
+import org.eclipse.aether.util.repository.DefaultProxySelector.NonProxyHosts;
 import org.junit.Test;
 
 /**
@@ -22,14 +24,22 @@ public class DefaultProxySelectorTest
 
     private boolean isNonProxyHost( String host, String nonProxyHosts )
     {
-        return new DefaultProxySelector.NonProxyHosts( nonProxyHosts ).isNonProxyHost( host );
+        return new NonProxyHosts( NonProxyHosts.split( nonProxyHosts ) ).isNonProxyHost( host );
+    }
+
+    private boolean isNonProxyHost( String host, String... nonProxyHosts )
+    {
+        return new NonProxyHosts( nonProxyHosts != null ? Arrays.asList( nonProxyHosts ) : null ).isNonProxyHost( host );
     }
 
     @Test
     public void testIsNonProxyHost_Blank()
     {
-        assertFalse( isNonProxyHost( "www.eclipse.org", null ) );
+        assertFalse( isNonProxyHost( "www.eclipse.org", (String) null ) );
         assertFalse( isNonProxyHost( "www.eclipse.org", "" ) );
+
+        assertFalse( isNonProxyHost( "www.eclipse.org", (String[]) null ) );
+        assertFalse( isNonProxyHost( "www.eclipse.org", new String[0] ) );
     }
 
     @Test
@@ -48,6 +58,11 @@ public class DefaultProxySelectorTest
         assertTrue( isNonProxyHost( "eclipse.org", "eclipse.org|host2" ) );
         assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org" ) );
         assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org|host2" ) );
+
+        // controversial (no trimming) but consistent with JRE's handling of http.nonProxyHosts
+        assertFalse( isNonProxyHost( "eclipse.org", "host1| eclipse.org |host2" ) );
+        assertFalse( isNonProxyHost( "eclipse.org", "host1|eclipse.org " ) );
+        assertFalse( isNonProxyHost( "eclipse.org", " eclipse.org|host2" ) );
     }
 
     @Test

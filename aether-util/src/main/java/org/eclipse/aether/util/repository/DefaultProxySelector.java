@@ -11,6 +11,7 @@
 package org.eclipse.aether.util.repository;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -34,12 +35,33 @@ public final class DefaultProxySelector
     /**
      * Adds the specified proxy definition to the selector. Proxy definitions are ordered, the first matching proxy for
      * a given repository will be used.
+     * <p>
+     * The syntax of the non-proxy host list matches that of the property "http.nonProxyHosts" from the JRE, i.e. the
+     * asterisk character ('*') serves as a wildcard for pattern matching. Multiple non-proxy hosts are separated by the
+     * pipe character ('|') but note that surrounding whitespace is not trimmed from the entries.
      * 
      * @param proxy The proxy definition to add, must not be {@code null}.
      * @param nonProxyHosts The list of (case-insensitive) host names to exclude from proxying, may be {@code null}.
      * @return This proxy selector for chaining, never {@code null}.
      */
     public DefaultProxySelector add( Proxy proxy, String nonProxyHosts )
+    {
+        return add( proxy, NonProxyHosts.split( nonProxyHosts ) );
+    }
+
+    /**
+     * Adds the specified proxy definition to the selector. Proxy definitions are ordered, the first matching proxy for
+     * a given repository will be used.
+     * <p>
+     * The asterisk character ('*') may be used as wildcard in a host name.
+     * 
+     * @param proxy The proxy definition to add, must not be {@code null}.
+     * @param nonProxyHosts The list of (case-insensitive) host names to exclude from proxying, may be {@code null} but
+     *            must not contain {@code null} elements.
+     * @return This proxy selector for chaining, never {@code null}.
+     * @since 1.1.0
+     */
+    public DefaultProxySelector add( Proxy proxy, Collection<String> nonProxyHosts )
     {
         if ( proxy == null )
         {
@@ -96,19 +118,33 @@ public final class DefaultProxySelector
 
         private final Pattern[] patterns;
 
-        public NonProxyHosts( String nonProxyHosts )
+        public NonProxyHosts( Collection<String> nonProxyHosts )
         {
             List<Pattern> patterns = new ArrayList<Pattern>();
             if ( nonProxyHosts != null )
             {
-                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" ); tokenizer.hasMoreTokens(); )
+                for ( String nonProxyHost : nonProxyHosts )
                 {
-                    String pattern = tokenizer.nextToken();
+                    String pattern = nonProxyHost;
                     pattern = pattern.replace( ".", "\\." ).replace( "*", ".*" );
                     patterns.add( Pattern.compile( pattern, Pattern.CASE_INSENSITIVE ) );
                 }
             }
             this.patterns = patterns.toArray( new Pattern[patterns.size()] );
+        }
+
+        static List<String> split( String nonProxyHosts )
+        {
+            List<String> hosts = null;
+            if ( nonProxyHosts != null )
+            {
+                hosts = new ArrayList<String>();
+                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" ); tokenizer.hasMoreTokens(); )
+                {
+                    hosts.add( tokenizer.nextToken() );
+                }
+            }
+            return hosts;
         }
 
         boolean isNonProxyHost( String host )
@@ -135,7 +171,7 @@ public final class DefaultProxySelector
 
         final NonProxyHosts nonProxyHosts;
 
-        public ProxyDef( Proxy proxy, String nonProxyHosts )
+        public ProxyDef( Proxy proxy, Collection<String> nonProxyHosts )
         {
             this.proxy = proxy;
             this.nonProxyHosts = new NonProxyHosts( nonProxyHosts );
