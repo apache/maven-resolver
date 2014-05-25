@@ -26,21 +26,42 @@ public class DefaultProxySelectorTest
     }
 
     @Test
-    public void testIsNonProxyHost()
+    public void testIsNonProxyHost_Blank()
     {
-        assertFalse( isNonProxyHost( "www.sonatype.org", null ) );
-        assertFalse( isNonProxyHost( "www.sonatype.org", "" ) );
+        assertFalse( isNonProxyHost( "www.eclipse.org", null ) );
+        assertFalse( isNonProxyHost( "www.eclipse.org", "" ) );
+    }
 
-        assertTrue( isNonProxyHost( "www.sonatype.org", "*" ) );
-        assertTrue( isNonProxyHost( "www.sonatype.org", "*.org" ) );
-        assertTrue( isNonProxyHost( "www.sonatype.org", "www.*" ) );
-        assertTrue( isNonProxyHost( "www.sonatype.org", "www.*.org" ) );
+    @Test
+    public void testIsNonProxyHost_Wildcard()
+    {
+        assertTrue( isNonProxyHost( "www.eclipse.org", "*" ) );
+        assertTrue( isNonProxyHost( "www.eclipse.org", "*.org" ) );
+        assertFalse( isNonProxyHost( "www.eclipse.org", "*.com" ) );
+        assertTrue( isNonProxyHost( "www.eclipse.org", "www.*" ) );
+        assertTrue( isNonProxyHost( "www.eclipse.org", "www.*.org" ) );
+    }
 
-        assertFalse( isNonProxyHost( "www.sonatype.org", "www.sonatype.com" ) );
-        assertFalse( isNonProxyHost( "www.sonatype.org", "*.com" ) );
-        assertFalse( isNonProxyHost( "www.sonatype.org", "sonatype.org" ) );
+    @Test
+    public void testIsNonProxyHost_Multiple()
+    {
+        assertTrue( isNonProxyHost( "eclipse.org", "eclipse.org|host2" ) );
+        assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org" ) );
+        assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org|host2" ) );
+    }
 
-        assertTrue( isNonProxyHost( "www.sonatype.org", "*.com|*.org" ) );
+    @Test
+    public void testIsNonProxyHost_Misc()
+    {
+        assertFalse( isNonProxyHost( "www.eclipse.org", "www.eclipse.com" ) );
+        assertFalse( isNonProxyHost( "www.eclipse.org", "eclipse.org" ) );
+    }
+
+    @Test
+    public void testIsNonProxyHost_CaseInsensitivity()
+    {
+        assertTrue( isNonProxyHost( "www.eclipse.org", "www.ECLIPSE.org" ) );
+        assertTrue( isNonProxyHost( "www.ECLIPSE.org", "www.eclipse.org" ) );
     }
 
 }
