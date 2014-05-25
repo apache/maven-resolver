@@ -38,9 +38,9 @@ public final class DefaultProxySelector
      * 
      * @param proxy The proxy definition to add, must not be {@code null}.
      * @param nonProxyHosts The list of (case-insensitive) host names to exclude from proxying, may be {@code null}. The
-     *            syntax of this list matches that of the property "http.nonProxyHosts" from the JRE, i.e. the asterisk
-     *            character ('*') serves as a wildcard for pattern matching. Multiple non-proxy hosts are separated by
-     *            the pipe character ('|') but note that surrounding whitespace is not trimmed from the entries.
+     *            syntax of this list resembles that of the property "http.nonProxyHosts" from the JRE, i.e. the
+     *            asterisk character ('*') serves as a wildcard for pattern matching. Multiple entries are separated by
+     *            the pipe character ('|') and surrounding whitespace is trimmed.
      * @return This proxy selector for chaining, never {@code null}.
      */
     public DefaultProxySelector add( Proxy proxy, String nonProxyHosts )
@@ -139,7 +139,7 @@ public final class DefaultProxySelector
             List<String> hosts = null;
             if ( nonProxyHosts != null )
             {
-                hosts = Arrays.asList( nonProxyHosts.split( "\\|" ) );
+                hosts = Arrays.asList( nonProxyHosts.trim().split( "\\s*\\|\\s*" ) );
             }
             return hosts;
         }

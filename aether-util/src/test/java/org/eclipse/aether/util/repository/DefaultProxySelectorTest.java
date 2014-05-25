@@ -64,11 +64,16 @@ public class DefaultProxySelectorTest
         assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org|host2" ) );
 
         assertFalse( isNonProxyHost( "", "||host||" ) );
+    }
 
-        // controversial (no trimming) but consistent with JRE's handling of http.nonProxyHosts
-        assertFalse( isNonProxyHost( "eclipse.org", "host1| eclipse.org |host2" ) );
-        assertFalse( isNonProxyHost( "eclipse.org", "host1|eclipse.org " ) );
-        assertFalse( isNonProxyHost( "eclipse.org", " eclipse.org|host2" ) );
+    @Test
+    public void testIsNonProxyHost_Trimming()
+    {
+        assertFalse( isNonProxyHost( "", " " ) );
+        assertTrue( isNonProxyHost( "eclipse.org", " eclipse.org " ) );
+        assertTrue( isNonProxyHost( "eclipse.org", "host1| eclipse.org |host2" ) );
+        assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org " ) );
+        assertTrue( isNonProxyHost( "eclipse.org", " eclipse.org|host2" ) );
     }
 
     @Test
