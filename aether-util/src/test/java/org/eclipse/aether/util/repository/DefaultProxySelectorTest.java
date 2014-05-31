@@ -70,7 +70,12 @@ public class DefaultProxySelectorTest
         assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org" ) );
         assertTrue( isNonProxyHost( "eclipse.org", "host1|eclipse.org|host2" ) );
 
+        assertTrue( isNonProxyHost( "eclipse.org", "eclipse.org,host2" ) );
+        assertTrue( isNonProxyHost( "eclipse.org", "host1,eclipse.org" ) );
+        assertTrue( isNonProxyHost( "eclipse.org", "host1,eclipse.org,host2" ) );
+
         assertFalse( isNonProxyHost( "", "||host||" ) );
+        assertFalse( isNonProxyHost( "", ",,host,," ) );
     }
 
     @Test
