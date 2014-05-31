@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,8 @@
 package org.eclipse.aether.util.repository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,23 +35,23 @@ public final class DefaultMirrorSelector
     /**
      * Adds the specified mirror to this selector.
      * 
-     * @param id The identifier of the mirror, must not be {@code null}.
-     * @param url The URL of the mirror, must not be {@code null}.
-     * @param type The content type of the mirror, must not be {@code null}.
+     * @param id The identifier of the mirror, may be {@code null}.
+     * @param url The URL of the mirror, may be {@code null}.
+     * @param type The content type of the mirror, may be {@code null}.
      * @param repositoryManager A flag whether the mirror is a repository manager or a simple server.
-     * @param mirrorOfIds The identifier(s) of remote repositories to mirror, must not be {@code null}. Multiple
-     *            identifiers can be separated by comma and additionally the wildcards "*" and "external:*" can be used
-     *            to match all (external) repositories, prefixing a repo id with an exclamation mark allows to express
-     *            an exclusion. For example "external:*,!central".
+     * @param mirrorOfIds The identifier(s) of remote repositories to mirror, may be {@code null}. Multiple identifiers
+     *            can be separated by comma (',') and additionally the wildcards "*" and "external:*" can be used to
+     *            match all (external) repositories, prefixing a repo id with an exclamation mark allows to express an
+     *            exclusion. For example "external:*,!central".
      * @param mirrorOfTypes The content type(s) of remote repositories to mirror, may be {@code null} or empty to match
-     *            any content type. Similar to the repo id specification, multiple types can be comma-separated, the
-     *            wildcard "*" and the "!" negation syntax are supported. For example "*,!p2".
+     *            any content type. Multiple types can be separated by comma (','), the wildcard "*" and the "!"
+     *            negation syntax are also supported. For example "*,!p2".
      * @return This selector for chaining, never {@code null}.
      */
     public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
                                       String mirrorOfIds, String mirrorOfTypes )
     {
-        mirrors.add( new MirrorDef( id, url, type, repositoryManager, mirrorOfIds, mirrorOfTypes ) );
+        mirrors.add( new MirrorDef( id, url, type, repositoryManager, split( mirrorOfIds ), split( mirrorOfTypes ) ) );
 
         return this;
     }
@@ -83,14 +85,14 @@ public final class DefaultMirrorSelector
 
     private MirrorDef findMirror( RemoteRepository repository )
     {
-        String repoId = repository.getId();
-
-        if ( repoId != null && !mirrors.isEmpty() )
+        if ( !mirrors.isEmpty() )
         {
+            String repoId = repository.getId();
+            String repoType = repository.getContentType();
+
             for ( MirrorDef mirror : mirrors )
             {
-                if ( repoId.equals( mirror.mirrorOfIds ) && matchesType( repository.getContentType(),
-                                                                         mirror.mirrorOfTypes ) )
+                if ( mirror.idMatcher.isExactMatch( repoId ) && mirror.typeMatcher.isMatch( repoType ) )
                 {
                     return mirror;
                 }
@@ -98,8 +100,7 @@ public final class DefaultMirrorSelector
 
             for ( MirrorDef mirror : mirrors )
             {
-                if ( matchPattern( repository, mirror.mirrorOfIds ) && matchesType( repository.getContentType(),
-                                                                                    mirror.mirrorOfTypes ) )
+                if ( mirror.idMatcher.isMatch( repository ) && mirror.typeMatcher.isMatch( repoType ) )
                 {
                     return mirror;
                 }
@@ -109,131 +110,135 @@ public final class DefaultMirrorSelector
         return null;
     }
 
-    /**
-     * This method checks if the pattern matches the originalRepository. Valid patterns: * = everything external:* =
-     * everything not on the localhost and not file based. repo,repo1 = repo or repo1 *,!repo1 = everything except repo1
-     * 
-     * @param repository to compare for a match.
-     * @param pattern used for match. Currently only '*' is supported.
-     * @return true if the repository is a match to this pattern.
-     */
-    static boolean matchPattern( RemoteRepository repository, String pattern )
+    static List<String> split( String list )
     {
-        boolean result = false;
-        String originalId = repository.getId();
-
-        // simple checks first to short circuit processing below.
-        if ( WILDCARD.equals( pattern ) || pattern.equals( originalId ) )
+        List<String> tokens = null;
+        if ( list != null )
         {
-            result = true;
+            tokens = Arrays.asList( list.split( "," ) );
         }
-        else
+        return tokens;
+    }
+
+    static String[] clean( Collection<String> tokens )
+    {
+        List<String> cleaned = new ArrayList<String>();
+        if ( tokens != null )
         {
-            // process the list
-            String[] repos = pattern.split( "," );
-            for ( String repo : repos )
+            for ( String token : tokens )
             {
-                // see if this is a negative match
-                if ( repo.length() > 1 && repo.startsWith( "!" ) )
+                if ( token != null && token.length() > 0 )
                 {
-                    if ( repo.substring( 1 ).equals( originalId ) )
-                    {
-                        // explicitly exclude. Set result and stop processing.
-                        result = false;
-                        break;
-                    }
-                }
-                // check for exact match
-                else if ( repo.equals( originalId ) )
-                {
-                    result = true;
-                    break;
-                }
-                // check for external:*
-                else if ( EXTERNAL_WILDCARD.equals( repo ) && isExternalRepo( repository ) )
-                {
-                    result = true;
-                    // don't stop processing in case a future segment explicitly excludes this repo
-                }
-                else if ( WILDCARD.equals( repo ) )
-                {
-                    result = true;
-                    // don't stop processing in case a future segment explicitly excludes this repo
+                    cleaned.add( token );
                 }
             }
         }
-        return result;
+        return cleaned.toArray( new String[cleaned.size()] );
     }
 
-    /**
-     * Checks the URL to see if this repository refers to an external repository.
-     * 
-     * @param repository The repository to check, must not be {@code null}.
-     * @return {@code true} if external, {@code false} otherwise.
-     */
-    static boolean isExternalRepo( RemoteRepository repository )
+    static final class IdMatcher
     {
-        boolean local =
-            "localhost".equals( repository.getHost() ) || "127.0.0.1".equals( repository.getHost() )
-                || "file".equalsIgnoreCase( repository.getProtocol() );
-        return !local;
-    }
 
-    /**
-     * Checks whether the types configured for a mirror match with the type of the repository.
-     * 
-     * @param repoType The type of the repository, may be {@code null}.
-     * @param mirrorType The types supported by the mirror, may be {@code null}.
-     * @return {@code true} if the types associated with the mirror match the type of the original repository,
-     *         {@code false} otherwise.
-     */
-    static boolean matchesType( String repoType, String mirrorType )
-    {
-        boolean result = false;
+        final String[] mirrorOfIds;
 
-        // simple checks first to short circuit processing below.
-        if ( mirrorType == null || mirrorType.length() <= 0 || WILDCARD.equals( mirrorType ) )
+        public IdMatcher( Collection<String> mirrorOfIds )
         {
-            result = true;
+            this.mirrorOfIds = clean( mirrorOfIds );
         }
-        else if ( mirrorType.equals( repoType ) )
+
+        boolean isExactMatch( String repoId )
         {
-            result = true;
+            return mirrorOfIds.length == 1 && mirrorOfIds[0].equals( repoId );
         }
-        else
+
+        boolean isMatch( RemoteRepository repository )
         {
-            // process the list
-            String[] layouts = mirrorType.split( "," );
-            for ( String layout : layouts )
+            boolean result = false;
+            if ( mirrorOfIds.length <= 0 )
             {
-                // see if this is a negative match
-                if ( layout.length() > 1 && layout.startsWith( "!" ) )
+                result = false;
+            }
+            else
+            {
+                String repoId = repository.getId();
+                for ( String mirrorOfId : mirrorOfIds )
                 {
-                    if ( layout.substring( 1 ).equals( repoType ) )
+                    if ( mirrorOfId.equals( repoId ) )
                     {
-                        // explicitly exclude. Set result and stop processing.
+                        result = true;
+                        break;
+                    }
+                    else if ( mirrorOfId.startsWith( "!" ) && mirrorOfId.substring( 1 ).equals( repoId ) )
+                    {
                         result = false;
                         break;
                     }
-                }
-                // check for exact match
-                else if ( layout.equals( repoType ) )
-                {
-                    result = true;
-                    break;
-                }
-                else if ( WILDCARD.equals( layout ) )
-                {
-                    result = true;
-                    // don't stop processing in case a future segment explicitly excludes this repo
+                    else if ( EXTERNAL_WILDCARD.equals( mirrorOfId ) && isExternalRepo( repository ) )
+                    {
+                        result = true;
+                    }
+                    else if ( WILDCARD.equals( mirrorOfId ) )
+                    {
+                        result = true;
+                    }
                 }
             }
+            return result;
         }
 
-        return result;
+        static boolean isExternalRepo( RemoteRepository repository )
+        {
+            boolean local =
+                "localhost".equals( repository.getHost() ) || "127.0.0.1".equals( repository.getHost() )
+                    || "file".equalsIgnoreCase( repository.getProtocol() );
+            return !local;
+        }
+
     }
 
-    static class MirrorDef
+    static final class TypeMatcher
+    {
+
+        final String[] mirrorOfTypes;
+
+        public TypeMatcher( Collection<String> mirrorOfTypes )
+        {
+            this.mirrorOfTypes = clean( mirrorOfTypes );
+        }
+
+        boolean isMatch( String repoType )
+        {
+            boolean result = false;
+            if ( mirrorOfTypes.length <= 0 )
+            {
+                result = true;
+            }
+            else
+            {
+                for ( String mirrorOfType : mirrorOfTypes )
+                {
+                    if ( mirrorOfType.equals( repoType ) )
+                    {
+                        result = true;
+                        break;
+                    }
+                    else if ( mirrorOfType.startsWith( "!" ) && mirrorOfType.substring( 1 ).equals( repoType ) )
+                    {
+                        result = false;
+                        break;
+                    }
+                    else if ( WILDCARD.equals( mirrorOfType ) )
+                    {
+                        result = true;
+                    }
+                }
+            }
+            return result;
+        }
+
+    }
+
+    static final class MirrorDef
     {
 
         final String id;
@@ -244,19 +249,19 @@ public final class DefaultMirrorSelector
 
         final boolean repositoryManager;
 
-        final String mirrorOfIds;
+        final IdMatcher idMatcher;
 
-        final String mirrorOfTypes;
+        final TypeMatcher typeMatcher;
 
-        public MirrorDef( String id, String url, String type, boolean repositoryManager, String mirrorOfIds,
-                          String mirrorOfTypes )
+        public MirrorDef( String id, String url, String type, boolean repositoryManager,
+                          Collection<String> mirrorOfIds, Collection<String> mirrorOfTypes )
         {
             this.id = id;
             this.url = url;
             this.type = type;
             this.repositoryManager = repositoryManager;
-            this.mirrorOfIds = mirrorOfIds;
-            this.mirrorOfTypes = mirrorOfTypes;
+            this.idMatcher = new IdMatcher( mirrorOfIds );
+            this.typeMatcher = new TypeMatcher( mirrorOfTypes );
         }
 
     }
