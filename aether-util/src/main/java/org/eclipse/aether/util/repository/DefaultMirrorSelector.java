@@ -51,7 +51,29 @@ public final class DefaultMirrorSelector
     public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
                                       String mirrorOfIds, String mirrorOfTypes )
     {
-        mirrors.add( new MirrorDef( id, url, type, repositoryManager, split( mirrorOfIds ), split( mirrorOfTypes ) ) );
+        return add( id, url, type, repositoryManager, split( mirrorOfIds ), split( mirrorOfTypes ) );
+    }
+
+    /**
+     * Adds the specified mirror to this selector.
+     * 
+     * @param id The identifier of the mirror, may be {@code null}.
+     * @param url The URL of the mirror, may be {@code null}.
+     * @param type The content type of the mirror, may be {@code null}.
+     * @param repositoryManager A flag whether the mirror is a repository manager or a simple server.
+     * @param mirrorOfIds The identifier(s) of remote repositories to mirror, may be {@code null}. The wildcards "*" and
+     *            "external:*" can be used to match all (external) repositories, prefixing a repo id with an exclamation
+     *            mark allows to express an exclusion. For example "external:*", "!central".
+     * @param mirrorOfTypes The content type(s) of remote repositories to mirror, may be {@code null} or empty to match
+     *            any content type. The wildcard "*" and the "!" negation syntax are also supported. For example "*",
+     *            "!p2".
+     * @return This selector for chaining, never {@code null}.
+     * @since 1.1.0
+     */
+    public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
+                                      Collection<String> mirrorOfIds, Collection<String> mirrorOfTypes )
+    {
+        mirrors.add( new MirrorDef( id, url, type, repositoryManager, mirrorOfIds, mirrorOfTypes ) );
 
         return this;
     }
