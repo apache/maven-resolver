@@ -14,6 +14,8 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
+import org.eclipse.aether.repository.Proxy;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.repository.DefaultProxySelector.NonProxyHosts;
 import org.junit.Test;
 
@@ -21,6 +23,11 @@ import org.junit.Test;
  */
 public class DefaultProxySelectorTest
 {
+
+    private RemoteRepository newRepo( String url )
+    {
+        return new RemoteRepository.Builder( "id", "type", url ).build();
+    }
 
     private boolean isNonProxyHost( String host, String nonProxyHosts )
     {
@@ -88,6 +95,69 @@ public class DefaultProxySelectorTest
     {
         assertTrue( isNonProxyHost( "www.eclipse.org", "www.ECLIPSE.org" ) );
         assertTrue( isNonProxyHost( "www.ECLIPSE.org", "www.eclipse.org" ) );
+    }
+
+    @Test
+    public void testGetProxy_FirstMatchWins()
+    {
+        DefaultProxySelector selector = new DefaultProxySelector();
+        Proxy proxy1 = new Proxy( Proxy.TYPE_HTTP, "proxy", 88 );
+        selector.add( proxy1, "localhost" );
+        Proxy proxy2 = new Proxy( Proxy.TYPE_HTTP, "other", 8888 );
+        selector.add( proxy2, "" );
+
+        assertSame( proxy1, selector.getProxy( newRepo( "http://eclipse.org/" ) ) );
+        assertSame( proxy2, selector.getProxy( newRepo( "http://localhost/" ) ) );
+    }
+
+    @Test
+    public void testGetProxy_Http()
+    {
+        DefaultProxySelector selector = new DefaultProxySelector();
+        Proxy proxy1 = new Proxy( Proxy.TYPE_HTTP, "proxy", 88 );
+        selector.add( proxy1, "localhost" );
+
+        assertSame( proxy1, selector.getProxy( newRepo( "http://eclipse.org/" ) ) );
+        assertSame( proxy1, selector.getProxy( newRepo( "HTTP://eclipse.org/" ) ) );
+
+        assertSame( proxy1, selector.getProxy( newRepo( "https://eclipse.org/" ) ) );
+        assertSame( proxy1, selector.getProxy( newRepo( "HTTPS://eclipse.org/" ) ) );
+
+        assertNull( selector.getProxy( newRepo( "http://localhost/" ) ) );
+
+        Proxy proxy2 = new Proxy( Proxy.TYPE_HTTPS, "sproxy", 888 );
+        selector.add( proxy2, "localhost" );
+
+        assertSame( proxy1, selector.getProxy( newRepo( "http://eclipse.org/" ) ) );
+        assertSame( proxy1, selector.getProxy( newRepo( "HTTP://eclipse.org/" ) ) );
+
+        assertSame( proxy2, selector.getProxy( newRepo( "https://eclipse.org/" ) ) );
+        assertSame( proxy2, selector.getProxy( newRepo( "HTTPS://eclipse.org/" ) ) );
+    }
+
+    @Test
+    public void testGetProxy_WebDav()
+    {
+        DefaultProxySelector selector = new DefaultProxySelector();
+        Proxy proxy1 = new Proxy( Proxy.TYPE_HTTP, "proxy", 88 );
+        selector.add( proxy1, "localhost" );
+
+        assertSame( proxy1, selector.getProxy( newRepo( "dav://eclipse.org/" ) ) );
+        assertSame( proxy1, selector.getProxy( newRepo( "dav:http://eclipse.org/" ) ) );
+
+        assertSame( proxy1, selector.getProxy( newRepo( "davs://eclipse.org/" ) ) );
+        assertSame( proxy1, selector.getProxy( newRepo( "dav:https://eclipse.org/" ) ) );
+
+        assertNull( selector.getProxy( newRepo( "dav://localhost/" ) ) );
+
+        Proxy proxy2 = new Proxy( Proxy.TYPE_HTTPS, "sproxy", 888 );
+        selector.add( proxy2, "localhost" );
+
+        assertSame( proxy1, selector.getProxy( newRepo( "dav://eclipse.org/" ) ) );
+        assertSame( proxy1, selector.getProxy( newRepo( "dav:http://eclipse.org/" ) ) );
+
+        assertSame( proxy2, selector.getProxy( newRepo( "davs://eclipse.org/" ) ) );
+        assertSame( proxy2, selector.getProxy( newRepo( "dav:https://eclipse.org/" ) ) );
     }
 
 }
