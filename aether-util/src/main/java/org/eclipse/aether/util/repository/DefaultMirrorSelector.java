@@ -40,12 +40,12 @@ public final class DefaultMirrorSelector
      * @param type The content type of the mirror, may be {@code null}.
      * @param repositoryManager A flag whether the mirror is a repository manager or a simple server.
      * @param mirrorOfIds The identifier(s) of remote repositories to mirror, may be {@code null}. Multiple identifiers
-     *            can be separated by comma (',') and additionally the wildcards "*" and "external:*" can be used to
-     *            match all (external) repositories, prefixing a repo id with an exclamation mark allows to express an
-     *            exclusion. For example "external:*,!central".
+     *            can be separated by comma (',') and surrounding whitespace is trimmed. Additionally the wildcards "*"
+     *            and "external:*" can be used to match all (external) repositories, prefixing a repo id with an
+     *            exclamation mark allows to express an exclusion. For example "external:*,!central".
      * @param mirrorOfTypes The content type(s) of remote repositories to mirror, may be {@code null} or empty to match
-     *            any content type. Multiple types can be separated by comma (','), the wildcard "*" and the "!"
-     *            negation syntax are also supported. For example "*,!p2".
+     *            any content type. Multiple types can be separated by comma (',') and surrounding whitespace is
+     *            trimmed. The wildcard "*" and the "!" negation syntax are also supported. For example "*,!p2".
      * @return This selector for chaining, never {@code null}.
      */
     public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
@@ -137,7 +137,7 @@ public final class DefaultMirrorSelector
         List<String> tokens = null;
         if ( list != null )
         {
-            tokens = Arrays.asList( list.split( "," ) );
+            tokens = Arrays.asList( list.trim().split( "\\s*,\\s*" ) );
         }
         return tokens;
     }

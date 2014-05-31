@@ -81,6 +81,16 @@ public class DefaultMirrorSelectorTest
     }
 
     @Test
+    public void testMatchesType_Trimming()
+    {
+        assertEquals( true, matchesType( "any", " " ) );
+        assertEquals( true, matchesType( "default", " default " ) );
+        assertEquals( true, matchesType( "default", "foo, default ,bar" ) );
+        assertEquals( true, matchesType( "default", " default ,bar" ) );
+        assertEquals( true, matchesType( "default", "foo, default " ) );
+    }
+
+    @Test
     public void testMatchesPattern()
     {
         assertEquals( false, matchesPattern( newRepo( "id", "type", "url" ), null ) );
@@ -100,6 +110,16 @@ public class DefaultMirrorSelectorTest
 
         assertEquals( false, matchesPattern( newRepo( "central", "type", "url" ), "*,!central" ) );
         assertEquals( false, matchesPattern( newRepo( "central", "type", "url" ), "!central,*" ) );
+    }
+
+    @Test
+    public void testMatchesPattern_Trimming()
+    {
+        assertEquals( false, matchesPattern( newRepo( "central", "type", "url" ), " " ) );
+        assertEquals( true, matchesPattern( newRepo( "central", "type", "url" ), " central " ) );
+        assertEquals( true, matchesPattern( newRepo( "central", "type", "url" ), "foo, central ,bar" ) );
+        assertEquals( true, matchesPattern( newRepo( "central", "type", "url" ), " central ,bar" ) );
+        assertEquals( true, matchesPattern( newRepo( "central", "type", "url" ), "foo, central " ) );
     }
 
     @Test
