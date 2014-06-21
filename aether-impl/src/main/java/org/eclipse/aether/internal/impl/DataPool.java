@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -41,18 +41,14 @@ import org.eclipse.aether.version.VersionConstraint;
 final class DataPool
 {
 
-    private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
-
-    private static final String DEPENDENCY_POOL = DataPool.class.getName() + "$Dependency";
+    private static final String OBJECT_POOL = DataPool.class.getName() + "$Objects";
 
     private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
 
     public static final ArtifactDescriptorResult NO_DESCRIPTOR =
         new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
 
-    private ObjectPool<Artifact> artifacts;
-
-    private ObjectPool<Dependency> dependencies;
+    private ObjectPool objectPool;
 
     private Map<Object, Descriptor> descriptors;
 
@@ -67,26 +63,16 @@ final class DataPool
 
         if ( cache != null )
         {
-            artifacts = (ObjectPool<Artifact>) cache.get( session, ARTIFACT_POOL );
-            dependencies = (ObjectPool<Dependency>) cache.get( session, DEPENDENCY_POOL );
+            objectPool = (ObjectPool) cache.get( session, OBJECT_POOL );
             descriptors = (Map<Object, Descriptor>) cache.get( session, DESCRIPTORS );
         }
 
-        if ( artifacts == null )
+        if ( objectPool == null )
         {
-            artifacts = new ObjectPool<Artifact>();
+            objectPool = new ObjectPool();
             if ( cache != null )
             {
-                cache.put( session, ARTIFACT_POOL, artifacts );
-            }
-        }
-
-        if ( dependencies == null )
-        {
-            dependencies = new ObjectPool<Dependency>();
-            if ( cache != null )
-            {
-                cache.put( session, DEPENDENCY_POOL, dependencies );
+                cache.put( session, OBJECT_POOL, objectPool );
             }
         }
 
@@ -100,14 +86,9 @@ final class DataPool
         }
     }
 
-    public Artifact intern( Artifact artifact )
-    {
-        return artifacts.intern( artifact );
-    }
-
     public Dependency intern( Dependency dependency )
     {
-        return dependencies.intern( dependency );
+        return objectPool.intern( dependency );
     }
 
     public Object toKey( ArtifactDescriptorRequest request )

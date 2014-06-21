@@ -441,7 +441,7 @@ public class DefaultDependencyCollector
                 }
                 else
                 {
-                    d = args.pool.intern( d.setArtifact( args.pool.intern( d.getArtifact() ) ) );
+                    d = args.pool.intern( d );
 
                     List<RemoteRepository> repos =
                         getRemoteRepositories( rangeResult.getRepository( version ), repositories );

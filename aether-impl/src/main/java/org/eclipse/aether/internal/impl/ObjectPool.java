@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,29 +15,31 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import org.eclipse.aether.graph.Dependency;
+
 /**
  * Pool of immutable object instances, used to avoid excessive memory consumption of (dirty) dependency graph which
  * tends to have many duplicate artifacts/dependencies.
  */
-class ObjectPool<T>
+final class ObjectPool
 {
 
-    private final Map<Object, Reference<T>> objects = new WeakHashMap<Object, Reference<T>>( 256 );
+    private final Map<Object, Reference<Dependency>> dependencies =
+        new WeakHashMap<Object, Reference<Dependency>>( 256 );
 
-    public synchronized T intern( T object )
+    public synchronized Dependency intern( Dependency dependency )
     {
-        Reference<T> pooledRef = objects.get( object );
+        Reference<Dependency> pooledRef = dependencies.get( dependency );
         if ( pooledRef != null )
         {
-            T pooled = pooledRef.get();
+            Dependency pooled = pooledRef.get();
             if ( pooled != null )
             {
                 return pooled;
             }
         }
-
-        objects.put( object, new WeakReference<T>( object ) );
-        return object;
+        dependencies.put( dependency, new WeakReference<Dependency>( dependency ) );
+        return dependency;
     }
 
 }
