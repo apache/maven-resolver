@@ -344,10 +344,12 @@ final class HttpTransporter
                     int status = response.getStatusLine().getStatusCode();
                     if ( status < 300 || status == HttpStatus.SC_METHOD_NOT_ALLOWED )
                     {
+                        // directory was created or already existed
                         break;
                     }
                     else if ( status == HttpStatus.SC_CONFLICT )
                     {
+                        // parent directory needs to be created first
                         continue;
                     }
                     handleStatus( response );
