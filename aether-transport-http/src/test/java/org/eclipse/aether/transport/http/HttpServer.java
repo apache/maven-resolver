@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -100,6 +100,8 @@ public class HttpServer
 
     private Connector httpsConnector;
 
+    private String credentialEncoding = StringUtil.__ISO_8859_1;
+
     private String username;
 
     private String password;
@@ -191,6 +193,12 @@ public class HttpServer
     public HttpServer setChecksumHeader( ChecksumHeader checksumHeader )
     {
         this.checksumHeader = checksumHeader;
+        return this;
+    }
+
+    public HttpServer setCredentialEncoding( String credentialEncoding )
+    {
+        this.credentialEncoding = ( credentialEncoding != null ) ? credentialEncoding : StringUtil.__ISO_8859_1;
         return this;
     }
 
@@ -524,7 +532,7 @@ public class HttpServer
 
     }
 
-    static boolean checkBasicAuth( String credentials, String username, String password )
+    boolean checkBasicAuth( String credentials, String username, String password )
     {
         if ( credentials != null )
         {
@@ -537,7 +545,7 @@ public class HttpServer
                     credentials = credentials.substring( space + 1 );
                     try
                     {
-                        credentials = B64Code.decode( credentials, StringUtil.__ISO_8859_1 );
+                        credentials = B64Code.decode( credentials, credentialEncoding );
                     }
                     catch ( UnsupportedEncodingException e )
                     {

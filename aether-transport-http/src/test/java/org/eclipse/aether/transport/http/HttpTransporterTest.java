@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1039,6 +1039,32 @@ public class HttpTransporterTest
                 assertEquals( entry.getKey(), entry.getValue(), log.headers.get( entry.getKey() ) );
             }
         }
+    }
+
+    @Test
+    public void testCredentialEncoding_Default()
+        throws Exception
+    {
+        testCredentialEncoding( null );
+    }
+
+    @Test
+    public void testCredentialEncoding_Utf8()
+        throws Exception
+    {
+        testCredentialEncoding( "UTF-8" );
+    }
+
+    private void testCredentialEncoding( String encoding )
+        throws Exception
+    {
+        session.setConfigProperty( ConfigurationProperties.HTTP_CREDENTIAL_ENCODING, encoding );
+        String username = "testuser", password = "\u00e4\u00f6\u00fc";
+        httpServer.setAuthentication( username, password );
+        httpServer.setCredentialEncoding( encoding );
+        auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
+        newTransporter( httpServer.getHttpUrl() );
+        transporter.get( new GetTask( URI.create( "repo/file.txt" ) ) );
     }
 
     @Test
