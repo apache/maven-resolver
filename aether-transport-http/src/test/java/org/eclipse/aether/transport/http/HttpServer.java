@@ -84,6 +84,8 @@ public class HttpServer
 
     private static final Logger log = LoggerFactory.getLogger( HttpServer.class );
 
+    private String serverHeader = "Dummy";
+
     private File repoDir;
 
     private boolean rangeSupport = true;
@@ -166,6 +168,12 @@ public class HttpServer
         return logEntries;
     }
 
+    public HttpServer setServer( String server )
+    {
+        this.serverHeader = server;
+        return this;
+    }
+
     public HttpServer setRepoDir( File repoDir )
     {
         this.repoDir = repoDir;
@@ -227,6 +235,7 @@ public class HttpServer
         httpConnector = new SelectChannelConnector();
 
         HandlerList handlers = new HandlerList();
+        handlers.addHandler( new CommonHandler() );
         handlers.addHandler( new LogHandler() );
         handlers.addHandler( new ProxyAuthHandler() );
         handlers.addHandler( new AuthHandler() );
@@ -251,6 +260,18 @@ public class HttpServer
             httpConnector = null;
             httpsConnector = null;
         }
+    }
+
+    private class CommonHandler
+        extends AbstractHandler
+    {
+
+        public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
+            throws IOException
+        {
+            response.setHeader( HttpHeaders.SERVER, serverHeader );
+        }
+
     }
 
     private class LogHandler
