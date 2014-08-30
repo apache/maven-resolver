@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -304,23 +304,35 @@ final class HttpTransporter
     private void prepare( HttpUriRequest request, SharingHttpContext context )
     {
         boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase( request.getMethod() );
-        if ( state.getWebDav() == null && ( put || isPayloadPresent( request ) ) )
+        if ( ( put || isPayloadPresent( request ) ) && !state.isProbed() )
         {
-            try
+            synchronized ( state )
             {
-                HttpOptions req = commonHeaders( new HttpOptions( request.getURI() ) );
-                HttpResponse response = client.execute( server, req, context );
-                state.setWebDav( isWebDav( response ) );
-                EntityUtils.consumeQuietly( response.getEntity() );
-            }
-            catch ( IOException e )
-            {
-                logger.debug( "Failed to prepare HTTP context", e );
+                if ( !state.isProbed() )
+                {
+                    probe( request, context );
+                    state.setProbed();
+                }
             }
         }
-        if ( put && Boolean.TRUE.equals( state.getWebDav() ) )
+        if ( put && state.isWebDav() )
         {
             mkdirs( request.getURI(), context );
+        }
+    }
+
+    private void probe( HttpUriRequest request, SharingHttpContext context )
+    {
+        try
+        {
+            HttpOptions req = commonHeaders( new HttpOptions( request.getURI() ) );
+            HttpResponse response = client.execute( server, req, context );
+            state.setWebDav( isWebDav( response ) );
+            EntityUtils.consumeQuietly( response.getEntity() );
+        }
+        catch ( IOException e )
+        {
+            logger.debug( "Failed to probe HTTP server", e );
         }
     }
 

@@ -64,6 +64,8 @@ public class HttpTransporterTest
         System.setProperty( "javax.net.ssl.keyStorePassword", "client-pwd" );
     }
 
+    private static final String REPO_ID = "test";
+
     @Rule
     public TestName testName = new TestName();
 
@@ -83,7 +85,7 @@ public class HttpTransporterTest
 
     private RemoteRepository newRepo( String url )
     {
-        return new RemoteRepository.Builder( "test", "default", url ).setAuthentication( auth ).setProxy( proxy ).build();
+        return new RemoteRepository.Builder( REPO_ID, "default", url ).setAuthentication( auth ).setProxy( proxy ).build();
     }
 
     private void newTransporter( String url )
@@ -406,7 +408,7 @@ public class HttpTransporterTest
     public void testGet_WebDav()
         throws Exception
     {
-        httpServer.setWebDav( true );
+        httpServer.setWebDav( HttpServer.WebDav.REQUIRED );
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask( URI.create( "repo/dir/file.txt" ) ).setListener( listener );
         ( (HttpTransporter) transporter ).getState().setWebDav( true );
@@ -801,7 +803,7 @@ public class HttpTransporterTest
     public void testPut_WebDav()
         throws Exception
     {
-        httpServer.setWebDav( true );
+        httpServer.setWebDav( HttpServer.WebDav.REQUIRED );
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
             new PutTask( URI.create( "repo/dir1/dir2/file.txt" ) ).setListener( listener ).setDataString( "upload" );
@@ -821,6 +823,31 @@ public class HttpTransporterTest
         assertEquals( "MKCOL", httpServer.getLogEntries().get( 3 ).method );
         assertEquals( "/repo/dir1/dir2/", httpServer.getLogEntries().get( 3 ).path );
         assertEquals( "PUT", httpServer.getLogEntries().get( 4 ).method );
+    }
+
+    @Test
+    public void testPut_WebDavOptional_ManuallyDisabled()
+        throws Exception
+    {
+        session.setConfigProperty( "aether.connector.http.webDav." + REPO_ID, "false" );
+        httpServer.setWebDav( HttpServer.WebDav.OPTIONAL );
+        httpServer.setAuthentication( "testuser", "testpass" );
+        auth = new AuthenticationBuilder().addUsername( "testuser" ).addPassword( "testpass" ).build();
+        newTransporter( httpServer.getHttpUrl() );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        PutTask task =
+            new PutTask( URI.create( "repo/dir1/dir2/file.txt" ) ).setListener( listener ).setDataString( "upload" );
+        transporter.put( task );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 6, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "dir1/dir2/file.txt" ) ) );
+
+        assertEquals( httpServer.getLogEntries().toString(), 3, httpServer.getLogEntries().size() );
+        assertEquals( "OPTIONS", httpServer.getLogEntries().get( 0 ).method );
+        assertEquals( "OPTIONS", httpServer.getLogEntries().get( 1 ).method );
+        assertEquals( "PUT", httpServer.getLogEntries().get( 2 ).method );
     }
 
     @Test

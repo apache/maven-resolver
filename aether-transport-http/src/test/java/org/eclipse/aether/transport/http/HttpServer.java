@@ -72,9 +72,22 @@ public class HttpServer
 
     }
 
+    public enum WebDav
+    {
+        /** DAV header advertised, MKCOL required for missing parent directories */
+        REQUIRED,
+        /** DAV header advertised, MKCOL supported but not required */
+        OPTIONAL
+    }
+
     public enum ExpectContinue
     {
-        FAIL, PROPER, BROKEN
+        /** reject request with "Expectation Failed" */
+        FAIL,
+        /** send "Continue" only if request made it past authentication */
+        PROPER,
+        /** send "Continue" before authentication has been checked */
+        BROKEN
     }
 
     public enum ChecksumHeader
@@ -90,7 +103,7 @@ public class HttpServer
 
     private boolean rangeSupport = true;
 
-    private boolean webDav;
+    private WebDav webDav;
 
     private ExpectContinue expectContinue = ExpectContinue.PROPER;
 
@@ -186,7 +199,7 @@ public class HttpServer
         return this;
     }
 
-    public HttpServer setWebDav( boolean webDav )
+    public HttpServer setWebDav( WebDav webDav )
     {
         this.webDav = webDav;
         return this;
@@ -405,7 +418,7 @@ public class HttpServer
             }
             else if ( HttpMethods.PUT.equals( req.getMethod() ) )
             {
-                if ( !webDav )
+                if ( !WebDav.REQUIRED.equals( webDav ) )
                 {
                     file.getParentFile().mkdirs();
                 }
@@ -437,14 +450,14 @@ public class HttpServer
             }
             else if ( HttpMethods.OPTIONS.equals( req.getMethod() ) )
             {
-                if ( webDav )
+                if ( webDav != null )
                 {
                     response.setHeader( "DAV", "1,2" );
                 }
                 response.setHeader( HttpHeaders.ALLOW, "GET, PUT, HEAD, OPTIONS" );
                 response.setStatus( HttpServletResponse.SC_OK );
             }
-            else if ( webDav && "MKCOL".equals( req.getMethod() ) )
+            else if ( webDav != null && "MKCOL".equals( req.getMethod() ) )
             {
                 if ( file.exists() )
                 {

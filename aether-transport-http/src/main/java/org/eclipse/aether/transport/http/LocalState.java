@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import org.apache.http.conn.ClientConnectionManager;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transport.http.GlobalState.CompoundKey;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Container for HTTP-related state that can be shared across invocations of the transporter to optimize the
@@ -28,6 +29,8 @@ import org.eclipse.aether.transport.http.GlobalState.CompoundKey;
 final class LocalState
     implements Closeable
 {
+
+    private static final String CONFIG_PROP_WEBDAV = "aether.connector.http.webDav";
 
     private final GlobalState global;
 
@@ -38,6 +41,8 @@ final class LocalState
     private volatile Object userToken;
 
     private final CompoundKey expectContinueKey;
+
+    private volatile boolean probed;
 
     private volatile Boolean expectContinue;
 
@@ -62,6 +67,10 @@ final class LocalState
             userTokenKey = new CompoundKey( repo.getId(), repo.getUrl(), repo.getAuthentication(), repo.getProxy() );
             expectContinueKey = new CompoundKey( repo.getUrl(), repo.getProxy() );
             authSchemePools = global.getAuthSchemePools();
+        }
+        if ( !ConfigUtils.getBoolean( session, true, CONFIG_PROP_WEBDAV + '.' + repo.getId(), CONFIG_PROP_WEBDAV ) )
+        {
+            webDav = false;
         }
     }
 
@@ -88,6 +97,16 @@ final class LocalState
         }
     }
 
+    public boolean isProbed()
+    {
+        return probed;
+    }
+
+    public void setProbed()
+    {
+        probed = true;
+    }
+
     public boolean isExpectContinue()
     {
         if ( expectContinue == null )
@@ -107,14 +126,17 @@ final class LocalState
         }
     }
 
-    public Boolean getWebDav()
+    public boolean isWebDav()
     {
-        return webDav;
+        return Boolean.TRUE.equals( webDav );
     }
 
     public void setWebDav( boolean webDav )
     {
-        this.webDav = webDav;
+        if ( this.webDav == null )
+        {
+            this.webDav = webDav;
+        }
     }
 
     public AuthScheme getAuthScheme( HttpHost host )
