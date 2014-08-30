@@ -338,7 +338,15 @@ final class HttpTransporter
 
     private boolean isWebDav( HttpResponse response )
     {
-        return response.containsHeader( HttpHeaders.DAV );
+        return response.containsHeader( HttpHeaders.DAV ) && !isWebDavOptional( response );
+    }
+
+    private boolean isWebDavOptional( HttpResponse response )
+    {
+        Header header = response.getFirstHeader( HttpHeaders.SERVER );
+        String server = ( header != null ) ? header.getValue() : null;
+        // repository managers don't need webdav mode and work fine with straight puts
+        return server != null && ( server.startsWith( "Artifactory/" ) || server.startsWith( "Nexus/" ) );
     }
 
     private void mkdirs( URI uri, SharingHttpContext context )

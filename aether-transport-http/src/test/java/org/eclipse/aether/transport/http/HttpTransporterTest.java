@@ -851,6 +851,40 @@ public class HttpTransporterTest
     }
 
     @Test
+    public void testPut_WebDavOptional_AutomaticallyDisabled_Artifactory()
+        throws Exception
+    {
+        testPut_WebDavOptional_AutomaticallyDisabled( "Artifactory/3.3.0" );
+    }
+
+    @Test
+    public void testPut_WebDavOptional_AutomaticallyDisabled_Nexus()
+        throws Exception
+    {
+        testPut_WebDavOptional_AutomaticallyDisabled( "Nexus/2.9.0-02" );
+    }
+
+    private void testPut_WebDavOptional_AutomaticallyDisabled( String server )
+        throws Exception
+    {
+        httpServer.setServer( server );
+        httpServer.setWebDav( HttpServer.WebDav.OPTIONAL );
+        RecordingTransportListener listener = new RecordingTransportListener();
+        PutTask task =
+            new PutTask( URI.create( "repo/dir1/dir2/file.txt" ) ).setListener( listener ).setDataString( "upload" );
+        transporter.put( task );
+        assertEquals( 0, listener.dataOffset );
+        assertEquals( 6, listener.dataLength );
+        assertEquals( 1, listener.startedCount );
+        assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
+        assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "dir1/dir2/file.txt" ) ) );
+
+        assertEquals( httpServer.getLogEntries().toString(), 2, httpServer.getLogEntries().size() );
+        assertEquals( "OPTIONS", httpServer.getLogEntries().get( 0 ).method );
+        assertEquals( "PUT", httpServer.getLogEntries().get( 1 ).method );
+    }
+
+    @Test
     public void testPut_FileHandleLeak()
         throws Exception
     {
