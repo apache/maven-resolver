@@ -32,6 +32,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.params.AuthParams;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
@@ -134,13 +135,7 @@ final class HttpTransporter
 
         configureClient( client.getParams(), session, repository, proxy );
 
-        DeferredCredentialsProvider credsProvider = new DeferredCredentialsProvider();
-        addCredentials( credsProvider, server.getHostName(), AuthScope.ANY_PORT, repoAuthContext );
-        if ( proxy != null )
-        {
-            addCredentials( credsProvider, proxy.getHostName(), proxy.getPort(), proxyAuthContext );
-        }
-        client.setCredentialsProvider( credsProvider );
+        client.setCredentialsProvider( toCredentialsProvider( server, repoAuthContext, proxy, proxyAuthContext ) );
 
         this.client = new DecompressingHttpClient( client );
     }
@@ -182,9 +177,21 @@ final class HttpTransporter
                                                                         ConfigurationProperties.USER_AGENT ) );
     }
 
-    private static void addCredentials( DeferredCredentialsProvider provider, String host, int port,
-                                        AuthenticationContext ctx )
+    private static CredentialsProvider toCredentialsProvider( HttpHost server, AuthenticationContext serverAuthCtx,
+                                                              HttpHost proxy, AuthenticationContext proxyAuthCtx )
     {
+        CredentialsProvider provider = toCredentialsProvider( server.getHostName(), AuthScope.ANY_PORT, serverAuthCtx );
+        if ( proxy != null )
+        {
+            CredentialsProvider p = toCredentialsProvider( proxy.getHostName(), proxy.getPort(), proxyAuthCtx );
+            provider = new DemuxCredentialsProvider( provider, p, proxy );
+        }
+        return provider;
+    }
+
+    private static CredentialsProvider toCredentialsProvider( String host, int port, AuthenticationContext ctx )
+    {
+        DeferredCredentialsProvider provider = new DeferredCredentialsProvider();
         if ( ctx != null )
         {
             AuthScope basicScope = new AuthScope( host, port );
@@ -193,6 +200,7 @@ final class HttpTransporter
             AuthScope ntlmScope = new AuthScope( host, port, AuthScope.ANY_REALM, "ntlm" );
             provider.setCredentials( ntlmScope, new DeferredCredentialsProvider.NtlmFactory( ctx ) );
         }
+        return provider;
     }
 
     LocalState getState()

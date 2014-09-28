@@ -1141,6 +1141,46 @@ public class HttpTransporterTest
     }
 
     @Test
+    public void testServerAuthScope_NotUsedForProxy()
+        throws Exception
+    {
+        String username = "testuser", password = "testpass";
+        httpServer.setProxyAuthentication( username, password );
+        auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
+        proxy = new Proxy( Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort() );
+        newTransporter( "http://" + httpServer.getHost() + ":12/" );
+        try
+        {
+            transporter.get( new GetTask( URI.create( "repo/file.txt" ) ) );
+            fail( "Server auth must not be used as proxy auth" );
+        }
+        catch ( HttpResponseException e )
+        {
+            assertEquals( 407, e.getStatusCode() );
+        }
+    }
+
+    @Test
+    public void testProxyAuthScope_NotUsedForServer()
+        throws Exception
+    {
+        String username = "testuser", password = "testpass";
+        httpServer.setAuthentication( username, password );
+        Authentication auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
+        proxy = new Proxy( Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort(), auth );
+        newTransporter( "http://" + httpServer.getHost() + ":12/" );
+        try
+        {
+            transporter.get( new GetTask( URI.create( "repo/file.txt" ) ) );
+            fail( "Proxy auth must not be used as server auth" );
+        }
+        catch ( HttpResponseException e )
+        {
+            assertEquals( 401, e.getStatusCode() );
+        }
+    }
+
+    @Test
     public void testAuthSchemeReuse()
         throws Exception
     {
