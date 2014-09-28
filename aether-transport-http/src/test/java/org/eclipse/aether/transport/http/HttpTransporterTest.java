@@ -973,7 +973,7 @@ public class HttpTransporterTest
         assertEquals( 1, listener.startedCount );
     }
 
-    @Test( timeout = 10000 )
+    @Test( timeout = 20000 )
     public void testConcurrency()
         throws Exception
     {
@@ -1126,6 +1126,18 @@ public class HttpTransporterTest
         auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
         newTransporter( httpServer.getHttpUrl() );
         transporter.get( new GetTask( URI.create( "repo/file.txt" ) ) );
+    }
+
+    @Test
+    public void testServerAuthScope_FollowsSslRedirect()
+        throws Exception
+    {
+        String username = "testuser", password = "testpass";
+        httpServer.setAuthentication( username, password );
+        httpServer.addSslConnector();
+        auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
+        newTransporter( httpServer.getHttpUrl() );
+        transporter.get( new GetTask( URI.create( "redirect/file.txt?scheme=https" ) ) );
     }
 
     @Test
