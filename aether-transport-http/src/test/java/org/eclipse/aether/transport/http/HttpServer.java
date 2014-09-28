@@ -163,14 +163,17 @@ public class HttpServer
             ssl.setTrustStorePassword( "client-pwd" );
             ssl.setNeedClientAuth( true );
             httpsConnector = new SslSelectChannelConnector( ssl );
-            server.addConnector( httpsConnector );
-            try
+            if ( server != null )
             {
-                httpsConnector.start();
-            }
-            catch ( Exception e )
-            {
-                throw new IllegalStateException( e );
+                server.addConnector( httpsConnector );
+                try
+                {
+                    httpsConnector.start();
+                }
+                catch ( Exception e )
+                {
+                    throw new IllegalStateException( e );
+                }
             }
         }
         return this;
@@ -257,6 +260,10 @@ public class HttpServer
 
         server = new Server();
         server.addConnector( httpConnector );
+        if ( httpsConnector != null )
+        {
+            server.addConnector( httpsConnector );
+        }
         server.setHandler( handlers );
         server.start();
 
@@ -495,11 +502,17 @@ public class HttpServer
             req.setHandled( true );
             StringBuilder location = new StringBuilder( 128 );
             String scheme = req.getParameter( "scheme" );
+            String host = req.getParameter( "host" );
+            String port = req.getParameter( "port" );
             location.append( scheme != null ? scheme : req.getScheme() );
             location.append( "://" );
-            location.append( req.getServerName() );
+            location.append( host != null ? host : req.getServerName() );
             location.append( ":" );
-            if ( "http".equalsIgnoreCase( scheme ) )
+            if ( port != null )
+            {
+                location.append( port );
+            }
+            else if ( "http".equalsIgnoreCase( scheme ) )
             {
                 location.append( getHttpPort() );
             }
