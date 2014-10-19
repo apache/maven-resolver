@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,7 +32,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as is.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys are set, may be {@code null}.
@@ -56,7 +56,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as is.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
@@ -71,7 +71,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a string value.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a string, may be
@@ -96,7 +96,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a string value.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
@@ -112,10 +112,11 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as an integer number.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a number.
+     * @param defaultValue The default value to return in case none of the property keys is set to a number or numeric
+     *            string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Number} or a string representation of an {@link Integer} is found.
      * @return The property value.
@@ -145,11 +146,12 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as an integer number.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a number.
+     * @param defaultValue The default value to return in case none of the property keys is set to a number or numeric
+     *            string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Number} or a string representation of an {@link Integer} is found.
      * @return The property value.
@@ -160,10 +162,11 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a long number.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a number.
+     * @param defaultValue The default value to return in case none of the property keys is set to a number or numeric
+     *            string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Number} or a string representation of a {@link Long} is found.
      * @return The property value.
@@ -193,11 +196,12 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a long number.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a number.
+     * @param defaultValue The default value to return in case none of the property keys is set to a number or numeric
+     *            string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Number} or a string representation of a {@link Long} is found.
      * @return The property value.
@@ -208,10 +212,11 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a single-precision floating point number.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a number.
+     * @param defaultValue The default value to return in case none of the property keys is set to a number or numeric
+     *            string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Number} or a string representation of a {@link Float} is found.
      * @return The property value.
@@ -241,11 +246,12 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a single-precision floating point number.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a number.
+     * @param defaultValue The default value to return in case none of the property keys is set to a number or numeric
+     *            string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Number} or a string representation of a {@link Float} is found.
      * @return The property value.
@@ -256,10 +262,10 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as boolean flag.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a boolean.
+     * @param defaultValue The default value to return in case none of the property keys is set to a boolean or string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Boolean} or a string (to be {@link Boolean#parseBoolean(String) parsed as boolean}) is found.
      * @return The property value.
@@ -284,11 +290,11 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a boolean flag.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a boolean.
+     * @param defaultValue The default value to return in case none of the property keys is set to a boolean or string.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a {@link Boolean} or a string (to be {@link Boolean#parseBoolean(String) parsed as boolean}) is found.
      * @return The property value.
@@ -299,7 +305,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a list of objects.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a collection.
@@ -327,7 +333,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a list of objects.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
@@ -342,7 +348,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as a map or key value pairs.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a map.
@@ -366,7 +372,7 @@ public final class ConfigUtils
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property as map of key value pairs.
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
