@@ -831,8 +831,6 @@ public class HttpTransporterTest
     {
         session.setConfigProperty( "aether.connector.http.webDav." + REPO_ID, "false" );
         httpServer.setWebDav( HttpServer.WebDav.OPTIONAL );
-        httpServer.setAuthentication( "testuser", "testpass" );
-        auth = new AuthenticationBuilder().addUsername( "testuser" ).addPassword( "testpass" ).build();
         newTransporter( httpServer.getHttpUrl() );
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
@@ -844,10 +842,9 @@ public class HttpTransporterTest
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "dir1/dir2/file.txt" ) ) );
 
-        assertEquals( httpServer.getLogEntries().toString(), 3, httpServer.getLogEntries().size() );
+        assertEquals( httpServer.getLogEntries().toString(), 2, httpServer.getLogEntries().size() );
         assertEquals( "OPTIONS", httpServer.getLogEntries().get( 0 ).method );
-        assertEquals( "OPTIONS", httpServer.getLogEntries().get( 1 ).method );
-        assertEquals( "PUT", httpServer.getLogEntries().get( 2 ).method );
+        assertEquals( "PUT", httpServer.getLogEntries().get( 1 ).method );
     }
 
     @Test
