@@ -74,8 +74,8 @@ public final class ConfigUtils
      * Gets the specified configuration property as a string value.
      * 
      * @param properties The configuration properties to read, must not be {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a string, may be
-     *            {@code null}.
+     * @param defaultValue The default value to return in case none of the property keys is set to a
+     *            string/boolean/number, may be {@code null}.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a string value is found.
      * @return The property value or {@code null} if none.
@@ -86,9 +86,9 @@ public final class ConfigUtils
         {
             Object value = properties.get( key );
 
-            if ( value instanceof String )
+            if ( value instanceof String || value instanceof Boolean || value instanceof Number )
             {
-                return (String) value;
+                return value.toString();
             }
         }
 
@@ -100,8 +100,8 @@ public final class ConfigUtils
      * 
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
-     * @param defaultValue The default value to return in case none of the property keys is set to a string, may be
-     *            {@code null}.
+     * @param defaultValue The default value to return in case none of the property keys is set to a
+     *            string/boolean/number, may be {@code null}.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a string value is found.
      * @return The property value or {@code null} if none.

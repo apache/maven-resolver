@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -94,6 +94,24 @@ public class ConfigUtilsTest
         config.put( "no-string", new Object() );
         config.put( "some-string", "passed" );
         assertEquals( "passed", ConfigUtils.getString( config, "default", "no-string", "some-string" ) );
+    }
+
+    @Test
+    public void testGetString_BooleanConversion()
+    {
+        config.put( "some-string", Boolean.TRUE );
+        assertEquals( "true", ConfigUtils.getString( config, "default", "some-string" ) );
+        config.put( "some-string", Boolean.FALSE );
+        assertEquals( "false", ConfigUtils.getString( config, "default", "some-string" ) );
+    }
+
+    @Test
+    public void testGetString_NumberConversion()
+    {
+        config.put( "some-string", Integer.valueOf( -7 ) );
+        assertEquals( "-7", ConfigUtils.getString( config, "default", "some-string" ) );
+        config.put( "some-string", new Float( -1.5f ) );
+        assertEquals( "-1.5", ConfigUtils.getString( config, "default", "some-string" ) );
     }
 
     @Test
