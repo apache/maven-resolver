@@ -1141,6 +1141,57 @@ public class HttpTransporterTest
     }
 
     @Test
+    public void testServerAuthScope_FollowsRedirectToDifferentHost_EnabledByRepoId()
+        throws Exception
+    {
+        session.setConfigProperty( ConfigurationProperties.HTTP_REDIRECTED_AUTHENTICATION + "." + REPO_ID, "true" );
+        String username = "testuser", password = "testpass";
+        httpServer.setAuthentication( username, password );
+        auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
+        proxy = new Proxy( Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort() );
+        newTransporter( "http://redirect.localhost:1/" );
+        GetTask task = new GetTask( URI.create( "redirect/file.txt?host=" + httpServer.getHost() ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+    }
+
+    @Test
+    public void testServerAuthScope_FollowsRedirectToDifferentHost_EnabledByHostName()
+        throws Exception
+    {
+        session.setConfigProperty( ConfigurationProperties.HTTP_REDIRECTED_AUTHENTICATION, " REDIRECT.localhost , foo" );
+        String username = "testuser", password = "testpass";
+        httpServer.setAuthentication( username, password );
+        auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
+        proxy = new Proxy( Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort() );
+        newTransporter( "http://redirect.localhost:1/" );
+        GetTask task = new GetTask( URI.create( "redirect/file.txt?host=" + httpServer.getHost() ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+    }
+
+    @Test
+    public void testServerAuthScope_FollowsRedirectToDifferentHost_DisabledByDefault()
+        throws Exception
+    {
+        String username = "testuser", password = "testpass";
+        httpServer.setAuthentication( username, password );
+        auth = new AuthenticationBuilder().addUsername( username ).addPassword( password ).build();
+        proxy = new Proxy( Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort() );
+        newTransporter( "http://redirect.localhost:1/" );
+        GetTask task = new GetTask( URI.create( "redirect/file.txt?host=" + httpServer.getHost() ) );
+        try
+        {
+            transporter.get( task );
+            fail( "Server auth must not be used for redirect destination" );
+        }
+        catch ( HttpResponseException e )
+        {
+            assertEquals( 401, e.getStatusCode() );
+        }
+    }
+
+    @Test
     public void testServerAuthScope_NotUsedForProxy()
         throws Exception
     {

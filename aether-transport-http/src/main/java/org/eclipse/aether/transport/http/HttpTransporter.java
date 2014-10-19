@@ -76,6 +76,8 @@ final class HttpTransporter
     private static final Pattern CONTENT_RANGE_PATTERN =
         Pattern.compile( "\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*" );
 
+    private static final Pattern HOST_SPLIT_PATTERN = Pattern.compile( "\\s*[,]\\s*" );
+
     private final Logger logger;
 
     private final AuthenticationContext repoAuthContext;
@@ -135,7 +137,8 @@ final class HttpTransporter
 
         configureClient( client.getParams(), session, repository, proxy );
 
-        client.setCredentialsProvider( toCredentialsProvider( server, repoAuthContext, proxy, proxyAuthContext ) );
+        boolean redirectedAuth = getRedirectedAuth( session, repository, server );
+        client.setCredentialsProvider( toCredentials( server, repoAuthContext, redirectedAuth, proxy, proxyAuthContext ) );
 
         this.client = new DecompressingHttpClient( client );
     }
@@ -177,19 +180,47 @@ final class HttpTransporter
                                                                         ConfigurationProperties.USER_AGENT ) );
     }
 
-    private static CredentialsProvider toCredentialsProvider( HttpHost server, AuthenticationContext serverAuthCtx,
-                                                              HttpHost proxy, AuthenticationContext proxyAuthCtx )
+    private static boolean getRedirectedAuth( RepositorySystemSession session, RemoteRepository repo, HttpHost server )
     {
-        CredentialsProvider provider = toCredentialsProvider( server.getHostName(), AuthScope.ANY_PORT, serverAuthCtx );
+        String mode =
+            ConfigUtils.getString( session, ConfigurationProperties.DEFAULT_HTTP_REDIRECTED_AUTHENTICATION,
+                                   ConfigurationProperties.HTTP_REDIRECTED_AUTHENTICATION + '.' + repo.getId(),
+                                   ConfigurationProperties.HTTP_REDIRECTED_AUTHENTICATION );
+        if ( "false".equalsIgnoreCase( mode ) )
+        {
+            return false;
+        }
+        if ( "true".equalsIgnoreCase( mode ) )
+        {
+            return true;
+        }
+        String host = server.getHostName();
+        for ( String allowed : HOST_SPLIT_PATTERN.split( mode.trim() ) )
+        {
+            if ( allowed.equalsIgnoreCase( host ) )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static CredentialsProvider toCredentials( HttpHost server, AuthenticationContext serverAuthCtx,
+                                                      boolean redirectedAuth, HttpHost proxy,
+                                                      AuthenticationContext proxyAuthCtx )
+    {
+        CredentialsProvider provider =
+            toCredentials( redirectedAuth ? AuthScope.ANY_HOST : server.getHostName(), AuthScope.ANY_PORT,
+                           serverAuthCtx );
         if ( proxy != null )
         {
-            CredentialsProvider p = toCredentialsProvider( proxy.getHostName(), proxy.getPort(), proxyAuthCtx );
+            CredentialsProvider p = toCredentials( proxy.getHostName(), proxy.getPort(), proxyAuthCtx );
             provider = new DemuxCredentialsProvider( provider, p, proxy );
         }
         return provider;
     }
 
-    private static CredentialsProvider toCredentialsProvider( String host, int port, AuthenticationContext ctx )
+    private static CredentialsProvider toCredentials( String host, int port, AuthenticationContext ctx )
     {
         DeferredCredentialsProvider provider = new DeferredCredentialsProvider();
         if ( ctx != null )

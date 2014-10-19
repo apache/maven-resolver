@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -121,6 +121,28 @@ public final class ConfigurationProperties
      * The default encoding/charset to use if {@link #HTTP_CREDENTIAL_ENCODING} isn't set.
      */
     public static final String DEFAULT_HTTP_CREDENTIAL_ENCODING = "ISO-8859-1";
+
+    /**
+     * An option indicating whether authentication configured for a HTTP repository should also be used with any host
+     * that the original server might redirect requests to. Unless enabled, credentials are only exchanged with the
+     * original host from the repository URL and not supplied to different hosts encountered during redirects. The
+     * option value can either be a boolean flag or a comma-separated list of host names denoting the whitelist of
+     * original hosts whose redirects can be trusted and should use the configured authentication no matter the
+     * destination host(s). Alternatively, the suffix {@code .<repoId>} can be appended to this configuration key to
+     * control the behavior for a specific repository id.
+     * 
+     * @see #DEFAULT_HTTP_REDIRECTED_AUTHENTICATION
+     * @since 1.1.0
+     */
+    public static final String HTTP_REDIRECTED_AUTHENTICATION = PREFIX_CONNECTOR + "http.redirectedAuthentication";
+
+    /**
+     * The default handling of authentication during HTTP redirects if {@link #HTTP_REDIRECTED_AUTHENTICATION} isn't
+     * set.
+     * 
+     * @since 1.1.0
+     */
+    public static final String DEFAULT_HTTP_REDIRECTED_AUTHENTICATION = "false";
 
     /**
      * A flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
