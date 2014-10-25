@@ -13,10 +13,13 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
@@ -41,6 +44,9 @@ import org.eclipse.aether.util.StringUtils;
 public class DefaultRemoteRepositoryManager
     implements RemoteRepositoryManager, Service
 {
+
+    private static final String CACHE_KEY_LOGGED_MIRRORS = DefaultRemoteRepositoryManager.class.getName()
+        + "$LoggedMirrors";
 
     private Logger logger = NullLoggerFactory.LOGGER;
 
@@ -121,8 +127,7 @@ public class DefaultRemoteRepositoryManager
 
                 if ( mirrorRepository != null )
                 {
-                    logger.debug( "Using mirror " + mirrorRepository.getId() + " (" + mirrorRepository.getUrl()
-                        + ") for " + recessiveRepository.getId() + " (" + recessiveRepository.getUrl() + ")." );
+                    logMirror( session, recessiveRepository, mirrorRepository );
                     repository = mirrorRepository;
                 }
             }
@@ -177,6 +182,33 @@ public class DefaultRemoteRepositoryManager
         }
 
         return result;
+    }
+
+    private void logMirror( RepositorySystemSession session, RemoteRepository original, RemoteRepository mirror )
+    {
+        if ( !logger.isDebugEnabled() )
+        {
+            return;
+        }
+        RepositoryCache cache = session.getCache();
+        if ( cache != null )
+        {
+            Object logged = cache.get( session, CACHE_KEY_LOGGED_MIRRORS );
+            if ( !( logged instanceof ConcurrentMap ) )
+            {
+                logged = new ConcurrentHashMap<Object, Object>();
+                cache.put( session, CACHE_KEY_LOGGED_MIRRORS, logged );
+            }
+            @SuppressWarnings( "unchecked" )
+            ConcurrentMap<Object, Object> map = (ConcurrentMap<Object, Object>) logged;
+            String key = mirror.getId() + '\t' + mirror.getUrl() + '\t' + original.getId() + '\t' + original.getUrl();
+            if ( map.put( key, Boolean.TRUE ) != null )
+            {
+                return;
+            }
+        }
+        logger.debug( "Using mirror " + mirror.getId() + " (" + mirror.getUrl() + ") for " + original.getId() + " ("
+            + original.getUrl() + ")." );
     }
 
     private String getKey( RemoteRepository repository )
