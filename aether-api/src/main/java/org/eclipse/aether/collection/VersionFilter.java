@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Sonatype, Inc.
+ * Copyright (c) 2013, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,10 +22,13 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
 /**
- * Decides which versions matching a version range should actually be considered for the dependency graph.
- * Implementations must be stateless. <em>Note:</em> This hook is called from a hot spot and therefore implementations
- * should pay attention to performance. Among others, implementations should provide a semantic
- * {@link Object#equals(Object) equals()} method.
+ * Decides which versions matching a version range should actually be considered for the dependency graph. The version
+ * filter is not invoked for dependencies that do not declare a version range but a single version.
+ * <p>
+ * <strong>Note:</strong> Implementations must be stateless.
+ * <p>
+ * <em>Warning:</em> This hook is called from a hot spot and therefore implementations should pay attention to
+ * performance. Among others, implementations should provide a semantic {@link Object#equals(Object) equals()} method.
  * 
  * @see org.eclipse.aether.RepositorySystemSession#getVersionFilter()
  * @see org.eclipse.aether.RepositorySystem#collectDependencies(org.eclipse.aether.RepositorySystemSession,

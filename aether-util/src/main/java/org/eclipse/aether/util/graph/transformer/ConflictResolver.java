@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2013 Sonatype, Inc.
+ * Copyright (c) 2012, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1144,7 +1144,9 @@ public final class ConflictResolver
      * An extension point of {@link ConflictResolver} that determines the winner among conflicting dependencies. The
      * winning node (and its children) will be retained in the dependency graph, the other nodes will get removed. The
      * version selector does not need to deal with potential scope conflicts, these will be addressed afterwards by the
-     * {@link ScopeSelector}. Implementations must be stateless.
+     * {@link ScopeSelector}.
+     * <p>
+     * <strong>Note:</strong> Implementations must be stateless.
      */
     public static abstract class VersionSelector
     {
@@ -1154,7 +1156,7 @@ public final class ConflictResolver
          * this method once per
          * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
          * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
-         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * implementations must be stateless, a new instance needs to be returned to hold such auxiliary data. The
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          * 
@@ -1186,7 +1188,9 @@ public final class ConflictResolver
     /**
      * An extension point of {@link ConflictResolver} that determines the effective scope of a dependency from a
      * potentially conflicting set of {@link ScopeDeriver derived scopes}. The scope selector gets invoked after the
-     * {@link VersionSelector} has picked the winning node. Implementations must be stateless.
+     * {@link VersionSelector} has picked the winning node.
+     * <p>
+     * <strong>Note:</strong> Implementations must be stateless.
      */
     public static abstract class ScopeSelector
     {
@@ -1196,7 +1200,7 @@ public final class ConflictResolver
          * this method once per
          * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
          * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
-         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * implementations must be stateless, a new instance needs to be returned to hold such auxiliary data. The
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          * 
@@ -1227,7 +1231,9 @@ public final class ConflictResolver
 
     /**
      * An extension point of {@link ConflictResolver} that determines the scope of a dependency in relation to the scope
-     * of its parent. Implementations must be stateless.
+     * of its parent.
+     * <p>
+     * <strong>Note:</strong> Implementations must be stateless.
      */
     public static abstract class ScopeDeriver
     {
@@ -1237,7 +1243,7 @@ public final class ConflictResolver
          * this method once per
          * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
          * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
-         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * implementations must be stateless, a new instance needs to be returned to hold such auxiliary data. The
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          * 
@@ -1268,7 +1274,9 @@ public final class ConflictResolver
     /**
      * An extension point of {@link ConflictResolver} that determines the effective optional flag of a dependency from a
      * potentially conflicting set of derived optionalities. The optionality selector gets invoked after the
-     * {@link VersionSelector} has picked the winning node. Implementations must be stateless.
+     * {@link VersionSelector} has picked the winning node.
+     * <p>
+     * <strong>Note:</strong> Implementations must be stateless.
      */
     public static abstract class OptionalitySelector
     {
@@ -1278,7 +1286,7 @@ public final class ConflictResolver
          * calls this method once per
          * {@link ConflictResolver#transformGraph(DependencyNode, DependencyGraphTransformationContext)} invocation to
          * allow implementations to prepare any auxiliary data that is needed for their operation. Given that
-         * implementations need to be stateless, a new instance needs to be returned to hold such auxiliary data. The
+         * implementations must be stateless, a new instance needs to be returned to hold such auxiliary data. The
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          * 

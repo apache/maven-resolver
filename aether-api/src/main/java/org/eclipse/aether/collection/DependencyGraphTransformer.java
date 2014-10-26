@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,8 +14,13 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Transforms a given dependency graph. <em>Note:</em> Dependency graphs may contain cycles, as such a graph transformer
- * needs to gracefully handle cyclic graphs, e.g. guard against infinite recursion. Implementations must be stateless.
+ * Transforms a given dependency graph.
+ * <p>
+ * <strong>Note:</strong> Implementations must be stateless.
+ * <p>
+ * <em>Warning:</em> Dependency graphs may generally contain cycles. As such a graph transformer that cannot assume for
+ * sure that cycles have already been eliminated must gracefully handle cyclic graphs, e.g. guard against infinite
+ * recursion.
  * 
  * @see org.eclipse.aether.RepositorySystemSession#getDependencyGraphTransformer()
  */
