@@ -14,6 +14,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -23,7 +24,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.pool.ConnPoolControl;
 import org.apache.http.pool.PoolStats;
 import org.eclipse.aether.ConfigurationProperties;
@@ -1033,7 +1033,7 @@ public class HttpTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        catch ( HttpHostConnectException e )
+        catch ( ConnectException e )
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
