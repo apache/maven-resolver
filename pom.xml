@@ -16,7 +16,7 @@
 
   <groupId>org.eclipse.aether</groupId>
   <artifactId>aether</artifactId>
-  <version>1.0.1.v20141111</version>
+  <version>1.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Aether</name>
