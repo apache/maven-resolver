@@ -11,12 +11,14 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
@@ -41,6 +43,39 @@ import org.eclipse.aether.util.StringUtils;
 public class DefaultRemoteRepositoryManager
     implements RemoteRepositoryManager, Service
 {
+
+    private static final class LoggedMirror
+    {
+
+        private final Object[] keys;
+
+        public LoggedMirror( RemoteRepository original, RemoteRepository mirror )
+        {
+            keys = new Object[] { mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl() };
+        }
+
+        @Override
+        public boolean equals( Object obj )
+        {
+            if ( this == obj )
+            {
+                return true;
+            }
+            else if ( !( obj instanceof LoggedMirror ) )
+            {
+                return false;
+            }
+            LoggedMirror that = (LoggedMirror) obj;
+            return Arrays.equals( keys, that.keys );
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Arrays.hashCode( keys );
+        }
+
+    }
 
     private Logger logger = NullLoggerFactory.LOGGER;
 
@@ -121,8 +156,7 @@ public class DefaultRemoteRepositoryManager
 
                 if ( mirrorRepository != null )
                 {
-                    logger.debug( "Using mirror " + mirrorRepository.getId() + " (" + mirrorRepository.getUrl()
-                        + ") for " + recessiveRepository.getId() + " (" + recessiveRepository.getUrl() + ")." );
+                    logMirror( session, recessiveRepository, mirrorRepository );
                     repository = mirrorRepository;
                 }
             }
@@ -177,6 +211,26 @@ public class DefaultRemoteRepositoryManager
         }
 
         return result;
+    }
+
+    private void logMirror( RepositorySystemSession session, RemoteRepository original, RemoteRepository mirror )
+    {
+        if ( !logger.isDebugEnabled() )
+        {
+            return;
+        }
+        RepositoryCache cache = session.getCache();
+        if ( cache != null )
+        {
+            Object key = new LoggedMirror( original, mirror );
+            if ( cache.get( session, key ) != null )
+            {
+                return;
+            }
+            cache.put( session, key, Boolean.TRUE );
+        }
+        logger.debug( "Using mirror " + mirror.getId() + " (" + mirror.getUrl() + ") for " + original.getId() + " ("
+            + original.getUrl() + ")." );
     }
 
     private String getKey( RemoteRepository repository )
