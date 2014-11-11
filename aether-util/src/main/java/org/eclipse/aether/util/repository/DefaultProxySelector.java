@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
@@ -40,6 +41,10 @@ public final class DefaultProxySelector
      */
     public DefaultProxySelector add( Proxy proxy, String nonProxyHosts )
     {
+        if ( proxy == null )
+        {
+            throw new IllegalArgumentException( "proxy not specified" );
+        }
         proxies.add( new ProxyDef( proxy, nonProxyHosts ) );
 
         return this;
@@ -52,7 +57,7 @@ public final class DefaultProxySelector
         String host = repository.getHost();
         for ( ProxyDef proxy : proxies )
         {
-            if ( !isNonProxyHosts( host, proxy.nonProxyHosts ) )
+            if ( !proxy.nonProxyHosts.isNonProxyHost( host ) )
             {
                 String key = proxy.proxy.getType().toLowerCase( Locale.ENGLISH );
                 if ( !candidates.containsKey( key ) )
@@ -86,22 +91,41 @@ public final class DefaultProxySelector
         return ( proxy != null ) ? proxy.proxy : null;
     }
 
-    static boolean isNonProxyHosts( String host, String nonProxyHosts )
+    static class NonProxyHosts
     {
-        if ( host != null && nonProxyHosts != null && nonProxyHosts.length() > 0 )
+
+        private final Pattern[] patterns;
+
+        public NonProxyHosts( String nonProxyHosts )
         {
-            for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" ); tokenizer.hasMoreTokens(); )
+            List<Pattern> patterns = new ArrayList<Pattern>();
+            if ( nonProxyHosts != null )
             {
-                String pattern = tokenizer.nextToken();
-                pattern = pattern.replace( ".", "\\." ).replace( "*", ".*" );
-                if ( host.matches( pattern ) )
+                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" ); tokenizer.hasMoreTokens(); )
                 {
-                    return true;
+                    String pattern = tokenizer.nextToken();
+                    pattern = pattern.replace( ".", "\\." ).replace( "*", ".*" );
+                    patterns.add( Pattern.compile( pattern ) );
                 }
             }
+            this.patterns = patterns.toArray( new Pattern[patterns.size()] );
         }
 
-        return false;
+        boolean isNonProxyHost( String host )
+        {
+            if ( host != null )
+            {
+                for ( Pattern pattern : patterns )
+                {
+                    if ( pattern.matcher( host ).matches() )
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
     }
 
     static class ProxyDef
@@ -109,12 +133,12 @@ public final class DefaultProxySelector
 
         final Proxy proxy;
 
-        final String nonProxyHosts;
+        final NonProxyHosts nonProxyHosts;
 
         public ProxyDef( Proxy proxy, String nonProxyHosts )
         {
             this.proxy = proxy;
-            this.nonProxyHosts = nonProxyHosts;
+            this.nonProxyHosts = new NonProxyHosts( nonProxyHosts );
         }
 
     }
