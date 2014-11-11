@@ -17,7 +17,7 @@
   <parent>
     <groupId>org.eclipse.aether</groupId>
     <artifactId>aether</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1.v20141111</version>
   </parent>
 
   <artifactId>aether-test-util</artifactId>
