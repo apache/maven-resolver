@@ -36,7 +36,7 @@ public final class DefaultProxySelector
      * a given repository will be used.
      * 
      * @param proxy The proxy definition to add, must not be {@code null}.
-     * @param nonProxyHosts The list of hosts to exclude from proxying, may be {@code null}.
+     * @param nonProxyHosts The list of (case-insensitive) host names to exclude from proxying, may be {@code null}.
      * @return This proxy selector for chaining, never {@code null}.
      */
     public DefaultProxySelector add( Proxy proxy, String nonProxyHosts )
@@ -105,7 +105,7 @@ public final class DefaultProxySelector
                 {
                     String pattern = tokenizer.nextToken();
                     pattern = pattern.replace( ".", "\\." ).replace( "*", ".*" );
-                    patterns.add( Pattern.compile( pattern ) );
+                    patterns.add( Pattern.compile( pattern, Pattern.CASE_INSENSITIVE ) );
                 }
             }
             this.patterns = patterns.toArray( new Pattern[patterns.size()] );
