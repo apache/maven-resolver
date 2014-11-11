@@ -117,7 +117,7 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-            <Import-Package>org.apache.http.*;version="[4.2.1,4.3)",*</Import-Package>
+            <Import-Package>org.apache.http.*;version="[4.2.1,4.4)",*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
