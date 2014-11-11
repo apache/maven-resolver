@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,9 +11,9 @@
 package org.eclipse.aether.version;
 
 /**
- * A constraint on versions for a dependency. A constraint can either consist of a version range or a single version. In
- * the first case, the constraint expresses a hard requirement on a version matching the range. In the second case, the
- * constraint expresses a soft requirement on a specific version (i.e. a recommendation).
+ * A constraint on versions for a dependency. A constraint can either consist of a version range (e.g. "[1, ]") or a
+ * single version (e.g. "1.1"). In the first case, the constraint expresses a hard requirement on a version matching the
+ * range. In the second case, the constraint expresses a soft requirement on a specific version (i.e. a recommendation).
  */
 public interface VersionConstraint
 {

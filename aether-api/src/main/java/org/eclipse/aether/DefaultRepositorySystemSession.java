@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2013 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,10 +36,12 @@ import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
 
 /**
- * A simple repository system session. <em>Note:</em> This class is not thread-safe. It is assumed that the mutators get
- * only called during an initialization phase and that the session itself is not changed when being used by the
- * repository system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to
- * prevent accidental manipulation of it afterwards.
+ * A simple repository system session.
+ * <p>
+ * <strong>Note:</strong> This class is not thread-safe. It is assumed that the mutators get only called during an
+ * initialization phase and that the session itself is not changed once initialized and being used by the repository
+ * system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to prevent
+ * accidental manipulation of it afterwards.
  */
 public final class DefaultRepositorySystemSession
     implements RepositorySystemSession
@@ -123,7 +125,9 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Creates a shallow copy of the specified session. Actually, the copy is not completely shallow, all maps holding
-     * properties are copied as well. In other words, mutating the new session has no effect on the original session.
+     * system/user/config properties are copied as well. In other words, invoking any mutator on the new session itself
+     * has no effect on the original session. Other mutable objects like the session data and cache (if any) are not
+     * copied and will be shared with the original session unless reconfigured.
      * 
      * @param session The session to copy, must not be {@code null}.
      */
@@ -395,6 +399,7 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the system properties to use, e.g. for processing of artifact descriptors. System properties are usually
      * collected from the runtime environment like {@link System#getProperties()} and environment variables.
+     * <p>
      * <em>Note:</em> System properties are of type {@code Map<String, String>} and any key-value pair in the input map
      * that doesn't match this type will be silently ignored.
      * 
@@ -438,8 +443,10 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the user properties to use, e.g. for processing of artifact descriptors. User properties are similar to
      * system properties but are set on the discretion of the user and hence are considered of higher priority than
-     * system properties. <em>Note:</em> User properties are of type {@code Map<String, String>} and any key-value pair
-     * in the input map that doesn't match this type will be silently ignored.
+     * system properties in case of conflicts.
+     * <p>
+     * <em>Note:</em> User properties are of type {@code Map<String, String>} and any key-value pair in the input map
+     * that doesn't match this type will be silently ignored.
      * 
      * @param userProperties The user properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
@@ -480,9 +487,10 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the configuration properties used to tweak internal aspects of the repository system (e.g. thread pooling,
-     * connector-specific behavior, etc.) <em>Note:</em> Configuration properties are of type
-     * {@code Map<String, Object>} and any key-value pair in the input map that doesn't match this type will be silently
-     * ignored.
+     * connector-specific behavior, etc.).
+     * <p>
+     * <em>Note:</em> Configuration properties are of type {@code Map<String, Object>} and any key-value pair in the
+     * input map that doesn't match this type will be silently ignored.
      * 
      * @param configProperties The configuration properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.

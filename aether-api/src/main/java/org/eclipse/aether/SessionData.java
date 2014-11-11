@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Sonatype, Inc.
+ * Copyright (c) 2010, 2014 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,10 +12,12 @@ package org.eclipse.aether;
 
 /**
  * A container for data that is specific to a repository system session. Both components within the repository system
- * and clients of the system may use this storage to associate arbitrary data with a session. Unlike a cache, this
- * session data is not subject to purging. For this same reason, session data should also not be abused as a cache (i.e.
- * for storing values that can be re-calculated) to avoid memory exhaustion. <strong>Note:</strong> Actual
- * implementations must be thread-safe.
+ * and clients of the system may use this storage to associate arbitrary data with a session.
+ * <p>
+ * Unlike a cache, this session data is not subject to purging. For this same reason, session data should also not be
+ * abused as a cache (i.e. for storing values that can be re-calculated) to avoid memory exhaustion.
+ * <p>
+ * <strong>Note:</strong> Actual implementations must be thread-safe.
  * 
  * @see RepositorySystemSession#getData()
  * @noimplement This interface is not intended to be implemented by clients.
@@ -39,8 +41,8 @@ public interface SessionData
      * @param key The key under which to store the session data, must not be {@code null}.
      * @param oldValue The expected data currently associated with the key, may be {@code null}.
      * @param newValue The data to associate with the key, may be {@code null} to remove the mapping.
-     * @return {@code true} if the key mapping was updated to the specified value, {@code false} if the current key
-     *         mapping didn't match the expected value and was not updated.
+     * @return {@code true} if the key mapping was successfully updated from the old value to the new value,
+     *         {@code false} if the current key mapping didn't match the expected value and was not updated.
      */
     boolean set( Object key, Object oldValue, Object newValue );
 
