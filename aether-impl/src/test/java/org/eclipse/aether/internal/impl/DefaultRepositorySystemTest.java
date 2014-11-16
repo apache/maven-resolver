@@ -16,10 +16,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.util.repository.DefaultAuthenticationSelector;
 import org.eclipse.aether.util.repository.DefaultMirrorSelector;
@@ -101,6 +110,31 @@ public class DefaultRepositorySystemTest
         assertNotNull( deployRepo );
         assertSame( proxy, deployRepo.getProxy() );
         assertSame( auth, deployRepo.getAuthentication() );
+    }
+
+    @Test
+    public void testResolveDependencies_NoRootNode()
+        throws Exception
+    {
+        DependencyRequest request = new DependencyRequest();
+        request.setCollectRequest( new CollectRequest().setRoot( new Dependency( new DefaultArtifact( "g:a:v" ), "" ) ) );
+        system.setDependencyCollector( new DependencyCollector()
+        {
+            public CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
+                throws DependencyCollectionException
+            {
+                throw new DependencyCollectionException( null );
+            }
+        } );
+        try
+        {
+            system.resolveDependencies( session, request );
+            fail( "Expected exception" );
+        }
+        catch ( DependencyResolutionException e )
+        {
+            assertTrue( e.getCause() instanceof DependencyCollectionException );
+        }
     }
 
 }
