@@ -22,6 +22,6 @@
     <appender-ref ref="STDOUT" />
   </root>
 
-  <logger name="org.apache.http.wire" level="DEBUG" />
+  <logger name="org.apache.http.wire" level="INFO" />
   <logger name="org.eclipse.jetty" level="INFO" />
 </configuration>
