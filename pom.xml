@@ -548,10 +548,10 @@
                     <include>com.google.guava:guava:[11.0.2]</include>
                     <!-- CQ #5639 -->
                     <include>javax.inject:javax.inject:[1]</include>
-                    <!-- CQ #7657 -->
-                    <include>org.apache.httpcomponents:httpclient:[4.2.6]</include>
-                    <!-- CQ #7656 -->
-                    <include>org.apache.httpcomponents:httpcore:[4.2.5]</include>
+                    <!-- CQ #8596 -->
+                    <include>org.apache.httpcomponents:httpclient:[4.3.5]</include>
+                    <!-- CQ #8595 -->
+                    <include>org.apache.httpcomponents:httpcore:[4.3.2]</include>
                     <!-- CQ #7346 -->
                     <include>commons-codec:commons-codec:[1.6]</include>
                     <!-- CQ #7347 -->
