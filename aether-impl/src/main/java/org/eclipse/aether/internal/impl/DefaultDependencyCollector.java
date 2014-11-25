@@ -447,8 +447,8 @@ public class DefaultDependencyCollector
                         getRemoteRepositories( rangeResult.getRepository( version ), repositories );
 
                     DefaultDependencyNode child =
-                        createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult, repos,
-                                              args.request.getRequestContext() );
+                        createDependencyNode( relocations, preManaged, rangeResult, version, d,
+                                              descriptorResult.getAliases(), repos, args.request.getRequestContext() );
 
                     node.getChildren().add( child );
 
@@ -459,6 +459,16 @@ public class DefaultDependencyCollector
                                    descriptorResult, child );
                     }
                 }
+            }
+            else
+            {
+                DependencyNode node = args.nodes.top();
+                List<RemoteRepository> repos =
+                    getRemoteRepositories( rangeResult.getRepository( version ), repositories );
+                DefaultDependencyNode child =
+                    createDependencyNode( relocations, preManaged, rangeResult, version, d, null, repos,
+                                          args.request.getRequestContext() );
+                node.getChildren().add( child );
             }
         }
     }
@@ -544,7 +554,7 @@ public class DefaultDependencyCollector
     private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations,
                                                                PremanagedDependency preManaged,
                                                                VersionRangeResult rangeResult, Version version,
-                                                               Dependency d, ArtifactDescriptorResult descriptorResult,
+                                                               Dependency d, Collection<Artifact> aliases,
                                                                List<RemoteRepository> repos, String requestContext )
     {
         DefaultDependencyNode child = new DefaultDependencyNode( d );
@@ -552,7 +562,7 @@ public class DefaultDependencyCollector
         child.setRelocations( relocations );
         child.setVersionConstraint( rangeResult.getVersionConstraint() );
         child.setVersion( version );
-        child.setAliases( descriptorResult.getAliases() );
+        child.setAliases( aliases );
         child.setRepositories( repos );
         child.setRequestContext( requestContext );
         return child;
@@ -565,7 +575,7 @@ public class DefaultDependencyCollector
                                                                DependencyNode cycleNode )
     {
         DefaultDependencyNode child =
-            createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult,
+            createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult.getAliases(),
                                   cycleNode.getRepositories(), cycleNode.getRequestContext() );
         child.setChildren( cycleNode.getChildren() );
         return child;
