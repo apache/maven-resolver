@@ -17,7 +17,7 @@
   <parent>
     <groupId>org.eclipse.aether</groupId>
     <artifactId>aether</artifactId>
-    <version>1.0.2.v20150114</version>
+    <version>1.0.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>aether-transport-file</artifactId>
