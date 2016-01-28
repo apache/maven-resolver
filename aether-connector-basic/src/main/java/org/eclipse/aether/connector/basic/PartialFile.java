@@ -129,44 +129,48 @@ final class PartialFile
         private static FileLock tryLock( File lockFile )
             throws IOException
         {
-            RandomAccessFile raf = new RandomAccessFile( lockFile, "rw" );
+            RandomAccessFile raf = null;
+            FileLock lock = null;
             try
             {
-                FileLock lock = raf.getChannel().tryLock( 0, 1, false );
+                raf = new RandomAccessFile( lockFile, "rw" );
+                lock = raf.getChannel().tryLock( 0, 1, false );
                 if ( lock == null )
                 {
-                    close( raf );
+                    raf.close();
+                    raf = null;
                 }
                 return lock;
             }
             catch ( OverlappingFileLockException e )
             {
-                close( raf );
                 return null;
             }
             catch ( RuntimeException e )
             {
-                close( raf );
                 lockFile.delete();
+                lock = null;
                 throw e;
             }
             catch ( IOException e )
             {
-                close( raf );
                 lockFile.delete();
+                lock = null;
                 throw e;
             }
-        }
-
-        private static void close( Closeable file )
-        {
-            try
+            finally
             {
-                file.close();
-            }
-            catch ( IOException e )
-            {
-                // irrelevant
+                try
+                {
+                    if ( lock == null && raf != null )
+                    {
+                        raf.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed
+                }
             }
         }
 
@@ -175,9 +179,9 @@ final class PartialFile
             return concurrent;
         }
 
-        public void close()
+        public void close() throws IOException
         {
-            close( lock.channel() );
+            lock.channel().close();
             lockFile.delete();
         }
 
@@ -277,7 +281,7 @@ final class PartialFile
         return lockFile != null && partFile.length() >= threshold;
     }
 
-    public void close()
+    public void close() throws IOException
     {
         if ( partFile.exists() && !isResume() )
         {

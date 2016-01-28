@@ -1,0 +1,3 @@
+gid:root:ext:ver root-scope
++- gid:direct-of-root:ext:ver direct-of-root-scope optional
+   +- gid:transitive-of-root:ext:ver transitive-of-root-scope optional

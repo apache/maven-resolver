@@ -19,7 +19,6 @@ package org.eclipse.aether.spi.connector.transport;
  * under the License.
  */
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -96,25 +95,47 @@ public abstract class AbstractTransporter
     protected void utilGet( GetTask task, InputStream is, boolean close, long length, boolean resume )
         throws IOException, TransferCancelledException
     {
+        OutputStream os = null;
         try
         {
+            os = task.newOutputStream( resume );
             task.getListener().transportStarted( resume ? task.getResumeOffset() : 0, length );
-            OutputStream os = task.newOutputStream( resume );
-            try
+            copy( os, is, task.getListener() );
+            os.close();
+            os = null;
+
+            if ( close )
             {
-                copy( os, is, task.getListener() );
-                os.close();
-            }
-            finally
-            {
-                close( os );
+                is.close();
+                is = null;
             }
         }
         finally
         {
-            if ( close )
+            try
             {
-                close( is );
+                if ( os != null )
+                {
+                    os.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed
+            }
+            finally
+            {
+                try
+                {
+                    if ( close && is != null )
+                    {
+                        is.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed
+                }
             }
         }
     }
@@ -147,35 +168,56 @@ public abstract class AbstractTransporter
      * @throws IOException If the transfer encountered an I/O error.
      * @throws TransferCancelledException If the transfer was cancelled.
      */
-    protected void utilPut( PutTask task, OutputStream os, boolean close )
+    protected void utilPut( PutTask task, OutputStream out, boolean close )
         throws IOException, TransferCancelledException
     {
+        InputStream in = null;
         try
         {
+            in = task.newInputStream();
             task.getListener().transportStarted( 0, task.getDataLength() );
-            InputStream is = task.newInputStream();
-            try
-            {
-                copy( os, is, task.getListener() );
-            }
-            finally
-            {
-                close( is );
-            }
+            copy( out, in, task.getListener() );
+
             if ( close )
             {
-                os.close();
+                out.close();
             }
             else
             {
-                os.flush();
+                out.flush();
             }
+
+            out = null;
+
+            in.close();
+            in = null;
         }
         finally
         {
-            if ( close )
+            try
             {
-                close( os );
+                if ( close && out != null )
+                {
+                    out.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed
+            }
+            finally
+            {
+                try
+                {
+                    if ( in != null )
+                    {
+                        in.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed
+                }
             }
         }
     }
@@ -212,21 +254,6 @@ public abstract class AbstractTransporter
             buffer.rewind();
             buffer.limit( read );
             listener.transportProgressed( buffer );
-        }
-    }
-
-    private static void close( Closeable file )
-    {
-        if ( file != null )
-        {
-            try
-            {
-                file.close();
-            }
-            catch ( IOException e )
-            {
-                // irrelevant
-            }
         }
     }
 

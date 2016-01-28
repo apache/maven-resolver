@@ -144,7 +144,7 @@ public final class ConflictResolver
 
         @SuppressWarnings( "unchecked" )
         Map<String, Object> stats = (Map<String, Object>) context.get( TransformationContextKeys.STATS );
-        long time1 = System.currentTimeMillis();
+        long time1 = System.nanoTime();
 
         @SuppressWarnings( "unchecked" )
         Collection<Collection<?>> conflictIdCycles =
@@ -231,7 +231,7 @@ public final class ConflictResolver
 
         if ( stats != null )
         {
-            long time2 = System.currentTimeMillis();
+            long time2 = System.nanoTime();
             stats.put( "ConflictResolver.totalTime", time2 - time1 );
             stats.put( "ConflictResolver.conflictItemCount", state.totalConflictItems );
         }

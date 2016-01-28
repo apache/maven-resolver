@@ -107,18 +107,14 @@ class IniArtifactDataReader
     private ArtifactDescription parse( Reader reader )
         throws IOException
     {
-        String line = null;
-
         State state = State.NONE;
-
         Map<State, List<String>> sections = new HashMap<State, List<String>>();
-
-        BufferedReader in = new BufferedReader( reader );
+        BufferedReader in = null;
         try
         {
-            while ( ( line = in.readLine() ) != null )
+            in = new BufferedReader( reader );
+            for ( String line = in.readLine(); line != null; line = in.readLine() )
             {
-
                 line = cutComment( line );
                 if ( isEmpty( line ) )
                 {
@@ -149,10 +145,23 @@ class IniArtifactDataReader
                     lines.add( line.trim() );
                 }
             }
+
+            in.close();
+            in = null;
         }
         finally
         {
-            in.close();
+            try
+            {
+                if ( in != null )
+                {
+                    in.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed
+            }
         }
 
         Artifact relocation = relocation( sections.get( State.RELOCATION ) );

@@ -100,6 +100,7 @@ public class TestFileProcessor
 
             // allow output to report any flush/close errors
             fos.close();
+            fos = null;
         }
         finally
         {
@@ -121,6 +122,7 @@ public class TestFileProcessor
 
             // allow output to report any flush/close errors
             fos.close();
+            fos = null;
         }
         finally
         {
@@ -137,8 +139,6 @@ public class TestFileProcessor
     public long copy( File source, File target, ProgressListener listener )
         throws IOException
     {
-        long total = 0;
-
         InputStream fis = null;
         OutputStream fos = null;
         try
@@ -149,18 +149,22 @@ public class TestFileProcessor
 
             fos = new BufferedOutputStream( new FileOutputStream( target ) );
 
-            total = copy( fos, fis, listener );
+            final long total = copy( fos, fis, listener );
 
             // allow output to report any flush/close errors
             fos.close();
+            fos = null;
+
+            fis.close();
+            fis = null;
+
+            return total;
         }
         finally
         {
             close( fis );
             close( fos );
         }
-
-        return total;
     }
 
     private long copy( OutputStream os, InputStream is, ProgressListener listener )

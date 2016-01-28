@@ -19,7 +19,6 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -39,21 +38,6 @@ import org.eclipse.aether.spi.io.FileProcessor;
 public class DefaultFileProcessor
     implements FileProcessor
 {
-
-    private static void close( Closeable closeable )
-    {
-        if ( closeable != null )
-        {
-            try
-            {
-                closeable.close();
-            }
-            catch ( IOException e )
-            {
-                // too bad but who cares
-            }
-        }
-    }
 
     /**
      * Thread-safe variant of {@link File#mkdirs()}. Creates the directory named by the given abstract pathname,
@@ -111,10 +95,21 @@ public class DefaultFileProcessor
 
             // allow output to report any flush/close errors
             fos.close();
+            fos = null;
         }
         finally
         {
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed
+            }
         }
     }
 
@@ -132,10 +127,21 @@ public class DefaultFileProcessor
 
             // allow output to report any flush/close errors
             fos.close();
+            fos = null;
         }
         finally
         {
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed
+            }
         }
     }
 
@@ -164,11 +170,38 @@ public class DefaultFileProcessor
 
             // allow output to report any flush/close errors
             fos.close();
+            fos = null;
+
+            fis.close();
+            fis = null;
         }
         finally
         {
-            close( fis );
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed
+            }
+            finally
+            {
+                try
+                {
+                    if ( fis != null )
+                    {
+                        fis.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed
+                }
+            }
         }
 
         return total;

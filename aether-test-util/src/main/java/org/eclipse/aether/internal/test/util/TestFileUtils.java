@@ -198,8 +198,6 @@ public class TestFileUtils
     public static long copyFile( File source, File target )
         throws IOException
     {
-        long total = 0;
-
         FileInputStream fis = null;
         OutputStream fos = null;
         try
@@ -210,7 +208,9 @@ public class TestFileUtils
 
             fos = new BufferedOutputStream( new FileOutputStream( target ) );
 
-            for ( byte[] buffer = new byte[1024 * 32];; )
+            long total = 0;
+
+            for ( byte[] buffer = new byte[ 1024 * 32 ];; )
             {
                 int bytes = fis.read( buffer );
                 if ( bytes < 0 )
@@ -224,14 +224,18 @@ public class TestFileUtils
             }
 
             fos.close();
+            fos = null;
+
+            fis.close();
+            fis = null;
+
+            return total;
         }
         finally
         {
             close( fis );
             close( fos );
         }
-
-        return total;
     }
 
     public static byte[] readBytes( File file )
@@ -243,6 +247,8 @@ public class TestFileUtils
             in = new RandomAccessFile( file, "r" );
             byte[] actual = new byte[(int) in.length()];
             in.readFully( actual );
+            in.close();
+            in = null;
             return actual;
         }
         finally
@@ -265,6 +271,7 @@ public class TestFileUtils
                 out.write( pattern );
             }
             out.close();
+            out = null;
         }
         finally
         {
@@ -293,6 +300,8 @@ public class TestFileUtils
         {
             fis = new FileInputStream( file );
             props.load( fis );
+            fis.close();
+            fis = null;
         }
         finally
         {
@@ -311,6 +320,7 @@ public class TestFileUtils
             fos = new FileOutputStream( file );
             props.store( fos, "aether-test" );
             fos.close();
+            fos = null;
         }
         finally
         {

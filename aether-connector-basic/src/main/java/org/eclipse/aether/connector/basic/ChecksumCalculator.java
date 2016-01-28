@@ -167,16 +167,21 @@ final class ChecksumCalculator
                     buffer.limit( read );
                     update( buffer );
                 }
+                fis.close();
+                fis = null;
             }
             finally
             {
                 try
                 {
-                    fis.close();
+                    if ( fis != null )
+                    {
+                        fis.close();
+                    }
                 }
                 catch ( IOException e )
                 {
-                    // irrelevant
+                    // Suppressed
                 }
             }
         }

@@ -457,6 +457,7 @@ final class WagonTransporter
     {
         if ( path != null && !path.delete() && path.exists() )
         {
+            path.deleteOnExit();
             logger.debug( "Could not delete temorary file " + path );
         }
     }
@@ -594,23 +595,22 @@ final class WagonTransporter
         private void readTempFile( File dst )
             throws IOException
         {
-            FileInputStream fis = new FileInputStream( dst );
+            FileInputStream in = null;
+            OutputStream out = null;
             try
             {
-                OutputStream os = task.newOutputStream();
-                try
-                {
-                    copy( os, fis );
-                    os.close();
-                }
-                finally
-                {
-                    close( os );
-                }
+                in = new FileInputStream( dst );
+                out = task.newOutputStream();
+                copy( out, in );
+                out.close();
+                out = null;
+                in.close();
+                in = null;
             }
             finally
             {
-                close( fis );
+                close( out );
+                close( in );
             }
         }
 
@@ -634,11 +634,14 @@ final class WagonTransporter
             File file = task.getDataFile();
             if ( file == null && wagon instanceof StreamingWagon )
             {
-                InputStream src = task.newInputStream();
+                InputStream src = null;
                 try
                 {
+                    src = task.newInputStream();
                     // StreamingWagon uses an internal buffer on src input stream.
                     ( (StreamingWagon) wagon ).putFromStream( src, dst, task.getDataLength(), -1 );
+                    src.close();
+                    src = null;
                 }
                 finally
                 {
@@ -665,34 +668,31 @@ final class WagonTransporter
         private File createTempFile()
             throws IOException
         {
-            File tmp = newTempFile();
+            File tmp = null;
+            FileOutputStream out = null;
+            InputStream in = null;
             try
             {
-                FileOutputStream fos = new FileOutputStream( tmp );
-                try
-                {
-                    InputStream is = task.newInputStream();
-                    try
-                    {
-                        copy( fos, is );
-                        fos.close();
-                    }
-                    finally
-                    {
-                        close( is );
-                    }
-                }
-                finally
-                {
-                    close( fos );
-                }
+                tmp = newTempFile();
+                in = task.newInputStream();
+                out = new FileOutputStream( tmp );
+                copy( out, in );
+                out.close();
+                out = null;
+                in.close();
+                in = null;
+                return tmp;
             }
             catch ( IOException e )
             {
                 delTempFile( tmp );
                 throw e;
             }
-            return tmp;
+            finally
+            {
+                close( out );
+                close( in );
+            }
         }
 
     }

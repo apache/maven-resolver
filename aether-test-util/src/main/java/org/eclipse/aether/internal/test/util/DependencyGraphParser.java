@@ -191,13 +191,23 @@ public class DependencyGraphParser
         try
         {
             stream = resource.openStream();
-            return parse( new BufferedReader( new InputStreamReader( stream, "UTF-8" ) ) );
+            final DependencyNode node = parse( new BufferedReader( new InputStreamReader( stream, "UTF-8" ) ) );
+            stream.close();
+            stream = null;
+            return node;
         }
         finally
         {
-            if ( stream != null )
+            try
             {
-                stream.close();
+                if ( stream != null )
+                {
+                    stream.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed
             }
         }
     }

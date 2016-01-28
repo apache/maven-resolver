@@ -67,7 +67,7 @@ class SimpleDigest
             }
             catch ( UnsupportedEncodingException e )
             {
-                // broken JVM
+                throw new AssertionError( e );
             }
         }
         else

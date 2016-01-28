@@ -1,0 +1,6 @@
+gid:0:ext:ver
++- gid:1:ext:ver compile
+   +- gid:2:ext:managed-by-0 compile
+      +- gid:3:ext:managed-by-1 compile
+         +- gid:4:ext:managed-by-2 compile
+            +- gid:5:ext:managed-by-3 compile

@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.maven.aether</groupId>
     <artifactId>aether</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>aether-transport-classpath</artifactId>
@@ -68,7 +68,7 @@
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-library</artifactId>
+      <artifactId>hamcrest-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

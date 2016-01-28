@@ -19,13 +19,12 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
@@ -69,6 +68,12 @@ class TrackingFileManager
                 Properties props = new Properties();
                 props.load( stream );
 
+                lock.release();
+                lock = null;
+
+                stream.close();
+                stream = null;
+
                 return props;
             }
             catch ( IOException e )
@@ -107,13 +112,7 @@ class TrackingFileManager
 
                 if ( file.canRead() )
                 {
-                    byte[] buffer = new byte[(int) raf.length()];
-
-                    raf.readFully( buffer );
-
-                    ByteArrayInputStream stream = new ByteArrayInputStream( buffer );
-
-                    props.load( stream );
+                    props.load( Channels.newInputStream( raf.getChannel() ) );
                 }
 
                 for ( Map.Entry<String, String> update : updates.entrySet() )
@@ -128,15 +127,17 @@ class TrackingFileManager
                     }
                 }
 
-                ByteArrayOutputStream stream = new ByteArrayOutputStream( 1024 * 2 );
-
                 logger.debug( "Writing tracking file " + file );
-                props.store( stream, "NOTE: This is an Aether internal implementation file"
-                    + ", its format can be changed without prior notice." );
+                raf.setLength( 0 );
+                props.store( Channels.newOutputStream( raf.getChannel() ),
+                             "NOTE: This is an Aether internal implementation file"
+                                 + ", its format can be changed without prior notice." );
 
-                raf.seek( 0 );
-                raf.write( stream.toByteArray() );
-                raf.setLength( raf.getFilePointer() );
+                lock.release();
+                lock = null;
+
+                raf.close();
+                raf = null;
             }
             catch ( IOException e )
             {
