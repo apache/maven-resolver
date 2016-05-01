@@ -33,11 +33,11 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.maven</groupId>
+      <groupId>org.apache.maven.aether</groupId>
       <artifactId>aether-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven</groupId>
+      <groupId>org.apache.maven.aether</groupId>
       <artifactId>aether-test-util</artifactId>
       <scope>test</scope>
     </dependency>

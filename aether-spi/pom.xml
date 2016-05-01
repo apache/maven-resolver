@@ -33,7 +33,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.maven</groupId>
+      <groupId>org.apache.maven.aether</groupId>
       <artifactId>aether-api</artifactId>
     </dependency>
     <dependency>

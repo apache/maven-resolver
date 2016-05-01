@@ -139,32 +139,32 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.aether</groupId>
         <artifactId>aether-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.aether</groupId>
         <artifactId>aether-spi</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.aether</groupId>
         <artifactId>aether-util</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.aether</groupId>
         <artifactId>aether-impl</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.aether</groupId>
         <artifactId>aether-connector-basic</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.aether</groupId>
         <artifactId>aether-test-util</artifactId>
         <version>${project.version}</version>
         <scope>test</scope>
@@ -529,7 +529,7 @@
                     <exclude>*:*</exclude>
                   </excludes>
                   <includes>
-                    <include>org.eclipse.aether</include>
+                    <include>org.apache.maven.aether</include>
                     <include>org.eclipse.sisu</include>
                     <include>org.eclipse.jetty:*:*:*:test</include>
                     <!-- CQ #5627 -->
