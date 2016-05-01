@@ -36,10 +36,6 @@
       A repository connector implementation for repositories using URI-based layouts.
   </description>
 
-  <properties>
-    <bundle.symbolicName>org.eclipse.aether.connector.basic</bundle.symbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.aether</groupId>
@@ -85,16 +81,8 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

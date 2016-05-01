@@ -36,10 +36,6 @@
     A collection of utility classes to ease testing of the repository system.
   </description>
 
-  <properties>
-    <bundle.symbolicName>org.eclipse.aether.test-util</bundle.symbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.aether</groupId>
@@ -60,17 +56,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 </project>

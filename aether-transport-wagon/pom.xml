@@ -38,7 +38,6 @@
 
   <properties>
     <wagonVersion>1.0</wagonVersion>
-    <bundle.symbolicName>org.eclipse.aether.transport.wagon</bundle.symbolicName>
   </properties>
 
   <dependencies>
@@ -114,20 +113,12 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-component-metadata</artifactId>
       </plugin>
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

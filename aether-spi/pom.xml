@@ -36,10 +36,6 @@
     The service provider interface for repository system implementations and repository connectors.
   </description>
 
-  <properties>
-    <bundle.symbolicName>org.eclipse.aether.spi</bundle.symbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.aether</groupId>
@@ -56,21 +52,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>clirr-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 </project>
