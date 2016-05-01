@@ -36,10 +36,6 @@
       A repository connector implementation for repositories using URI-based layouts.
   </description>
 
-  <properties>
-    <bundle.symbolicName>org.eclipse.aether.connector.basic</bundle.symbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.aether</groupId>

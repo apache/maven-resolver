@@ -36,10 +36,6 @@
       A transport implementation for repositories using http:// and https:// URLs.
   </description>
 
-  <properties>
-    <bundle.symbolicName>org.eclipse.aether.transport.http</bundle.symbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.aether</groupId>
@@ -120,15 +116,6 @@
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <instructions>
-            <Import-Package>org.apache.http.*;version="[4.2.1,4.4)",*</Import-Package>
-          </instructions>
-        </configuration>
       </plugin>
     </plugins>
   </build>
