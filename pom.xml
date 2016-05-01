@@ -44,6 +44,7 @@
   <scm>
     <connection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-aether.git</connection>
     <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-aether.git</developerConnection>
+    <url>https://git-wip-us.apache.org/repos/asf/maven-aether.git</url>
   </scm>
   <!--issueManagement>
     <system>jira</system>
@@ -53,6 +54,18 @@
     <system>Jenkins</system>
     <url>https://builds.apache.org/job/</url>
   </ciManagement-->
+  <distributionManagement>
+    <site>
+      <id>apache.website</id>
+      <url>scm:svn:https://svn.apache.org/repos/infra/websites/production/maven/components/${maven.site.path}</url>
+    </site>
+  </distributionManagement>
+
+  <properties>
+    <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
+    <checkstyle.skip>true</checkstyle.skip>
+    <maven.site.path>aether-archives/aether-LATEST</maven.site.path>
+  </properties>
 
   <modules>
     <!-- NOTE: Be sure to update the bin assembly descriptor as well if the module list changes -->
@@ -67,11 +80,6 @@
     <module>aether-transport-http</module>
     <module>aether-transport-wagon</module>
   </modules>
-
-  <properties>
-    <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
-    <checkstyle.skip>true</checkstyle.skip>
-  </properties>
 
   <dependencyManagement>
     <dependencies>
@@ -305,8 +313,6 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-    </plugins>
   </build>
 
   <profiles>
@@ -355,20 +361,6 @@
                         <goals>
                           <goal>test-index</goal>
                           <goal>main-index</goal>
-                        </goals>
-                      </pluginExecutionFilter>
-                      <action>
-                        <ignore />
-                      </action>
-                    </pluginExecution>
-                    <pluginExecution>
-                      <pluginExecutionFilter>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <versionRange>[1.7,)</versionRange>
-                        <goals>
-                          <goal>regex-property</goal>
-                          <goal>timestamp-property</goal>
                         </goals>
                       </pluginExecutionFilter>
                       <action>
