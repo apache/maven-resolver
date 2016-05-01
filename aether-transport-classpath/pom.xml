@@ -15,7 +15,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.eclipse.aether</groupId>
+    <groupId>org.apache.maven.aether</groupId>
     <artifactId>aether</artifactId>
     <version>1.0.3-SNAPSHOT</version>
   </parent>
@@ -33,15 +33,15 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.eclipse.aether</groupId>
+      <groupId>org.apache.maven.aether</groupId>
       <artifactId>aether-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.aether</groupId>
+      <groupId>org.apache.maven.aether</groupId>
       <artifactId>aether-spi</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.aether</groupId>
+      <groupId>org.apache.maven.aether</groupId>
       <artifactId>aether-util</artifactId>
     </dependency>
     <dependency>
@@ -67,7 +67,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.aether</groupId>
+      <groupId>org.apache.maven.aether</groupId>
       <artifactId>aether-test-util</artifactId>
       <scope>test</scope>
     </dependency>
