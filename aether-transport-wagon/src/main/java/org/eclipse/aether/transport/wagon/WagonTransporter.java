@@ -1,3 +1,5 @@
+package org.eclipse.aether.transport.wagon;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.wagon;
 
 import java.io.Closeable;
 import java.io.File;
@@ -503,7 +504,7 @@ final class WagonTransporter
     private interface TaskRunner
     {
 
-        public void run( Wagon wagon )
+        void run( Wagon wagon )
             throws Exception;
 
     }

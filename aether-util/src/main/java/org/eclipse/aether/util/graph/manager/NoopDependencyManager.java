@@ -1,3 +1,5 @@
+package org.eclipse.aether.util.graph.manager;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.manager;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManagement;

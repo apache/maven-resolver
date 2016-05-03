@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -160,7 +161,7 @@ final class DataPool
         nodes.put( key, children );
     }
 
-    static abstract class Descriptor
+    abstract static class Descriptor
     {
 
         public abstract ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request );

@@ -1,3 +1,5 @@
+package org.eclipse.aether.transfer;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transfer;
 
 /**
  * A listener being notified of artifact/metadata transfers from/to remote repositories. The listener may be called from

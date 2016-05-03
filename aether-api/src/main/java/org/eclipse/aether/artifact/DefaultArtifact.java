@@ -1,3 +1,5 @@
+package org.eclipse.aether.artifact;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.artifact;
 
 import java.io.File;
 import java.util.Collections;
@@ -56,7 +57,7 @@ public final class DefaultArtifact
      */
     public DefaultArtifact( String coords )
     {
-        this( coords, Collections.<String, String> emptyMap() );
+        this( coords, Collections.<String, String>emptyMap() );
     }
 
     /**

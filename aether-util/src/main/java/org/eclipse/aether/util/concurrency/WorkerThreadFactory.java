@@ -1,3 +1,5 @@
+package org.eclipse.aether.util.concurrency;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.concurrency;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -35,7 +36,7 @@ public final class WorkerThreadFactory
 
     private final AtomicInteger threadIndex;
 
-    private static final AtomicInteger poolIndex = new AtomicInteger();
+    private static final AtomicInteger POOL_INDEX = new AtomicInteger();
 
     /**
      * Creates a new thread factory whose threads will have names using the specified prefix.
@@ -48,7 +49,7 @@ public final class WorkerThreadFactory
         this.factory = Executors.defaultThreadFactory();
         this.namePrefix =
             ( ( namePrefix != null && namePrefix.length() > 0 ) ? namePrefix : getCallerSimpleClassName() + '-' )
-                + poolIndex.getAndIncrement() + '-';
+                + POOL_INDEX.getAndIncrement() + '-';
         threadIndex = new AtomicInteger();
     }
 

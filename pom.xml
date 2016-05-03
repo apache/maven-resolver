@@ -63,8 +63,8 @@
 
   <properties>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
-    <checkstyle.skip>true</checkstyle.skip>
     <maven.site.path>aether-archives/aether-LATEST</maven.site.path>
+    <checkstyle.violation.ignore>UnusedImports,LineLength,InnerAssignment,MagicNumber,AvoidNestedBlocks,ParameterNumber,MethodLength,MemberName</checkstyle.violation.ignore>
   </properties>
 
   <modules>

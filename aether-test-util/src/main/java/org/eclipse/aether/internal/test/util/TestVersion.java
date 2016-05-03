@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.test.util;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.test.util;
 
 import org.eclipse.aether.version.Version;
 
@@ -52,19 +53,29 @@ final class TestVersion
     public boolean equals( Object obj )
     {
         if ( this == obj )
+        {
             return true;
+        }
         if ( obj == null )
+        {
             return false;
+        }
         if ( getClass() != obj.getClass() )
+        {
             return false;
+        }
         TestVersion other = (TestVersion) obj;
         if ( version == null )
         {
             if ( other.version != null )
+            {
                 return false;
+            }
         }
         else if ( !version.equals( other.version ) )
+        {
             return false;
+        }
         return true;
     }
 

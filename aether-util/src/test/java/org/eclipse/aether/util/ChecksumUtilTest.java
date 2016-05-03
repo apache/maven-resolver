@@ -1,3 +1,5 @@
+package org.eclipse.aether.util;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util;
 
 import static org.eclipse.aether.internal.test.util.TestFileUtils.*;
 import static org.junit.Assert.*;

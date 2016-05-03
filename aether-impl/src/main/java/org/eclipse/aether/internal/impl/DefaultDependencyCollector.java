@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -328,7 +329,7 @@ public class DefaultDependencyCollector
         {
             int initialCapacity = dominant.size() + recessive.size();
             result = new ArrayList<Dependency>( initialCapacity );
-            Collection<String> ids = new HashSet<String>(initialCapacity, 1.0f);
+            Collection<String> ids = new HashSet<String>( initialCapacity, 1.0f );
             for ( Dependency dependency : dominant )
             {
                 ids.add( getId( dependency.getArtifact() ) );

@@ -1,3 +1,5 @@
+package org.eclipse.aether.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.impl;
 
 import java.io.File;
 
@@ -26,6 +27,8 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * A request to check if an update of an artifact/metadata from a remote repository is needed.
  * 
+ * @param <T>
+ * @param <E>
  * @see UpdateCheckManager
  * @provisional This type is provisional and can be changed, moved or removed without prior notice.
  */
