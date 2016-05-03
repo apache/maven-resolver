@@ -1,3 +1,5 @@
+package org.eclipse.aether;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether;
 
 /**
  * A container for data that is specific to a repository system session. Both components within the repository system

@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.test.util;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.test.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -119,7 +120,7 @@ public class DependencyGraphParser
      */
     public DependencyGraphParser( String prefix )
     {
-        this( prefix, Collections.<String> emptyList() );
+        this( prefix, Collections.<String>emptyList() );
     }
 
     /**

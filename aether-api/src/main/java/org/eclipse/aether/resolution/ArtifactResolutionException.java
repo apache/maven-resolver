@@ -1,3 +1,5 @@
+package org.eclipse.aether.resolution;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.resolution;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +43,7 @@ public class ArtifactResolutionException
     public ArtifactResolutionException( List<ArtifactResult> results )
     {
         super( getMessage( results ), getCause( results ) );
-        this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
+        this.results = ( results != null ) ? results : Collections.<ArtifactResult>emptyList();
     }
 
     /**
@@ -54,7 +55,7 @@ public class ArtifactResolutionException
     public ArtifactResolutionException( List<ArtifactResult> results, String message )
     {
         super( message, getCause( results ) );
-        this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
+        this.results = ( results != null ) ? results : Collections.<ArtifactResult>emptyList();
     }
 
     /**
@@ -67,7 +68,7 @@ public class ArtifactResolutionException
     public ArtifactResolutionException( List<ArtifactResult> results, String message, Throwable cause )
     {
         super( message, cause );
-        this.results = ( results != null ) ? results : Collections.<ArtifactResult> emptyList();
+        this.results = ( results != null ) ? results : Collections.<ArtifactResult>emptyList();
     }
 
     /**

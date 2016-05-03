@@ -1,3 +1,5 @@
+package org.eclipse.aether.util.graph.manager;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.manager;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -59,9 +60,9 @@ public final class ClassicDependencyManager
      */
     public ClassicDependencyManager()
     {
-        this( 0, Collections.<Object, String> emptyMap(), Collections.<Object, String> emptyMap(),
-              Collections.<Object, Boolean> emptyMap(), Collections.<Object, String> emptyMap(),
-              Collections.<Object, Collection<Exclusion>> emptyMap() );
+        this( 0, Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
+              Collections.<Object, Boolean>emptyMap(), Collections.<Object, String>emptyMap(),
+              Collections.<Object, Collection<Exclusion>>emptyMap() );
     }
 
     private ClassicDependencyManager( int depth, Map<Object, String> managedVersions,

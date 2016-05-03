@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +34,7 @@ import org.eclipse.aether.util.ConfigUtils;
 final class PrioritizedComponents<T>
 {
 
-    private final static String FACTORY_SUFFIX = "Factory";
+    private static final String FACTORY_SUFFIX = "Factory";
 
     private final Map<?, ?> configProps;
 

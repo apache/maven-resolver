@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +42,7 @@ final class DefaultVersionFilterContext
     implements VersionFilter.VersionFilterContext
 {
 
-    private final Iterator<Version> EMPTY = Collections.<Version> emptySet().iterator();
+    private final Iterator<Version> EMPTY = Collections.<Version>emptySet().iterator();
 
     private final RepositorySystemSession session;
 

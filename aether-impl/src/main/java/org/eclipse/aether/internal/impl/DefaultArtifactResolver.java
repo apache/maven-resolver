@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -418,7 +419,7 @@ public class DefaultArtifactResolver
                 {
                     group = new ResolutionGroup( repo );
                     groups.add( group );
-                    groupIt = Collections.<ResolutionGroup> emptyList().iterator();
+                    groupIt = Collections.<ResolutionGroup>emptyList().iterator();
                 }
                 group.items.add( new ResolutionItem( trace, artifact, resolved, result, local, repo ) );
             }

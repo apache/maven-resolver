@@ -1,3 +1,5 @@
+package org.eclipse.aether.spi.connector.checksum;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.spi.connector.checksum;
 
 import org.eclipse.aether.transfer.ChecksumFailureException;
 
@@ -67,7 +68,7 @@ public interface ChecksumPolicy
     /**
      * Bit flag indicating a checksum which is not part of the official repository layout/structure.
      */
-    static final int KIND_UNOFFICIAL = 0x01;
+    int KIND_UNOFFICIAL = 0x01;
 
     /**
      * Signals a match between the locally computed checksum value and the checksum value declared by the remote

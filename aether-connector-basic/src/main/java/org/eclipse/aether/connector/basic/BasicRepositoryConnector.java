@@ -1,3 +1,5 @@
+package org.eclipse.aether.connector.basic;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.connector.basic;
 
 import java.io.File;
 import java.io.IOException;
@@ -299,7 +300,7 @@ final class BasicRepositoryConnector
 
     private static <T> Collection<T> safe( Collection<T> items )
     {
-        return ( items != null ) ? items : Collections.<T> emptyList();
+        return ( items != null ) ? items : Collections.<T>emptyList();
     }
 
     private TransferResource newTransferResource( URI path, File file, RequestTrace trace )

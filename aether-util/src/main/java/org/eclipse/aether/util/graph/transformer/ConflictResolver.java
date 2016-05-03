@@ -1,3 +1,5 @@
+package org.eclipse.aether.util.graph.transformer;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.transformer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -300,7 +301,7 @@ public final class ConflictResolver
                         loser.setData( NODE_DATA_ORIGINAL_SCOPE, loser.getDependency().getScope() );
                         loser.setData( NODE_DATA_ORIGINAL_OPTIONALITY, loser.getDependency().isOptional() );
                         loser.setScope( item.getScopes().iterator().next() );
-                        loser.setChildren( Collections.<DependencyNode> emptyList() );
+                        loser.setChildren( Collections.<DependencyNode>emptyList() );
                         childIt.set( loser );
                     }
                     else
@@ -1156,7 +1157,7 @@ public final class ConflictResolver
      * <p>
      * <strong>Note:</strong> Implementations must be stateless.
      */
-    public static abstract class VersionSelector
+    public abstract static class VersionSelector
     {
 
         /**
@@ -1200,7 +1201,7 @@ public final class ConflictResolver
      * <p>
      * <strong>Note:</strong> Implementations must be stateless.
      */
-    public static abstract class ScopeSelector
+    public abstract static class ScopeSelector
     {
 
         /**
@@ -1243,7 +1244,7 @@ public final class ConflictResolver
      * <p>
      * <strong>Note:</strong> Implementations must be stateless.
      */
-    public static abstract class ScopeDeriver
+    public abstract static class ScopeDeriver
     {
 
         /**
@@ -1286,7 +1287,7 @@ public final class ConflictResolver
      * <p>
      * <strong>Note:</strong> Implementations must be stateless.
      */
-    public static abstract class OptionalitySelector
+    public abstract static class OptionalitySelector
     {
 
         /**

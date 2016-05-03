@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.test.util;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.test.util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -129,7 +130,7 @@ public class NodeBuilder
 
     public NodeBuilder properties( Map<String, String> properties )
     {
-        this.properties = properties != null ? properties : Collections.<String, String> emptyMap();
+        this.properties = properties != null ? properties : Collections.<String, String>emptyMap();
         return this;
     }
 

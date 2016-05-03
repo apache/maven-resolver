@@ -1,3 +1,5 @@
+package org.eclipse.aether.util.version;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.version;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -337,6 +338,7 @@ final class GenericVersion
                         case 'm':
                         case 'M':
                             return new Item( Item.KIND_QUALIFIER, QUALIFIER_MILESTONE );
+                        default:
                     }
                 }
                 Integer qualifier = QUALIFIERS.get( token );

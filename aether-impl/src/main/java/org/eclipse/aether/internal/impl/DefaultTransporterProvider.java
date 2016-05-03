@@ -1,3 +1,5 @@
+package org.eclipse.aether.internal.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -153,7 +154,7 @@ public final class DefaultTransporterProvider
         {
             buffer.append( "Cannot access " ).append( repository.getUrl() );
             buffer.append( " using the registered transporter factories: " );
-            factories.list( buffer);
+            factories.list( buffer );
         }
 
         throw new NoTransporterException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 ) : null );

@@ -1,3 +1,5 @@
+package org.eclipse.aether.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.impl;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
@@ -326,7 +327,7 @@ public final class DefaultServiceLocator
     /**
      * A hook to customize the handling of errors encountered while locating a service implementation.
      */
-    public static abstract class ErrorHandler
+    public abstract static class ErrorHandler
     {
 
         /**

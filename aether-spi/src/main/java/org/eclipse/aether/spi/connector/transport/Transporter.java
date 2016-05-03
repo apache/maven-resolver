@@ -1,3 +1,5 @@
+package org.eclipse.aether.spi.connector.transport;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.spi.connector.transport;
 
 import java.io.Closeable;
 
@@ -42,7 +43,7 @@ public interface Transporter
      * 
      * @see #classify(Throwable)
      */
-    public static final int ERROR_OTHER = 0;
+    int ERROR_OTHER = 0;
 
     /**
      * Classification for exceptions that denote a requested resource does not exist in the remote repository. Note that
@@ -50,7 +51,7 @@ public interface Transporter
      * 
      * @see #classify(Throwable)
      */
-    public static final int ERROR_NOT_FOUND = 1;
+    int ERROR_NOT_FOUND = 1;
 
     /**
      * Classifies the type of exception that has been thrown from a previous request to the transporter. The exception
