@@ -337,6 +337,44 @@
       </build>
     </profile>
     <profile>
+      <id>reporting</id>
+      <reporting>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <linksource>true</linksource>
+              <notimestamp>true</notimestamp>
+              <quiet>true</quiet>
+            </configuration>
+            <reportSets>
+              <reportSet>
+                <id>aggregate</id>
+                <inherited>false</inherited>
+                <reports>
+                  <report>aggregate</report>
+                </reports>
+              </reportSet>
+            </reportSets>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jxr-plugin</artifactId>
+            <reportSets>
+              <reportSet>
+                <id>aggregate</id>
+                <inherited>false</inherited>
+                <reports>
+                  <report>aggregate</report>
+                </reports>
+              </reportSet>
+            </reportSets>
+          </plugin>
+        </plugins>
+      </reporting>
+    </profile>
+    <profile>
       <id>m2e</id>
       <activation>
         <property>
