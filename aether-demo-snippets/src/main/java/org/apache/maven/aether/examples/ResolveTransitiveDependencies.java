@@ -65,7 +65,8 @@ public class ResolveTransitiveDependencies
 
         for ( ArtifactResult artifactResult : artifactResults )
         {
-            System.out.println( artifactResult.getArtifact() + " resolved to " + artifactResult.getArtifact().getFile() );
+            System.out.println( artifactResult.getArtifact() + " resolved to "
+                + artifactResult.getArtifact().getFile() );
         }
     }
 

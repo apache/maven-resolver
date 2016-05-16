@@ -39,7 +39,7 @@ public class AetherDemo
     public void resolve() 
         throws DependencyResolutionException
     {
-        Aether aether = new Aether( "http://localhost:8081/nexus/content/groups/public", "/Users/jvanzyl/aether-repo" );
+        Aether aether = new Aether( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
                 
         AetherResult result = aether.resolve( "com.mycompany.app", "super-app", "1.0" );
 
@@ -59,7 +59,7 @@ public class AetherDemo
     public void installAndDeploy() 
         throws InstallationException, DeploymentException
     {
-        Aether aether = new Aether( "http://localhost:8081/nexus/content/groups/public", "/Users/jvanzyl/aether-repo" );
+        Aether aether = new Aether( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
         
         Artifact artifact = new DefaultArtifact( "com.mycompany.super", "super-core", "jar", "0.1-SNAPSHOT" );
         artifact = artifact.setFile( new File( "jar-from-whatever-process.jar" ) );

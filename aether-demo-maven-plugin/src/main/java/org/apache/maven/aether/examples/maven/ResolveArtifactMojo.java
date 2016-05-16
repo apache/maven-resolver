@@ -68,7 +68,7 @@ public class ResolveArtifactMojo
     /**
      * The {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>} of the artifact to resolve.
      * 
-     * @parameter expression="${aether.artifactCoords}"
+     * @parameter property="aether.artifactCoords"
      */
     private String artifactCoords;
 
