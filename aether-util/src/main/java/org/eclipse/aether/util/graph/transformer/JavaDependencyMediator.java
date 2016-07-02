@@ -19,7 +19,10 @@ package org.eclipse.aether.util.graph.transformer;
  * under the License.
  */
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
@@ -43,10 +46,14 @@ public final class JavaDependencyMediator
                                           final DependencyGraphTransformationContext context )
         throws RepositoryException
     {
-        return this.recurse( node );
+        DependencyNode result = node;
+        result = this.removeNonTransitiveNodes( result );
+        result = this.updateTransitiveScopes( result );
+        result = this.removeDuplicateNodes( result, new HashMap<ConflictMarker.Key, DependencyNode>( 1024 ) );
+        return result;
     }
 
-    private DependencyNode recurse( final DependencyNode parent )
+    private DependencyNode removeNonTransitiveNodes( final DependencyNode parent )
     {
         final String parentScope = parent.getDependency() != null
                                        ? parent.getDependency().getScope() != null
@@ -58,8 +65,45 @@ public final class JavaDependencyMediator
         for ( final Iterator<DependencyNode> it = parent.getChildren().iterator(); it.hasNext(); )
         {
             final DependencyNode child = it.next();
-            boolean removed = false;
 
+            recurse:
+            {
+                if ( parentScope != null )
+                {
+                    String childScope = child.getDependency().getScope() != null
+                                            && child.getDependency().getScope().length() >= 0
+                                            ? child.getDependency().getScope()
+                                            : JavaScopes.COMPILE;
+
+                    // Provided and test scopes are non-transitive.
+                    // Optional dependencies are non-transitive.
+                    if ( JavaScopes.PROVIDED.equals( childScope )
+                             || JavaScopes.TEST.equals( childScope )
+                             || child.getDependency().isOptional() )
+                    {
+                        it.remove();
+                        break recurse;
+                    }
+                }
+
+                this.removeNonTransitiveNodes( child );
+            }
+        }
+
+        return parent;
+    }
+
+    private DependencyNode updateTransitiveScopes( final DependencyNode parent )
+    {
+        final String parentScope = parent.getDependency() != null
+                                       ? parent.getDependency().getScope() != null
+                                             && parent.getDependency().getScope().length() >= 0
+                                             ? parent.getDependency().getScope()
+                                             : JavaScopes.COMPILE
+                                       : null;
+
+        for ( final DependencyNode child : parent.getChildren() )
+        {
             if ( parentScope != null )
             {
                 String childScope = child.getDependency().getScope() != null
@@ -79,7 +123,7 @@ public final class JavaDependencyMediator
                                  || JavaScopes.RUNTIME.equals( childScope ) )
                         {
                             childScope = JavaScopes.PROVIDED;
-                            child.getDependency().setScope( childScope );
+                            child.setScope( childScope );
                         }
                     }
                     else if ( JavaScopes.RUNTIME.equals( parentScope ) )
@@ -88,7 +132,7 @@ public final class JavaDependencyMediator
                         if ( JavaScopes.COMPILE.equals( childScope ) )
                         {
                             childScope = JavaScopes.RUNTIME;
-                            child.getDependency().setScope( childScope );
+                            child.setScope( childScope );
                         }
                     }
                     else if ( JavaScopes.TEST.equals( parentScope ) )
@@ -98,27 +142,87 @@ public final class JavaDependencyMediator
                                  || JavaScopes.RUNTIME.equals( childScope ) )
                         {
                             childScope = JavaScopes.TEST;
-                            child.getDependency().setScope( childScope );
+                            child.setScope( childScope );
                         }
                     }
                 }
-
-                // Provided and test scopes are non-transitive.
-                if ( JavaScopes.PROVIDED.equals( childScope )
-                         || JavaScopes.TEST.equals( childScope ) )
-                {
-                    it.remove();
-                    removed = true;
-                }
             }
 
-            if ( !removed )
-            {
-                this.recurse( child );
-            }
+            this.updateTransitiveScopes( child );
         }
 
         return parent;
+    }
+
+    private DependencyNode removeDuplicateNodes( final DependencyNode candidate,
+                                                 final Map<ConflictMarker.Key, DependencyNode> nodes )
+    {
+        recurse:
+        {
+            if ( candidate.getDependency() != null )
+            {
+                final ConflictMarker.Key candidateKey = new ConflictMarker.Key( candidate.getArtifact() );
+                final DependencyNode existing = nodes.get( candidateKey );
+
+                if ( existing == null )
+                {
+                    // Candidate is selected.
+                    nodes.put( candidateKey, candidate );
+                }
+                else if ( this.isPreferredNode( existing, candidate ) )
+                {
+                    // Candidate is selected.
+                    nodes.put( candidateKey, candidate );
+                    existing.getParent().getChildren().remove( existing );
+                }
+                else
+                {
+                    // Candidate is not selected.
+                    candidate.getParent().getChildren().remove( candidate );
+                    // No need to inspect children.
+                    break recurse;
+                }
+            }
+
+            for ( final DependencyNode child : new ArrayList<DependencyNode>( candidate.getChildren() ) )
+            {
+                this.removeDuplicateNodes( child, nodes );
+            }
+        }
+
+        return candidate;
+    }
+
+    private boolean isPreferredNode( final DependencyNode existing, final DependencyNode candidate )
+    {
+        boolean preferred = false;
+        final Integer p1 = SCOPE_PRIORITIES.get( existing.getDependency().getScope() );
+        final Integer p2 = SCOPE_PRIORITIES.get( candidate.getDependency().getScope() );
+        final boolean candidateScopePrioritized = p1 != null && p2 != null ? p2 > p1 : false;
+        final boolean equalPriority = existing.getDependency().getScope().
+            equals( candidate.getDependency().getScope() );
+
+        if ( candidate.getDepth() < existing.getDepth() )
+        {
+            preferred = equalPriority || candidateScopePrioritized;
+        }
+        else if ( candidate.getDepth() == existing.getDepth() )
+        {
+            preferred = !equalPriority && candidateScopePrioritized;
+        }
+
+        return preferred;
+    }
+
+    private static final Map<String, Integer> SCOPE_PRIORITIES = new HashMap<String, Integer>();
+
+    static
+    {
+        SCOPE_PRIORITIES.put( JavaScopes.PROVIDED, 0 );
+        SCOPE_PRIORITIES.put( JavaScopes.TEST, 0 );
+        SCOPE_PRIORITIES.put( JavaScopes.RUNTIME, 1 );
+        SCOPE_PRIORITIES.put( JavaScopes.COMPILE, 2 );
+        SCOPE_PRIORITIES.put( JavaScopes.SYSTEM, 3 );
     }
 
 }
