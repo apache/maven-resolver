@@ -8,9 +8,9 @@ package org.eclipse.aether.graph;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -38,6 +38,8 @@ public final class DefaultDependencyNode
     implements DependencyNode
 {
 
+    private DependencyNode parent;
+
     private List<DependencyNode> children;
 
     private Dependency dependency;
@@ -61,30 +63,26 @@ public final class DefaultDependencyNode
     private Map<Object, Object> data;
 
     /**
-     * Creates a new node with the specified dependency.
-     * 
+     * Creates a new root node with the specified dependency.
+     *
      * @param dependency The dependency associated with this node, may be {@code null} for a root node.
      */
     public DefaultDependencyNode( Dependency dependency )
     {
-        this.dependency = dependency;
-        artifact = ( dependency != null ) ? dependency.getArtifact() : null;
-        children = new ArrayList<DependencyNode>( 0 );
-        aliases = relocations = Collections.emptyList();
-        repositories = Collections.emptyList();
-        context = "";
-        data = Collections.emptyMap();
+        this( null, dependency );
     }
 
     /**
      * Creates a new root node with the specified artifact as its label. Note that the new node has no dependency, i.e.
      * {@link #getDependency()} will return {@code null}. Put differently, the specified artifact will not be subject to
      * dependency collection/resolution.
-     * 
+     *
      * @param artifact The artifact to use as label for this node, may be {@code null}.
      */
     public DefaultDependencyNode( Artifact artifact )
     {
+        super();
+        this.parent = null;
         this.artifact = artifact;
         children = new ArrayList<DependencyNode>( 0 );
         aliases = relocations = Collections.emptyList();
@@ -96,11 +94,13 @@ public final class DefaultDependencyNode
     /**
      * Creates a mostly shallow clone of the specified node. The new node has its own copy of any custom data and
      * initially no children.
-     * 
+     *
      * @param node The node to copy, must not be {@code null}.
      */
     public DefaultDependencyNode( DependencyNode node )
     {
+        super();
+        parent = node.getParent();
         dependency = node.getDependency();
         artifact = node.getArtifact();
         children = new ArrayList<DependencyNode>( 0 );
@@ -113,6 +113,37 @@ public final class DefaultDependencyNode
         setVersionConstraint( node.getVersionConstraint() );
         Map<?, ?> data = node.getData();
         setData( data.isEmpty() ? null : new HashMap<Object, Object>( data ) );
+    }
+
+    /**
+     * Creates a new node with the specified dependency.
+     *
+     * @param parent The parent node of the node or {@code null}.
+     * @param dependency The dependency associated with this node, may be {@code null} for a root node.
+     *
+     * @since 1.2
+     */
+    public DefaultDependencyNode( DependencyNode parent, Dependency dependency )
+    {
+        super();
+        this.parent = parent;
+        this.dependency = dependency;
+        artifact = ( dependency != null ) ? dependency.getArtifact() : null;
+        children = new ArrayList<DependencyNode>( 0 );
+        aliases = relocations = Collections.emptyList();
+        repositories = Collections.emptyList();
+        context = "";
+        data = Collections.emptyMap();
+    }
+
+    public long getDepth()
+    {
+        return this.getParent() != null ? this.getParent().getDepth() + 1L : 0L;
+    }
+
+    public DependencyNode getParent()
+    {
+        return this.parent;
     }
 
     public List<DependencyNode> getChildren()
@@ -159,7 +190,7 @@ public final class DefaultDependencyNode
 
     /**
      * Sets the sequence of relocations that was followed to resolve this dependency's artifact.
-     * 
+     *
      * @param relocations The sequence of relocations, may be {@code null}.
      */
     public void setRelocations( List<? extends Artifact> relocations )
@@ -181,7 +212,7 @@ public final class DefaultDependencyNode
 
     /**
      * Sets the known aliases for this dependency's artifact.
-     * 
+     *
      * @param aliases The known aliases, may be {@code null}.
      */
     public void setAliases( Collection<? extends Artifact> aliases )
@@ -203,7 +234,7 @@ public final class DefaultDependencyNode
 
     /**
      * Sets the version constraint that was parsed from the dependency's version declaration.
-     * 
+     *
      * @param versionConstraint The version constraint for this node, may be {@code null}.
      */
     public void setVersionConstraint( VersionConstraint versionConstraint )
@@ -218,7 +249,7 @@ public final class DefaultDependencyNode
 
     /**
      * Sets the version that was selected for the dependency's target artifact.
-     * 
+     *
      * @param version The parsed version, may be {@code null}.
      */
     public void setVersion( Version version )
@@ -251,9 +282,9 @@ public final class DefaultDependencyNode
 
     /**
      * Sets a bit field indicating which attributes of this node were subject to dependency management.
-     * 
+     *
      * @param managedBits The bit field indicating the managed attributes or {@code 0} if dependency management wasn't
-     *            applied.
+     * applied.
      */
     public void setManagedBits( int managedBits )
     {
@@ -267,7 +298,7 @@ public final class DefaultDependencyNode
 
     /**
      * Sets the remote repositories from which this node's artifact shall be resolved.
-     * 
+     *
      * @param repositories The remote repositories to use for artifact resolution, may be {@code null}.
      */
     public void setRepositories( List<RemoteRepository> repositories )

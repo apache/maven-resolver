@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -431,8 +431,8 @@ public class DefaultDependencyCollector
                     if ( cycleNode.getDependency() != null )
                     {
                         DefaultDependencyNode child =
-                            createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult,
-                                                  cycleNode );
+                            createDependencyNode( node, relocations, preManaged, rangeResult, version, d,
+                                                  descriptorResult, cycleNode );
                         node.getChildren().add( child );
                         continue;
                     }
@@ -456,7 +456,7 @@ public class DefaultDependencyCollector
                         getRemoteRepositories( rangeResult.getRepository( version ), repositories );
 
                     DefaultDependencyNode child =
-                        createDependencyNode( relocations, preManaged, rangeResult, version, d,
+                        createDependencyNode( node, relocations, preManaged, rangeResult, version, d,
                                               descriptorResult.getAliases(), repos, args.request.getRequestContext() );
 
                     node.getChildren().add( child );
@@ -475,7 +475,7 @@ public class DefaultDependencyCollector
                 List<RemoteRepository> repos =
                     getRemoteRepositories( rangeResult.getRepository( version ), repositories );
                 DefaultDependencyNode child =
-                    createDependencyNode( relocations, preManaged, rangeResult, version, d, null, repos,
+                    createDependencyNode( node, relocations, preManaged, rangeResult, version, d, null, repos,
                                           args.request.getRequestContext() );
                 node.getChildren().add( child );
             }
@@ -560,13 +560,14 @@ public class DefaultDependencyCollector
         return descriptorResult;
     }
 
-    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations,
+    private static DefaultDependencyNode createDependencyNode( DependencyNode parent,
+                                                               List<Artifact> relocations,
                                                                PremanagedDependency preManaged,
                                                                VersionRangeResult rangeResult, Version version,
                                                                Dependency d, Collection<Artifact> aliases,
                                                                List<RemoteRepository> repos, String requestContext )
     {
-        DefaultDependencyNode child = new DefaultDependencyNode( d );
+        DefaultDependencyNode child = new DefaultDependencyNode( parent, d );
         preManaged.applyTo( child );
         child.setRelocations( relocations );
         child.setVersionConstraint( rangeResult.getVersionConstraint() );
@@ -577,15 +578,18 @@ public class DefaultDependencyCollector
         return child;
     }
 
-    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations,
+    private static DefaultDependencyNode createDependencyNode( DependencyNode parent,
+                                                               List<Artifact> relocations,
                                                                PremanagedDependency preManaged,
                                                                VersionRangeResult rangeResult, Version version,
                                                                Dependency d, ArtifactDescriptorResult descriptorResult,
                                                                DependencyNode cycleNode )
     {
         DefaultDependencyNode child =
-            createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult.getAliases(),
-                                  cycleNode.getRepositories(), cycleNode.getRequestContext() );
+            createDependencyNode( parent, relocations, preManaged, rangeResult, version, d,
+                                  descriptorResult.getAliases(), cycleNode.getRepositories(),
+                                  cycleNode.getRequestContext() );
+
         child.setChildren( cycleNode.getChildren() );
         return child;
     }

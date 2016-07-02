@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.test.util;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -46,7 +46,7 @@ import org.eclipse.aether.version.VersionScheme;
 /**
  * Creates a dependency graph from a text description. <h2>Definition</h2> Each (non-empty) line in the input defines
  * one node of the resulting graph:
- * 
+ *
  * <pre>
  * line      ::= (indent? ("(null)" | node | reference))? comment?
  * comment   ::= "#" rest-of-line
@@ -55,7 +55,7 @@ import org.eclipse.aether.version.VersionScheme;
  * node      ::= coords (range)? space (scope("&lt;" premanagedScope)?)? space "optional"? space ("relocations=" coords ("," coords)*)? ("(" id ")")?
  * coords    ::= groupId ":" artifactId (":" extension (":" classifier)?)? ":" version
  * </pre>
- * 
+ *
  * The special token {@code (null)} may be used to indicate an "empty" root node with no dependency.
  * <p>
  * If {@code indent} is empty, the line defines the root node. Only one root node may be defined. The level is
@@ -64,7 +64,7 @@ import org.eclipse.aether.version.VersionScheme;
  * The {@code ^id} syntax allows to reuse a previously built node to share common sub graphs among different parent
  * nodes.
  * <h2>Example</h2>
- * 
+ *
  * <pre>
  * gid:aid:ver
  * +- gid:aid2:ver scope
@@ -72,7 +72,7 @@ import org.eclipse.aether.version.VersionScheme;
  * +- gid:aid4:ext:ver scope
  * \- ^id1                            # reuse previous node
  * </pre>
- * 
+ *
  * <h2>Multiple definitions in one resource</h2>
  * <p>
  * By using {@link #parseMultiResource(String)}, definitions divided by a line beginning with "---" can be read from the
@@ -83,12 +83,12 @@ import org.eclipse.aether.version.VersionScheme;
  * {@link #DependencyGraphParser(String, Collection)}). Every '%s' in the definition will be substituted by the next
  * String in the defined substitutions.
  * <h3>Example</h3>
- * 
+ *
  * <pre>
  * parser.setSubstitutions( &quot;foo&quot;, &quot;bar&quot; );
  * String def = &quot;gid:%s:ext:ver\n&quot; + &quot;+- gid:%s:ext:ver&quot;;
  * </pre>
- * 
+ *
  * The first node will have "foo" as its artifact id, the second node (child to the first) will have "bar" as its
  * artifact id.
  */
@@ -103,7 +103,7 @@ public class DependencyGraphParser
 
     /**
      * Create a parser with the given prefix and the given substitution strings.
-     * 
+     *
      * @see DependencyGraphParser#parseResource(String)
      */
     public DependencyGraphParser( String prefix, Collection<String> substitutions )
@@ -115,7 +115,7 @@ public class DependencyGraphParser
 
     /**
      * Create a parser with the given prefix.
-     * 
+     *
      * @see DependencyGraphParser#parseResource(String)
      */
     public DependencyGraphParser( String prefix )
@@ -338,7 +338,7 @@ public class DependencyGraphParser
         {
             DefaultArtifact artifact = new DefaultArtifact( def.coords, def.properties );
             Dependency dependency = new Dependency( artifact, def.scope, def.optional );
-            node = new DefaultDependencyNode( dependency );
+            node = new DefaultDependencyNode( parent, dependency );
             int managedBits = 0;
             if ( def.premanagedScope != null )
             {
