@@ -20,6 +20,7 @@ package org.eclipse.aether.util.graph.transformer;
  */
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -35,11 +36,65 @@ import org.eclipse.aether.util.artifact.JavaScopes;
  *
  * @author Christian Schulte
  * @since 1.2
- * @see <a href="http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope">Introduction to the Dependency Mechanism</a>
+ * @see <a href="http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html">Introduction to the Dependency Mechanism</a>
  */
 public final class JavaDependencyMediator
     implements DependencyGraphTransformer
 {
+
+    private static final Map<String, Integer> APPLICATION_SCOPE_PRIORITIES = new HashMap<String, Integer>( 5 );
+
+    private static final Map<String, Integer> TEST_SCOPE_PRIORITIES = new HashMap<String, Integer>( 5 );
+
+    static
+    {
+        APPLICATION_SCOPE_PRIORITIES.put( JavaScopes.TEST, 0 );
+        APPLICATION_SCOPE_PRIORITIES.put( JavaScopes.RUNTIME, 1 );
+        APPLICATION_SCOPE_PRIORITIES.put( JavaScopes.PROVIDED, 2 );
+        APPLICATION_SCOPE_PRIORITIES.put( JavaScopes.COMPILE, 3 );
+        APPLICATION_SCOPE_PRIORITIES.put( JavaScopes.SYSTEM, 4 );
+
+        TEST_SCOPE_PRIORITIES.put( JavaScopes.RUNTIME, 0 );
+        TEST_SCOPE_PRIORITIES.put( JavaScopes.PROVIDED, 1 );
+        TEST_SCOPE_PRIORITIES.put( JavaScopes.COMPILE, 2 );
+        TEST_SCOPE_PRIORITIES.put( JavaScopes.TEST, 3 );
+        TEST_SCOPE_PRIORITIES.put( JavaScopes.SYSTEM, 4 );
+    }
+
+    /**
+     * Application scope nodes are prioritized over non application scope nodes.
+     */
+    public static final int APPLICATION_SCOPE_PRIORITIZATION = 1 << 1;
+
+    /**
+     * Test scope nodes are prioritized over non test scope nodes.
+     */
+    public static final int TEST_SCOPE_PRIORITIZATION = 1 << 2;
+
+    /**
+     * Nearest wins only strategy. No scopes are prioritized.
+     */
+    public static final int NO_PRIORITIZATION = 1 << 3;
+
+    /**
+     * The prioritization to apply.
+     */
+    private final int prioritization;
+
+    /**
+     * Creates a new {@code DependencyGraphTransformer}.
+     *
+     * @param prioritization The prioritization to apply.
+     *
+     * @see #APPLICATION_SCOPE_PRIORITIZATION
+     * @see #TEST_SCOPE_PRIORITIZATION
+     * @see #NO_PRIORITIZATION
+     */
+    public JavaDependencyMediator( final int prioritization )
+    {
+        super();
+        this.prioritization = prioritization;
+    }
 
     @Override
     public DependencyNode transformGraph( final DependencyNode node,
@@ -49,7 +104,16 @@ public final class JavaDependencyMediator
         DependencyNode result = node;
         result = this.removeNonTransitiveNodes( result );
         result = this.updateTransitiveScopes( result );
-        result = this.removeDuplicateNodes( result, new HashMap<ConflictMarker.Key, DependencyNode>( 1024 ) );
+
+        for ( ;; )
+        {
+            if ( this.removeDuplicateNodes( result, result, new HashMap<ConflictMarker.Key, DependencyNode>( 8192 ),
+                                            new HashMap<DependencyNode, DependencyNode>( 8192 ) ) )
+            {
+                break;
+            }
+        }
+
         return result;
     }
 
@@ -154,75 +218,172 @@ public final class JavaDependencyMediator
         return parent;
     }
 
-    private DependencyNode removeDuplicateNodes( final DependencyNode candidate,
-                                                 final Map<ConflictMarker.Key, DependencyNode> nodes )
+    private boolean removeDuplicateNodes( final DependencyNode rootNode,
+                                          final DependencyNode candidateNode,
+                                          final Map<ConflictMarker.Key, DependencyNode> winnerNodes,
+                                          final Map<DependencyNode, DependencyNode> looserNodes )
     {
+        boolean restart = false;
+
         recurse:
         {
-            if ( candidate.getDependency() != null )
+            if ( candidateNode.getDependency() != null )
             {
-                final ConflictMarker.Key candidateKey = new ConflictMarker.Key( candidate.getArtifact() );
-                final DependencyNode existing = nodes.get( candidateKey );
+                final ConflictMarker.Key candidateKey = new ConflictMarker.Key( candidateNode.getArtifact() );
+                final DependencyNode winnerNode = winnerNodes.get( candidateKey );
 
-                if ( existing == null )
+                if ( winnerNode == null )
                 {
-                    // Candidate is selected.
-                    nodes.put( candidateKey, candidate );
+                    // Conflict not yet seen. Candidate is selected.
+                    winnerNodes.put( candidateKey, candidateNode );
                 }
-                else if ( this.isPreferredNode( existing, candidate ) )
+                else if ( this.isPreferredNode( winnerNode, candidateNode ) )
                 {
-                    // Candidate is selected.
-                    nodes.put( candidateKey, candidate );
-                    existing.getParent().getChildren().remove( existing );
+                    // Conflict already seen. Candidate is preferred.
+                    winnerNodes.put( candidateKey, candidateNode );
+                    looserNodes.put( candidateNode, winnerNode );
+
+                    if ( winnerNode.getParent() != null )
+                    {
+                        winnerNode.getParent().getChildren().remove( winnerNode );
+                    }
+                    else
+                    {
+                        rootNode.getChildren().remove( winnerNode );
+                    }
+
+                    final DependencyNode winningChild = getWinningChild( winnerNode, winnerNodes.values() );
+
+                    if ( winningChild != null )
+                    {
+                        // The node eliminated by the current candidate node contains a child node which has been
+                        // selected the winner in a previous iteration. As that winner is eliminated in this iteration,
+                        // the former looser needs to be re-added and the whole transformation re-started (undo and
+                        // restart). No need to maintain the maps here because they are thrown away when restarting.
+                        // Doing it for completeness, however.
+                        final DependencyNode looserNode = looserNodes.remove( winningChild ); // Can be get().
+
+                        if ( looserNode != null )
+                        {
+                            if ( looserNode.getParent() != null )
+                            {
+                                if ( !looserNode.getParent().getChildren().contains( looserNode ) )
+                                {
+                                    looserNode.getParent().getChildren().add( looserNode );
+                                }
+                            }
+                            else if ( !rootNode.getChildren().contains( looserNode ) )
+                            {
+                                rootNode.getChildren().add( looserNode );
+                            }
+
+                            // Not needed, but...
+                            final DependencyNode winner =
+                                winnerNodes.remove( new ConflictMarker.Key( looserNode.getArtifact() ) );
+
+                            if ( winner != null )
+                            {
+                                looserNodes.remove( winner );
+                            }
+                        }
+
+                        restart = true;
+                        break recurse;
+                    }
                 }
                 else
                 {
-                    // Candidate is not selected.
-                    candidate.getParent().getChildren().remove( candidate );
+                    // Conflict already seen. Candidate is not preferred.
+                    looserNodes.put( winnerNode, candidateNode );
+                    if ( candidateNode.getParent() != null )
+                    {
+                        candidateNode.getParent().getChildren().remove( candidateNode );
+                    }
+                    else
+                    {
+                        rootNode.getChildren().remove( candidateNode );
+                    }
                     // No need to inspect children.
                     break recurse;
                 }
             }
 
-            for ( final DependencyNode child : new ArrayList<DependencyNode>( candidate.getChildren() ) )
+            for ( final DependencyNode child : new ArrayList<DependencyNode>( candidateNode.getChildren() ) )
             {
-                this.removeDuplicateNodes( child, nodes );
+                if ( !this.removeDuplicateNodes( rootNode, child, winnerNodes, looserNodes ) )
+                {
+                    restart = true;
+                    break recurse;
+                }
             }
         }
 
-        return candidate;
+        return !restart;
     }
 
     private boolean isPreferredNode( final DependencyNode existing, final DependencyNode candidate )
     {
         boolean preferred = false;
-        final Integer p1 = SCOPE_PRIORITIES.get( existing.getDependency().getScope() );
-        final Integer p2 = SCOPE_PRIORITIES.get( candidate.getDependency().getScope() );
-        final boolean candidateScopePrioritized = p1 != null && p2 != null ? p2 > p1 : false;
-        final boolean equalPriority = existing.getDependency().getScope().
-            equals( candidate.getDependency().getScope() );
+        Integer p1 = null;
+        Integer p2 = null;
+        boolean prioritize = true;
+
+        if ( this.prioritization == APPLICATION_SCOPE_PRIORITIZATION )
+        {
+            p1 = APPLICATION_SCOPE_PRIORITIES.get( existing.getDependency().getScope() );
+            p2 = APPLICATION_SCOPE_PRIORITIES.get( candidate.getDependency().getScope() );
+        }
+        else if ( this.prioritization == TEST_SCOPE_PRIORITIZATION )
+        {
+            p1 = TEST_SCOPE_PRIORITIES.get( existing.getDependency().getScope() );
+            p2 = TEST_SCOPE_PRIORITIES.get( candidate.getDependency().getScope() );
+        }
+        else if ( this.prioritization == NO_PRIORITIZATION )
+        {
+            prioritize = false;
+        }
+        else
+        {
+            throw new AssertionError( this.prioritization );
+        }
+
+        final Boolean candidateScopePrioritized = p1 != null && p2 != null ? p2 > p1 : false;
+        final boolean equalPriority =
+            existing.getDependency().getScope().equals( candidate.getDependency().getScope() );
 
         if ( candidate.getDepth() < existing.getDepth() )
         {
-            preferred = equalPriority || candidateScopePrioritized;
+            preferred = !prioritize || equalPriority || candidateScopePrioritized;
         }
         else if ( candidate.getDepth() == existing.getDepth() )
         {
-            preferred = !equalPriority && candidateScopePrioritized;
+            preferred = prioritize && !equalPriority && candidateScopePrioritized;
         }
 
         return preferred;
     }
 
-    private static final Map<String, Integer> SCOPE_PRIORITIES = new HashMap<String, Integer>();
-
-    static
+    private static DependencyNode getWinningChild( final DependencyNode node,
+                                                   final Collection<DependencyNode> winnerNodes )
     {
-        SCOPE_PRIORITIES.put( JavaScopes.PROVIDED, 0 );
-        SCOPE_PRIORITIES.put( JavaScopes.TEST, 0 );
-        SCOPE_PRIORITIES.put( JavaScopes.RUNTIME, 1 );
-        SCOPE_PRIORITIES.put( JavaScopes.COMPILE, 2 );
-        SCOPE_PRIORITIES.put( JavaScopes.SYSTEM, 3 );
+        DependencyNode winningChild = winnerNodes.contains( node )
+                                          ? node
+                                          : null;
+
+        if ( winningChild == null )
+        {
+            for ( final DependencyNode child : node.getChildren() )
+            {
+                winningChild = getWinningChild( child, winnerNodes );
+
+                if ( winningChild != null )
+                {
+                    break;
+                }
+            }
+        }
+
+        return winningChild;
     }
 
 }
