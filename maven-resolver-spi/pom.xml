@@ -24,19 +24,23 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.maven.aether</groupId>
-    <artifactId>aether</artifactId>
+    <groupId>org.apache.maven.resolver</groupId>
+    <artifactId>maven-resolver</artifactId>
     <version>1.2.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>aether-api</artifactId>
+  <artifactId>maven-resolver-spi</artifactId>
 
-  <name>Aether API</name>
+  <name>Maven Artifact Resolver SPI</name>
   <description>
-    The application programming interface for the repository system.
+    The service provider interface for repository system implementations and repository connectors.
   </description>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -28,25 +28,25 @@
 
   <body>
 
-    <section name="Apache Maven Aether">
+    <section name="Apache Maven Artifact Resolver">
 
-      <p>Apache Maven Aether is a library for working with artifact repositories and dependency resolution.
-         Aether deals with the specification of local repository, remote repository, developer workspaces, artifact transports and artifact resolution.
+      <p>Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.
+         Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports and artifact resolution.
       </p>
 
       <p>
-        <img src="images/aether-deps.png" width="520" height="265" border="0" usemap="#Aether_dependencies" />
-        <map name="Aether_dependencies">
-          <area shape="rect" coords="51,229,113,265"  href="./aether-api/" />
-          <area shape="rect" coords="0,167,62,202"    href="./aether-spi/" />
-          <area shape="rect" coords="102,166,165,202" href="./aether-util/" />
-          <area shape="rect" coords="202,166,285,202" href="./aether-test-util/" />
-          <area shape="rect" coords="0,70,62,106"     href="./aether-impl/" />
-          <area shape="rect" coords="81,63,187,118"   href="./aether-connector-basic/" />
-          <area shape="rect" coords="246,32,289,68"   href="./aether-transport-file/" />
-          <area shape="rect" coords="207,74,310,110"  href="./aether-transport-classpath/" />
-          <area shape="rect" coords="299,32,382,68"   href="./aether-transport-wagon/" />
-          <area shape="rect" coords="319,74,382,110"  href="./aether-transport-http/" />
+        <img src="images/maven-resolver-deps.png" width="520" height="265" border="0" usemap="#Maven_Resolver_dependencies" />
+        <map name="Maven_Resolver_dependencies">
+          <area shape="rect" coords="51,229,113,265"  href="./maven-resolver-api/" />
+          <area shape="rect" coords="0,167,62,202"    href="./maven-resolver-spi/" />
+          <area shape="rect" coords="102,166,165,202" href="./maven-resolver-util/" />
+          <area shape="rect" coords="202,166,285,202" href="./maven-resolver-test-util/" />
+          <area shape="rect" coords="0,70,62,106"     href="./maven-resolver-impl/" />
+          <area shape="rect" coords="81,63,187,118"   href="./maven-resolver-connector-basic/" />
+          <area shape="rect" coords="246,32,289,68"   href="./maven-resolver-transport-file/" />
+          <area shape="rect" coords="207,74,310,110"  href="./maven-resolver-transport-classpath/" />
+          <area shape="rect" coords="299,32,382,68"   href="./maven-resolver-transport-wagon/" />
+          <area shape="rect" coords="319,74,382,110"  href="./maven-resolver-transport-http/" />
           <area shape="rect" coords="414,32,499,68"   href="/wagon/" />
           <area shape="rect" coords="416,74,519,110"  href="http://hc.apache.org/httpcomponents-client-ga/index.html" />
         </map>
