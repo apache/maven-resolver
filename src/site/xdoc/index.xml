@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+
+<document>
+
+  <properties>
+    <title>Introduction</title>
+    <author email="hboutemy_AT_apache_DOT_org">Hervé Boutemy</author>
+  </properties>
+
+  <body>
+
+    <section name="Apache Maven Artifact Resolver">
+
+      <p>Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.
+         Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports and artifact resolution.
+      </p>
+
+      <p>
+        <img src="images/maven-resolver-deps.png" width="520" height="265" border="0" usemap="#Maven_Resolver_dependencies" />
+        <map name="Maven_Resolver_dependencies">
+          <area shape="rect" coords="51,229,113,265"  href="./maven-resolver-api/" />
+          <area shape="rect" coords="0,167,62,202"    href="./maven-resolver-spi/" />
+          <area shape="rect" coords="102,166,165,202" href="./maven-resolver-util/" />
+          <area shape="rect" coords="202,166,285,202" href="./maven-resolver-test-util/" />
+          <area shape="rect" coords="0,70,62,106"     href="./maven-resolver-impl/" />
+          <area shape="rect" coords="81,63,187,118"   href="./maven-resolver-connector-basic/" />
+          <area shape="rect" coords="246,32,289,68"   href="./maven-resolver-transport-file/" />
+          <area shape="rect" coords="207,74,310,110"  href="./maven-resolver-transport-classpath/" />
+          <area shape="rect" coords="299,32,382,68"   href="./maven-resolver-transport-wagon/" />
+          <area shape="rect" coords="319,74,382,110"  href="./maven-resolver-transport-http/" />
+          <area shape="rect" coords="414,32,499,68"   href="/wagon/" />
+          <area shape="rect" coords="416,74,519,110"  href="http://hc.apache.org/httpcomponents-client-ga/index.html" />
+        </map>
+      </p>
+    </section>
+
+  </body>
+
+</document>

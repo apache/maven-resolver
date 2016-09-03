@@ -24,47 +24,30 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.maven.aether</groupId>
-    <artifactId>aether</artifactId>
+    <groupId>org.apache.maven.resolver</groupId>
+    <artifactId>maven-resolver</artifactId>
     <version>1.0.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>aether-transport-http</artifactId>
+  <artifactId>maven-resolver-transport-classpath</artifactId>
 
-  <name>Aether Transport HTTP</name>
+  <name>Maven Artifact Resolver Transport Classpath</name>
   <description>
-      A transport implementation for repositories using http:// and https:// URLs.
+      A transport implementation for repositories using classpath:// URLs.
   </description>
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-api</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-spi</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-spi</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.2.6</version>
-      <exclusions>
-        <exclusion>
-          <!-- using jcl-over-slf4j instead -->
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>1.6.2</version>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-util</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
@@ -89,20 +72,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-test-util</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>7.6.14.v20131031</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.0.7</version>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-test-util</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

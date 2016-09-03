@@ -29,16 +29,16 @@
     <version>27</version>
   </parent>
 
-  <groupId>org.apache.maven.aether</groupId>
-  <artifactId>aether</artifactId>
+  <groupId>org.apache.maven.resolver</groupId>
+  <artifactId>maven-resolver</artifactId>
   <version>1.0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Aether</name>
+  <name>Maven Artifact Resolver</name>
   <description>
     The parent and aggregator for the repository system.
   </description>
-  <url>http://maven.apache.org/aether/</url>
+  <url>http://maven.apache.org/resolver/</url>
   <inceptionYear>2010</inceptionYear>
 
   <scm>
@@ -63,54 +63,54 @@
 
   <properties>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
-    <maven.site.path>aether-archives/aether-LATEST</maven.site.path>
+    <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>UnusedImports,LineLength,InnerAssignment,MagicNumber,AvoidNestedBlocks,ParameterNumber,MethodLength,MemberName</checkstyle.violation.ignore>
   </properties>
 
   <modules>
     <!-- NOTE: Be sure to update the bin assembly descriptor as well if the module list changes -->
-    <module>aether-api</module>
-    <module>aether-spi</module>
-    <module>aether-util</module>
-    <module>aether-impl</module>
-    <module>aether-test-util</module>
-    <module>aether-connector-basic</module>
-    <module>aether-transport-classpath</module>
-    <module>aether-transport-file</module>
-    <module>aether-transport-http</module>
-    <module>aether-transport-wagon</module>
+    <module>maven-resolver-api</module>
+    <module>maven-resolver-spi</module>
+    <module>maven-resolver-util</module>
+    <module>maven-resolver-impl</module>
+    <module>maven-resolver-test-util</module>
+    <module>maven-resolver-connector-basic</module>
+    <module>maven-resolver-transport-classpath</module>
+    <module>maven-resolver-transport-file</module>
+    <module>maven-resolver-transport-http</module>
+    <module>maven-resolver-transport-wagon</module>
   </modules>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.maven.aether</groupId>
-        <artifactId>aether-api</artifactId>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven.aether</groupId>
-        <artifactId>aether-spi</artifactId>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-spi</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven.aether</groupId>
-        <artifactId>aether-util</artifactId>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-util</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven.aether</groupId>
-        <artifactId>aether-impl</artifactId>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-impl</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven.aether</groupId>
-        <artifactId>aether-connector-basic</artifactId>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-connector-basic</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.maven.aether</groupId>
-        <artifactId>aether-test-util</artifactId>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-test-util</artifactId>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>

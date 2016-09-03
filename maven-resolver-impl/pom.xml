@@ -24,30 +24,30 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.maven.aether</groupId>
-    <artifactId>aether</artifactId>
+    <groupId>org.apache.maven.resolver</groupId>
+    <artifactId>maven-resolver</artifactId>
     <version>1.0.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>aether-impl</artifactId>
+  <artifactId>maven-resolver-impl</artifactId>
 
-  <name>Aether Implementation</name>
+  <name>Maven Artifact Resolver Implementation</name>
   <description>
     An implementation of the repository system.
   </description>
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-api</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-spi</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-spi</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-util</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-util</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
@@ -85,8 +85,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-test-util</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-test-util</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

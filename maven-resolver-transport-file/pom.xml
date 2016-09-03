@@ -24,22 +24,42 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache.maven.aether</groupId>
-    <artifactId>aether</artifactId>
+    <groupId>org.apache.maven.resolver</groupId>
+    <artifactId>maven-resolver</artifactId>
     <version>1.0.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>aether-spi</artifactId>
+  <artifactId>maven-resolver-transport-file</artifactId>
 
-  <name>Aether SPI</name>
+  <name>Maven Artifact Resolver Transport File</name>
   <description>
-    The service provider interface for repository system implementations and repository connectors.
+      A transport implementation for repositories using file:// URLs.
   </description>
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.maven.aether</groupId>
-      <artifactId>aether-api</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-guice</artifactId>
+      <classifier>no_aop</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -51,5 +71,19 @@
       <artifactId>hamcrest-library</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-test-util</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>sisu-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 </project>
