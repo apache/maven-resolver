@@ -26,7 +26,7 @@
   </formats>
   <fileSets>
     <fileSet>
-      <directory>aether-api/target</directory>
+      <directory>maven-resolver-api/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -38,7 +38,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-spi/target</directory>
+      <directory>maven-resolver-spi/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -50,7 +50,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-util/target</directory>
+      <directory>maven-resolver-util/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -62,7 +62,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-impl/target</directory>
+      <directory>maven-resolver-impl/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -74,7 +74,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-connector-basic/target</directory>
+      <directory>maven-resolver-connector-basic/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -86,7 +86,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-transport-classpath/target</directory>
+      <directory>maven-resolver-transport-classpath/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -98,7 +98,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-transport-file/target</directory>
+      <directory>maven-resolver-transport-file/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -110,7 +110,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-transport-http/target</directory>
+      <directory>maven-resolver-transport-http/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
@@ -122,7 +122,7 @@
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>aether-transport-wagon/target</directory>
+      <directory>maven-resolver-transport-wagon/target</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>*.jar</include>
