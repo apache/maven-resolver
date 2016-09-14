@@ -42,9 +42,9 @@
   <inceptionYear>2010</inceptionYear>
 
   <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-aether.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-aether.git</developerConnection>
-    <url>https://github.com/apache/maven-aether/tree/${project.scm.tag}</url>
+    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-resolver.git</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-resolver.git</developerConnection>
+    <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
     <tag>master</tag>
   </scm>
   <issueManagement>
