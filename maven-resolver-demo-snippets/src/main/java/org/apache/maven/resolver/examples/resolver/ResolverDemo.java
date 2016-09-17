@@ -1,4 +1,4 @@
-package org.apache.maven.resolver.examples.aether;
+package org.apache.maven.resolver.examples.resolver;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -33,15 +33,15 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 /**
  */
 @SuppressWarnings( "unused" )
-public class AetherDemo
+public class ResolverDemo
 {
 
     public void resolve() 
         throws DependencyResolutionException
     {
-        Aether aether = new Aether( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
+        Resolver resolver = new Resolver( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
                 
-        AetherResult result = aether.resolve( "com.mycompany.app", "super-app", "1.0" );
+        ResolverResult result = resolver.resolve( "com.mycompany.app", "super-app", "1.0" );
 
         // Get the root of the resolved tree of artifacts
         //
@@ -59,7 +59,7 @@ public class AetherDemo
     public void installAndDeploy() 
         throws InstallationException, DeploymentException
     {
-        Aether aether = new Aether( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
+        Resolver resolver = new Resolver( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
         
         Artifact artifact = new DefaultArtifact( "com.mycompany.super", "super-core", "jar", "0.1-SNAPSHOT" );
         artifact = artifact.setFile( new File( "jar-from-whatever-process.jar" ) );
@@ -68,11 +68,11 @@ public class AetherDemo
           
         // Install into the local repository specified
         //
-        aether.install( artifact, pom );
+        resolver.install( artifact, pom );
         
         // Deploy to a remote reposistory
         //
-        aether.deploy( artifact, pom, "http://localhost:8081/nexus/content/repositories/snapshots/" );
+        resolver.deploy( artifact, pom, "http://localhost:8081/nexus/content/repositories/snapshots/" );
     }
 
 }

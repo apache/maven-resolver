@@ -1,4 +1,4 @@
-package org.apache.maven.resolver.examples.aether;
+package org.apache.maven.resolver.examples.resolver;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -46,7 +46,7 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 
 /**
  */
-public class Aether
+public class Resolver
 {
     private String remoteRepository;
 
@@ -54,7 +54,7 @@ public class Aether
 
     private LocalRepository localRepository;
 
-    public Aether( String remoteRepository, String localRepository )
+    public Resolver( String remoteRepository, String localRepository )
     {
         this.remoteRepository = remoteRepository;
         this.repositorySystem = Booter.newRepositorySystem();
@@ -68,7 +68,7 @@ public class Aether
         return session;
     }
 
-    public AetherResult resolve( String groupId, String artifactId, String version )
+    public ResolverResult resolve( String groupId, String artifactId, String version )
         throws DependencyResolutionException
     {
         RepositorySystemSession session = newSession();
@@ -91,7 +91,7 @@ public class Aether
         PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
         rootNode.accept( nlg );
 
-        return new AetherResult( rootNode, nlg.getFiles(), nlg.getClassPath() );
+        return new ResolverResult( rootNode, nlg.getFiles(), nlg.getClassPath() );
     }
 
     public void install( Artifact artifact, Artifact pom )

@@ -34,8 +34,8 @@ public class PlexusRepositorySystemFactory
     public static RepositorySystem newRepositorySystem()
     {
         /*
-         * Aether's components are equipped with plexus-specific metadata to enable discovery and wiring of components
-         * by a Plexus container so this is as easy as looking up the implementation.
+         * Maven Artifact Resolver's components are equipped with plexus-specific metadata to enable discovery and
+         * wiring of components by a Plexus container so this is as easy as looking up the implementation.
          */
         try
         {

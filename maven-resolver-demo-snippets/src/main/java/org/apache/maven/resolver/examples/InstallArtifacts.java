@@ -46,7 +46,7 @@ public class InstallArtifacts
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
         Artifact jarArtifact =
-            new DefaultArtifact( "test", "org.apache.maven.aether.examples", "", "jar", "0.1-SNAPSHOT" );
+            new DefaultArtifact( "test", "org.apache.maven.resolver.examples", "", "jar", "0.1-SNAPSHOT" );
         jarArtifact = jarArtifact.setFile( new File( "src/main/data/demo.jar" ) );
 
         Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );

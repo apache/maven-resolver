@@ -43,7 +43,7 @@ public class ResolveArtifactMojo
 {
 
     /**
-     * The entry point to Aether, i.e. the component doing all the work.
+     * The entry point to Maven Artifact Resolver, i.e. the component doing all the work.
      * 
      * @component
      */
@@ -68,7 +68,7 @@ public class ResolveArtifactMojo
     /**
      * The {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>} of the artifact to resolve.
      * 
-     * @parameter property="aether.artifactCoords"
+     * @parameter property="resolver.artifactCoords"
      */
     private String artifactCoords;
 

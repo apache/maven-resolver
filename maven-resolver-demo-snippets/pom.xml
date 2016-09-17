@@ -30,7 +30,7 @@
 
   <artifactId>maven-resolver-demo-snippets</artifactId>
 
-  <name>Maven ArtifactResolver Demo Snippets</name>
+  <name>Maven Artifact Resolver Demo Snippets</name>
   <description>
     A module to demonstrate the usage of Maven Artifact Resolver by means of various runnable code snippets.
   </description>

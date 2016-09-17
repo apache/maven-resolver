@@ -31,7 +31,7 @@ public class GuiceRepositorySystemFactory
 
     public static RepositorySystem newRepositorySystem()
     {
-        return Guice.createInjector( new DemoAetherModule() ).getInstance( RepositorySystem.class );
+        return Guice.createInjector( new DemoResolverModule() ).getInstance( RepositorySystem.class );
     }
 
 }

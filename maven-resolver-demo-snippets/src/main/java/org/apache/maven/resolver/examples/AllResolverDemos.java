@@ -22,7 +22,7 @@ package org.apache.maven.resolver.examples;
 /**
  * Runs all demos at once.
  */
-public class AllAetherDemos
+public class AllResolverDemos
 {
 
     public static void main( String[] args )
