@@ -303,6 +303,9 @@
             <excludes combine.children="append">
               <exclude>src/test/resources/**/*.ini</exclude>
               <exclude>src/test/resources/**/*.txt</exclude>
+              <!-- maven-resolver-transport-http -->
+              <exclude>src/test/resources/ssl/server-store</exclude>
+              <exclude>src/test/resources/ssl/client-store</exclude>
             </excludes>
           </configuration>
         </plugin>
