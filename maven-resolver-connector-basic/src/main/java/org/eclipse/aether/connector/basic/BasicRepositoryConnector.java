@@ -305,7 +305,7 @@ final class BasicRepositoryConnector
 
     private TransferResource newTransferResource( URI path, File file, RequestTrace trace )
     {
-        return new TransferResource( repository.getUrl(), path.toString(), file, trace );
+        return new TransferResource( repository.getId(), repository.getUrl(), path.toString(), file, trace );
     }
 
     private TransferEvent.Builder newEventBuilder( TransferResource resource, boolean upload, boolean peek )
