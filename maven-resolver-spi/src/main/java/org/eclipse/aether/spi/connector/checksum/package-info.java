@@ -1,4 +1,10 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The support infrastructure for repository connectors to apply checksum policies when validating the integrity of
+ * downloaded files.
+ */
+package org.eclipse.aether.spi.connector.checksum;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,9 +23,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The support infrastructure for repository connectors to apply checksum policies when validating the integrity of
- * downloaded files.  
- */
-package org.eclipse.aether.spi.connector.checksum;
-

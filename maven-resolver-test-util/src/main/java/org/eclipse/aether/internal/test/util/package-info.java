@@ -1,4 +1,11 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * Utility classes to ease unit testing. This package supports the needs of Aether's own codebase but implementors of
+ * extensions might find some of these classes useful, too, as long as they understand that these classes do not denote
+ * a stable API and are subject to change without prior notice.
+ */
+package org.eclipse.aether.internal.test.util;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,10 +24,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Utility classes to ease unit testing. This package supports the needs of Aether's own codebase but implementors of
- * extensions might find some of these classes useful, too, as long as they understand that these classes do not denote
- * a stable API and are subject to change without prior notice.
- */
-package org.eclipse.aether.internal.test.util;
-

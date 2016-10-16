@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The types supporting the resolution of artifacts and metadata from repositories.
+ */
+package org.eclipse.aether.resolution;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The types supporting the resolution of artifacts and metadata from repositories.
- */
-package org.eclipse.aether.resolution;
-

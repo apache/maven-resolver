@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The various sub components that collectively implement the repository system.
+ */
+package org.eclipse.aether.internal.impl;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The various sub components that collectively implement the repository system. 
- */
-package org.eclipse.aether.internal.impl;
-

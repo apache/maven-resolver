@@ -1,4 +1,10 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * Integration with the Plexus IoC container which is the native runtime environment expected by many wagon
+ * implementations.
+ */
+package org.eclipse.aether.internal.transport.wagon;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,9 +23,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Integration with the Plexus IoC container which is the native runtime environment expected by many wagon
- * implementations.
- */
-package org.eclipse.aether.internal.transport.wagon;
-

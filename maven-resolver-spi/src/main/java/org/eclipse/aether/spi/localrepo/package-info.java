@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The contract for custom local repository implementations.
+ */
+package org.eclipse.aether.spi.localrepo;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The contract for custom local repository implementations. 
- */
-package org.eclipse.aether.spi.localrepo;
-

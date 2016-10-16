@@ -1,4 +1,10 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The types and extension points for collecting the transitive dependencies of an artifact and building a dependency
+ * graph.
+ */
+package org.eclipse.aether.collection;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,9 +23,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The types and extension points for collecting the transitive dependencies of an artifact and building a dependency
- * graph.
- */
-package org.eclipse.aether.collection;
-

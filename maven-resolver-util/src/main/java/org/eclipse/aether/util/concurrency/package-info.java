@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * Utilities for concurrent task processing.
+ */
+package org.eclipse.aether.util.concurrency;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Utilities for concurrent task processing.
- */
-package org.eclipse.aether.util.concurrency;
-

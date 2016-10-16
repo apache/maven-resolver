@@ -1,4 +1,15 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The contract to access artifacts/metadata in remote repositories. By implementing a
+ * {@link org.eclipse.aether.spi.connector.RepositoryConnectorFactory} and registering it with the repository system,
+ * an application can enable access to arbitrary remote repositories. It should be noted that a repository connector is
+ * powerful yet burdensome to implement. In many cases, implementing a
+ * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory} or
+ * {@link org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory} will be sufficient and easier to access a
+ * custom remote repository.
+ */
+package org.eclipse.aether.spi.connector;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,14 +28,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The contract to access artifacts/metadata in remote repositories. By implementing a
- * {@link org.eclipse.aether.spi.connector.RepositoryConnectorFactory} and registering it with the repository system,
- * an application can enable access to arbitrary remote repositories. It should be noted that a repository connector is
- * powerful yet burdensome to implement. In many cases, implementing a 
- * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory} or 
- * {@link org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory} will be sufficient and easier to access a
- * custom remote repository.
- */
-package org.eclipse.aether.spi.connector;
-

@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * Support for downloads/uploads using the local filesystem as "remote" storage.
+ */
+package org.eclipse.aether.transport.file;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Support for downloads/uploads using the local filesystem as "remote" storage.
- */
-package org.eclipse.aether.transport.file;
-

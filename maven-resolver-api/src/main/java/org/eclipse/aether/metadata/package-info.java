@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The definition of metadata, that is an auxiliary entity managed by the repository system to locate artifacts.
+ */
+package org.eclipse.aether.metadata;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The definition of metadata, that is an auxiliary entity managed by the repository system to locate artifacts.
- */
-package org.eclipse.aether.metadata;
-

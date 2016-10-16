@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * Utilities to build repository and transfer listeners.
+ */
+package org.eclipse.aether.util.listener;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Utilities to build repository and transfer listeners.
- */
-package org.eclipse.aether.util.listener;
-

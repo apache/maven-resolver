@@ -1,4 +1,10 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * A listener and various exception types dealing with the transfer of a resource between the local system and a remote
+ * repository.
+ */
+package org.eclipse.aether.transfer;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,9 +23,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * A listener and various exception types dealing with the transfer of a resource between the local system and a remote
- * repository.
- */
-package org.eclipse.aether.transfer;
-

@@ -1,4 +1,11 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The contract to download/upload URI-based resources using custom transport protocols. By implementing a
+ * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory} and registering it with the repository system,
+ * an application enables access to remote repositories that use new URI schemes.
+ */
+package org.eclipse.aether.spi.connector.transport;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,10 +24,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The contract to download/upload URI-based resources using custom transport protocols. By implementing a
- * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory} and registering it with the repository system,
- * an application enables access to remote repositories that use new URI schemes.  
- */
-package org.eclipse.aether.spi.connector.transport;
-

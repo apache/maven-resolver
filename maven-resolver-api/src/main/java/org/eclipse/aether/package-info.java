@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The primary API of the {@link org.eclipse.aether.RepositorySystem} and its functionality.
+ */
+package org.eclipse.aether;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The primary API of the {@link org.eclipse.aether.RepositorySystem} and its functionality.
- */
-package org.eclipse.aether;
-

@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * The integration with the dependency injection framework <a href="http://code.google.com/p/google-guice/" target="_blank">Google Guice</a>.
+ */
+package org.eclipse.aether.impl.guice;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * The integration with the dependency injection framework <a href="http://code.google.com/p/google-guice/" target="_blank">Google Guice</a>. 
- */
-package org.eclipse.aether.impl.guice;
-

@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * Ready-to-use selectors for authentication, proxies and mirrors and a few other repository related utilities.
+ */
+package org.eclipse.aether.util.repository;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Ready-to-use selectors for authentication, proxies and mirrors and a few other repository related utilities.
- */
-package org.eclipse.aether.util.repository;
-

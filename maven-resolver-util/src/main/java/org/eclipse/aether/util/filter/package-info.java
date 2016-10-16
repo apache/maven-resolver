@@ -1,4 +1,9 @@
 // CHECKSTYLE_OFF: RegexpHeader
+/**
+ * Various dependency filters for selecting nodes in a dependency graph.
+ */
+package org.eclipse.aether.util.filter;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +22,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Various dependency filters for selecting nodes in a dependency graph.
- */
-package org.eclipse.aether.util.filter;
-
