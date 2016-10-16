@@ -194,7 +194,7 @@ class RecordingRepositoryConnector
             return;
         }
         TransferEvent.Builder event =
-            new TransferEvent.Builder( session, new TransferResource( null, null, null, transfer.getTrace() ) );
+            new TransferEvent.Builder( session, new TransferResource( null, null, null, null, transfer.getTrace() ) );
         event.setType( TransferEvent.EventType.INITIATED );
         listener.transferInitiated( event.build() );
     }
@@ -208,7 +208,7 @@ class RecordingRepositoryConnector
             return;
         }
         TransferEvent.Builder event =
-            new TransferEvent.Builder( session, new TransferResource( null, null, null, transfer.getTrace() ) );
+            new TransferEvent.Builder( session, new TransferResource( null, null, null, null, transfer.getTrace() ) );
         event.setException( transfer.getException() );
         if ( transfer.getException() != null )
         {

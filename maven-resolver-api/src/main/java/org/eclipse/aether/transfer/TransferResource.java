@@ -29,6 +29,8 @@ import org.eclipse.aether.RequestTrace;
 public final class TransferResource
 {
 
+    private final String repositoryId;
+
     private final String repositoryUrl;
 
     private final String resourceName;
@@ -45,7 +47,8 @@ public final class TransferResource
 
     /**
      * Creates a new transfer resource with the specified properties.
-     * 
+     *
+     * @param repositoryId The ID of the repository used to transfer the resource, may be {@code null} or empty if unknown.
      * @param repositoryUrl The base URL of the repository, may be {@code null} or empty if unknown. If not empty, a
      *            trailing slash will automatically be added if missing.
      * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
@@ -53,8 +56,18 @@ public final class TransferResource
      * @param file The source/target file involved in the transfer, may be {@code null}.
      * @param trace The trace information, may be {@code null}.
      */
-    public TransferResource( String repositoryUrl, String resourceName, File file, RequestTrace trace )
+    public TransferResource( String repositoryId, String repositoryUrl, String resourceName,
+        File file, RequestTrace trace )
     {
+        if ( repositoryId == null || repositoryId.length() <= 0 )
+        {
+            this.repositoryId = "";
+        }
+        else
+        {
+            this.repositoryId = repositoryId;
+        }
+
         if ( repositoryUrl == null || repositoryUrl.length() <= 0 )
         {
             this.repositoryUrl = "";
@@ -89,9 +102,19 @@ public final class TransferResource
     }
 
     /**
+     * The ID of the repository, e.g., "central".
+     *
+     * @return The ID of the repository or an empty string if unknown, never {@code null}.
+     */
+    public String getRepositoryId()
+    {
+        return repositoryId;
+    }
+
+    /**
      * The base URL of the repository, e.g. "http://repo1.maven.org/maven2/". Unless the URL is unknown, it will be
      * terminated by a trailing slash.
-     * 
+     *
      * @return The base URL of the repository or an empty string if unknown, never {@code null}.
      */
     public String getRepositoryUrl()
@@ -101,7 +124,7 @@ public final class TransferResource
 
     /**
      * The path of the resource relative to the repository's base URL, e.g. "org/apache/maven/maven/3.0/maven-3.0.pom".
-     * 
+     *
      * @return The path of the resource, never {@code null}.
      */
     public String getResourceName()
@@ -112,7 +135,7 @@ public final class TransferResource
     /**
      * Gets the local file being uploaded or downloaded. When the repository system merely checks for the existence of a
      * remote resource, no local file will be involved in the transfer.
-     * 
+     *
      * @return The source/target file involved in the transfer or {@code null} if none.
      */
     public File getFile()
@@ -124,7 +147,7 @@ public final class TransferResource
      * The size of the resource in bytes. Note that the size of a resource during downloads might be unknown to the
      * client which is usually the case when transfers employ compression like gzip. In general, the content length is
      * not known until the transfer has {@link TransferListener#transferStarted(TransferEvent) started}.
-     * 
+     *
      * @return The size of the resource in bytes or a negative value if unknown.
      */
     public long getContentLength()
@@ -134,7 +157,7 @@ public final class TransferResource
 
     /**
      * Sets the size of the resource in bytes.
-     * 
+     *
      * @param contentLength The size of the resource in bytes or a negative value if unknown.
      * @return This resource for chaining, never {@code null}.
      */
@@ -147,7 +170,7 @@ public final class TransferResource
     /**
      * Gets the byte offset within the resource from which the download starts. A positive offset indicates a previous
      * download attempt is being resumed, {@code 0} means the transfer starts at the first byte.
-     * 
+     *
      * @return The zero-based index of the first byte being transferred, never negative.
      */
     public long getResumeOffset()
@@ -157,7 +180,7 @@ public final class TransferResource
 
     /**
      * Sets the byte offset within the resource at which the download starts.
-     * 
+     *
      * @param resumeOffset The zero-based index of the first byte being transferred, must not be negative.
      * @return This resource for chaining, never {@code null}.
      */
@@ -173,7 +196,7 @@ public final class TransferResource
 
     /**
      * Gets the timestamp when the transfer of this resource was started.
-     * 
+     *
      * @return The timestamp when the transfer of this resource was started.
      */
     public long getTransferStartTime()
@@ -184,7 +207,7 @@ public final class TransferResource
     /**
      * Gets the trace information that describes the higher level request/operation during which this resource is
      * transferred.
-     * 
+     *
      * @return The trace information about the higher level operation or {@code null} if none.
      */
     public RequestTrace getTrace()

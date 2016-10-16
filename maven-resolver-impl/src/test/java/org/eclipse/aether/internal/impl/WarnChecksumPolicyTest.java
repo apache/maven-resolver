@@ -37,7 +37,7 @@ public class WarnChecksumPolicyTest
     @Before
     public void setup()
     {
-        policy = new WarnChecksumPolicy( null, new TransferResource( "file:/dev/null", "file.txt", null, null ) );
+        policy = new WarnChecksumPolicy( null, new TransferResource( "null", "file:/dev/null", "file.txt", null, null ) );
         exception = new ChecksumFailureException( "test" );
     }
 

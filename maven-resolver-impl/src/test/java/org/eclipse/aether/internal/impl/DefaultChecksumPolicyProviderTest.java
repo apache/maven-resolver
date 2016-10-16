@@ -51,7 +51,7 @@ public class DefaultChecksumPolicyProviderTest
         session = TestUtils.newSession();
         provider = new DefaultChecksumPolicyProvider();
         repository = new RemoteRepository.Builder( "test", "default", "file:/void" ).build();
-        resource = new TransferResource( repository.getUrl(), "file.txt", null, null );
+        resource = new TransferResource( repository.getId(), repository.getUrl(), "file.txt", null, null );
     }
 
     @After

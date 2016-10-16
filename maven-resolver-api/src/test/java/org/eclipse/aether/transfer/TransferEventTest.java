@@ -34,7 +34,7 @@ import org.junit.Test;
 public class TransferEventTest
 {
 
-    private static TransferResource res = new TransferResource( "file://nil", "void", null, null );
+    private static TransferResource res = new TransferResource( "none", "file://nil", "void", null, null );
 
     private static RepositorySystemSession session = new DefaultRepositorySystemSession();
 
