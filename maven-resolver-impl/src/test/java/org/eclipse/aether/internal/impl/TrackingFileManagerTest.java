@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,7 +80,7 @@ public class TrackingFileManagerTest
         TrackingFileManager tfm = new TrackingFileManager();
 
         // NOTE: The excessive repetitions are to check the update properly truncates the file
-        File propFile = TestFileUtils.createTempFile( "key1=value1\nkey2 : value2\n".getBytes( "UTF-8" ), 1000 );
+        File propFile = TestFileUtils.createTempFile( "key1=value1\nkey2 : value2\n".getBytes( StandardCharsets.UTF_8 ), 1000 );
 
         Map<String, String> updates = new HashMap<String, String>();
         updates.put( "key1", "v" );

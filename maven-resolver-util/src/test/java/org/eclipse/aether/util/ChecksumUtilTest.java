@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -75,7 +76,7 @@ public class ChecksumUtilTest
             createTempFile( new byte[] { 0, 1, 2, 4, 8, 16, 32, 64, 127, -1, -2, -4, -8, -16, -32, -64, -127 }, 1000 );
         sums.put( patternFile, patternFileChecksums );
 
-        textFile = createTempFile( "the quick brown fox jumps over the lazy dog\n".getBytes( "UTF-8" ), 500 );
+        textFile = createTempFile( "the quick brown fox jumps over the lazy dog\n".getBytes( StandardCharsets.UTF_8 ), 500 );
         sums.put( textFile, textFileChecksums );
 
     }

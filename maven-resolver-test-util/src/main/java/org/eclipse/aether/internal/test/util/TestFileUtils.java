@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -150,7 +151,7 @@ public class TestFileUtils
     public static File createTempFile( String contents )
         throws IOException
     {
-        return createTempFile( contents.getBytes( "UTF-8" ), 1 );
+        return createTempFile( contents.getBytes( StandardCharsets.UTF_8 ), 1 );
     }
 
     public static File createTempFile( byte[] pattern, int repeat )
@@ -309,13 +310,13 @@ public class TestFileUtils
         throws IOException
     {
         byte[] content = readBytes( file );
-        return new String( content, "UTF-8" );
+        return new String( content, StandardCharsets.UTF_8 );
     }
 
     public static void writeString( File file, String content )
         throws IOException
     {
-        writeBytes( file, content.getBytes( "UTF-8" ), 1 );
+        writeBytes( file, content.getBytes( StandardCharsets.UTF_8 ), 1 );
     }
 
     public static void readProps( File file, Properties props )

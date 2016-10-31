@@ -22,7 +22,6 @@ package org.eclipse.aether.internal.test.util;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -182,7 +181,7 @@ public class DependencyGraphParserTest
 
     @Test
     public void testResourceLoading()
-        throws UnsupportedEncodingException, IOException
+        throws IOException
     {
         String prefix = "org/eclipse/aether/internal/test/util/";
         String name = "testResourceLoading.txt";
@@ -194,7 +193,7 @@ public class DependencyGraphParserTest
 
     @Test
     public void testResourceLoadingWithPrefix()
-        throws UnsupportedEncodingException, IOException
+        throws IOException
     {
         String prefix = "org/eclipse/aether/internal/test/util/";
         parser = new DependencyGraphParser( prefix );

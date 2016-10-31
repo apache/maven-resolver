@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,14 +58,7 @@ public class ChecksumCalculatorTest
 
     private ByteBuffer toBuffer( String data )
     {
-        try
-        {
-            return ByteBuffer.wrap( data.getBytes( "UTF-8" ) );
-        }
-        catch ( UnsupportedEncodingException e )
-        {
-            throw new IllegalStateException( e );
-        }
+        return ByteBuffer.wrap( data.getBytes( StandardCharsets.UTF_8 ) );
     }
 
     @Before

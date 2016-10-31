@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -61,14 +62,7 @@ class SimpleDigest
         }
         if ( digest != null )
         {
-            try
-            {
-                digest.update( data.getBytes( "UTF-8" ) );
-            }
-            catch ( UnsupportedEncodingException e )
-            {
-                // broken JVM
-            }
+            digest.update( data.getBytes( StandardCharsets.UTF_8 ) );
         }
         else
         {

@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -56,7 +57,7 @@ public final class ChecksumUtils
         BufferedReader br = null;
         try
         {
-            br = new BufferedReader( new InputStreamReader( new FileInputStream( checksumFile ), "UTF-8" ), 512 );
+            br = new BufferedReader( new InputStreamReader( new FileInputStream( checksumFile ), StandardCharsets.UTF_8 ), 512 );
             while ( true )
             {
                 String line = br.readLine();
@@ -71,9 +72,6 @@ public final class ChecksumUtils
                     break;
                 }
             }
-
-            br.close();
-            br = null;
         }
         finally
         {
@@ -82,6 +80,7 @@ public final class ChecksumUtils
                 if ( br != null )
                 {
                     br.close();
+                    br = null;
                 }
             }
             catch ( IOException e )

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -169,7 +170,7 @@ public class DependencyGraphParser
             throw new IOException( "Could not find classpath resource " + prefix + resource );
         }
 
-        BufferedReader reader = new BufferedReader( new InputStreamReader( res.openStream(), "UTF-8" ) );
+        BufferedReader reader = new BufferedReader( new InputStreamReader( res.openStream(), StandardCharsets.UTF_8 ) );
 
         List<DependencyNode> ret = new ArrayList<DependencyNode>();
         DependencyNode root = null;
@@ -189,10 +190,8 @@ public class DependencyGraphParser
         BufferedReader reader = null;
         try
         {
-            reader = new BufferedReader( new InputStreamReader( resource.openStream(), "UTF-8" ) );
+            reader = new BufferedReader( new InputStreamReader( resource.openStream(), StandardCharsets.UTF_8 ) );
             final DependencyNode node = parse( reader );
-            reader.close();
-            reader = null;
             return node;
         }
         finally
@@ -202,6 +201,7 @@ public class DependencyGraphParser
                 if ( reader != null )
                 {
                     reader.close();
+                    reader = null;
                 }
             }
             catch ( final IOException e )
