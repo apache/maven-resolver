@@ -371,7 +371,7 @@ public class HttpServer
                     response.setStatus( HttpServletResponse.SC_PRECONDITION_FAILED );
                     return;
                 }
-                long offset = 0;
+                long offset = 0L;
                 String range = request.getHeader( HttpHeaders.RANGE );
                 if ( range != null && rangeSupport )
                 {
@@ -392,12 +392,12 @@ public class HttpServer
                         return;
                     }
                 }
-                response.setStatus( ( offset > 0 ) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK );
+                response.setStatus( ( offset > 0L ) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK );
                 response.setDateHeader( HttpHeaders.LAST_MODIFIED, file.lastModified() );
                 response.setHeader( HttpHeaders.CONTENT_LENGTH, Long.toString( file.length() - offset ) );
-                if ( offset > 0 )
+                if ( offset > 0L )
                 {
-                    response.setHeader( HttpHeaders.CONTENT_RANGE, "bytes " + offset + "-" + ( file.length() - 1 )
+                    response.setHeader( HttpHeaders.CONTENT_RANGE, "bytes " + offset + "-" + ( file.length() - 1L )
                         + "/" + file.length() );
                 }
                 if ( checksumHeader != null )
@@ -417,7 +417,7 @@ public class HttpServer
                 FileInputStream is = new FileInputStream( file );
                 try
                 {
-                    if ( offset > 0 )
+                    if ( offset > 0L )
                     {
                         long skipped = is.skip( offset );
                         while ( skipped < offset && is.read() >= 0 )

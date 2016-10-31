@@ -135,7 +135,7 @@ final class ChecksumCalculator
         {
             checksum.reset();
         }
-        if ( dataOffset <= 0 )
+        if ( dataOffset <= 0L )
         {
             return;
         }
@@ -144,7 +144,7 @@ final class ChecksumCalculator
             FileInputStream fis = new FileInputStream( targetFile );
             try
             {
-                long total = 0;
+                long total = 0L;
                 ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
                 for ( byte[] array = buffer.array(); total < dataOffset; )
                 {

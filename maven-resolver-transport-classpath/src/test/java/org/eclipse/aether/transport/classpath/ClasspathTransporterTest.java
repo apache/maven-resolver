@@ -144,8 +144,8 @@ public class ClasspathTransporterTest
         GetTask task = new GetTask( URI.create( "file.txt" ) ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -160,8 +160,8 @@ public class ClasspathTransporterTest
         GetTask task = new GetTask( URI.create( "file.txt" ) ).setDataFile( file ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", TestFileUtils.readString( file ) );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "test", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -176,8 +176,8 @@ public class ClasspathTransporterTest
         GetTask task = new GetTask( URI.create( "empty.txt" ) ).setDataFile( file ).setListener( listener );
         transporter.get( task );
         assertEquals( "", TestFileUtils.readString( file ) );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 0, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 0L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
         assertEquals( "", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -269,8 +269,8 @@ public class ClasspathTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
     }
@@ -291,8 +291,8 @@ public class ClasspathTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 1, listener.progressedCount );
     }

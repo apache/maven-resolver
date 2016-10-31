@@ -53,7 +53,7 @@ import org.junit.Test;
 public class DefaultUpdateCheckManagerTest
 {
 
-    private static final int HOUR = 60 * 60 * 1000;
+    private static final long HOUR = 60L * 60L * 1000L;
 
     private DefaultUpdateCheckManager manager;
 
@@ -543,7 +543,7 @@ public class DefaultUpdateCheckManagerTest
         throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        long fifteenMinutes = new Date().getTime() - ( 15 * 60 * 1000 );
+        long fifteenMinutes = new Date().getTime() - ( 15L * 60L * 1000L );
         check.getFile().setLastModified( fifteenMinutes );
         // time is truncated on setLastModfied
         fifteenMinutes = check.getFile().lastModified();
@@ -553,7 +553,7 @@ public class DefaultUpdateCheckManagerTest
         assertEquals( true, check.isRequired() );
 
         // just checked
-        check.setLocalLastUpdated( 0 );
+        check.setLocalLastUpdated( 0L );
         long lastUpdate = new Date().getTime();
         check.getFile().setLastModified( lastUpdate );
         lastUpdate = check.getFile().lastModified();
@@ -562,7 +562,7 @@ public class DefaultUpdateCheckManagerTest
         assertEquals( false, check.isRequired() );
 
         // no local file, no repo timestamp
-        check.setLocalLastUpdated( 0 );
+        check.setLocalLastUpdated( 0L );
         check.getFile().delete();
         manager.checkArtifact( session, check );
         assertEquals( true, check.isRequired() );

@@ -49,7 +49,7 @@ public final class WagonTransporterFactory
 
     private WagonConfigurator wagonConfigurator;
 
-    private float priority = -1;
+    private float priority = -1.0f;
 
     /**
      * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation

@@ -209,7 +209,7 @@ public class TestFileUtils
 
             fos = new BufferedOutputStream( new FileOutputStream( target ) );
 
-            long total = 0;
+            long total = 0L;
 
             for ( byte[] buffer = new byte[ 1024 * 32 ];; )
             {

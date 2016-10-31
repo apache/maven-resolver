@@ -155,7 +155,7 @@ public class DefaultFileProcessor
     public long copy( File source, File target, ProgressListener listener )
         throws IOException
     {
-        long total = 0;
+        long total = 0L;
 
         InputStream fis = null;
         OutputStream fos = null;
@@ -211,7 +211,7 @@ public class DefaultFileProcessor
     private long copy( OutputStream os, InputStream is, ProgressListener listener )
         throws IOException
     {
-        long total = 0;
+        long total = 0L;
 
         ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
         byte[] array = buffer.array();

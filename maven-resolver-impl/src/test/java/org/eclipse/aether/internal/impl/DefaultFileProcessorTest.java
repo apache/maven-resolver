@@ -98,7 +98,7 @@ public class DefaultFileProcessorTest
         File target = new File( targetDir, "testCopyEmptyFile" );
         target.delete();
         fileProcessor.copy( file, target );
-        assertTrue( "empty file was not copied", target.exists() && target.length() == 0 );
+        assertTrue( "empty file was not copied", target.exists() && target.length() == 0L );
         target.delete();
     }
 
@@ -120,7 +120,7 @@ public class DefaultFileProcessorTest
         };
         fileProcessor.copy( file, target, listener );
         assertTrue( "file was not created", target.isFile() );
-        assertEquals( "file was not fully copied", 4, target.length() );
+        assertEquals( "file was not fully copied", 4L, target.length() );
         assertEquals( "listener not called", 4, progressed.intValue() );
         target.delete();
     }

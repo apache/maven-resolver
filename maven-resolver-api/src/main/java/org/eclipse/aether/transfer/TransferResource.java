@@ -41,7 +41,7 @@ public final class TransferResource
 
     private final RequestTrace trace;
 
-    private long contentLength = -1;
+    private long contentLength = -1L;
 
     private long resumeOffset;
 
@@ -186,7 +186,7 @@ public final class TransferResource
      */
     public TransferResource setResumeOffset( long resumeOffset )
     {
-        if ( resumeOffset < 0 )
+        if ( resumeOffset < 0L )
         {
             throw new IllegalArgumentException( "resume offset cannot be negative" );
         }

@@ -159,7 +159,7 @@ public class DefaultUpdateCheckManager
             else
             {
                 // this is the first attempt ever
-                lastUpdated = 0;
+                lastUpdated = 0L;
             }
         }
         else if ( error.length() <= 0 )
@@ -174,7 +174,7 @@ public class DefaultUpdateCheckManager
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
-        if ( lastUpdated == 0 )
+        if ( lastUpdated == 0L )
         {
             check.setRequired( true );
         }
@@ -296,7 +296,7 @@ public class DefaultUpdateCheckManager
             else
             {
                 // this is the first attempt ever
-                lastUpdated = 0;
+                lastUpdated = 0L;
             }
         }
         else if ( error.length() <= 0 )
@@ -311,7 +311,7 @@ public class DefaultUpdateCheckManager
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
-        if ( lastUpdated == 0 )
+        if ( lastUpdated == 0L )
         {
             check.setRequired( true );
         }

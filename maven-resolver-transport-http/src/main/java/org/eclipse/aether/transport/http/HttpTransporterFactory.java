@@ -44,7 +44,7 @@ public final class HttpTransporterFactory
 
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    private float priority = 5;
+    private float priority = 5.0f;
 
     /**
      * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation

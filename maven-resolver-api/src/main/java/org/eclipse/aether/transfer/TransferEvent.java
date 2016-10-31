@@ -300,7 +300,7 @@ public final class TransferEvent
             {
                 case INITIATED:
                 case STARTED:
-                    transferredBytes = 0;
+                    transferredBytes = 0L;
                 default:
             }
             return this;
@@ -352,7 +352,7 @@ public final class TransferEvent
          */
         public Builder setTransferredBytes( long transferredBytes )
         {
-            if ( transferredBytes < 0 )
+            if ( transferredBytes < 0L )
             {
                 throw new IllegalArgumentException( "number of transferred bytes cannot be negative" );
             }
@@ -362,14 +362,14 @@ public final class TransferEvent
 
         /**
          * Increments the total number of bytes that have been transferred so far during the download/upload.
-         * 
+         *
          * @param transferredBytes The number of bytes that have been transferred since the last event, must not be
          *            negative.
          * @return This event builder for chaining, never {@code null}.
          */
         public Builder addTransferredBytes( long transferredBytes )
         {
-            if ( transferredBytes < 0 )
+            if ( transferredBytes < 0L )
             {
                 throw new IllegalArgumentException( "number of transferred bytes cannot be negative" );
             }

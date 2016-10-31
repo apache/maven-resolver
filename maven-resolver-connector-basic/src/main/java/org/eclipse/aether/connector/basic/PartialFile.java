@@ -75,7 +75,7 @@ final class PartialFile
             boolean interrupted = false;
             try
             {
-                for ( long lastLength = -1, lastTime = 0;; )
+                for ( long lastLength = -1L, lastTime = 0L;; )
                 {
                     FileLock lock = tryLock( lockFile );
                     if ( lock != null )
@@ -87,7 +87,7 @@ final class PartialFile
                     long currentTime = System.currentTimeMillis();
                     if ( currentLength != lastLength )
                     {
-                        if ( lastLength < 0 )
+                        if ( lastLength < 0L )
                         {
                             concurrent[0] = true;
                             /*
@@ -109,7 +109,7 @@ final class PartialFile
 
                     try
                     {
-                        Thread.sleep( 100 );
+                        Thread.sleep( 100L );
                     }
                     catch ( InterruptedException e )
                     {

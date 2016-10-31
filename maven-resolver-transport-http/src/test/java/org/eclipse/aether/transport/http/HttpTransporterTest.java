@@ -276,8 +276,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/file.txt" ) ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -292,8 +292,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/file.txt" ) ).setDataFile( file ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", TestFileUtils.readString( file ) );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "test", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -308,8 +308,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/empty.txt" ) ).setDataFile( file ).setListener( listener );
         transporter.get( task );
         assertEquals( "", TestFileUtils.readString( file ) );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 0, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 0L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
         assertEquals( "", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -335,8 +335,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/file.txt" ) ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -371,8 +371,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/file.txt" ) ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -407,8 +407,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/file.txt" ) ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -424,8 +424,8 @@ public class HttpTransporterTest
         ( (HttpTransporter) transporter ).getState().setWebDav( true );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -441,8 +441,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "redirect/file.txt?scheme=https" ) ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -457,8 +457,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/resume.txt" ) ).setDataFile( file, true ).setListener( listener );
         transporter.get( task );
         assertEquals( "resumable", TestFileUtils.readString( file ) );
-        assertEquals( 1, listener.startedCount );
-        assertEquals( 2, listener.dataOffset );
+        assertEquals( 1L, listener.startedCount );
+        assertEquals( 2L, listener.dataOffset );
         assertEquals( 9, listener.dataLength );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "sumable", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -474,8 +474,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/resume.txt" ) ).setDataFile( file, true ).setListener( listener );
         transporter.get( task );
         assertEquals( "resumable", TestFileUtils.readString( file ) );
-        assertEquals( 1, listener.startedCount );
-        assertEquals( 0, listener.dataOffset );
+        assertEquals( 1L, listener.startedCount );
+        assertEquals( 0L, listener.dataOffset );
         assertEquals( 9, listener.dataLength );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "resumable", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -491,8 +491,8 @@ public class HttpTransporterTest
         GetTask task = new GetTask( URI.create( "repo/resume.txt" ) ).setDataFile( file, true ).setListener( listener );
         transporter.get( task );
         assertEquals( "resumable", TestFileUtils.readString( file ) );
-        assertEquals( 1, listener.startedCount );
-        assertEquals( 0, listener.dataOffset );
+        assertEquals( 1L, listener.startedCount );
+        assertEquals( 0L, listener.dataOffset );
         assertEquals( 9, listener.dataLength );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "resumable", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -569,8 +569,8 @@ public class HttpTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
     }
@@ -591,8 +591,8 @@ public class HttpTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 1, listener.progressedCount );
     }
@@ -604,8 +604,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -619,8 +619,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataFile( file );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -633,8 +633,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 0, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 0L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
         assertEquals( "", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -648,8 +648,8 @@ public class HttpTransporterTest
         PutTask task =
             new PutTask( URI.create( "repo/some%20space.txt" ) ).setListener( listener ).setDataString( "OK" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 2, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 2L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "OK", TestFileUtils.readString( new File( repoDir, "some space.txt" ) ) );
@@ -665,8 +665,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -683,8 +683,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -701,8 +701,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -722,8 +722,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -761,8 +761,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -802,8 +802,8 @@ public class HttpTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "repo/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "file.txt" ) ) );
@@ -818,8 +818,8 @@ public class HttpTransporterTest
         PutTask task =
             new PutTask( URI.create( "repo/dir1/dir2/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "dir1/dir2/file.txt" ) ) );
@@ -846,8 +846,8 @@ public class HttpTransporterTest
         PutTask task =
             new PutTask( URI.create( "repo/dir1/dir2/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "dir1/dir2/file.txt" ) ) );
@@ -880,8 +880,8 @@ public class HttpTransporterTest
         PutTask task =
             new PutTask( URI.create( "repo/dir1/dir2/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", TestFileUtils.readString( new File( repoDir, "dir1/dir2/file.txt" ) ) );
@@ -937,8 +937,8 @@ public class HttpTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
     }
@@ -959,8 +959,8 @@ public class HttpTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 1, listener.progressedCount );
     }
@@ -980,7 +980,7 @@ public class HttpTransporterTest
         assertEquals( 1, listener.startedCount );
     }
 
-    @Test( timeout = 20000 )
+    @Test( timeout = 20000L )
     public void testConcurrency()
         throws Exception
     {
@@ -1027,7 +1027,7 @@ public class HttpTransporterTest
         assertNull( String.valueOf( error.get() ), error.get() );
     }
 
-    @Test( timeout = 1000 )
+    @Test( timeout = 1000L )
     public void testConnectTimeout()
         throws Exception
     {
@@ -1049,7 +1049,7 @@ public class HttpTransporterTest
         }
     }
 
-    @Test( timeout = 1000 )
+    @Test( timeout = 1000L )
     public void testRequestTimeout()
         throws Exception
     {

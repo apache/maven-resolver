@@ -94,7 +94,7 @@ public class DefaultSessionDataTest
         assertNull( get( key ) );
     }
 
-    @Test( timeout = 10000 )
+    @Test( timeout = 10000L )
     public void testConcurrency()
         throws Exception
     {

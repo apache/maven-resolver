@@ -192,8 +192,8 @@ public abstract class AbstractWagonTransporterTest
         GetTask task = new GetTask( URI.create( "file.txt" ) ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", task.getDataString() );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -208,8 +208,8 @@ public abstract class AbstractWagonTransporterTest
         GetTask task = new GetTask( URI.create( "file.txt" ) ).setDataFile( file ).setListener( listener );
         transporter.get( task );
         assertEquals( "test", TestFileUtils.readString( file ) );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "test", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -225,8 +225,8 @@ public abstract class AbstractWagonTransporterTest
         GetTask task = new GetTask( URI.create( "empty.txt" ) ).setDataFile( file ).setListener( listener );
         transporter.get( task );
         assertEquals( "", TestFileUtils.readString( file ) );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 0, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 0L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
         assertEquals( "", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
@@ -311,8 +311,8 @@ public abstract class AbstractWagonTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 4, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 4L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 1, listener.progressedCount );
     }
@@ -324,8 +324,8 @@ public abstract class AbstractWagonTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", fs.get( "file.txt" ) );
@@ -339,8 +339,8 @@ public abstract class AbstractWagonTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "file.txt" ) ).setListener( listener ).setDataFile( file );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", fs.get( "file.txt" ) );
@@ -353,8 +353,8 @@ public abstract class AbstractWagonTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "file.txt" ) ).setListener( listener );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 0, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 0L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
         assertEquals( "", fs.get( "file.txt" ) );
@@ -368,8 +368,8 @@ public abstract class AbstractWagonTransporterTest
         PutTask task =
             new PutTask( URI.create( "dir/sub/dir/file.txt" ) ).setListener( listener ).setDataString( "upload" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "upload", fs.get( "dir/sub/dir/file.txt" ) );
@@ -382,8 +382,8 @@ public abstract class AbstractWagonTransporterTest
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask( URI.create( "some%20space.txt" ) ).setListener( listener ).setDataString( "OK" );
         transporter.put( task );
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 2, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 2L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
         assertEquals( "OK", fs.get( "some space.txt" ) );
@@ -444,8 +444,8 @@ public abstract class AbstractWagonTransporterTest
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
-        assertEquals( 0, listener.dataOffset );
-        assertEquals( 6, listener.dataLength );
+        assertEquals( 0L, listener.dataOffset );
+        assertEquals( 6L, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 1, listener.progressedCount );
     }

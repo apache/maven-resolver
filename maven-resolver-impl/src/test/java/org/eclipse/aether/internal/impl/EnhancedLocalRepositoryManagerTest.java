@@ -131,13 +131,13 @@ public class EnhancedLocalRepositoryManagerTest
         String path = manager.getPathForRemoteArtifact( artifact, repository, testContext );
         return copy( artifact, path );
     }
-    
+
     private long copy( Metadata metadata, String path )
         throws IOException
     {
         if ( metadata.getFile() == null )
         {
-            return -1;
+            return -1L;
         }
         return TestFileUtils.copyFile( metadata.getFile(), new File( basedir, path ) );
     }
@@ -147,7 +147,7 @@ public class EnhancedLocalRepositoryManagerTest
     {
         if ( artifact.getFile() == null )
         {
-            return -1;
+            return -1L;
         }
         File artifactFile = new File( basedir, path );
         return TestFileUtils.copyFile( artifact.getFile(), artifactFile );
