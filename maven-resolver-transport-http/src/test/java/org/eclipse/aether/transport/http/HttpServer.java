@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -48,7 +49,6 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.util.B64Code;
 import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
@@ -124,7 +124,7 @@ public class HttpServer
 
     private Connector httpsConnector;
 
-    private String credentialEncoding = StringUtil.__ISO_8859_1;
+    private String credentialEncoding = StandardCharsets.ISO_8859_1.name();
 
     private String username;
 
@@ -231,7 +231,7 @@ public class HttpServer
 
     public HttpServer setCredentialEncoding( String credentialEncoding )
     {
-        this.credentialEncoding = ( credentialEncoding != null ) ? credentialEncoding : StringUtil.__ISO_8859_1;
+        this.credentialEncoding = ( credentialEncoding != null ) ? credentialEncoding : StandardCharsets.ISO_8859_1.name();
         return this;
     }
 

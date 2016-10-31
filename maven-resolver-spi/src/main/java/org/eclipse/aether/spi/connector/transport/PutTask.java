@@ -26,10 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A task to upload a resource to the remote repository.
- * 
+ *
  * @see Transporter#put(PutTask)
  */
 public final class PutTask
@@ -120,25 +121,18 @@ public final class PutTask
 
     /**
      * Sets the textual data to be uploaded. The text is encoded using UTF-8 before transmission.
-     * 
+     *
      * @param str The textual data, may be {@code null}.
      * @return This task for chaining, never {@code null}.
      */
     public PutTask setDataString( String str )
     {
-        try
-        {
-            return setDataBytes( ( str != null ) ? str.getBytes( "UTF-8" ) : null );
-        }
-        catch ( UnsupportedEncodingException e )
-        {
-            throw new IllegalStateException( e );
-        }
+        return setDataBytes( ( str != null ) ? str.getBytes( StandardCharsets.UTF_8 ) : null );
     }
 
     /**
      * Sets the listener that is to be notified during the transfer.
-     * 
+     *
      * @param listener The listener to notify of progress, may be {@code null}.
      * @return This task for chaining, never {@code null}.
      */

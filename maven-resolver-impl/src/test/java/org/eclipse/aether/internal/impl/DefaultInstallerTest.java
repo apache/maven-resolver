@@ -23,7 +23,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -108,7 +107,7 @@ public class DefaultInstallerTest
 
     @Test
     public void testSuccessfulInstall()
-        throws InstallationException, UnsupportedEncodingException, IOException
+        throws InstallationException, IOException
     {
         File artifactFile =
             new File( session.getLocalRepositoryManager().getRepository().getBasedir(), localArtifactPath );

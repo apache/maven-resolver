@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
@@ -147,7 +148,7 @@ public class ClasspathTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -163,7 +164,7 @@ public class ClasspathTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( "test", listener.baos.toString( "UTF-8" ) );
+        assertEquals( "test", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -179,7 +180,7 @@ public class ClasspathTransporterTest
         assertEquals( 0, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
-        assertEquals( "", listener.baos.toString( "UTF-8" ) );
+        assertEquals( "", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test

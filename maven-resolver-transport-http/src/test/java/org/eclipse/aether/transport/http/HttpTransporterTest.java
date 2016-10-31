@@ -27,6 +27,7 @@ import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -279,7 +280,7 @@ public class HttpTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -295,7 +296,7 @@ public class HttpTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( "test", listener.baos.toString( "UTF-8" ) );
+        assertEquals( "test", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -311,7 +312,7 @@ public class HttpTransporterTest
         assertEquals( 0, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertEquals( 0, listener.progressedCount );
-        assertEquals( "", listener.baos.toString( "UTF-8" ) );
+        assertEquals( "", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -338,7 +339,7 @@ public class HttpTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -374,7 +375,7 @@ public class HttpTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -410,7 +411,7 @@ public class HttpTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -427,7 +428,7 @@ public class HttpTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
         assertEquals( httpServer.getLogEntries().toString(), 1, httpServer.getLogEntries().size() );
     }
 
@@ -444,7 +445,7 @@ public class HttpTransporterTest
         assertEquals( 4, listener.dataLength );
         assertEquals( 1, listener.startedCount );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( task.getDataString(), listener.baos.toString( "UTF-8" ) );
+        assertEquals( task.getDataString(), new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -460,7 +461,7 @@ public class HttpTransporterTest
         assertEquals( 2, listener.dataOffset );
         assertEquals( 9, listener.dataLength );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( "sumable", listener.baos.toString( "UTF-8" ) );
+        assertEquals( "sumable", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -477,7 +478,7 @@ public class HttpTransporterTest
         assertEquals( 0, listener.dataOffset );
         assertEquals( 9, listener.dataLength );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( "resumable", listener.baos.toString( "UTF-8" ) );
+        assertEquals( "resumable", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -494,7 +495,7 @@ public class HttpTransporterTest
         assertEquals( 0, listener.dataOffset );
         assertEquals( 9, listener.dataLength );
         assertTrue( "Count: " + listener.progressedCount, listener.progressedCount > 0 );
-        assertEquals( "resumable", listener.baos.toString( "UTF-8" ) );
+        assertEquals( "resumable", new String( listener.baos.toByteArray(), StandardCharsets.UTF_8 ) );
     }
 
     @Test
@@ -1119,7 +1120,7 @@ public class HttpTransporterTest
     public void testCredentialEncoding_Utf8()
         throws Exception
     {
-        testCredentialEncoding( "UTF-8" );
+        testCredentialEncoding( StandardCharsets.UTF_8.name() );
     }
 
     private void testCredentialEncoding( String encoding )

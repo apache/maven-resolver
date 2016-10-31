@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import javax.inject.Named;
 
@@ -90,7 +91,7 @@ public class DefaultFileProcessor
 
             if ( data != null )
             {
-                fos.write( data.getBytes( "UTF-8" ) );
+                fos.write( data.getBytes( StandardCharsets.UTF_8 ) );
             }
 
             // allow output to report any flush/close errors

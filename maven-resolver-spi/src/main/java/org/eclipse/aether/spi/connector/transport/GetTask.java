@@ -26,13 +26,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * A task to download a resource from the remote repository.
- * 
+ *
  * @see Transporter#get(GetTask)
  */
 public final class GetTask
@@ -192,19 +193,12 @@ public final class GetTask
         {
             return "";
         }
-        try
-        {
-            return dataBytes.toString( "UTF-8" );
-        }
-        catch ( UnsupportedEncodingException e )
-        {
-            throw new IllegalStateException( e );
-        }
+        return new String( dataBytes.toByteArray(), StandardCharsets.UTF_8 );
     }
 
     /**
      * Sets the listener that is to be notified during the transfer.
-     * 
+     *
      * @param listener The listener to notify of progress, may be {@code null}.
      * @return This task for chaining, never {@code null}.
      */

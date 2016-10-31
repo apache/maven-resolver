@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import org.eclipse.aether.spi.io.FileProcessor;
 
@@ -95,7 +96,7 @@ public class TestFileProcessor
 
             if ( data != null )
             {
-                fos.write( data.getBytes( "UTF-8" ) );
+                fos.write( data.getBytes( StandardCharsets.UTF_8 ) );
             }
 
             // allow output to report any flush/close errors

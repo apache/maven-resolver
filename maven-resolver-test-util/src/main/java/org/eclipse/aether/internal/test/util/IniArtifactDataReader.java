@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -86,7 +87,7 @@ class IniArtifactDataReader
     public ArtifactDescription parse( URL res )
         throws IOException
     {
-        return parse( new InputStreamReader( res.openStream(), "UTF-8" ) );
+        return parse( new InputStreamReader( res.openStream(), StandardCharsets.UTF_8 ) );
     }
 
     /**

@@ -23,8 +23,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 
@@ -104,15 +104,7 @@ public class MemStreamWagon
         {
             throw new ResourceDoesNotExistException( "Missing resource: " + inputData.getResource().getName() );
         }
-        byte[] bytes;
-        try
-        {
-            bytes = data.getBytes( "UTF-8" );
-        }
-        catch ( UnsupportedEncodingException e )
-        {
-            throw new TransferFailedException( e.getMessage(), e );
-        }
+        byte[] bytes = data.getBytes( StandardCharsets.UTF_8 );
         inputData.getResource().setContentLength( bytes.length );
         inputData.setInputStream( new ByteArrayInputStream( bytes ) );
     }
@@ -128,15 +120,7 @@ public class MemStreamWagon
     protected void finishPutTransfer( Resource resource, InputStream input, OutputStream output )
         throws TransferFailedException, AuthorizationException, ResourceDoesNotExistException
     {
-        String data;
-        try
-        {
-            data = ( (ByteArrayOutputStream) output ).toString( "UTF-8" );
-        }
-        catch ( UnsupportedEncodingException e )
-        {
-            throw new TransferFailedException( e.getMessage(), e );
-        }
+        String data = new String( ( (ByteArrayOutputStream) output ).toByteArray(), StandardCharsets.UTF_8 );
         fs.put( URI.create( resource.getName() ).getSchemeSpecificPart(), data );
     }
 

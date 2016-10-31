@@ -19,7 +19,7 @@ package org.eclipse.aether.repository;
  * under the License.
  */
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -157,14 +157,7 @@ public final class AuthenticationDigest
             {
                 if ( string != null )
                 {
-                    try
-                    {
-                        digest.update( string.getBytes( "UTF-8" ) );
-                    }
-                    catch ( UnsupportedEncodingException e )
-                    {
-                        throw new IllegalStateException( e );
-                    }
+                    digest.update( string.getBytes( StandardCharsets.UTF_8 ) );
                 }
             }
         }
