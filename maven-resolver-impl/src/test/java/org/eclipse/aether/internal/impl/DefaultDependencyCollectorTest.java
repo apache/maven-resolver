@@ -18,8 +18,12 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -721,6 +725,58 @@ public class DefaultDependencyCollectorTest
         result = collector.collectDependencies( session, request );
 
         assertEqualSubtree( expected, result.getRoot() );
+    }
+
+    @Test
+    public void testResolveRootRelocation() throws Exception
+    {
+        Dependency dependency = newDep( "oldgid:aid:ext:ver" );
+        CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
+
+        session.setDependencyManager( new ClassicDependencyManager() );
+
+        CollectResult result = collector.collectDependencies( session, request );
+
+        assertEquals( 0, result.getExceptions().size() );
+
+        Dependency relocated = newDep( "gid:aid:ext:ver", null );
+        DependencyNode root = result.getRoot();
+
+        assertEquals( relocated, dep( root ) );
+        assertEquals( relocated.getArtifact(), dep( root ).getArtifact() );
+
+        assertEquals( 1, root.getChildren().size() );
+        Dependency expect = newDep( "gid:aid2:ext:ver", "compile" );
+        assertEquals( expect, dep( root, 0 ) );
+
+        assertEquals( 0, path( root, 0 ).getChildren().size() );
+    }
+
+    @Test
+    public void testResolveDependencyRelocation() throws Exception
+    {
+        Dependency dependency = newDep( "gid:aid3:ext:5" );
+        CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
+
+        session.setDependencyManager( new ClassicDependencyManager() );
+
+        CollectResult result = collector.collectDependencies( session, request );
+
+        assertEquals( 0, result.getExceptions().size() );
+
+        DependencyNode root = result.getRoot();
+        assertEquals( dependency, dep( root ) );
+        assertEquals( dependency.getArtifact(), dep( root ).getArtifact() );
+
+        assertEquals( 1, root.getChildren().size() );
+        Dependency expect = newDep( "gid:aid:ext:ver", "compile" );
+        assertEquals( expect, dep( root, 0 ) );
+
+        assertEquals( 1, path( root, 0 ).getChildren().size() );
+        expect = newDep( "gid:aid2:ext:ver", "compile" );
+        assertEquals( expect, dep( root, 0, 0 ) );
+
+        assertEquals( 0, path( root, 0, 0 ).getChildren().size() );
     }
 
     static class TestDependencyManager
