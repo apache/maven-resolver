@@ -105,7 +105,7 @@ public abstract class AbstractWagonTransporterTest
                 {
                     return newWagon();
                 }
-                throw new IllegalArgumentException( "Unknown wagon role: " + roleHint );
+                throw new IllegalArgumentException( "unknown wagon role: " + roleHint );
             }
 
             public void release( Wagon wagon )

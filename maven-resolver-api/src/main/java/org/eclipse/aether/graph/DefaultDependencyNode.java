@@ -147,7 +147,7 @@ public final class DefaultDependencyNode
     {
         if ( dependency == null )
         {
-            throw new UnsupportedOperationException( "node does not have a dependency" );
+            throw new IllegalStateException( "node does not have a dependency" );
         }
         dependency = dependency.setArtifact( artifact );
         this.artifact = dependency.getArtifact();
@@ -231,7 +231,7 @@ public final class DefaultDependencyNode
     {
         if ( dependency == null )
         {
-            throw new UnsupportedOperationException( "node does not have a dependency" );
+            throw new IllegalStateException( "node does not have a dependency" );
         }
         dependency = dependency.setScope( scope );
     }
@@ -240,7 +240,7 @@ public final class DefaultDependencyNode
     {
         if ( dependency == null )
         {
-            throw new UnsupportedOperationException( "node does not have a dependency" );
+            throw new IllegalStateException( "node does not have a dependency" );
         }
         dependency = dependency.setOptional( optional );
     }

@@ -255,7 +255,7 @@ public class DefaultInstaller
         {
             if ( dstFile.equals( srcFile ) )
             {
-                throw new IllegalArgumentException( "Cannot install " + dstFile + " to same path" );
+                throw new IllegalStateException( "cannot install " + dstFile + " to same path" );
             }
 
             boolean copy =
@@ -305,7 +305,7 @@ public class DefaultInstaller
             {
                 if ( dstFile.equals( metadata.getFile() ) )
                 {
-                    throw new IllegalArgumentException( "Cannot install " + dstFile + " to same path" );
+                    throw new IllegalStateException( "cannot install " + dstFile + " to same path" );
                 }
                 fileProcessor.copy( metadata.getFile(), dstFile );
             }
