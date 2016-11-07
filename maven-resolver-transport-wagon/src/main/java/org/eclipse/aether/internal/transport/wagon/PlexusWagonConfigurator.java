@@ -86,7 +86,7 @@ public class PlexusWagonConfigurator
         }
         else
         {
-            throw new IllegalArgumentException( "Unexpected configuration type: " + configuration.getClass().getName() );
+            throw new IllegalArgumentException( "unexpected configuration type: " + configuration.getClass().getName() );
         }
 
         WagonComponentConfigurator configurator = new WagonComponentConfigurator();
