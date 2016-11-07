@@ -429,13 +429,13 @@ public class DefaultRepositorySystem
     private void validateSession( RepositorySystemSession session )
     {
         Objects.requireNonNull( session, "repository system session cannot be null" );
-        invalidSession(session.getLocalRepositoryManager(), "local repository manager" );
-        invalidSession(session.getSystemProperties(), "system properties" );
-        invalidSession(session.getConfigProperties(), "config properties" );
-        invalidSession(session.getMirrorSelector(), "mirror selector" );
-        invalidSession(session.getProxySelector(), "proxy selector" );
-        invalidSession(session.getAuthenticationSelector(), "authentication selector" );
-        invalidSession(session.getArtifactTypeRegistry(), "artifact type registry" );
+        invalidSession( session.getLocalRepositoryManager(), "local repository manager" );
+        invalidSession( session.getSystemProperties(), "system properties" );
+        invalidSession( session.getConfigProperties(), "config properties" );
+        invalidSession( session.getMirrorSelector(), "mirror selector" );
+        invalidSession( session.getProxySelector(), "proxy selector" );
+        invalidSession( session.getAuthenticationSelector(), "authentication selector" );
+        invalidSession( session.getArtifactTypeRegistry(), "artifact type registry" );
     }
 
     private void invalidSession( Object obj, String name )

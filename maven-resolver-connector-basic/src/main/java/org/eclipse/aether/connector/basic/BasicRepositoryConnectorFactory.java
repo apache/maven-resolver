@@ -1,7 +1,5 @@
 package org.eclipse.aether.connector.basic;
 
-import java.util.Objects;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -23,6 +21,8 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
