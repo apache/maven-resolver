@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -76,11 +77,7 @@ public class DefaultLocalRepositoryProvider
 
     public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )
     {
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "Local repository manager factory has not been specified." );
-        }
-        managerFactories.add( factory );
+        managerFactories.add( requireNonNull( factory, "local repository manager factory cannot be null" ) );
         return this;
     }
 

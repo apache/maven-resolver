@@ -21,6 +21,7 @@ package org.eclipse.aether.util.artifact;
 
 import java.io.File;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.AbstractArtifact;
 import org.eclipse.aether.artifact.Artifact;
@@ -105,11 +106,7 @@ public final class SubArtifact
     public SubArtifact( Artifact mainArtifact, String classifier, String extension, Map<String, String> properties,
                         File file )
     {
-        if ( mainArtifact == null )
-        {
-            throw new IllegalArgumentException( "no artifact specified" );
-        }
-        this.mainArtifact = mainArtifact;
+        this.mainArtifact = requireNonNull( mainArtifact, "main artifact cannot be null" );
         this.classifier = classifier;
         this.extension = extension;
         this.file = file;

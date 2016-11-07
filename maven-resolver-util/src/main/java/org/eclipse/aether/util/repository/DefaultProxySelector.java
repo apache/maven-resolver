@@ -20,10 +20,12 @@ package org.eclipse.aether.util.repository;
  */
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -50,10 +52,7 @@ public final class DefaultProxySelector
      */
     public DefaultProxySelector add( Proxy proxy, String nonProxyHosts )
     {
-        if ( proxy == null )
-        {
-            throw new IllegalArgumentException( "proxy not specified" );
-        }
+        requireNonNull( proxy, "proxy cannot be null" );
         proxies.add( new ProxyDef( proxy, nonProxyHosts ) );
 
         return this;

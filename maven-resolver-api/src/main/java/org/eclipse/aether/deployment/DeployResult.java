@@ -22,6 +22,7 @@ package org.eclipse.aether.deployment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -44,23 +45,19 @@ public final class DeployResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The deployment request, must not be {@code null}.
      */
     public DeployResult( DeployRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "deploy request has not been specified" );
-        }
-        this.request = request;
+        this.request = requireNonNull( request, "deploy request cannot be null" );
         artifacts = Collections.emptyList();
         metadata = Collections.emptyList();
     }
 
     /**
      * Gets the deploy request that was made.
-     * 
+     *
      * @return The deploy request, never {@code null}.
      */
     public DeployRequest getRequest()

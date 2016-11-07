@@ -19,6 +19,8 @@ package org.eclipse.aether.resolution;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
+
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.metadata.Metadata;
@@ -42,21 +44,17 @@ public final class MetadataResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The resolution request, must not be {@code null}.
      */
     public MetadataResult( MetadataRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "metadata request has not been specified" );
-        }
-        this.request = request;
+        this.request = requireNonNull( request, "metadata request cannot be null" );
     }
 
     /**
      * Gets the resolution request that was made.
-     * 
+     *
      * @return The resolution request, never {@code null}.
      */
     public MetadataRequest getRequest()

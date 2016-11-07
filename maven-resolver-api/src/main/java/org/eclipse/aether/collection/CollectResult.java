@@ -22,6 +22,7 @@ package org.eclipse.aether.collection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -46,23 +47,19 @@ public final class CollectResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The resolution request, must not be {@code null}.
      */
     public CollectResult( CollectRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "dependency collection request has not been specified" );
-        }
-        this.request = request;
+        this.request = requireNonNull( request, "dependency collection request cannot be null" );
         exceptions = Collections.emptyList();
         cycles = Collections.emptyList();
     }
 
     /**
      * Gets the collection request that was made.
-     * 
+     *
      * @return The collection request, never {@code null}.
      */
     public CollectRequest getRequest()

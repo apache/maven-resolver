@@ -19,6 +19,8 @@ package org.eclipse.aether.util.repository;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
+
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -35,17 +37,13 @@ public final class ConservativeAuthenticationSelector
 
     /**
      * Creates a new selector that delegates to the specified selector.
-     * 
+     *
      * @param selector The selector to delegate to in case a repository has no authentication yet, must not be
      *            {@code null}.
      */
     public ConservativeAuthenticationSelector( AuthenticationSelector selector )
     {
-        if ( selector == null )
-        {
-            throw new IllegalArgumentException( "no authentication selector specified" );
-        }
-        this.selector = selector;
+        this.selector = requireNonNull( selector, "authentication selector cannot be null" );
     }
 
     public Authentication getAuthentication( RemoteRepository repository )

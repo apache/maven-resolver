@@ -22,6 +22,7 @@ package org.eclipse.aether;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -310,27 +311,19 @@ public final class RepositoryEvent
 
         /**
          * Creates a new event builder for the specified session and event type.
-         * 
+         *
          * @param session The repository system session, must not be {@code null}.
          * @param type The type of the event, must not be {@code null}.
          */
         public Builder( RepositorySystemSession session, EventType type )
         {
-            if ( session == null )
-            {
-                throw new IllegalArgumentException( "session not specified" );
-            }
-            this.session = session;
-            if ( type == null )
-            {
-                throw new IllegalArgumentException( "event type not specified" );
-            }
-            this.type = type;
+            this.session = requireNonNull( session, "session cannot be null" );
+            this.type = requireNonNull( type, "event type cannot be null" );
         }
 
         /**
          * Sets the artifact involved in the event.
-         * 
+         *
          * @param artifact The involved artifact, may be {@code null}.
          * @return This event builder for chaining, never {@code null}.
          */

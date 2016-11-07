@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -148,81 +149,49 @@ public class DefaultArtifactResolver
 
     public DefaultArtifactResolver setFileProcessor( FileProcessor fileProcessor )
     {
-        if ( fileProcessor == null )
-        {
-            throw new IllegalArgumentException( "file processor has not been specified" );
-        }
-        this.fileProcessor = fileProcessor;
+        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        if ( repositoryEventDispatcher == null )
-        {
-            throw new IllegalArgumentException( "repository event dispatcher has not been specified" );
-        }
-        this.repositoryEventDispatcher = repositoryEventDispatcher;
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setVersionResolver( VersionResolver versionResolver )
     {
-        if ( versionResolver == null )
-        {
-            throw new IllegalArgumentException( "version resolver has not been specified" );
-        }
-        this.versionResolver = versionResolver;
+        this.versionResolver = requireNonNull( versionResolver, "version resolver cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setUpdateCheckManager( UpdateCheckManager updateCheckManager )
     {
-        if ( updateCheckManager == null )
-        {
-            throw new IllegalArgumentException( "update check manager has not been specified" );
-        }
-        this.updateCheckManager = updateCheckManager;
+        this.updateCheckManager = requireNonNull( updateCheckManager, "update check manager cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        if ( repositoryConnectorProvider == null )
-        {
-            throw new IllegalArgumentException( "repository connector provider has not been specified" );
-        }
-        this.repositoryConnectorProvider = repositoryConnectorProvider;
+        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        if ( remoteRepositoryManager == null )
-        {
-            throw new IllegalArgumentException( "remote repository manager has not been specified" );
-        }
-        this.remoteRepositoryManager = remoteRepositoryManager;
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        if ( syncContextFactory == null )
-        {
-            throw new IllegalArgumentException( "sync context factory has not been specified" );
-        }
-        this.syncContextFactory = syncContextFactory;
+        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setOfflineController( OfflineController offlineController )
     {
-        if ( offlineController == null )
-        {
-            throw new IllegalArgumentException( "offline controller has not been specified" );
-        }
-        this.offlineController = offlineController;
+        this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
         return this;
     }
 

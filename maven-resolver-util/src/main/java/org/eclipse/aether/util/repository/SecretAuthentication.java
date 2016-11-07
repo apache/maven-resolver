@@ -21,6 +21,7 @@ package org.eclipse.aether.util.repository;
 
 import java.util.Arrays;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -64,11 +65,11 @@ final class SecretAuthentication
 
     private SecretAuthentication( char[] value, String key )
     {
-        if ( key == null )
+        this.key = requireNonNull( key, "authentication key cannot be null" );
+        if ( key.length() == 0 )
         {
-            throw new IllegalArgumentException( "authentication key missing" );
+            throw new IllegalArgumentException( "authentication key cannot be empty" );
         }
-        this.key = key;
         this.secretHash = Arrays.hashCode( value ) ^ KEYS[0].hashCode();
         this.value = xor( value );
     }

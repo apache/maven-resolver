@@ -22,6 +22,7 @@ package org.eclipse.aether.installation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -44,23 +45,19 @@ public final class InstallResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The installation request, must not be {@code null}.
      */
     public InstallResult( InstallRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "install request has not been specified" );
-        }
-        this.request = request;
+        this.request = requireNonNull( request, "install request cannot be null" );
         artifacts = Collections.emptyList();
         metadata = Collections.emptyList();
     }
 
     /**
      * Gets the install request that was made.
-     * 
+     *
      * @return The install request, never {@code null}.
      */
     public InstallRequest getRequest()

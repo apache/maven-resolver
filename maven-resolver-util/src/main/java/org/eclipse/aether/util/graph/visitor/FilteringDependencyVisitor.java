@@ -19,6 +19,8 @@ package org.eclipse.aether.util.graph.visitor;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
+
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
@@ -41,17 +43,13 @@ public final class FilteringDependencyVisitor
 
     /**
      * Creates a new visitor that delegates traversal of nodes matching the given filter to the specified visitor.
-     * 
+     *
      * @param visitor The visitor to delegate to, must not be {@code null}.
      * @param filter The filter to apply, may be {@code null} to not filter.
      */
     public FilteringDependencyVisitor( DependencyVisitor visitor, DependencyFilter filter )
     {
-        if ( visitor == null )
-        {
-            throw new IllegalArgumentException( "dependency visitor not specified" );
-        }
-        this.visitor = visitor;
+        this.visitor = requireNonNull( visitor, "dependency visitor delegate cannot be null" );
         this.filter = filter;
         this.accepts = new Stack<Boolean>();
         this.parents = new Stack<DependencyNode>();

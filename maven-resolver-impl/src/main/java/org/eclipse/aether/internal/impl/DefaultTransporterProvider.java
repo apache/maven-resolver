@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -76,11 +77,7 @@ public final class DefaultTransporterProvider
 
     public DefaultTransporterProvider addTransporterFactory( TransporterFactory factory )
     {
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "transporter factory has not been specified" );
-        }
-        factories.add( factory );
+        factories.add( requireNonNull( factory, "transporter factory cannot be null" ) );
         return this;
     }
 
@@ -100,10 +97,7 @@ public final class DefaultTransporterProvider
     public Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        if ( repository == null )
-        {
-            throw new IllegalArgumentException( "remote repository has not been specified" );
-        }
+        requireNonNull( repository, "remote repository cannot be null" );
 
         PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<TransporterFactory>( session );
         for ( TransporterFactory factory : this.factories )

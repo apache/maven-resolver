@@ -22,6 +22,8 @@ package org.eclipse.aether.connector.basic;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import static java.util.Objects.requireNonNull;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
@@ -104,65 +106,49 @@ public final class BasicRepositoryConnectorFactory
 
     /**
      * Sets the transporter provider to use for this component.
-     * 
+     *
      * @param transporterProvider The transporter provider to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
     public BasicRepositoryConnectorFactory setTransporterProvider( TransporterProvider transporterProvider )
     {
-        if ( transporterProvider == null )
-        {
-            throw new IllegalArgumentException( "transporter provider has not been specified" );
-        }
-        this.transporterProvider = transporterProvider;
+        this.transporterProvider = requireNonNull( transporterProvider, "transporter provider cannot be null" );
         return this;
     }
 
     /**
      * Sets the repository layout provider to use for this component.
-     * 
+     *
      * @param layoutProvider The repository layout provider to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
     public BasicRepositoryConnectorFactory setRepositoryLayoutProvider( RepositoryLayoutProvider layoutProvider )
     {
-        if ( layoutProvider == null )
-        {
-            throw new IllegalArgumentException( "repository layout provider has not been specified" );
-        }
-        this.layoutProvider = layoutProvider;
+        this.layoutProvider =  requireNonNull( layoutProvider, "repository layout provider cannot be null" );
         return this;
     }
 
     /**
      * Sets the checksum policy provider to use for this component.
-     * 
+     *
      * @param checksumPolicyProvider The checksum policy provider to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
     public BasicRepositoryConnectorFactory setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
     {
-        if ( checksumPolicyProvider == null )
-        {
-            throw new IllegalArgumentException( "checksum policy provider has not been specified" );
-        }
-        this.checksumPolicyProvider = checksumPolicyProvider;
+        this.checksumPolicyProvider = requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
         return this;
     }
 
     /**
      * Sets the file processor to use for this component.
-     * 
+     *
      * @param fileProcessor The file processor to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
     public BasicRepositoryConnectorFactory setFileProcessor( FileProcessor fileProcessor )
     {
-        if ( fileProcessor == null )
-        {
-            throw new IllegalArgumentException( "file processor has not been specified" );
-        }
-        this.fileProcessor = fileProcessor;
+        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
         return this;
     }
 

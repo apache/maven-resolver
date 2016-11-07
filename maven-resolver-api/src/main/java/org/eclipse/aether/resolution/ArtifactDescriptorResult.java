@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -62,16 +63,12 @@ public final class ArtifactDescriptorResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The descriptor request, must not be {@code null}.
      */
     public ArtifactDescriptorResult( ArtifactDescriptorRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "artifact descriptor request has not been specified" );
-        }
-        this.request = request;
+        this.request = requireNonNull( request, "artifact descriptor request cannot be null" );
         artifact = request.getArtifact();
         exceptions = Collections.emptyList();
         relocations = Collections.emptyList();

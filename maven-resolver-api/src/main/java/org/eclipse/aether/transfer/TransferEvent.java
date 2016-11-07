@@ -20,12 +20,13 @@ package org.eclipse.aether.transfer;
  */
 
 import java.nio.ByteBuffer;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * An event fired to a transfer listener during an artifact/metadata transfer.
- * 
+ *
  * @see TransferListener
  * @see TransferEvent.Builder
  */
@@ -237,22 +238,14 @@ public final class TransferEvent
 
         /**
          * Creates a new transfer event builder for the specified session and the given resource.
-         * 
+         *
          * @param session The repository system session, must not be {@code null}.
          * @param resource The resource being transferred, must not be {@code null}.
          */
         public Builder( RepositorySystemSession session, TransferResource resource )
         {
-            if ( session == null )
-            {
-                throw new IllegalArgumentException( "session not specified" );
-            }
-            if ( resource == null )
-            {
-                throw new IllegalArgumentException( "transfer resource not specified" );
-            }
-            this.session = session;
-            this.resource = resource;
+            this.session = requireNonNull( session, "repository system session cannot be null" );
+            this.resource = requireNonNull( resource, "transfer resource cannot be null" );
             type = EventType.INITIATED;
             requestType = RequestType.GET;
         }
@@ -283,17 +276,13 @@ public final class TransferEvent
          * Sets the type of the event and resets event-specific fields. In more detail, the data buffer and the
          * exception fields are set to {@code null}. Furthermore, the total number of transferred bytes is set to
          * {@code 0} if the event type is {@link EventType#STARTED}.
-         * 
+         *
          * @param type The type of the event, must not be {@code null}.
          * @return This event builder for chaining, never {@code null}.
          */
         public Builder resetType( EventType type )
         {
-            if ( type == null )
-            {
-                throw new IllegalArgumentException( "event type not specified" );
-            }
-            this.type = type;
+            this.type = requireNonNull( type, "event type cannot be null" );
             dataBuffer = null;
             exception = null;
             switch ( type )
@@ -309,33 +298,25 @@ public final class TransferEvent
         /**
          * Sets the type of the event. When re-using the same builder to generate a sequence of events for one transfer,
          * {@link #resetType(TransferEvent.EventType)} might be more handy.
-         * 
+         *
          * @param type The type of the event, must not be {@code null}.
          * @return This event builder for chaining, never {@code null}.
          */
         public Builder setType( EventType type )
         {
-            if ( type == null )
-            {
-                throw new IllegalArgumentException( "event type not specified" );
-            }
-            this.type = type;
+            this.type = requireNonNull( type, "event type cannot be null" );
             return this;
         }
 
         /**
          * Sets the type of the request/transfer.
-         * 
+         *
          * @param requestType The request/transfer type, must not be {@code null}.
          * @return This event builder for chaining, never {@code null}.
          */
         public Builder setRequestType( RequestType requestType )
         {
-            if ( requestType == null )
-            {
-                throw new IllegalArgumentException( "request type not specified" );
-            }
-            this.requestType = requestType;
+            this.requestType = requireNonNull( requestType, "request type cannot be null" );
             return this;
         }
 

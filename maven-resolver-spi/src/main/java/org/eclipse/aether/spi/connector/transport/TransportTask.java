@@ -20,10 +20,11 @@ package org.eclipse.aether.spi.connector.transport;
  */
 
 import java.net.URI;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transport task.
- * 
+ *
  * @noextend This class is not intended to be extended by clients.
  */
 public abstract class TransportTask
@@ -56,17 +57,13 @@ public abstract class TransportTask
 
     TransportTask setLocation( URI location )
     {
-        if ( location == null )
-        {
-            throw new IllegalArgumentException( "resource location has not been specified" );
-        }
-        this.location = location;
+        this.location = requireNonNull( location, "location type cannot be null" );
         return this;
     }
 
     /**
      * Gets the listener that is to be notified during the transfer.
-     * 
+     *
      * @return The listener to notify of progress, never {@code null}.
      */
     public TransportListener getListener()

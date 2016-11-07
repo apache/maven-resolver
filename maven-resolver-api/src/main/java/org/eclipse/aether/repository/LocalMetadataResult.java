@@ -20,12 +20,13 @@ package org.eclipse.aether.repository;
  */
 
 import java.io.File;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A result from the local repository about the existence of metadata.
- * 
+ *
  * @see LocalRepositoryManager#find(RepositorySystemSession, LocalMetadataRequest)
  */
 public final class LocalMetadataResult
@@ -39,21 +40,17 @@ public final class LocalMetadataResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The local metadata request, must not be {@code null}.
      */
     public LocalMetadataResult( LocalMetadataRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "local metadata request has not been specified" );
-        }
-        this.request = request;
+        this.request = requireNonNull( request, "local metadata request cannot be null" );
     }
 
     /**
      * Gets the request corresponding to this result.
-     * 
+     *
      * @return The corresponding request, never {@code null}.
      */
     public LocalMetadataRequest getRequest()

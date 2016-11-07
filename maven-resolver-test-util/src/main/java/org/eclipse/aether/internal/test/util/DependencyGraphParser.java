@@ -246,7 +246,7 @@ public class DependencyGraphParser
             {
                 if ( !substitutionIterator.hasNext() )
                 {
-                    throw new IllegalArgumentException( "not enough substitutions to fill placeholders" );
+                    throw new IllegalStateException( "not enough substitutions to fill placeholders" );
                 }
                 line = line.replaceFirst( "%s", substitutionIterator.next() );
             }

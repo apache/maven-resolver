@@ -21,6 +21,7 @@ package org.eclipse.aether.metadata;
 
 import java.io.File;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A basic metadata instance. <em>Note:</em> Instances of this class are immutable and the exposed mutators return new
@@ -127,11 +128,7 @@ public final class DefaultMetadata
         this.artifactId = emptify( artifactId );
         this.version = emptify( version );
         this.type = emptify( type );
-        if ( nature == null )
-        {
-            throw new IllegalArgumentException( "metadata nature was not specified" );
-        }
-        this.nature = nature;
+        this.nature = requireNonNull( nature, "metadata nature cannot be null" );
         this.file = file;
         this.properties = copyProperties( properties );
     }

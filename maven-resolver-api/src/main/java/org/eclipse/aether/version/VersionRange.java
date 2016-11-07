@@ -19,6 +19,8 @@ package org.eclipse.aether.version;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A range of versions.
  */
@@ -61,23 +63,19 @@ public interface VersionRange
 
         /**
          * Creates a new bound with the specified properties.
-         * 
+         *
          * @param version The bounding version, must not be {@code null}.
          * @param inclusive A flag whether the specified version is included in the range or not.
          */
         public Bound( Version version, boolean inclusive )
         {
-            if ( version == null )
-            {
-                throw new IllegalArgumentException( "version missing" );
-            }
-            this.version = version;
+            this.version = requireNonNull( version, "version cannot be null" );
             this.inclusive = inclusive;
         }
 
         /**
          * Gets the bounding version.
-         * 
+         *
          * @return The bounding version, never {@code null}.
          */
         public Version getVersion()

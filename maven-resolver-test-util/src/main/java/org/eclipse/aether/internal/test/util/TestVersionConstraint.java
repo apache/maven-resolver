@@ -19,6 +19,8 @@ package org.eclipse.aether.internal.test.util;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
+
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionRange;
@@ -36,31 +38,23 @@ final class TestVersionConstraint
 
     /**
      * Creates a version constraint from the specified version range.
-     * 
+     *
      * @param range The version range, must not be {@code null}.
      */
     public TestVersionConstraint( VersionRange range )
     {
-        if ( range == null )
-        {
-            throw new IllegalArgumentException( "version range missing" );
-        }
-        this.range = range;
+        this.range = requireNonNull( range, "version range cannot be null" );
         this.version = null;
     }
 
     /**
      * Creates a version constraint from the specified version.
-     * 
+     *
      * @param version The version, must not be {@code null}.
      */
     public TestVersionConstraint( Version version )
     {
-        if ( version == null )
-        {
-            throw new IllegalArgumentException( "version missing" );
-        }
-        this.version = version;
+        this.version = requireNonNull( version, "version cannot be null" );
         this.range = null;
     }
 

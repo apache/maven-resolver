@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -106,11 +107,7 @@ public class DefaultUpdateCheckManager
 
     public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
-        if ( updatePolicyAnalyzer == null )
-        {
-            throw new IllegalArgumentException( "update policy analyzer has not been specified" );
-        }
-        this.updatePolicyAnalyzer = updatePolicyAnalyzer;
+        this.updatePolicyAnalyzer = requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
         return this;
     }
 
@@ -132,11 +129,7 @@ public class DefaultUpdateCheckManager
         Artifact artifact = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File artifactFile = check.getFile();
-        if ( artifactFile == null )
-        {
-            throw new IllegalArgumentException( String.format( "The artifact '%s' has no file attached", artifact ) );
-        }
+        File artifactFile = requireNonNull( check.getFile(), String.format( "The artifact '%s' has no file attached", artifact ) );
 
         boolean fileExists = check.isFileValid() && artifactFile.exists();
 
@@ -269,11 +262,7 @@ public class DefaultUpdateCheckManager
         Metadata metadata = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File metadataFile = check.getFile();
-        if ( metadataFile == null )
-        {
-            throw new IllegalArgumentException( String.format( "The metadata '%s' has no file attached", metadata ) );
-        }
+        File metadataFile = requireNonNull( check.getFile(), String.format( "The metadata '%s' has no file attached", metadata ) );
 
         boolean fileExists = check.isFileValid() && metadataFile.exists();
 

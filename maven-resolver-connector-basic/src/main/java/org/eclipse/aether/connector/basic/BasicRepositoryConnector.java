@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -400,7 +401,7 @@ final class BasicRepositoryConnector
                               List<RepositoryLayout.Checksum> checksums, TransferTransportListener<?> listener )
         {
             super( path, listener );
-            this.file = file;
+            this.file = requireNonNull( file, "destination file cannot be null" );
             checksumValidator =
                 new ChecksumValidator( logger, file, fileProcessor, this, checksumPolicy, safe( checksums ) );
         }
@@ -432,10 +433,6 @@ final class BasicRepositoryConnector
         protected void runTask()
             throws Exception
         {
-            if ( file == null )
-            {
-                throw new IllegalArgumentException( "destination file has not been specified" );
-            }
             fileProcessor.mkdirs( file.getParentFile() );
 
             PartialFile partFile = partialFileFactory.newInstance( file, this );
@@ -505,17 +502,13 @@ final class BasicRepositoryConnector
                               TransferTransportListener<?> listener )
         {
             super( path, listener );
-            this.file = file;
+            this.file = requireNonNull( file, "source file cannot be null" );
             this.checksums = safe( checksums );
         }
 
         protected void runTask()
             throws Exception
         {
-            if ( file == null )
-            {
-                throw new IllegalArgumentException( "source file has not been specified" );
-            }
             transporter.put( new PutTask( path ).setDataFile( file ).setListener( listener ) );
             uploadChecksums( file, path );
         }

@@ -22,6 +22,7 @@ package org.eclipse.aether.resolution;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -45,22 +46,18 @@ public final class VersionResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The resolution request, must not be {@code null}.
      */
     public VersionResult( VersionRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "version request has not been specified" );
-        }
-        this.request = request;
+        this.request = requireNonNull( request, "version request cannot be null" );
         exceptions = Collections.emptyList();
     }
 
     /**
      * Gets the resolution request that was made.
-     * 
+     *
      * @return The resolution request, never {@code null}.
      */
     public VersionRequest getRequest()

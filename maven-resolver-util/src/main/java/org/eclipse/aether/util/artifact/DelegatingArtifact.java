@@ -21,6 +21,7 @@ package org.eclipse.aether.util.artifact;
 
 import java.io.File;
 import java.util.Map;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.AbstractArtifact;
 import org.eclipse.aether.artifact.Artifact;
@@ -37,22 +38,18 @@ public abstract class DelegatingArtifact
 
     /**
      * Creates a new artifact instance that delegates to the specified artifact.
-     * 
+     *
      * @param delegate The artifact to delegate to, must not be {@code null}.
      */
     protected DelegatingArtifact( Artifact delegate )
     {
-        if ( delegate == null )
-        {
-            throw new IllegalArgumentException( "delegate artifact not specified" );
-        }
-        this.delegate = delegate;
+        this.delegate = requireNonNull( delegate, "delegate artifact cannot be null" );
     }
 
     /**
      * Creates a new artifact instance that delegates to the specified artifact. Subclasses should use this hook to
      * instantiate themselves, taking along any data from the current instance that was added.
-     * 
+     *
      * @param delegate The artifact to delegate to, must not be {@code null}.
      * @return The new delegating artifact, never {@code null}.
      */

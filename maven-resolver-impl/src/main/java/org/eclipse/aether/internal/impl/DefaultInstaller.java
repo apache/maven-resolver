@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -106,31 +107,19 @@ public class DefaultInstaller
 
     public DefaultInstaller setFileProcessor( FileProcessor fileProcessor )
     {
-        if ( fileProcessor == null )
-        {
-            throw new IllegalArgumentException( "file processor has not been specified" );
-        }
-        this.fileProcessor = fileProcessor;
+        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
         return this;
     }
 
     public DefaultInstaller setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        if ( repositoryEventDispatcher == null )
-        {
-            throw new IllegalArgumentException( "repository event dispatcher has not been specified" );
-        }
-        this.repositoryEventDispatcher = repositoryEventDispatcher;
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultInstaller addMetadataGeneratorFactory( MetadataGeneratorFactory factory )
     {
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "metadata generator factory has not been specified" );
-        }
-        metadataFactories.add( factory );
+        metadataFactories.add( requireNonNull( factory, "metadata generator factory cannot be null" ) );
         return this;
     }
 
@@ -149,11 +138,7 @@ public class DefaultInstaller
 
     public DefaultInstaller setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        if ( syncContextFactory == null )
-        {
-            throw new IllegalArgumentException( "sync context factory has not been specified" );
-        }
-        this.syncContextFactory = syncContextFactory;
+        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 
