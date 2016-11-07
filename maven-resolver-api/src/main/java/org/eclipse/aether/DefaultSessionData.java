@@ -1,7 +1,5 @@
 package org.eclipse.aether;
 
-import java.util.Objects;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +18,8 @@ import java.util.Objects;
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import java.util.Objects;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
