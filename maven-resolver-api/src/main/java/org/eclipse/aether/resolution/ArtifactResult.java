@@ -22,6 +22,7 @@ package org.eclipse.aether.resolution;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -48,22 +49,18 @@ public final class ArtifactResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The resolution request, must not be {@code null}.
      */
     public ArtifactResult( ArtifactRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "resolution request has not been specified" );
-        }
-        this.request = request;
+        this.request = Objects.requireNonNull( request, "artifact request cannot be null" );
         exceptions = Collections.emptyList();
     }
 
     /**
      * Gets the resolution request that was made.
-     * 
+     *
      * @return The resolution request, never {@code null}.
      */
     public ArtifactRequest getRequest()

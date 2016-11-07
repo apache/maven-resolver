@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -179,11 +180,7 @@ public final class AuthenticationContext
     private AuthenticationContext( RepositorySystemSession session, RemoteRepository repository, Proxy proxy,
                                    Authentication auth )
     {
-        if ( session == null )
-        {
-            throw new IllegalArgumentException( "repository system session missing" );
-        }
-        this.session = session;
+        this.session = Objects.requireNonNull( session, "repository system session cannot be null" );
         this.repository = repository;
         this.proxy = proxy;
         this.auth = auth;
@@ -257,10 +254,12 @@ public final class AuthenticationContext
      */
     public <T> T get( String key, Map<String, String> data, Class<T> type )
     {
-        if ( key == null )
+        Objects.requireNonNull( key, "authentication key cannot be null" );
+        if ( key.length() == 0 )
         {
-            throw new IllegalArgumentException( "authentication data key missing" );
+            throw new IllegalArgumentException( "authentication key cannot be empty" );
         }
+
         Object value;
         synchronized ( authData )
         {
@@ -333,16 +332,18 @@ public final class AuthenticationContext
      * Puts the specified authentication data into this context. This method should only be called from implementors of
      * {@link Authentication#fill(AuthenticationContext, String, Map)}. Passed in character arrays are not cloned and
      * become owned by this context, i.e. get erased when the context gets closed.
-     * 
+     *
      * @param key The key to associate the authentication data with, must not be {@code null}.
      * @param value The (cleartext) authentication data to store, may be {@code null}.
      */
     public void put( String key, Object value )
     {
-        if ( key == null )
+        Objects.requireNonNull( key, "authentication key cannot be null" );
+        if ( key.length() == 0 )
         {
-            throw new IllegalArgumentException( "authentication data key missing" );
+            throw new IllegalArgumentException( "authentication key cannot be empty" );
         }
+
         synchronized ( authData )
         {
             Object oldValue = authData.put( key, value );

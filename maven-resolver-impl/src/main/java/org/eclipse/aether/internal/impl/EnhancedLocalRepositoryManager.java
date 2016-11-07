@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -165,11 +166,7 @@ class EnhancedLocalRepositoryManager
 
     private void addArtifact( Artifact artifact, Collection<String> repositories, boolean local )
     {
-        if ( artifact == null )
-        {
-            throw new IllegalArgumentException( "artifact to register not specified" );
-        }
-        String path = getPathForArtifact( artifact, local );
+        String path = getPathForArtifact( Objects.requireNonNull( artifact, "artifact cannot be null" ), local );
         File file = new File( getRepository().getBasedir(), path );
         addRepo( file, repositories );
     }

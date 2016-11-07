@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -121,21 +122,13 @@ public class DefaultRemoteRepositoryManager
 
     public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
-        if ( updatePolicyAnalyzer == null )
-        {
-            throw new IllegalArgumentException( "update policy analyzer has not been specified" );
-        }
-        this.updatePolicyAnalyzer = updatePolicyAnalyzer;
+        this.updatePolicyAnalyzer = Objects.requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
         return this;
     }
 
     public DefaultRemoteRepositoryManager setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
     {
-        if ( checksumPolicyProvider == null )
-        {
-            throw new IllegalArgumentException( "checksum policy provider has not been specified" );
-        }
-        this.checksumPolicyProvider = checksumPolicyProvider;
+        this.checksumPolicyProvider = Objects.requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
         return this;
     }
 

@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -166,111 +167,67 @@ public class DefaultRepositorySystem
 
     public DefaultRepositorySystem setVersionResolver( VersionResolver versionResolver )
     {
-        if ( versionResolver == null )
-        {
-            throw new IllegalArgumentException( "version resolver has not been specified" );
-        }
-        this.versionResolver = versionResolver;
+        this.versionResolver = Objects.requireNonNull( versionResolver, "version resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
     {
-        if ( versionRangeResolver == null )
-        {
-            throw new IllegalArgumentException( "version range resolver has not been specified" );
-        }
-        this.versionRangeResolver = versionRangeResolver;
+        this.versionRangeResolver = Objects.requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setArtifactResolver( ArtifactResolver artifactResolver )
     {
-        if ( artifactResolver == null )
-        {
-            throw new IllegalArgumentException( "artifact resolver has not been specified" );
-        }
-        this.artifactResolver = artifactResolver;
+        this.artifactResolver = Objects.requireNonNull( artifactResolver, "artifact resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setMetadataResolver( MetadataResolver metadataResolver )
     {
-        if ( metadataResolver == null )
-        {
-            throw new IllegalArgumentException( "metadata resolver has not been specified" );
-        }
-        this.metadataResolver = metadataResolver;
+        this.metadataResolver = Objects.requireNonNull( metadataResolver, "metadata resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
     {
-        if ( artifactDescriptorReader == null )
-        {
-            throw new IllegalArgumentException( "artifact descriptor reader has not been specified" );
-        }
-        this.artifactDescriptorReader = artifactDescriptorReader;
+        this.artifactDescriptorReader = Objects.requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setDependencyCollector( DependencyCollector dependencyCollector )
     {
-        if ( dependencyCollector == null )
-        {
-            throw new IllegalArgumentException( "dependency collector has not been specified" );
-        }
-        this.dependencyCollector = dependencyCollector;
+        this.dependencyCollector = Objects.requireNonNull( dependencyCollector, "dependency collector cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setInstaller( Installer installer )
     {
-        if ( installer == null )
-        {
-            throw new IllegalArgumentException( "installer has not been specified" );
-        }
-        this.installer = installer;
+        this.installer = Objects.requireNonNull( installer, "installer cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setDeployer( Deployer deployer )
     {
-        if ( deployer == null )
-        {
-            throw new IllegalArgumentException( "deployer has not been specified" );
-        }
-        this.deployer = deployer;
+        this.deployer = Objects.requireNonNull( deployer, "deployer cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setLocalRepositoryProvider( LocalRepositoryProvider localRepositoryProvider )
     {
-        if ( localRepositoryProvider == null )
-        {
-            throw new IllegalArgumentException( "local repository provider has not been specified" );
-        }
-        this.localRepositoryProvider = localRepositoryProvider;
+        this.localRepositoryProvider = Objects.requireNonNull( localRepositoryProvider, "local repository provider cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        if ( syncContextFactory == null )
-        {
-            throw new IllegalArgumentException( "sync context factory has not been specified" );
-        }
-        this.syncContextFactory = syncContextFactory;
+        this.syncContextFactory = Objects.requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        if ( remoteRepositoryManager == null )
-        {
-            throw new IllegalArgumentException( "remote repository manager has not been specified" );
-        }
-        this.remoteRepositoryManager = remoteRepositoryManager;
+        this.remoteRepositoryManager = Objects.requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
@@ -363,7 +320,7 @@ public class DefaultRepositorySystem
         }
         else
         {
-            throw new IllegalArgumentException( "dependency node or collect request missing" );
+            throw new NullPointerException( "dependency node and collect request cannot be null" );
         }
 
         if ( result.getRoot() != null )
@@ -471,51 +428,19 @@ public class DefaultRepositorySystem
 
     private void validateSession( RepositorySystemSession session )
     {
-        if ( session == null )
-        {
-            throw new IllegalArgumentException( "Invalid repository system session: the session may not be null." );
-        }
-        if ( session.getLocalRepositoryManager() == null )
-        {
-            invalidSession( "LocalRepositoryManager" );
-        }
-        if ( session.getSystemProperties() == null )
-        {
-            invalidSession( "SystemProperties" );
-        }
-        if ( session.getUserProperties() == null )
-        {
-            invalidSession( "UserProperties" );
-        }
-        if ( session.getConfigProperties() == null )
-        {
-            invalidSession( "ConfigProperties" );
-        }
-        if ( session.getMirrorSelector() == null )
-        {
-            invalidSession( "MirrorSelector" );
-        }
-        if ( session.getProxySelector() == null )
-        {
-            invalidSession( "ProxySelector" );
-        }
-        if ( session.getAuthenticationSelector() == null )
-        {
-            invalidSession( "AuthenticationSelector" );
-        }
-        if ( session.getArtifactTypeRegistry() == null )
-        {
-            invalidSession( "ArtifactTypeRegistry" );
-        }
-        if ( session.getData() == null )
-        {
-            invalidSession( "Data" );
-        }
+        Objects.requireNonNull( session, "repository system session cannot be null" );
+        invalidSession(session.getLocalRepositoryManager(), "local repository manager" );
+        invalidSession(session.getSystemProperties(), "system properties" );
+        invalidSession(session.getConfigProperties(), "config properties" );
+        invalidSession(session.getMirrorSelector(), "mirror selector" );
+        invalidSession(session.getProxySelector(), "proxy selector" );
+        invalidSession(session.getAuthenticationSelector(), "authentication selector" );
+        invalidSession(session.getArtifactTypeRegistry(), "artifact type registry" );
     }
 
-    private void invalidSession( String name )
+    private void invalidSession( Object obj, String name )
     {
-        throw new IllegalArgumentException( "Invalid repository system session: " + name + " is not set." );
+        Objects.requireNonNull( obj, "repository system session's " + name + " cannot be null" );
     }
 
 }

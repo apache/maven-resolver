@@ -48,7 +48,7 @@ public class RemoteRepositoryBuilderTest
         assertSame( prototype, builder.build() );
     }
 
-    @Test( expected = IllegalArgumentException.class )
+    @Test( expected = NullPointerException.class )
     public void testPrototypeMandatory()
     {
         new Builder( null );

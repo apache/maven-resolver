@@ -22,6 +22,7 @@ package org.eclipse.aether;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -137,15 +138,12 @@ public final class DefaultRepositorySystemSession
      * system/user/config properties are copied as well. In other words, invoking any mutator on the new session itself
      * has no effect on the original session. Other mutable objects like the session data and cache (if any) are not
      * copied and will be shared with the original session unless reconfigured.
-     * 
+     *
      * @param session The session to copy, must not be {@code null}.
      */
     public DefaultRepositorySystemSession( RepositorySystemSession session )
     {
-        if ( session == null )
-        {
-            throw new IllegalArgumentException( "repository system session not specified" );
-        }
+        Objects.requireNonNull( session, "repository system session cannot be null" );
 
         setOffline( session.isOffline() );
         setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );

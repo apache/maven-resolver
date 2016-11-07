@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
@@ -108,26 +109,10 @@ public final class ConflictResolver
     public ConflictResolver( VersionSelector versionSelector, ScopeSelector scopeSelector,
                              OptionalitySelector optionalitySelector, ScopeDeriver scopeDeriver )
     {
-        if ( versionSelector == null )
-        {
-            throw new IllegalArgumentException( "version selector not specified" );
-        }
-        this.versionSelector = versionSelector;
-        if ( scopeSelector == null )
-        {
-            throw new IllegalArgumentException( "scope selector not specified" );
-        }
-        this.scopeSelector = scopeSelector;
-        if ( scopeDeriver == null )
-        {
-            throw new IllegalArgumentException( "scope deriver not specified" );
-        }
-        this.scopeDeriver = scopeDeriver;
-        if ( optionalitySelector == null )
-        {
-            throw new IllegalArgumentException( "optionality selector not specified" );
-        }
-        this.optionalitySelector = optionalitySelector;
+        this.versionSelector = Objects.requireNonNull( versionSelector, "version selector cannot be null" );
+        this.scopeSelector = Objects.requireNonNull( scopeSelector, "scope selector cannot be null" );
+        this.optionalitySelector = Objects.requireNonNull( optionalitySelector, "optionality selector cannot be null" );
+        this.scopeDeriver = Objects.requireNonNull( scopeDeriver, "scope deriver cannot be null" );
     }
 
     public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )

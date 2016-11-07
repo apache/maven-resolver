@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -51,16 +52,12 @@ public final class VersionRangeResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The resolution request, must not be {@code null}.
      */
     public VersionRangeResult( VersionRangeRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "version range request has not been specified" );
-        }
-        this.request = request;
+        this.request = Objects.requireNonNull( request, "version range request cannot be null" );
         exceptions = Collections.emptyList();
         versions = Collections.emptyList();
         repositories = Collections.emptyMap();

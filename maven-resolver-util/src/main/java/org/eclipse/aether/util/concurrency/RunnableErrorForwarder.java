@@ -1,5 +1,7 @@
 package org.eclipse.aether.util.concurrency;
 
+import java.util.Objects;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -54,16 +56,13 @@ public final class RunnableErrorForwarder
 
     /**
      * Wraps the specified runnable into an equivalent runnable that will allow forwarding of uncaught errors.
-     * 
+     *
      * @param runnable The runnable from which to forward errors, must not be {@code null}.
      * @return The error-forwarding runnable to eventually execute, never {@code null}.
      */
     public Runnable wrap( final Runnable runnable )
     {
-        if ( runnable == null )
-        {
-            throw new IllegalArgumentException( "runnable missing" );
-        }
+        Objects.requireNonNull( runnable, "runnable cannot be null" );
 
         counter.incrementAndGet();
 

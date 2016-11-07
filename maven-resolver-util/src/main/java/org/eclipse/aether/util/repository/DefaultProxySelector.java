@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.eclipse.aether.repository.Proxy;
@@ -69,11 +70,7 @@ public final class DefaultProxySelector
      */
     public DefaultProxySelector add( Proxy proxy, Collection<String> nonProxyHosts )
     {
-        if ( proxy == null )
-        {
-            throw new IllegalArgumentException( "proxy not specified" );
-        }
-        proxies.add( new ProxyDef( proxy, nonProxyHosts ) );
+        proxies.add( new ProxyDef( Objects.requireNonNull( proxy, "proxy cannot be null" ), nonProxyHosts ) );
 
         return this;
     }

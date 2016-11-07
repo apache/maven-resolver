@@ -22,6 +22,7 @@ package org.eclipse.aether.spi.connector.layout;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -88,14 +89,12 @@ public interface RepositoryLayout
 
         private static void verify( String algorithm, URI location )
         {
-            if ( algorithm == null || algorithm.length() <= 0 )
+            Objects.requireNonNull( algorithm, "checksum algorithm cannot be null" );
+            if ( algorithm.length() == 0 )
             {
-                throw new IllegalArgumentException( "checksum algorithm has not been specified" );
+                throw new IllegalArgumentException( "checksum algorithm cannot be empty" );
             }
-            if ( location == null )
-            {
-                throw new IllegalArgumentException( "checksum location has not been specified" );
-            }
+            Objects.requireNonNull( location, "checksum location cannot be null" );
             if ( location.isAbsolute() )
             {
                 throw new IllegalArgumentException( "checksum location must be relative" );

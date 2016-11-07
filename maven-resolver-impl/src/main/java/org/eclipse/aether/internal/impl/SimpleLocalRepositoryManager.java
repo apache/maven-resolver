@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import java.io.File;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -58,10 +59,7 @@ class SimpleLocalRepositoryManager
 
     SimpleLocalRepositoryManager( File basedir, String type )
     {
-        if ( basedir == null )
-        {
-            throw new IllegalArgumentException( "base directory has not been specified" );
-        }
+        Objects.requireNonNull( basedir, "base directory cannot be null" );
         repository = new LocalRepository( basedir.getAbsoluteFile(), type );
     }
 

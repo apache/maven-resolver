@@ -1,5 +1,7 @@
 package org.eclipse.aether.internal.transport.wagon;
 
+import java.util.Objects;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -49,16 +51,12 @@ public class PlexusWagonProvider
 
     /**
      * Creates a wagon provider using the specified Plexus container.
-     * 
+     *
      * @param container The Plexus container instance to use, must not be {@code null}.
      */
     public PlexusWagonProvider( PlexusContainer container )
     {
-        if ( container == null )
-        {
-            throw new IllegalArgumentException( "plexus container has not been specified" );
-        }
-        this.container = container;
+        this.container = Objects.requireNonNull( container, "plexus container cannot be null" );
     }
 
     public Wagon lookup( String roleHint )

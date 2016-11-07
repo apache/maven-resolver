@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -138,61 +139,37 @@ public class DefaultMetadataResolver
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        if ( repositoryEventDispatcher == null )
-        {
-            throw new IllegalArgumentException( "repository event dispatcher has not been specified" );
-        }
-        this.repositoryEventDispatcher = repositoryEventDispatcher;
+        this.repositoryEventDispatcher = Objects.requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultMetadataResolver setUpdateCheckManager( UpdateCheckManager updateCheckManager )
     {
-        if ( updateCheckManager == null )
-        {
-            throw new IllegalArgumentException( "update check manager has not been specified" );
-        }
-        this.updateCheckManager = updateCheckManager;
+        this.updateCheckManager = Objects.requireNonNull( updateCheckManager, "update check manager cannot be null" );
         return this;
     }
 
     public DefaultMetadataResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        if ( repositoryConnectorProvider == null )
-        {
-            throw new IllegalArgumentException( "repository connector provider has not been specified" );
-        }
-        this.repositoryConnectorProvider = repositoryConnectorProvider;
+        this.repositoryConnectorProvider = Objects.requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultMetadataResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        if ( remoteRepositoryManager == null )
-        {
-            throw new IllegalArgumentException( "remote repository manager has not been specified" );
-        }
-        this.remoteRepositoryManager = remoteRepositoryManager;
+        this.remoteRepositoryManager = Objects.requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
     public DefaultMetadataResolver setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        if ( syncContextFactory == null )
-        {
-            throw new IllegalArgumentException( "sync context factory has not been specified" );
-        }
-        this.syncContextFactory = syncContextFactory;
+        this.syncContextFactory = Objects.requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 
     public DefaultMetadataResolver setOfflineController( OfflineController offlineController )
     {
-        if ( offlineController == null )
-        {
-            throw new IllegalArgumentException( "offline controller has not been specified" );
-        }
-        this.offlineController = offlineController;
+        this.offlineController = Objects.requireNonNull( offlineController, "offline controller cannot be null" );
         return this;
     }
 

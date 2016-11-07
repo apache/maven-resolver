@@ -60,7 +60,7 @@ public class SubArtifactTest
         assertSame( null, a.getProperty( "key", null ) );
     }
 
-    @Test( expected = IllegalArgumentException.class )
+    @Test( expected = NullPointerException.class )
     public void testMainArtifactMissing()
     {
         new SubArtifact( null, "", "pom" );

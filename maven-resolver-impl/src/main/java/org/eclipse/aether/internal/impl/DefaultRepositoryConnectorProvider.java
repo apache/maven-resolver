@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -78,11 +79,7 @@ public class DefaultRepositoryConnectorProvider
 
     public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory( RepositoryConnectorFactory factory )
     {
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "repository connector factory has not been specified" );
-        }
-        connectorFactories.add( factory );
+        connectorFactories.add( Objects.requireNonNull( factory, "repository connector factory cannot be null" ) );
         return this;
     }
 
@@ -102,10 +99,7 @@ public class DefaultRepositoryConnectorProvider
     public RepositoryConnector newRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {
-        if ( repository == null )
-        {
-            throw new IllegalArgumentException( "remote repository has not been specified" );
-        }
+        Objects.requireNonNull( repository, "remote repository cannot be null" );
 
         PrioritizedComponents<RepositoryConnectorFactory> factories =
             new PrioritizedComponents<RepositoryConnectorFactory>( session );

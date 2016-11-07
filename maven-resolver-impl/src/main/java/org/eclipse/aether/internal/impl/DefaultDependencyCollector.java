@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -121,31 +122,19 @@ public class DefaultDependencyCollector
 
     public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        if ( remoteRepositoryManager == null )
-        {
-            throw new IllegalArgumentException( "remote repository manager has not been specified" );
-        }
-        this.remoteRepositoryManager = remoteRepositoryManager;
+        this.remoteRepositoryManager = Objects.requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
     public DefaultDependencyCollector setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
     {
-        if ( artifactDescriptorReader == null )
-        {
-            throw new IllegalArgumentException( "artifact descriptor reader has not been specified" );
-        }
-        descriptorReader = artifactDescriptorReader;
+        descriptorReader = Objects.requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
         return this;
     }
 
     public DefaultDependencyCollector setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
     {
-        if ( versionRangeResolver == null )
-        {
-            throw new IllegalArgumentException( "version range resolver has not been specified" );
-        }
-        this.versionRangeResolver = versionRangeResolver;
+        this.versionRangeResolver = Objects.requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
         return this;
     }
 

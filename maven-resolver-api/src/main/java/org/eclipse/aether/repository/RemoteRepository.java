@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -335,22 +336,18 @@ public final class RemoteRepository
          * Creates a new repository builder which uses the specified remote repository as a prototype for the new one.
          * All properties which have not been set on the builder will be copied from the prototype when building the
          * repository.
-         * 
+         *
          * @param prototype The remote repository to use as prototype, must not be {@code null}.
          */
         public Builder( RemoteRepository prototype )
         {
-            if ( prototype == null )
-            {
-                throw new IllegalArgumentException( "repository prototype missing" );
-            }
-            this.prototype = prototype;
+            this.prototype = Objects.requireNonNull( prototype, "remote repository prototype cannot be null" );
         }
 
         /**
          * Builds a new remote repository from the current values of this builder. The state of the builder itself
          * remains unchanged.
-         * 
+         *
          * @return The remote repository, never {@code null}.
          */
         public RemoteRepository build()

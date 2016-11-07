@@ -22,6 +22,7 @@ package org.eclipse.aether.artifact;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A simple artifact type.
@@ -83,11 +84,11 @@ public final class DefaultArtifactType
     public DefaultArtifactType( String id, String extension, String classifier, String language,
                                 boolean constitutesBuildPath, boolean includesDependencies )
     {
-        if ( id == null || id.length() < 0 )
+        this.id = Objects.requireNonNull( id, "type id cannot be null" );
+        if ( id.length() == 0 )
         {
-            throw new IllegalArgumentException( "no type id specified" );
+            throw new IllegalArgumentException( "type id cannot be empty" );
         }
-        this.id = id;
         this.extension = emptify( extension );
         this.classifier = emptify( classifier );
         Map<String, String> props = new HashMap<String, String>();
@@ -108,11 +109,11 @@ public final class DefaultArtifactType
      */
     public DefaultArtifactType( String id, String extension, String classifier, Map<String, String> properties )
     {
-        if ( id == null || id.length() < 0 )
+        this.id = Objects.requireNonNull( id, "type id cannot be null" );
+        if ( id.length() == 0 )
         {
-            throw new IllegalArgumentException( "no type id specified" );
+            throw new IllegalArgumentException( "type id cannot be empty" );
         }
-        this.id = id;
         this.extension = emptify( extension );
         this.classifier = emptify( classifier );
         this.properties = AbstractArtifact.copyProperties( properties );

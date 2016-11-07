@@ -20,12 +20,13 @@ package org.eclipse.aether.repository;
  */
 
 import java.io.File;
+import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A result from the local repository about the existence of an artifact.
- * 
+ *
  * @see LocalRepositoryManager#find(RepositorySystemSession, LocalArtifactRequest)
  */
 public final class LocalArtifactResult
@@ -41,21 +42,17 @@ public final class LocalArtifactResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The local artifact request, must not be {@code null}.
      */
     public LocalArtifactResult( LocalArtifactRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "local artifact request has not been specified" );
-        }
-        this.request = request;
+        this.request = Objects.requireNonNull( request, "local artifact request cannot be null" );
     }
 
     /**
      * Gets the request corresponding to this result.
-     * 
+     *
      * @return The corresponding request, never {@code null}.
      */
     public LocalArtifactRequest getRequest()

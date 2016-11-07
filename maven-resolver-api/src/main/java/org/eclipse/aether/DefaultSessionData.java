@@ -1,5 +1,7 @@
 package org.eclipse.aether;
 
+import java.util.Objects;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -38,10 +40,7 @@ public final class DefaultSessionData
 
     public void set( Object key, Object value )
     {
-        if ( key == null )
-        {
-            throw new IllegalArgumentException( "key must not be null" );
-        }
+        Objects.requireNonNull( key, "key cannot be null" );
 
         if ( value != null )
         {
@@ -55,10 +54,7 @@ public final class DefaultSessionData
 
     public boolean set( Object key, Object oldValue, Object newValue )
     {
-        if ( key == null )
-        {
-            throw new IllegalArgumentException( "key must not be null" );
-        }
+        Objects.requireNonNull( key, "key cannot be null" );
 
         if ( newValue != null )
         {
@@ -80,10 +76,7 @@ public final class DefaultSessionData
 
     public Object get( Object key )
     {
-        if ( key == null )
-        {
-            throw new IllegalArgumentException( "key must not be null" );
-        }
+        Objects.requireNonNull( key, "key cannot be null" );
 
         return data.get( key );
     }

@@ -1,5 +1,7 @@
 package org.eclipse.aether.resolution;
 
+import java.util.Objects;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -42,21 +44,17 @@ public final class MetadataResult
 
     /**
      * Creates a new result for the specified request.
-     * 
+     *
      * @param request The resolution request, must not be {@code null}.
      */
     public MetadataResult( MetadataRequest request )
     {
-        if ( request == null )
-        {
-            throw new IllegalArgumentException( "metadata request has not been specified" );
-        }
-        this.request = request;
+        this.request = Objects.requireNonNull( request, "metadata request cannot be null" );
     }
 
     /**
      * Gets the resolution request that was made.
-     * 
+     *
      * @return The resolution request, never {@code null}.
      */
     public MetadataRequest getRequest()

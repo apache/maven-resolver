@@ -467,7 +467,7 @@ public class DefaultUpdateCheckManagerTest
         assertEquals( false, check.isRequired() );
     }
 
-    @Test( expected = IllegalArgumentException.class )
+    @Test( expected = NullPointerException.class )
     public void testCheckArtifactFailOnNoFile()
         throws Exception
     {

@@ -1,5 +1,7 @@
 package org.eclipse.aether.util.repository;
 
+import java.util.Objects;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -35,16 +37,12 @@ public final class ConservativeProxySelector
 
     /**
      * Creates a new selector that delegates to the specified selector.
-     * 
+     *
      * @param selector The selector to delegate to in case a repository has no proxy yet, must not be {@code null}.
      */
     public ConservativeProxySelector( ProxySelector selector )
     {
-        if ( selector == null )
-        {
-            throw new IllegalArgumentException( "no proxy selector specified" );
-        }
-        this.selector = selector;
+        this.selector = Objects.requireNonNull( selector, "proxy selector cannot be null" );
     }
 
     public Proxy getProxy( RemoteRepository repository )

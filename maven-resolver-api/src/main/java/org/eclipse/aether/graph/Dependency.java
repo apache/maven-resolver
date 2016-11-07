@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -83,11 +84,7 @@ public final class Dependency
     private Dependency( Artifact artifact, String scope, Set<Exclusion> exclusions, Boolean optional )
     {
         // NOTE: This constructor assumes immutability of the provided exclusion collection, for internal use only
-        if ( artifact == null )
-        {
-            throw new IllegalArgumentException( "no artifact specified for dependency" );
-        }
-        this.artifact = artifact;
+        this.artifact = Objects.requireNonNull( artifact, "artifact cannot be null" );
         this.scope = ( scope != null ) ? scope : "";
         this.optional = optional;
         this.exclusions = exclusions;
