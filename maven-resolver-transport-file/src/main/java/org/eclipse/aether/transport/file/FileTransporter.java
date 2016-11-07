@@ -109,7 +109,7 @@ final class FileTransporter
         String path = task.getLocation().getPath();
         if ( path.contains( "../" ) )
         {
-            throw new IllegalArgumentException( "Illegal resource path: " + path );
+            throw new IllegalArgumentException( "illegal resource path: " + path );
         }
         File file = new File( basedir, path );
         if ( required && !file.exists() )
