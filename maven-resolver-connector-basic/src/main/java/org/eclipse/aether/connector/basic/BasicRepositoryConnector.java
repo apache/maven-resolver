@@ -502,7 +502,7 @@ final class BasicRepositoryConnector
                               TransferTransportListener<?> listener )
         {
             super( path, listener );
-            this.file = Objects.requireNonNull( file, "source file cannot be null" );;
+            this.file = Objects.requireNonNull( file, "source file cannot be null" );
             this.checksums = safe( checksums );
         }
 
