@@ -275,7 +275,7 @@ public class DependencyGraphParser
                 DependencyNode child = nodes.get( reference );
                 if ( child == null )
                 {
-                    throw new IllegalArgumentException( "undefined reference " + reference );
+                    throw new IllegalStateException( "undefined reference " + reference );
                 }
                 node.getChildren().add( child );
             }
@@ -327,11 +327,11 @@ public class DependencyGraphParser
         NodeDefinition def = ctx.getDefinition();
         if ( !isRoot && parent == null )
         {
-            throw new IllegalArgumentException( "dangling node: " + def );
+            throw new IllegalStateException( "dangling node: " + def );
         }
         else if ( ctx.getLevel() == 0 && parent != null )
         {
-            throw new IllegalArgumentException( "inconsistent leveling (parent for level 0?): " + def );
+            throw new IllegalStateException( "inconsistent leveling (parent for level 0?): " + def );
         }
 
         DefaultDependencyNode node;
