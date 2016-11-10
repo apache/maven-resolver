@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
@@ -91,7 +91,7 @@ public final class DefaultServiceLocator
 
         public Entry( Class<T> type )
         {
-            this.type = Objects.requireNonNull( type, "service type cannot be null" );
+            this.type = requireNonNull( type, "service type cannot be null" );
             providers = new LinkedHashSet<Object>( 8 );
         }
 
@@ -102,7 +102,7 @@ public final class DefaultServiceLocator
             {
                 for ( T service : services )
                 {
-                    providers.add( Objects.requireNonNull( service, "service instance cannot be null" ) );
+                    providers.add( requireNonNull( service, "service instance cannot be null" ) );
                 }
             }
             instances = null;
@@ -116,7 +116,7 @@ public final class DefaultServiceLocator
 
         public synchronized void addService( Class<? extends T> impl )
         {
-            providers.add( Objects.requireNonNull( impl, "implementation class cannot be null" ) );
+            providers.add( requireNonNull( impl, "implementation class cannot be null" ) );
             instances = null;
         }
 
@@ -224,7 +224,7 @@ public final class DefaultServiceLocator
     private <T> Entry<T> getEntry( Class<T> type, boolean create )
     {
         @SuppressWarnings( "unchecked" )
-        Entry<T> entry = (Entry<T>) entries.get( Objects.requireNonNull( type, "service type cannot be null" ) );
+        Entry<T> entry = (Entry<T>) entries.get( requireNonNull( type, "service type cannot be null" ) );
         if ( entry == null && create )
         {
             entry = new Entry<T>( type );

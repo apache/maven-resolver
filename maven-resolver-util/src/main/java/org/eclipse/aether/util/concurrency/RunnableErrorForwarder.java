@@ -19,7 +19,7 @@ package org.eclipse.aether.util.concurrency;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,7 +62,7 @@ public final class RunnableErrorForwarder
      */
     public Runnable wrap( final Runnable runnable )
     {
-        Objects.requireNonNull( runnable, "runnable cannot be null" );
+        requireNonNull( runnable, "runnable cannot be null" );
 
         counter.incrementAndGet();
 

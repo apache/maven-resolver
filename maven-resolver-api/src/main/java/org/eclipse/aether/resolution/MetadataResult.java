@@ -19,7 +19,7 @@ package org.eclipse.aether.resolution;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -49,7 +49,7 @@ public final class MetadataResult
      */
     public MetadataResult( MetadataRequest request )
     {
-        this.request = Objects.requireNonNull( request, "metadata request cannot be null" );
+        this.request = requireNonNull( request, "metadata request cannot be null" );
     }
 
     /**

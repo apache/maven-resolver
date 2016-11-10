@@ -22,7 +22,7 @@ package org.eclipse.aether;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -317,8 +317,8 @@ public final class RepositoryEvent
          */
         public Builder( RepositorySystemSession session, EventType type )
         {
-            this.session = Objects.requireNonNull( session, "session cannot be null" );
-            this.type = Objects.requireNonNull( type, "event type cannot be null" );
+            this.session = requireNonNull( session, "session cannot be null" );
+            this.type = requireNonNull( type, "event type cannot be null" );
         }
 
         /**

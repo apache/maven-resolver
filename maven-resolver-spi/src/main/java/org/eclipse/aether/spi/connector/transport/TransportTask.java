@@ -20,7 +20,7 @@ package org.eclipse.aether.spi.connector.transport;
  */
 
 import java.net.URI;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transport task.
@@ -57,7 +57,7 @@ public abstract class TransportTask
 
     TransportTask setLocation( URI location )
     {
-        this.location = Objects.requireNonNull( location, "location type cannot be null" );
+        this.location = requireNonNull( location, "location type cannot be null" );
         return this;
     }
 

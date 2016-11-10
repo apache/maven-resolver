@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -144,37 +144,37 @@ public class DefaultDeployer
 
     public DefaultDeployer setFileProcessor( FileProcessor fileProcessor )
     {
-        this.fileProcessor = Objects.requireNonNull( fileProcessor, "file processor cannot be null" );
+        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
         return this;
     }
 
     public DefaultDeployer setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = Objects.requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultDeployer setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = Objects.requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultDeployer setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = Objects.requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
     public DefaultDeployer setUpdateCheckManager( UpdateCheckManager updateCheckManager )
     {
-        this.updateCheckManager = Objects.requireNonNull( updateCheckManager, "update check manager cannot be null" );
+        this.updateCheckManager = requireNonNull( updateCheckManager, "update check manager cannot be null" );
         return this;
     }
 
     public DefaultDeployer addMetadataGeneratorFactory( MetadataGeneratorFactory factory )
     {
-        metadataFactories.add( Objects.requireNonNull( factory, "metadata generator factory cannot be null" ) );
+        metadataFactories.add( requireNonNull( factory, "metadata generator factory cannot be null" ) );
         return this;
     }
 
@@ -193,13 +193,13 @@ public class DefaultDeployer
 
     public DefaultDeployer setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        this.syncContextFactory = Objects.requireNonNull( syncContextFactory, "sync context factory cannot be null" );
+        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 
     public DefaultDeployer setOfflineController( OfflineController offlineController )
     {
-        this.offlineController = Objects.requireNonNull( offlineController, "offline controller cannot be null" );
+        this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
         return this;
     }
 

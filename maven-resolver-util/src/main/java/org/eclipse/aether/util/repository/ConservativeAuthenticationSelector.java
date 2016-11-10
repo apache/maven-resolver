@@ -19,7 +19,7 @@ package org.eclipse.aether.util.repository;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
@@ -43,7 +43,7 @@ public final class ConservativeAuthenticationSelector
      */
     public ConservativeAuthenticationSelector( AuthenticationSelector selector )
     {
-        this.selector = Objects.requireNonNull( selector, "authentication selector cannot be null" );
+        this.selector = requireNonNull( selector, "authentication selector cannot be null" );
     }
 
     public Authentication getAuthentication( RemoteRepository repository )

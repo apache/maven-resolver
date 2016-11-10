@@ -20,7 +20,7 @@ package org.eclipse.aether.repository;
  */
 
 import java.io.File;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -47,7 +47,7 @@ public final class LocalArtifactResult
      */
     public LocalArtifactResult( LocalArtifactRequest request )
     {
-        this.request = Objects.requireNonNull( request, "local artifact request cannot be null" );
+        this.request = requireNonNull( request, "local artifact request cannot be null" );
     }
 
     /**

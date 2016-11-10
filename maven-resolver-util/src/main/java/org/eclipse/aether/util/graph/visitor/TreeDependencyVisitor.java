@@ -21,7 +21,7 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
@@ -48,7 +48,7 @@ public final class TreeDependencyVisitor
      */
     public TreeDependencyVisitor( DependencyVisitor visitor )
     {
-        this.visitor = Objects.requireNonNull( visitor, "dependency visitor delegate cannot be null" );
+        this.visitor = requireNonNull( visitor, "dependency visitor delegate cannot be null" );
         visitedNodes = new IdentityHashMap<DependencyNode, Object>( 512 );
         visits = new Stack<Boolean>();
     }

@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.Properties;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -166,7 +166,7 @@ class EnhancedLocalRepositoryManager
 
     private void addArtifact( Artifact artifact, Collection<String> repositories, boolean local )
     {
-        String path = getPathForArtifact( Objects.requireNonNull( artifact, "artifact cannot be null" ), local );
+        String path = getPathForArtifact( requireNonNull( artifact, "artifact cannot be null" ), local );
         File file = new File( getRepository().getBasedir(), path );
         addRepo( file, repositories );
     }

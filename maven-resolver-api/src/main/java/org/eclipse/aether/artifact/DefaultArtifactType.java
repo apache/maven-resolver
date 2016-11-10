@@ -22,7 +22,7 @@ package org.eclipse.aether.artifact;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A simple artifact type.
@@ -84,7 +84,7 @@ public final class DefaultArtifactType
     public DefaultArtifactType( String id, String extension, String classifier, String language,
                                 boolean constitutesBuildPath, boolean includesDependencies )
     {
-        this.id = Objects.requireNonNull( id, "type id cannot be null" );
+        this.id = requireNonNull( id, "type id cannot be null" );
         if ( id.length() == 0 )
         {
             throw new IllegalArgumentException( "type id cannot be empty" );
@@ -109,7 +109,7 @@ public final class DefaultArtifactType
      */
     public DefaultArtifactType( String id, String extension, String classifier, Map<String, String> properties )
     {
-        this.id = Objects.requireNonNull( id, "type id cannot be null" );
+        this.id = requireNonNull( id, "type id cannot be null" );
         if ( id.length() == 0 )
         {
             throw new IllegalArgumentException( "type id cannot be empty" );

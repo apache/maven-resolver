@@ -22,7 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -167,67 +167,67 @@ public class DefaultRepositorySystem
 
     public DefaultRepositorySystem setVersionResolver( VersionResolver versionResolver )
     {
-        this.versionResolver = Objects.requireNonNull( versionResolver, "version resolver cannot be null" );
+        this.versionResolver = requireNonNull( versionResolver, "version resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
     {
-        this.versionRangeResolver = Objects.requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
+        this.versionRangeResolver = requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setArtifactResolver( ArtifactResolver artifactResolver )
     {
-        this.artifactResolver = Objects.requireNonNull( artifactResolver, "artifact resolver cannot be null" );
+        this.artifactResolver = requireNonNull( artifactResolver, "artifact resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setMetadataResolver( MetadataResolver metadataResolver )
     {
-        this.metadataResolver = Objects.requireNonNull( metadataResolver, "metadata resolver cannot be null" );
+        this.metadataResolver = requireNonNull( metadataResolver, "metadata resolver cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
     {
-        this.artifactDescriptorReader = Objects.requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
+        this.artifactDescriptorReader = requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setDependencyCollector( DependencyCollector dependencyCollector )
     {
-        this.dependencyCollector = Objects.requireNonNull( dependencyCollector, "dependency collector cannot be null" );
+        this.dependencyCollector = requireNonNull( dependencyCollector, "dependency collector cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setInstaller( Installer installer )
     {
-        this.installer = Objects.requireNonNull( installer, "installer cannot be null" );
+        this.installer = requireNonNull( installer, "installer cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setDeployer( Deployer deployer )
     {
-        this.deployer = Objects.requireNonNull( deployer, "deployer cannot be null" );
+        this.deployer = requireNonNull( deployer, "deployer cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setLocalRepositoryProvider( LocalRepositoryProvider localRepositoryProvider )
     {
-        this.localRepositoryProvider = Objects.requireNonNull( localRepositoryProvider, "local repository provider cannot be null" );
+        this.localRepositoryProvider = requireNonNull( localRepositoryProvider, "local repository provider cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        this.syncContextFactory = Objects.requireNonNull( syncContextFactory, "sync context factory cannot be null" );
+        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 
     public DefaultRepositorySystem setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = Objects.requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
@@ -428,7 +428,7 @@ public class DefaultRepositorySystem
 
     private void validateSession( RepositorySystemSession session )
     {
-        Objects.requireNonNull( session, "repository system session cannot be null" );
+        requireNonNull( session, "repository system session cannot be null" );
         invalidSession( session.getLocalRepositoryManager(), "local repository manager" );
         invalidSession( session.getSystemProperties(), "system properties" );
         invalidSession( session.getConfigProperties(), "config properties" );
@@ -440,7 +440,7 @@ public class DefaultRepositorySystem
 
     private void invalidSession( Object obj, String name )
     {
-        Objects.requireNonNull( obj, "repository system session's " + name + " cannot be null" );
+        requireNonNull( obj, "repository system session's " + name + " cannot be null" );
     }
 
 }

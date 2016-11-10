@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -57,7 +57,7 @@ public final class VersionRangeResult
      */
     public VersionRangeResult( VersionRangeRequest request )
     {
-        this.request = Objects.requireNonNull( request, "version range request cannot be null" );
+        this.request = requireNonNull( request, "version range request cannot be null" );
         exceptions = Collections.emptyList();
         versions = Collections.emptyList();
         repositories = Collections.emptyMap();

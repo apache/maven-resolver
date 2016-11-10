@@ -19,7 +19,7 @@ package org.eclipse.aether.util.graph.visitor;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
@@ -49,7 +49,7 @@ public final class FilteringDependencyVisitor
      */
     public FilteringDependencyVisitor( DependencyVisitor visitor, DependencyFilter filter )
     {
-        this.visitor = Objects.requireNonNull( visitor, "dependency visitor delegate cannot be null" );
+        this.visitor = requireNonNull( visitor, "dependency visitor delegate cannot be null" );
         this.filter = filter;
         this.accepts = new Stack<Boolean>();
         this.parents = new Stack<DependencyNode>();

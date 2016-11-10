@@ -20,7 +20,7 @@ package org.eclipse.aether.transfer;
  */
 
 import java.nio.ByteBuffer;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -244,8 +244,8 @@ public final class TransferEvent
          */
         public Builder( RepositorySystemSession session, TransferResource resource )
         {
-            this.session = Objects.requireNonNull( session, "repository system session cannot be null" );
-            this.resource = Objects.requireNonNull( resource, "transfer resource cannot be null" );
+            this.session = requireNonNull( session, "repository system session cannot be null" );
+            this.resource = requireNonNull( resource, "transfer resource cannot be null" );
             type = EventType.INITIATED;
             requestType = RequestType.GET;
         }
@@ -282,7 +282,7 @@ public final class TransferEvent
          */
         public Builder resetType( EventType type )
         {
-            this.type = Objects.requireNonNull( type, "event type cannot be null" );
+            this.type = requireNonNull( type, "event type cannot be null" );
             dataBuffer = null;
             exception = null;
             switch ( type )
@@ -304,7 +304,7 @@ public final class TransferEvent
          */
         public Builder setType( EventType type )
         {
-            this.type = Objects.requireNonNull( type, "event type cannot be null" );
+            this.type = requireNonNull( type, "event type cannot be null" );
             return this;
         }
 
@@ -316,7 +316,7 @@ public final class TransferEvent
          */
         public Builder setRequestType( RequestType requestType )
         {
-            this.requestType = Objects.requireNonNull( requestType, "request type cannot be null" );
+            this.requestType = requireNonNull( requestType, "request type cannot be null" );
             return this;
         }
 

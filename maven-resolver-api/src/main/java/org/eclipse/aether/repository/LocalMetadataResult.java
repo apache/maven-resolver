@@ -20,7 +20,7 @@ package org.eclipse.aether.repository;
  */
 
 import java.io.File;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -45,7 +45,7 @@ public final class LocalMetadataResult
      */
     public LocalMetadataResult( LocalMetadataRequest request )
     {
-        this.request = Objects.requireNonNull( request, "local metadata request cannot be null" );
+        this.request = requireNonNull( request, "local metadata request cannot be null" );
     }
 
     /**

@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -401,7 +401,7 @@ final class BasicRepositoryConnector
                               List<RepositoryLayout.Checksum> checksums, TransferTransportListener<?> listener )
         {
             super( path, listener );
-            this.file = Objects.requireNonNull( file, "destination file cannot be null" );
+            this.file = requireNonNull( file, "destination file cannot be null" );
             checksumValidator =
                 new ChecksumValidator( logger, file, fileProcessor, this, checksumPolicy, safe( checksums ) );
         }
@@ -502,7 +502,7 @@ final class BasicRepositoryConnector
                               TransferTransportListener<?> listener )
         {
             super( path, listener );
-            this.file = Objects.requireNonNull( file, "source file cannot be null" );
+            this.file = requireNonNull( file, "source file cannot be null" );
             this.checksums = safe( checksums );
         }
 

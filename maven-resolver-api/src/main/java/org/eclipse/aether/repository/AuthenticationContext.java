@@ -24,7 +24,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -180,7 +180,7 @@ public final class AuthenticationContext
     private AuthenticationContext( RepositorySystemSession session, RemoteRepository repository, Proxy proxy,
                                    Authentication auth )
     {
-        this.session = Objects.requireNonNull( session, "repository system session cannot be null" );
+        this.session = requireNonNull( session, "repository system session cannot be null" );
         this.repository = repository;
         this.proxy = proxy;
         this.auth = auth;
@@ -254,7 +254,7 @@ public final class AuthenticationContext
      */
     public <T> T get( String key, Map<String, String> data, Class<T> type )
     {
-        Objects.requireNonNull( key, "authentication key cannot be null" );
+        requireNonNull( key, "authentication key cannot be null" );
         if ( key.length() == 0 )
         {
             throw new IllegalArgumentException( "authentication key cannot be empty" );
@@ -338,7 +338,7 @@ public final class AuthenticationContext
      */
     public void put( String key, Object value )
     {
-        Objects.requireNonNull( key, "authentication key cannot be null" );
+        requireNonNull( key, "authentication key cannot be null" );
         if ( key.length() == 0 )
         {
             throw new IllegalArgumentException( "authentication key cannot be empty" );

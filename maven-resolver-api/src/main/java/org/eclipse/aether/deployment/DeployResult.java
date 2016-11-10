@@ -22,7 +22,7 @@ package org.eclipse.aether.deployment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -50,7 +50,7 @@ public final class DeployResult
      */
     public DeployResult( DeployRequest request )
     {
-        this.request = Objects.requireNonNull( request, "deploy request cannot be null" );
+        this.request = requireNonNull( request, "deploy request cannot be null" );
         artifacts = Collections.emptyList();
         metadata = Collections.emptyList();
     }

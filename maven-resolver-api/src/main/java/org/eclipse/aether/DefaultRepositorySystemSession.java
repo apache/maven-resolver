@@ -22,7 +22,7 @@ package org.eclipse.aether;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -143,7 +143,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession( RepositorySystemSession session )
     {
-        Objects.requireNonNull( session, "repository system session cannot be null" );
+        requireNonNull( session, "repository system session cannot be null" );
 
         setOffline( session.isOffline() );
         setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );

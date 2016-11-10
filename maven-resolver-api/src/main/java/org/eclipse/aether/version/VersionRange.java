@@ -19,7 +19,7 @@ package org.eclipse.aether.version;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A range of versions.
@@ -69,7 +69,7 @@ public interface VersionRange
          */
         public Bound( Version version, boolean inclusive )
         {
-            this.version = Objects.requireNonNull( version, "version cannot be null" );
+            this.version = requireNonNull( version, "version cannot be null" );
             this.inclusive = inclusive;
         }
 

@@ -20,7 +20,7 @@ package org.eclipse.aether.util.filter;
  */
 
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
@@ -41,7 +41,7 @@ public final class NotDependencyFilter
      */
     public NotDependencyFilter( DependencyFilter filter )
     {
-        this.filter = Objects.requireNonNull( filter, "dependency filter cannot be null" );
+        this.filter = requireNonNull( filter, "dependency filter cannot be null" );
     }
 
     public boolean accept( DependencyNode node, List<DependencyNode> parents )

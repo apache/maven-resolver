@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -149,49 +149,49 @@ public class DefaultArtifactResolver
 
     public DefaultArtifactResolver setFileProcessor( FileProcessor fileProcessor )
     {
-        this.fileProcessor = Objects.requireNonNull( fileProcessor, "file processor cannot be null" );
+        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = Objects.requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setVersionResolver( VersionResolver versionResolver )
     {
-        this.versionResolver = Objects.requireNonNull( versionResolver, "version resolver cannot be null" );
+        this.versionResolver = requireNonNull( versionResolver, "version resolver cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setUpdateCheckManager( UpdateCheckManager updateCheckManager )
     {
-        this.updateCheckManager = Objects.requireNonNull( updateCheckManager, "update check manager cannot be null" );
+        this.updateCheckManager = requireNonNull( updateCheckManager, "update check manager cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = Objects.requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = Objects.requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        this.syncContextFactory = Objects.requireNonNull( syncContextFactory, "sync context factory cannot be null" );
+        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setOfflineController( OfflineController offlineController )
     {
-        this.offlineController = Objects.requireNonNull( offlineController, "offline controller cannot be null" );
+        this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
         return this;
     }
 

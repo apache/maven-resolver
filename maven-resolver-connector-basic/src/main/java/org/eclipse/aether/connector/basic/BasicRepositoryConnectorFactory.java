@@ -22,7 +22,7 @@ package org.eclipse.aether.connector.basic;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -112,7 +112,7 @@ public final class BasicRepositoryConnectorFactory
      */
     public BasicRepositoryConnectorFactory setTransporterProvider( TransporterProvider transporterProvider )
     {
-        this.transporterProvider = Objects.requireNonNull( transporterProvider, "transporter provider cannot be null" );
+        this.transporterProvider = requireNonNull( transporterProvider, "transporter provider cannot be null" );
         return this;
     }
 
@@ -124,7 +124,7 @@ public final class BasicRepositoryConnectorFactory
      */
     public BasicRepositoryConnectorFactory setRepositoryLayoutProvider( RepositoryLayoutProvider layoutProvider )
     {
-        this.layoutProvider =  Objects.requireNonNull( layoutProvider, "repository layout provider cannot be null" );
+        this.layoutProvider =  requireNonNull( layoutProvider, "repository layout provider cannot be null" );
         return this;
     }
 
@@ -136,7 +136,7 @@ public final class BasicRepositoryConnectorFactory
      */
     public BasicRepositoryConnectorFactory setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
     {
-        this.checksumPolicyProvider = Objects.requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
+        this.checksumPolicyProvider = requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
         return this;
     }
 
@@ -148,7 +148,7 @@ public final class BasicRepositoryConnectorFactory
      */
     public BasicRepositoryConnectorFactory setFileProcessor( FileProcessor fileProcessor )
     {
-        this.fileProcessor = Objects.requireNonNull( fileProcessor, "file processor cannot be null" );
+        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
         return this;
     }
 

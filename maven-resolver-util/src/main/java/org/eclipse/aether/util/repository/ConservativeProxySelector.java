@@ -19,7 +19,7 @@ package org.eclipse.aether.util.repository;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
@@ -42,7 +42,7 @@ public final class ConservativeProxySelector
      */
     public ConservativeProxySelector( ProxySelector selector )
     {
-        this.selector = Objects.requireNonNull( selector, "proxy selector cannot be null" );
+        this.selector = requireNonNull( selector, "proxy selector cannot be null" );
     }
 
     public Proxy getProxy( RemoteRepository repository )

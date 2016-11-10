@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -122,13 +122,13 @@ public class DefaultRemoteRepositoryManager
 
     public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
-        this.updatePolicyAnalyzer = Objects.requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
+        this.updatePolicyAnalyzer = requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
         return this;
     }
 
     public DefaultRemoteRepositoryManager setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
     {
-        this.checksumPolicyProvider = Objects.requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
+        this.checksumPolicyProvider = requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
         return this;
     }
 

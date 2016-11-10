@@ -19,7 +19,7 @@ package org.eclipse.aether;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -40,7 +40,7 @@ public final class DefaultSessionData
 
     public void set( Object key, Object value )
     {
-        Objects.requireNonNull( key, "key cannot be null" );
+        requireNonNull( key, "key cannot be null" );
 
         if ( value != null )
         {
@@ -54,7 +54,7 @@ public final class DefaultSessionData
 
     public boolean set( Object key, Object oldValue, Object newValue )
     {
-        Objects.requireNonNull( key, "key cannot be null" );
+        requireNonNull( key, "key cannot be null" );
 
         if ( newValue != null )
         {
@@ -76,7 +76,7 @@ public final class DefaultSessionData
 
     public Object get( Object key )
     {
-        Objects.requireNonNull( key, "key cannot be null" );
+        requireNonNull( key, "key cannot be null" );
 
         return data.get( key );
     }

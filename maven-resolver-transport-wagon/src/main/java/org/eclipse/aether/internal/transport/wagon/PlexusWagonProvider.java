@@ -19,7 +19,7 @@ package org.eclipse.aether.internal.transport.wagon;
  * under the License.
  */
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.apache.maven.wagon.Wagon;
 import org.codehaus.plexus.PlexusContainer;
@@ -56,7 +56,7 @@ public class PlexusWagonProvider
      */
     public PlexusWagonProvider( PlexusContainer container )
     {
-        this.container = Objects.requireNonNull( container, "plexus container cannot be null" );
+        this.container = requireNonNull( container, "plexus container cannot be null" );
     }
 
     public Wagon lookup( String roleHint )

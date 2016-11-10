@@ -21,7 +21,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
@@ -49,12 +49,12 @@ class DefaultDependencyGraphTransformationContext
 
     public Object get( Object key )
     {
-        return map.get( Objects.requireNonNull( key, "key cannot be null" ) );
+        return map.get( requireNonNull( key, "key cannot be null" ) );
     }
 
     public Object put( Object key, Object value )
     {
-        Objects.requireNonNull( key, "key cannot be null" );
+        requireNonNull( key, "key cannot be null" );
         if ( value != null )
         {
             return map.put( key, value );

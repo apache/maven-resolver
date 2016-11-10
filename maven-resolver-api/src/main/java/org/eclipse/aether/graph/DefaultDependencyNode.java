@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -343,7 +343,7 @@ public final class DefaultDependencyNode
 
     public void setData( Object key, Object value )
     {
-        Objects.requireNonNull( key, "key cannot be null" );
+        requireNonNull( key, "key cannot be null" );
 
         if ( value == null )
         {

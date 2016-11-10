@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -122,19 +122,19 @@ public class DefaultDependencyCollector
 
     public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = Objects.requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
     public DefaultDependencyCollector setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
     {
-        descriptorReader = Objects.requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
+        descriptorReader = requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
         return this;
     }
 
     public DefaultDependencyCollector setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
     {
-        this.versionRangeResolver = Objects.requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
+        this.versionRangeResolver = requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
         return this;
     }
 

@@ -21,7 +21,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -67,7 +67,7 @@ public class DefaultRepositoryEventDispatcher
 
     public DefaultRepositoryEventDispatcher addRepositoryListener( RepositoryListener listener )
     {
-        this.listeners.add( Objects.requireNonNull( listener, "repository listener cannot be null" ) );
+        this.listeners.add( requireNonNull( listener, "repository listener cannot be null" ) );
         return this;
     }
 

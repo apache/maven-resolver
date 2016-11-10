@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -107,19 +107,19 @@ public class DefaultInstaller
 
     public DefaultInstaller setFileProcessor( FileProcessor fileProcessor )
     {
-        this.fileProcessor = Objects.requireNonNull( fileProcessor, "file processor cannot be null" );
+        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
         return this;
     }
 
     public DefaultInstaller setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = Objects.requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultInstaller addMetadataGeneratorFactory( MetadataGeneratorFactory factory )
     {
-        metadataFactories.add( Objects.requireNonNull( factory, "metadata generator factory cannot be null" ) );
+        metadataFactories.add( requireNonNull( factory, "metadata generator factory cannot be null" ) );
         return this;
     }
 
@@ -138,7 +138,7 @@ public class DefaultInstaller
 
     public DefaultInstaller setSyncContextFactory( SyncContextFactory syncContextFactory )
     {
-        this.syncContextFactory = Objects.requireNonNull( syncContextFactory, "sync context factory cannot be null" );
+        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
         return this;
     }
 

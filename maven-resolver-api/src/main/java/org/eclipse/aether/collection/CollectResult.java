@@ -22,7 +22,7 @@ package org.eclipse.aether.collection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -52,7 +52,7 @@ public final class CollectResult
      */
     public CollectResult( CollectRequest request )
     {
-        this.request = Objects.requireNonNull( request, "dependency collection request cannot be null" );
+        this.request = requireNonNull( request, "dependency collection request cannot be null" );
         exceptions = Collections.emptyList();
         cycles = Collections.emptyList();
     }

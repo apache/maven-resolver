@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -341,7 +341,7 @@ public final class RemoteRepository
          */
         public Builder( RemoteRepository prototype )
         {
-            this.prototype = Objects.requireNonNull( prototype, "remote repository prototype cannot be null" );
+            this.prototype = requireNonNull( prototype, "remote repository prototype cannot be null" );
         }
 
         /**

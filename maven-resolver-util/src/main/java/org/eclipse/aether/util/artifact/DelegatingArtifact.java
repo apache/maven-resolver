@@ -21,7 +21,7 @@ package org.eclipse.aether.util.artifact;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.AbstractArtifact;
 import org.eclipse.aether.artifact.Artifact;
@@ -43,7 +43,7 @@ public abstract class DelegatingArtifact
      */
     protected DelegatingArtifact( Artifact delegate )
     {
-        this.delegate = Objects.requireNonNull( delegate, "delegate artifact cannot be null" );
+        this.delegate = requireNonNull( delegate, "delegate artifact cannot be null" );
     }
 
     /**
