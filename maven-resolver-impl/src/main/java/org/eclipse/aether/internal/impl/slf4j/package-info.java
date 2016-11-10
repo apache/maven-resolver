@@ -3,6 +3,7 @@
  * The integration with the logging framework <a href="http://www.slf4j.org/" target="_blank">SLF4J</a>.
  */
 package org.eclipse.aether.internal.impl.slf4j;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,4 +22,3 @@ package org.eclipse.aether.internal.impl.slf4j;
  * specific language governing permissions and limitations
  * under the License.
  */
-

@@ -350,7 +350,7 @@ public class DefaultInstallerTest
         assertEquals( msg, EventType.ARTIFACT_INSTALLING, event.getType() );
         assertEquals( msg, artifact, event.getArtifact() );
         assertNull( msg, event.getException() );
-        
+
         event = events.get( 1 );
         assertEquals( msg, EventType.ARTIFACT_INSTALLED, event.getType() );
         assertEquals( msg, artifact, event.getArtifact() );
