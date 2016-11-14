@@ -37,7 +37,7 @@ import org.eclipse.aether.util.artifact.JavaScopes;
  * A dependency manager supporting transitive dependency management.
  *
  * @author Christian Schulte
- * @since 1.2
+ * @since 1.2.0
  */
 public final class TransitiveDependencyManager
     implements DependencyManager
