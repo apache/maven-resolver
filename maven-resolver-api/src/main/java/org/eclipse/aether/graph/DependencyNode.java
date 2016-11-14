@@ -77,24 +77,6 @@ public interface DependencyNode
     int MANAGED_EXCLUSIONS = 0x10;
 
     /**
-     * Gets the depth of the node.
-     *
-     * @return The depth of the node.
-     *
-     * @since 1.2
-     */
-    long getDepth();
-
-    /**
-     * Gets the parent node of this node.
-     *
-     * @return The parent node of this node or {@code null}, if this node is the root of the graph.
-     *
-     * @since 1.2
-     */
-    DependencyNode getParent();
-
-    /**
      * Gets the child nodes of this node. To conserve memory, dependency nodes with equal dependencies may share the
      * same child list instance. Hence clients mutating the child list need to be aware that these changes might affect
      * more than this node. Where this is not desired, the child list should be copied before mutation if the client

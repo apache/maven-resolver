@@ -39,8 +39,6 @@ public final class DefaultDependencyNode
     implements DependencyNode
 {
 
-    private DependencyNode parent;
-
     private List<DependencyNode> children;
 
     private Dependency dependency;
@@ -70,7 +68,13 @@ public final class DefaultDependencyNode
      */
     public DefaultDependencyNode( Dependency dependency )
     {
-        this( null, dependency );
+        this.dependency = dependency;
+        artifact = ( dependency != null ) ? dependency.getArtifact() : null;
+        children = new ArrayList<DependencyNode>( 0 );
+        aliases = relocations = Collections.emptyList();
+        repositories = Collections.emptyList();
+        context = "";
+        data = Collections.emptyMap();
     }
 
     /**
@@ -83,7 +87,6 @@ public final class DefaultDependencyNode
     public DefaultDependencyNode( Artifact artifact )
     {
         super();
-        this.parent = null;
         this.artifact = artifact;
         children = new ArrayList<DependencyNode>( 0 );
         aliases = relocations = Collections.emptyList();
@@ -101,7 +104,6 @@ public final class DefaultDependencyNode
     public DefaultDependencyNode( DependencyNode node )
     {
         super();
-        parent = node.getParent();
         dependency = node.getDependency();
         artifact = node.getArtifact();
         children = new ArrayList<DependencyNode>( 0 );
@@ -114,37 +116,6 @@ public final class DefaultDependencyNode
         setVersionConstraint( node.getVersionConstraint() );
         Map<?, ?> data = node.getData();
         setData( data.isEmpty() ? null : new HashMap<Object, Object>( data ) );
-    }
-
-    /**
-     * Creates a new node with the specified dependency.
-     *
-     * @param parent The parent node of the node or {@code null}.
-     * @param dependency The dependency associated with this node, may be {@code null} for a root node.
-     *
-     * @since 1.2
-     */
-    public DefaultDependencyNode( DependencyNode parent, Dependency dependency )
-    {
-        super();
-        this.parent = parent;
-        this.dependency = dependency;
-        artifact = ( dependency != null ) ? dependency.getArtifact() : null;
-        children = new ArrayList<DependencyNode>( 0 );
-        aliases = relocations = Collections.emptyList();
-        repositories = Collections.emptyList();
-        context = "";
-        data = Collections.emptyMap();
-    }
-
-    public long getDepth()
-    {
-        return this.getParent() != null ? this.getParent().getDepth() + 1L : 0L;
-    }
-
-    public DependencyNode getParent()
-    {
-        return this.parent;
     }
 
     public List<DependencyNode> getChildren()

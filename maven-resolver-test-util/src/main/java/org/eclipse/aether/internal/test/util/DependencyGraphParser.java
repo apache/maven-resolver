@@ -339,7 +339,7 @@ public class DependencyGraphParser
         {
             DefaultArtifact artifact = new DefaultArtifact( def.coords, def.properties );
             Dependency dependency = new Dependency( artifact, def.scope, def.optional );
-            node = new DefaultDependencyNode( parent, dependency );
+            node = new DefaultDependencyNode( dependency );
             int managedBits = 0;
             if ( def.premanagedScope != null )
             {

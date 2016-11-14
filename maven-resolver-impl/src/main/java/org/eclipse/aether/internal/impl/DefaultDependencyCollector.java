@@ -420,8 +420,8 @@ public class DefaultDependencyCollector
                     if ( cycleNode.getDependency() != null )
                     {
                         DefaultDependencyNode child =
-                            createDependencyNode( node, relocations, preManaged, rangeResult, version, d,
-                                                  descriptorResult, cycleNode );
+                            createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult,
+                                                  cycleNode );
                         node.getChildren().add( child );
                         continue;
                     }
@@ -445,7 +445,7 @@ public class DefaultDependencyCollector
                         getRemoteRepositories( rangeResult.getRepository( version ), repositories );
 
                     DefaultDependencyNode child =
-                        createDependencyNode( node, relocations, preManaged, rangeResult, version, d,
+                        createDependencyNode( relocations, preManaged, rangeResult, version, d,
                                               descriptorResult.getAliases(), repos, args.request.getRequestContext() );
 
                     node.getChildren().add( child );
@@ -464,7 +464,7 @@ public class DefaultDependencyCollector
                 List<RemoteRepository> repos =
                     getRemoteRepositories( rangeResult.getRepository( version ), repositories );
                 DefaultDependencyNode child =
-                    createDependencyNode( node, relocations, preManaged, rangeResult, version, d, null, repos,
+                    createDependencyNode( relocations, preManaged, rangeResult, version, d, null, repos,
                                           args.request.getRequestContext() );
                 node.getChildren().add( child );
             }
@@ -553,14 +553,13 @@ public class DefaultDependencyCollector
         return descriptorResult;
     }
 
-    private static DefaultDependencyNode createDependencyNode( DependencyNode parent,
-                                                               List<Artifact> relocations,
+    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations,
                                                                PremanagedDependency preManaged,
                                                                VersionRangeResult rangeResult, Version version,
                                                                Dependency d, Collection<Artifact> aliases,
                                                                List<RemoteRepository> repos, String requestContext )
     {
-        DefaultDependencyNode child = new DefaultDependencyNode( parent, d );
+        DefaultDependencyNode child = new DefaultDependencyNode( d );
         preManaged.applyTo( child );
         child.setRelocations( relocations );
         child.setVersionConstraint( rangeResult.getVersionConstraint() );
@@ -571,15 +570,14 @@ public class DefaultDependencyCollector
         return child;
     }
 
-    private static DefaultDependencyNode createDependencyNode( DependencyNode parent,
-                                                               List<Artifact> relocations,
+    private static DefaultDependencyNode createDependencyNode( List<Artifact> relocations,
                                                                PremanagedDependency preManaged,
                                                                VersionRangeResult rangeResult, Version version,
                                                                Dependency d, ArtifactDescriptorResult descriptorResult,
                                                                DependencyNode cycleNode )
     {
         DefaultDependencyNode child =
-            createDependencyNode( parent, relocations, preManaged, rangeResult, version, d,
+            createDependencyNode( relocations, preManaged, rangeResult, version, d,
                                   descriptorResult.getAliases(), cycleNode.getRepositories(),
                                   cycleNode.getRequestContext() );
 
