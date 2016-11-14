@@ -476,8 +476,10 @@ public class DefaultDependencyCollector
                             DependencyTraverser depTraverser, VersionFilter verFilter, Dependency d,
                             ArtifactDescriptorResult descriptorResult, DefaultDependencyNode child )
     {
-        DefaultDependencyCollectionContext context = args.collectionContext.clone();
-        context.set( d, descriptorResult.getManagedDependencies() );
+        final DefaultDependencyCollectionContext savedContext = args.collectionContext;
+        args.collectionContext = args.collectionContext.clone();
+        args.collectionContext.set( d, descriptorResult.getManagedDependencies() );
+        DefaultDependencyCollectionContext context = args.collectionContext;
 
         DependencySelector childSelector = depSelector != null ? depSelector.deriveChildSelector( context ) : null;
         DependencyManager childManager = depManager != null ? depManager.deriveChildManager( context ) : null;
@@ -508,6 +510,8 @@ public class DefaultDependencyCollector
         {
             child.setChildren( children );
         }
+
+        args.collectionContext = savedContext;
     }
 
     private ArtifactDescriptorResult getArtifactDescriptorResult( Args args, Results results, boolean noDescriptor,
@@ -696,7 +700,7 @@ public class DefaultDependencyCollector
 
         final NodeStack nodes;
 
-        final DefaultDependencyCollectionContext collectionContext;
+        DefaultDependencyCollectionContext collectionContext;
 
         final DefaultVersionFilterContext versionContext;
 
