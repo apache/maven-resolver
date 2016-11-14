@@ -24,42 +24,49 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * A dependency selector that excludes optional dependencies which occur beyond level one of the dependency graph.
- * 
+ * A dependency selector that excludes transitive optional dependencies.
+ *
  * @see Dependency#isOptional()
  */
 public final class OptionalDependencySelector
     implements DependencySelector
 {
 
-    private final int depth;
+    private final boolean transitive;
 
     /**
      * Creates a new selector to exclude optional transitive dependencies.
      */
     public OptionalDependencySelector()
     {
-        depth = 0;
+        this( false );
     }
 
-    private OptionalDependencySelector( int depth )
+    private OptionalDependencySelector( final boolean transitive )
     {
-        this.depth = depth;
+        super();
+        this.transitive = transitive;
     }
 
     public boolean selectDependency( Dependency dependency )
     {
-        return depth < 2 || !dependency.isOptional();
+        return !this.transitive || !dependency.isOptional();
     }
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
     {
-        if ( depth >= 2 )
+        OptionalDependencySelector child = this;
+
+        if ( context.getDependency() != null && !child.transitive )
         {
-            return this;
+            child = new OptionalDependencySelector( true );
+        }
+        if ( context.getDependency() == null && child.transitive )
+        {
+            child = new OptionalDependencySelector( false );
         }
 
-        return new OptionalDependencySelector( depth + 1 );
+        return child;
     }
 
     @Override
@@ -75,14 +82,14 @@ public final class OptionalDependencySelector
         }
 
         OptionalDependencySelector that = (OptionalDependencySelector) obj;
-        return depth == that.depth;
+        return this.transitive == that.transitive;
     }
 
     @Override
     public int hashCode()
     {
         int hash = getClass().hashCode();
-        hash = hash * 31 + depth;
+        hash = hash * 31 + ( this.transitive ? 1 : 0 );
         return hash;
     }
 

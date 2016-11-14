@@ -476,7 +476,7 @@ public class DefaultDependencyCollector
                             DependencyTraverser depTraverser, VersionFilter verFilter, Dependency d,
                             ArtifactDescriptorResult descriptorResult, DefaultDependencyNode child )
     {
-        DefaultDependencyCollectionContext context = args.collectionContext;
+        DefaultDependencyCollectionContext context = args.collectionContext.clone();
         context.set( d, descriptorResult.getManagedDependencies() );
 
         DependencySelector childSelector = depSelector != null ? depSelector.deriveChildSelector( context ) : null;

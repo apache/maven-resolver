@@ -19,6 +19,7 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -30,7 +31,7 @@ import org.eclipse.aether.graph.Dependency;
  * @see DefaultDependencyCollector
  */
 final class DefaultDependencyCollectionContext
-    implements DependencyCollectionContext
+    implements DependencyCollectionContext, Cloneable
 {
 
     private final RepositorySystemSession session;
@@ -83,4 +84,24 @@ final class DefaultDependencyCollectionContext
         return String.valueOf( getDependency() );
     }
 
+    /**
+     * @since 1.2.0
+     */
+    @Override
+    public DefaultDependencyCollectionContext clone()
+    {
+        try
+        {
+            final DefaultDependencyCollectionContext clone = (DefaultDependencyCollectionContext) super.clone();
+            clone.managedDependencies = clone.managedDependencies != null
+                                            ? new ArrayList<>( clone.managedDependencies )
+                                            : null;
+
+            return clone;
+        }
+        catch ( final CloneNotSupportedException e )
+        {
+            throw new AssertionError( e );
+        }
+    }
 }

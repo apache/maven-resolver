@@ -1,0 +1,2 @@
+gid:direct:ext:ver direct-scope
++- gid:transitive-of-direct:ext:ver transitive-of-direct-scope

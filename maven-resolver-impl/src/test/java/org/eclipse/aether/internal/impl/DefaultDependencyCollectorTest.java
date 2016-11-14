@@ -116,6 +116,11 @@ public class DefaultDependencyCollectorTest
         assertEqualSubtree( expected, actual, new LinkedList<DependencyNode>() );
     }
 
+    private static void assertEqualArtifactSubtree( DependencyNode expected, DependencyNode actual )
+    {
+        assertEqualArtifactSubtree( expected, actual, new LinkedList<DependencyNode>() );
+    }
+
     private static void assertEqualSubtree( DependencyNode expected, DependencyNode actual,
                                             LinkedList<DependencyNode> parents )
     {
@@ -144,6 +149,39 @@ public class DefaultDependencyCollectorTest
         while ( iterator1.hasNext() )
         {
             assertEqualSubtree( iterator1.next(), iterator2.next(), parents );
+        }
+
+        parents.removeLast();
+    }
+
+    private static void assertEqualArtifactSubtree( DependencyNode expected, DependencyNode actual,
+                                                    LinkedList<DependencyNode> parents )
+    {
+        assertEquals( "path: " + parents, expected.getArtifact(), actual.getArtifact() );
+
+        if ( actual.getArtifact() != null )
+        {
+            Artifact artifact = actual.getArtifact();
+            for ( DependencyNode parent : parents )
+            {
+                if ( parent.getArtifact() != null && artifact.equals( parent.getArtifact() ) )
+                {
+                    return;
+                }
+            }
+        }
+
+        parents.addLast( expected );
+
+        assertEquals( "path: " + parents + ", expected: " + expected.getChildren() + ", actual: "
+                          + actual.getChildren(), expected.getChildren().size(), actual.getChildren().size() );
+
+        Iterator<DependencyNode> iterator1 = expected.getChildren().iterator();
+        Iterator<DependencyNode> iterator2 = actual.getChildren().iterator();
+
+        while ( iterator1.hasNext() )
+        {
+            assertEqualArtifactSubtree( iterator1.next(), iterator2.next(), parents );
         }
 
         parents.removeLast();
@@ -389,6 +427,7 @@ public class DefaultDependencyCollectorTest
 
         collector.setArtifactDescriptorReader( new ArtifactDescriptorReader()
         {
+
             public ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
                                                                     ArtifactDescriptorRequest request )
                 throws ArtifactDescriptorException
@@ -396,6 +435,7 @@ public class DefaultDependencyCollectorTest
                 repos.addAll( request.getRepositories() );
                 return new ArtifactDescriptorResult( request );
             }
+
         } );
 
         List<Dependency> dependencies = Arrays.asList( newDep( "verrange:parent:jar:1[1,)", "compile" ) );
@@ -653,7 +693,7 @@ public class DefaultDependencyCollectorTest
         collector.setArtifactDescriptorReader( newReader( "selection/scope/" ) );
         parser = new DependencyGraphParser( "artifact-descriptions/selection/scope/" );
 
-        final Dependency root = newDep( "gid:root:ext:ver", "root-scope" );
+        final Dependency root = newDep( "gid:direct:ext:ver", "direct-scope" );
         CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
 
@@ -672,31 +712,54 @@ public class DefaultDependencyCollectorTest
 
         assertEqualSubtree( expected, result.getRoot() );
 
-        // Exclude scope of direct dependency of root equals "include all" as direct dependencies are always included.
-        this.session.setDependencySelector( new ScopeDependencySelector( "direct-of-root-scope" ) );
+        // Exclude direct scope equals include all as direct dependencies are always included.
+        this.session.setDependencySelector( new ScopeDependencySelector( "direct-scope" ) );
 
         request = new CollectRequest( root, Arrays.asList( repository ) );
         result = collector.collectDependencies( session, request );
 
         assertEqualSubtree( expected, result.getRoot() );
 
-        // Exclude scope of transitive dependency of direct dependency of root.
-        expected = parser.parseResource( "transitive-of-root-scope-exclusion-tree.txt" );
-        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-of-root-scope" ) );
+        // Exclude scope of transitive of direct.
+        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-of-direct-scope" ) );
+
+        request = new CollectRequest( root, Arrays.asList( repository ) );
+        result = collector.collectDependencies( session, request );
+
+        expected = parser.parseResource( "transitive-of-direct-scope-exclusion-tree.txt" );
+        assertEqualSubtree( expected, result.getRoot() );
+
+        // Exclude scope of transitive of transitive of direct dependency.
+        expected = parser.parseResource( "transitive-of-transitive-of-direct-scope-exclusion-tree.txt" );
+        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-of-transitive-of-direct-scope" ) );
 
         request = new CollectRequest( root, Arrays.asList( repository ) );
         result = collector.collectDependencies( session, request );
 
         assertEqualSubtree( expected, result.getRoot() );
 
-        // Exclude scope of transitive dependency of transitive dependency of direct dependency of root.
-        expected = parser.parseResource( "transitive-of-transitive-of-root-exclusion-tree.txt" );
-        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-of-transitive-of-root-scope" ) );
+        // Exclude scope of transitive of transitive of direct dependency.
+        expected = parser.parseResource( "transitive-of-transitive-of-transitive-of-direct-scope-exclusion-tree.txt" );
+        this.session.setDependencySelector(
+            new ScopeDependencySelector( "transitive-of-transitive-of-transitive-of-direct-scope" ) );
 
         request = new CollectRequest( root, Arrays.asList( repository ) );
         result = collector.collectDependencies( session, request );
 
         assertEqualSubtree( expected, result.getRoot() );
+
+        // Ensure direct dependencies are correctly detected for root artifact (POM) requests.
+        expected = parser.parseResource( "all-nodes-of-pom.txt" );
+
+        this.session.setDependencySelector( new ScopeDependencySelector( "direct-scope" ) );
+
+        request = new CollectRequest();
+        request.addDependency( root );
+        request.setRootArtifact( new DefaultArtifact( "gid:pom:ext:ver" ) );
+        request.setRepositories( Arrays.asList( repository ) );
+        result = collector.collectDependencies( session, request );
+
+        assertEqualArtifactSubtree( expected, result.getRoot() );
     }
 
     @Test
@@ -706,21 +769,35 @@ public class DefaultDependencyCollectorTest
         collector.setArtifactDescriptorReader( newReader( "selection/optional/" ) );
         parser = new DependencyGraphParser( "artifact-descriptions/selection/optional/" );
 
-        final Dependency root = newDep( "gid:root:ext:ver", "root-scope" );
+        final Dependency root = newDep( "gid:direct:ext:ver", "direct-scope" ).setOptional( true );
+
         CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
 
-        DependencyNode expected = parser.parseResource( "no-selector-tree.txt" );
+        DependencyNode expected = parser.parseResource( "all-nodes.txt" );
         assertEqualSubtree( expected, result.getRoot() );
 
         // Exclude optional transitive dependencies.
-        expected = parser.parseResource( "optional-exclusion-tree.txt" );
+        expected = parser.parseResource( "without-optional-transitive-nodes-of-direct-dependency.txt" );
         this.session.setDependencySelector( new OptionalDependencySelector() );
 
         request = new CollectRequest( root, Arrays.asList( repository ) );
         result = collector.collectDependencies( session, request );
 
         assertEqualSubtree( expected, result.getRoot() );
+
+        // Ensure direct dependencies are correctly detected for root artifact (POM) requests.
+        expected = parser.parseResource( "without-optional-transitive-nodes-of-pom.txt" );
+
+        this.session.setDependencySelector( new OptionalDependencySelector() );
+
+        request = new CollectRequest();
+        request.addDependency( root );
+        request.setRootArtifact( new DefaultArtifact( "gid:pom:ext:ver" ) );
+        request.setRepositories( Arrays.asList( repository ) );
+        result = collector.collectDependencies( session, request );
+
+        assertEqualArtifactSubtree( expected, result.getRoot() );
     }
 
     static class TestDependencyManager

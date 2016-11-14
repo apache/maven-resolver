@@ -40,7 +40,7 @@ public final class ScopeDependencySelector
     implements DependencySelector
 {
 
-    private final int depth;
+    private final boolean transitive;
 
     private final Collection<String> included;
 
@@ -55,7 +55,7 @@ public final class ScopeDependencySelector
     public ScopeDependencySelector( Collection<String> included, Collection<String> excluded )
     {
         super();
-        this.depth = 0;
+        this.transitive = false;
         this.included = clone( included );
         this.excluded = clone( excluded );
     }
@@ -90,19 +90,17 @@ public final class ScopeDependencySelector
         this( null, ( excluded != null ) ? Arrays.asList( excluded ) : null );
     }
 
-    private ScopeDependencySelector( int depth, Collection<String> included, Collection<String> excluded )
+    private ScopeDependencySelector( boolean transitive, Collection<String> included, Collection<String> excluded )
     {
         super();
-        this.depth = depth;
+        this.transitive = transitive;
         this.included = included;
         this.excluded = excluded;
     }
 
     public boolean selectDependency( Dependency dependency )
     {
-        // depth < 2 == direct dependency
-        // assert this.depth > 0 : "Unexpected depth.";
-        return this.depth < 2
+        return !this.transitive
                    || ( ( included == null || included.contains( dependency.getScope() ) )
                         && ( excluded == null || !excluded.contains( dependency.getScope() ) ) );
 
@@ -110,11 +108,18 @@ public final class ScopeDependencySelector
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
     {
-        // First call is for direct dependencies, successive calls are for transitive dependencies.
-        return this.depth >= 2
-                   ? this
-                   : new ScopeDependencySelector( this.depth + 1, this.included, this.excluded );
+        ScopeDependencySelector child = this;
 
+        if ( context.getDependency() != null && !child.transitive )
+        {
+            child = new ScopeDependencySelector( true, this.included, this.excluded );
+        }
+        if ( context.getDependency() == null && child.transitive )
+        {
+            child = new ScopeDependencySelector( false, this.included, this.excluded );
+        }
+
+        return child;
     }
 
     @Override
@@ -130,7 +135,7 @@ public final class ScopeDependencySelector
         }
 
         ScopeDependencySelector that = (ScopeDependencySelector) obj;
-        return this.depth == that.depth && eq( included, that.included ) && eq( excluded, that.excluded );
+        return this.transitive == that.transitive && eq( included, that.included ) && eq( excluded, that.excluded );
     }
 
     private static <T> boolean eq( T o1, T o2 )
@@ -142,7 +147,7 @@ public final class ScopeDependencySelector
     public int hashCode()
     {
         int hash = 17;
-        hash = hash * 31 + ( this.depth );
+        hash = hash * 31 + ( this.transitive ? 1 : 0 );
         hash = hash * 31 + ( included != null ? included.hashCode() : 0 );
         hash = hash * 31 + ( excluded != null ? excluded.hashCode() : 0 );
         return hash;
