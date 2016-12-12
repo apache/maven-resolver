@@ -130,7 +130,7 @@ class TrackingFileManager
                 logger.debug( "Writing tracking file " + file );
                 raf.setLength( 0 );
                 props.store( Channels.newOutputStream( raf.getChannel() ),
-                             "NOTE: This is an Aether internal implementation file"
+                             "NOTE: This is a Maven Resolver internal implementation file"
                                  + ", its format can be changed without prior notice." );
 
                 lock.release();
