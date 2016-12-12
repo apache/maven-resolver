@@ -131,7 +131,7 @@ class TrackingFileManager
                 ByteArrayOutputStream stream = new ByteArrayOutputStream( 1024 * 2 );
 
                 logger.debug( "Writing tracking file " + file );
-                props.store( stream, "NOTE: This is an Aether internal implementation file"
+                props.store( stream, "NOTE: This is a Maven Resolver internal implementation file"
                     + ", its format can be changed without prior notice." );
 
                 raf.seek( 0 );
