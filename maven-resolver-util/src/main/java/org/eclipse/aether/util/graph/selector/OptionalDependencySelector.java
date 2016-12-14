@@ -89,7 +89,7 @@ public final class OptionalDependencySelector
     public int hashCode()
     {
         int hash = getClass().hashCode();
-        hash = hash * 31 + ( this.transitive ? 1 : 0 );
+        hash = hash * 31 + ( ( (Boolean) this.transitive ).hashCode() );
         return hash;
     }
 

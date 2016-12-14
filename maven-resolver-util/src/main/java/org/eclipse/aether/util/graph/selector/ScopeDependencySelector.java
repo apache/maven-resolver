@@ -147,7 +147,7 @@ public final class ScopeDependencySelector
     public int hashCode()
     {
         int hash = 17;
-        hash = hash * 31 + ( this.transitive ? 1 : 0 );
+        hash = hash * 31 + ( ( (Boolean) this.transitive ).hashCode() );
         hash = hash * 31 + ( included != null ? included.hashCode() : 0 );
         hash = hash * 31 + ( excluded != null ? excluded.hashCode() : 0 );
         return hash;
