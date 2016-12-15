@@ -228,6 +228,8 @@ public class DefaultDependencyCollector
         else
         {
             node = new DefaultDependencyNode( request.getRootArtifact() );
+            node.setRequestContext( request.getRequestContext() );
+            node.setRepositories( request.getRepositories() );
         }
 
         result.setRoot( node );
