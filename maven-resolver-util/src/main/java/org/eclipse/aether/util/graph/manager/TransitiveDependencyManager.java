@@ -43,8 +43,6 @@ public final class TransitiveDependencyManager
     implements DependencyManager
 {
 
-    private final int depth;
-
     private final Map<Object, String> managedVersions;
 
     private final Map<Object, String> managedScopes;
@@ -55,6 +53,8 @@ public final class TransitiveDependencyManager
 
     private final Map<Object, Collection<Exclusion>> managedExclusions;
 
+    private final boolean transitive;
+
     private int hashCode;
 
     /**
@@ -62,12 +62,12 @@ public final class TransitiveDependencyManager
      */
     public TransitiveDependencyManager()
     {
-        this( 0, Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
+        this( false, Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
               Collections.<Object, Boolean>emptyMap(), Collections.<Object, String>emptyMap(),
               Collections.<Object, Collection<Exclusion>>emptyMap() );
     }
 
-    private TransitiveDependencyManager( final int depth,
+    private TransitiveDependencyManager( final boolean transitive,
                                          final Map<Object, String> managedVersions,
                                          final Map<Object, String> managedScopes,
                                          final Map<Object, Boolean> managedOptionals,
@@ -75,7 +75,7 @@ public final class TransitiveDependencyManager
                                          final Map<Object, Collection<Exclusion>> managedExclusions )
     {
         super();
-        this.depth = depth;
+        this.transitive = transitive;
         this.managedVersions = managedVersions;
         this.managedScopes = managedScopes;
         this.managedOptionals = managedOptionals;
@@ -152,7 +152,24 @@ public final class TransitiveDependencyManager
             }
         }
 
-        return new TransitiveDependencyManager( this.depth + 1, versions, scopes, optionals, localPaths, exclusions );
+        TransitiveDependencyManager child = null;
+
+        if ( context.getDependency() != null && !this.transitive )
+        {
+            child = new TransitiveDependencyManager( true, versions, scopes, optionals, localPaths, exclusions );
+        }
+        if ( context.getDependency() == null && this.transitive )
+        {
+            child = new TransitiveDependencyManager( false, versions, scopes, optionals, localPaths, exclusions );
+        }
+        if ( child == null )
+        {
+            child = new TransitiveDependencyManager( this.transitive, versions, scopes, optionals, localPaths,
+                                                     exclusions );
+
+        }
+
+        return child;
     }
 
     public DependencyManagement manageDependency( Dependency dependency )
@@ -161,7 +178,7 @@ public final class TransitiveDependencyManager
 
         Object key = getKey( dependency.getArtifact() );
 
-        if ( depth >= 2 )
+        if ( this.transitive )
         {
             String version = managedVersions.get( key );
             if ( version != null )
@@ -248,7 +265,7 @@ public final class TransitiveDependencyManager
         if ( equal )
         {
             final TransitiveDependencyManager that = (TransitiveDependencyManager) obj;
-            return this.depth == that.depth
+            return this.transitive == that.transitive
                        && this.managedVersions.equals( that.managedVersions )
                        && this.managedScopes.equals( that.managedScopes )
                        && this.managedOptionals.equals( that.managedOptionals )
@@ -265,7 +282,7 @@ public final class TransitiveDependencyManager
         if ( this.hashCode == 0 )
         {
             int hash = 17;
-            hash = hash * 31 + this.depth;
+            hash = hash * 31 + ( (Boolean) this.transitive ).hashCode();
             hash = hash * 31 + this.managedVersions.hashCode();
             hash = hash * 31 + this.managedScopes.hashCode();
             hash = hash * 31 + this.managedOptionals.hashCode();

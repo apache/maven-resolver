@@ -534,10 +534,23 @@ public class DefaultDependencyCollectorTest
         session.setDependencyManager( new TransitiveDependencyManager() );
         final Dependency root = newDep( "gid:0:ext:ver" );
         CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
+        request.addManagedDependency( newDep( "gid:0:ext:must-retain-model-builder-override" ) );
+        request.addManagedDependency( newDep( "gid:1:ext:managed-by-request" ) );
         CollectResult result = collector.collectDependencies( session, request );
 
         DependencyNode expected = parser.parseResource( "management-tree.txt" );
         assertEqualSubtree( expected, result.getRoot() );
+
+        // Ensure direct dependencies are correctly detected for root artifact (POM) requests.
+        request = new CollectRequest();
+        request.setRootArtifact( new DefaultArtifact( "gid:pom:ext:ver" ) );
+        request.setRepositories( Arrays.asList( repository ) );
+        request.addDependency( root.setScope( "compile" ) );
+        request.addManagedDependency( newDep( "gid:0:ext:must-retain-model-builder-override" ) );
+        request.addManagedDependency( newDep( "gid:1:ext:managed-by-request" ) );
+        result = collector.collectDependencies( session, request );
+        expected = parser.parseResource( "pom-management-tree.txt" );
+        assertEqualArtifactSubtree( expected, result.getRoot() );
     }
 
     @Test
