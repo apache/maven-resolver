@@ -1,4 +1,3 @@
 gid:root:ext:ver root-scope
 +- gid:direct:ext:ver direct-scope
    +- gid:transitive-1:ext:ver transitive-1-scope
-      +- gid:transitive-2:ext:ver transitive-2-scope

@@ -44,6 +44,7 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
@@ -116,11 +117,6 @@ public class DefaultDependencyCollectorTest
         assertEqualSubtree( expected, actual, new LinkedList<DependencyNode>() );
     }
 
-    private static void assertEqualArtifactSubtree( DependencyNode expected, DependencyNode actual )
-    {
-        assertEqualArtifactSubtree( expected, actual, new LinkedList<DependencyNode>() );
-    }
-
     private static void assertEqualSubtree( DependencyNode expected, DependencyNode actual,
                                             LinkedList<DependencyNode> parents )
     {
@@ -149,39 +145,6 @@ public class DefaultDependencyCollectorTest
         while ( iterator1.hasNext() )
         {
             assertEqualSubtree( iterator1.next(), iterator2.next(), parents );
-        }
-
-        parents.removeLast();
-    }
-
-    private static void assertEqualArtifactSubtree( DependencyNode expected, DependencyNode actual,
-                                                    LinkedList<DependencyNode> parents )
-    {
-        assertEquals( "path: " + parents, expected.getArtifact(), actual.getArtifact() );
-
-        if ( actual.getArtifact() != null )
-        {
-            Artifact artifact = actual.getArtifact();
-            for ( DependencyNode parent : parents )
-            {
-                if ( parent.getArtifact() != null && artifact.equals( parent.getArtifact() ) )
-                {
-                    return;
-                }
-            }
-        }
-
-        parents.addLast( expected );
-
-        assertEquals( "path: " + parents + ", expected: " + expected.getChildren() + ", actual: "
-                          + actual.getChildren(), expected.getChildren().size(), actual.getChildren().size() );
-
-        Iterator<DependencyNode> iterator1 = expected.getChildren().iterator();
-        Iterator<DependencyNode> iterator2 = actual.getChildren().iterator();
-
-        while ( iterator1.hasNext() )
-        {
-            assertEqualArtifactSubtree( iterator1.next(), iterator2.next(), parents );
         }
 
         parents.removeLast();
@@ -532,25 +495,24 @@ public class DefaultDependencyCollectorTest
         collector.setArtifactDescriptorReader( newReader( "managed/" ) );
         parser = new DependencyGraphParser( "artifact-descriptions/managed/" );
         session.setDependencyManager( new TransitiveDependencyManager() );
-        final Dependency root = newDep( "gid:0:ext:ver" );
+        final Dependency root = newDep( "gid:root:ext:ver", "compile" );
         CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
-        request.addManagedDependency( newDep( "gid:0:ext:must-retain-model-builder-override" ) );
-        request.addManagedDependency( newDep( "gid:1:ext:managed-by-request" ) );
+        request.addManagedDependency( newDep( "gid:root:ext:must-retain-core-management" ) );
         CollectResult result = collector.collectDependencies( session, request );
 
-        DependencyNode expected = parser.parseResource( "management-tree.txt" );
-        assertEqualSubtree( expected, result.getRoot() );
+        final DependencyNode expectedTree = parser.parseResource( "management-tree.txt" );
+        assertEqualSubtree( expectedTree, result.getRoot() );
 
-        // Ensure direct dependencies are correctly detected for root artifact (POM) requests.
-        request = new CollectRequest();
-        request.setRootArtifact( new DefaultArtifact( "gid:pom:ext:ver" ) );
-        request.setRepositories( Arrays.asList( repository ) );
-        request.addDependency( root.setScope( "compile" ) );
-        request.addManagedDependency( newDep( "gid:0:ext:must-retain-model-builder-override" ) );
-        request.addManagedDependency( newDep( "gid:1:ext:managed-by-request" ) );
-        result = collector.collectDependencies( session, request );
-        expected = parser.parseResource( "pom-management-tree.txt" );
-        assertEqualArtifactSubtree( expected, result.getRoot() );
+        // Same test for root artifact (POM) request.
+        final CollectRequest rootArtifactRequest = new CollectRequest();
+        rootArtifactRequest.setRepositories( Arrays.asList( repository ) );
+        rootArtifactRequest.setRootArtifact( new DefaultArtifact( "gid:root:ext:ver" ) );
+        rootArtifactRequest.addDependency( newDep( "gid:direct:ext:ver", "compile" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:root:ext:must-retain-core-management" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "git:direct:ext:must-retain-core-management" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:transitive-1:ext:managed-by-root" ) );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertEqualSubtree( expectedTree, this.toDependencyResult( result.getRoot(), "compile", null ) );
     }
 
     @Test
@@ -705,13 +667,15 @@ public class DefaultDependencyCollectorTest
     {
         collector.setArtifactDescriptorReader( newReader( "selection/scope/" ) );
         parser = new DependencyGraphParser( "artifact-descriptions/selection/scope/" );
+        session.setDependencySelector( null );
 
-        final Dependency root = newDep( "gid:direct:ext:ver", "direct-scope" );
-        CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
+        final DependencyNode allNodes = parser.parseResource( "all-nodes.txt" );
+        final DependencyNode transitive1ExclusionTree = parser.parseResource( "transitive-1-exclusion-tree.txt" );
+        final DependencyNode transitive2ExclusionTree = parser.parseResource( "transitive-2-exclusion-tree.txt" );
+        final Dependency root = newDep( "gid:root:ext:ver", "root-scope" );
+        final CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
-
-        DependencyNode expected = parser.parseResource( "all-nodes.txt" );
-        assertEqualSubtree( expected, result.getRoot() );
+        assertEqualSubtree( allNodes, result.getRoot() );
 
         /*
          A dependency selector that filters transitive dependencies based on their scope. Direct dependencies are always
@@ -719,60 +683,67 @@ public class DefaultDependencyCollectorTest
          */
         // Include all.
         this.session.setDependencySelector( new ScopeDependencySelector() );
-
-        request = new CollectRequest( root, Arrays.asList( repository ) );
         result = collector.collectDependencies( session, request );
+        assertEqualSubtree( allNodes, result.getRoot() );
 
-        assertEqualSubtree( expected, result.getRoot() );
+        // Exclude root scope equals include all as the root is always included.
+        this.session.setDependencySelector( new ScopeDependencySelector( "root-scope" ) );
+        result = collector.collectDependencies( session, request );
+        assertEqualSubtree( allNodes, result.getRoot() );
 
         // Exclude direct scope equals include all as direct dependencies are always included.
         this.session.setDependencySelector( new ScopeDependencySelector( "direct-scope" ) );
-
-        request = new CollectRequest( root, Arrays.asList( repository ) );
         result = collector.collectDependencies( session, request );
-
-        assertEqualSubtree( expected, result.getRoot() );
+        assertEqualSubtree( allNodes, result.getRoot() );
 
         // Exclude scope of transitive of direct.
-        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-of-direct-scope" ) );
-
-        request = new CollectRequest( root, Arrays.asList( repository ) );
+        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-1-scope" ) );
         result = collector.collectDependencies( session, request );
-
-        expected = parser.parseResource( "transitive-of-direct-scope-exclusion-tree.txt" );
-        assertEqualSubtree( expected, result.getRoot() );
+        assertEqualSubtree( transitive1ExclusionTree, result.getRoot() );
 
         // Exclude scope of transitive of transitive of direct dependency.
-        expected = parser.parseResource( "transitive-of-transitive-of-direct-scope-exclusion-tree.txt" );
-        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-of-transitive-of-direct-scope" ) );
-
-        request = new CollectRequest( root, Arrays.asList( repository ) );
+        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-2-scope" ) );
         result = collector.collectDependencies( session, request );
+        assertEqualSubtree( transitive2ExclusionTree, result.getRoot() );
 
-        assertEqualSubtree( expected, result.getRoot() );
+        // Same test as above but with root artifact instead of root dependency.
+        this.session.setDependencySelector( null );
+        final CollectRequest rootArtifactRequest = new CollectRequest();
+        rootArtifactRequest.setRootArtifact( new DefaultArtifact( "gid:root:ext:ver" ) );
+        rootArtifactRequest.addDependency( newDep( "gid:direct:ext:ver", "direct-scope" ) );
+        rootArtifactRequest.setRepositories( Arrays.asList( repository ) );
 
-        // Exclude scope of transitive of transitive of direct dependency.
-        expected = parser.parseResource( "transitive-of-transitive-of-transitive-of-direct-scope-exclusion-tree.txt" );
-        this.session.setDependencySelector(
-            new ScopeDependencySelector( "transitive-of-transitive-of-transitive-of-direct-scope" ) );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertNull( result.getRoot().getDependency() );
+        assertEqualSubtree( allNodes, this.toDependencyResult( result.getRoot(), "root-scope", null ) );
 
-        request = new CollectRequest( root, Arrays.asList( repository ) );
-        result = collector.collectDependencies( session, request );
+        /*
+         A dependency selector that filters transitive dependencies based on their scope. Direct dependencies are always
+         included regardless of their scope.
+         */
+        // Include all.
+        this.session.setDependencySelector( new ScopeDependencySelector() );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertNull( result.getRoot().getDependency() );
+        assertEqualSubtree( allNodes, this.toDependencyResult( result.getRoot(), "root-scope", null ) );
 
-        assertEqualSubtree( expected, result.getRoot() );
-
-        // Ensure direct dependencies are correctly detected for root artifact (POM) requests.
-        expected = parser.parseResource( "all-nodes-of-pom.txt" );
-
+        // Exclude direct scope equals include all as direct dependencies are always included.
         this.session.setDependencySelector( new ScopeDependencySelector( "direct-scope" ) );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertNull( result.getRoot().getDependency() );
+        assertEqualSubtree( allNodes, this.toDependencyResult( result.getRoot(), "root-scope", null ) );
 
-        request = new CollectRequest();
-        request.addDependency( root );
-        request.setRootArtifact( new DefaultArtifact( "gid:pom:ext:ver" ) );
-        request.setRepositories( Arrays.asList( repository ) );
-        result = collector.collectDependencies( session, request );
+        // Exclude scope of transitive of direct.
+        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-1-scope" ) );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertNull( result.getRoot().getDependency() );
+        assertEqualSubtree( transitive1ExclusionTree, this.toDependencyResult( result.getRoot(), "root-scope", null ) );
 
-        assertEqualArtifactSubtree( expected, result.getRoot() );
+        // Exclude scope of transitive of transitive of direct dependency.
+        this.session.setDependencySelector( new ScopeDependencySelector( "transitive-2-scope" ) );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertNull( result.getRoot().getDependency() );
+        assertEqualSubtree( transitive2ExclusionTree, this.toDependencyResult( result.getRoot(), "root-scope", null ) );
     }
 
     @Test
@@ -781,36 +752,58 @@ public class DefaultDependencyCollectorTest
     {
         collector.setArtifactDescriptorReader( newReader( "selection/optional/" ) );
         parser = new DependencyGraphParser( "artifact-descriptions/selection/optional/" );
+        session.setDependencySelector( null );
 
-        final Dependency root = newDep( "gid:direct:ext:ver", "direct-scope" ).setOptional( true );
+        final DependencyNode allNodes = parser.parseResource( "all-nodes.txt" );
+        final DependencyNode optionalTransitiveExclusionTree =
+            parser.parseResource( "optional-transitive-exclusion-tree.txt" );
 
-        CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
+        final Dependency root = newDep( "gid:root:ext:ver", "root-scope" ).setOptional( true );
+        // No selector. Include all.
+        final CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
         CollectResult result = collector.collectDependencies( session, request );
+        assertEqualSubtree( allNodes, result.getRoot() );
 
-        DependencyNode expected = parser.parseResource( "all-nodes.txt" );
-        assertEqualSubtree( expected, result.getRoot() );
-
-        // Exclude optional transitive dependencies.
-        expected = parser.parseResource( "without-optional-transitive-nodes-of-direct-dependency.txt" );
+        // A dependency selector that excludes transitive optional dependencies.
         this.session.setDependencySelector( new OptionalDependencySelector() );
-
-        request = new CollectRequest( root, Arrays.asList( repository ) );
         result = collector.collectDependencies( session, request );
+        assertEqualSubtree( optionalTransitiveExclusionTree, result.getRoot() );
 
-        assertEqualSubtree( expected, result.getRoot() );
+        // Same test as above but with root artifact instead of root dependency.
+        this.session.setDependencySelector( null );
+        final Artifact rootArtifact = new DefaultArtifact( "gid:root:ext:ver" );
+        final CollectRequest rootArtifactRequest = new CollectRequest();
+        rootArtifactRequest.setRootArtifact( rootArtifact );
+        rootArtifactRequest.addDependency( newDep( "gid:direct:ext:ver", "direct-scope" ).setOptional( true ) );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertNull( result.getRoot().getDependency() );
+        assertEqualSubtree( allNodes, this.toDependencyResult( result.getRoot(), "root-scope", true ) );
 
-        // Ensure direct dependencies are correctly detected for root artifact (POM) requests.
-        expected = parser.parseResource( "without-optional-transitive-nodes-of-pom.txt" );
-
+        // A dependency selector that excludes transitive optional dependencies.
         this.session.setDependencySelector( new OptionalDependencySelector() );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertNull( result.getRoot().getDependency() );
+        assertEqualSubtree( optionalTransitiveExclusionTree, this.toDependencyResult( result.getRoot(), "root-scope",
+                                                                                      true ) );
 
-        request = new CollectRequest();
-        request.addDependency( root );
-        request.setRootArtifact( new DefaultArtifact( "gid:pom:ext:ver" ) );
-        request.setRepositories( Arrays.asList( repository ) );
-        result = collector.collectDependencies( session, request );
+    }
 
-        assertEqualArtifactSubtree( expected, result.getRoot() );
+    private DependencyNode toDependencyResult( final DependencyNode root, final String rootScope,
+                                               final Boolean optional )
+    {
+        // Make the root artifact resultion result a dependency resolution result for the subtree check.
+        assertNull( "Expected root artifact resolution result.", root.getDependency() );
+        final DefaultDependencyNode defaultNode =
+            new DefaultDependencyNode( new Dependency( root.getArtifact(), rootScope ) );
+
+        defaultNode.setChildren( root.getChildren() );
+
+        if ( optional != null )
+        {
+            defaultNode.setOptional( optional );
+        }
+
+        return defaultNode;
     }
 
     static class TestDependencyManager

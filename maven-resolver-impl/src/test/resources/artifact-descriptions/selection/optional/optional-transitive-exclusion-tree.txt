@@ -1,2 +1,2 @@
-gid:pom:ext:ver
+gid:root:ext:ver root-scope optional
 +- gid:direct:ext:ver direct-scope optional

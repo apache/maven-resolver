@@ -1,1 +1,0 @@
-gid:direct:ext:ver direct-scope optional
