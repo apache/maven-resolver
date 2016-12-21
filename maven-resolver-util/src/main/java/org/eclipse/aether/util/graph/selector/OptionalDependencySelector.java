@@ -8,9 +8,9 @@ package org.eclipse.aether.util.graph.selector;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -32,41 +32,34 @@ public final class OptionalDependencySelector
     implements DependencySelector
 {
 
-    private final boolean transitive;
+    private final int depth;
 
     /**
      * Creates a new selector to exclude optional transitive dependencies.
      */
     public OptionalDependencySelector()
     {
-        this( false );
+        depth = 0;
     }
 
-    private OptionalDependencySelector( final boolean transitive )
+    private OptionalDependencySelector( int depth )
     {
-        super();
-        this.transitive = transitive;
+        this.depth = depth;
     }
 
     public boolean selectDependency( Dependency dependency )
     {
-        return !this.transitive || !dependency.isOptional();
+        return depth < 2 || !dependency.isOptional();
     }
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
     {
-        OptionalDependencySelector child = this;
-
-        if ( context.getDependency() != null && !child.transitive )
+        if ( depth >= 2 )
         {
-            child = new OptionalDependencySelector( true );
-        }
-        if ( context.getDependency() == null && child.transitive )
-        {
-            child = new OptionalDependencySelector( false );
+            return this;
         }
 
-        return child;
+        return new OptionalDependencySelector( depth + 1 );
     }
 
     @Override
@@ -82,14 +75,14 @@ public final class OptionalDependencySelector
         }
 
         OptionalDependencySelector that = (OptionalDependencySelector) obj;
-        return this.transitive == that.transitive;
+        return depth == that.depth;
     }
 
     @Override
     public int hashCode()
     {
         int hash = getClass().hashCode();
-        hash = hash * 31 + ( ( (Boolean) this.transitive ).hashCode() );
+        hash = hash * 31 + depth;
         return hash;
     }
 
