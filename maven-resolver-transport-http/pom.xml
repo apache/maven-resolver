@@ -64,7 +64,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
-      <version>1.7.16</version>
+      <version>${slf4jVersion}</version>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
@@ -96,7 +96,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>7.6.19.v20160209</version>
+      <version>8.2.0.v20160908</version>
       <scope>test</scope>
     </dependency>
     <dependency>

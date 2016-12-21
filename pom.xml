@@ -68,6 +68,7 @@
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>UnusedImports,LineLength,InnerAssignment,MagicNumber,AvoidNestedBlocks,ParameterNumber,MethodLength,MemberName</checkstyle.violation.ignore>
     <sisu.version>0.3.3</sisu.version>
+    <slf4jVersion>1.7.22</slf4jVersion>
   </properties>
 
   <modules>
@@ -180,7 +181,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>1.7.16</version>
+        <version>${slf4jVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
