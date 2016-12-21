@@ -34,7 +34,7 @@ import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 /**
- * A dependency manager supporting transitive dependency management.
+ * A dependency manager managing transitive dependencies supporting transitive dependency management.
  *
  * @author Christian Schulte
  * @since 1.2.0
@@ -53,7 +53,7 @@ public final class TransitiveDependencyManager
 
     private final Map<Object, Collection<Exclusion>> managedExclusions;
 
-    private final boolean transitive;
+    private final int depth;
 
     private int hashCode;
 
@@ -62,12 +62,12 @@ public final class TransitiveDependencyManager
      */
     public TransitiveDependencyManager()
     {
-        this( false, Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
+        this( 0, Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
               Collections.<Object, Boolean>emptyMap(), Collections.<Object, String>emptyMap(),
               Collections.<Object, Collection<Exclusion>>emptyMap() );
     }
 
-    private TransitiveDependencyManager( final boolean transitive,
+    private TransitiveDependencyManager( final int depth,
                                          final Map<Object, String> managedVersions,
                                          final Map<Object, String> managedScopes,
                                          final Map<Object, Boolean> managedOptionals,
@@ -75,7 +75,7 @@ public final class TransitiveDependencyManager
                                          final Map<Object, Collection<Exclusion>> managedExclusions )
     {
         super();
-        this.transitive = transitive;
+        this.depth = depth;
         this.managedVersions = managedVersions;
         this.managedScopes = managedScopes;
         this.managedOptionals = managedOptionals;
@@ -152,24 +152,9 @@ public final class TransitiveDependencyManager
             }
         }
 
-        TransitiveDependencyManager child = null;
+        return new TransitiveDependencyManager( this.depth + 1, versions, scopes, optionals, localPaths,
+                                                exclusions );
 
-        if ( context.getDependency() != null && !this.transitive )
-        {
-            child = new TransitiveDependencyManager( true, versions, scopes, optionals, localPaths, exclusions );
-        }
-        if ( context.getDependency() == null && this.transitive )
-        {
-            child = new TransitiveDependencyManager( false, versions, scopes, optionals, localPaths, exclusions );
-        }
-        if ( child == null )
-        {
-            child = new TransitiveDependencyManager( this.transitive, versions, scopes, optionals, localPaths,
-                                                     exclusions );
-
-        }
-
-        return child;
     }
 
     public DependencyManagement manageDependency( Dependency dependency )
@@ -178,7 +163,7 @@ public final class TransitiveDependencyManager
 
         Object key = getKey( dependency.getArtifact() );
 
-        if ( this.transitive )
+        if ( this.depth >= 2 )
         {
             String version = managedVersions.get( key );
             if ( version != null )
@@ -265,7 +250,7 @@ public final class TransitiveDependencyManager
         if ( equal )
         {
             final TransitiveDependencyManager that = (TransitiveDependencyManager) obj;
-            return this.transitive == that.transitive
+            return this.depth == that.depth
                        && this.managedVersions.equals( that.managedVersions )
                        && this.managedScopes.equals( that.managedScopes )
                        && this.managedOptionals.equals( that.managedOptionals )
@@ -282,7 +267,7 @@ public final class TransitiveDependencyManager
         if ( this.hashCode == 0 )
         {
             int hash = 17;
-            hash = hash * 31 + ( (Boolean) this.transitive ).hashCode();
+            hash = hash * 31 + this.depth;
             hash = hash * 31 + this.managedVersions.hashCode();
             hash = hash * 31 + this.managedScopes.hashCode();
             hash = hash * 31 + this.managedOptionals.hashCode();
