@@ -369,22 +369,13 @@ public class DefaultDependencyCollector
                                     DependencyTraverser depTraverser, VersionFilter verFilter, Dependency dependency,
                                     List<Artifact> relocations, boolean disableVersionManagement )
     {
-        if ( args.session.getData().get( "maven.legacyDependencyManagement" ) != null
-                 && depSelector != null && !depSelector.selectDependency( dependency ) )
-        {
-            // Legacy behaviour before MRESOLVER-9.
-            return;
-        }
-
         PremanagedDependency preManaged =
             PremanagedDependency.create( depManager, dependency, disableVersionManagement, args.premanagedState );
 
         dependency = preManaged.managedDependency;
 
-        if ( args.session.getData().get( "maven.legacyDependencyManagement" ) == null
-                 && depSelector != null && !depSelector.selectDependency( dependency ) )
+        if ( depSelector != null && !depSelector.selectDependency( dependency ) )
         {
-            // Corrected behaviour after MRESOLVER-9.
             return;
         }
 
