@@ -309,6 +309,7 @@
             <excludes combine.children="append">
               <exclude>src/test/resources/**/*.ini</exclude>
               <exclude>src/test/resources/**/*.txt</exclude>
+              <exclude>src/test/resources/ssl/*-store</exclude>
             </excludes>
           </configuration>
         </plugin>
