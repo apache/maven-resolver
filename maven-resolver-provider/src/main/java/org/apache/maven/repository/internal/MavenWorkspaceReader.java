@@ -23,6 +23,12 @@ import org.apache.maven.model.Model;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.WorkspaceReader;
 
+/**
+ * Manages a repository backed by the IDE workspace, a build session or a similar ad-hoc collection of artifacts.
+ *
+ * @see org.eclipse.aether.RepositorySystemSession#getWorkspaceReader()
+ */
+
 public interface MavenWorkspaceReader
     extends WorkspaceReader
 {

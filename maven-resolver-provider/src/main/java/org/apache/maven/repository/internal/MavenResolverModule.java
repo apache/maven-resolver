@@ -19,11 +19,6 @@ package org.apache.maven.repository.internal;
  * under the License.
  */
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
@@ -35,6 +30,15 @@ import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.impl.guice.AetherModule;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * A guice Module for injecting suitable providers for a the Maven Artifact Resolver
+ */
 public final class MavenResolverModule
     extends AbstractModule
 {
