@@ -31,7 +31,7 @@ public class ScopeDependencySelectorTest
     public void testToString()
     {
         assertEquals(
-            "ScopeDependencySelector(included: [foo], excluded: [bar], transitive: false)",
+            "ScopeDependencySelector(included: [foo], excluded: [bar], depth: 0)",
             new ScopeDependencySelector(Collections.singleton( "foo" ), Collections.singleton( "bar" ) ).toString()
         );
     }
