@@ -63,7 +63,7 @@ public final class ConflictIdSorter
 
         @SuppressWarnings( "unchecked" )
         Map<String, Object> stats = (Map<String, Object>) context.get( TransformationContextKeys.STATS );
-        long time1 = System.currentTimeMillis();
+        long time1 = System.nanoTime();
 
         Map<Object, ConflictId> ids = new LinkedHashMap<Object, ConflictId>( 256 );
 
@@ -81,13 +81,13 @@ public final class ConflictIdSorter
             buildConflitIdDAG( ids, node, id, 0, visited, conflictIds );
         }
 
-        long time2 = System.currentTimeMillis();
+        long time2 = System.nanoTime();
 
         int cycles = topsortConflictIds( ids.values(), context );
 
         if ( stats != null )
         {
-            long time3 = System.currentTimeMillis();
+            long time3 = System.nanoTime();
             stats.put( "ConflictIdSorter.graphTime", time2 - time1 );
             stats.put( "ConflictIdSorter.topsortTime", time3 - time2 );
             stats.put( "ConflictIdSorter.conflictIdCount", ids.size() );
