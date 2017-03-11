@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl.collect;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -372,15 +372,15 @@ public class DefaultDependencyCollector
                                     DependencyTraverser depTraverser, VersionFilter verFilter, Dependency dependency,
                                     List<Artifact> relocations, boolean disableVersionManagement )
     {
+        PremanagedDependency preManaged =
+            PremanagedDependency.create( depManager, dependency, disableVersionManagement, args.premanagedState );
+
+        dependency = preManaged.managedDependency;
 
         if ( depSelector != null && !depSelector.selectDependency( dependency ) )
         {
             return;
         }
-
-        PremanagedDependency preManaged =
-            PremanagedDependency.create( depManager, dependency, disableVersionManagement, args.premanagedState );
-        dependency = preManaged.managedDependency;
 
         boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
 
@@ -582,6 +582,7 @@ public class DefaultDependencyCollector
         DefaultDependencyNode child =
             createDependencyNode( relocations, preManaged, rangeResult, version, d, descriptorResult.getAliases(),
                                   cycleNode.getRepositories(), cycleNode.getRequestContext() );
+
         child.setChildren( cycleNode.getChildren() );
         return child;
     }
