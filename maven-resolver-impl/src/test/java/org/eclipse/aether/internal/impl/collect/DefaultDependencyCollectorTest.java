@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.collect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -47,6 +48,7 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
@@ -64,6 +66,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
@@ -478,6 +481,52 @@ public class DefaultDependencyCollectorTest
         assertEquals( "ver", DependencyManagerUtils.getPremanagedVersion( node ) );
         assertEquals( "compile", DependencyManagerUtils.getPremanagedScope( node ) );
         assertEquals( Boolean.FALSE, DependencyManagerUtils.getPremanagedOptional( node ) );
+    }
+
+    @Test
+    public void testDependencyManagement_TransitiveDependencyManager()
+            throws DependencyCollectionException, IOException
+    {
+        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
+        parser = new DependencyGraphParser( "artifact-descriptions/managed/" );
+        session.setDependencyManager( new TransitiveDependencyManager() );
+        final Dependency root = newDep( "gid:root:ext:ver", "compile" );
+        CollectRequest request = new CollectRequest( root, Collections.singletonList( repository ) );
+        request.addManagedDependency( newDep( "gid:root:ext:must-retain-core-management" ) );
+        CollectResult result = collector.collectDependencies( session, request );
+
+        final DependencyNode expectedTree = parser.parseResource( "management-tree.txt" );
+        assertEqualSubtree( expectedTree, result.getRoot() );
+
+        // Same test for root artifact (POM) request.
+        final CollectRequest rootArtifactRequest = new CollectRequest();
+        rootArtifactRequest.setRepositories( Collections.singletonList( repository ) );
+        rootArtifactRequest.setRootArtifact( new DefaultArtifact( "gid:root:ext:ver" ) );
+        rootArtifactRequest.addDependency( newDep( "gid:direct:ext:ver", "compile" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:root:ext:must-retain-core-management" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:direct:ext:must-retain-core-management" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:transitive-1:ext:managed-by-root" ) );
+        session.setDependencyManager( new TransitiveDependencyManager() );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertEqualSubtree( expectedTree, toDependencyResult( result.getRoot(), "compile", null ) );
+    }
+
+    private DependencyNode toDependencyResult( final DependencyNode root, final String rootScope,
+                                               final Boolean optional )
+    {
+        // Make the root artifact resultion result a dependency resolution result for the subtree check.
+        assertNull( "Expected root artifact resolution result.", root.getDependency() );
+        final DefaultDependencyNode defaultNode =
+                new DefaultDependencyNode( new Dependency( root.getArtifact(), rootScope ) );
+
+        defaultNode.setChildren( root.getChildren() );
+
+        if ( optional != null )
+        {
+            defaultNode.setOptional( optional );
+        }
+
+        return defaultNode;
     }
 
     @Test
