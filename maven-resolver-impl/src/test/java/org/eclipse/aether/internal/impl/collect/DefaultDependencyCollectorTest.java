@@ -571,10 +571,6 @@ public class DefaultDependencyCollectorTest
 
     /**
      * Tests that scope based dependency selection happens before dependency management.
-     * <p>
-     * This is not really correct (see MRESOLVER-9), but there are a number of tests
-     * in the Maven and Maven Integration Testing projects that currently rely on this
-     * behaviour.
      */
     @Test
     public void testSelectionBeforeManagement()
@@ -604,7 +600,7 @@ public class DefaultDependencyCollectorTest
         // With proper dependency management, the test scope of aid3 would
         // be managed to compile, and we would get another child.
         // Currently, the dependency gets filtered by ScopeDependencyManager.
-        assertEquals( 0, childLevel1.getChildren().size() );
+        assertEquals( 1, childLevel1.getChildren().size() );
     }
 
     static class TestDependencyManager
