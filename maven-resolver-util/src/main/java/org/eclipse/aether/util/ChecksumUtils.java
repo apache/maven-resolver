@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -52,49 +53,40 @@ public final class ChecksumUtils
         throws IOException
     {
         String checksum = "";
-
-        FileInputStream fis = new FileInputStream( checksumFile );
+        BufferedReader br = null;
         try
         {
-            BufferedReader br = new BufferedReader( new InputStreamReader( fis, "UTF-8" ), 512 );
-            try
+            br = new BufferedReader( new InputStreamReader( new FileInputStream( checksumFile ), "UTF-8" ), 512 );
+            while ( true )
             {
-                while ( true )
+                String line = br.readLine();
+                if ( line == null )
                 {
-                    String line = br.readLine();
-                    if ( line == null )
-                    {
-                        break;
-                    }
-                    line = line.trim();
-                    if ( line.length() > 0 )
-                    {
-                        checksum = line;
-                        break;
-                    }
+                    break;
+                }
+                line = line.trim();
+                if ( line.length() > 0 )
+                {
+                    checksum = line;
+                    break;
                 }
             }
-            finally
-            {
-                try
-                {
-                    br.close();
-                }
-                catch ( IOException e )
-                {
-                    // ignored
-                }
-            }
+
+            br.close();
+            br = null;
         }
         finally
         {
             try
             {
-                fis.close();
+                if ( br != null )
+                {
+                    br.close();
+                }
             }
             catch ( IOException e )
             {
-                // ignored
+                // Suppressed due to an exception already thrown in the try block.
             }
         }
 
@@ -144,12 +136,13 @@ public final class ChecksumUtils
             }
         }
 
-        FileInputStream fis = new FileInputStream( dataFile );
+        InputStream in = null;
         try
         {
-            for ( byte[] buffer = new byte[32 * 1024];; )
+            in = new FileInputStream( dataFile );
+            for ( byte[] buffer = new byte[ 32 * 1024 ];; )
             {
-                int read = fis.read( buffer );
+                int read = in.read( buffer );
                 if ( read < 0 )
                 {
                     break;
@@ -159,16 +152,21 @@ public final class ChecksumUtils
                     digest.update( buffer, 0, read );
                 }
             }
+            in.close();
+            in = null;
         }
         finally
         {
             try
             {
-                fis.close();
+                if ( in != null )
+                {
+                    in.close();
+                }
             }
             catch ( IOException e )
             {
-                // ignored
+                // Suppressed due to an exception already thrown in the try block.
             }
         }
 

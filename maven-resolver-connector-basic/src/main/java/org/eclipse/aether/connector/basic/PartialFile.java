@@ -23,9 +23,11 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.Channel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.spi.log.Logger;
 
@@ -57,19 +59,18 @@ final class PartialFile
 
         private final FileLock lock;
 
-        private final boolean concurrent;
+        private final AtomicBoolean concurrent;
 
         public LockFile( File partFile, int requestTimeout, RemoteAccessChecker checker, Logger logger )
             throws Exception
         {
             lockFile = new File( partFile.getPath() + EXT_LOCK );
-            boolean[] concurrent = { false };
+            concurrent = new AtomicBoolean( false );
             lock = lock( lockFile, partFile, requestTimeout, checker, logger, concurrent );
-            this.concurrent = concurrent[0];
         }
 
         private static FileLock lock( File lockFile, File partFile, int requestTimeout, RemoteAccessChecker checker,
-                                      Logger logger, boolean[] concurrent )
+                                      Logger logger, AtomicBoolean concurrent )
             throws Exception
         {
             boolean interrupted = false;
@@ -89,7 +90,7 @@ final class PartialFile
                     {
                         if ( lastLength < 0 )
                         {
-                            concurrent[0] = true;
+                            concurrent.set( true );
                             /*
                              * NOTE: We're going with the optimistic assumption that the other thread is downloading the
                              * file from an equivalent repository. As a bare minimum, ensure the repository we are given
@@ -104,12 +105,12 @@ final class PartialFile
                     else if ( requestTimeout > 0 && currentTime - lastTime > Math.max( requestTimeout, 3 * 1000 ) )
                     {
                         throw new IOException( "Timeout while waiting for concurrent download of " + partFile
-                            + " to progress" );
+                                                   + " to progress" );
                     }
 
                     try
                     {
-                        Thread.sleep( 100 );
+                        Thread.sleep( Math.max( requestTimeout / 2, 100 ) );
                     }
                     catch ( InterruptedException e )
                     {
@@ -129,56 +130,114 @@ final class PartialFile
         private static FileLock tryLock( File lockFile )
             throws IOException
         {
-            RandomAccessFile raf = new RandomAccessFile( lockFile, "rw" );
+            RandomAccessFile raf = null;
+            FileLock lock = null;
             try
             {
-                FileLock lock = raf.getChannel().tryLock( 0, 1, false );
+                raf = new RandomAccessFile( lockFile, "rw" );
+                lock = raf.getChannel().tryLock( 0, 1, false );
+
                 if ( lock == null )
                 {
-                    close( raf );
+                    raf.close();
+                    raf = null;
                 }
-                return lock;
             }
             catch ( OverlappingFileLockException e )
             {
                 close( raf );
-                return null;
+                raf = null;
+                lock = null;
             }
             catch ( RuntimeException e )
             {
                 close( raf );
-                lockFile.delete();
+                raf = null;
+                if ( !lockFile.delete() )
+                {
+                    lockFile.deleteOnExit();
+                }
                 throw e;
             }
             catch ( IOException e )
             {
                 close( raf );
-                lockFile.delete();
+                raf = null;
+                if ( !lockFile.delete() )
+                {
+                    lockFile.deleteOnExit();
+                }
                 throw e;
             }
+            finally
+            {
+                try
+                {
+                    if ( lock == null && raf != null )
+                    {
+                        raf.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+            }
+
+            return lock;
         }
 
         private static void close( Closeable file )
         {
             try
             {
-                file.close();
+                if ( file != null )
+                {
+                    file.close();
+                }
             }
             catch ( IOException e )
             {
-                // irrelevant
+                // Suppressed.
             }
         }
 
         public boolean isConcurrent()
         {
-            return concurrent;
+            return concurrent.get();
         }
 
-        public void close()
+        public void close() throws IOException
         {
-            close( lock.channel() );
-            lockFile.delete();
+            Channel channel = null;
+            try
+            {
+                channel = lock.channel();
+                lock.release();
+                channel.close();
+                channel = null;
+            }
+            finally
+            {
+                try
+                {
+                    if ( channel != null )
+                    {
+                        channel.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+                finally
+                {
+                    if ( !lockFile.delete() )
+                    {
+                        lockFile.deleteOnExit();
+                    }
+                }
+            }
         }
 
         @Override
@@ -277,7 +336,7 @@ final class PartialFile
         return lockFile != null && partFile.length() >= threshold;
     }
 
-    public void close()
+    public void close() throws IOException
     {
         if ( partFile.exists() && !isResume() )
         {

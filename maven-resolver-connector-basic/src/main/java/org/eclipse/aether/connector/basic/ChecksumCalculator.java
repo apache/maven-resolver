@@ -22,6 +22,7 @@ package org.eclipse.aether.connector.basic;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -139,52 +140,57 @@ final class ChecksumCalculator
         {
             return;
         }
+
+        InputStream in = null;
         try
         {
-            FileInputStream fis = new FileInputStream( targetFile );
-            try
+            in = new FileInputStream( targetFile );
+            long total = 0;
+            ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
+            for ( byte[] array = buffer.array(); total < dataOffset; )
             {
-                long total = 0;
-                ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
-                for ( byte[] array = buffer.array(); total < dataOffset; )
+                int read = in.read( array );
+                if ( read < 0 )
                 {
-                    int read = fis.read( array );
-                    if ( read < 0 )
+                    if ( total < dataOffset )
                     {
-                        if ( total < dataOffset )
-                        {
-                            throw new IOException( targetFile + " contains only " + total
-                                + " bytes, cannot resume download from offset " + dataOffset );
-                        }
-                        break;
+                        throw new IOException( targetFile + " contains only " + total
+                                                   + " bytes, cannot resume download from offset " + dataOffset );
                     }
-                    total += read;
-                    if ( total > dataOffset )
-                    {
-                        read -= total - dataOffset;
-                    }
-                    buffer.rewind();
-                    buffer.limit( read );
-                    update( buffer );
+                    break;
                 }
-            }
-            finally
-            {
-                try
+                total += read;
+                if ( total > dataOffset )
                 {
-                    fis.close();
+                    read -= total - dataOffset;
                 }
-                catch ( IOException e )
-                {
-                    // irrelevant
-                }
+                buffer.rewind();
+                buffer.limit( read );
+                update( buffer );
             }
+
+            in.close();
+            in = null;
         }
         catch ( IOException e )
         {
             for ( Checksum checksum : checksums )
             {
                 checksum.error( e );
+            }
+        }
+        finally
+        {
+            try
+            {
+                if ( in != null )
+                {
+                    in.close();
+                }
+            }
+            catch ( IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
             }
         }
     }

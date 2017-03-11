@@ -26,6 +26,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.util.ArrayList;
@@ -97,47 +98,90 @@ public class PartialFileTest
         @Override
         public void run()
         {
+            RandomAccessFile raf = null;
+            FileLock lock = null;
+            OutputStream out = null;
             try
             {
-                RandomAccessFile raf = new RandomAccessFile( lockFile, "rw" );
-                try
+                raf = new RandomAccessFile( lockFile, "rw" );
+                lock = raf.getChannel().lock( 0, 1, false );
+                locked.countDown();
+                out = new FileOutputStream( partFile );
+                for ( int i = 0, n = Math.abs( length ); i < n; i++ )
                 {
-                    FileLock lock = raf.getChannel().lock( 0, 1, false );
-                    locked.countDown();
-                    FileOutputStream fos = new FileOutputStream( partFile );
-                    try
+                    for ( long start = System.currentTimeMillis(); System.currentTimeMillis() - start < sleep; )
                     {
-                        for ( int i = 0, n = Math.abs( length ); i < n; i++ )
-                        {
-                            for ( long start = System.currentTimeMillis(); System.currentTimeMillis() - start < sleep; )
-                            {
-                                Thread.sleep( 10 );
-                            }
-                            fos.write( 65 );
-                            fos.flush();
-                            System.out.println( "  " + System.currentTimeMillis() + " Wrote byte " + ( i + 1 ) + "/"
-                                + n );
-                        }
-                        if ( length >= 0 && !dstFile.setLastModified( System.currentTimeMillis() ) )
-                        {
-                            throw new IOException( "Could not update destination file" );
-                        }
+                        Thread.sleep( 10 );
                     }
-                    finally
-                    {
-                        fos.close();
-                    }
-                    lock.release();
+                    out.write( 65 );
+                    out.flush();
+                    System.out.println( "  " + System.currentTimeMillis() + " Wrote byte " + ( i + 1 ) + "/"
+                                            + n );
                 }
-                finally
+                if ( length >= 0 && !dstFile.setLastModified( System.currentTimeMillis() ) )
                 {
-                    raf.close();
-                    lockFile.delete();
+                    throw new IOException( "Could not update destination file" );
                 }
+
+                out.close();
+                out = null;
+                lock.release();
+                lock = null;
+                raf.close();
+                raf = null;
             }
             catch ( Exception e )
             {
                 error = e;
+            }
+            finally
+            {
+                try
+                {
+                    if ( out != null )
+                    {
+                        out.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+                finally
+                {
+                    try
+                    {
+                        if ( lock != null )
+                        {
+                            lock.release();
+                        }
+                    }
+                    catch ( final IOException e )
+                    {
+                        // Suppressed due to an exception already thrown in the try block.
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if ( raf != null )
+                            {
+                                raf.close();
+                            }
+                        }
+                        catch ( final IOException e )
+                        {
+                            // Suppressed due to an exception already thrown in the try block.
+                        }
+                        finally
+                        {
+                            if ( !lockFile.delete() )
+                            {
+                                lockFile.deleteOnExit();
+                            }
+                        }
+                    }
+                }
             }
         }
 

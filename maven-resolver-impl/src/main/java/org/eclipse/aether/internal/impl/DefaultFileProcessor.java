@@ -19,7 +19,6 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -39,21 +38,6 @@ import org.eclipse.aether.spi.io.FileProcessor;
 public class DefaultFileProcessor
     implements FileProcessor
 {
-
-    private static void close( Closeable closeable )
-    {
-        if ( closeable != null )
-        {
-            try
-            {
-                closeable.close();
-            }
-            catch ( IOException e )
-            {
-                // too bad but who cares
-            }
-        }
-    }
 
     /**
      * Thread-safe variant of {@link File#mkdirs()}. Creates the directory named by the given abstract pathname,
@@ -99,22 +83,32 @@ public class DefaultFileProcessor
     {
         mkdirs( target.getAbsoluteFile().getParentFile() );
 
-        OutputStream fos = null;
+        OutputStream out = null;
         try
         {
-            fos = new FileOutputStream( target );
+            out = new FileOutputStream( target );
 
             if ( data != null )
             {
-                fos.write( data.getBytes( "UTF-8" ) );
+                out.write( data.getBytes( "UTF-8" ) );
             }
 
-            // allow output to report any flush/close errors
-            fos.close();
+            out.close();
+            out = null;
         }
         finally
         {
-            close( fos );
+            try
+            {
+                if ( out != null )
+                {
+                    out.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 
@@ -123,19 +117,29 @@ public class DefaultFileProcessor
     {
         mkdirs( target.getAbsoluteFile().getParentFile() );
 
-        OutputStream fos = null;
+        OutputStream out = null;
         try
         {
-            fos = new FileOutputStream( target );
+            out = new FileOutputStream( target );
 
-            copy( fos, source, null );
+            copy( out, source, null );
 
-            // allow output to report any flush/close errors
-            fos.close();
+            out.close();
+            out = null;
         }
         finally
         {
-            close( fos );
+            try
+            {
+                if ( out != null )
+                {
+                    out.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 
@@ -150,25 +154,51 @@ public class DefaultFileProcessor
     {
         long total = 0;
 
-        InputStream fis = null;
-        OutputStream fos = null;
+        InputStream in = null;
+        OutputStream out = null;
         try
         {
-            fis = new FileInputStream( source );
+            in = new FileInputStream( source );
 
             mkdirs( target.getAbsoluteFile().getParentFile() );
 
-            fos = new FileOutputStream( target );
+            out = new FileOutputStream( target );
 
-            total = copy( fos, fis, listener );
+            total = copy( out, in, listener );
 
-            // allow output to report any flush/close errors
-            fos.close();
+            out.close();
+            out = null;
+
+            in.close();
+            in = null;
         }
         finally
         {
-            close( fis );
-            close( fos );
+            try
+            {
+                if ( out != null )
+                {
+                    out.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
+            finally
+            {
+                try
+                {
+                    if ( in != null )
+                    {
+                        in.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+            }
         }
 
         return total;

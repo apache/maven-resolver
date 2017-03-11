@@ -20,7 +20,6 @@ package org.eclipse.aether.internal.test.util;
  */
 
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -37,21 +36,6 @@ import org.eclipse.aether.spi.io.FileProcessor;
 public class TestFileProcessor
     implements FileProcessor
 {
-
-    private static void close( Closeable closeable )
-    {
-        if ( closeable != null )
-        {
-            try
-            {
-                closeable.close();
-            }
-            catch ( IOException e )
-            {
-                // too bad but who cares
-            }
-        }
-    }
 
     public boolean mkdirs( File directory )
     {
@@ -98,12 +82,22 @@ public class TestFileProcessor
                 fos.write( data.getBytes( "UTF-8" ) );
             }
 
-            // allow output to report any flush/close errors
             fos.close();
+            fos = null;
         }
         finally
         {
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 
@@ -119,12 +113,22 @@ public class TestFileProcessor
 
             copy( fos, source, null );
 
-            // allow output to report any flush/close errors
             fos.close();
+            fos = null;
         }
         finally
         {
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 
@@ -151,13 +155,39 @@ public class TestFileProcessor
 
             total = copy( fos, fis, listener );
 
-            // allow output to report any flush/close errors
             fos.close();
+            fos = null;
+
+            fis.close();
+            fis = null;
         }
         finally
         {
-            close( fis );
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
+            finally
+            {
+                try
+                {
+                    if ( fis != null )
+                    {
+                        fis.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+            }
         }
 
         return total;

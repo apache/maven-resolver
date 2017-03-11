@@ -20,7 +20,6 @@ package org.eclipse.aether.internal.test.util;
  */
 
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -179,22 +178,6 @@ public class TestFileUtils
         return tmpFile;
     }
 
-    private static void close( Closeable c )
-        throws IOException
-    {
-        if ( c != null )
-        {
-            try
-            {
-                c.close();
-            }
-            catch ( IOException e )
-            {
-                // ignore
-            }
-        }
-    }
-
     public static long copyFile( File source, File target )
         throws IOException
     {
@@ -210,7 +193,7 @@ public class TestFileUtils
 
             fos = new BufferedOutputStream( new FileOutputStream( target ) );
 
-            for ( byte[] buffer = new byte[1024 * 32];; )
+            for ( byte[] buffer = new byte[ 1024 * 32 ];; )
             {
                 int bytes = fis.read( buffer );
                 if ( bytes < 0 )
@@ -224,11 +207,38 @@ public class TestFileUtils
             }
 
             fos.close();
+            fos = null;
+
+            fis.close();
+            fis = null;
         }
         finally
         {
-            close( fis );
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
+            finally
+            {
+                try
+                {
+                    if ( fis != null )
+                    {
+                        fis.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+            }
         }
 
         return total;
@@ -241,13 +251,25 @@ public class TestFileUtils
         try
         {
             in = new RandomAccessFile( file, "r" );
-            byte[] actual = new byte[(int) in.length()];
+            byte[] actual = new byte[ (int) in.length() ];
             in.readFully( actual );
+            in.close();
+            in = null;
             return actual;
         }
         finally
         {
-            close( in );
+            try
+            {
+                if ( in != null )
+                {
+                    in.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 
@@ -265,10 +287,21 @@ public class TestFileUtils
                 out.write( pattern );
             }
             out.close();
+            out = null;
         }
         finally
         {
-            close( out );
+            try
+            {
+                if ( out != null )
+                {
+                    out.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 
@@ -293,10 +326,22 @@ public class TestFileUtils
         {
             fis = new FileInputStream( file );
             props.load( fis );
+            fis.close();
+            fis = null;
         }
         finally
         {
-            close( fis );
+            try
+            {
+                if ( fis != null )
+                {
+                    fis.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 
@@ -311,10 +356,21 @@ public class TestFileUtils
             fos = new FileOutputStream( file );
             props.store( fos, "aether-test" );
             fos.close();
+            fos = null;
         }
         finally
         {
-            close( fos );
+            try
+            {
+                if ( fos != null )
+                {
+                    fos.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
     }
 

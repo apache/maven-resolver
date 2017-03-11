@@ -113,9 +113,10 @@ class IniArtifactDataReader
 
         Map<State, List<String>> sections = new HashMap<State, List<String>>();
 
-        BufferedReader in = new BufferedReader( reader );
+        BufferedReader in = null;
         try
         {
+            in = new BufferedReader( reader );
             while ( ( line = in.readLine() ) != null )
             {
 
@@ -149,10 +150,23 @@ class IniArtifactDataReader
                     lines.add( line.trim() );
                 }
             }
+
+            in.close();
+            in = null;
         }
         finally
         {
-            in.close();
+            try
+            {
+                if ( in != null )
+                {
+                    in.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
+            }
         }
 
         Artifact relocation = relocation( sections.get( State.RELOCATION ) );

@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.test.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
@@ -187,17 +186,27 @@ public class DependencyGraphParser
     public DependencyNode parse( URL resource )
         throws IOException
     {
-        InputStream stream = null;
+        BufferedReader reader = null;
         try
         {
-            stream = resource.openStream();
-            return parse( new BufferedReader( new InputStreamReader( stream, "UTF-8" ) ) );
+            reader = new BufferedReader( new InputStreamReader( resource.openStream(), "UTF-8" ) );
+            final DependencyNode node = parse( reader );
+            reader.close();
+            reader = null;
+            return node;
         }
         finally
         {
-            if ( stream != null )
+            try
             {
-                stream.close();
+                if ( reader != null )
+                {
+                    reader.close();
+                }
+            }
+            catch ( final IOException e )
+            {
+                // Suppressed due to an exception already thrown in the try block.
             }
         }
     }
