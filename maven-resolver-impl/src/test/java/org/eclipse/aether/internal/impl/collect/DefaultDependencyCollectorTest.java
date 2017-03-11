@@ -43,6 +43,7 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
@@ -61,6 +62,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -485,6 +487,34 @@ public class DefaultDependencyCollectorTest
     }
 
     @Test
+    public void testDependencyManagement_TransitiveDependencyManager()
+        throws DependencyCollectionException, IOException
+    {
+        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
+        parser = new DependencyGraphParser( "artifact-descriptions/managed/" );
+        session.setDependencyManager( new TransitiveDependencyManager() );
+        final Dependency root = newDep( "gid:root:ext:ver", "compile" );
+        CollectRequest request = new CollectRequest( root, Arrays.asList( repository ) );
+        request.addManagedDependency( newDep( "gid:root:ext:must-retain-core-management" ) );
+        CollectResult result = collector.collectDependencies( session, request );
+
+        final DependencyNode expectedTree = parser.parseResource( "management-tree.txt" );
+        assertEqualSubtree( expectedTree, result.getRoot() );
+
+        // Same test for root artifact (POM) request.
+        final CollectRequest rootArtifactRequest = new CollectRequest();
+        rootArtifactRequest.setRepositories( Arrays.asList( repository ) );
+        rootArtifactRequest.setRootArtifact( new DefaultArtifact( "gid:root:ext:ver" ) );
+        rootArtifactRequest.addDependency( newDep( "gid:direct:ext:ver", "compile" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:root:ext:must-retain-core-management" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:direct:ext:must-retain-core-management" ) );
+        rootArtifactRequest.addManagedDependency( newDep( "gid:transitive-1:ext:managed-by-root" ) );
+        session.setDependencyManager( new TransitiveDependencyManager() );
+        result = collector.collectDependencies( session, rootArtifactRequest );
+        assertEqualSubtree( expectedTree, this.toDependencyResult( result.getRoot(), "compile", null ) );
+    }
+
+    @Test
     public void testVersionFilter()
         throws Exception
     {
@@ -492,6 +522,24 @@ public class DefaultDependencyCollectorTest
         CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:1" ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertEquals( 1, result.getRoot().getChildren().size() );
+    }
+
+    private DependencyNode toDependencyResult( final DependencyNode root, final String rootScope,
+                                               final Boolean optional )
+    {
+        // Make the root artifact resultion result a dependency resolution result for the subtree check.
+        assertNull( "Expected root artifact resolution result.", root.getDependency() );
+        final DefaultDependencyNode defaultNode =
+            new DefaultDependencyNode( new Dependency( root.getArtifact(), rootScope ) );
+
+        defaultNode.setChildren( root.getChildren() );
+
+        if ( optional != null )
+        {
+            defaultNode.setOptional( optional );
+        }
+
+        return defaultNode;
     }
 
     static class TestDependencyManager
