@@ -169,7 +169,7 @@ public class DefaultDependencyCollector
         List<Dependency> managedDependencies = request.getManagedDependencies();
 
         Map<String, Object> stats = logger.isDebugEnabled() ? new LinkedHashMap<String, Object>() : null;
-        long time1 = System.currentTimeMillis();
+        long time1 = System.nanoTime();
 
         DefaultDependencyNode node;
         if ( root != null )
@@ -271,7 +271,7 @@ public class DefaultDependencyCollector
             errorPath = results.errorPath;
         }
 
-        long time2 = System.currentTimeMillis();
+        long time2 = System.nanoTime();
 
         DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
         if ( transformer != null )
@@ -291,7 +291,7 @@ public class DefaultDependencyCollector
 
         if ( stats != null )
         {
-            long time3 = System.currentTimeMillis();
+            long time3 = System.nanoTime();
             stats.put( "DefaultDependencyCollector.collectTime", time2 - time1 );
             stats.put( "DefaultDependencyCollector.transformTime", time3 - time2 );
             logger.debug( "Dependency collection stats: " + stats );
