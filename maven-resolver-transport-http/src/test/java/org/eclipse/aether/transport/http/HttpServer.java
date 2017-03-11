@@ -365,9 +365,10 @@ public class HttpServer
                 {
                     return;
                 }
-                FileInputStream is = new FileInputStream( file );
+                FileInputStream is = null;
                 try
                 {
+                    is = new FileInputStream( file );
                     if ( offset > 0 )
                     {
                         long skipped = is.skip( offset );
@@ -377,10 +378,22 @@ public class HttpServer
                         }
                     }
                     IO.copy( is, response.getOutputStream() );
+                    is.close();
+                    is = null;
                 }
                 finally
                 {
-                    IO.close( is );
+                    try
+                    {
+                        if ( is != null )
+                        {
+                            is.close();
+                        }
+                    }
+                    catch ( final IOException e )
+                    {
+                        // Suppressed due to an exception already thrown in the try block.
+                    }
                 }
             }
             else if ( HttpMethods.PUT.equals( req.getMethod() ) )
@@ -393,14 +406,27 @@ public class HttpServer
                 {
                     try
                     {
-                        FileOutputStream os = new FileOutputStream( file );
+                        FileOutputStream os = null;
                         try
                         {
+                            os = new FileOutputStream( file );
                             IO.copy( request.getInputStream(), os );
+                            os.close();
+                            os = null;
                         }
                         finally
                         {
-                            os.close();
+                            try
+                            {
+                                if ( os != null )
+                                {
+                                    os.close();
+                                }
+                            }
+                            catch ( final IOException e )
+                            {
+                                // Suppressed due to an exception already thrown in the try block.
+                            }
                         }
                     }
                     catch ( IOException e )

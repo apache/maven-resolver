@@ -19,7 +19,6 @@ package org.eclipse.aether.transport.wagon;
  * under the License.
  */
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -458,6 +457,7 @@ final class WagonTransporter
         if ( path != null && !path.delete() && path.exists() )
         {
             logger.debug( "Could not delete temorary file " + path );
+            path.deleteOnExit();
         }
     }
 
@@ -468,21 +468,6 @@ final class WagonTransporter
         for ( int read = is.read( buffer ); read >= 0; read = is.read( buffer ) )
         {
             os.write( buffer, 0, read );
-        }
-    }
-
-    private static void close( Closeable file )
-    {
-        if ( file != null )
-        {
-            try
-            {
-                file.close();
-            }
-            catch ( IOException e )
-            {
-                // too bad
-            }
         }
     }
 
@@ -551,14 +536,27 @@ final class WagonTransporter
             File file = task.getDataFile();
             if ( file == null && wagon instanceof StreamingWagon )
             {
-                OutputStream dst = task.newOutputStream();
+                OutputStream dst = null;
                 try
                 {
+                    dst = task.newOutputStream();
                     ( (StreamingWagon) wagon ).getToStream( src, dst );
+                    dst.close();
+                    dst = null;
                 }
                 finally
                 {
-                    dst.close();
+                    try
+                    {
+                        if ( dst != null )
+                        {
+                            dst.close();
+                        }
+                    }
+                    catch ( final IOException e )
+                    {
+                        // Suppressed due to an exception already thrown in the try block.
+                    }
                 }
             }
             else
@@ -567,14 +565,14 @@ final class WagonTransporter
                 try
                 {
                     wagon.get( src, dst );
-                    if ( !dst.exists() )
+                    /*
+                     * NOTE: Wagon (1.0-beta-6) doesn't create the destination file when transferring a 0-byte
+                     * resource. So if the resource we asked for didn't cause any exception but doesn't show up in
+                     * the dst file either, Wagon tells us in its weird way the file is empty.
+                     */
+                    if ( !dst.exists() && !dst.createNewFile() )
                     {
-                        /*
-                         * NOTE: Wagon (1.0-beta-6) doesn't create the destination file when transferring a 0-byte
-                         * resource. So if the resource we asked for didn't cause any exception but doesn't show up in
-                         * the dst file either, Wagon tells us in its weird way the file is empty.
-                         */
-                        new FileOutputStream( dst ).close();
+                        throw new IOException( String.format( "Failure creating file '%s'.", dst.getAbsolutePath() ) );
                     }
                     if ( file == null )
                     {
@@ -594,23 +592,45 @@ final class WagonTransporter
         private void readTempFile( File dst )
             throws IOException
         {
-            FileInputStream fis = new FileInputStream( dst );
+            FileInputStream in = null;
+            OutputStream out = null;
             try
             {
-                OutputStream os = task.newOutputStream();
-                try
-                {
-                    copy( os, fis );
-                    os.close();
-                }
-                finally
-                {
-                    close( os );
-                }
+                in = new FileInputStream( dst );
+                out = task.newOutputStream();
+                copy( out, in );
+                out.close();
+                out = null;
+                in.close();
+                in = null;
             }
             finally
             {
-                close( fis );
+                try
+                {
+                    if ( out != null )
+                    {
+                        out.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+                finally
+                {
+                    try
+                    {
+                        if ( in != null )
+                        {
+                            in.close();
+                        }
+                    }
+                    catch ( final IOException e )
+                    {
+                        // Suppressed due to an exception already thrown in the try block.
+                    }
+                }
             }
         }
 
@@ -634,15 +654,28 @@ final class WagonTransporter
             File file = task.getDataFile();
             if ( file == null && wagon instanceof StreamingWagon )
             {
-                InputStream src = task.newInputStream();
+                InputStream src = null;
                 try
                 {
+                    src = task.newInputStream();
                     // StreamingWagon uses an internal buffer on src input stream.
                     ( (StreamingWagon) wagon ).putFromStream( src, dst, task.getDataLength(), -1 );
+                    src.close();
+                    src = null;
                 }
                 finally
                 {
-                    close( src );
+                    try
+                    {
+                        if ( src != null )
+                        {
+                            src.close();
+                        }
+                    }
+                    catch ( final IOException e )
+                    {
+                        // Suppressed due to an exception already thrown in the try block.
+                    }
                 }
             }
             else
@@ -666,32 +699,52 @@ final class WagonTransporter
             throws IOException
         {
             File tmp = newTempFile();
+            OutputStream out = null;
+            InputStream in = null;
             try
             {
-                FileOutputStream fos = new FileOutputStream( tmp );
-                try
-                {
-                    InputStream is = task.newInputStream();
-                    try
-                    {
-                        copy( fos, is );
-                        fos.close();
-                    }
-                    finally
-                    {
-                        close( is );
-                    }
-                }
-                finally
-                {
-                    close( fos );
-                }
+                in = task.newInputStream();
+                out = new FileOutputStream( tmp );
+                copy( out, in );
+                out.close();
+                out = null;
+                in.close();
+                in = null;
             }
             catch ( IOException e )
             {
                 delTempFile( tmp );
                 throw e;
             }
+            finally
+            {
+                try
+                {
+                    if ( out != null )
+                    {
+                        out.close();
+                    }
+                }
+                catch ( final IOException e )
+                {
+                    // Suppressed due to an exception already thrown in the try block.
+                }
+                finally
+                {
+                    try
+                    {
+                        if ( in != null )
+                        {
+                            in.close();
+                        }
+                    }
+                    catch ( final IOException e )
+                    {
+                        // Suppressed due to an exception already thrown in the try block.
+                    }
+                }
+            }
+
             return tmp;
         }
 
