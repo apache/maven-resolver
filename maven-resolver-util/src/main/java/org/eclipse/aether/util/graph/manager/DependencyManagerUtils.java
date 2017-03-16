@@ -19,8 +19,12 @@ package org.eclipse.aether.util.graph.manager;
  * under the License.
  */
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 
 /**
  * A utility class assisting in analyzing the effects of dependency management.
@@ -55,10 +59,27 @@ public final class DependencyManagerUtils
     public static final String NODE_DATA_PREMANAGED_OPTIONAL = "premanaged.optional";
 
     /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the original exclusions
+     * are stored.
+     *
+     * @since 1.1.0
+     */
+    public static final String NODE_DATA_PREMANAGED_EXCLUSIONS = "premanaged.exclusions";
+
+    /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the original properties
+     * are stored.
+     *
+     * @since 1.1.0
+     */
+    public static final String NODE_DATA_PREMANAGED_PROPERTIES = "premanaged.properties";
+
+    /**
      * Gets the version or version range of the specified dependency node before dependency management was applied (if
      * any).
-     * 
+     *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
+     *
      * @return The node's dependency version before dependency management or {@code null} if the version was not managed
      *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
@@ -73,8 +94,9 @@ public final class DependencyManagerUtils
 
     /**
      * Gets the scope of the specified dependency node before dependency management was applied (if any).
-     * 
+     *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
+     *
      * @return The node's dependency scope before dependency management or {@code null} if the scope was not managed or
      *         if {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
@@ -89,8 +111,9 @@ public final class DependencyManagerUtils
 
     /**
      * Gets the optional flag of the specified dependency node before dependency management was applied (if any).
-     * 
+     *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
+     *
      * @return The node's optional flag before dependency management or {@code null} if the flag was not managed or if
      *         {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
@@ -101,6 +124,46 @@ public final class DependencyManagerUtils
             return null;
         }
         return cast( node.getData().get( NODE_DATA_PREMANAGED_OPTIONAL ), Boolean.class );
+    }
+
+    /**
+     * Gets the {@code Exclusion}s of the specified dependency node before dependency management was applied (if any).
+     *
+     * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
+     *
+     * @return The nodes' {@code Exclusion}s before dependency management or {@code null} if exclusions were not managed
+     *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     *
+     * @since 1.1.0
+     */
+    @SuppressWarnings( "unchecked" )
+    public static Collection<Exclusion> getPremanagedExclusions( DependencyNode node )
+    {
+        if ( ( node.getManagedBits() & DependencyNode.MANAGED_EXCLUSIONS ) == 0 )
+        {
+            return null;
+        }
+        return cast( node.getData().get( NODE_DATA_PREMANAGED_EXCLUSIONS ), Collection.class );
+    }
+
+    /**
+     * Gets the properties of the specified dependency node before dependency management was applied (if any).
+     *
+     * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
+     *
+     * @return The nodes' properties before dependency management or {@code null} if properties were not managed or if
+     *         {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     *
+     * @since 1.1.0
+     */
+    @SuppressWarnings( "unchecked" )
+    public static Map<String, String> getPremanagedProperties( DependencyNode node )
+    {
+        if ( ( node.getManagedBits() & DependencyNode.MANAGED_PROPERTIES ) == 0 )
+        {
+            return null;
+        }
+        return cast( node.getData().get( NODE_DATA_PREMANAGED_PROPERTIES ), Map.class );
     }
 
     private static <T> T cast( Object obj, Class<T> type )

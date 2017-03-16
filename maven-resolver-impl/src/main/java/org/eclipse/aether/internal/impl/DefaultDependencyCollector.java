@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -497,10 +499,11 @@ public class DefaultDependencyCollector
         DependencyTraverser childTraverser = depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null;
         VersionFilter childFilter = verFilter != null ? verFilter.deriveChildFilter( context ) : null;
 
-        final List<RemoteRepository> childRepos = args.ignoreRepos
-            ? repositories
-            : remoteRepositoryManager.aggregateRepositories( args.session, repositories,
-                                                             descriptorResult.getRepositories(), true );
+        final List<RemoteRepository> childRepos =
+            args.ignoreRepos
+                ? repositories
+                : remoteRepositoryManager.aggregateRepositories( args.session, repositories,
+                                                                 descriptorResult.getRepositories(), true );
 
         Object key =
             args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter );
@@ -528,8 +531,9 @@ public class DefaultDependencyCollector
                                                                   ArtifactDescriptorRequest descriptorRequest )
     {
         return noDescriptor
-            ? new ArtifactDescriptorResult( descriptorRequest )
-            : resolveCachedArtifactDescriptor( args.pool, descriptorRequest, args.session, d, results, args );
+                   ? new ArtifactDescriptorResult( descriptorRequest )
+                   : resolveCachedArtifactDescriptor( args.pool, descriptorRequest, args.session, d, results, args );
+
     }
 
     private ArtifactDescriptorResult resolveCachedArtifactDescriptor( DataPool pool,
@@ -629,7 +633,6 @@ public class DefaultDependencyCollector
         return rangeResult;
     }
 
-
     private static boolean isLackingDescriptor( Artifact artifact )
     {
         return artifact.getProperty( ArtifactProperties.LOCAL_PATH, null ) != null;
@@ -711,7 +714,6 @@ public class DefaultDependencyCollector
 
         final CollectRequest request;
 
-
         public Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
                      DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
                      CollectRequest request )
@@ -789,11 +791,22 @@ public class DefaultDependencyCollector
 
     static class PremanagedDependency
     {
+
         final String premanagedVersion;
 
         final String premanagedScope;
 
         final Boolean premanagedOptional;
+
+        /**
+         * @since 1.1.0
+         */
+        final Collection<Exclusion> premanagedExclusions;
+
+        /**
+         * @since 1.1.0
+         */
+        final Map<String, String> premanagedProperties;
 
         final int managedBits;
 
@@ -802,11 +815,22 @@ public class DefaultDependencyCollector
         final boolean premanagedState;
 
         PremanagedDependency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
+                              Collection<Exclusion> premanagedExclusions, Map<String, String> premanagedProperties,
                               int managedBits, Dependency managedDependency, boolean premanagedState )
         {
             this.premanagedVersion = premanagedVersion;
             this.premanagedScope = premanagedScope;
             this.premanagedOptional = premanagedOptional;
+            this.premanagedExclusions =
+                premanagedExclusions != null
+                    ? Collections.unmodifiableCollection( new ArrayList<Exclusion>( premanagedExclusions ) )
+                    : null;
+
+            this.premanagedProperties =
+                premanagedProperties != null
+                    ? Collections.unmodifiableMap( new HashMap<String, String>( premanagedProperties ) )
+                    : null;
+
             this.managedBits = managedBits;
             this.managedDependency = managedDependency;
             this.premanagedState = premanagedState;
@@ -821,6 +845,8 @@ public class DefaultDependencyCollector
             String premanagedVersion = null;
             String premanagedScope = null;
             Boolean premanagedOptional = null;
+            Collection<Exclusion> premanagedExclusions = null;
+            Map<String, String> premanagedProperties = null;
 
             if ( depMngt != null )
             {
@@ -834,6 +860,7 @@ public class DefaultDependencyCollector
                 if ( depMngt.getProperties() != null )
                 {
                     Artifact artifact = dependency.getArtifact();
+                    premanagedProperties = artifact.getProperties();
                     dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
                     managedBits |= DependencyNode.MANAGED_PROPERTIES;
                 }
@@ -851,12 +878,15 @@ public class DefaultDependencyCollector
                 }
                 if ( depMngt.getExclusions() != null )
                 {
+                    premanagedExclusions = dependency.getExclusions();
                     dependency = dependency.setExclusions( depMngt.getExclusions() );
                     managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
                 }
             }
-            return new PremanagedDependency( premanagedVersion, premanagedScope, premanagedOptional, managedBits,
-                                             dependency, premanagedState );
+            return new PremanagedDependency( premanagedVersion, premanagedScope, premanagedOptional,
+                                             premanagedExclusions, premanagedProperties, managedBits, dependency,
+                                             premanagedState );
+
         }
 
         public void applyTo( DefaultDependencyNode child )
@@ -867,8 +897,11 @@ public class DefaultDependencyCollector
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_EXCLUSIONS, premanagedExclusions );
+                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_PROPERTIES, premanagedProperties );
             }
         }
+
     }
 
 }
