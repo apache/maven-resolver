@@ -47,16 +47,37 @@ public final class DependencyManagerUtils
     public static final String NODE_DATA_PREMANAGED_VERSION = "premanaged.version";
 
     /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the informational hint
+     * describing the source declaring the version management is stored.
+     * @since 1.2.0
+     */
+    public static final String NODE_DATA_VERSION_MANAGEMENT_SOURCE_HINT = "version.management.source.hint";
+
+    /**
      * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the original scope is
      * stored.
      */
     public static final String NODE_DATA_PREMANAGED_SCOPE = "premanaged.scope";
 
     /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the informational hint
+     * describing the source declaring the scope management is stored.
+     * @since 1.2.0
+     */
+    public static final String NODE_DATA_SCOPE_MANAGEMENT_SOURCE_HINT = "scope.management.source.hint";
+
+    /**
      * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the original optional
      * flag is stored.
      */
     public static final String NODE_DATA_PREMANAGED_OPTIONAL = "premanaged.optional";
+
+    /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the informational hint
+     * describing the source declaring the optionality management is stored.
+     * @since 1.2.0
+     */
+    public static final String NODE_DATA_OPTIONALITY_MANAGEMENT_SOURCE_HINT = "optionality.management.source.hint";
 
     /**
      * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the original exclusions
@@ -67,6 +88,13 @@ public final class DependencyManagerUtils
     public static final String NODE_DATA_PREMANAGED_EXCLUSIONS = "premanaged.exclusions";
 
     /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the informational hint
+     * describing the source declaring the exclusion management is stored.
+     * @since 1.2.0
+     */
+    public static final String NODE_DATA_EXCLUSIONS_MANAGEMENT_SOURCE_HINT = "exlusions.management.source.hint";
+
+    /**
      * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the original properties
      * are stored.
      *
@@ -75,13 +103,20 @@ public final class DependencyManagerUtils
     public static final String NODE_DATA_PREMANAGED_PROPERTIES = "premanaged.properties";
 
     /**
+     * The key in the dependency node's {@link DependencyNode#getData() custom data} under which the informational hint
+     * describing the source declaring the properties management is stored.
+     * @since 1.2.0
+     */
+    public static final String NODE_DATA_PROPERTIES_MANAGEMENT_SOURCE_HINT = "properties.management.source.hint";
+
+    /**
      * Gets the version or version range of the specified dependency node before dependency management was applied (if
      * any).
      *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
      *
      * @return The node's dependency version before dependency management or {@code null} if the version was not managed
-     *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
     public static String getPremanagedVersion( DependencyNode node )
     {
@@ -93,12 +128,31 @@ public final class DependencyManagerUtils
     }
 
     /**
+     * Gets an informational hint describing the source declaring the version management of the specified dependency
+     * node after dependency management was applied (if any).
+     *
+     * @param node The dependency node to retrieve the data of, must not be {@code null}.
+     *
+     * @return The node's version management source hint or {@code null} if no such information is available or if
+     * {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @since 1.2.0
+     */
+    public static String getVersionManagementSourceHint( DependencyNode node )
+    {
+        if ( ( node.getManagedBits() & DependencyNode.MANAGED_VERSION ) == 0 )
+        {
+            return null;
+        }
+        return cast( node.getData().get( NODE_DATA_VERSION_MANAGEMENT_SOURCE_HINT ), String.class );
+    }
+
+    /**
      * Gets the scope of the specified dependency node before dependency management was applied (if any).
      *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
      *
      * @return The node's dependency scope before dependency management or {@code null} if the scope was not managed or
-     *         if {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * if {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
     public static String getPremanagedScope( DependencyNode node )
     {
@@ -110,12 +164,31 @@ public final class DependencyManagerUtils
     }
 
     /**
+     * Gets an informational hint describing the source declaring the scope management of the specified dependency
+     * node after dependency management was applied (if any).
+     *
+     * @param node The dependency node to retrieve the data of, must not be {@code null}.
+     *
+     * @return The node's scope management source hint or {@code null} if no such information is available or if
+     * {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @since 1.2.0
+     */
+    public static String getScopeManagementSourceHint( DependencyNode node )
+    {
+        if ( ( node.getManagedBits() & DependencyNode.MANAGED_SCOPE ) == 0 )
+        {
+            return null;
+        }
+        return cast( node.getData().get( NODE_DATA_SCOPE_MANAGEMENT_SOURCE_HINT ), String.class );
+    }
+
+    /**
      * Gets the optional flag of the specified dependency node before dependency management was applied (if any).
      *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
      *
      * @return The node's optional flag before dependency management or {@code null} if the flag was not managed or if
-     *         {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
     public static Boolean getPremanagedOptional( DependencyNode node )
     {
@@ -127,12 +200,31 @@ public final class DependencyManagerUtils
     }
 
     /**
+     * Gets an informational hint describing the source declaring the optionality management of the specified
+     * dependency node after dependency management was applied (if any).
+     *
+     * @param node The dependency node to retrieve the data of, must not be {@code null}.
+     *
+     * @return The node's optionality management source hint or {@code null} if no such information is available or if
+     * {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @since 1.2.0
+     */
+    public static String getOptionalityManagementSourceHint( DependencyNode node )
+    {
+        if ( ( node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL ) == 0 )
+        {
+            return null;
+        }
+        return cast( node.getData().get( NODE_DATA_OPTIONALITY_MANAGEMENT_SOURCE_HINT ), String.class );
+    }
+
+    /**
      * Gets the {@code Exclusion}s of the specified dependency node before dependency management was applied (if any).
      *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
      *
      * @return The nodes' {@code Exclusion}s before dependency management or {@code null} if exclusions were not managed
-     *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
      *
      * @since 1.1.0
      */
@@ -147,12 +239,31 @@ public final class DependencyManagerUtils
     }
 
     /**
+     * Gets an informational hint describing the source declaring the exclusions management of the specified dependency
+     * node after dependency management was applied (if any).
+     *
+     * @param node The dependency node to retrieve the data of, must not be {@code null}.
+     *
+     * @return The node's exclusions management source hint or {@code null} if no such information is available or if
+     * {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @since 1.2.0
+     */
+    public static String getExclusionsManagementSourceHint( DependencyNode node )
+    {
+        if ( ( node.getManagedBits() & DependencyNode.MANAGED_EXCLUSIONS ) == 0 )
+        {
+            return null;
+        }
+        return cast( node.getData().get( NODE_DATA_EXCLUSIONS_MANAGEMENT_SOURCE_HINT ), String.class );
+    }
+
+    /**
      * Gets the properties of the specified dependency node before dependency management was applied (if any).
      *
      * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
      *
      * @return The nodes' properties before dependency management or {@code null} if properties were not managed or if
-     *         {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * {@link #CONFIG_PROP_VERBOSE} was not enabled.
      *
      * @since 1.1.0
      */
@@ -164,6 +275,25 @@ public final class DependencyManagerUtils
             return null;
         }
         return cast( node.getData().get( NODE_DATA_PREMANAGED_PROPERTIES ), Map.class );
+    }
+
+    /**
+     * Gets an informational hint describing the source declaring the properties management of the specified dependency
+     * node after dependency management was applied (if any).
+     *
+     * @param node The dependency node to retrieve the data of, must not be {@code null}.
+     *
+     * @return The node's properties management source hint or {@code null} if no such information is available or if
+     * {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @since 1.2.0
+     */
+    public static String getPropertiesManagementSourceHint( DependencyNode node )
+    {
+        if ( ( node.getManagedBits() & DependencyNode.MANAGED_EXCLUSIONS ) == 0 )
+        {
+            return null;
+        }
+        return cast( node.getData().get( NODE_DATA_EXCLUSIONS_MANAGEMENT_SOURCE_HINT ), String.class );
     }
 
     private static <T> T cast( Object obj, Class<T> type )

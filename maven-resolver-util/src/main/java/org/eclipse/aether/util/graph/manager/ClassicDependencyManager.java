@@ -45,13 +45,38 @@ public final class ClassicDependencyManager
 
     private final Map<Object, String> managedVersions;
 
+    /**
+     * @since 1.2.0
+     */
+    private final Map<Object, String> managedVersionsSourceHints;
+
     private final Map<Object, String> managedScopes;
+
+    /**
+     * @since 1.2.0
+     */
+    private final Map<Object, String> managedScopesSourceHints;
 
     private final Map<Object, Boolean> managedOptionals;
 
+    /**
+     * @since 1.2.0
+     */
+    private final Map<Object, String> managedOptionalsSourceHints;
+
     private final Map<Object, String> managedLocalPaths;
 
+    /**
+     * @since 1.2.0
+     */
+    private final Map<Object, String> managedLocalPathsSourceHints;
+
     private final Map<Object, Collection<Exclusion>> managedExclusions;
+
+    /**
+     * @since 1.2.0
+     */
+    private final Map<Object, Collection<String>> managedExclusionsSourceHints;
 
     private int hashCode;
 
@@ -61,21 +86,37 @@ public final class ClassicDependencyManager
     public ClassicDependencyManager()
     {
         this( 0, Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
+              Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
               Collections.<Object, Boolean>emptyMap(), Collections.<Object, String>emptyMap(),
-              Collections.<Object, Collection<Exclusion>>emptyMap() );
+              Collections.<Object, String>emptyMap(), Collections.<Object, String>emptyMap(),
+              Collections.<Object, Collection<Exclusion>>emptyMap(),
+              Collections.<Object, Collection<String>>emptyMap() );
     }
 
-    private ClassicDependencyManager( int depth, Map<Object, String> managedVersions,
-                                      Map<Object, String> managedScopes, Map<Object, Boolean> managedOptionals,
+    private ClassicDependencyManager( int depth,
+                                      Map<Object, String> managedVersions,
+                                      Map<Object, String> managedVersionsSourceHints,
+                                      Map<Object, String> managedScopes,
+                                      Map<Object, String> managedScopesSourceHints,
+                                      Map<Object, Boolean> managedOptionals,
+                                      Map<Object, String> managedOptionalsSourceHints,
                                       Map<Object, String> managedLocalPaths,
-                                      Map<Object, Collection<Exclusion>> managedExclusions )
+                                      Map<Object, String> managedLocalPathsSourceHints,
+                                      Map<Object, Collection<Exclusion>> managedExclusions,
+                                      Map<Object, Collection<String>> managedExclusionsSourceHints )
     {
+        super();
         this.depth = depth;
         this.managedVersions = managedVersions;
+        this.managedVersionsSourceHints = managedVersionsSourceHints;
         this.managedScopes = managedScopes;
+        this.managedScopesSourceHints = managedScopesSourceHints;
         this.managedOptionals = managedOptionals;
+        this.managedOptionalsSourceHints = managedOptionalsSourceHints;
         this.managedLocalPaths = managedLocalPaths;
+        this.managedLocalPathsSourceHints = managedLocalPathsSourceHints;
         this.managedExclusions = managedExclusions;
+        this.managedExclusionsSourceHints = managedExclusionsSourceHints;
     }
 
     public DependencyManager deriveChildManager( DependencyCollectionContext context )
@@ -86,15 +127,23 @@ public final class ClassicDependencyManager
         }
         else if ( depth == 1 )
         {
-            return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedOptionals,
-                                                 managedLocalPaths, managedExclusions );
+            return new ClassicDependencyManager( depth + 1, managedVersions, managedVersionsSourceHints,
+                                                 managedScopes, managedScopesSourceHints,
+                                                 managedOptionals, managedOptionalsSourceHints,
+                                                 managedLocalPaths, managedLocalPathsSourceHints,
+                                                 managedExclusions, managedExclusionsSourceHints );
         }
 
-        Map<Object, String> managedVersions = this.managedVersions;
-        Map<Object, String> managedScopes = this.managedScopes;
-        Map<Object, Boolean> managedOptionals = this.managedOptionals;
-        Map<Object, String> managedLocalPaths = this.managedLocalPaths;
-        Map<Object, Collection<Exclusion>> managedExclusions = this.managedExclusions;
+        Map<Object, String> versions = this.managedVersions;
+        Map<Object, String> versionsSourceHints = this.managedVersionsSourceHints;
+        Map<Object, String> scopes = this.managedScopes;
+        Map<Object, String> scopesSourceHints = this.managedScopesSourceHints;
+        Map<Object, Boolean> optionals = this.managedOptionals;
+        Map<Object, String> optionalsSourceHints = this.managedOptionalsSourceHints;
+        Map<Object, String> localPaths = this.managedLocalPaths;
+        Map<Object, String> localPathsSourceHints = this.managedLocalPathsSourceHints;
+        Map<Object, Collection<Exclusion>> exclusions = this.managedExclusions;
+        Map<Object, Collection<String>> exclusionsSourceHints = this.managedExclusionsSourceHints;
 
         for ( Dependency managedDependency : context.getManagedDependencies() )
         {
@@ -102,64 +151,86 @@ public final class ClassicDependencyManager
             Object key = getKey( artifact );
 
             String version = artifact.getVersion();
-            if ( version.length() > 0 && !managedVersions.containsKey( key ) )
+            if ( version.length() > 0 && !versions.containsKey( key ) )
             {
-                if ( managedVersions == this.managedVersions )
+                if ( versions == this.managedVersions )
                 {
-                    managedVersions = new HashMap<Object, String>( this.managedVersions );
+                    versions = new HashMap<Object, String>( this.managedVersions );
+                    versionsSourceHints = new HashMap<Object, String>( this.managedVersionsSourceHints );
                 }
-                managedVersions.put( key, version );
+                versions.put( key, version );
+                versionsSourceHints.put( key, managedDependency.getSourceHint() );
             }
 
             String scope = managedDependency.getScope();
-            if ( scope.length() > 0 && !managedScopes.containsKey( key ) )
+            if ( scope.length() > 0 && !scopes.containsKey( key ) )
             {
-                if ( managedScopes == this.managedScopes )
+                if ( scopes == this.managedScopes )
                 {
-                    managedScopes = new HashMap<Object, String>( this.managedScopes );
+                    scopes = new HashMap<Object, String>( this.managedScopes );
+                    scopesSourceHints = new HashMap<Object, String>( this.managedScopesSourceHints );
                 }
-                managedScopes.put( key, scope );
+                scopes.put( key, scope );
+                scopesSourceHints.put( key, managedDependency.getSourceHint() );
             }
 
             Boolean optional = managedDependency.getOptional();
-            if ( optional != null && !managedOptionals.containsKey( key ) )
+            if ( optional != null && !optionals.containsKey( key ) )
             {
-                if ( managedOptionals == this.managedOptionals )
+                if ( optionals == this.managedOptionals )
                 {
-                    managedOptionals = new HashMap<Object, Boolean>( this.managedOptionals );
+                    optionals = new HashMap<Object, Boolean>( this.managedOptionals );
+                    optionalsSourceHints = new HashMap<Object, String>( this.managedOptionalsSourceHints );
                 }
-                managedOptionals.put( key, optional );
+                optionals.put( key, optional );
+                optionalsSourceHints.put( key, managedDependency.getSourceHint() );
             }
 
             String localPath = managedDependency.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null );
-            if ( localPath != null && !managedLocalPaths.containsKey( key ) )
+            if ( localPath != null && !localPaths.containsKey( key ) )
             {
-                if ( managedLocalPaths == this.managedLocalPaths )
+                if ( localPaths == this.managedLocalPaths )
                 {
-                    managedLocalPaths = new HashMap<Object, String>( this.managedLocalPaths );
+                    localPaths = new HashMap<Object, String>( this.managedLocalPaths );
+                    localPathsSourceHints = new HashMap<Object, String>( this.managedLocalPathsSourceHints );
                 }
-                managedLocalPaths.put( key, localPath );
+                localPaths.put( key, localPath );
+                localPathsSourceHints.put( key, managedDependency.getSourceHint() );
             }
 
-            Collection<Exclusion> exclusions = managedDependency.getExclusions();
-            if ( !exclusions.isEmpty() )
+            if ( !managedDependency.getExclusions().isEmpty() )
             {
-                if ( managedExclusions == this.managedExclusions )
+                if ( exclusions == this.managedExclusions )
                 {
-                    managedExclusions = new HashMap<Object, Collection<Exclusion>>( this.managedExclusions );
+                    exclusions = new HashMap<Object, Collection<Exclusion>>( this.managedExclusions );
+                    exclusionsSourceHints = new HashMap<Object, Collection<String>>( this.managedExclusionsSourceHints );
                 }
-                Collection<Exclusion> managed = managedExclusions.get( key );
+                Collection<Exclusion> managed = exclusions.get( key );
                 if ( managed == null )
                 {
                     managed = new LinkedHashSet<Exclusion>();
-                    managedExclusions.put( key, managed );
+                    exclusions.put( key, managed );
                 }
-                managed.addAll( exclusions );
+                managed.addAll( managedDependency.getExclusions() );
+
+                Collection<String> managedSourceHints = exclusionsSourceHints.get( key );
+                if ( managedSourceHints == null )
+                {
+                    managedSourceHints = new LinkedHashSet<String>();
+                    exclusionsSourceHints.put( key, managedSourceHints );
+                }
+
+                managedSourceHints.add( managedDependency.getSourceHint() );
             }
         }
 
-        return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedOptionals,
-                                             managedLocalPaths, managedExclusions );
+        return new ClassicDependencyManager( depth + 1,
+                                             versions, versionsSourceHints,
+                                             scopes, scopesSourceHints,
+                                             optionals, optionalsSourceHints,
+                                             localPaths, localPathsSourceHints,
+                                             exclusions, exclusionsSourceHints );
+
     }
 
     public DependencyManagement manageDependency( Dependency dependency )
@@ -178,6 +249,7 @@ public final class ClassicDependencyManager
                     management = new DependencyManagement();
                 }
                 management.setVersion( version );
+                management.setVersionSourceHint( this.managedVersionsSourceHints.get( key ) );
             }
 
             String scope = managedScopes.get( key );
@@ -188,19 +260,21 @@ public final class ClassicDependencyManager
                     management = new DependencyManagement();
                 }
                 management.setScope( scope );
+                management.setScopeSourceHint( this.managedScopesSourceHints.get( key ) );
 
                 if ( !JavaScopes.SYSTEM.equals( scope )
-                    && dependency.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) != null )
+                         && dependency.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) != null )
                 {
                     Map<String, String> properties =
                         new HashMap<String, String>( dependency.getArtifact().getProperties() );
                     properties.remove( ArtifactProperties.LOCAL_PATH );
                     management.setProperties( properties );
+                    management.setPropertiesSourceHint( this.managedScopesSourceHints.get( key ) );
                 }
             }
 
             if ( ( scope != null && JavaScopes.SYSTEM.equals( scope ) )
-                || ( scope == null && JavaScopes.SYSTEM.equals( dependency.getScope() ) ) )
+                     || ( scope == null && JavaScopes.SYSTEM.equals( dependency.getScope() ) ) )
             {
                 String localPath = managedLocalPaths.get( key );
                 if ( localPath != null )
@@ -213,6 +287,7 @@ public final class ClassicDependencyManager
                         new HashMap<String, String>( dependency.getArtifact().getProperties() );
                     properties.put( ArtifactProperties.LOCAL_PATH, localPath );
                     management.setProperties( properties );
+                    management.setPropertiesSourceHint( this.managedLocalPathsSourceHints.get( key ) );
                 }
             }
 
@@ -224,6 +299,7 @@ public final class ClassicDependencyManager
                     management = new DependencyManagement();
                 }
                 management.setOptional( optional );
+                management.setOptionalitySourceHint( this.managedOptionalsSourceHints.get( key ) );
             }
         }
 
@@ -237,6 +313,12 @@ public final class ClassicDependencyManager
             Collection<Exclusion> result = new LinkedHashSet<Exclusion>( dependency.getExclusions() );
             result.addAll( exclusions );
             management.setExclusions( result );
+
+            final Object sourceHint = this.managedExclusionsSourceHints.get( key );
+            if ( sourceHint != null )
+            {
+                management.setExclusionsSourceHint( sourceHint.toString() );
+            }
         }
 
         return management;
@@ -261,8 +343,8 @@ public final class ClassicDependencyManager
 
         ClassicDependencyManager that = (ClassicDependencyManager) obj;
         return depth == that.depth && managedVersions.equals( that.managedVersions )
-            && managedScopes.equals( that.managedScopes ) && managedOptionals.equals( that.managedOptionals )
-            && managedExclusions.equals( that.managedExclusions );
+                   && managedScopes.equals( that.managedScopes ) && managedOptionals.equals( that.managedOptionals )
+                   && managedExclusions.equals( that.managedExclusions );
     }
 
     @Override
@@ -311,9 +393,9 @@ public final class ClassicDependencyManager
             }
             Key that = (Key) obj;
             return artifact.getArtifactId().equals( that.artifact.getArtifactId() )
-                && artifact.getGroupId().equals( that.artifact.getGroupId() )
-                && artifact.getExtension().equals( that.artifact.getExtension() )
-                && artifact.getClassifier().equals( that.artifact.getClassifier() );
+                       && artifact.getGroupId().equals( that.artifact.getGroupId() )
+                       && artifact.getExtension().equals( that.artifact.getExtension() )
+                       && artifact.getClassifier().equals( that.artifact.getClassifier() );
         }
 
         @Override
