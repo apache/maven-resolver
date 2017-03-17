@@ -367,7 +367,12 @@ public class DefaultRepositorySystem
         DependencyFilter filter = request.getFilter();
         DependencyVisitor visitor = ( filter != null ) ? new FilteringDependencyVisitor( builder, filter ) : builder;
         visitor = new TreeDependencyVisitor( visitor );
-        result.getRoot().accept( visitor );
+
+        if ( result.getRoot() != null )
+        {
+            result.getRoot().accept( visitor );
+        }
+
         List<ArtifactRequest> requests = builder.getRequests();
 
         List<ArtifactResult> results;
