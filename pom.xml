@@ -62,6 +62,7 @@
   </distributionManagement>
 
   <properties>
+    <version.of.maven>3.3.9</version.of.maven>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>UnusedImports,LineLength,InnerAssignment,MagicNumber,AvoidNestedBlocks,ParameterNumber,MethodLength,MemberName</checkstyle.violation.ignore>
@@ -79,10 +80,28 @@
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-http</module>
     <module>maven-resolver-transport-wagon</module>
+    <module>maven-resolver-provider</module>
+
   </modules>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-model</artifactId>
+        <version>${version.of.maven}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-model-builder</artifactId>
+        <version>${version.of.maven}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-repository-metadata</artifactId>
+        <version>${version.of.maven}</version>
+      </dependency>
+      
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-api</artifactId>
@@ -144,12 +163,12 @@
       <dependency>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>org.eclipse.sisu.inject</artifactId>
-        <version>0.1.1</version>
+        <version>0.3.2</version>
       </dependency>
       <dependency>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>org.eclipse.sisu.plexus</artifactId>
-        <version>0.1.1</version>
+        <version>0.3.2</version>
         <exclusions>
           <exclusion>
             <groupId>javax.enterprise</groupId>
@@ -160,7 +179,7 @@
       <dependency>
         <groupId>org.sonatype.sisu</groupId>
         <artifactId>sisu-guice</artifactId>
-        <version>3.1.6</version>
+        <version>3.2.2</version>
         <classifier>no_aop</classifier>
         <exclusions>
           <exclusion>
