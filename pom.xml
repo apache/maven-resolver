@@ -66,6 +66,8 @@
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>UnusedImports,LineLength,InnerAssignment,MagicNumber,AvoidNestedBlocks,ParameterNumber,MethodLength,MemberName</checkstyle.violation.ignore>
+    <sisuVersion>0.3.3</sisuVersion>
+    <slf4jVersion>1.7.25</slf4jVersion>
   </properties>
 
   <modules>
@@ -119,7 +121,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.11</version>
+        <version>4.12</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -138,19 +140,19 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-component-annotations</artifactId>
-        <version>1.5.5</version>
+        <version>1.7.1</version>
         <scope>provided</scope>
       </dependency>
 
       <dependency>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>org.eclipse.sisu.inject</artifactId>
-        <version>0.1.1</version>
+        <version>${sisuVersion}</version>
       </dependency>
       <dependency>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>org.eclipse.sisu.plexus</artifactId>
-        <version>0.1.1</version>
+        <version>${sisuVersion}</version>
         <exclusions>
           <exclusion>
             <groupId>javax.enterprise</groupId>
@@ -161,7 +163,7 @@
       <dependency>
         <groupId>org.sonatype.sisu</groupId>
         <artifactId>sisu-guice</artifactId>
-        <version>3.1.6</version>
+        <version>3.2.6</version>
         <classifier>no_aop</classifier>
         <exclusions>
           <exclusion>
@@ -178,7 +180,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>1.6.2</version>
+        <version>${slf4jVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -292,7 +294,7 @@
         <plugin>
           <groupId>org.eclipse.sisu</groupId>
           <artifactId>sisu-maven-plugin</artifactId>
-          <version>0.0.0.M2</version>
+          <version>${sisuVersion}</version>
           <executions>
             <execution>
               <id>generate-index</id>
@@ -398,7 +400,7 @@
                       <pluginExecutionFilter>
                         <groupId>org.eclipse.sisu</groupId>
                         <artifactId>sisu-maven-plugin</artifactId>
-                        <versionRange>[0.0.0.M2,)</versionRange>
+                        <versionRange>[${sisuVersion},)</versionRange>
                         <goals>
                           <goal>test-index</goal>
                           <goal>main-index</goal>
