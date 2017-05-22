@@ -76,7 +76,7 @@ final class PartialFile
             boolean interrupted = false;
             try
             {
-                for ( long lastLength = -1, lastTime = 0;; )
+                for ( long lastLength = -1L, lastTime = 0L;; )
                 {
                     FileLock lock = tryLock( lockFile );
                     if ( lock != null )
@@ -88,7 +88,7 @@ final class PartialFile
                     long currentTime = System.currentTimeMillis();
                     if ( currentLength != lastLength )
                     {
-                        if ( lastLength < 0 )
+                        if ( lastLength < 0L )
                         {
                             concurrent.set( true );
                             /*
@@ -276,7 +276,7 @@ final class PartialFile
 
                 long reqTimestamp = System.currentTimeMillis();
                 LockFile lockFile = new LockFile( partFile, requestTimeout, checker, logger );
-                if ( lockFile.isConcurrent() && dstFile.lastModified() >= reqTimestamp - 100 )
+                if ( lockFile.isConcurrent() && dstFile.lastModified() >= reqTimestamp - 100L )
                 {
                     lockFile.close();
                     return null;
@@ -315,7 +315,7 @@ final class PartialFile
 
     private PartialFile( File partFile, Logger logger )
     {
-        this( partFile, null, 0, logger );
+        this( partFile, null, 0L, logger );
     }
 
     private PartialFile( File partFile, LockFile lockFile, long threshold, Logger logger )

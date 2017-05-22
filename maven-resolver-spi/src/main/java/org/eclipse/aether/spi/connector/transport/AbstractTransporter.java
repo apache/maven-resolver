@@ -98,8 +98,8 @@ public abstract class AbstractTransporter
         OutputStream os = null;
         try
         {
-            task.getListener().transportStarted( resume ? task.getResumeOffset() : 0, length );
             os = task.newOutputStream( resume );
+            task.getListener().transportStarted( resume ? task.getResumeOffset() : 0L, length );
             copy( os, is, task.getListener() );
             os.close();
             os = null;

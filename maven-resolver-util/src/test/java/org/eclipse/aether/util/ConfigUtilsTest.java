@@ -168,16 +168,16 @@ public class ConfigUtilsTest
     public void testGetLong_Default()
     {
         config.put( "no-long", new Object() );
-        assertEquals( -17, ConfigUtils.getLong( config, -17L, "no-value" ) );
-        assertEquals( 43, ConfigUtils.getLong( config, 43L, "no-long" ) );
+        assertEquals( -17L, ConfigUtils.getLong( config, -17L, "no-value" ) );
+        assertEquals( 43L, ConfigUtils.getLong( config, 43L, "no-long" ) );
     }
 
     @Test
     public void testGetLong_AlternativeKeys()
     {
         config.put( "no-long", "text" );
-        config.put( "some-long", 23 );
-        assertEquals( 23, ConfigUtils.getLong( config, 0, "no-long", "some-long" ) );
+        config.put( "some-long", 23L );
+        assertEquals( 23L, ConfigUtils.getLong( config, 0, "no-long", "some-long" ) );
     }
 
     @Test
@@ -222,7 +222,7 @@ public class ConfigUtilsTest
     @Test
     public void testGetFloat_NumberConversion()
     {
-        config.put( "some-number", -1234 );
+        config.put( "some-number", -1234f );
         assertEquals( -1234f, ConfigUtils.getFloat( config, 0, "some-number" ), 0.1f );
     }
 

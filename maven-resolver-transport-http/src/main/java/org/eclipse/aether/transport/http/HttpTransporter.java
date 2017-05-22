@@ -456,11 +456,11 @@ final class HttpTransporter
     private <T extends HttpUriRequest> T resume( T request, GetTask task )
     {
         long resumeOffset = task.getResumeOffset();
-        if ( resumeOffset > 0 && task.getDataFile() != null )
+        if ( resumeOffset > 0L && task.getDataFile() != null )
         {
             request.setHeader( HttpHeaders.RANGE, "bytes=" + Long.toString( resumeOffset ) + '-' );
             request.setHeader( HttpHeaders.IF_UNMODIFIED_SINCE,
-                               DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60 * 1000 ) ) );
+                               DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60L * 1000L ) ) );
             request.setHeader( HttpHeaders.ACCEPT_ENCODING, "identity" );
         }
         return request;
@@ -503,7 +503,7 @@ final class HttpTransporter
                 entity = new ByteArrayEntity( new byte[0] );
             }
 
-            long offset = 0, length = entity.getContentLength();
+            long offset = 0L, length = entity.getContentLength();
             String range = getHeader( response, HttpHeaders.CONTENT_RANGE );
             if ( range != null )
             {
@@ -513,8 +513,8 @@ final class HttpTransporter
                     throw new IOException( "Invalid Content-Range header for partial download: " + range );
                 }
                 offset = Long.parseLong( m.group( 1 ) );
-                length = Long.parseLong( m.group( 2 ) ) + 1;
-                if ( offset < 0 || offset >= length || ( offset > 0 && offset != task.getResumeOffset() ) )
+                length = Long.parseLong( m.group( 2 ) ) + 1L;
+                if ( offset < 0L || offset >= length || ( offset > 0L && offset != task.getResumeOffset() ) )
                 {
                     throw new IOException( "Invalid Content-Range header for partial download from offset "
                         + task.getResumeOffset() + ": " + range );
@@ -522,7 +522,7 @@ final class HttpTransporter
             }
 
             InputStream is = entity.getContent();
-            utilGet( task, is, true, length, offset > 0 );
+            utilGet( task, is, true, length, offset > 0L );
             extractChecksums( response );
         }
 

@@ -167,7 +167,7 @@ final class BasicRepositoryConnector
         if ( executor == null )
         {
             executor =
-                new ThreadPoolExecutor( maxThreads, maxThreads, 3, TimeUnit.SECONDS,
+                new ThreadPoolExecutor( maxThreads, maxThreads, 3L, TimeUnit.SECONDS,
                                         new LinkedBlockingQueue<Runnable>(),
                                         new WorkerThreadFactory( getClass().getSimpleName() + '-'
                                             + repository.getHost() + '-' ) );

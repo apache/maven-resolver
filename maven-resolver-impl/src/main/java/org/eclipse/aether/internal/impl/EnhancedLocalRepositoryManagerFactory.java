@@ -47,7 +47,7 @@ public class EnhancedLocalRepositoryManagerFactory
 
     private Logger logger = NullLoggerFactory.LOGGER;
 
-    private float priority = 10;
+    private float priority = 10.0f;
 
     public EnhancedLocalRepositoryManagerFactory()
     {

@@ -72,7 +72,7 @@ final class DefaultVersionFilterContext
         {
             for ( int i = count - 1; i >= 0; i-- )
             {
-                deleted[i] = 0;
+                deleted[i] = (byte) 0;
             }
         }
     }
@@ -166,7 +166,7 @@ final class DefaultVersionFilterContext
 
         private void advance()
         {
-            for ( next = index + 1; next < size && deleted[next] != 0; next++ )
+            for ( next = index + 1; next < size && deleted[next] != (byte) 0; next++ )
             {
                 // just advancing index
             }
@@ -198,11 +198,11 @@ final class DefaultVersionFilterContext
             {
                 throw new ConcurrentModificationException();
             }
-            if ( index < 0 || deleted[index] == 1 )
+            if ( index < 0 || deleted[index] == (byte) 1 )
             {
                 throw new IllegalStateException();
             }
-            deleted[index] = 1;
+            deleted[index] = (byte) 1;
             count = --DefaultVersionFilterContext.this.count;
         }
 

@@ -60,7 +60,7 @@ class StaticUpdateCheckManager
     {
         check.setRequired( checkRequired );
 
-        if ( check.getLocalLastUpdated() != 0 && localUpToDate )
+        if ( check.getLocalLastUpdated() != 0L && localUpToDate )
         {
             check.setRequired( false );
         }
@@ -74,7 +74,7 @@ class StaticUpdateCheckManager
     {
         check.setRequired( checkRequired );
 
-        if ( check.getLocalLastUpdated() != 0 && localUpToDate )
+        if ( check.getLocalLastUpdated() != 0L && localUpToDate )
         {
             check.setRequired( false );
         }

@@ -136,7 +136,7 @@ final class ChecksumCalculator
         {
             checksum.reset();
         }
-        if ( dataOffset <= 0 )
+        if ( dataOffset <= 0L )
         {
             return;
         }

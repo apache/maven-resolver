@@ -212,7 +212,7 @@ public class PartialFileTest
         throws Exception
     {
         PartialFile.Factory factory =
-            new PartialFile.Factory( resumeThreshold >= 0, resumeThreshold, requestTimeout,
+            new PartialFile.Factory( resumeThreshold >= 0L, resumeThreshold, requestTimeout,
                                      new TestLoggerFactory().getLogger( "" ) );
         PartialFile partFile = factory.newInstance( dstFile, remoteAccessChecker );
         if ( partFile != null )
@@ -301,7 +301,7 @@ public class PartialFileTest
         partialFile.close();
     }
 
-    @Test( timeout = 10000 )
+    @Test( timeout = 10000L )
     public void testResumeConcurrently_RequestTimeout()
         throws Exception
     {
@@ -320,12 +320,12 @@ public class PartialFileTest
         writer.join();
     }
 
-    @Test( timeout = 10000 )
+    @Test( timeout = 10000L )
     public void testResumeConcurrently_AwaitCompletion_ConcurrentWriterSucceeds()
         throws Exception
     {
         assumeTrue( PROPER_LOCK_SUPPORT );
-        assertTrue( dstFile.setLastModified( System.currentTimeMillis() - 60 * 1000 ) );
+        assertTrue( dstFile.setLastModified( System.currentTimeMillis() - 60L * 1000L ) );
         ConcurrentWriter writer = new ConcurrentWriter( dstFile, 100, 10 );
         assertNull( newPartialFile( 0, 500 ) );
         writer.join();
@@ -333,12 +333,12 @@ public class PartialFileTest
         assertEquals( 1, remoteAccessChecker.invocations );
     }
 
-    @Test( timeout = 10000 )
+    @Test( timeout = 10000L )
     public void testResumeConcurrently_AwaitCompletion_ConcurrentWriterFails()
         throws Exception
     {
         assumeTrue( PROPER_LOCK_SUPPORT );
-        assertTrue( dstFile.setLastModified( System.currentTimeMillis() - 60 * 1000 ) );
+        assertTrue( dstFile.setLastModified( System.currentTimeMillis() - 60L * 1000L ) );
         ConcurrentWriter writer = new ConcurrentWriter( dstFile, 100, -10 );
         PartialFile partialFile = newPartialFile( 0, 500 );
         assertNotNull( partialFile );
@@ -348,7 +348,7 @@ public class PartialFileTest
         assertEquals( 1, remoteAccessChecker.invocations );
     }
 
-    @Test( timeout = 10000 )
+    @Test( timeout = 10000L )
     public void testResumeConcurrently_CheckRemoteAccess()
         throws Exception
     {
