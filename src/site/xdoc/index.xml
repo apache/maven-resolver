@@ -30,8 +30,11 @@
 
     <section name="Apache Maven Artifact Resolver">
 
-      <p>Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.
-         Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports and artifact resolution.
+      <p>Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.</p>
+      <p>Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports and artifact resolution.</p>
+      <p>It is expected to be extended by concrete repository implementation, like
+        <a href="/ref/current/maven-resolver-provider/">Maven Artifact Resolver Provider</a> for Maven repositories
+        or any other provider for other repository formats.
       </p>
 
       <p>
@@ -51,6 +54,14 @@
           <area shape="rect" coords="416,74,519,110"  href="http://hc.apache.org/httpcomponents-client-ga/index.html" />
         </map>
       </p>
+
+      <subsection name="See Also">
+        <ul>
+          <li><a href="/resolver-archives/resolver-demos-LATEST/">Maven Artifact Resolver Demos</a></li>
+          <li><a href="/resolver-archives/resolver-ant-tasks-LATEST/">Maven Artifact Resolver Ant Tasks</a></li>
+          <li><a href="/ref/current/maven-resolver-provider/">Maven Artifact Resolver Provider</a></li>
+        </ul>
+      </subsection>
     </section>
 
   </body>

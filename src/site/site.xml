@@ -31,6 +31,11 @@ under the License.
       <item name="License" href="http://www.apache.org/licenses/"/>
       <item name="Download" href="download.html"/>
     </menu>
+    <menu name="See Also">
+      <item name="Maven Artifact Resolver Demos" href="/resolver-archives/resolver-demos-LATEST/"/>
+      <item name="Maven Artifact Resolver Ant Tasks" href="/resolver-archives/resolver-ant-tasks-LATEST/"/>
+      <item name="Maven Artifact Resolver Provider" href="/ref/current/maven-resolver-provider/"/>
+    </menu>
 
     <menu ref="modules"/>
     <menu ref="reports"/>
