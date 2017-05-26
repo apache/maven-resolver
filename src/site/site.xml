@@ -35,7 +35,7 @@ under the License.
     <menu name="See Also" inherit="bottom">
       <item name="Maven Artifact Resolver" href="https://maven.apache.org/resolver/"/>
       <item name="Maven Artifact Resolver Provider" href="https://maven.apache.org/ref/current/maven-resolver-provider/"/>
-      <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-archives/resolver-ant-tasks-LATEST/"/>
+      <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-ant-tasks/"/>
     </menu>
 
     <menu ref="modules"/>
