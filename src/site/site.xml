@@ -32,8 +32,8 @@ under the License.
       <item name="Download" href="download.html"/>
     </menu>
     <menu name="See Also">
-      <item name="Maven Artifact Resolver Demos" href="https://maven.apache.org/resolver-archives/resolver-demos-LATEST/"/>
-      <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-archives/resolver-ant-tasks-LATEST/"/>
+      <item name="Maven Artifact Resolver Demos" href="https://maven.apache.org/resolver-demos/"/>
+      <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-ant-tasks/"/>
       <item name="Maven Artifact Resolver Provider" href="https://maven.apache.org/ref/current/maven-resolver-provider/"/>
     </menu>
 

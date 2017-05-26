@@ -37,7 +37,7 @@
   <description>
     The parent and aggregator for the repository system.
   </description>
-  <url>http://maven.apache.org/resolver/</url>
+  <url>https://maven.apache.org/resolver/</url>
   <inceptionYear>2010</inceptionYear>
 
   <scm>
