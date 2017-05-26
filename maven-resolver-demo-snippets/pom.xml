@@ -32,7 +32,8 @@
 
   <name>Maven Artifact Resolver Demo Snippets</name>
   <description>
-    A module to demonstrate the usage of Maven Artifact Resolver by means of various runnable code snippets.
+    A module to demonstrate the usage of Maven Artifact Resolver with Maven repositories
+    by means of various runnable code snippets.
   </description>
 
   <properties>

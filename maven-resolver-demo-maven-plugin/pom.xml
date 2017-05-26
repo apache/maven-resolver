@@ -33,7 +33,7 @@
 
   <name>Maven Artifact Resolver Demo Maven Plugin</name>
   <description>
-    A simple Maven plugin using Maven Artifact Resolver.
+    A simple Maven plugin using Maven Artifact Resolver with Maven repositories.
   </description>
   <inceptionYear>2010</inceptionYear>
 
