@@ -71,6 +71,7 @@
   <properties>
     <maven.site.path>resolver-demos</maven.site.path>
     <checkstyle.violation.ignore>LineLength,MagicNumber,AvoidNestedBlocks</checkstyle.violation.ignore>
+    <javaVersion>7</javaVersion>
   </properties>
 
   <build>
