@@ -35,6 +35,7 @@ under the License.
       <item name="Maven Artifact Resolver Demos" href="https://maven.apache.org/resolver-demos/"/>
       <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-ant-tasks/"/>
       <item name="Maven Artifact Resolver Provider" href="https://maven.apache.org/ref/current/maven-resolver-provider/"/>
+      <item name="Aether wiki" href="http://wiki.eclipse.org/Aether"/>
     </menu>
 
     <menu ref="modules"/>

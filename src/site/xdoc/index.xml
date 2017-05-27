@@ -60,6 +60,7 @@
           <li><a href="/resolver-demos/">Maven Artifact Resolver Demos</a></li>
           <li><a href="/resolver-ant-tasks/">Maven Artifact Resolver Ant Tasks</a></li>
           <li><a href="/ref/current/maven-resolver-provider/">Maven Artifact Resolver Provider</a></li>
+          <li><a href="http://wiki.eclipse.org/Aether">Aether wiki</a></li>
         </ul>
       </subsection>
     </section>
