@@ -78,7 +78,7 @@ import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 /**
- * A ready-made <a href="http://code.google.com/p/google-guice/" target="_blank">Guice</a> module that sets up bindings
+ * A ready-made <a href="https://github.com/google/guice" target="_blank">Guice</a> module that sets up bindings
  * for all components from this library. To acquire a complete repository system, clients need to bind an artifact
  * descriptor reader, a version resolver, a version range resolver, zero or more metadata generator factories, some
  * repository connector and transporter factories to access remote repositories.

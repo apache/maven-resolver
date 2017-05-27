@@ -18,7 +18,7 @@
  * under the License.
  */
 /**
- * The integration with the dependency injection framework <a href="http://code.google.com/p/google-guice/" target="_blank">Google Guice</a>. 
+ * The integration with the dependency injection framework <a href="https://github.com/google/guice" target="_blank">Google Guice</a>. 
  */
 package org.eclipse.aether.impl.guice;
 
