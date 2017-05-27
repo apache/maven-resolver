@@ -35,6 +35,10 @@
     The service provider interface for repository system implementations and repository connectors.
   </description>
 
+  <properties>
+    <AutomaticModuleName>org.apache.maven.resolver.spi</AutomaticModuleName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

@@ -35,6 +35,10 @@
     An implementation of the repository system.
   </description>
 
+  <properties>
+    <AutomaticModuleName>org.apache.maven.resolver.impl</AutomaticModuleName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

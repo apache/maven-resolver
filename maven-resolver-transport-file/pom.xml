@@ -35,6 +35,10 @@
       A transport implementation for repositories using file:// URLs.
   </description>
 
+  <properties>
+    <AutomaticModuleName>org.apache.maven.resolver.transport.file</AutomaticModuleName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

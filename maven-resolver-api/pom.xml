@@ -35,6 +35,10 @@
     The application programming interface for the repository system.
   </description>
 
+  <properties>
+    <AutomaticModuleName>org.apache.maven.resolver</AutomaticModuleName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

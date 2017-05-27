@@ -35,6 +35,10 @@
       A repository connector implementation for repositories using URI-based layouts.
   </description>
 
+  <properties>
+    <AutomaticModuleName>org.apache.maven.resolver.connector.basic</AutomaticModuleName>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
