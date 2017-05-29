@@ -230,27 +230,27 @@
             </tags>
             <groups>
               <group>
-                <title>API</title>
+                <title>API - org.apache.maven.resolver</title>
                 <packages>org.eclipse.aether*</packages>
               </group>
               <group>
-                <title>SPI</title>
+                <title>SPI - org.apache.maven.resolver.spi</title>
                 <packages>org.eclipse.aether.spi*</packages>
               </group>
               <group>
-                <title>Utilities</title>
+                <title>Utilities - org.apache.maven.resolver.util</title>
                 <packages>org.eclipse.aether.util*</packages>
               </group>
               <group>
-                <title>Repository Connectors</title>
-                <packages>org.eclipse.aether.connector*</packages>
+                <title>Repository Basic Connector - org.apache.maven.resolver.connector.basic</title>
+                <packages>org.eclipse.aether.connector.basic*</packages>
               </group>
               <group>
-                <title>Transporters</title>
+                <title>Transporters - org.apache.maven.resolver.transport.*</title>
                 <packages>org.eclipse.aether.transport*</packages>
               </group>
               <group>
-                <title>Implementation</title>
+                <title>Implementation - org.apache.maven.resolver.impl</title>
                 <packages>org.eclipse.aether.impl*</packages>
               </group>
               <group>
@@ -314,17 +314,6 @@
               <exclude>src/test/resources/**/*.txt</exclude>
               <exclude>src/test/resources/ssl/*-store</exclude>
             </excludes>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <configuration>
-            <archive>
-              <manifestEntries>
-                <Automatic-Module-Name>${AutomaticModuleName}</Automatic-Module-Name>
-              </manifestEntries>
-            </archive>
           </configuration>
         </plugin>
       </plugins>
@@ -436,6 +425,31 @@
                     </pluginExecution>
                   </pluginExecutions>
                 </lifecycleMappingMetadata>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>java9-module</id>
+      <activation>
+        <property>
+          <name>AutomaticModuleName</name>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-jar-plugin</artifactId>
+              <configuration>
+                <archive>
+                  <manifestEntries>
+                    <Automatic-Module-Name>${AutomaticModuleName}</Automatic-Module-Name>
+                  </manifestEntries>
+                </archive>
               </configuration>
             </plugin>
           </plugins>

@@ -36,7 +36,7 @@
   </description>
 
   <properties>
-    <AutomaticModuleName>org.apache.maven.resolver.testutil</AutomaticModuleName>
+    <AutomaticModuleName>org.apache.maven.resolver.internal.test.util</AutomaticModuleName>
   </properties>
 
   <dependencies>
