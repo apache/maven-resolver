@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -38,15 +36,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.aether.util.ChecksumUtils;
-import org.eclipse.jetty.http.HttpHeaders;
-import org.eclipse.jetty.http.HttpMethods;
-import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.util.B64Code;
 import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.StringUtil;
@@ -106,9 +102,9 @@ public class HttpServer
 
     private Server server;
 
-    private Connector httpConnector;
+    private ServerConnector httpConnector;
 
-    private Connector httpsConnector;
+    private ServerConnector httpsConnector;
 
     private String username;
 
@@ -152,10 +148,10 @@ public class HttpServer
             SslContextFactory ssl = new SslContextFactory();
             ssl.setKeyStorePath( new File( "src/test/resources/ssl/server-store" ).getAbsolutePath() );
             ssl.setKeyStorePassword( "server-pwd" );
-            ssl.setTrustStore( new File( "src/test/resources/ssl/client-store" ).getAbsolutePath() );
+            ssl.setTrustStorePath( new File( "src/test/resources/ssl/client-store" ).getAbsolutePath() );
             ssl.setTrustStorePassword( "client-pwd" );
             ssl.setNeedClientAuth( true );
-            httpsConnector = new SslSelectChannelConnector( ssl );
+            httpsConnector = new ServerConnector( server, ssl );
             server.addConnector( httpsConnector );
             try
             {
@@ -226,8 +222,6 @@ public class HttpServer
             return this;
         }
 
-        httpConnector = new SelectChannelConnector();
-
         HandlerList handlers = new HandlerList();
         handlers.addHandler( new LogHandler() );
         handlers.addHandler( new ProxyAuthHandler() );
@@ -236,6 +230,7 @@ public class HttpServer
         handlers.addHandler( new RepoHandler() );
 
         server = new Server();
+        httpConnector = new ServerConnector( server );
         server.addConnector( httpConnector );
         server.setHandler( handlers );
         server.start();
@@ -303,28 +298,28 @@ public class HttpServer
             }
             req.setHandled( true );
 
-            if ( ExpectContinue.FAIL.equals( expectContinue ) && request.getHeader( HttpHeaders.EXPECT ) != null )
+            if ( ExpectContinue.FAIL.equals( expectContinue ) && request.getHeader( HttpHeader.EXPECT.asString() ) != null )
             {
                 response.setStatus( HttpServletResponse.SC_EXPECTATION_FAILED );
                 return;
             }
 
             File file = new File( repoDir, path.substring( 5 ) );
-            if ( HttpMethods.GET.equals( req.getMethod() ) || HttpMethods.HEAD.equals( req.getMethod() ) )
+            if ( HttpMethod.GET.is( req.getMethod() ) || HttpMethod.HEAD.is( req.getMethod() ) )
             {
                 if ( !file.isFile() || path.endsWith( URIUtil.SLASH ) )
                 {
                     response.setStatus( HttpServletResponse.SC_NOT_FOUND );
                     return;
                 }
-                long ifUnmodifiedSince = request.getDateHeader( HttpHeaders.IF_UNMODIFIED_SINCE );
+                long ifUnmodifiedSince = request.getDateHeader( HttpHeader.IF_UNMODIFIED_SINCE.asString() );
                 if ( ifUnmodifiedSince != -1L && file.lastModified() > ifUnmodifiedSince )
                 {
                     response.setStatus( HttpServletResponse.SC_PRECONDITION_FAILED );
                     return;
                 }
                 long offset = 0L;
-                String range = request.getHeader( HttpHeaders.RANGE );
+                String range = request.getHeader( HttpHeader.RANGE.asString() );
                 if ( range != null && rangeSupport )
                 {
                     Matcher m = SIMPLE_RANGE.matcher( range );
@@ -337,7 +332,7 @@ public class HttpServer
                             return;
                         }
                     }
-                    String encoding = request.getHeader( HttpHeaders.ACCEPT_ENCODING );
+                    String encoding = request.getHeader( HttpHeader.ACCEPT_ENCODING.asString() );
                     if ( ( encoding != null && !"identity".equals( encoding ) ) || ifUnmodifiedSince == -1L )
                     {
                         response.setStatus( HttpServletResponse.SC_BAD_REQUEST );
@@ -345,11 +340,11 @@ public class HttpServer
                     }
                 }
                 response.setStatus( ( offset > 0L ) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK );
-                response.setDateHeader( HttpHeaders.LAST_MODIFIED, file.lastModified() );
-                response.setHeader( HttpHeaders.CONTENT_LENGTH, Long.toString( file.length() - offset ) );
+                response.setDateHeader( HttpHeader.LAST_MODIFIED.asString(), file.lastModified() );
+                response.setHeader( HttpHeader.CONTENT_LENGTH.asString(), Long.toString( file.length() - offset ) );
                 if ( offset > 0L )
                 {
-                    response.setHeader( HttpHeaders.CONTENT_RANGE, "bytes " + offset + "-" + ( file.length() - 1L )
+                    response.setHeader( HttpHeader.CONTENT_RANGE.asString(), "bytes " + offset + "-" + ( file.length() - 1L )
                         + "/" + file.length() );
                 }
                 if ( checksumHeader != null )
@@ -358,11 +353,11 @@ public class HttpServer
                     switch ( checksumHeader )
                     {
                         case NEXUS:
-                            response.setHeader( HttpHeaders.ETAG, "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
+                            response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
                             break;
                     }
                 }
-                if ( HttpMethods.HEAD.equals( req.getMethod() ) )
+                if ( HttpMethod.HEAD.is( req.getMethod() ) )
                 {
                     return;
                 }
@@ -397,7 +392,7 @@ public class HttpServer
                     }
                 }
             }
-            else if ( HttpMethods.PUT.equals( req.getMethod() ) )
+            else if ( HttpMethod.PUT.is( req.getMethod() ) )
             {
                 if ( !webDav )
                 {
@@ -442,13 +437,13 @@ public class HttpServer
                     response.setStatus( HttpServletResponse.SC_FORBIDDEN );
                 }
             }
-            else if ( HttpMethods.OPTIONS.equals( req.getMethod() ) )
+            else if ( HttpMethod.OPTIONS.is( req.getMethod() ) )
             {
                 if ( webDav )
                 {
                     response.setHeader( "DAV", "1,2" );
                 }
-                response.setHeader( HttpHeaders.ALLOW, "GET, PUT, HEAD, OPTIONS" );
+                response.setHeader( HttpHeader.ALLOW.asString(), "GET, PUT, HEAD, OPTIONS" );
                 response.setStatus( HttpServletResponse.SC_OK );
             }
             else if ( webDav && "MKCOL".equals( req.getMethod() ) )
@@ -507,7 +502,7 @@ public class HttpServer
             }
             location.append( "/repo" ).append( path.substring( 9 ) );
             response.setStatus( HttpServletResponse.SC_MOVED_PERMANENTLY );
-            response.setHeader( HttpHeaders.LOCATION, location.toString() );
+            response.setHeader( HttpHeader.LOCATION.asString(), location.toString() );
         }
 
     }
@@ -520,19 +515,19 @@ public class HttpServer
             throws IOException
         {
             if ( ExpectContinue.BROKEN.equals( expectContinue )
-                && "100-continue".equalsIgnoreCase( request.getHeader( HttpHeaders.EXPECT ) ) )
+                && "100-continue".equalsIgnoreCase( request.getHeader( HttpHeader.EXPECT.asString() ) ) )
             {
                 request.getInputStream();
             }
 
             if ( username != null && password != null )
             {
-                if ( checkBasicAuth( request.getHeader( HttpHeaders.AUTHORIZATION ), username, password ) )
+                if ( checkBasicAuth( request.getHeader( HttpHeader.AUTHORIZATION.asString() ), username, password ) )
                 {
                     return;
                 }
                 req.setHandled( true );
-                response.setHeader( HttpHeaders.WWW_AUTHENTICATE, "basic realm=\"Test-Realm\"" );
+                response.setHeader( HttpHeader.WWW_AUTHENTICATE.asString(), "basic realm=\"Test-Realm\"" );
                 response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
             }
         }
@@ -548,12 +543,12 @@ public class HttpServer
         {
             if ( proxyUsername != null && proxyPassword != null )
             {
-                if ( checkBasicAuth( request.getHeader( HttpHeaders.PROXY_AUTHORIZATION ), proxyUsername, proxyPassword ) )
+                if ( checkBasicAuth( request.getHeader( HttpHeader.PROXY_AUTHORIZATION.asString() ), proxyUsername, proxyPassword ) )
                 {
                     return;
                 }
                 req.setHandled( true );
-                response.setHeader( HttpHeaders.PROXY_AUTHENTICATE, "basic realm=\"Test-Realm\"" );
+                response.setHeader( HttpHeader.PROXY_AUTHENTICATE.asString(), "basic realm=\"Test-Realm\"" );
                 response.setStatus( HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED );
             }
         }
@@ -571,14 +566,7 @@ public class HttpServer
                 if ( "basic".equalsIgnoreCase( method ) )
                 {
                     credentials = credentials.substring( space + 1 );
-                    try
-                    {
-                        credentials = B64Code.decode( credentials, StringUtil.__ISO_8859_1 );
-                    }
-                    catch ( UnsupportedEncodingException e )
-                    {
-                        throw new IllegalStateException( e );
-                    }
+                    credentials = B64Code.decode( credentials, StringUtil.__ISO_8859_1 );
                     int i = credentials.indexOf( ':' );
                     if ( i > 0 )
                     {
