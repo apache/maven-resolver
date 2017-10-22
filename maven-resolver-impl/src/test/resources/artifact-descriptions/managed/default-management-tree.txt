@@ -1,0 +1,6 @@
+gid:root:ext:ver compile
++- gid:direct:ext:managed-by-dominant-request compile
+   +- gid:transitive-1:ext:managed-by-root compile
+      +- gid:transitive-2:ext:managed-by-direct compile
+         +- gid:transitive-3:ext:managed-by-transitive-1 compile
+            +- gid:transitive-4:ext:managed-by-transitive-2 compile
