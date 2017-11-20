@@ -82,6 +82,7 @@
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-http</module>
     <module>maven-resolver-transport-wagon</module>
+    <module>maven-resolver-demos</module>
   </modules>
 
   <dependencyManagement>
