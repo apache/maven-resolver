@@ -37,7 +37,7 @@
   </description>
 
   <properties>
-    <resolverVersion>1.0.3</resolverVersion>
+    <resolverVersion>${project.version}</resolverVersion>
     <mavenVersion>3.5.0</mavenVersion>
   </properties>
 

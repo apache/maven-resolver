@@ -35,14 +35,13 @@
   <description>
     A simple Maven plugin using Maven Artifact Resolver with Maven repositories.
   </description>
-  <inceptionYear>2010</inceptionYear>
 
   <prerequisites>
     <maven>3.5.0</maven>
   </prerequisites>
 
   <properties>
-    <resolverVersion>1.0.3</resolverVersion>
+    <resolverVersion>${project.version}</resolverVersion>
     <mavenVersion>3.5.0</mavenVersion>
   </properties>
 
