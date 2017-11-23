@@ -36,6 +36,11 @@ import org.eclipse.aether.version.Version;
 public class FindAvailableVersions
 {
 
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {

@@ -40,6 +40,11 @@ import org.eclipse.aether.util.filter.DependencyFilterUtils;
 public class ResolveTransitiveDependencies
 {
 
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {

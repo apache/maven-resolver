@@ -35,6 +35,11 @@ import org.eclipse.aether.graph.Dependency;
 public class GetDependencyTree
 {
 
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {

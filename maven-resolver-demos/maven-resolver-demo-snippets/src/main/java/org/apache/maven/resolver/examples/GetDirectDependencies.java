@@ -34,6 +34,11 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 public class GetDirectDependencies
 {
 
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {

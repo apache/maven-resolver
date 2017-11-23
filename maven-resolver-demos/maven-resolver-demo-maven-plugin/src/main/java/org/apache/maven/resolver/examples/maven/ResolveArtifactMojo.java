@@ -72,6 +72,9 @@ public class ResolveArtifactMojo
      */
     private String artifactCoords;
 
+    /**
+     * The actual execution of the mojo.
+     */
     public void execute()
         throws MojoExecutionException, MojoFailureException
     {

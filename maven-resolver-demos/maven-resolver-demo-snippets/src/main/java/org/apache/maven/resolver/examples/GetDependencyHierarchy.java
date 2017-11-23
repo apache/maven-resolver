@@ -38,6 +38,11 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 public class GetDependencyHierarchy
 {
 
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {

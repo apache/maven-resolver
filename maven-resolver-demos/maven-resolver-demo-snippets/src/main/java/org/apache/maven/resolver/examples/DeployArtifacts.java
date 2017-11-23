@@ -36,6 +36,11 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 public class DeployArtifacts
 {
 
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {
@@ -46,7 +51,8 @@ public class DeployArtifacts
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact jarArtifact = new DefaultArtifact( "test", "org.apache.maven.aether.examples", "", "jar", "0.1-SNAPSHOT" );
+        Artifact jarArtifact = new DefaultArtifact( "test", "org.apache.maven.aether.examples", "", 
+            "jar", "0.1-SNAPSHOT" );
         jarArtifact = jarArtifact.setFile( new File( "src/main/data/demo.jar" ) );
 
         Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );

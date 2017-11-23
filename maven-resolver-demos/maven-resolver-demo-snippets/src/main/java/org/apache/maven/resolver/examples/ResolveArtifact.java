@@ -33,6 +33,11 @@ import org.eclipse.aether.resolution.ArtifactResult;
 public class ResolveArtifact
 {
 
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {

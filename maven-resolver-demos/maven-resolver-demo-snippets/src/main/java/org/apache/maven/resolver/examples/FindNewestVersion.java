@@ -33,7 +33,11 @@ import org.eclipse.aether.version.Version;
  */
 public class FindNewestVersion
 {
-
+    /**
+     * Main.
+     * @param args
+     * @throws Exception
+     */
     public static void main( String[] args )
         throws Exception
     {
