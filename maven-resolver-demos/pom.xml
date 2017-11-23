@@ -37,22 +37,7 @@
     Maven Artifact Resolver demos, showing concrete code to use Maven Artifact Resolver with Maven repositories.
   </description>
   <url>https://maven.apache.org/resolver-demos/</url>
-  <inceptionYear>2010</inceptionYear>
 
-  <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-resolver.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-resolver.git</developerConnection>
-    <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
-    <tag>demos</tag>
-  </scm>
-  <issueManagement>
-    <system>jira</system>
-    <url>https://issues.apache.org/jira/browse/MRESOLVER</url>
-  </issueManagement>
-  <ciManagement>
-    <system>Jenkins</system>
-    <url>https://builds.apache.org/job/maven-resolver-demos</url>
-  </ciManagement>
   <distributionManagement>
     <site>
       <id>apache.website</id>
@@ -67,8 +52,6 @@
 
   <properties>
     <maven.site.path>resolver-demos</maven.site.path>
-    <checkstyle.violation.ignore>LineLength,MagicNumber,AvoidNestedBlocks</checkstyle.violation.ignore>
-    <javaVersion>7</javaVersion>
   </properties>
 
   <build>
