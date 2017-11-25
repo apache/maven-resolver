@@ -38,28 +38,37 @@
       </p>
 
       <p>
-        <img src="images/maven-resolver-deps.png" width="520" height="265" border="0" usemap="#Maven_Resolver_dependencies" />
+        <img src="images/maven-resolver-deps.png" width="792" height="441" border="0" usemap="#Maven_Resolver_dependencies" />
         <map name="Maven_Resolver_dependencies">
-          <area shape="rect" coords="51,229,113,265"  href="./maven-resolver-api/" />
-          <area shape="rect" coords="0,167,62,202"    href="./maven-resolver-spi/" />
-          <area shape="rect" coords="102,166,165,202" href="./maven-resolver-util/" />
-          <area shape="rect" coords="202,166,285,202" href="./maven-resolver-test-util/" />
-          <area shape="rect" coords="0,70,62,106"     href="./maven-resolver-impl/" />
-          <area shape="rect" coords="81,63,187,118"   href="./maven-resolver-connector-basic/" />
-          <area shape="rect" coords="246,32,289,68"   href="./maven-resolver-transport-file/" />
-          <area shape="rect" coords="207,74,310,110"  href="./maven-resolver-transport-classpath/" />
-          <area shape="rect" coords="299,32,382,68"   href="./maven-resolver-transport-wagon/" />
-          <area shape="rect" coords="319,74,382,110"  href="./maven-resolver-transport-http/" />
-          <area shape="rect" coords="414,32,499,68"   href="/wagon/" />
-          <area shape="rect" coords="416,74,519,110"  href="http://hc.apache.org/httpcomponents-client-ga/index.html" />
+          <area shape="rect" coords="285,405,348,441" href="./maven-resolver-api/" />
+          <area shape="rect" coords="286,335,349,370" href="./maven-resolver-spi/" />
+          <area shape="rect" coords="375,335,437,370" href="./maven-resolver-util/" />
+          <area shape="rect" coords="527,335,609,370" href="./maven-resolver-test-util/" />
+          <area shape="rect" coords="285,180,348,215" href="./maven-resolver-impl/" />
+          <area shape="rect" coords="353,230,459,286" href="./maven-resolver-connector-basic/" />
+          <area shape="rect" coords="479,201,520,235" href="./maven-resolver-transport-file/" />
+          <area shape="rect" coords="479,243,581,278" href="./maven-resolver-transport-classpath/" />
+          <area shape="rect" coords="572,201,654,236" href="./maven-resolver-transport-wagon/" />
+          <area shape="rect" coords="592,243,654,278" href="./maven-resolver-transport-http/" />
+          <area shape="rect" coords="291,33,424,69"   href="./maven-resolver-demos/maven-resolver-demo-maven-plugin/" />
+          <area shape="rect" coords="433,33,524,69"   href="./maven-resolver-demos/maven-resolver-demo-snippets/" />
+          <area shape="rect" coords="279,1,537,78"    href="./maven-resolver-demos/" />
+          <area shape="rect" coords="551,33,663,69"   href="/resolver-ant-tasks/" />
+          <area shape="rect" coords="130,33,240,69"   href="/ref/current/maven-plugin-api/" />
+          <area shape="rect" coords="19,117,199,153"  href="/ref/current/maven-resolver-provider/" />
+          <area shape="rect" coords="114,180,257,215" href="/ref/current/maven-model-builder/" />
+          <area shape="rect" coords="142,234,228,270" href="/ref/current/maven-model/" />
+          <area shape="rect" coords="6,284,212,320"   href="/ref/current/maven-repository-metadata/" />
+          <area shape="rect" coords="0,1,266,329"     href="/ref/current/" />
+          <area shape="rect" coords="689,200,775,236" href="/wagon/" />
+          <area shape="rect" coords="689,243,791,278" href="http://hc.apache.org/httpcomponents-client-ga/index.html" />
+          <area shape="rect" coords="689,34,774,70"   href="http://ant.apache.org/" />
         </map>
       </p>
 
       <subsection name="See Also">
         <ul>
-          <li><a href="/resolver-demos/">Maven Artifact Resolver Demos</a></li>
           <li><a href="/resolver-ant-tasks/">Maven Artifact Resolver Ant Tasks</a></li>
-          <li><a href="/ref/current/maven-resolver-provider/">Maven Artifact Resolver Provider</a></li>
           <li><a href="http://wiki.eclipse.org/Aether">Aether wiki</a></li>
         </ul>
       </subsection>

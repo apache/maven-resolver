@@ -36,23 +36,11 @@
   <description>
     Maven Artifact Resolver demos, showing concrete code to use Maven Artifact Resolver with Maven repositories.
   </description>
-  <url>https://maven.apache.org/resolver-demos/</url>
-
-  <distributionManagement>
-    <site>
-      <id>apache.website</id>
-      <url>scm:svn:https://svn.apache.org/repos/infra/websites/production/maven/components/${maven.site.path}</url>
-    </site>
-  </distributionManagement>
 
   <modules>
     <module>maven-resolver-demo-snippets</module>
     <module>maven-resolver-demo-maven-plugin</module>
   </modules>
-
-  <properties>
-    <maven.site.path>resolver-demos</maven.site.path>
-  </properties>
 
   <build>
     <pluginManagement>
