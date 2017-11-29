@@ -41,7 +41,7 @@
               <goal>resolve-artifact</goal>
             </goals>
             <configuration>
-              <artifactCoords>junit:junit:3.8.2</artifactCoords>
+              <artifactCoords>junit:junit:4.12</artifactCoords>
             </configuration>
           </execution>
         </executions>

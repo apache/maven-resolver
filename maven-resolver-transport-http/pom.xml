@@ -37,7 +37,7 @@
 
   <properties>
     <AutomaticModuleName>org.apache.maven.resolver.transport.http</AutomaticModuleName>
-    <jettyVersion>9.2.9.v20150224</jettyVersion>
+    <jettyVersion>9.2.22.v20170606</jettyVersion>
   </properties>
 
   <dependencies>
@@ -68,7 +68,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>4.4.6</version>
+      <version>4.4.8</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
