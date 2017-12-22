@@ -41,7 +41,6 @@
   </prerequisites>
 
   <properties>
-    <resolverVersion>${project.version}</resolverVersion>
     <mavenVersion>3.5.0</mavenVersion>
   </properties>
 
@@ -69,12 +68,10 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
   </dependencies>
 

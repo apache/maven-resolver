@@ -37,7 +37,6 @@
   </description>
 
   <properties>
-    <resolverVersion>${project.version}</resolverVersion>
     <mavenVersion>3.5.0</mavenVersion>
   </properties>
 
@@ -60,37 +59,30 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-spi</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-impl</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-connector-basic</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-file</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-http</artifactId>
-      <version>${resolverVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -100,31 +92,13 @@
     <dependency>
       <groupId>org.eclipse.sisu</groupId>
       <artifactId>org.eclipse.sisu.plexus</artifactId>
-      <version>0.1.1</version>
       <optional>true</optional>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.enterprise</groupId>
-          <artifactId>cdi-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.sonatype.sisu</groupId>
       <artifactId>sisu-guice</artifactId>
-      <version>3.1.6</version>
       <classifier>no_aop</classifier>
       <optional>true</optional>
-      <exclusions>
-        <exclusion>
-          <groupId>aopalliance</groupId>
-          <artifactId>aopalliance</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>jsr305</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
   </dependencies>
 </project>
