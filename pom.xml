@@ -210,6 +210,13 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <!-- See https://issues.apache.org/jira/browse/MPLUGIN-296           -->
+          <!-- Can be removed once the core is shipped with an updated plugin. -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>3.5</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
