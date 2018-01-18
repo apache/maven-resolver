@@ -110,7 +110,7 @@ final class PartialFile
 
                     try
                     {
-                        Thread.sleep( Math.max( requestTimeout / 2, 100 ) );
+                        Thread.sleep( 100 );
                     }
                     catch ( InterruptedException e )
                     {
