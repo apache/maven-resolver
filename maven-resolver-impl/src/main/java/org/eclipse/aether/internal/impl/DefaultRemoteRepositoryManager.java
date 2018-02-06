@@ -59,7 +59,7 @@ public class DefaultRemoteRepositoryManager
 
         private final Object[] keys;
 
-        public LoggedMirror( RemoteRepository original, RemoteRepository mirror )
+        LoggedMirror( RemoteRepository original, RemoteRepository mirror )
         {
             keys = new Object[] { mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl() };
         }

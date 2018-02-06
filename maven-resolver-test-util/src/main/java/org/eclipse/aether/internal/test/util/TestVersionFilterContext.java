@@ -47,7 +47,7 @@ class TestVersionFilterContext
 
     private final List<Version> versions;
 
-    public TestVersionFilterContext( RepositorySystemSession session, VersionRangeResult result )
+    TestVersionFilterContext( RepositorySystemSession session, VersionRangeResult result )
     {
         this.session = session;
         this.result = result;

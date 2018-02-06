@@ -40,7 +40,7 @@ final class TestDependencyCollectionContext
 
     private final List<Dependency> managedDependencies;
 
-    public TestDependencyCollectionContext( RepositorySystemSession session, Artifact artifact, Dependency dependency,
+    TestDependencyCollectionContext( RepositorySystemSession session, Artifact artifact, Dependency dependency,
                                             List<Dependency> managedDependencies )
     {
         this.session = session;

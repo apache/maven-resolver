@@ -257,7 +257,7 @@ public final class ConflictIdSorter
 
         int minDepth;
 
-        public ConflictId( Object key, int depth )
+        ConflictId( Object key, int depth )
         {
             this.key = key;
             this.minDepth = depth;

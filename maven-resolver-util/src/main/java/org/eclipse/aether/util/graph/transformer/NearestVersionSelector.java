@@ -168,7 +168,7 @@ public final class NearestVersionSelector
 
         ConflictItem winner;
 
-        public ConflictGroup()
+        ConflictGroup()
         {
             constraints = new HashSet<VersionConstraint>();
             candidates = new ArrayList<ConflictItem>( 64 );

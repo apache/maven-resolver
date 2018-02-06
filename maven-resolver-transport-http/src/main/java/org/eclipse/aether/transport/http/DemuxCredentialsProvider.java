@@ -40,7 +40,7 @@ final class DemuxCredentialsProvider
 
     private final HttpHost proxy;
 
-    public DemuxCredentialsProvider( CredentialsProvider serverCredentialsProvider,
+    DemuxCredentialsProvider( CredentialsProvider serverCredentialsProvider,
                                      CredentialsProvider proxyCredentialsProvider, HttpHost proxy )
     {
         this.serverCredentialsProvider = serverCredentialsProvider;

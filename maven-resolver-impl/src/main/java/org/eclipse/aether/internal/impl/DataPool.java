@@ -70,7 +70,7 @@ final class DataPool
     private Map<Object, List<DependencyNode>> nodes = new HashMap<Object, List<DependencyNode>>( 256 );
 
     @SuppressWarnings( "unchecked" )
-    public DataPool( RepositorySystemSession session )
+    DataPool( RepositorySystemSession session )
     {
         RepositoryCache cache = session.getCache();
 
@@ -203,7 +203,7 @@ final class DataPool
 
         final List<Dependency> managedDependencies;
 
-        public GoodDescriptor( ArtifactDescriptorResult result )
+        GoodDescriptor( ArtifactDescriptorResult result )
         {
             artifact = result.getArtifact();
             relocations = result.getRelocations();
@@ -247,7 +247,7 @@ final class DataPool
 
         final VersionConstraint versionConstraint;
 
-        public Constraint( VersionRangeResult result )
+        Constraint( VersionRangeResult result )
         {
             versionConstraint = result.getVersionConstraint();
             List<Version> versions = result.getVersions();
@@ -297,7 +297,7 @@ final class DataPool
 
         private final int hashCode;
 
-        public ConstraintKey( VersionRangeRequest request )
+        ConstraintKey( VersionRangeRequest request )
         {
             artifact = request.getArtifact();
             repositories = request.getRepositories();
@@ -381,7 +381,7 @@ final class DataPool
 
         private final int hashCode;
 
-        public GraphKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
+        GraphKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
                          DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
         {
             this.artifact = artifact;

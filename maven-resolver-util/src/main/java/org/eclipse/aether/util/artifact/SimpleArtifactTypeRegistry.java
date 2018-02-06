@@ -38,7 +38,7 @@ class SimpleArtifactTypeRegistry
      * Creates a new artifact type registry with initally no registered artifact types. Use {@link #add(ArtifactType)}
      * to populate the registry.
      */
-    public SimpleArtifactTypeRegistry()
+    SimpleArtifactTypeRegistry()
     {
         types = new HashMap<String, ArtifactType>();
     }

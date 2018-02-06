@@ -137,7 +137,7 @@ public class ConsoleDependencyGraphDumper
 
         int index;
 
-        public ChildInfo( int count )
+        ChildInfo( int count )
         {
             this.count = count;
         }

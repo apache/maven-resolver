@@ -99,7 +99,7 @@ final class WagonTransporter
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    public WagonTransporter( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator,
+    WagonTransporter( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator,
                              RemoteRepository repository, RepositorySystemSession session, Logger logger )
         throws NoTransporterException
     {
@@ -500,7 +500,7 @@ final class WagonTransporter
 
         private final PeekTask task;
 
-        public PeekTaskRunner( PeekTask task )
+        PeekTaskRunner( PeekTask task )
         {
             this.task = task;
         }
@@ -524,7 +524,7 @@ final class WagonTransporter
 
         private final GetTask task;
 
-        public GetTaskRunner( GetTask task )
+        GetTaskRunner( GetTask task )
         {
             this.task = task;
         }
@@ -642,7 +642,7 @@ final class WagonTransporter
 
         private final PutTask task;
 
-        public PutTaskRunner( PutTask task )
+        PutTaskRunner( PutTask task )
         {
             this.task = task;
         }

@@ -484,7 +484,7 @@ public class DefaultDeployer
 
         private final RepositoryEventDispatcher dispatcher;
 
-        public EventCatapult( RepositorySystemSession session, RequestTrace trace, RemoteRepository repository,
+        EventCatapult( RepositorySystemSession session, RequestTrace trace, RemoteRepository repository,
                               RepositoryEventDispatcher dispatcher )
         {
             this.session = session;
@@ -559,7 +559,7 @@ public class DefaultDeployer
 
         private final ArtifactUpload transfer;
 
-        public ArtifactUploadListener( EventCatapult catapult, ArtifactUpload transfer, Logger logger )
+        ArtifactUploadListener( EventCatapult catapult, ArtifactUpload transfer, Logger logger )
         {
             super( catapult.getSession(), logger );
             this.catapult = catapult;
@@ -598,7 +598,7 @@ public class DefaultDeployer
 
         private final MetadataUpload transfer;
 
-        public MetadataUploadListener( EventCatapult catapult, MetadataUpload transfer, Logger logger )
+        MetadataUploadListener( EventCatapult catapult, MetadataUpload transfer, Logger logger )
         {
             super( catapult.getSession(), logger );
             this.catapult = catapult;

@@ -20,7 +20,6 @@ package org.eclipse.aether.util.repository;
  */
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -104,7 +103,7 @@ public final class DefaultProxySelector
 
         private final Pattern[] patterns;
 
-        public NonProxyHosts( String nonProxyHosts )
+        NonProxyHosts( String nonProxyHosts )
         {
             List<Pattern> patterns = new ArrayList<Pattern>();
             if ( nonProxyHosts != null )
@@ -143,7 +142,7 @@ public final class DefaultProxySelector
 
         final NonProxyHosts nonProxyHosts;
 
-        public ProxyDef( Proxy proxy, String nonProxyHosts )
+        ProxyDef( Proxy proxy, String nonProxyHosts )
         {
             this.proxy = proxy;
             this.nonProxyHosts = new NonProxyHosts( nonProxyHosts );

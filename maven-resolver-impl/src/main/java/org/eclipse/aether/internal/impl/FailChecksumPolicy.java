@@ -30,7 +30,7 @@ final class FailChecksumPolicy
     extends AbstractChecksumPolicy
 {
 
-    public FailChecksumPolicy( LoggerFactory loggerFactory, TransferResource resource )
+    FailChecksumPolicy( LoggerFactory loggerFactory, TransferResource resource )
     {
         super( loggerFactory, resource );
     }

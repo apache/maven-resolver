@@ -47,12 +47,12 @@ class SimpleLocalRepositoryManager
 
     private final LocalRepository repository;
 
-    public SimpleLocalRepositoryManager( File basedir )
+    SimpleLocalRepositoryManager( File basedir )
     {
         this( basedir, "simple" );
     }
 
-    public SimpleLocalRepositoryManager( String basedir )
+    SimpleLocalRepositoryManager( String basedir )
     {
         this( ( basedir != null ) ? new File( basedir ) : null, "simple" );
     }

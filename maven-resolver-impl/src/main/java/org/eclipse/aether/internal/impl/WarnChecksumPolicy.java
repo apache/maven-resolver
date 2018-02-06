@@ -30,7 +30,7 @@ final class WarnChecksumPolicy
     extends AbstractChecksumPolicy
 {
 
-    public WarnChecksumPolicy( LoggerFactory loggerFactory, TransferResource resource )
+    WarnChecksumPolicy( LoggerFactory loggerFactory, TransferResource resource )
     {
         super( loggerFactory, resource );
     }

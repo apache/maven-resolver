@@ -35,7 +35,7 @@ final class WagonTransferListener
 
     private final TransportListener listener;
 
-    public WagonTransferListener( TransportListener listener )
+    WagonTransferListener( TransportListener listener )
     {
         this.listener = listener;
     }

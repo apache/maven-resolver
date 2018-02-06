@@ -54,7 +54,7 @@ final class DefaultVersionFilterContext
 
     byte[] deleted = new byte[64];
 
-    public DefaultVersionFilterContext( RepositorySystemSession session )
+    DefaultVersionFilterContext( RepositorySystemSession session )
     {
         this.session = session;
     }
@@ -154,7 +154,7 @@ final class DefaultVersionFilterContext
 
         private int next;
 
-        public VersionIterator()
+        VersionIterator()
         {
             count = DefaultVersionFilterContext.this.count;
             index = -1;

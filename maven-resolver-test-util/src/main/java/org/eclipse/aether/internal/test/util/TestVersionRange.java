@@ -44,7 +44,7 @@ final class TestVersionRange
      * @param range The range specification to parse, must not be {@code null}.
      * @throws InvalidVersionSpecificationException If the range could not be parsed.
      */
-    public TestVersionRange( String range )
+    TestVersionRange( String range )
         throws InvalidVersionSpecificationException
     {
         String process = range;

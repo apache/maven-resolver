@@ -37,7 +37,7 @@ final class StringAuthentication
 
     private final String value;
 
-    public StringAuthentication( String key, String value )
+    StringAuthentication( String key, String value )
     {
         this.key = requireNonNull( key, "authentication key cannot be null" );
         if ( key.length() == 0 )

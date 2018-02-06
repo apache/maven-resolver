@@ -66,7 +66,7 @@ final class ChecksumValidator
 
     private final Map<File, Object> checksumFiles;
 
-    public ChecksumValidator( Logger logger, File dataFile, FileProcessor fileProcessor,
+    ChecksumValidator( Logger logger, File dataFile, FileProcessor fileProcessor,
                               ChecksumFetcher checksumFetcher, ChecksumPolicy checksumPolicy,
                               Collection<Checksum> checksums )
     {

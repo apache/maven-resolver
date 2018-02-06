@@ -44,7 +44,7 @@ final class PrioritizedComponents<T>
 
     private int firstDisabled;
 
-    public PrioritizedComponents( RepositorySystemSession session )
+    PrioritizedComponents( RepositorySystemSession session )
     {
         this( session.getConfigProperties() );
     }

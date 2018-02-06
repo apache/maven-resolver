@@ -37,7 +37,7 @@ final class ChainedAuthentication
 
     private final Authentication[] authentications;
 
-    public ChainedAuthentication( Authentication... authentications )
+    ChainedAuthentication( Authentication... authentications )
     {
         if ( authentications != null && authentications.length > 0 )
         {
@@ -49,7 +49,7 @@ final class ChainedAuthentication
         }
     }
 
-    public ChainedAuthentication( Collection<? extends Authentication> authentications )
+    ChainedAuthentication( Collection<? extends Authentication> authentications )
     {
         if ( authentications != null && !authentications.isEmpty() )
         {

@@ -66,7 +66,7 @@ class EnhancedLocalRepositoryManager
 
     private final TrackingFileManager trackingFileManager;
 
-    public EnhancedLocalRepositoryManager( File basedir, RepositorySystemSession session )
+    EnhancedLocalRepositoryManager( File basedir, RepositorySystemSession session )
     {
         super( basedir, "enhanced" );
         String filename = ConfigUtils.getString( session, "", "aether.enhancedLocalRepository.trackingFilename" );

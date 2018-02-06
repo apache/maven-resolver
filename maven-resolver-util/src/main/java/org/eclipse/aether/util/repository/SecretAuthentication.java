@@ -53,12 +53,12 @@ final class SecretAuthentication
 
     private final int secretHash;
 
-    public SecretAuthentication( String key, String value )
+    SecretAuthentication( String key, String value )
     {
         this( ( value != null ) ? value.toCharArray() : null, key );
     }
 
-    public SecretAuthentication( String key, char[] value )
+    SecretAuthentication( String key, char[] value )
     {
         this( copy( value ), key );
     }

@@ -50,7 +50,7 @@ class IniArtifactDataReader
     /**
      * Constructs a data reader with the prefix {@code ""}.
      */
-    public IniArtifactDataReader()
+    IniArtifactDataReader()
     {
         this( "" );
     }
@@ -60,7 +60,7 @@ class IniArtifactDataReader
      * 
      * @param prefix the prefix to use for loading resources from the classpath.
      */
-    public IniArtifactDataReader( String prefix )
+    IniArtifactDataReader( String prefix )
     {
         this.prefix = prefix;
 
@@ -301,7 +301,7 @@ class IniArtifactDataReader
 
         private boolean optional = false;
 
-        public Definition( String def )
+        Definition( String def )
         {
             this.definition = def.trim();
 

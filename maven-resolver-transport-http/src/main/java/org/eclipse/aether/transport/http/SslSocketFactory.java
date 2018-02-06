@@ -43,7 +43,7 @@ final class SslSocketFactory
 
     private final String[] protocols;
 
-    public SslSocketFactory( SslConfig config )
+    SslSocketFactory( SslConfig config )
     {
         this( getSocketFactory( config.context ), getHostnameVerifier( config.verifier ), config.cipherSuites,
               config.protocols );

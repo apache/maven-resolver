@@ -89,7 +89,7 @@ public final class DefaultServiceLocator
 
         private List<T> instances;
 
-        public Entry( Class<T> type )
+        Entry( Class<T> type )
         {
             this.type = requireNonNull( type, "service type cannot be null" );
             providers = new LinkedHashSet<Object>( 8 );

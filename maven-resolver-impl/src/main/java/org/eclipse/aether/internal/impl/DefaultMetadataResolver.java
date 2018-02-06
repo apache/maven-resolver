@@ -549,7 +549,7 @@ public class DefaultMetadataResolver
 
         volatile MetadataTransferException exception;
 
-        public ResolveTask( RepositorySystemSession session, RequestTrace trace, MetadataResult result,
+        ResolveTask( RepositorySystemSession session, RequestTrace trace, MetadataResult result,
                             File metadataFile, List<UpdateCheck<Metadata, MetadataTransferException>> checks,
                             String policy )
         {

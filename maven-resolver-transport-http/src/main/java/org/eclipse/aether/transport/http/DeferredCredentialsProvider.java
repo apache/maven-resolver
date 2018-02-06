@@ -44,7 +44,7 @@ final class DeferredCredentialsProvider
 
     private final Map<AuthScope, Factory> factories;
 
-    public DeferredCredentialsProvider()
+    DeferredCredentialsProvider()
     {
         delegate = new BasicCredentialsProvider();
         factories = new HashMap<AuthScope, Factory>();
@@ -95,7 +95,7 @@ final class DeferredCredentialsProvider
 
         private final AuthenticationContext authContext;
 
-        public BasicFactory( AuthenticationContext authContext )
+        BasicFactory( AuthenticationContext authContext )
         {
             this.authContext = authContext;
         }
@@ -119,7 +119,7 @@ final class DeferredCredentialsProvider
 
         private final AuthenticationContext authContext;
 
-        public NtlmFactory( AuthenticationContext authContext )
+        NtlmFactory( AuthenticationContext authContext )
         {
             this.authContext = authContext;
         }

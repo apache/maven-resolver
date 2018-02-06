@@ -703,7 +703,7 @@ public class DefaultDependencyCollector
 
         final CollectRequest request;
 
-        public Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
+        Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
                      DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
                      CollectRequest request )
         {
@@ -731,7 +731,7 @@ public class DefaultDependencyCollector
 
         String errorPath;
 
-        public Results( CollectResult result, RepositorySystemSession session )
+        Results( CollectResult result, RepositorySystemSession session )
         {
             this.result = result;
             this.maxExceptions = ConfigUtils.getInteger( session, 50, CONFIG_PROP_MAX_EXCEPTIONS );

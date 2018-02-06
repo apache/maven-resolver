@@ -32,7 +32,7 @@ final class ArtifactTransportListener
 
     private final RemoteRepository repository;
 
-    public ArtifactTransportListener( ArtifactTransfer transfer, RemoteRepository repository,
+    ArtifactTransportListener( ArtifactTransfer transfer, RemoteRepository repository,
                                       TransferEvent.Builder eventBuilder )
     {
         super( transfer, eventBuilder );

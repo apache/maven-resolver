@@ -30,7 +30,7 @@ final class TestVersion
 
     private String version;
 
-    public TestVersion( String version )
+    TestVersion( String version )
     {
         this.version = version == null ? "" : version;
     }

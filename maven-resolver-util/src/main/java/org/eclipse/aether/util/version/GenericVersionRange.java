@@ -40,7 +40,7 @@ final class GenericVersionRange
      * @param range The range specification to parse, must not be {@code null}.
      * @throws InvalidVersionSpecificationException If the range could not be parsed.
      */
-    public GenericVersionRange( String range )
+    GenericVersionRange( String range )
         throws InvalidVersionSpecificationException
     {
         String process = range;

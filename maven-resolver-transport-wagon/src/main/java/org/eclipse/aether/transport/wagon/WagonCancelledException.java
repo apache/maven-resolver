@@ -28,7 +28,7 @@ class WagonCancelledException
     extends RuntimeException
 {
 
-    public WagonCancelledException( TransferCancelledException cause )
+    WagonCancelledException( TransferCancelledException cause )
     {
         super( cause );
     }

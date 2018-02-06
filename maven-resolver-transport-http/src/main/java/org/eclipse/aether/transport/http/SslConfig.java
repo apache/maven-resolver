@@ -46,7 +46,7 @@ final class SslConfig
 
     final String[] protocols;
 
-    public SslConfig( RepositorySystemSession session, AuthenticationContext authContext )
+    SslConfig( RepositorySystemSession session, AuthenticationContext authContext )
     {
         context =
             ( authContext != null ) ? authContext.get( AuthenticationContext.SSL_CONTEXT, SSLContext.class ) : null;

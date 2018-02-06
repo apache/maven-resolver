@@ -49,7 +49,7 @@ class AbstractPatternDependencyFilter
      * 
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public AbstractPatternDependencyFilter( final String... patterns )
+    AbstractPatternDependencyFilter( final String... patterns )
     {
         this( null, patterns );
     }
@@ -61,7 +61,7 @@ class AbstractPatternDependencyFilter
      *            range no artifact will be included.
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public AbstractPatternDependencyFilter( final VersionScheme versionScheme, final String... patterns )
+    AbstractPatternDependencyFilter( final VersionScheme versionScheme, final String... patterns )
     {
         this( versionScheme, patterns == null ? null : Arrays.asList( patterns ) );
     }
@@ -71,7 +71,7 @@ class AbstractPatternDependencyFilter
      * 
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public AbstractPatternDependencyFilter( final Collection<String> patterns )
+    AbstractPatternDependencyFilter( final Collection<String> patterns )
     {
         this( null, patterns );
     }
@@ -83,7 +83,7 @@ class AbstractPatternDependencyFilter
      *            range no artifact will be included.
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public AbstractPatternDependencyFilter( final VersionScheme versionScheme, final Collection<String> patterns )
+    AbstractPatternDependencyFilter( final VersionScheme versionScheme, final Collection<String> patterns )
     {
         if ( patterns != null )
         {

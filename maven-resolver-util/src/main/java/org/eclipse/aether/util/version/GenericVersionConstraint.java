@@ -41,7 +41,7 @@ final class GenericVersionConstraint
      *
      * @param range The version range, must not be {@code null}.
      */
-    public GenericVersionConstraint( VersionRange range )
+    GenericVersionConstraint( VersionRange range )
     {
         this.range = requireNonNull( range, "version range cannot be null" );
         this.version = null;
@@ -52,7 +52,7 @@ final class GenericVersionConstraint
      *
      * @param version The version, must not be {@code null}.
      */
-    public GenericVersionConstraint( Version version )
+    GenericVersionConstraint( Version version )
     {
         this.version = requireNonNull( version, "version cannot be null" );
         this.range = null;

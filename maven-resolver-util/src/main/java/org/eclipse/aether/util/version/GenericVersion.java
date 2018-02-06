@@ -48,7 +48,7 @@ final class GenericVersion
      * 
      * @param version The version string, must not be {@code null}.
      */
-    public GenericVersion( String version )
+    GenericVersion( String version )
     {
         this.version = version;
         items = parse( version );
@@ -212,7 +212,7 @@ final class GenericVersion
 
         private boolean terminatedByNumber;
 
-        public Tokenizer( String version )
+        Tokenizer( String version )
         {
             this.version = ( version.length() > 0 ) ? version : "0";
         }
@@ -378,7 +378,7 @@ final class GenericVersion
 
         private final Object value;
 
-        public Item( int kind, Object value )
+        Item( int kind, Object value )
         {
             this.kind = kind;
             this.value = value;

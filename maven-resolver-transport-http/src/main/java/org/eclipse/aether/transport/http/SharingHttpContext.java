@@ -39,7 +39,7 @@ final class SharingHttpContext
 
     private final SharingAuthCache authCache;
 
-    public SharingHttpContext( LocalState state )
+    SharingHttpContext( LocalState state )
     {
         this.state = state;
         authCache = new SharingAuthCache( state );

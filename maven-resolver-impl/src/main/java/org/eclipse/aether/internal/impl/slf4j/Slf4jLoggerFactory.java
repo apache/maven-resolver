@@ -116,7 +116,7 @@ public class Slf4jLoggerFactory
 
         private final org.slf4j.Logger logger;
 
-        public Slf4jLogger( org.slf4j.Logger logger )
+        Slf4jLogger( org.slf4j.Logger logger )
         {
             this.logger = logger;
         }
@@ -161,7 +161,7 @@ public class Slf4jLoggerFactory
 
         private final LocationAwareLogger logger;
 
-        public Slf4jLoggerEx( LocationAwareLogger logger )
+        Slf4jLoggerEx( LocationAwareLogger logger )
         {
             this.logger = logger;
         }

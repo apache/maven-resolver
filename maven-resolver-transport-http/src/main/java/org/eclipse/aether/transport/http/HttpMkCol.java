@@ -30,7 +30,7 @@ final class HttpMkCol
     extends HttpRequestBase
 {
 
-    public HttpMkCol( URI uri )
+    HttpMkCol( URI uri )
     {
         setURI( uri );
     }

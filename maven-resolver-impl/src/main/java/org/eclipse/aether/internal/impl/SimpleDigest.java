@@ -33,7 +33,7 @@ class SimpleDigest
 
     private long hash;
 
-    public SimpleDigest()
+    SimpleDigest()
     {
         try
         {

@@ -35,7 +35,7 @@ final class AuthSchemePool
 
     private String schemeName;
 
-    public AuthSchemePool()
+    AuthSchemePool()
     {
         authSchemes = new LinkedList<AuthScheme>();
     }

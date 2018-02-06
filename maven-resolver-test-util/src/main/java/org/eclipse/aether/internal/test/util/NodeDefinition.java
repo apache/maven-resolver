@@ -88,7 +88,7 @@ class NodeDefinition
 
     String reference;
 
-    public NodeDefinition( String definition )
+    NodeDefinition( String definition )
     {
         def = definition.trim();
 

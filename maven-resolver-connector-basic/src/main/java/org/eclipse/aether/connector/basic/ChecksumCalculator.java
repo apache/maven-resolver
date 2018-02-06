@@ -51,7 +51,7 @@ final class ChecksumCalculator
 
         Exception error;
 
-        public Checksum( String algorithm )
+        Checksum( String algorithm )
         {
             this.algorithm = algorithm;
             MessageDigest digest = null;

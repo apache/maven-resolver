@@ -257,7 +257,7 @@ public final class DefaultMirrorSelector
 
         final String mirrorOfTypes;
 
-        public MirrorDef( String id, String url, String type, boolean repositoryManager, String mirrorOfIds,
+        MirrorDef( String id, String url, String type, boolean repositoryManager, String mirrorOfIds,
                           String mirrorOfTypes )
         {
             this.id = id;

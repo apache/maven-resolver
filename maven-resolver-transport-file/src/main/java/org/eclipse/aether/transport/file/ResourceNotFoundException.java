@@ -29,7 +29,7 @@ class ResourceNotFoundException
     extends IOException
 {
 
-    public ResourceNotFoundException( String message )
+    ResourceNotFoundException( String message )
     {
         super( message );
     }

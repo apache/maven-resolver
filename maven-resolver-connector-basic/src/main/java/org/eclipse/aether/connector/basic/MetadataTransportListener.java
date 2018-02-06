@@ -32,7 +32,7 @@ final class MetadataTransportListener
 
     private final RemoteRepository repository;
 
-    public MetadataTransportListener( MetadataTransfer transfer, RemoteRepository repository,
+    MetadataTransportListener( MetadataTransfer transfer, RemoteRepository repository,
                                       TransferEvent.Builder eventBuilder )
     {
         super( transfer, eventBuilder );

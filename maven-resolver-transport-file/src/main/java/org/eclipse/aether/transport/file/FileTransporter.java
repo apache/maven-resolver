@@ -43,7 +43,7 @@ final class FileTransporter
 
     private final File basedir;
 
-    public FileTransporter( RemoteRepository repository, Logger logger )
+    FileTransporter( RemoteRepository repository, Logger logger )
         throws NoTransporterException
     {
         if ( !"file".equalsIgnoreCase( repository.getProtocol() ) )

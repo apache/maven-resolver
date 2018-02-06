@@ -288,7 +288,7 @@ public final class ClassicDependencyManager
 
         private final int hashCode;
 
-        public Key( Artifact artifact )
+        Key( Artifact artifact )
         {
             this.artifact = artifact;
 

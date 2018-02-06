@@ -61,7 +61,7 @@ final class PartialFile
 
         private final AtomicBoolean concurrent;
 
-        public LockFile( File partFile, int requestTimeout, RemoteAccessChecker checker, Logger logger )
+        LockFile( File partFile, int requestTimeout, RemoteAccessChecker checker, Logger logger )
             throws Exception
         {
             lockFile = new File( partFile.getPath() + EXT_LOCK );
@@ -259,7 +259,7 @@ final class PartialFile
 
         private final Logger logger;
 
-        public Factory( boolean resume, long resumeThreshold, int requestTimeout, Logger logger )
+        Factory( boolean resume, long resumeThreshold, int requestTimeout, Logger logger )
         {
             this.resume = resume;
             this.resumeThreshold = resumeThreshold;

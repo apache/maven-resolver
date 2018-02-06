@@ -36,7 +36,7 @@ class TestDependencyGraphTransformationContext
 
     private final Map<Object, Object> map;
 
-    public TestDependencyGraphTransformationContext( RepositorySystemSession session )
+    TestDependencyGraphTransformationContext( RepositorySystemSession session )
     {
         this.session = session;
         this.map = new HashMap<Object, Object>();

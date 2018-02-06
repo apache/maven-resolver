@@ -60,7 +60,7 @@ public final class TestLoggerFactory
 
         private final PrintStream out;
 
-        public TestLogger( PrintStream out )
+        TestLogger( PrintStream out )
         {
             this.out = ( out != null ) ? out : System.out;
         }

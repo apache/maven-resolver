@@ -250,7 +250,7 @@ public final class ConflictMarker
 
         final int index;
 
-        public ConflictGroup( Set<Object> keys, int index )
+        ConflictGroup( Set<Object> keys, int index )
         {
             this.keys = keys;
             this.index = index;
@@ -269,7 +269,7 @@ public final class ConflictMarker
 
         private final Artifact artifact;
 
-        public Key( Artifact artifact )
+        Key( Artifact artifact )
         {
             this.artifact = artifact;
         }

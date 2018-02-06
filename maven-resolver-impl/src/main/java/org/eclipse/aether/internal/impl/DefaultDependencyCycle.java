@@ -39,7 +39,7 @@ final class DefaultDependencyCycle
 
     private final int cycleEntry;
 
-    public DefaultDependencyCycle( NodeStack nodes, int cycleEntry, Dependency dependency )
+    DefaultDependencyCycle( NodeStack nodes, int cycleEntry, Dependency dependency )
     {
         // skip root node unless it actually has a dependency or is considered the cycle entry (due to its label)
         int offset = ( cycleEntry > 0 && nodes.get( 0 ).getDependency() == null ) ? 1 : 0;

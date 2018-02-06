@@ -46,7 +46,7 @@ final class ClasspathTransporter
 
     private final ClassLoader classLoader;
 
-    public ClasspathTransporter( RepositorySystemSession session, RemoteRepository repository, Logger logger )
+    ClasspathTransporter( RepositorySystemSession session, RemoteRepository repository, Logger logger )
         throws NoTransporterException
     {
         if ( !"classpath".equalsIgnoreCase( repository.getProtocol() ) )

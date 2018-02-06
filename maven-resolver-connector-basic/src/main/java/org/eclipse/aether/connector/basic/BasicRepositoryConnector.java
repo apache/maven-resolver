@@ -106,7 +106,7 @@ final class BasicRepositoryConnector
 
     private boolean closed;
 
-    public BasicRepositoryConnector( RepositorySystemSession session, RemoteRepository repository,
+    BasicRepositoryConnector( RepositorySystemSession session, RemoteRepository repository,
                                      TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
                                      ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor,
                                      Logger logger )
@@ -346,7 +346,7 @@ final class BasicRepositoryConnector
 
         protected final TransferTransportListener<?> listener;
 
-        public TaskRunner( URI path, TransferTransportListener<?> listener )
+        TaskRunner( URI path, TransferTransportListener<?> listener )
         {
             this.path = path;
             this.listener = listener;
@@ -375,7 +375,7 @@ final class BasicRepositoryConnector
         extends TaskRunner
     {
 
-        public PeekTaskRunner( URI path, TransferTransportListener<?> listener )
+        PeekTaskRunner( URI path, TransferTransportListener<?> listener )
         {
             super( path, listener );
         }
@@ -397,7 +397,7 @@ final class BasicRepositoryConnector
 
         private final ChecksumValidator checksumValidator;
 
-        public GetTaskRunner( URI path, File file, ChecksumPolicy checksumPolicy,
+        GetTaskRunner( URI path, File file, ChecksumPolicy checksumPolicy,
                               List<RepositoryLayout.Checksum> checksums, TransferTransportListener<?> listener )
         {
             super( path, listener );
@@ -498,7 +498,7 @@ final class BasicRepositoryConnector
 
         private final Collection<RepositoryLayout.Checksum> checksums;
 
-        public PutTaskRunner( URI path, File file, List<RepositoryLayout.Checksum> checksums,
+        PutTaskRunner( URI path, File file, List<RepositoryLayout.Checksum> checksums,
                               TransferTransportListener<?> listener )
         {
             super( path, listener );

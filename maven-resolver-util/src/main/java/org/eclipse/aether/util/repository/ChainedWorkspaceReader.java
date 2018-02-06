@@ -131,7 +131,7 @@ public final class ChainedWorkspaceReader
 
         private final List<Object> keys = new ArrayList<Object>();
 
-        public Key( List<WorkspaceReader> readers )
+        Key( List<WorkspaceReader> readers )
         {
             for ( WorkspaceReader reader : readers )
             {

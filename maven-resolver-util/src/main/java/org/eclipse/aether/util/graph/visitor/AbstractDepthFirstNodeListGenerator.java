@@ -48,7 +48,7 @@ abstract class AbstractDepthFirstNodeListGenerator
 
     protected final List<DependencyNode> nodes;
 
-    public AbstractDepthFirstNodeListGenerator()
+    AbstractDepthFirstNodeListGenerator()
     {
         nodes = new ArrayList<DependencyNode>( 128 );
         visitedNodes = new IdentityHashMap<DependencyNode, Object>( 512 );

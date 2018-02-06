@@ -103,7 +103,7 @@ final class HttpTransporter
 
     private final LocalState state;
 
-    public HttpTransporter( RemoteRepository repository, RepositorySystemSession session, Logger logger )
+    HttpTransporter( RemoteRepository repository, RepositorySystemSession session, Logger logger )
         throws NoTransporterException
     {
         if ( !"http".equalsIgnoreCase( repository.getProtocol() )
@@ -489,7 +489,7 @@ final class HttpTransporter
 
         private final GetTask task;
 
-        public EntityGetter( GetTask task )
+        EntityGetter( GetTask task )
         {
             this.task = task;
         }
@@ -554,7 +554,7 @@ final class HttpTransporter
 
         private final PutTask task;
 
-        public PutTaskEntity( PutTask task )
+        PutTaskEntity( PutTask task )
         {
             this.task = task;
         }

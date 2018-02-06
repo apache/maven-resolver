@@ -40,7 +40,7 @@ public interface RepositoryLayout
      * underlying algorithm used to calculate/verify it. Checksum algorithms are denoted by names as used with
      * {@link java.security.MessageDigest#getInstance(String)}, e.g. {@code "SHA-1"} or {@code "MD5"}.
      */
-    static final class Checksum
+    final class Checksum
     {
 
         private final String algorithm;

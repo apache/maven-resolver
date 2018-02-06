@@ -31,7 +31,7 @@ final class PrioritizedComponent<T>
 
     private final int index;
 
-    public PrioritizedComponent( T component, Class<?> type, float priority, int index )
+    PrioritizedComponent( T component, Class<?> type, float priority, int index )
     {
         this.component = component;
         this.type = type;

@@ -41,7 +41,7 @@ final class DefaultDependencyCollectionContext
 
     private List<Dependency> managedDependencies;
 
-    public DefaultDependencyCollectionContext( RepositorySystemSession session, Artifact artifact,
+    DefaultDependencyCollectionContext( RepositorySystemSession session, Artifact artifact,
                                                Dependency dependency, List<Dependency> managedDependencies )
     {
         this.session = session;

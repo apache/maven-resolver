@@ -39,7 +39,7 @@ class ArtifactDefinition
 
     private Boolean optional;
 
-    public ArtifactDefinition( String def )
+    ArtifactDefinition( String def )
     {
         this.definition = def.trim();
 

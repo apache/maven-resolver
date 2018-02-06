@@ -41,7 +41,7 @@ final class TestVersionConstraint
      *
      * @param range The version range, must not be {@code null}.
      */
-    public TestVersionConstraint( VersionRange range )
+    TestVersionConstraint( VersionRange range )
     {
         this.range = requireNonNull( range, "version range cannot be null" );
         this.version = null;
@@ -52,7 +52,7 @@ final class TestVersionConstraint
      *
      * @param version The version, must not be {@code null}.
      */
-    public TestVersionConstraint( Version version )
+    TestVersionConstraint( Version version )
     {
         this.version = requireNonNull( version, "version cannot be null" );
         this.range = null;

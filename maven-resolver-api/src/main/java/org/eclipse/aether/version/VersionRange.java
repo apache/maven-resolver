@@ -54,7 +54,7 @@ public interface VersionRange
     /**
      * A bound of a version range.
      */
-    static final class Bound
+    final class Bound
     {
 
         private final Version version;

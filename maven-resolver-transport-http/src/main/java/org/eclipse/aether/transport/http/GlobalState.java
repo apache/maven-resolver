@@ -49,7 +49,7 @@ final class GlobalState
 
         private final Object[] keys;
 
-        public CompoundKey( Object... keys )
+        CompoundKey( Object... keys )
         {
             this.keys = keys;
         }

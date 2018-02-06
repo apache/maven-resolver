@@ -38,7 +38,7 @@ final class ComponentAuthentication
 
     private final Object value;
 
-    public ComponentAuthentication( String key, Object value )
+    ComponentAuthentication( String key, Object value )
     {
         this.key = requireNonNull( key, "authentication key cannot be null" );
         if ( key.length() == 0 )

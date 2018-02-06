@@ -54,7 +54,7 @@ final class LocalState
 
     private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
 
-    public LocalState( RepositorySystemSession session, RemoteRepository repo, SslConfig sslConfig )
+    LocalState( RepositorySystemSession session, RemoteRepository repo, SslConfig sslConfig )
     {
         global = GlobalState.get( session );
         userToken = this;
