@@ -33,6 +33,8 @@ import java.util.regex.Pattern;
 public final class DefaultArtifact
     extends AbstractArtifact
 {
+    private static final Pattern COORDINATE_PATTERN =
+        Pattern.compile( "([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)" );
 
     private final String groupId;
 
@@ -70,8 +72,7 @@ public final class DefaultArtifact
      */
     public DefaultArtifact( String coords, Map<String, String> properties )
     {
-        Pattern p = Pattern.compile( "([^: ]+):([^: ]+)(:([^: ]*)(:([^: ]+))?)?:([^: ]+)" );
-        Matcher m = p.matcher( coords );
+        Matcher m = COORDINATE_PATTERN.matcher( coords );
         if ( !m.matches() )
         {
             throw new IllegalArgumentException( "Bad artifact coordinates " + coords
