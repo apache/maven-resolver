@@ -27,7 +27,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.StringUtils;
 
-class StubRemoteRepositoryManager
+public class StubRemoteRepositoryManager
     implements RemoteRepositoryManager
 {
 

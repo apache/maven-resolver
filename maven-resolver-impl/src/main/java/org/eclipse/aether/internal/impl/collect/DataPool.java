@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl;
+package org.eclipse.aether.internal.impl.collect;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
