@@ -46,8 +46,13 @@ public final class Dependency
     private final Set<Exclusion> exclusions;
 
     /**
+     * @since 1.2.0
+     */
+    private final String sourceHint;
+
+    /**
      * Creates a mandatory dependency on the specified artifact with the given scope.
-     * 
+     *
      * @param artifact The artifact being depended on, must not be {@code null}.
      * @param scope The scope of the dependency, may be {@code null}.
      */
@@ -58,7 +63,7 @@ public final class Dependency
 
     /**
      * Creates a dependency on the specified artifact with the given scope.
-     * 
+     *
      * @param artifact The artifact being depended on, must not be {@code null}.
      * @param scope The scope of the dependency, may be {@code null}.
      * @param optional A flag whether the dependency is optional or mandatory, may be {@code null}.
@@ -70,7 +75,7 @@ public final class Dependency
 
     /**
      * Creates a dependency on the specified artifact with the given scope and exclusions.
-     * 
+     *
      * @param artifact The artifact being depended on, must not be {@code null}.
      * @param scope The scope of the dependency, may be {@code null}.
      * @param optional A flag whether the dependency is optional or mandatory, may be {@code null}.
@@ -78,21 +83,65 @@ public final class Dependency
      */
     public Dependency( Artifact artifact, String scope, Boolean optional, Collection<Exclusion> exclusions )
     {
-        this( artifact, scope, Exclusions.copy( exclusions ), optional );
+        this( null, artifact, scope, Exclusions.copy( exclusions ), optional );
     }
 
-    private Dependency( Artifact artifact, String scope, Set<Exclusion> exclusions, Boolean optional )
+    /**
+     * Creates a dependency on the specified artifact.
+     *
+     * @param sourceHint An informational hint describing the source declaring the dependency, may be {@code null}.
+     * @param artifact The artifact being depended on, must not be {@code null}.
+     * @param scope The scope of the dependency, may be {@code null}.
+     * @param optional A flag whether the dependency is optional or mandatory, may be {@code null}.
+     * @param exclusions The exclusions that apply to transitive dependencies, may be {@code null} if none.
+     * @since 1.2.0
+     */
+    public Dependency( String sourceHint, Artifact artifact, String scope, Boolean optional,
+                       Collection<Exclusion> exclusions )
+    {
+        this( sourceHint, artifact, scope, Exclusions.copy( exclusions ), optional );
+    }
+
+    private Dependency( String sourceHint, Artifact artifact, String scope, Set<Exclusion> exclusions,
+                        Boolean optional )
     {
         // NOTE: This constructor assumes immutability of the provided exclusion collection, for internal use only
         this.artifact = requireNonNull( artifact, "artifact cannot be null" );
         this.scope = ( scope != null ) ? scope : "";
         this.optional = optional;
         this.exclusions = exclusions;
+        this.sourceHint = sourceHint;
+    }
+
+    /**
+     * Gets an informational hint describing the source declaring the dependency.
+     *
+     * @return An informational hint describing the source declaring the dependency or {@code null}.
+     * @since 1.2.0
+     */
+    public String getSourceHint()
+    {
+        return this.sourceHint;
+    }
+
+    /**
+     * Sets the informational hint describing the source declaring the dependency.
+     * @param value The new informational hint describing the source declaring the dependency or {@code null}.
+     * @return The new dependency, never {@code null}.
+     * @since 1.2.0
+     */
+    public Dependency setSourceHint( final String value )
+    {
+        return ( this.sourceHint != null && this.sourceHint.equals( value ) )
+                   || ( this.sourceHint == value )
+                   ? this
+                   : new Dependency( value, artifact, scope, exclusions, optional );
+
     }
 
     /**
      * Gets the artifact being depended on.
-     * 
+     *
      * @return The artifact, never {@code null}.
      */
     public Artifact getArtifact()
@@ -102,7 +151,7 @@ public final class Dependency
 
     /**
      * Sets the artifact being depended on.
-     * 
+     *
      * @param artifact The artifact, must not be {@code null}.
      * @return The new dependency, never {@code null}.
      */
@@ -112,12 +161,12 @@ public final class Dependency
         {
             return this;
         }
-        return new Dependency( artifact, scope, exclusions, optional );
+        return new Dependency( sourceHint, artifact, scope, exclusions, optional );
     }
 
     /**
      * Gets the scope of the dependency. The scope defines in which context this dependency is relevant.
-     * 
+     *
      * @return The scope or an empty string if not set, never {@code null}.
      */
     public String getScope()
@@ -127,7 +176,7 @@ public final class Dependency
 
     /**
      * Sets the scope of the dependency, e.g. "compile".
-     * 
+     *
      * @param scope The scope of the dependency, may be {@code null}.
      * @return The new dependency, never {@code null}.
      */
@@ -137,12 +186,12 @@ public final class Dependency
         {
             return this;
         }
-        return new Dependency( artifact, scope, exclusions, optional );
+        return new Dependency( sourceHint, artifact, scope, exclusions, optional );
     }
 
     /**
      * Indicates whether this dependency is optional or not. Optional dependencies can be ignored in some contexts.
-     * 
+     *
      * @return {@code true} if the dependency is (definitively) optional, {@code false} otherwise.
      */
     public boolean isOptional()
@@ -153,7 +202,7 @@ public final class Dependency
     /**
      * Gets the optional flag for the dependency. Note: Most clients will usually call {@link #isOptional()} to
      * determine the optional flag, this method is for advanced use cases where three-valued logic is required.
-     * 
+     *
      * @return The optional flag or {@code null} if unspecified.
      */
     public Boolean getOptional()
@@ -163,9 +212,9 @@ public final class Dependency
 
     /**
      * Sets the optional flag for the dependency.
-     * 
+     *
      * @param optional {@code true} if the dependency is optional, {@code false} if the dependency is mandatory, may be
-     *            {@code null} if unspecified.
+     * {@code null} if unspecified.
      * @return The new dependency, never {@code null}.
      */
     public Dependency setOptional( Boolean optional )
@@ -174,13 +223,13 @@ public final class Dependency
         {
             return this;
         }
-        return new Dependency( artifact, scope, exclusions, optional );
+        return new Dependency( sourceHint, artifact, scope, exclusions, optional );
     }
 
     /**
      * Gets the exclusions for this dependency. Exclusions can be used to remove transitive dependencies during
      * resolution.
-     * 
+     *
      * @return The (read-only) exclusions, never {@code null}.
      */
     public Collection<Exclusion> getExclusions()
@@ -190,7 +239,7 @@ public final class Dependency
 
     /**
      * Sets the exclusions for the dependency.
-     * 
+     *
      * @param exclusions The exclusions, may be {@code null}.
      * @return The new dependency, never {@code null}.
      */
@@ -200,7 +249,7 @@ public final class Dependency
         {
             return this;
         }
-        return new Dependency( artifact, scope, optional, exclusions );
+        return new Dependency( sourceHint, artifact, scope, optional, exclusions );
     }
 
     private boolean hasEquivalentExclusions( Collection<Exclusion> exclusions )
@@ -214,7 +263,7 @@ public final class Dependency
             return this.exclusions.equals( exclusions );
         }
         return exclusions.size() >= this.exclusions.size() && this.exclusions.containsAll( exclusions )
-            && exclusions.containsAll( this.exclusions );
+                   && exclusions.containsAll( this.exclusions );
     }
 
     @Override
@@ -238,7 +287,7 @@ public final class Dependency
         Dependency that = (Dependency) obj;
 
         return artifact.equals( that.artifact ) && scope.equals( that.scope ) && eq( optional, that.optional )
-            && exclusions.equals( that.exclusions );
+                   && exclusions.equals( that.exclusions );
     }
 
     private static <T> boolean eq( T o1, T o2 )
@@ -278,7 +327,7 @@ public final class Dependency
             {
                 exclusions = new LinkedHashSet<Exclusion>( exclusions );
             }
-            this.exclusions = exclusions.toArray( new Exclusion[exclusions.size()] );
+            this.exclusions = exclusions.toArray( new Exclusion[ exclusions.size() ] );
         }
 
         @Override

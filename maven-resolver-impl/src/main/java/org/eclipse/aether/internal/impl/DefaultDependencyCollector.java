@@ -124,7 +124,8 @@ public class DefaultDependencyCollector
 
     public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager,
+                                                       "remote repository provider cannot be null" );
         return this;
     }
 
@@ -704,8 +705,8 @@ public class DefaultDependencyCollector
         final CollectRequest request;
 
         Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
-                     DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
-                     CollectRequest request )
+              DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
+              CollectRequest request )
         {
             this.session = session;
             this.request = request;
@@ -783,9 +784,24 @@ public class DefaultDependencyCollector
 
         final String premanagedVersion;
 
+        /**
+         * @since 1.2.0
+         */
+        final String versionManagementSourceHint;
+
         final String premanagedScope;
 
+        /**
+         * @since 1.2.0
+         */
+        final String scopeManagementSourceHint;
+
         final Boolean premanagedOptional;
+
+        /**
+         * @since 1.2.0
+         */
+        final String optionalityManagementSourceHint;
 
         /**
          * @since 1.1.0
@@ -793,9 +809,19 @@ public class DefaultDependencyCollector
         final Collection<Exclusion> premanagedExclusions;
 
         /**
+         * @since 1.2.0
+         */
+        final String exclusionsManagementSourceHint;
+
+        /**
          * @since 1.1.0
          */
         final Map<String, String> premanagedProperties;
+
+        /**
+         * @since 1.2.0
+         */
+        final String propertiesManagementSourceHint;
 
         final int managedBits;
 
@@ -803,23 +829,32 @@ public class DefaultDependencyCollector
 
         final boolean premanagedState;
 
-        PremanagedDependency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
-                              Collection<Exclusion> premanagedExclusions, Map<String, String> premanagedProperties,
+        PremanagedDependency( String premanagedVersion, String versionManagementSourceHint,
+                              String premanagedScope, String scopeManagementSourceHint,
+                              Boolean premanagedOptional, String optionalityManagementSourceHint,
+                              Collection<Exclusion> premanagedExclusions, String exclusionsManagementSourceHint,
+                              Map<String, String> premanagedProperties, String propertiesManagementSourceHint,
                               int managedBits, Dependency managedDependency, boolean premanagedState )
         {
             this.premanagedVersion = premanagedVersion;
+            this.versionManagementSourceHint = versionManagementSourceHint;
             this.premanagedScope = premanagedScope;
+            this.scopeManagementSourceHint = scopeManagementSourceHint;
             this.premanagedOptional = premanagedOptional;
+            this.optionalityManagementSourceHint = optionalityManagementSourceHint;
             this.premanagedExclusions =
                 premanagedExclusions != null
                     ? Collections.unmodifiableCollection( new ArrayList<Exclusion>( premanagedExclusions ) )
                     : null;
+
+            this.exclusionsManagementSourceHint = exclusionsManagementSourceHint;
 
             this.premanagedProperties =
                 premanagedProperties != null
                     ? Collections.unmodifiableMap( new HashMap<String, String>( premanagedProperties ) )
                     : null;
 
+            this.propertiesManagementSourceHint = propertiesManagementSourceHint;
             this.managedBits = managedBits;
             this.managedDependency = managedDependency;
             this.premanagedState = premanagedState;
@@ -832,10 +867,15 @@ public class DefaultDependencyCollector
 
             int managedBits = 0;
             String premanagedVersion = null;
+            String versionSourceHint = null;
             String premanagedScope = null;
+            String scopeSourceHint = null;
             Boolean premanagedOptional = null;
+            String optionalitySourceHint = null;
             Collection<Exclusion> premanagedExclusions = null;
+            String exclusionsSourceHint = null;
             Map<String, String> premanagedProperties = null;
+            String propertiesSourceHint = null;
 
             if ( depMngt != null )
             {
@@ -843,6 +883,7 @@ public class DefaultDependencyCollector
                 {
                     Artifact artifact = dependency.getArtifact();
                     premanagedVersion = artifact.getVersion();
+                    versionSourceHint = depMngt.getVersionSourceHint();
                     dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
                     managedBits |= DependencyNode.MANAGED_VERSION;
                 }
@@ -850,30 +891,38 @@ public class DefaultDependencyCollector
                 {
                     Artifact artifact = dependency.getArtifact();
                     premanagedProperties = artifact.getProperties();
+                    propertiesSourceHint = depMngt.getPropertiesSourceHint();
                     dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
                     managedBits |= DependencyNode.MANAGED_PROPERTIES;
                 }
                 if ( depMngt.getScope() != null )
                 {
                     premanagedScope = dependency.getScope();
+                    scopeSourceHint = depMngt.getScopeSourceHint();
                     dependency = dependency.setScope( depMngt.getScope() );
                     managedBits |= DependencyNode.MANAGED_SCOPE;
                 }
                 if ( depMngt.getOptional() != null )
                 {
                     premanagedOptional = dependency.isOptional();
+                    optionalitySourceHint = depMngt.getOptionalitySourceHint();
                     dependency = dependency.setOptional( depMngt.getOptional() );
                     managedBits |= DependencyNode.MANAGED_OPTIONAL;
                 }
                 if ( depMngt.getExclusions() != null )
                 {
                     premanagedExclusions = dependency.getExclusions();
+                    exclusionsSourceHint = depMngt.getExclusionsSourceHint();
                     dependency = dependency.setExclusions( depMngt.getExclusions() );
                     managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
                 }
             }
-            return new PremanagedDependency( premanagedVersion, premanagedScope, premanagedOptional,
-                                             premanagedExclusions, premanagedProperties, managedBits, dependency,
+            return new PremanagedDependency( premanagedVersion, versionSourceHint,
+                                             premanagedScope, scopeSourceHint,
+                                             premanagedOptional, optionalitySourceHint,
+                                             premanagedExclusions, exclusionsSourceHint,
+                                             premanagedProperties, propertiesSourceHint,
+                                             managedBits, dependency,
                                              premanagedState );
 
         }
@@ -884,10 +933,25 @@ public class DefaultDependencyCollector
             if ( premanagedState )
             {
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
+                child.setData( DependencyManagerUtils.NODE_DATA_VERSION_MANAGEMENT_SOURCE_HINT,
+                               versionManagementSourceHint );
+
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
+                child.setData( DependencyManagerUtils.NODE_DATA_SCOPE_MANAGEMENT_SOURCE_HINT,
+                               scopeManagementSourceHint );
+
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+                child.setData( DependencyManagerUtils.NODE_DATA_OPTIONALITY_MANAGEMENT_SOURCE_HINT,
+                               optionalityManagementSourceHint );
+
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_EXCLUSIONS, premanagedExclusions );
+                child.setData( DependencyManagerUtils.NODE_DATA_EXCLUSIONS_MANAGEMENT_SOURCE_HINT,
+                               exclusionsManagementSourceHint );
+
                 child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_PROPERTIES, premanagedProperties );
+                child.setData( DependencyManagerUtils.NODE_DATA_PROPERTIES_MANAGEMENT_SOURCE_HINT,
+                               propertiesManagementSourceHint );
+
             }
         }
 
