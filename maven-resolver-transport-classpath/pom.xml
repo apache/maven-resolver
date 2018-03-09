@@ -36,7 +36,8 @@
   </description>
 
   <properties>
-    <AutomaticModuleName>org.apache.maven.resolver.transport.classpath</AutomaticModuleName>
+    <Automatic-Module-Name>org.apache.maven.resolver.transport.classpath</Automatic-Module-Name>
+    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
   </properties>
 
   <dependencies>
@@ -86,6 +87,19 @@
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.directory}/osgi/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
       </plugin>
     </plugins>
   </build>

@@ -36,7 +36,8 @@
   </description>
 
   <properties>
-    <AutomaticModuleName>org.apache.maven.resolver</AutomaticModuleName>
+    <Automatic-Module-Name>org.apache.maven.resolver</Automatic-Module-Name>
+    <Bundle-SymbolicName>${Automatic-Module-Name}.api</Bundle-SymbolicName>
   </properties>
 
   <dependencies>
@@ -51,4 +52,22 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.directory}/osgi/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
