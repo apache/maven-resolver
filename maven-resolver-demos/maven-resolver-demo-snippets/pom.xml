@@ -37,6 +37,7 @@
   </description>
 
   <properties>
+    <Automatic-Module-Name>org.apache.maven.resolver.demo.snippets</Automatic-Module-Name>
     <mavenVersion>3.5.0</mavenVersion>
   </properties>
 
