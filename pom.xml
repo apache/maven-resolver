@@ -41,8 +41,8 @@
   <inceptionYear>2010</inceptionYear>
 
   <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-resolver.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/maven-resolver.git</developerConnection>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</developerConnection>
     <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
     <tag>master</tag>
   </scm>
@@ -52,7 +52,7 @@
   </issueManagement>
   <ciManagement>
     <system>Jenkins</system>
-    <url>https://builds.apache.org/job/maven-resolver/</url>
+    <url>https://builds.apache.org/job/maven-box/job/maven-resolver/</url>
   </ciManagement>
   <distributionManagement>
     <site>
