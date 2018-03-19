@@ -28,9 +28,6 @@ import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
@@ -42,8 +39,6 @@ import org.eclipse.aether.transfer.NoTransporterException;
 public final class WagonTransporterFactory
     implements TransporterFactory, Service
 {
-
-    private Logger logger = NullLoggerFactory.LOGGER;
 
     private WagonProvider wagonProvider;
 
@@ -62,31 +57,16 @@ public final class WagonTransporterFactory
     }
 
     @Inject
-    WagonTransporterFactory( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator,
-                             LoggerFactory loggerFactory )
+    WagonTransporterFactory( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator )
     {
         setWagonProvider( wagonProvider );
         setWagonConfigurator( wagonConfigurator );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setWagonProvider( locator.getService( WagonProvider.class ) );
         setWagonConfigurator( locator.getService( WagonConfigurator.class ) );
-    }
-
-    /**
-     * Sets the logger factory to use for this component.
-     * 
-     * @param loggerFactory The logger factory to use, may be {@code null} to disable logging.
-     * @return This component for chaining, never {@code null}.
-     */
-    public WagonTransporterFactory setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, WagonTransporter.class );
-        return this;
     }
 
     /**
@@ -133,7 +113,7 @@ public final class WagonTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        return new WagonTransporter( wagonProvider, wagonConfigurator, repository, session, logger );
+        return new WagonTransporter( wagonProvider, wagonConfigurator, repository, session );
     }
 
 }

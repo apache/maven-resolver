@@ -35,10 +35,9 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -47,7 +46,7 @@ public final class DefaultTransporterProvider
     implements TransporterProvider, Service
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTransporterProvider.class );
 
     private Collection<TransporterFactory> factories = new ArrayList<TransporterFactory>();
 
@@ -57,22 +56,14 @@ public final class DefaultTransporterProvider
     }
 
     @Inject
-    DefaultTransporterProvider( Set<TransporterFactory> transporterFactories, LoggerFactory loggerFactory )
+    DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
     {
-        setLoggerFactory( loggerFactory );
         setTransporterFactories( transporterFactories );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setTransporterFactories( locator.getServices( TransporterFactory.class ) );
-    }
-
-    public DefaultTransporterProvider setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultTransporterProvider addTransporterFactory( TransporterFactory factory )
@@ -112,14 +103,14 @@ public final class DefaultTransporterProvider
             {
                 Transporter transporter = factory.getComponent().newInstance( session, repository );
 
-                if ( logger.isDebugEnabled() )
+                if ( LOGGER.isDebugEnabled() )
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
                     buffer.append( "Using transporter " ).append( transporter.getClass().getSimpleName() );
                     Utils.appendClassLoader( buffer, transporter );
                     buffer.append( " with priority " ).append( factory.getPriority() );
                     buffer.append( " for " ).append( repository.getUrl() );
-                    logger.debug( buffer.toString() );
+                    LOGGER.debug( buffer.toString() );
                 }
 
                 return transporter;
@@ -130,12 +121,12 @@ public final class DefaultTransporterProvider
                 errors.add( e );
             }
         }
-        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        if ( LOGGER.isDebugEnabled() && errors.size() > 1 )
         {
             String msg = "Could not obtain transporter factory for " + repository;
             for ( Exception e : errors )
             {
-                logger.debug( msg, e );
+                LOGGER.debug( msg, e );
             }
         }
 

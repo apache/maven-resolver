@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.GetTask;
@@ -76,7 +75,7 @@ public class FileTransporterTest
         throws Exception
     {
         session = TestUtils.newSession();
-        factory = new FileTransporterFactory( new TestLoggerFactory() );
+        factory = new FileTransporterFactory( );
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString( new File( repoDir, "file.txt" ), "test" );
         TestFileUtils.writeString( new File( repoDir, "empty.txt" ), "" );

@@ -21,9 +21,7 @@ package org.eclipse.aether.transport.wagon;
 
 import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.PlexusTestCase;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.spi.log.LoggerFactory;
 
 /**
  */
@@ -40,8 +38,6 @@ public class PlexusSupportTest
     public void testExistenceOfPlexusComponentMetadata()
         throws Exception
     {
-        getContainer().addComponent( new TestLoggerFactory(), LoggerFactory.class, null );
-
         TransporterFactory factory = lookup( TransporterFactory.class, "wagon" );
         assertNotNull( factory );
         assertEquals( WagonTransporterFactory.class, factory.getClass() );

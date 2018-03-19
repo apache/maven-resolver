@@ -20,24 +20,21 @@ package org.eclipse.aether.internal.impl;
  */
 
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class AbstractChecksumPolicy
     implements ChecksumPolicy
-
 {
 
-    protected final Logger logger;
+    protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
     protected final TransferResource resource;
 
-    protected AbstractChecksumPolicy( LoggerFactory loggerFactory, TransferResource resource )
+    protected AbstractChecksumPolicy( TransferResource resource )
     {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
         this.resource = resource;
     }
 
@@ -58,7 +55,7 @@ abstract class AbstractChecksumPolicy
     public void onChecksumError( String algorithm, int kind, ChecksumFailureException exception )
         throws ChecksumFailureException
     {
-        logger.debug( "Could not validate " + algorithm + " checksum for " + resource.getResourceName(), exception );
+        logger.debug( "Could not validate {} checksum for {}", algorithm, resource.getResourceName(), exception );
     }
 
     public void onNoMoreChecksums()

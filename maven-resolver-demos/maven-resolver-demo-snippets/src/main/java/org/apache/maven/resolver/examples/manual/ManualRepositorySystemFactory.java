@@ -27,6 +27,8 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A factory for repository system instances that employs Maven Artifact Resolver's built-in service locator
@@ -34,6 +36,7 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory;
  */
 public class ManualRepositorySystemFactory
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger( ManualRepositorySystemFactory.class );
 
     public static RepositorySystem newRepositorySystem()
     {
@@ -52,7 +55,8 @@ public class ManualRepositorySystemFactory
             @Override
             public void serviceCreationFailed( Class<?> type, Class<?> impl, Throwable exception )
             {
-                exception.printStackTrace();
+               LOGGER.error( "Service creation failed for {} implementation {}: {}",
+                        type, impl, exception.getMessage(), exception );
             }
         } );
 

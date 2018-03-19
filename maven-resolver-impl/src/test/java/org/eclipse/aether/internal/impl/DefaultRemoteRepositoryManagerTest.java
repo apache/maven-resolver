@@ -28,8 +28,6 @@ import java.util.List;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
-import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.Proxy;
@@ -61,7 +59,6 @@ public class DefaultRemoteRepositoryManagerTest
         manager = new DefaultRemoteRepositoryManager();
         manager.setUpdatePolicyAnalyzer( new StubUpdatePolicyAnalyzer() );
         manager.setChecksumPolicyProvider( new DefaultChecksumPolicyProvider() );
-        manager.setLoggerFactory( new TestLoggerFactory() );
     }
 
     @After

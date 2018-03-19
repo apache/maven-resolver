@@ -21,47 +21,26 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.Calendar;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 @Named
 public class DefaultUpdatePolicyAnalyzer
-    implements UpdatePolicyAnalyzer, Service
+    implements UpdatePolicyAnalyzer
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
 
     public DefaultUpdatePolicyAnalyzer()
     {
         // enables default constructor
-    }
-
-    @Inject
-    DefaultUpdatePolicyAnalyzer( LoggerFactory loggerFactory )
-    {
-        setLoggerFactory( loggerFactory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
-    }
-
-    public DefaultUpdatePolicyAnalyzer setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )
@@ -129,8 +108,8 @@ public class DefaultUpdatePolicyAnalyzer
 
             if ( !RepositoryPolicy.UPDATE_POLICY_NEVER.equals( policy ) )
             {
-                logger.warn( "Unknown repository update policy '" + policy + "', assuming '"
-                    + RepositoryPolicy.UPDATE_POLICY_NEVER + "'" );
+                LOGGER.warn( "Unknown repository update policy '{}', assuming '{}'",
+                        policy, RepositoryPolicy.UPDATE_POLICY_NEVER );
             }
         }
 
@@ -149,8 +128,8 @@ public class DefaultUpdatePolicyAnalyzer
         {
             minutes = 24 * 60;
 
-            logger.warn( "Non-parseable repository update policy '" + policy + "', assuming '"
-                + RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":1440'" );
+            LOGGER.warn( "Non-parseable repository update policy '{}', assuming '{}:1440'",
+                    policy, RepositoryPolicy.UPDATE_POLICY_INTERVAL );
         }
         return minutes;
     }

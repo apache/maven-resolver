@@ -34,9 +34,6 @@ import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
@@ -48,9 +45,6 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 public final class BasicRepositoryConnectorFactory
     implements RepositoryConnectorFactory, Service
 {
-
-    private Logger logger = NullLoggerFactory.LOGGER;
-
     private TransporterProvider transporterProvider;
 
     private RepositoryLayoutProvider layoutProvider;
@@ -73,35 +67,20 @@ public final class BasicRepositoryConnectorFactory
 
     @Inject
     BasicRepositoryConnectorFactory( TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
-                                     ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor,
-                                     LoggerFactory loggerFactory )
+                                     ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor )
     {
         setTransporterProvider( transporterProvider );
         setRepositoryLayoutProvider( layoutProvider );
         setChecksumPolicyProvider( checksumPolicyProvider );
         setFileProcessor( fileProcessor );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setTransporterProvider( locator.getService( TransporterProvider.class ) );
         setRepositoryLayoutProvider( locator.getService( RepositoryLayoutProvider.class ) );
         setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
-    }
-
-    /**
-     * Sets the logger factory to use for this component.
-     * 
-     * @param loggerFactory The logger factory to use, may be {@code null} to disable logging.
-     * @return This component for chaining, never {@code null}.
-     */
-    public BasicRepositoryConnectorFactory setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, BasicRepositoryConnector.class );
-        return this;
     }
 
     /**
@@ -173,7 +152,7 @@ public final class BasicRepositoryConnectorFactory
         throws NoRepositoryConnectorException
     {
         return new BasicRepositoryConnector( session, repository, transporterProvider, layoutProvider,
-                                             checksumPolicyProvider, fileProcessor, logger );
+                                             checksumPolicyProvider, fileProcessor );
     }
 
 }

@@ -40,7 +40,6 @@ import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
@@ -113,7 +112,7 @@ public class HttpTransporterTest
     {
         System.out.println( "=== " + testName.getMethodName() + " ===" );
         session = TestUtils.newSession();
-        factory = new HttpTransporterFactory( new TestLoggerFactory() );
+        factory = new HttpTransporterFactory( );
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString( new File( repoDir, "file.txt" ), "test" );
         TestFileUtils.writeString( new File( repoDir, "dir/file.txt" ), "test" );

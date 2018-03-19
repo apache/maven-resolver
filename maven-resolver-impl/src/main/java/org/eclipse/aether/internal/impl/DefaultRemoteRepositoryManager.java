@@ -42,10 +42,9 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -87,7 +86,7 @@ public class DefaultRemoteRepositoryManager
 
     }
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRemoteRepositoryManager.class );
 
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
@@ -100,24 +99,16 @@ public class DefaultRemoteRepositoryManager
 
     @Inject
     DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer,
-                                    ChecksumPolicyProvider checksumPolicyProvider, LoggerFactory loggerFactory )
+                                    ChecksumPolicyProvider checksumPolicyProvider )
     {
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
         setChecksumPolicyProvider( checksumPolicyProvider );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
         setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
-    }
-
-    public DefaultRemoteRepositoryManager setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
@@ -217,7 +208,7 @@ public class DefaultRemoteRepositoryManager
 
     private void logMirror( RepositorySystemSession session, RemoteRepository original, RemoteRepository mirror )
     {
-        if ( !logger.isDebugEnabled() )
+        if ( !LOGGER.isDebugEnabled() )
         {
             return;
         }
@@ -231,8 +222,8 @@ public class DefaultRemoteRepositoryManager
             }
             cache.put( session, key, Boolean.TRUE );
         }
-        logger.debug( "Using mirror " + mirror.getId() + " (" + mirror.getUrl() + ") for " + original.getId() + " ("
-            + original.getUrl() + ")." );
+        LOGGER.debug( "Using mirror {} ({}) for {} ({}).",
+                mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl() );
     }
 
     private String getKey( RemoteRepository repository )

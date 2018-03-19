@@ -36,7 +36,6 @@ import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.log.Logger;
 
 /**
  * A local repository manager that realizes the classical Maven 2.0 local repository.
@@ -61,11 +60,6 @@ class SimpleLocalRepositoryManager
     {
         requireNonNull( basedir, "base directory cannot be null" );
         repository = new LocalRepository( basedir.getAbsoluteFile(), type );
-    }
-
-    public SimpleLocalRepositoryManager setLogger( Logger logger )
-    {
-        return this;
     }
 
     public LocalRepository getRepository()

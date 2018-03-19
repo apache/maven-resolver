@@ -19,6 +19,9 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -32,22 +35,13 @@ import java.nio.channels.OverlappingFileLockException;
 import java.util.Map;
 import java.util.Properties;
 
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
-
 /**
  * Manages potentially concurrent accesses to a properties file.
  */
 class TrackingFileManager
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
-
-    public TrackingFileManager setLogger( Logger logger )
-    {
-        this.logger = ( logger != null ) ? logger : NullLoggerFactory.LOGGER;
-        return this;
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger( TrackingFileManager.class );
 
     public Properties read( File file )
     {
@@ -73,7 +67,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Failed to read tracking file " + file, e );
+                LOGGER.warn( "Failed to read tracking file {}", file, e );
             }
             finally
             {
@@ -94,7 +88,7 @@ class TrackingFileManager
             File directory = file.getParentFile();
             if ( !directory.mkdirs() && !directory.exists() )
             {
-                logger.warn( "Failed to create parent directories for tracking file " + file );
+                LOGGER.warn( "Failed to create parent directories for tracking file {}", file );
                 return props;
             }
 
@@ -130,7 +124,7 @@ class TrackingFileManager
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream( 1024 * 2 );
 
-                logger.debug( "Writing tracking file " + file );
+                LOGGER.debug( "Writing tracking file {}", file );
                 props.store( stream, "NOTE: This is a Maven Resolver internal implementation file"
                     + ", its format can be changed without prior notice." );
 
@@ -140,7 +134,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Failed to write tracking file " + file, e );
+                LOGGER.warn( "Failed to write tracking file {}", file, e );
             }
             finally
             {
@@ -162,7 +156,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Error releasing lock for tracking file " + file, e );
+                LOGGER.warn( "Error releasing lock for tracking file {}", file, e );
             }
         }
     }
@@ -177,7 +171,7 @@ class TrackingFileManager
             }
             catch ( IOException e )
             {
-                logger.warn( "Error closing tracking file " + file, e );
+                LOGGER.warn( "Error closing tracking file {}", file, e );
             }
         }
     }
@@ -195,7 +189,7 @@ class TrackingFileManager
         }
         catch ( IOException e )
         {
-            logger.warn( "Failed to canonicalize path " + file + ": " + e.getMessage() );
+            LOGGER.warn( "Failed to canonicalize path {}: {}", file, e.getMessage() );
             return file.getAbsolutePath().intern();
         }
     }

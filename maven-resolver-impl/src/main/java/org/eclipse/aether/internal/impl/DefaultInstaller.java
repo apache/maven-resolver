@@ -52,9 +52,8 @@ import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -63,7 +62,7 @@ public class DefaultInstaller
     implements Installer, Service
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultInstaller.class );
 
     private FileProcessor fileProcessor;
 
@@ -80,29 +79,20 @@ public class DefaultInstaller
 
     @Inject
     DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
-                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory,
-                      LoggerFactory loggerFactory )
+                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-    }
-
-    public DefaultInstaller setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultInstaller setFileProcessor( FileProcessor fileProcessor )
@@ -269,7 +259,7 @@ public class DefaultInstaller
             }
             else
             {
-                logger.debug( "Skipped re-installing " + srcFile + " to " + dstFile + ", seems unchanged" );
+                LOGGER.debug( "Skipped re-installing {} to {}, seems unchanged", srcFile, dstFile );
             }
 
             lrm.add( session, new LocalArtifactRegistration( artifact ) );

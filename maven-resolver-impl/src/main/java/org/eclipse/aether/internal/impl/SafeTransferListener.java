@@ -20,45 +20,44 @@ package org.eclipse.aether.internal.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class SafeTransferListener
     extends AbstractTransferListener
 {
 
-    private final Logger logger;
+    private static final Logger LOGGER = LoggerFactory.getLogger( SafeTransferListener.class );
 
     private final TransferListener listener;
 
-    public static TransferListener wrap( RepositorySystemSession session, Logger logger )
+    public static TransferListener wrap( RepositorySystemSession session )
     {
         TransferListener listener = session.getTransferListener();
         if ( listener == null )
         {
             return null;
         }
-        return new SafeTransferListener( listener, logger );
+        return new SafeTransferListener( listener );
     }
 
-    protected SafeTransferListener( RepositorySystemSession session, Logger logger )
+    protected SafeTransferListener( RepositorySystemSession session )
     {
-        this( session.getTransferListener(), logger );
+        this( session.getTransferListener() );
     }
 
-    private SafeTransferListener( TransferListener listener, Logger logger )
+    private SafeTransferListener( TransferListener listener )
     {
         this.listener = listener;
-        this.logger = logger;
     }
 
     private void logError( TransferEvent event, Throwable e )
     {
-        String msg = "Failed to dispatch transfer event '" + event + "' to " + listener.getClass().getCanonicalName();
-        logger.debug( msg, e );
+        LOGGER.debug( "Failed to dispatch transfer event '{}' to {}", event,  listener.getClass().getCanonicalName(), e );
     }
 
     @Override
@@ -71,11 +70,7 @@ class SafeTransferListener
             {
                 listener.transferInitiated( event );
             }
-            catch ( RuntimeException e )
-            {
-                logError( event, e );
-            }
-            catch ( LinkageError e )
+            catch ( RuntimeException | LinkageError e )
             {
                 logError( event, e );
             }
@@ -92,11 +87,7 @@ class SafeTransferListener
             {
                 listener.transferStarted( event );
             }
-            catch ( RuntimeException e )
-            {
-                logError( event, e );
-            }
-            catch ( LinkageError e )
+            catch ( RuntimeException | LinkageError e )
             {
                 logError( event, e );
             }
@@ -113,11 +104,7 @@ class SafeTransferListener
             {
                 listener.transferProgressed( event );
             }
-            catch ( RuntimeException e )
-            {
-                logError( event, e );
-            }
-            catch ( LinkageError e )
+            catch ( RuntimeException | LinkageError e )
             {
                 logError( event, e );
             }
@@ -134,11 +121,7 @@ class SafeTransferListener
             {
                 listener.transferCorrupted( event );
             }
-            catch ( RuntimeException e )
-            {
-                logError( event, e );
-            }
-            catch ( LinkageError e )
+            catch ( RuntimeException | LinkageError e )
             {
                 logError( event, e );
             }
@@ -154,11 +137,7 @@ class SafeTransferListener
             {
                 listener.transferSucceeded( event );
             }
-            catch ( RuntimeException e )
-            {
-                logError( event, e );
-            }
-            catch ( LinkageError e )
+            catch ( RuntimeException | LinkageError e )
             {
                 logError( event, e );
             }
@@ -174,11 +153,7 @@ class SafeTransferListener
             {
                 listener.transferFailed( event );
             }
-            catch ( RuntimeException e )
-            {
-                logError( event, e );
-            }
-            catch ( LinkageError e )
+            catch ( RuntimeException | LinkageError e )
             {
                 logError( event, e );
             }
