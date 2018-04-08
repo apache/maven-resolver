@@ -215,10 +215,7 @@ public final class DefaultServiceLocator
         addService( LocalRepositoryProvider.class, DefaultLocalRepositoryProvider.class );
         addService( LocalRepositoryManagerFactory.class, SimpleLocalRepositoryManagerFactory.class );
         addService( LocalRepositoryManagerFactory.class, EnhancedLocalRepositoryManagerFactory.class );
-        if ( Slf4jLoggerFactory.isSlf4jAvailable() )
-        {
-            addService( LoggerFactory.class, Slf4jLoggerFactory.class );
-        }
+        addService( LoggerFactory.class, Slf4jLoggerFactory.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )

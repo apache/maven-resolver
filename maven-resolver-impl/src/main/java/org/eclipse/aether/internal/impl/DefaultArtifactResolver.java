@@ -69,14 +69,13 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -87,7 +86,7 @@ public class DefaultArtifactResolver
 
     private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultArtifactResolver.class );
 
     private FileProcessor fileProcessor;
 
@@ -115,7 +114,7 @@ public class DefaultArtifactResolver
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             OfflineController offlineController, LoggerFactory loggerFactory )
+                             OfflineController offlineController )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -125,12 +124,10 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setVersionResolver( locator.getService( VersionResolver.class ) );
@@ -139,12 +136,6 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
-    }
-
-    public DefaultArtifactResolver setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultArtifactResolver setFileProcessor( FileProcessor fileProcessor )
@@ -348,7 +339,7 @@ public class DefaultArtifactResolver
             }
             else if ( local.getFile() != null )
             {
-                logger.debug( "Verifying availability of " + local.getFile() + " from " + repos );
+                LOGGER.debug( "Verifying availability of {} from {}", local.getFile(), repos );
             }
 
             AtomicBoolean resolved = new AtomicBoolean( false );
@@ -531,7 +522,7 @@ public class DefaultArtifactResolver
             ArtifactDownload download = new ArtifactDownload();
             download.setArtifact( artifact );
             download.setRequestContext( item.request.getRequestContext() );
-            download.setListener( SafeTransferListener.wrap( session, logger ) );
+            download.setListener( SafeTransferListener.wrap( session ) );
             download.setTrace( item.trace );
             if ( item.local.getFile() != null )
             {

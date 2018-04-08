@@ -35,7 +35,6 @@ import org.apache.maven.wagon.Wagon;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
@@ -99,7 +98,6 @@ public abstract class AbstractWagonTransporterTest
         factory = new WagonTransporterFactory( new WagonProvider()
         {
             public Wagon lookup( String roleHint )
-                throws Exception
             {
                 if ( "mem".equalsIgnoreCase( roleHint ) )
                 {
@@ -114,11 +112,10 @@ public abstract class AbstractWagonTransporterTest
         }, new WagonConfigurator()
         {
             public void configure( Wagon wagon, Object configuration )
-                throws Exception
             {
                 ( (Configurable) wagon ).setConfiguration( configuration );
             }
-        }, new TestLoggerFactory() );
+        } );
         id = UUID.randomUUID().toString().replace( "-", "" );
         fs = MemWagonUtils.getFilesystem( id );
         fs.put( "file.txt", "test" );

@@ -25,7 +25,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  * Helps Sisu-based applications to pick the right logger factory depending on the classpath.
@@ -42,23 +41,7 @@ public class LoggerFactoryProvider
 
     public LoggerFactory get()
     {
-        try
-        {
-            LoggerFactory factory = slf4j.get();
-            if ( factory != null )
-            {
-                return factory;
-            }
-        }
-        catch ( LinkageError e )
-        {
-            // fall through
-        }
-        catch ( RuntimeException e )
-        {
-            // fall through
-        }
-        return NullLoggerFactory.INSTANCE;
+            return slf4j.get();
     }
 
 }

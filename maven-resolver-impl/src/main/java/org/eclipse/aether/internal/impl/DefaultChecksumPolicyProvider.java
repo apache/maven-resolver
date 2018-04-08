@@ -29,15 +29,13 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.TransferResource;
 
 /**
  */
 @Named
 public final class DefaultChecksumPolicyProvider
-    implements ChecksumPolicyProvider, Service
+    implements ChecksumPolicyProvider
 {
 
     private static final int ORDINAL_IGNORE = 0;
@@ -46,28 +44,9 @@ public final class DefaultChecksumPolicyProvider
 
     private static final int ORDINAL_FAIL = 2;
 
-    private LoggerFactory loggerFactory = NullLoggerFactory.INSTANCE;
-
     public DefaultChecksumPolicyProvider()
     {
         // enables default constructor
-    }
-
-    @Inject
-    DefaultChecksumPolicyProvider( LoggerFactory loggerFactory )
-    {
-        setLoggerFactory( loggerFactory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
-    }
-
-    public DefaultChecksumPolicyProvider setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.loggerFactory = loggerFactory;
-        return this;
     }
 
     public ChecksumPolicy newChecksumPolicy( RepositorySystemSession session, RemoteRepository repository,
@@ -79,9 +58,9 @@ public final class DefaultChecksumPolicyProvider
         }
         if ( RepositoryPolicy.CHECKSUM_POLICY_FAIL.equals( policy ) )
         {
-            return new FailChecksumPolicy( loggerFactory, resource );
+            return new FailChecksumPolicy( resource );
         }
-        return new WarnChecksumPolicy( loggerFactory, resource );
+        return new WarnChecksumPolicy( resource );
     }
 
     public String getEffectiveChecksumPolicy( RepositorySystemSession session, String policy1, String policy2 )

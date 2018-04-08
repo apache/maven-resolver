@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.GetTask;
@@ -74,7 +73,7 @@ public class ClasspathTransporterTest
         throws Exception
     {
         session = TestUtils.newSession();
-        factory = new ClasspathTransporterFactory( new TestLoggerFactory() );
+        factory = new ClasspathTransporterFactory( );
         newTransporter( "classpath:/repository" );
     }
 

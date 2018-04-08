@@ -64,9 +64,6 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
@@ -81,9 +78,6 @@ import org.eclipse.aether.transfer.TransferEvent;
 public class DefaultDeployer
     implements Deployer, Service
 {
-
-    private Logger logger = NullLoggerFactory.LOGGER;
-
     private FileProcessor fileProcessor;
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
@@ -110,7 +104,7 @@ public class DefaultDeployer
                      RepositoryConnectorProvider repositoryConnectorProvider,
                      RemoteRepositoryManager remoteRepositoryManager, UpdateCheckManager updateCheckManager,
                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory,
-                     OfflineController offlineController, LoggerFactory loggerFactory )
+                     OfflineController offlineController )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -119,13 +113,11 @@ public class DefaultDeployer
         setUpdateCheckManager( updateCheckManager );
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
-        setLoggerFactory( loggerFactory );
         setOfflineController( offlineController );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
@@ -134,12 +126,6 @@ public class DefaultDeployer
         setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
-    }
-
-    public DefaultDeployer setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultDeployer setFileProcessor( FileProcessor fileProcessor )
@@ -282,7 +268,7 @@ public class DefaultDeployer
 
                 ArtifactUpload upload = new ArtifactUpload( artifact, artifact.getFile() );
                 upload.setTrace( trace );
-                upload.setListener( new ArtifactUploadListener( catapult, upload, logger ) );
+                upload.setListener( new ArtifactUploadListener( catapult, upload ) );
                 artifactUploads.add( upload );
             }
 
@@ -390,7 +376,7 @@ public class DefaultDeployer
                 download.setMetadata( metadata );
                 download.setFile( dstFile );
                 download.setChecksumPolicy( policy.getChecksumPolicy() );
-                download.setListener( SafeTransferListener.wrap( session, logger ) );
+                download.setListener( SafeTransferListener.wrap( session ) );
                 download.setTrace( catapult.getTrace() );
                 connector.get( null, Arrays.asList( download ) );
 
@@ -461,7 +447,7 @@ public class DefaultDeployer
 
         MetadataUpload upload = new MetadataUpload( metadata, dstFile );
         upload.setTrace( catapult.getTrace() );
-        upload.setListener( new MetadataUploadListener( catapult, upload, logger ) );
+        upload.setListener( new MetadataUploadListener( catapult, upload ) );
         metadataUploads.add( upload );
     }
 
@@ -559,9 +545,9 @@ public class DefaultDeployer
 
         private final ArtifactUpload transfer;
 
-        ArtifactUploadListener( EventCatapult catapult, ArtifactUpload transfer, Logger logger )
+        ArtifactUploadListener( EventCatapult catapult, ArtifactUpload transfer )
         {
-            super( catapult.getSession(), logger );
+            super( catapult.getSession() );
             this.catapult = catapult;
             this.transfer = transfer;
         }
@@ -598,9 +584,9 @@ public class DefaultDeployer
 
         private final MetadataUpload transfer;
 
-        MetadataUploadListener( EventCatapult catapult, MetadataUpload transfer, Logger logger )
+        MetadataUploadListener( EventCatapult catapult, MetadataUpload transfer )
         {
-            super( catapult.getSession(), logger );
+            super( catapult.getSession() );
             this.catapult = catapult;
             this.transfer = transfer;
         }

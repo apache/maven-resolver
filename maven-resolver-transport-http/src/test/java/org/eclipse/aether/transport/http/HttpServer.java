@@ -88,7 +88,7 @@ public class HttpServer
         NEXUS
     }
 
-    private static final Logger log = LoggerFactory.getLogger( HttpServer.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger( HttpServer.class );
 
     private File repoDir;
 
@@ -258,8 +258,8 @@ public class HttpServer
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
             throws IOException
         {
-            log.info( "{} {}{}", new Object[] { req.getMethod(), req.getRequestURL(),
-                req.getQueryString() != null ? "?" + req.getQueryString() : "" } );
+            LOGGER.info( "{} {}{}", req.getMethod(), req.getRequestURL(),
+                    req.getQueryString() != null ? "?" + req.getQueryString() : "");
 
             Map<String, String> headers = new TreeMap<String, String>( String.CASE_INSENSITIVE_ORDER );
             for ( Enumeration<String> en = req.getHeaderNames(); en.hasMoreElements(); )

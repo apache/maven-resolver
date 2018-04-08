@@ -19,18 +19,12 @@ package org.eclipse.aether.transport.file;
  * under the License.
  */
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
@@ -38,10 +32,8 @@ import org.eclipse.aether.transfer.NoTransporterException;
  */
 @Named( "file" )
 public final class FileTransporterFactory
-    implements TransporterFactory, Service
+    implements TransporterFactory
 {
-
-    private Logger logger = NullLoggerFactory.LOGGER;
 
     private float priority;
 
@@ -53,29 +45,6 @@ public final class FileTransporterFactory
     public FileTransporterFactory()
     {
         // enables default constructor
-    }
-
-    @Inject
-    FileTransporterFactory( LoggerFactory loggerFactory )
-    {
-        setLoggerFactory( loggerFactory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
-    }
-
-    /**
-     * Sets the logger factory to use for this component.
-     * 
-     * @param loggerFactory The logger factory to use, may be {@code null} to disable logging.
-     * @return This component for chaining, never {@code null}.
-     */
-    public FileTransporterFactory setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, FileTransporter.class );
-        return this;
     }
 
     public float getPriority()
@@ -98,7 +67,7 @@ public final class FileTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        return new FileTransporter( repository, logger );
+        return new FileTransporter( repository );
     }
 
 }

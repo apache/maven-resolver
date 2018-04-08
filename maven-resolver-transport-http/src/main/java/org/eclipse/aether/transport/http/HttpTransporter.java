@@ -70,10 +70,11 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
-import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A transporter for HTTP/HTTPS.
@@ -85,7 +86,7 @@ final class HttpTransporter
     private static final Pattern CONTENT_RANGE_PATTERN =
         Pattern.compile( "\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*" );
 
-    private final Logger logger;
+    private static final Logger LOGGER = LoggerFactory.getLogger( HttpTransporter.class );
 
     private final AuthenticationContext repoAuthContext;
 
@@ -103,7 +104,7 @@ final class HttpTransporter
 
     private final LocalState state;
 
-    HttpTransporter( RemoteRepository repository, RepositorySystemSession session, Logger logger )
+    HttpTransporter( RemoteRepository repository, RepositorySystemSession session )
         throws NoTransporterException
     {
         if ( !"http".equalsIgnoreCase( repository.getProtocol() )
@@ -111,7 +112,6 @@ final class HttpTransporter
         {
             throw new NoTransporterException( repository );
         }
-        this.logger = logger;
         try
         {
             baseUri = new URI( repository.getUrl() ).parseServerAuthority();
@@ -332,7 +332,7 @@ final class HttpTransporter
             }
             catch ( IOException e )
             {
-                logger.debug( "Failed to prepare HTTP context", e );
+                LOGGER.debug( "Failed to prepare HTTP context", e );
             }
         }
         if ( put && Boolean.TRUE.equals( state.getWebDav() ) )
@@ -376,7 +376,7 @@ final class HttpTransporter
             }
             catch ( IOException e )
             {
-                logger.debug( "Failed to create parent directory " + dirs.get( index ), e );
+                LOGGER.debug( "Failed to create parent directory {}", dirs.get( index ), e );
                 return;
             }
         }
@@ -397,7 +397,7 @@ final class HttpTransporter
             }
             catch ( IOException e )
             {
-                logger.debug( "Failed to create parent directory " + dirs.get( index ), e );
+                LOGGER.debug( "Failed to create parent directory {}", dirs.get( index ), e );
                 return;
             }
         }

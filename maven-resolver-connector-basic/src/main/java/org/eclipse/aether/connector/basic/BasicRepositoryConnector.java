@@ -54,7 +54,6 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
@@ -65,6 +64,8 @@ import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -80,7 +81,7 @@ final class BasicRepositoryConnector
 
     private static final String CONFIG_PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
 
-    private final Logger logger;
+    private static final Logger LOGGER = LoggerFactory.getLogger( BasicRepositoryConnector.class );
 
     private final FileProcessor fileProcessor;
 
@@ -108,8 +109,7 @@ final class BasicRepositoryConnector
 
     BasicRepositoryConnector( RepositorySystemSession session, RemoteRepository repository,
                                      TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
-                                     ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor,
-                                     Logger logger )
+                                     ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor )
         throws NoRepositoryConnectorException
     {
         try
@@ -133,7 +133,6 @@ final class BasicRepositoryConnector
         this.session = session;
         this.repository = repository;
         this.fileProcessor = fileProcessor;
-        this.logger = logger;
 
         maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
@@ -150,7 +149,7 @@ final class BasicRepositoryConnector
             ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                                     ConfigurationProperties.REQUEST_TIMEOUT + '.' + repository.getId(),
                                     ConfigurationProperties.REQUEST_TIMEOUT );
-        partialFileFactory = new PartialFile.Factory( resumeDownloads, resumeThreshold, requestTimeout, logger );
+        partialFileFactory = new PartialFile.Factory( resumeDownloads, resumeThreshold, requestTimeout );
     }
 
     private Executor getExecutor( Collection<?> artifacts, Collection<?> metadatas )
@@ -403,7 +402,7 @@ final class BasicRepositoryConnector
             super( path, listener );
             this.file = requireNonNull( file, "destination file cannot be null" );
             checksumValidator =
-                new ChecksumValidator( logger, file, fileProcessor, this, checksumPolicy, safe( checksums ) );
+                new ChecksumValidator( file, fileProcessor, this, checksumPolicy, safe( checksums ) );
         }
 
         public void checkRemoteAccess()
@@ -438,7 +437,7 @@ final class BasicRepositoryConnector
             PartialFile partFile = partialFileFactory.newInstance( file, this );
             if ( partFile == null )
             {
-                logger.debug( "Concurrent download of " + file + " just finished, skipping download" );
+                LOGGER.debug( "Concurrent download of {} just finished, skipping download", file );
                 return;
             }
 
@@ -535,13 +534,13 @@ final class BasicRepositoryConnector
             catch ( IOException e )
             {
                 String msg = "Failed to upload checksums for " + file + ": " + e.getMessage();
-                if ( logger.isDebugEnabled() )
+                if ( LOGGER.isDebugEnabled() )
                 {
-                    logger.warn( msg, e );
+                    LOGGER.warn( msg, e );
                 }
                 else
                 {
-                    logger.warn( msg );
+                    LOGGER.warn( msg );
                 }
             }
         }
@@ -559,13 +558,13 @@ final class BasicRepositoryConnector
             catch ( Exception e )
             {
                 String msg = "Failed to upload checksum " + location + ": " + e.getMessage();
-                if ( logger.isDebugEnabled() )
+                if ( LOGGER.isDebugEnabled() )
                 {
-                    logger.warn( msg, e );
+                    LOGGER.warn( msg, e );
                 }
                 else
                 {
-                    logger.warn( msg );
+                    LOGGER.warn( msg );
                 }
             }
         }
