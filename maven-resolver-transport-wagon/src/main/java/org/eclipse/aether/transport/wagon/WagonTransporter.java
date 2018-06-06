@@ -52,9 +52,10 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
-import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A transporter using Maven Wagon.
@@ -71,7 +72,7 @@ final class WagonTransporter
 
     private static final String CONFIG_PROP_GROUP = "aether.connector.perms.group";
 
-    private final Logger logger;
+    private static final Logger LOGGER = LoggerFactory.getLogger( WagonTransporter.class );
 
     private final RemoteRepository repository;
 
@@ -100,10 +101,9 @@ final class WagonTransporter
     private final AtomicBoolean closed = new AtomicBoolean();
 
     WagonTransporter( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator,
-                             RemoteRepository repository, RepositorySystemSession session, Logger logger )
+                             RemoteRepository repository, RepositorySystemSession session )
         throws NoTransporterException
     {
-        this.logger = logger;
         this.wagonProvider = wagonProvider;
         this.wagonConfigurator = wagonConfigurator;
         this.repository = repository;
@@ -124,7 +124,7 @@ final class WagonTransporter
         }
         catch ( Exception e )
         {
-            logger.debug( e.getMessage(), e );
+            LOGGER.debug( "No transport {}", e.getMessage(), e );
             throw new NoTransporterException( repository, e.getMessage(), e );
         }
 
@@ -300,7 +300,7 @@ final class WagonTransporter
             }
             catch ( Exception e )
             {
-                logger.debug( "Could not set user agent for wagon " + wagon.getClass().getName() + ": " + e );
+                LOGGER.debug( "Could not set user agent for wagon {}: {}", wagon.getClass().getName(), e.getMessage() );
             }
         }
 
@@ -328,13 +328,13 @@ final class WagonTransporter
                 String msg =
                     "Could not apply configuration for " + repository.getId() + " to wagon "
                         + wagon.getClass().getName() + ":" + e.getMessage();
-                if ( logger.isDebugEnabled() )
+                if ( LOGGER.isDebugEnabled() )
                 {
-                    logger.warn( msg, e );
+                    LOGGER.warn( msg, e );
                 }
                 else
                 {
-                    logger.warn( msg );
+                    LOGGER.warn( msg );
                 }
             }
         }
@@ -353,7 +353,7 @@ final class WagonTransporter
         }
         catch ( Exception e )
         {
-            logger.debug( "Could not disconnect wagon " + wagon, e );
+            LOGGER.debug( "Could not disconnect wagon {}", wagon, e );
         }
     }
 
@@ -456,7 +456,7 @@ final class WagonTransporter
     {
         if ( path != null && !path.delete() && path.exists() )
         {
-            logger.debug( "Could not delete temorary file " + path );
+            LOGGER.debug( "Could not delete temporary file {}", path );
             path.deleteOnExit();
         }
     }

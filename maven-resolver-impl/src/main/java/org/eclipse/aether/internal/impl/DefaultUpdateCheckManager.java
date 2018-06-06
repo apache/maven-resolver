@@ -45,14 +45,13 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -61,7 +60,7 @@ public class DefaultUpdateCheckManager
     implements UpdateCheckManager, Service
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
 
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
@@ -87,22 +86,14 @@ public class DefaultUpdateCheckManager
     }
 
     @Inject
-    DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer, LoggerFactory loggerFactory )
+    DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
-    }
-
-    public DefaultUpdateCheckManager setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
@@ -116,11 +107,7 @@ public class DefaultUpdateCheckManager
         if ( check.getLocalLastUpdated() != 0
             && !isUpdatedRequired( session, check.getLocalLastUpdated(), check.getPolicy() ) )
         {
-            if ( logger.isDebugEnabled() )
-            {
-                logger.debug( "Skipped remote request for " + check.getItem()
-                    + ", locally installed artifact up-to-date." );
-            }
+            LOGGER.debug( "Skipped remote request for {}, locally installed artifact up-to-date.", check.getItem() );
 
             check.setRequired( false );
             return;
@@ -173,9 +160,9 @@ public class DefaultUpdateCheckManager
         }
         else if ( isAlreadyUpdated( session, updateKey ) )
         {
-            if ( logger.isDebugEnabled() )
+            if ( LOGGER.isDebugEnabled() )
             {
-                logger.debug( "Skipped remote request for " + check.getItem()
+                LOGGER.debug( "Skipped remote request for " + check.getItem()
                     + ", already updated during this session." );
             }
 
@@ -191,10 +178,7 @@ public class DefaultUpdateCheckManager
         }
         else if ( fileExists )
         {
-            if ( logger.isDebugEnabled() )
-            {
-                logger.debug( "Skipped remote request for " + check.getItem() + ", locally cached artifact up-to-date." );
-            }
+            LOGGER.debug( "Skipped remote request for {}, locally cached artifact up-to-date.", check.getItem() );
 
             check.setRequired( false );
         }
@@ -249,11 +233,7 @@ public class DefaultUpdateCheckManager
         if ( check.getLocalLastUpdated() != 0
             && !isUpdatedRequired( session, check.getLocalLastUpdated(), check.getPolicy() ) )
         {
-            if ( logger.isDebugEnabled() )
-            {
-                logger.debug( "Skipped remote request for " + check.getItem()
-                    + ", locally installed metadata up-to-date." );
-            }
+            LOGGER.debug( "Skipped remote request for {} locally installed metadata up-to-date.", check.getItem() );
 
             check.setRequired( false );
             return;
@@ -306,11 +286,7 @@ public class DefaultUpdateCheckManager
         }
         else if ( isAlreadyUpdated( session, updateKey ) )
         {
-            if ( logger.isDebugEnabled() )
-            {
-                logger.debug( "Skipped remote request for " + check.getItem()
-                    + ", already updated during this session." );
-            }
+            LOGGER.debug( "Skipped remote request for {}, already updated during this session.", check.getItem() );
 
             check.setRequired( false );
             if ( error != null )
@@ -324,10 +300,7 @@ public class DefaultUpdateCheckManager
         }
         else if ( fileExists )
         {
-            if ( logger.isDebugEnabled() )
-            {
-                logger.debug( "Skipped remote request for " + check.getItem() + ", locally cached metadata up-to-date." );
-            }
+            LOGGER.debug( "Skipped remote request for {}, locally cached metadata up-to-date.", check.getItem() );
 
             check.setRequired( false );
         }
@@ -374,7 +347,7 @@ public class DefaultUpdateCheckManager
         }
         catch ( NumberFormatException e )
         {
-            logger.debug( "Cannot parse lastUpdated date: \'" + value + "\'. Ignoring.", e );
+            LOGGER.debug( "Cannot parse lastUpdated date: \'{}\'. Ignoring.", value, e );
             return 1;
         }
     }
@@ -386,7 +359,7 @@ public class DefaultUpdateCheckManager
 
     private File getTouchFile( Artifact artifact, File artifactFile )
     {
-        return new File( artifactFile.getPath() + ".lastUpdated" );
+        return new File( artifactFile.getPath() + UPDATED_KEY_SUFFIX );
     }
 
     private File getTouchFile( Metadata metadata, File metadataFile )
@@ -533,7 +506,7 @@ public class DefaultUpdateCheckManager
 
     private Properties read( File touchFile )
     {
-        Properties props = new TrackingFileManager().setLogger( logger ).read( touchFile );
+        Properties props = new TrackingFileManager().read( touchFile );
         return ( props != null ) ? props : new Properties();
     }
 
@@ -612,7 +585,7 @@ public class DefaultUpdateCheckManager
             updates.put( transferKey + UPDATED_KEY_SUFFIX, timestamp );
         }
 
-        return new TrackingFileManager().setLogger( logger ).update( touchFile, updates );
+        return new TrackingFileManager().update( touchFile, updates );
     }
 
 }

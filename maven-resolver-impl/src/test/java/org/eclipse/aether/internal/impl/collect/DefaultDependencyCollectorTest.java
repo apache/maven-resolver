@@ -54,7 +54,6 @@ import org.eclipse.aether.internal.impl.IniArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.StubRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.StubVersionRangeResolver;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -109,7 +108,6 @@ public class DefaultDependencyCollectorTest
         collector.setArtifactDescriptorReader( newReader( "" ) );
         collector.setVersionRangeResolver( new StubVersionRangeResolver() );
         collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
-        collector.setLoggerFactory( new TestLoggerFactory() );
 
         parser = new DependencyGraphParser( "artifact-descriptions/" );
 

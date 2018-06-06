@@ -19,6 +19,9 @@ package org.eclipse.aether.connector.basic;
  * under the License.
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +31,6 @@ import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.eclipse.aether.spi.log.Logger;
 
 /**
  * A partially downloaded file with optional support for resume. If resume is enabled, a well-known location is used for
@@ -61,16 +62,16 @@ final class PartialFile
 
         private final AtomicBoolean concurrent;
 
-        LockFile( File partFile, int requestTimeout, RemoteAccessChecker checker, Logger logger )
+        LockFile( File partFile, int requestTimeout, RemoteAccessChecker checker )
             throws Exception
         {
             lockFile = new File( partFile.getPath() + EXT_LOCK );
             concurrent = new AtomicBoolean( false );
-            lock = lock( lockFile, partFile, requestTimeout, checker, logger, concurrent );
+            lock = lock( lockFile, partFile, requestTimeout, checker, concurrent );
         }
 
         private static FileLock lock( File lockFile, File partFile, int requestTimeout, RemoteAccessChecker checker,
-                                      Logger logger, AtomicBoolean concurrent )
+                                      AtomicBoolean concurrent )
             throws Exception
         {
             boolean interrupted = false;
@@ -97,7 +98,7 @@ final class PartialFile
                              * at least knows about the file and is accessible to us.
                              */
                             checker.checkRemoteAccess();
-                            logger.debug( "Concurrent download of " + partFile + " in progress, awaiting completion" );
+                            LOGGER.debug( "Concurrent download of {} in progress, awaiting completion", partFile );
                         }
                         lastLength = currentLength;
                         lastTime = currentTime;
@@ -257,14 +258,13 @@ final class PartialFile
 
         private final int requestTimeout;
 
-        private final Logger logger;
+        private static final Logger LOGGER = LoggerFactory.getLogger( Factory.class );
 
-        Factory( boolean resume, long resumeThreshold, int requestTimeout, Logger logger )
+        Factory( boolean resume, long resumeThreshold, int requestTimeout )
         {
             this.resume = resume;
             this.resumeThreshold = resumeThreshold;
             this.requestTimeout = requestTimeout;
-            this.logger = logger;
         }
 
         public PartialFile newInstance( File dstFile, RemoteAccessChecker checker )
@@ -275,7 +275,7 @@ final class PartialFile
                 File partFile = new File( dstFile.getPath() + EXT_PART );
 
                 long reqTimestamp = System.currentTimeMillis();
-                LockFile lockFile = new LockFile( partFile, requestTimeout, checker, logger );
+                LockFile lockFile = new LockFile( partFile, requestTimeout, checker );
                 if ( lockFile.isConcurrent() && dstFile.lastModified() >= reqTimestamp - 100L )
                 {
                     lockFile.close();
@@ -287,12 +287,12 @@ final class PartialFile
                     {
                         throw new IOException( partFile.exists() ? "Path exists but is not a file" : "Unknown error" );
                     }
-                    return new PartialFile( partFile, lockFile, resumeThreshold, logger );
+                    return new PartialFile( partFile, lockFile, resumeThreshold );
                 }
                 catch ( IOException e )
                 {
                     lockFile.close();
-                    logger.debug( "Cannot create resumable file " + partFile.getAbsolutePath() + ": " + e );
+                    LOGGER.debug( "Cannot create resumable file {}: {}", partFile.getAbsolutePath(), e.getMessage(), e );
                     // fall through and try non-resumable/temporary file location
                 }
             }
@@ -300,7 +300,7 @@ final class PartialFile
             File tempFile =
                 File.createTempFile( dstFile.getName() + '-' + UUID.randomUUID().toString().replace( "-", "" ), ".tmp",
                                      dstFile.getParentFile() );
-            return new PartialFile( tempFile, logger );
+            return new PartialFile( tempFile );
         }
 
     }
@@ -311,19 +311,18 @@ final class PartialFile
 
     private final long threshold;
 
-    private final Logger logger;
+    private static final Logger LOGGER = LoggerFactory.getLogger( PartialFile.class );
 
-    private PartialFile( File partFile, Logger logger )
+    private PartialFile( File partFile )
     {
-        this( partFile, null, 0L, logger );
+        this( partFile, null, 0L );
     }
 
-    private PartialFile( File partFile, LockFile lockFile, long threshold, Logger logger )
+    private PartialFile( File partFile, LockFile lockFile, long threshold )
     {
         this.partFile = partFile;
         this.lockFile = lockFile;
         this.threshold = threshold;
-        this.logger = logger;
     }
 
     public File getFile()
@@ -342,7 +341,7 @@ final class PartialFile
         {
             if ( !partFile.delete() && partFile.exists() )
             {
-                logger.debug( "Could not delete temorary file " + partFile );
+                LOGGER.debug( "Could not delete temporary file {}", partFile );
             }
         }
         if ( lockFile != null )

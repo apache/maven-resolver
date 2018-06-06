@@ -32,9 +32,8 @@ import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -43,7 +42,7 @@ public class DefaultRepositoryEventDispatcher
     implements RepositoryEventDispatcher, Service
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryEventDispatcher.class );
 
     private Collection<RepositoryListener> listeners = new ArrayList<RepositoryListener>();
 
@@ -53,16 +52,9 @@ public class DefaultRepositoryEventDispatcher
     }
 
     @Inject
-    DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners, LoggerFactory loggerFactory )
+    DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
     {
         setRepositoryListeners( listeners );
-        setLoggerFactory( loggerFactory );
-    }
-
-    public DefaultRepositoryEventDispatcher setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultRepositoryEventDispatcher addRepositoryListener( RepositoryListener listener )
@@ -86,7 +78,6 @@ public class DefaultRepositoryEventDispatcher
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setRepositoryListeners( locator.getServices( RepositoryListener.class ) );
     }
 
@@ -190,13 +181,13 @@ public class DefaultRepositoryEventDispatcher
         String msg =
             "Failed to dispatch repository event to " + listener.getClass().getCanonicalName() + ": " + e.getMessage();
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.warn( msg, e );
+            LOGGER.warn( msg, e );
         }
         else
         {
-            logger.warn( msg );
+            LOGGER.warn( msg );
         }
     }
 

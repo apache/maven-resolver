@@ -19,18 +19,12 @@ package org.eclipse.aether.transport.http;
  * under the License.
  */
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
@@ -39,10 +33,8 @@ import org.eclipse.aether.transfer.NoTransporterException;
  */
 @Named( "http" )
 public final class HttpTransporterFactory
-    implements TransporterFactory, Service
+    implements TransporterFactory
 {
-
-    private Logger logger = NullLoggerFactory.LOGGER;
 
     private float priority = 5.0f;
 
@@ -54,29 +46,6 @@ public final class HttpTransporterFactory
     public HttpTransporterFactory()
     {
         // enables default constructor
-    }
-
-    @Inject
-    HttpTransporterFactory( LoggerFactory loggerFactory )
-    {
-        setLoggerFactory( loggerFactory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
-    }
-
-    /**
-     * Sets the logger factory to use for this component.
-     * 
-     * @param loggerFactory The logger factory to use, may be {@code null} to disable logging.
-     * @return This component for chaining, never {@code null}.
-     */
-    public HttpTransporterFactory setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, HttpTransporter.class );
-        return this;
     }
 
     public float getPriority()
@@ -99,7 +68,7 @@ public final class HttpTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        return new HttpTransporter( repository, session, logger );
+        return new HttpTransporter( repository, session );
     }
 
 }

@@ -35,7 +35,6 @@ import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -212,8 +211,7 @@ public class PartialFileTest
         throws Exception
     {
         PartialFile.Factory factory =
-            new PartialFile.Factory( resumeThreshold >= 0L, resumeThreshold, requestTimeout,
-                                     new TestLoggerFactory().getLogger( "" ) );
+            new PartialFile.Factory( resumeThreshold >= 0L, resumeThreshold, requestTimeout );
         PartialFile partFile = factory.newInstance( dstFile, remoteAccessChecker );
         if ( partFile != null )
         {

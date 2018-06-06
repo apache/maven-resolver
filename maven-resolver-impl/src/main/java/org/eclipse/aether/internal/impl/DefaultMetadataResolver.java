@@ -65,9 +65,6 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -84,8 +81,6 @@ public class DefaultMetadataResolver
 {
 
     private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
-
-    private Logger logger = NullLoggerFactory.LOGGER;
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
@@ -109,7 +104,7 @@ public class DefaultMetadataResolver
                              UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             OfflineController offlineController, LoggerFactory loggerFactory )
+                             OfflineController offlineController )
     {
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setUpdateCheckManager( updateCheckManager );
@@ -117,24 +112,16 @@ public class DefaultMetadataResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
         setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
         setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
-    }
-
-    public DefaultMetadataResolver setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
@@ -583,7 +570,7 @@ public class DefaultMetadataResolver
                 download.setFile( metadataFile );
                 download.setChecksumPolicy( policy );
                 download.setRepositories( repositories );
-                download.setListener( SafeTransferListener.wrap( session, logger ) );
+                download.setListener( SafeTransferListener.wrap( session ) );
                 download.setTrace( trace );
 
                 RepositoryConnector connector =

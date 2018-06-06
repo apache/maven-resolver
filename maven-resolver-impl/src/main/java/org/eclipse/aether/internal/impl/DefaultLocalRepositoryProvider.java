@@ -36,9 +36,8 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -47,7 +46,7 @@ public class DefaultLocalRepositoryProvider
     implements LocalRepositoryProvider, Service
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultLocalRepositoryProvider.class );
 
     private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<LocalRepositoryManagerFactory>();
 
@@ -57,22 +56,14 @@ public class DefaultLocalRepositoryProvider
     }
 
     @Inject
-    DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories, LoggerFactory loggerFactory )
+    DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
     {
         setLocalRepositoryManagerFactories( factories );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setLocalRepositoryManagerFactories( locator.getServices( LocalRepositoryManagerFactory.class ) );
-    }
-
-    public DefaultLocalRepositoryProvider setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )
@@ -111,7 +102,7 @@ public class DefaultLocalRepositoryProvider
             {
                 LocalRepositoryManager manager = factory.getComponent().newInstance( session, repository );
 
-                if ( logger.isDebugEnabled() )
+                if ( LOGGER.isDebugEnabled() )
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
                     buffer.append( "Using manager " ).append( manager.getClass().getSimpleName() );
@@ -119,7 +110,7 @@ public class DefaultLocalRepositoryProvider
                     buffer.append( " with priority " ).append( factory.getPriority() );
                     buffer.append( " for " ).append( repository.getBasedir() );
 
-                    logger.debug( buffer.toString() );
+                    LOGGER.debug( buffer.toString() );
                 }
 
                 return manager;
@@ -130,12 +121,12 @@ public class DefaultLocalRepositoryProvider
                 errors.add( e );
             }
         }
-        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        if ( LOGGER.isDebugEnabled() && errors.size() > 1 )
         {
             String msg = "Could not obtain local repository manager for " + repository;
             for ( Exception e : errors )
             {
-                logger.debug( msg, e );
+                LOGGER.debug( msg, e );
             }
         }
 

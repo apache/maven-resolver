@@ -34,7 +34,6 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
@@ -77,14 +76,6 @@ class EnhancedLocalRepositoryManager
         }
         trackingFilename = filename;
         trackingFileManager = new TrackingFileManager();
-    }
-
-    @Override
-    public EnhancedLocalRepositoryManager setLogger( Logger logger )
-    {
-        super.setLogger( logger );
-        trackingFileManager.setLogger( logger );
-        return this;
     }
 
     @Override

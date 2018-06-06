@@ -19,7 +19,6 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
 
@@ -30,9 +29,9 @@ final class FailChecksumPolicy
     extends AbstractChecksumPolicy
 {
 
-    FailChecksumPolicy( LoggerFactory loggerFactory, TransferResource resource )
+    FailChecksumPolicy( TransferResource resource )
     {
-        super( loggerFactory, resource );
+        super( resource );
     }
 
     public boolean onTransferChecksumFailure( ChecksumFailureException error )

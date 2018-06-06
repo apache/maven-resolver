@@ -37,10 +37,9 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -49,7 +48,7 @@ public class DefaultRepositoryConnectorProvider
     implements RepositoryConnectorProvider, Service
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryConnectorProvider.class );
 
     private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<RepositoryConnectorFactory>();
 
@@ -59,22 +58,14 @@ public class DefaultRepositoryConnectorProvider
     }
 
     @Inject
-    DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories, LoggerFactory loggerFactory )
+    DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories )
     {
         setRepositoryConnectorFactories( connectorFactories );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         connectorFactories = locator.getServices( RepositoryConnectorFactory.class );
-    }
-
-    public DefaultRepositoryConnectorProvider setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory( RepositoryConnectorFactory factory )
@@ -115,7 +106,7 @@ public class DefaultRepositoryConnectorProvider
             {
                 RepositoryConnector connector = factory.getComponent().newInstance( session, repository );
 
-                if ( logger.isDebugEnabled() )
+                if ( LOGGER.isDebugEnabled() )
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
                     buffer.append( "Using connector " ).append( connector.getClass().getSimpleName() );
@@ -141,7 +132,7 @@ public class DefaultRepositoryConnectorProvider
                         }
                     }
 
-                    logger.debug( buffer.toString() );
+                    LOGGER.debug( buffer.toString() );
                 }
 
                 return connector;
@@ -152,12 +143,12 @@ public class DefaultRepositoryConnectorProvider
                 errors.add( e );
             }
         }
-        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        if ( LOGGER.isDebugEnabled() && errors.size() > 1 )
         {
             String msg = "Could not obtain connector factory for " + repository;
             for ( Exception e : errors )
             {
-                logger.debug( msg, e );
+                LOGGER.debug( msg, e );
             }
         }
 

@@ -79,9 +79,6 @@ import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 
@@ -91,8 +88,6 @@ import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 public class DefaultRepositorySystem
     implements RepositorySystem, Service
 {
-
-    private Logger logger = NullLoggerFactory.LOGGER;
 
     private VersionResolver versionResolver;
 
@@ -127,7 +122,7 @@ public class DefaultRepositorySystem
                              ArtifactDescriptorReader artifactDescriptorReader,
                              DependencyCollector dependencyCollector, Installer installer, Deployer deployer,
                              LocalRepositoryProvider localRepositoryProvider, SyncContextFactory syncContextFactory,
-                             RemoteRepositoryManager remoteRepositoryManager, LoggerFactory loggerFactory )
+                             RemoteRepositoryManager remoteRepositoryManager )
     {
         setVersionResolver( versionResolver );
         setVersionRangeResolver( versionRangeResolver );
@@ -140,12 +135,10 @@ public class DefaultRepositorySystem
         setLocalRepositoryProvider( localRepositoryProvider );
         setSyncContextFactory( syncContextFactory );
         setRemoteRepositoryManager( remoteRepositoryManager );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setVersionResolver( locator.getService( VersionResolver.class ) );
         setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
         setArtifactResolver( locator.getService( ArtifactResolver.class ) );
@@ -157,12 +150,6 @@ public class DefaultRepositorySystem
         setLocalRepositoryProvider( locator.getService( LocalRepositoryProvider.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-    }
-
-    public DefaultRepositorySystem setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultRepositorySystem setVersionResolver( VersionResolver versionResolver )

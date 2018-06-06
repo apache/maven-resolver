@@ -35,10 +35,9 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -47,7 +46,7 @@ public final class DefaultRepositoryLayoutProvider
     implements RepositoryLayoutProvider, Service
 {
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryLayoutProvider.class );
 
     private Collection<RepositoryLayoutFactory> factories = new ArrayList<RepositoryLayoutFactory>();
 
@@ -57,22 +56,14 @@ public final class DefaultRepositoryLayoutProvider
     }
 
     @Inject
-    DefaultRepositoryLayoutProvider( Set<RepositoryLayoutFactory> layoutFactories, LoggerFactory loggerFactory )
+    DefaultRepositoryLayoutProvider( Set<RepositoryLayoutFactory> layoutFactories )
     {
-        setLoggerFactory( loggerFactory );
         setRepositoryLayoutFactories( layoutFactories );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setRepositoryLayoutFactories( locator.getServices( RepositoryLayoutFactory.class ) );
-    }
-
-    public DefaultRepositoryLayoutProvider setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultRepositoryLayoutProvider addRepositoryLayoutFactory( RepositoryLayoutFactory factory )
@@ -120,12 +111,12 @@ public final class DefaultRepositoryLayoutProvider
                 errors.add( e );
             }
         }
-        if ( logger.isDebugEnabled() && errors.size() > 1 )
+        if ( LOGGER.isDebugEnabled() && errors.size() > 1 )
         {
             String msg = "Could not obtain layout factory for " + repository;
             for ( Exception e : errors )
             {
-                logger.debug( msg, e );
+                LOGGER.debug( msg, e );
             }
         }
 

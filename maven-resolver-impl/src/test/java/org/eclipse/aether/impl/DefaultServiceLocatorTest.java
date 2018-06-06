@@ -25,10 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.impl.ArtifactDescriptorReader;
-import org.eclipse.aether.impl.DefaultServiceLocator;
-import org.eclipse.aether.impl.VersionRangeResolver;
-import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.junit.Test;

@@ -31,7 +31,6 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
-import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -46,7 +45,7 @@ final class ClasspathTransporter
 
     private final ClassLoader classLoader;
 
-    ClasspathTransporter( RepositorySystemSession session, RemoteRepository repository, Logger logger )
+    ClasspathTransporter( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
         if ( !"classpath".equalsIgnoreCase( repository.getProtocol() ) )

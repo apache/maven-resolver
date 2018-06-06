@@ -33,7 +33,6 @@ import java.util.Map;
 
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLoggerFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.transfer.ChecksumFailureException;
@@ -196,8 +195,7 @@ public class ChecksumValidatorTest
 
     private ChecksumValidator newValidator( String... algos )
     {
-        return new ChecksumValidator( new TestLoggerFactory().getLogger( "" ), dataFile, new TestFileProcessor(),
-                                      fetcher, policy, newChecksums( algos ) );
+        return new ChecksumValidator( dataFile, new TestFileProcessor(), fetcher, policy, newChecksums( algos ) );
     }
 
     private Map<String, ?> checksums( String... algoDigestPairs )

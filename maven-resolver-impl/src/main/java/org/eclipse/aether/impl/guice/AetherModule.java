@@ -70,7 +70,6 @@ import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.slf4j.ILoggerFactory;
 
 import com.google.inject.AbstractModule;
@@ -146,21 +145,9 @@ public class AetherModule
         .to( SimpleLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( LocalRepositoryManagerFactory.class ).annotatedWith( Names.named( "enhanced" ) ) //
         .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
-        if ( Slf4jLoggerFactory.isSlf4jAvailable() )
-        {
-            bindSlf4j();
-        }
-        else
-        {
-            bind( LoggerFactory.class ) //
-            .toInstance( NullLoggerFactory.INSTANCE );
-        }
 
-    }
-
-    private void bindSlf4j()
-    {
         install( new Slf4jModule() );
+
     }
 
     @Provides
@@ -168,7 +155,7 @@ public class AetherModule
     Set<LocalRepositoryManagerFactory> provideLocalRepositoryManagerFactories( @Named( "simple" ) LocalRepositoryManagerFactory simple,
                                                                                @Named( "enhanced" ) LocalRepositoryManagerFactory enhanced )
     {
-        Set<LocalRepositoryManagerFactory> factories = new HashSet<LocalRepositoryManagerFactory>();
+        Set<LocalRepositoryManagerFactory> factories = new HashSet<>();
         factories.add( simple );
         factories.add( enhanced );
         return Collections.unmodifiableSet( factories );
@@ -178,7 +165,7 @@ public class AetherModule
     @Singleton
     Set<RepositoryLayoutFactory> provideRepositoryLayoutFactories( @Named( "maven2" ) RepositoryLayoutFactory maven2 )
     {
-        Set<RepositoryLayoutFactory> factories = new HashSet<RepositoryLayoutFactory>();
+        Set<RepositoryLayoutFactory> factories = new HashSet<>();
         factories.add( maven2 );
         return Collections.unmodifiableSet( factories );
     }

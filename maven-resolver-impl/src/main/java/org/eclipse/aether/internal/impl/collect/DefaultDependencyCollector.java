@@ -65,13 +65,12 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -84,7 +83,7 @@ public class DefaultDependencyCollector
 
     private static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
 
-    private Logger logger = NullLoggerFactory.LOGGER;
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultDependencyCollector.class );
 
     private RemoteRepositoryManager remoteRepositoryManager;
 
@@ -100,26 +99,18 @@ public class DefaultDependencyCollector
     @Inject
     DefaultDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
                                 ArtifactDescriptorReader artifactDescriptorReader,
-                                VersionRangeResolver versionRangeResolver, LoggerFactory loggerFactory )
+                                VersionRangeResolver versionRangeResolver )
     {
         setRemoteRepositoryManager( remoteRepositoryManager );
         setArtifactDescriptorReader( artifactDescriptorReader );
         setVersionRangeResolver( versionRangeResolver );
-        setLoggerFactory( loggerFactory );
     }
 
     public void initService( ServiceLocator locator )
     {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
         setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
-    }
-
-    public DefaultDependencyCollector setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
     }
 
     public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
@@ -160,7 +151,7 @@ public class DefaultDependencyCollector
         List<Dependency> dependencies = request.getDependencies();
         List<Dependency> managedDependencies = request.getManagedDependencies();
 
-        Map<String, Object> stats = logger.isDebugEnabled() ? new LinkedHashMap<String, Object>() : null;
+        Map<String, Object> stats = LOGGER.isDebugEnabled() ? new LinkedHashMap<String, Object>() : null;
         long time1 = System.nanoTime();
 
         DefaultDependencyNode node;
@@ -286,7 +277,7 @@ public class DefaultDependencyCollector
             long time3 = System.nanoTime();
             stats.put( "DefaultDependencyCollector.collectTime", time2 - time1 );
             stats.put( "DefaultDependencyCollector.transformTime", time3 - time2 );
-            logger.debug( "Dependency collection stats: " + stats );
+            LOGGER.debug( "Dependency collection stats: " + stats );
         }
 
         if ( errorPath != null )

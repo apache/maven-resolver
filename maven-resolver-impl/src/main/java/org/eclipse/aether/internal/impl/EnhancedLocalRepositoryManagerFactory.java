@@ -19,7 +19,6 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -27,11 +26,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.log.Logger;
-import org.eclipse.aether.spi.log.LoggerFactory;
-import org.eclipse.aether.spi.log.NullLoggerFactory;
 
 /**
  * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}. Enhanced
@@ -42,11 +36,8 @@ import org.eclipse.aether.spi.log.NullLoggerFactory;
  */
 @Named( "enhanced" )
 public class EnhancedLocalRepositoryManagerFactory
-    implements LocalRepositoryManagerFactory, Service
+    implements LocalRepositoryManagerFactory
 {
-
-    private Logger logger = NullLoggerFactory.LOGGER;
-
     private float priority = 10.0f;
 
     public EnhancedLocalRepositoryManagerFactory()
@@ -54,34 +45,17 @@ public class EnhancedLocalRepositoryManagerFactory
         // enable no-arg constructor
     }
 
-    @Inject
-    EnhancedLocalRepositoryManagerFactory( LoggerFactory loggerFactory )
-    {
-        setLoggerFactory( loggerFactory );
-    }
-
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
-            return new EnhancedLocalRepositoryManager( repository.getBasedir(), session ).setLogger( logger );
+            return new EnhancedLocalRepositoryManager( repository.getBasedir(), session );
         }
         else
         {
             throw new NoLocalRepositoryManagerException( repository );
         }
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( LoggerFactory.class ) );
-    }
-
-    public EnhancedLocalRepositoryManagerFactory setLoggerFactory( LoggerFactory loggerFactory )
-    {
-        this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, EnhancedLocalRepositoryManager.class );
-        return this;
     }
 
     public float getPriority()

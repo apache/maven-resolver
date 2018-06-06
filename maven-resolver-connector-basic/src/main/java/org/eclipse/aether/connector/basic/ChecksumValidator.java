@@ -32,9 +32,10 @@ import java.util.UUID;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.Checksum;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.util.ChecksumUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Performs checksum validation for a downloaded file.
@@ -50,7 +51,7 @@ final class ChecksumValidator
 
     }
 
-    private final Logger logger;
+    private static final Logger LOGGER = LoggerFactory.getLogger( ChecksumValidator.class );
 
     private final File dataFile;
 
@@ -66,11 +67,10 @@ final class ChecksumValidator
 
     private final Map<File, Object> checksumFiles;
 
-    ChecksumValidator( Logger logger, File dataFile, FileProcessor fileProcessor,
+    ChecksumValidator( File dataFile, FileProcessor fileProcessor,
                               ChecksumFetcher checksumFetcher, ChecksumPolicy checksumPolicy,
                               Collection<Checksum> checksums )
     {
-        this.logger = logger;
         this.dataFile = dataFile;
         this.tempFiles = new HashSet<File>();
         this.fileProcessor = fileProcessor;
@@ -213,7 +213,7 @@ final class ChecksumValidator
         {
             if ( !file.delete() && file.exists() )
             {
-                logger.debug( "Could not delete temorary file " + file );
+                LOGGER.debug( "Could not delete temporary file {}", file );
             }
         }
         tempFiles.clear();
@@ -251,7 +251,7 @@ final class ChecksumValidator
             }
             catch ( IOException e )
             {
-                logger.debug( "Failed to write checksum file " + checksumFile + ": " + e.getMessage(), e );
+                LOGGER.debug( "Failed to write checksum file {}: {}", checksumFile, e.getMessage(), e );
             }
         }
         checksumFiles.clear();
