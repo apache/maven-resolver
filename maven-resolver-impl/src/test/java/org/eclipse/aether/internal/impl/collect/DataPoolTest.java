@@ -18,8 +18,11 @@ package org.eclipse.aether.internal.impl.collect;
  * specific language governing permissions and limitations
  * under the License.
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import static org.junit.Assert.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -27,6 +30,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.util.concurrency.FutureResult;
 import org.junit.Test;
 
 public class DataPoolTest
@@ -38,7 +42,7 @@ public class DataPoolTest
     }
 
     @Test
-    public void testArtifactDescriptorCaching()
+    public void testArtifactDescriptorCaching() throws InterruptedException, ExecutionException
     {
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
         request.setArtifact( new DefaultArtifact( "gid:aid:1" ) );
@@ -49,12 +53,14 @@ public class DataPoolTest
         result.addManagedDependency( new Dependency( new DefaultArtifact( "gid:mdep:3" ), "runtime" ) );
         result.addRepository( new RemoteRepository.Builder( "test", "default", "http://localhost" ).build() );
         result.addAlias( new DefaultArtifact( "gid:alias:4" ) );
+        Future<ArtifactDescriptorResult> futureResult = new FutureResult<>( result );
 
         DataPool pool = newDataPool();
         Object key = pool.toKey( request );
-        pool.putDescriptor( key, result );
-        ArtifactDescriptorResult cached = pool.getDescriptor( key, request );
-        assertNotNull( cached );
+        pool.putDescriptor( key, futureResult );
+        Future<ArtifactDescriptorResult> futureCached = pool.getDescriptor( key, request );
+        assertNotNull( futureCached );
+        ArtifactDescriptorResult cached = futureCached.get();
         assertEquals( result.getArtifact(), cached.getArtifact() );
         assertEquals( result.getRelocations(), cached.getRelocations() );
         assertEquals( result.getDependencies(), cached.getDependencies() );

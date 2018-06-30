@@ -19,12 +19,15 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
@@ -42,6 +45,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.util.concurrency.FutureResult;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -56,8 +60,8 @@ final class DataPool
 
     private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
 
-    public static final ArtifactDescriptorResult NO_DESCRIPTOR =
-        new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
+    public static final Future<ArtifactDescriptorResult> NO_DESCRIPTOR =
+        new FutureResult<>( new ArtifactDescriptorResult( new ArtifactDescriptorRequest() ) );
 
     private ObjectPool<Artifact> artifacts;
 
@@ -65,9 +69,9 @@ final class DataPool
 
     private Map<Object, Descriptor> descriptors;
 
-    private Map<Object, Constraint> constraints = new HashMap<Object, Constraint>();
+    private Map<Object, Constraint> constraints = new HashMap<>();
 
-    private Map<Object, List<DependencyNode>> nodes = new HashMap<Object, List<DependencyNode>>( 256 );
+    private Map<Object, List<DependencyNode>> nodes = new HashMap<>( 256 );
 
     @SuppressWarnings( "unchecked" )
     DataPool( RepositorySystemSession session )
@@ -83,7 +87,7 @@ final class DataPool
 
         if ( artifacts == null )
         {
-            artifacts = new ObjectPool<Artifact>();
+            artifacts = new ObjectPool<>();
             if ( cache != null )
             {
                 cache.put( session, ARTIFACT_POOL, artifacts );
@@ -92,7 +96,7 @@ final class DataPool
 
         if ( dependencies == null )
         {
-            dependencies = new ObjectPool<Dependency>();
+            dependencies = new ObjectPool<>();
             if ( cache != null )
             {
                 cache.put( session, DEPENDENCY_POOL, dependencies );
@@ -124,7 +128,7 @@ final class DataPool
         return request.getArtifact();
     }
 
-    public ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
+    public Future<ArtifactDescriptorResult> getDescriptor( Object key, ArtifactDescriptorRequest request )
     {
         Descriptor descriptor = descriptors.get( key );
         if ( descriptor != null )
@@ -134,12 +138,12 @@ final class DataPool
         return null;
     }
 
-    public void putDescriptor( Object key, ArtifactDescriptorResult result )
+    public void putDescriptor( Object key, Future<ArtifactDescriptorResult> futureResult )
     {
-        descriptors.put( key, new GoodDescriptor( result ) );
+        descriptors.put( key, new GoodDescriptor( futureResult ) );
     }
 
-    public void putDescriptor( Object key, ArtifactDescriptorException e )
+    public void putDescriptor( Object key, ArtifactDescriptorException exception )
     {
         descriptors.put( key, BadDescriptor.INSTANCE );
     }
@@ -164,10 +168,10 @@ final class DataPool
         constraints.put( key, new Constraint( result ) );
     }
 
-    public Object toKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
-                         DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
+    public Object toKey( Artifact artifact, DefaultDependencyCollectionContext context )
     {
-        return new GraphKey( artifact, repositories, selector, manager, traverser, filter );
+        return new GraphKey( artifact, context.getRepositories(), context.getDepSelector(),
+                             context.getDepManager(), context.getDepTraverser(), context.getVerFilter() );
     }
 
     public List<DependencyNode> getChildren( Object key )
@@ -182,67 +186,79 @@ final class DataPool
 
     abstract static class Descriptor
     {
-
-        public abstract ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request );
-
+        public abstract Future<ArtifactDescriptorResult> toResult( ArtifactDescriptorRequest request );
     }
 
     static final class GoodDescriptor
         extends Descriptor
     {
+        Future<ArtifactDescriptorResult> futureResult;
 
-        final Artifact artifact;
-
-        final List<Artifact> relocations;
-
-        final Collection<Artifact> aliases;
-
-        final List<RemoteRepository> repositories;
-
-        final List<Dependency> dependencies;
-
-        final List<Dependency> managedDependencies;
-
-        GoodDescriptor( ArtifactDescriptorResult result )
+        GoodDescriptor( Future<ArtifactDescriptorResult> futureResult )
         {
-            artifact = result.getArtifact();
-            relocations = result.getRelocations();
-            aliases = result.getAliases();
-            dependencies = result.getDependencies();
-            managedDependencies = result.getManagedDependencies();
-            repositories = result.getRepositories();
+            this.futureResult = futureResult;
         }
 
-        public ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request )
+        public Future<ArtifactDescriptorResult> toResult( final ArtifactDescriptorRequest request )
         {
-            ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
-            result.setArtifact( artifact );
-            result.setRelocations( relocations );
-            result.setAliases( aliases );
-            result.setDependencies( dependencies );
-            result.setManagedDependencies( managedDependencies );
-            result.setRepositories( repositories );
-            return result;
+            return new Future<ArtifactDescriptorResult>()
+            {
+                public boolean cancel( boolean mayInterruptIfRunning )
+                {
+                    return futureResult.cancel( mayInterruptIfRunning );
+                }
+
+                public boolean isCancelled()
+                {
+                    return futureResult.isCancelled();
+                }
+
+                public boolean isDone()
+                {
+                    return futureResult.isDone();
+                }
+
+                public ArtifactDescriptorResult get()
+                    throws InterruptedException, ExecutionException
+                {
+                    ArtifactDescriptorResult result = futureResult.get();
+                    return wrap( request, result );
+                }
+                public ArtifactDescriptorResult get( long timeout, TimeUnit unit )
+                        throws InterruptedException, ExecutionException, TimeoutException
+                {
+                    ArtifactDescriptorResult result = futureResult.get( timeout, unit );
+                    return wrap( request, result );
+                }
+            };
         }
 
+        private ArtifactDescriptorResult wrap( ArtifactDescriptorRequest request, ArtifactDescriptorResult result )
+        {
+            ArtifactDescriptorResult wrapped = new ArtifactDescriptorResult( request );
+            wrapped.setArtifact( result.getArtifact() );
+            wrapped.setRelocations( result.getRelocations() );
+            wrapped.setAliases( result.getAliases() );
+            wrapped.setDependencies( result.getDependencies() );
+            wrapped.setManagedDependencies( result.getManagedDependencies() );
+            wrapped.setRepositories( result.getRepositories() );
+            return wrapped;
+        }
     }
 
     static final class BadDescriptor
         extends Descriptor
     {
-
         static final BadDescriptor INSTANCE = new BadDescriptor();
 
-        public ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request )
+        public Future<ArtifactDescriptorResult> toResult( ArtifactDescriptorRequest request )
         {
             return NO_DESCRIPTOR;
         }
-
     }
 
     static final class Constraint
     {
-
         final VersionRepo[] repositories;
 
         final VersionConstraint versionConstraint;
@@ -273,7 +289,6 @@ final class DataPool
 
         static final class VersionRepo
         {
-
             final Version version;
 
             final ArtifactRepository repo;
@@ -283,14 +298,11 @@ final class DataPool
                 this.version = version;
                 this.repo = repo;
             }
-
         }
-
     }
 
     static final class ConstraintKey
     {
-
         private final Artifact artifact;
 
         private final List<RemoteRepository> repositories;
@@ -361,12 +373,10 @@ final class DataPool
         {
             return hashCode;
         }
-
     }
 
     static final class GraphKey
     {
-
         private final Artifact artifact;
 
         private final List<RemoteRepository> repositories;
