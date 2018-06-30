@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl.collect;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,8 +18,12 @@ package org.eclipse.aether.internal.impl.collect;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,6 +64,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -490,6 +495,44 @@ public class DefaultDependencyCollectorTest
         CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:1" ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertEquals( 1, result.getRoot().getChildren().size() );
+    }
+
+    /**
+     * Tests that scope based dependency selection happens before dependency management.
+     * <p>
+     * This is not really correct (see MRESOLVER-9), but there are a number of tests
+     * in the Maven and Maven Integration Testing projects that currently rely on this
+     * behaviour.
+     */
+    @Test
+    public void testSelectionBeforeManagement()
+        throws IOException, DependencyCollectionException
+    {
+        session.setDependencySelector( new ScopeDependencySelector( "provided", "test" ) );
+        session.setDependencyManager( new ClassicDependencyManager() );
+
+        Dependency dependency = newDep( "gid3:aid1:ext:1", "compile" );
+        CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
+        CollectResult result = collector.collectDependencies( session, request );
+
+        assertEquals( 0, result.getExceptions().size() );
+
+        DependencyNode root = result.getRoot();
+        Dependency newDependency = root.getDependency();
+
+        assertEquals( dependency, newDependency );
+        assertEquals( dependency.getArtifact(), newDependency.getArtifact() );
+
+        assertEquals( 1, root.getChildren().size() );
+
+        Dependency expect = newDep( "gid3:aid2:ext:1", "compile" );
+        DependencyNode childLevel1 = root.getChildren().get( 0 );
+        assertEquals( expect, childLevel1.getDependency() );
+
+        // With proper dependency management, the test scope of aid3 would
+        // be managed to compile, and we would get another child.
+        // Currently, the dependency gets filtered by ScopeDependencyManager.
+        assertEquals( 0, childLevel1.getChildren().size() );
     }
 
     static class TestDependencyManager
