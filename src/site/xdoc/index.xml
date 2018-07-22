@@ -69,7 +69,6 @@
       <subsection name="See Also">
         <ul>
           <li><a href="/resolver-ant-tasks/">Maven Artifact Resolver Ant Tasks</a></li>
-          <li><a href="http://wiki.eclipse.org/Aether">Aether wiki</a></li>
         </ul>
       </subsection>
     </section>
