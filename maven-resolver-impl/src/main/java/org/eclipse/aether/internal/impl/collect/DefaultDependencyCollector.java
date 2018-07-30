@@ -23,6 +23,7 @@ import static org.eclipse.aether.internal.impl.collect.DependencyCollectionUtils
 import static org.eclipse.aether.internal.impl.collect.DependencyCollectionUtils.createArtifactDescriptorRequest;
 import static org.eclipse.aether.internal.impl.collect.DependencyCollectionUtils.createDependencyNode;
 import static org.eclipse.aether.internal.impl.collect.DependencyCollectionUtils.createVersionRangeRequest;
+import static org.eclipse.aether.internal.impl.collect.DependencyCollectionUtils.filterVersions;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,8 +36,10 @@ import static java.util.Objects.requireNonNull;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -51,7 +54,6 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyTraverser;
-import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -70,6 +72,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.concurrency.FutureResult;
+import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
 import org.slf4j.Logger;
@@ -94,7 +97,7 @@ public class DefaultDependencyCollector
 
     private VersionRangeResolver versionRangeResolver;
 
-    private ExecutorService executor = Executors.newFixedThreadPool( 5 );
+    private final ExecutorService executor = getExecutor();
 
     public DefaultDependencyCollector()
     {
@@ -134,6 +137,16 @@ public class DefaultDependencyCollector
     {
         this.versionRangeResolver = requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
         return this;
+    }
+
+    /**
+     * Setup executor with 5 daemon threads in pool.
+     */
+    private ExecutorService getExecutor(  )
+    {
+        return new ThreadPoolExecutor( 5, 5, 3L, TimeUnit.SECONDS,
+                                new LinkedBlockingQueue<Runnable>(),
+                                new WorkerThreadFactory( null ) );
     }
 
     public CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
@@ -666,46 +679,4 @@ public class DefaultDependencyCollector
         }
         return repositories;
     }
-
-    private static List<? extends Version> filterVersions( Dependency dependency, VersionRangeResult rangeResult,
-                                                           VersionFilter verFilter,
-                                                           DefaultVersionFilterContext verContext )
-        throws VersionRangeResolutionException
-    {
-        if ( rangeResult.getVersions().isEmpty() )
-        {
-            throw new VersionRangeResolutionException( rangeResult,
-                                                       "No versions available for " + dependency.getArtifact()
-                                                           + " within specified range" );
-        }
-
-        List<? extends Version> versions;
-        if ( verFilter != null && rangeResult.getVersionConstraint().getRange() != null )
-        {
-            verContext.set( dependency, rangeResult );
-            try
-            {
-                verFilter.filterVersions( verContext );
-            }
-            catch ( RepositoryException e )
-            {
-                throw new VersionRangeResolutionException( rangeResult,
-                                                           "Failed to filter versions for " + dependency.getArtifact()
-                                                               + ": " + e.getMessage(), e );
-            }
-            versions = verContext.get();
-            if ( versions.isEmpty() )
-            {
-                throw new VersionRangeResolutionException( rangeResult,
-                                                           "No acceptable versions for " + dependency.getArtifact()
-                                                               + ": " + rangeResult.getVersions() );
-            }
-        }
-        else
-        {
-            versions = rangeResult.getVersions();
-        }
-        return versions;
-    }
-
 }
