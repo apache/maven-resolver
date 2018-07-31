@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>31</version>
+    <version>32</version>
   </parent>
 
   <groupId>org.apache.maven.resolver</groupId>
@@ -64,7 +64,6 @@
   <properties>
     <javaVersion>7</javaVersion>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
-    <surefire.version>2.22.0</surefire.version>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>UnusedImports,LineLength,InnerAssignment,MagicNumber,AvoidNestedBlocks,ParameterNumber,MethodLength,MemberName</checkstyle.violation.ignore>
     <sisuVersion>0.3.3</sisuVersion>
