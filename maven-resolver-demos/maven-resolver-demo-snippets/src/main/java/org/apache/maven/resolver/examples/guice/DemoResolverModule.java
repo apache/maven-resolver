@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.maven.repository.internal.MavenAetherModule;
+import org.apache.maven.repository.internal.MavenResolverModule;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
@@ -44,7 +44,7 @@ class DemoResolverModule
     @Override
     protected void configure()
     {
-        install( new MavenAetherModule() );
+        install( new MavenResolverModule() );
         // alternatively, use the Guice Multibindings extensions
         bind( RepositoryConnectorFactory.class ).annotatedWith( Names.named( "basic" ) ).to( BasicRepositoryConnectorFactory.class );
         bind( TransporterFactory.class ).annotatedWith( Names.named( "file" ) ).to( FileTransporterFactory.class );
@@ -55,7 +55,7 @@ class DemoResolverModule
     @Singleton
     Set<RepositoryConnectorFactory> provideRepositoryConnectorFactories( @Named( "basic" ) RepositoryConnectorFactory basic )
     {
-        Set<RepositoryConnectorFactory> factories = new HashSet<RepositoryConnectorFactory>();
+        Set<RepositoryConnectorFactory> factories = new HashSet<>();
         factories.add( basic );
         return Collections.unmodifiableSet( factories );
     }
@@ -65,7 +65,7 @@ class DemoResolverModule
     Set<TransporterFactory> provideTransporterFactories( @Named( "file" ) TransporterFactory file,
                                                          @Named( "http" ) TransporterFactory http )
     {
-        Set<TransporterFactory> factories = new HashSet<TransporterFactory>();
+        Set<TransporterFactory> factories = new HashSet<>();
         factories.add( file );
         factories.add( http );
         return Collections.unmodifiableSet( factories );
