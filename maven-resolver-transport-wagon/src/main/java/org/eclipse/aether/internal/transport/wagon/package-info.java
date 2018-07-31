@@ -18,7 +18,7 @@
  * under the License.
  */
 /**
- * Integration with the Plexus IoC container which is the native runtime environment expected by many wagon
+ * Integration with the IoC container which is the native runtime environment expected by many wagon
  * implementations.
  */
 package org.eclipse.aether.internal.transport.wagon;

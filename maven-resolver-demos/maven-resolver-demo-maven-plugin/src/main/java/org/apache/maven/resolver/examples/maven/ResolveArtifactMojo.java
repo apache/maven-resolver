@@ -24,6 +24,9 @@ import java.util.List;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -32,44 +35,39 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resolves a single artifact (not including its transitive dependencies).
- * 
- * @goal resolve-artifact
  */
+@Mojo( name = "resolve-artifact", threadSafe = true )
 public class ResolveArtifactMojo
     extends AbstractMojo
 {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger( ResolveArtifactMojo.class );
     /**
      * The entry point to Maven Artifact Resolver, i.e. the component doing all the work.
-     * 
-     * @component
      */
+    @Component
     private RepositorySystem repoSystem;
 
     /**
      * The current repository/network configuration of Maven.
-     * 
-     * @parameter default-value="${repositorySystemSession}"
-     * @readonly
      */
+    @Parameter( defaultValue = "${repositorySystemSession}", readonly = true )
     private RepositorySystemSession repoSession;
 
     /**
      * The project's remote repositories to use for the resolution.
-     * 
-     * @parameter default-value="${project.remoteProjectRepositories}"
-     * @readonly
      */
+    @Parameter( defaultValue = "${project.remotePluginRepositories}", readonly = true )
     private List<RemoteRepository> remoteRepos;
 
     /**
      * The {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>} of the artifact to resolve.
-     * 
-     * @parameter property="resolver.artifactCoords"
      */
+    @Parameter ( property = "resolver.artifactCoords", readonly = true )
     private String artifactCoords;
 
     /**
@@ -92,7 +90,7 @@ public class ResolveArtifactMojo
         request.setArtifact( artifact );
         request.setRepositories( remoteRepos );
 
-        getLog().info( "Resolving artifact " + artifact + " from " + remoteRepos );
+        LOGGER.info( "Resolving artifact {} from {}", artifact, remoteRepos );
 
         ArtifactResult result;
         try
@@ -104,8 +102,8 @@ public class ResolveArtifactMojo
             throw new MojoExecutionException( e.getMessage(), e );
         }
 
-        getLog().info( "Resolved artifact " + artifact + " to " + result.getArtifact().getFile() + " from "
-                           + result.getRepository() );
+        LOGGER.info( "Resolved artifact {} to {} from {}", artifact, result.getArtifact().getFile(),
+                result.getRepository() );
     }
 
 }

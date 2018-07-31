@@ -24,8 +24,6 @@ import static java.util.Objects.requireNonNull;
 import org.apache.maven.wagon.Wagon;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.component.configurator.AbstractComponentConfigurator;
 import org.codehaus.plexus.component.configurator.ComponentConfigurationException;
 import org.codehaus.plexus.component.configurator.ConfigurationListener;
@@ -36,34 +34,27 @@ import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.transport.wagon.WagonConfigurator;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 /**
  * A wagon configurator based on the Plexus component configuration framework.
  */
-@Component( role = WagonConfigurator.class, hint = "plexus" )
+@Named ( "plexus" )
+@Singleton
 public class PlexusWagonConfigurator
     implements WagonConfigurator
 {
-
-    @Requirement
     private PlexusContainer container;
-
-    /**
-     * Creates an uninitialized wagon configurator.
-     * 
-     * @noreference This constructor only supports the Plexus IoC container and should not be called directly by
-     *              clients.
-     */
-    public PlexusWagonConfigurator()
-    {
-        // enables no-arg constructor
-    }
 
     /**
      * Creates a wagon configurator using the specified Plexus container.
      *
      * @param container The Plexus container instance to use, must not be {@code null}.
      */
-    public PlexusWagonConfigurator( PlexusContainer container )
+    @Inject
+    public PlexusWagonConfigurator( final PlexusContainer container )
     {
         this.container = requireNonNull( container, "plexus container cannot be null" );
     }
@@ -71,7 +62,7 @@ public class PlexusWagonConfigurator
     public void configure( Wagon wagon, Object configuration )
         throws Exception
     {
-        PlexusConfiguration config = null;
+        PlexusConfiguration config;
         if ( configuration instanceof PlexusConfiguration )
         {
             config = (PlexusConfiguration) configuration;

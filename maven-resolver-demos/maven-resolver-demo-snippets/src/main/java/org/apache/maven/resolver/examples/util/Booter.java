@@ -20,7 +20,7 @@ package org.apache.maven.resolver.examples.util;
  */
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -41,7 +41,6 @@ public class Booter
         return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
         // return org.eclipse.aether.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
         // return org.eclipse.aether.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
-        // return org.eclipse.aether.examples.plexus.PlexusRepositorySystemFactory.newRepositorySystem();
     }
 
     public static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )
@@ -62,7 +61,7 @@ public class Booter
 
     public static List<RemoteRepository> newRepositories( RepositorySystem system, RepositorySystemSession session )
     {
-        return new ArrayList<RemoteRepository>( Arrays.asList( newCentralRepository() ) );
+        return new ArrayList<>( Collections.singletonList( newCentralRepository() ) );
     }
 
     private static RemoteRepository newCentralRepository()

@@ -23,38 +23,29 @@ import static java.util.Objects.requireNonNull;
 
 import org.apache.maven.wagon.Wagon;
 import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.eclipse.aether.transport.wagon.WagonProvider;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * A wagon provider backed by a Plexus container and the wagons registered with this container.
  */
-@Component( role = WagonProvider.class, hint = "plexus" )
+@Named( "plexus" )
+@Singleton
 public class PlexusWagonProvider
     implements WagonProvider
 {
-
-    @Requirement
     private PlexusContainer container;
-
-    /**
-     * Creates an uninitialized wagon provider.
-     * 
-     * @noreference This constructor only supports the Plexus IoC container and should not be called directly by
-     *              clients.
-     */
-    public PlexusWagonProvider()
-    {
-        // enables no-arg constructor
-    }
 
     /**
      * Creates a wagon provider using the specified Plexus container.
      *
      * @param container The Plexus container instance to use, must not be {@code null}.
      */
-    public PlexusWagonProvider( PlexusContainer container )
+    @Inject
+    public PlexusWagonProvider( final PlexusContainer container )
     {
         this.container = requireNonNull( container, "plexus container cannot be null" );
     }
