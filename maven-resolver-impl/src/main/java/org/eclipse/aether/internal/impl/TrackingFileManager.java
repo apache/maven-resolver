@@ -34,6 +34,7 @@ import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages potentially concurrent accesses to a properties file.
@@ -43,48 +44,123 @@ class TrackingFileManager
 
     private static final Logger LOGGER = LoggerFactory.getLogger( TrackingFileManager.class );
 
-    public Properties read( File file )
+    /**
+     * Timeout for cached entry - 1 minute. 
+     * Effectively entry is checked once per minute if it had been modified.
+     */
+    private static final long READ_CACHE_TIMEOUT = 60 * 1000L;
+
+    /**
+     * Caches the tracking file contents in write-through fashion. Reads are cached for READ_CACHE_TIMEOUT. Writes are
+     * re-reading the file contents always - they do not rely on cached state, but they are typically much less frequent
+     * than reads.
+     */
+    private class CacheEntry
     {
-        synchronized ( getLock( file ) )
+
+        /**
+         * Tracking file
+         */
+        private final File file;
+
+        /**
+         * Timestamp of tracking file (last time it was read). 0 if it was never read or if file does not exist.
+         */
+        private long lastModifiedTs;
+
+        /**
+         * Cached properties. null if there are no properties (file does not exist) or it was not yet read
+         */
+        private Properties props;
+
+        /**
+         * Timestamp of last time entry was updated or read.
+         */
+        private long entryTs;
+
+        CacheEntry( File file )
         {
-            FileLock lock = null;
-            FileInputStream stream = null;
-            try
-            {
-                if ( !file.exists() )
-                {
-                    return null;
-                }
-
-                stream = new FileInputStream( file );
-
-                lock = lock( stream.getChannel(), Math.max( 1, file.length() ), true );
-
-                Properties props = new Properties();
-                props.load( stream );
-
-                return props;
-            }
-            catch ( IOException e )
-            {
-                LOGGER.warn( "Failed to read tracking file {}", file, e );
-            }
-            finally
-            {
-                release( lock, file );
-                close( stream, file );
-            }
+            this.file = file;
         }
 
-        return null;
-    }
-
-    public Properties update( File file, Map<String, String> updates )
-    {
-        Properties props = new Properties();
-
-        synchronized ( getLock( file ) )
+        public synchronized Properties load()
         {
+            if ( hasExpired( READ_CACHE_TIMEOUT ) )
+            {
+                FileLock lock = null;
+                FileInputStream stream = null;
+                try
+                {
+                    if ( !file.exists() )
+                    {
+                        resetFile();
+                    }
+                    else
+                    {
+                        long fileLastModified = file.lastModified();
+                        if ( hasFileChanged( fileLastModified ) )
+                        {
+                            stream = new FileInputStream( file );
+
+                            lock = lock( stream.getChannel(), Math.max( 1, file.length() ), true );
+
+                            props = new Properties();
+                            props.load( stream );
+                            lastModifiedTs = fileLastModified;
+                        } // else file had not changed since last time it was read
+                    }
+                }
+                catch ( IOException e )
+                {
+                    LOGGER.warn( "Failed to read tracking file {}", file, e );
+                    resetFile();
+                }
+                finally
+                {
+                    release( lock );
+                    close( stream );
+                }
+                entryTs = System.currentTimeMillis();
+            }
+            return props;
+        }
+
+        // checks if file last modified timestamp has changed
+        private boolean hasFileChanged( long fileLastModified )
+        {
+            return lastModifiedTs == 0 || fileLastModified != lastModifiedTs;
+        }
+
+        // reset this entry to 'no tracking file cached' state
+        private void resetFile()
+        {
+            props = null;
+            lastModifiedTs = 0;
+        }
+
+        // checks if this entry is expired according to given timeout
+        private boolean hasExpired( long timeout )
+        {
+            return entryTs == 0L || System.currentTimeMillis() - entryTs > timeout;
+        }
+
+        // clear any cached state of this entry
+        private synchronized void expunge()
+        {
+            expire();
+            resetFile();
+        }
+
+        // clear timestamp of this entry
+        private synchronized void expire()
+        {
+            this.entryTs = 0L;
+        }
+
+        public synchronized Properties update( Map<String, String> updates )
+        {
+            props = new Properties();
+
             File directory = file.getParentFile();
             if ( !directory.mkdirs() && !directory.exists() )
             {
@@ -131,6 +207,9 @@ class TrackingFileManager
                 raf.seek( 0 );
                 raf.write( stream.toByteArray() );
                 raf.setLength( raf.getFilePointer() );
+
+                this.entryTs = System.currentTimeMillis();
+                this.lastModifiedTs = file.lastModified();
             }
             catch ( IOException e )
             {
@@ -138,45 +217,135 @@ class TrackingFileManager
             }
             finally
             {
-                release( lock, file );
-                close( raf, file );
+                release( lock );
+                close( raf );
             }
+
+            return props;
         }
 
-        return props;
-    }
-
-    private void release( FileLock lock, File file )
-    {
-        if ( lock != null )
+        private void release( FileLock lock )
         {
-            try
+            if ( lock != null )
             {
-                lock.release();
-            }
-            catch ( IOException e )
-            {
-                LOGGER.warn( "Error releasing lock for tracking file {}", file, e );
+                try
+                {
+                    lock.release();
+                }
+                catch ( IOException e )
+                {
+                    LOGGER.warn( "Error releasing lock for tracking file {}", file, e );
+                }
             }
         }
-    }
 
-    private void close( Closeable closeable, File file )
-    {
-        if ( closeable != null )
+        private void close( Closeable closeable )
         {
-            try
+            if ( closeable != null )
             {
-                closeable.close();
-            }
-            catch ( IOException e )
-            {
-                LOGGER.warn( "Error closing tracking file {}", file, e );
+                try
+                {
+                    closeable.close();
+                }
+                catch ( IOException e )
+                {
+                    LOGGER.warn( "Error closing tracking file {}", file, e );
+                }
             }
         }
+
+        private FileLock lock( FileChannel channel, long size, boolean shared ) throws IOException
+        {
+            FileLock lock = null;
+
+            for ( int attempts = 8; attempts >= 0; attempts-- )
+            {
+                try
+                {
+                    lock = channel.lock( 0, size, shared );
+                    break;
+                }
+                catch ( OverlappingFileLockException e )
+                {
+                    if ( attempts <= 0 )
+                    {
+                        throw (IOException) new IOException().initCause( e );
+                    }
+                    try
+                    {
+                        Thread.sleep( 50L );
+                    }
+                    catch ( InterruptedException e1 )
+                    {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+
+            if ( lock == null )
+            {
+                throw new IOException( "Could not lock file" );
+            }
+
+            return lock;
+        }
+
     }
 
-    private Object getLock( File file )
+    /**
+     * Canonicalized files by their path (the same canonicalized file may be registered under different paths). This
+     * cache is especially useful on Windows platform where canonicalization is relatively expensive.
+     */
+    private static ConcurrentHashMap<String, File> canonicalizedCache = new ConcurrentHashMap<>();
+
+    /**
+     * All tracking files cache entries by their canonicalized file.
+     */
+    private static ConcurrentHashMap<File, CacheEntry> cache = new ConcurrentHashMap<>();
+
+    private CacheEntry getCacheEntry( File file )
+    {
+        File key = getKey( file );
+        CacheEntry cacheEntry = cache.get( key );
+        if ( cacheEntry == null )
+        {
+            // no locking here - the worst case it will be created twice but only one of
+            // those entries will prevail at the end.
+            // since jdk8 we could use computeIfAbsent for better consistency
+            cacheEntry = new CacheEntry( file );
+            cache.put( key, cacheEntry );
+        }
+        return cacheEntry;
+    }
+
+    public Properties read( File file )
+    {
+        return cloneProps( getCacheEntry( file ).load() );
+    }
+
+    private Properties cloneProps( Properties ps )
+    {
+        return (Properties) ( ps != null ? ps.clone() : ps );
+    }
+
+    // Test only method to force cache clear
+    void expunge( File file )
+    {
+        getCacheEntry( file ).expunge();
+    }
+
+    // Test only method to force cache expiry
+    void expire( File file )
+    {
+        getCacheEntry( file ).expire();
+    }
+
+    public Properties update( File file, Map<String, String> updates )
+    {
+        return cloneProps( getCacheEntry( file ).update( updates ) );
+    }
+
+    private File getKey( File file )
     {
         /*
          * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
@@ -185,50 +354,25 @@ class TrackingFileManager
          */
         try
         {
-            return file.getCanonicalPath().intern();
+            return canonicalize( file );
         }
         catch ( IOException e )
         {
             LOGGER.warn( "Failed to canonicalize path {}: {}", file, e.getMessage() );
-            return file.getAbsolutePath().intern();
+            return new File( file.getAbsolutePath() );
         }
     }
 
-    private FileLock lock( FileChannel channel, long size, boolean shared )
-        throws IOException
+    private File canonicalize( File file ) throws IOException
     {
-        FileLock lock = null;
-
-        for ( int attempts = 8; attempts >= 0; attempts-- )
+        String p = file.getPath();
+        File canonicalized = canonicalizedCache.get( p );
+        if ( canonicalized == null )
         {
-            try
-            {
-                lock = channel.lock( 0, size, shared );
-                break;
-            }
-            catch ( OverlappingFileLockException e )
-            {
-                if ( attempts <= 0 )
-                {
-                    throw (IOException) new IOException().initCause( e );
-                }
-                try
-                {
-                    Thread.sleep( 50L );
-                }
-                catch ( InterruptedException e1 )
-                {
-                    Thread.currentThread().interrupt();
-                }
-            }
+            canonicalized = file.getCanonicalFile();
+            canonicalizedCache.put( p, canonicalized );
         }
-
-        if ( lock == null )
-        {
-            throw new IOException( "Could not lock file" );
-        }
-
-        return lock;
+        return canonicalized;
     }
 
 }

@@ -55,6 +55,7 @@ public class TrackingFileManagerTest
 
         assertTrue( "Leaked file: " + propFile, propFile.delete() );
 
+        tfm.expire(propFile);
         props = tfm.read( propFile );
         assertNull( String.valueOf( props ), props );
     }
@@ -68,6 +69,7 @@ public class TrackingFileManagerTest
         for ( int i = 0; i < 1000; i++ )
         {
             File propFile = TestFileUtils.createTempFile( "#COMMENT\nkey1=value1\nkey2 : value2" );
+            tfm.expunge(propFile);
             assertNotNull( tfm.read( propFile ) );
             assertTrue( "Leaked file: " + propFile, propFile.delete() );
         }
@@ -142,6 +144,7 @@ public class TrackingFileManagerTest
                     {
                         for ( int i = 0; i < 1000; i++ )
                         {
+                            tfm.expunge(file); // required since otherwise it would be a cached file
                             assertNotNull( tfm.read( file ) );
                         }
                     }
