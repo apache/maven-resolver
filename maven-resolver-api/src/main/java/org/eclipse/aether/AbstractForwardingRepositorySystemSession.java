@@ -36,6 +36,7 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transform.FileTransformerManager;
 
 /**
  * A special repository system session to enable decorating or proxying another session. To do so, clients have to
@@ -61,129 +62,160 @@ public abstract class AbstractForwardingRepositorySystemSession
      */
     protected abstract RepositorySystemSession getSession();
 
+    @Override
     public boolean isOffline()
     {
         return getSession().isOffline();
     }
 
+    @Override
     public boolean isIgnoreArtifactDescriptorRepositories()
     {
         return getSession().isIgnoreArtifactDescriptorRepositories();
     }
 
+    @Override
     public ResolutionErrorPolicy getResolutionErrorPolicy()
     {
         return getSession().getResolutionErrorPolicy();
     }
 
+    @Override
     public ArtifactDescriptorPolicy getArtifactDescriptorPolicy()
     {
         return getSession().getArtifactDescriptorPolicy();
     }
 
+    @Override
     public String getChecksumPolicy()
     {
         return getSession().getChecksumPolicy();
     }
 
+    @Override
     public String getUpdatePolicy()
     {
         return getSession().getUpdatePolicy();
     }
 
+    @Override
     public LocalRepository getLocalRepository()
     {
         return getSession().getLocalRepository();
     }
 
+    @Override
     public LocalRepositoryManager getLocalRepositoryManager()
     {
         return getSession().getLocalRepositoryManager();
     }
 
+    @Override
     public WorkspaceReader getWorkspaceReader()
     {
         return getSession().getWorkspaceReader();
     }
 
+    @Override
     public RepositoryListener getRepositoryListener()
     {
         return getSession().getRepositoryListener();
     }
 
+    @Override
     public TransferListener getTransferListener()
     {
         return getSession().getTransferListener();
     }
 
+    @Override
     public Map<String, String> getSystemProperties()
     {
         return getSession().getSystemProperties();
     }
 
+    @Override
     public Map<String, String> getUserProperties()
     {
         return getSession().getUserProperties();
     }
 
+    @Override
     public Map<String, Object> getConfigProperties()
     {
         return getSession().getConfigProperties();
     }
 
+    @Override
     public MirrorSelector getMirrorSelector()
     {
         return getSession().getMirrorSelector();
     }
 
+    @Override
     public ProxySelector getProxySelector()
     {
         return getSession().getProxySelector();
     }
 
+    @Override
     public AuthenticationSelector getAuthenticationSelector()
     {
         return getSession().getAuthenticationSelector();
     }
 
+    @Override
     public ArtifactTypeRegistry getArtifactTypeRegistry()
     {
         return getSession().getArtifactTypeRegistry();
     }
 
+    @Override
     public DependencyTraverser getDependencyTraverser()
     {
         return getSession().getDependencyTraverser();
     }
 
+    @Override
     public DependencyManager getDependencyManager()
     {
         return getSession().getDependencyManager();
     }
 
+    @Override
     public DependencySelector getDependencySelector()
     {
         return getSession().getDependencySelector();
     }
 
+    @Override
     public VersionFilter getVersionFilter()
     {
         return getSession().getVersionFilter();
     }
 
+    @Override
     public DependencyGraphTransformer getDependencyGraphTransformer()
     {
         return getSession().getDependencyGraphTransformer();
     }
 
+    @Override
     public SessionData getData()
     {
         return getSession().getData();
     }
 
+    @Override
     public RepositoryCache getCache()
     {
         return getSession().getCache();
+    }
+    
+    @Override
+    public FileTransformerManager geFileTransformerManager()
+    {
+        return getSession().geFileTransformerManager();
     }
 
 }

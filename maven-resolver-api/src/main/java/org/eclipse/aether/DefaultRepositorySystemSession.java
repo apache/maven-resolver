@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
+import java.util.Collection;
+
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -44,6 +47,8 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transform.FileTransformer;
+import org.eclipse.aether.transform.FileTransformerManager;
 
 /**
  * A simple repository system session.
@@ -72,6 +77,8 @@ public final class DefaultRepositorySystemSession
     private String updatePolicy;
 
     private LocalRepositoryManager localRepositoryManager;
+
+    private FileTransformerManager fileTransformerManager;
 
     private WorkspaceReader workspaceReader;
 
@@ -130,6 +137,7 @@ public final class DefaultRepositorySystemSession
         proxySelector = NullProxySelector.INSTANCE;
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
+        fileTransformerManager = NullFileTransformerManager.INSTANCE;
         data = new DefaultSessionData();
     }
 
@@ -314,6 +322,23 @@ public final class DefaultRepositorySystemSession
     {
         failIfReadOnly();
         this.localRepositoryManager = localRepositoryManager;
+        return this;
+    }
+
+    @Override
+    public FileTransformerManager geFileTransformerManager()
+    {
+        return fileTransformerManager;
+    }
+
+    public DefaultRepositorySystemSession setFileTransformerManager( FileTransformerManager fileTransformerManager )
+    {
+        failIfReadOnly();
+        this.fileTransformerManager = fileTransformerManager;
+        if ( this.fileTransformerManager == null )
+        {
+            this.fileTransformerManager = NullFileTransformerManager.INSTANCE;
+        }
         return this;
     }
 
@@ -827,6 +852,17 @@ public final class DefaultRepositorySystemSession
             return null;
         }
 
+    }
+
+    static final class NullFileTransformerManager implements FileTransformerManager
+    {
+        public static final FileTransformerManager INSTANCE = new NullFileTransformerManager();
+
+        @Override
+        public Collection<FileTransformer> getTransformersForArtifact( Artifact artifact )
+        {
+            return Collections.emptyList();
+        }
     }
 
 }

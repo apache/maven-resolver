@@ -19,10 +19,16 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +43,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
-import org.eclipse.aether.internal.impl.DefaultDeployer;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -52,6 +57,8 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
+import org.eclipse.aether.transform.FileTransformer;
+import org.eclipse.aether.util.artifact.SubArtifact;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -380,6 +387,37 @@ public class DefaultDeployerTest
         props = new Properties();
         TestFileUtils.readProps( metadataFile, props );
         assertNull( props.toString(), props.get( "old" ) );
+    }
+
+    @Test
+    public void testFileTransformer() throws Exception
+    {
+        final Artifact transformedArtifact = new SubArtifact( artifact, null, "raj" );
+        FileTransformer transformer = new FileTransformer()
+        {
+            @Override
+            public InputStream transformData( File file )
+            {
+                return new ByteArrayInputStream( "transformed data".getBytes( StandardCharsets.UTF_8 ) );
+            }
+            
+            @Override
+            public Artifact transformArtifact( Artifact artifact )
+            {
+                return transformedArtifact;
+            }
+        };
+        
+        StubFileTransformerManager fileTransformerManager = new StubFileTransformerManager();
+        fileTransformerManager.addFileTransformer( "jar", transformer );
+        session.setFileTransformerManager( fileTransformerManager );
+        
+        request = new DeployRequest();
+        request.addArtifact( artifact );
+        deployer.deploy( session, request );
+        
+        Artifact putArtifact = connector.getActualArtifactPutRequests().get( 0 );
+        assertEquals( transformedArtifact, putArtifact );
     }
 
 }

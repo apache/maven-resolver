@@ -921,7 +921,7 @@ public class HttpTransporterTest
         assertEquals( 1, listener.startedCount );
     }
 
-    @Test( timeout = 10000L )
+    @Test( timeout = 20000L )
     public void testConcurrency()
         throws Exception
     {

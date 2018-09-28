@@ -20,6 +20,7 @@ package org.eclipse.aether.util;
  */
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -54,10 +55,8 @@ public final class ChecksumUtils
         throws IOException
     {
         String checksum = "";
-        BufferedReader br = null;
-        try
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( new FileInputStream( checksumFile ), StandardCharsets.UTF_8 ), 512 ) )
         {
-            br = new BufferedReader( new InputStreamReader( new FileInputStream( checksumFile ), StandardCharsets.UTF_8 ), 512 );
             while ( true )
             {
                 String line = br.readLine();
@@ -71,21 +70,6 @@ public final class ChecksumUtils
                     checksum = line;
                     break;
                 }
-            }
-        }
-        finally
-        {
-            try
-            {
-                if ( br != null )
-                {
-                    br.close();
-                    br = null;
-                }
-            }
-            catch ( IOException e )
-            {
-                // Suppressed due to an exception already thrown in the try block.
             }
         }
 
@@ -118,6 +102,20 @@ public final class ChecksumUtils
      * @throws IOException If the data file could not be read.
      */
     public static Map<String, Object> calc( File dataFile, Collection<String> algos )
+                    throws IOException
+    {
+       return calc( new FileInputStream( dataFile ), algos );
+    }
+
+    
+    public static Map<String, Object> calc( byte[] dataBytes, Collection<String> algos )
+                    throws IOException
+    {
+        return calc( new ByteArrayInputStream( dataBytes ), algos );
+    }
+
+    
+    private static Map<String, Object> calc( InputStream data, Collection<String> algos )
         throws IOException
     {
         Map<String, Object> results = new LinkedHashMap<String, Object>();
@@ -135,10 +133,8 @@ public final class ChecksumUtils
             }
         }
 
-        InputStream in = null;
-        try
+        try ( InputStream in = data )
         {
-            in = new FileInputStream( dataFile );
             for ( byte[] buffer = new byte[ 32 * 1024 ];; )
             {
                 int read = in.read( buffer );
@@ -151,22 +147,6 @@ public final class ChecksumUtils
                     digest.update( buffer, 0, read );
                 }
             }
-            in.close();
-            in = null;
-        }
-        finally
-        {
-            try
-            {
-                if ( in != null )
-                {
-                    in.close();
-                }
-            }
-            catch ( IOException e )
-            {
-                // Suppressed due to an exception already thrown in the try block.
-            }
         }
 
         for ( Map.Entry<String, MessageDigest> entry : digests.entrySet() )
@@ -178,6 +158,7 @@ public final class ChecksumUtils
 
         return results;
     }
+    
 
     /**
      * Creates a hexadecimal representation of the specified bytes. Each byte is converted into a two-digit hex number
