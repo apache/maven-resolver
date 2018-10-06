@@ -29,7 +29,7 @@ import org.eclipse.aether.artifact.Artifact;
  * Can transform a file while installing/deploying
  * 
  * @author Robert Scholte
- * @since 1.2.0
+ * @since 1.3.0
  */
 public interface FileTransformer
 {

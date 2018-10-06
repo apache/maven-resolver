@@ -27,7 +27,7 @@ import org.eclipse.aether.artifact.Artifact;
  * Manager the FileTransformers 
  * 
  * @author Robert Scholte
- * @since 1.2.0
+ * @since 1.3.0
  */
 public interface FileTransformerManager
 {
