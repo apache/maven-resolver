@@ -239,7 +239,7 @@ public class DefaultDeployer
         {
             List<? extends MetadataGenerator> generators = getMetadataGenerators( session, request );
 
-            FileTransformerManager fileTransformerManager = session.geFileTransformerManager();
+            FileTransformerManager fileTransformerManager = session.getFileTransformerManager();
 
             List<ArtifactUpload> artifactUploads = new ArrayList<ArtifactUpload>();
             List<MetadataUpload> metadataUploads = new ArrayList<MetadataUpload>();

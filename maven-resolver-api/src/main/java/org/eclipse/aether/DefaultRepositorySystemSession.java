@@ -175,6 +175,7 @@ public final class DefaultRepositorySystemSession
         setDependencySelector( session.getDependencySelector() );
         setVersionFilter( session.getVersionFilter() );
         setDependencyGraphTransformer( session.getDependencyGraphTransformer() );
+        setFileTransformerManager( session.getFileTransformerManager() );
         setData( session.getData() );
         setCache( session.getCache() );
     }
@@ -326,7 +327,7 @@ public final class DefaultRepositorySystemSession
     }
 
     @Override
-    public FileTransformerManager geFileTransformerManager()
+    public FileTransformerManager getFileTransformerManager()
     {
         return fileTransformerManager;
     }

@@ -213,9 +213,9 @@ public abstract class AbstractForwardingRepositorySystemSession
     }
     
     @Override
-    public FileTransformerManager geFileTransformerManager()
+    public FileTransformerManager getFileTransformerManager()
     {
-        return getSession().geFileTransformerManager();
+        return getSession().getFileTransformerManager();
     }
 
 }

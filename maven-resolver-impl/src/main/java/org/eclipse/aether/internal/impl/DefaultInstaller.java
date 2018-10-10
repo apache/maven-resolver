@@ -239,7 +239,7 @@ public class DefaultInstaller
 
         File srcFile = artifact.getFile();
 
-        Collection<FileTransformer> fileTransformers = session.geFileTransformerManager().getTransformersForArtifact( artifact );
+        Collection<FileTransformer> fileTransformers = session.getFileTransformerManager().getTransformersForArtifact( artifact );
         if ( fileTransformers.isEmpty() )
         {
             install( session, trace, artifact, lrm, srcFile, null );

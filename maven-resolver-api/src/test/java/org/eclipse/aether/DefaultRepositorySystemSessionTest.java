@@ -18,10 +18,13 @@ package org.eclipse.aether;
  * specific language governing permissions and limitations
  * under the License.
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
-import static org.junit.Assert.*;
-
+import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -29,6 +32,7 @@ import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  */
@@ -121,6 +125,22 @@ public class DefaultRepositorySystemSessionTest
         catch ( UnsupportedOperationException e )
         {
             // expected
+        }
+    }
+
+
+    @Test
+    public void testCopyRepositorySystemSession() throws Exception
+    {
+        RepositorySystemSession session = Mockito.mock( RepositorySystemSession.class, Mockito.RETURNS_MOCKS );
+
+        RepositorySystemSession newSession = new DefaultRepositorySystemSession( session );
+
+        Method[] methods = RepositorySystemSession.class.getMethods();
+
+        for ( Method method : methods )
+        {
+            assertEquals( method.getName(), method.invoke( session ) == null, method.invoke( newSession ) == null );
         }
     }
 

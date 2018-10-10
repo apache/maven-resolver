@@ -266,6 +266,6 @@ public interface RepositorySystemSession
      * 
      * @return the manager, never {@code null}
      */
-    FileTransformerManager geFileTransformerManager();
+    FileTransformerManager getFileTransformerManager();
 
 }
