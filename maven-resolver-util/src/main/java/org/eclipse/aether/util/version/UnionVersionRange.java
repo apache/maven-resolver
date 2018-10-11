@@ -64,7 +64,8 @@ final class UnionVersionRange
         if ( ranges == null || ranges.isEmpty() )
         {
             this.ranges = Collections.emptySet();
-            lowerBound = upperBound = null;
+            lowerBound = null;
+            upperBound = null;
         }
         else
         {

@@ -519,7 +519,8 @@ public final class ConflictResolver
 
         void prepare( Object conflictId, Collection<Object> cyclicPredecessors )
         {
-            currentId = conflictCtx.conflictId = conflictId;
+            currentId = conflictId;
+            conflictCtx.conflictId = conflictId;
             conflictCtx.winner = null;
             conflictCtx.scope = null;
             conflictCtx.optional = null;
@@ -710,7 +711,8 @@ public final class ConflictResolver
         private void scopes( int parent, Dependency child )
         {
             scopeCtx.parentScope = ( parent > 0 ) ? parentScopes.get( parent - 1 ) : null;
-            scopeCtx.derivedScope = scopeCtx.childScope = scope( child );
+            scopeCtx.derivedScope = scope( child );
+            scopeCtx.childScope = scope( child );
         }
 
         private String scope( Dependency dependency )
@@ -760,7 +762,8 @@ public final class ConflictResolver
         public ScopeContext( String parentScope, String childScope )
         {
             this.parentScope = ( parentScope != null ) ? parentScope : "";
-            derivedScope = this.childScope = ( childScope != null ) ? childScope : "";
+            derivedScope = ( childScope != null ) ? childScope : "";
+            this.childScope = ( childScope != null ) ? childScope : "";
         }
 
         /**

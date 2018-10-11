@@ -73,7 +73,8 @@ public final class ArtifactDescriptorResult
         exceptions = Collections.emptyList();
         relocations = Collections.emptyList();
         aliases = Collections.emptyList();
-        dependencies = managedDependencies = Collections.emptyList();
+        dependencies = Collections.emptyList();
+        managedDependencies = Collections.emptyList();
         repositories = Collections.emptyList();
         properties = Collections.emptyMap();
     }

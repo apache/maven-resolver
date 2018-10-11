@@ -93,7 +93,8 @@ public class ChecksumFailureException
     public ChecksumFailureException( boolean retryWorthy, String message, Throwable cause )
     {
         super( message, cause );
-        expected = actual = "";
+        expected = "";
+        actual = "";
         this.retryWorthy = retryWorthy;
     }
 

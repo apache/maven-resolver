@@ -91,7 +91,8 @@ final class TestVersionRange
                     + ", single version must be surrounded by []" );
             }
 
-            lowerBound = upperBound = new TestVersion( process.trim() );
+            lowerBound = new TestVersion( process.trim() );
+            upperBound = new TestVersion( process.trim() );
         }
         else
         {

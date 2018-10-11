@@ -104,7 +104,8 @@ public final class RemoteRepository
         }
         else
         {
-            protocol = host = "";
+            protocol = "";
+            host = "";
         }
     }
 
@@ -427,7 +428,8 @@ public final class RemoteRepository
          */
         public Builder setPolicy( RepositoryPolicy policy )
         {
-            this.releasePolicy = this.snapshotPolicy = ( policy != null ) ? policy : DEFAULT_POLICY;
+            this.releasePolicy = ( policy != null ) ? policy : DEFAULT_POLICY;
+            this.snapshotPolicy = ( policy != null ) ? policy : DEFAULT_POLICY;
             if ( prototype != null )
             {
                 delta( RELEASES, this.releasePolicy, prototype.getPolicy( false ) );
