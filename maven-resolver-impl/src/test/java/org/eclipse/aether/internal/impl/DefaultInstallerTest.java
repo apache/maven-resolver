@@ -50,6 +50,7 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
+import org.eclipse.aether.transform.TransformException;
 import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.util.artifact.SubArtifact;
 import org.junit.After;
@@ -429,7 +430,7 @@ public class DefaultInstallerTest
         {
             @Override
             public InputStream transformData( File file )
-                throws IOException
+                throws IOException, TransformException
             {
                 return new ByteArrayInputStream( "transformed data".getBytes( StandardCharsets.UTF_8 ) );
             }

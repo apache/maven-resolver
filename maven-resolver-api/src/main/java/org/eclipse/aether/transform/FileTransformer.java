@@ -46,6 +46,9 @@ public interface FileTransformer
      * 
      * @param file the file with the original data
      * @return the transformed data
+     * @throws IOException If an I/O error occurred
+     * @throws TransformException If the file could not be transformed
      */
-    InputStream transformData( File file ) throws IOException;
+    InputStream transformData( File file )
+        throws IOException, TransformException;
 }

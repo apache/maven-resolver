@@ -40,6 +40,12 @@
   <url>https://maven.apache.org/resolver/</url>
   <inceptionYear>2010</inceptionYear>
 
+  <contributors>
+    <contributor>
+      <name>Matej Cimbora</name>
+    </contributor>
+  </contributors>
+
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</developerConnection>
