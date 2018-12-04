@@ -138,6 +138,16 @@ public class DefaultArtifactResolver
         setOfflineController( locator.getService( OfflineController.class ) );
     }
 
+    /**
+     * @deprecated not used any more since MRESOLVER-36 move to slf4j, added back in MRESOLVER-64 for compatibility
+     */
+    @Deprecated
+    public DefaultArtifactResolver setLoggerFactory( org.eclipse.aether.spi.log.LoggerFactory loggerFactory )
+    {
+        // this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
+        return this;
+    }
+
     public DefaultArtifactResolver setFileProcessor( FileProcessor fileProcessor )
     {
         this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
