@@ -55,7 +55,7 @@ final class UriUtils
 
     public static List<URI> getDirectories( URI base, URI uri )
     {
-        List<URI> dirs = new ArrayList<URI>();
+        List<URI> dirs = new ArrayList<>();
         for ( URI dir = uri.resolve( "." ); !isBase( base, dir ); dir = dir.resolve( ".." ) )
         {
             dirs.add( dir );

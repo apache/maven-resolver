@@ -89,7 +89,7 @@ public final class CollectResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }
@@ -118,7 +118,7 @@ public final class CollectResult
         {
             if ( cycles.isEmpty() )
             {
-                cycles = new ArrayList<DependencyCycle>();
+                cycles = new ArrayList<>();
             }
             cycles.add( cycle );
         }

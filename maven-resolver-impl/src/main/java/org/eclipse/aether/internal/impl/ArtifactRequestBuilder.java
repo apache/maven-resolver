@@ -40,7 +40,7 @@ class ArtifactRequestBuilder
     ArtifactRequestBuilder( RequestTrace trace )
     {
         this.trace = trace;
-        this.requests = new ArrayList<ArtifactRequest>();
+        this.requests = new ArrayList<>();
     }
 
     public List<ArtifactRequest> getRequests()

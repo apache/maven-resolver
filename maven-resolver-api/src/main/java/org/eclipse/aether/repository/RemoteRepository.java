@@ -511,7 +511,7 @@ public final class RemoteRepository
         {
             if ( this.mirroredRepositories == null )
             {
-                this.mirroredRepositories = new ArrayList<RemoteRepository>();
+                this.mirroredRepositories = new ArrayList<>();
             }
             else
             {
@@ -542,7 +542,7 @@ public final class RemoteRepository
             {
                 if ( this.mirroredRepositories == null )
                 {
-                    this.mirroredRepositories = new ArrayList<RemoteRepository>();
+                    this.mirroredRepositories = new ArrayList<>();
                     if ( prototype != null )
                     {
                         mirroredRepositories.addAll( prototype.getMirroredRepositories() );

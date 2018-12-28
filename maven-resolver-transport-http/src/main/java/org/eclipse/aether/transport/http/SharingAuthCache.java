@@ -41,7 +41,7 @@ final class SharingAuthCache
     SharingAuthCache( LocalState state )
     {
         this.state = state;
-        authSchemes = new HashMap<HttpHost, AuthScheme>();
+        authSchemes = new HashMap<>();
     }
 
     private static HttpHost toKey( HttpHost host )

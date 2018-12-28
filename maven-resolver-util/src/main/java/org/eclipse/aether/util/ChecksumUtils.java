@@ -118,9 +118,9 @@ public final class ChecksumUtils
     private static Map<String, Object> calc( InputStream data, Collection<String> algos )
         throws IOException
     {
-        Map<String, Object> results = new LinkedHashMap<String, Object>();
+        Map<String, Object> results = new LinkedHashMap<>();
 
-        Map<String, MessageDigest> digests = new LinkedHashMap<String, MessageDigest>();
+        Map<String, MessageDigest> digests = new LinkedHashMap<>();
         for ( String algo : algos )
         {
             try

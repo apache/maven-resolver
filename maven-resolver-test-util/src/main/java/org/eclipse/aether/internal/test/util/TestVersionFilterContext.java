@@ -52,7 +52,7 @@ class TestVersionFilterContext
         this.session = session;
         this.result = result;
         dependency = new Dependency( result.getRequest().getArtifact(), "" );
-        versions = new ArrayList<Version>( result.getVersions() );
+        versions = new ArrayList<>( result.getVersions() );
     }
 
     public RepositorySystemSession getSession()

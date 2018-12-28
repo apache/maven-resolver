@@ -65,7 +65,7 @@ public final class ConflictIdSorter
         Map<String, Object> stats = (Map<String, Object>) context.get( TransformationContextKeys.STATS );
         long time1 = System.nanoTime();
 
-        Map<Object, ConflictId> ids = new LinkedHashMap<Object, ConflictId>( 256 );
+        Map<Object, ConflictId> ids = new LinkedHashMap<>( 256 );
 
         {
             ConflictId id = null;
@@ -76,7 +76,7 @@ public final class ConflictIdSorter
                 ids.put( key, id );
             }
 
-            Map<DependencyNode, Object> visited = new IdentityHashMap<DependencyNode, Object>( conflictIds.size() );
+            Map<DependencyNode, Object> visited = new IdentityHashMap<>( conflictIds.size() );
 
             buildConflitIdDAG( ids, node, id, 0, visited, conflictIds );
         }
@@ -132,7 +132,7 @@ public final class ConflictIdSorter
 
     private int topsortConflictIds( Collection<ConflictId> conflictIds, DependencyGraphTransformationContext context )
     {
-        List<Object> sorted = new ArrayList<Object>( conflictIds.size() );
+        List<Object> sorted = new ArrayList<>( conflictIds.size() );
 
         RootQueue roots = new RootQueue( conflictIds.size() / 2 );
         for ( ConflictId id : conflictIds )
@@ -204,10 +204,10 @@ public final class ConflictIdSorter
 
     private Collection<Collection<Object>> findCycles( Collection<ConflictId> conflictIds )
     {
-        Collection<Collection<Object>> cycles = new HashSet<Collection<Object>>();
+        Collection<Collection<Object>> cycles = new HashSet<>();
 
-        Map<Object, Integer> stack = new HashMap<Object, Integer>( 128 );
-        Map<ConflictId, Object> visited = new IdentityHashMap<ConflictId, Object>( conflictIds.size() );
+        Map<Object, Integer> stack = new HashMap<>( 128 );
+        Map<ConflictId, Object> visited = new IdentityHashMap<>( conflictIds.size() );
         for ( ConflictId id : conflictIds )
         {
             findCycles( id, visited, stack, cycles );
@@ -223,7 +223,7 @@ public final class ConflictIdSorter
         if ( depth != null )
         {
             stack.put( id.key, depth );
-            Collection<Object> cycle = new HashSet<Object>();
+            Collection<Object> cycle = new HashSet<>();
             for ( Map.Entry<Object, Integer> entry : stack.entrySet() )
             {
                 if ( entry.getValue() >= depth )
@@ -267,7 +267,7 @@ public final class ConflictIdSorter
         {
             if ( children.isEmpty() )
             {
-                children = new HashSet<ConflictId>();
+                children = new HashSet<>();
             }
             if ( children.add( child ) )
             {

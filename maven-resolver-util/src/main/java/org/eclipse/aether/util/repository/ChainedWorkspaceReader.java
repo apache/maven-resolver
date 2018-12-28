@@ -37,7 +37,7 @@ public final class ChainedWorkspaceReader
     implements WorkspaceReader
 {
 
-    private List<WorkspaceReader> readers = new ArrayList<WorkspaceReader>();
+    private List<WorkspaceReader> readers = new ArrayList<>();
 
     private WorkspaceRepository repository;
 
@@ -106,14 +106,14 @@ public final class ChainedWorkspaceReader
 
     public List<String> findVersions( Artifact artifact )
     {
-        Collection<String> versions = new LinkedHashSet<String>();
+        Collection<String> versions = new LinkedHashSet<>();
 
         for ( WorkspaceReader reader : readers )
         {
             versions.addAll( reader.findVersions( artifact ) );
         }
 
-        return Collections.unmodifiableList( new ArrayList<String>( versions ) );
+        return Collections.unmodifiableList( new ArrayList<>( versions ) );
     }
 
     public WorkspaceRepository getRepository()
@@ -129,7 +129,7 @@ public final class ChainedWorkspaceReader
     private static class Key
     {
 
-        private final List<Object> keys = new ArrayList<Object>();
+        private final List<Object> keys = new ArrayList<>();
 
         Key( List<WorkspaceReader> readers )
         {

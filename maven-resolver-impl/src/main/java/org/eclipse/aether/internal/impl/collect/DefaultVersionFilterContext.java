@@ -91,7 +91,7 @@ final class DefaultVersionFilterContext
             }
             return Collections.singletonList( iterator().next() );
         }
-        List<Version> versions = new ArrayList<Version>( count );
+        List<Version> versions = new ArrayList<>( count );
         for ( Version version : this )
         {
             versions.add( version );

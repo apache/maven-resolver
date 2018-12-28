@@ -41,7 +41,7 @@ public class ConsoleDependencyGraphDumper
 
     private PrintStream out;
 
-    private List<ChildInfo> childInfos = new ArrayList<ChildInfo>();
+    private List<ChildInfo> childInfos = new ArrayList<>();
 
     public ConsoleDependencyGraphDumper()
     {

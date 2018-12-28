@@ -105,7 +105,7 @@ public class DefaultUpdateCheckManagerTest
 
     private UpdateCheck<Metadata, MetadataTransferException> newMetadataCheck()
     {
-        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<Metadata, MetadataTransferException>();
+        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
         check.setItem( metadata );
         check.setFile( metadata.getFile() );
         check.setRepository( repository );
@@ -116,7 +116,7 @@ public class DefaultUpdateCheckManagerTest
 
     private UpdateCheck<Artifact, ArtifactTransferException> newArtifactCheck()
     {
-        UpdateCheck<Artifact, ArtifactTransferException> check = new UpdateCheck<Artifact, ArtifactTransferException>();
+        UpdateCheck<Artifact, ArtifactTransferException> check = new UpdateCheck<>();
         check.setItem( artifact );
         check.setFile( artifact.getFile() );
         check.setRepository( repository );

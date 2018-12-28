@@ -236,7 +236,7 @@ public final class GetTask
         {
             if ( checksums.isEmpty() )
             {
-                checksums = new HashMap<String, String>();
+                checksums = new HashMap<>();
             }
             if ( value != null && value.length() > 0 )
             {

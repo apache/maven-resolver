@@ -35,7 +35,7 @@ public final class OrDependencyFilter
     implements DependencyFilter
 {
 
-    private final Set<DependencyFilter> filters = new LinkedHashSet<DependencyFilter>();
+    private final Set<DependencyFilter> filters = new LinkedHashSet<>();
 
     /**
      * Creates a new filter from the specified filters.

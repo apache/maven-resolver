@@ -91,7 +91,7 @@ public final class DefaultArtifactType
         }
         this.extension = emptify( extension );
         this.classifier = emptify( classifier );
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put( ArtifactProperties.TYPE, id );
         props.put( ArtifactProperties.LANGUAGE, ( language != null && language.length() > 0 ) ? language : "none" );
         props.put( ArtifactProperties.INCLUDES_DEPENDENCIES, Boolean.toString( includesDependencies ) );

@@ -70,7 +70,7 @@ public final class DefaultDependencyNode
     {
         this.dependency = dependency;
         artifact = ( dependency != null ) ? dependency.getArtifact() : null;
-        children = new ArrayList<DependencyNode>( 0 );
+        children = new ArrayList<>( 0 );
         aliases = relocations = Collections.emptyList();
         repositories = Collections.emptyList();
         context = "";
@@ -87,7 +87,7 @@ public final class DefaultDependencyNode
     public DefaultDependencyNode( Artifact artifact )
     {
         this.artifact = artifact;
-        children = new ArrayList<DependencyNode>( 0 );
+        children = new ArrayList<>( 0 );
         aliases = relocations = Collections.emptyList();
         repositories = Collections.emptyList();
         context = "";
@@ -104,7 +104,7 @@ public final class DefaultDependencyNode
     {
         dependency = node.getDependency();
         artifact = node.getArtifact();
-        children = new ArrayList<DependencyNode>( 0 );
+        children = new ArrayList<>( 0 );
         setAliases( node.getAliases() );
         setRequestContext( node.getRequestContext() );
         setManagedBits( node.getManagedBits() );
@@ -113,7 +113,7 @@ public final class DefaultDependencyNode
         setVersion( node.getVersion() );
         setVersionConstraint( node.getVersionConstraint() );
         Map<?, ?> data = node.getData();
-        setData( data.isEmpty() ? null : new HashMap<Object, Object>( data ) );
+        setData( data.isEmpty() ? null : new HashMap<>( data ) );
     }
 
     public List<DependencyNode> getChildren()
@@ -125,7 +125,7 @@ public final class DefaultDependencyNode
     {
         if ( children == null )
         {
-            this.children = new ArrayList<DependencyNode>( 0 );
+            this.children = new ArrayList<>( 0 );
         }
         else
         {
@@ -330,7 +330,7 @@ public final class DefaultDependencyNode
         {
             if ( data.isEmpty() )
             {
-                data = new HashMap<Object, Object>( 1, 2 ); // nodes can be numerous so let's be space conservative
+                data = new HashMap<>( 1, 2 ); // nodes can be numerous so let's be space conservative
             }
             data.put( key, value );
         }

@@ -172,7 +172,7 @@ public final class ArtifactRequest
         {
             if ( this.repositories.isEmpty() )
             {
-                this.repositories = new ArrayList<RemoteRepository>();
+                this.repositories = new ArrayList<>();
             }
             this.repositories.add( repository );
         }

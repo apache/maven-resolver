@@ -137,7 +137,7 @@ public class DefaultRemoteRepositoryManager
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
 
-        List<RemoteRepository> result = new ArrayList<RemoteRepository>( dominantRepositories );
+        List<RemoteRepository> result = new ArrayList<>( dominantRepositories );
 
         next: for ( RemoteRepository recessiveRepository : recessiveRepositories )
         {

@@ -128,7 +128,7 @@ public class DefaultArtifactResolverTest
         throws IOException, ArtifactResolutionException
     {
         File tmpFile = TestFileUtils.createTempFile( "tmp" );
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
         artifact = artifact.setProperties( properties );
 
@@ -149,7 +149,7 @@ public class DefaultArtifactResolverTest
         throws IOException, ArtifactResolutionException
     {
         File tmpFile = TestFileUtils.createTempFile( "tmp" );
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
         artifact = artifact.setProperties( properties );
 
@@ -422,7 +422,7 @@ public class DefaultArtifactResolverTest
         session.setRepositoryListener( listener );
 
         File tmpFile = TestFileUtils.createTempFile( "tmp" );
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
         artifact = artifact.setProperties( properties );
 
@@ -449,7 +449,7 @@ public class DefaultArtifactResolverTest
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener( listener );
 
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, "doesnotexist" );
         artifact = artifact.setProperties( properties );
 

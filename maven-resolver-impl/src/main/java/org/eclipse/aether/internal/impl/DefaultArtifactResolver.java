@@ -210,7 +210,7 @@ public class DefaultArtifactResolver
 
         try
         {
-            Collection<Artifact> artifacts = new ArrayList<Artifact>( requests.size() );
+            Collection<Artifact> artifacts = new ArrayList<>( requests.size() );
             for ( ArtifactRequest request : requests )
             {
                 if ( request.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) != null )
@@ -234,13 +234,13 @@ public class DefaultArtifactResolver
                                           Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
     {
-        List<ArtifactResult> results = new ArrayList<ArtifactResult>( requests.size() );
+        List<ArtifactResult> results = new ArrayList<>( requests.size() );
         boolean failures = false;
 
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         WorkspaceReader workspace = session.getWorkspaceReader();
 
-        List<ResolutionGroup> groups = new ArrayList<ResolutionGroup>();
+        List<ResolutionGroup> groups = new ArrayList<>();
 
         for ( ArtifactRequest request : requests )
         {
@@ -517,7 +517,7 @@ public class DefaultArtifactResolver
     private List<ArtifactDownload> gatherDownloads( RepositorySystemSession session, ResolutionGroup group )
     {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-        List<ArtifactDownload> downloads = new ArrayList<ArtifactDownload>();
+        List<ArtifactDownload> downloads = new ArrayList<>();
 
         for ( ResolutionItem item : group.items )
         {
@@ -553,8 +553,7 @@ public class DefaultArtifactResolver
             int errorPolicy = Utils.getPolicy( session, artifact, group.repository );
             if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_ALL ) != 0 )
             {
-                UpdateCheck<Artifact, ArtifactTransferException> check =
-                    new UpdateCheck<Artifact, ArtifactTransferException>();
+                UpdateCheck<Artifact, ArtifactTransferException> check = new UpdateCheck<>();
                 check.setItem( artifact );
                 check.setFile( download.getFile() );
                 check.setFileValid( false );
@@ -689,7 +688,7 @@ public class DefaultArtifactResolver
 
         final RemoteRepository repository;
 
-        final List<ResolutionItem> items = new ArrayList<ResolutionItem>();
+        final List<ResolutionItem> items = new ArrayList<>();
 
         ResolutionGroup( RemoteRepository repository )
         {

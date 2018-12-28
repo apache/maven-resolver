@@ -41,7 +41,7 @@ public class PatternInclusionsDependencyFilterTest
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId( "testArtifact" );
         DependencyNode node = builder.build();
-        List<DependencyNode> parents = new LinkedList<DependencyNode>();
+        List<DependencyNode> parents = new LinkedList<>();
 
         // Empty String, Empty List
         assertTrue( accept( node, "" ) );

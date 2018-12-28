@@ -145,7 +145,7 @@ public final class ConflictResolver
             throw new RepositoryException( "conflict groups have not been identified" );
         }
 
-        Map<Object, Collection<Object>> cyclicPredecessors = new HashMap<Object, Collection<Object>>();
+        Map<Object, Collection<Object>> cyclicPredecessors = new HashMap<>();
         for ( Collection<?> cycle : conflictIdCycles )
         {
             for ( Object conflictId : cycle )
@@ -153,7 +153,7 @@ public final class ConflictResolver
                 Collection<Object> predecessors = cyclicPredecessors.get( conflictId );
                 if ( predecessors == null )
                 {
-                    predecessors = new HashSet<Object>();
+                    predecessors = new HashSet<>();
                     cyclicPredecessors.put( conflictId, predecessors );
                 }
                 predecessors.addAll( cycle );
@@ -362,7 +362,7 @@ public final class ConflictResolver
             }
             else
             {
-                Collection<String> scopes = new HashSet<String>();
+                Collection<String> scopes = new HashSet<>();
                 scopes.add( (String) derivedScopes );
                 scopes.add( derivedScope );
                 derivedScopes = scopes;
@@ -381,7 +381,7 @@ public final class ConflictResolver
         {
             if ( children == null )
             {
-                children = new ArrayList<ConflictItem>( 1 );
+                children = new ArrayList<>( 1 );
             }
             children.add( item );
         }
@@ -500,15 +500,15 @@ public final class ConflictResolver
         {
             this.conflictIds = conflictIds;
             verbose = ConfigUtils.getBoolean( context.getSession(), false, CONFIG_PROP_VERBOSE );
-            potentialAncestorIds = new HashSet<Object>( conflictIdCount * 2 );
-            resolvedIds = new HashMap<Object, DependencyNode>( conflictIdCount * 2 );
-            items = new ArrayList<ConflictItem>( 256 );
-            infos = new IdentityHashMap<List<DependencyNode>, NodeInfo>( 64 );
-            stack = new IdentityHashMap<List<DependencyNode>, Object>( 64 );
-            parentNodes = new ArrayList<DependencyNode>( 64 );
-            parentScopes = new ArrayList<String>( 64 );
-            parentOptionals = new ArrayList<Boolean>( 64 );
-            parentInfos = new ArrayList<NodeInfo>( 64 );
+            potentialAncestorIds = new HashSet<>( conflictIdCount * 2 );
+            resolvedIds = new HashMap<>( conflictIdCount * 2 );
+            items = new ArrayList<>( 256 );
+            infos = new IdentityHashMap<>( 64 );
+            stack = new IdentityHashMap<>( 64 );
+            parentNodes = new ArrayList<>( 64 );
+            parentScopes = new ArrayList<>( 64 );
+            parentOptionals = new ArrayList<>( 64 );
+            parentInfos = new ArrayList<>( 64 );
             conflictCtx = new ConflictContext( root, conflictIds, items );
             scopeCtx = new ScopeContext( null, null );
             versionSelector = ConflictResolver.this.versionSelector.getInstance( root, context );
@@ -952,7 +952,7 @@ public final class ConflictResolver
             }
             else if ( !scopes.equals( scope ) )
             {
-                Collection<Object> set = new HashSet<Object>();
+                Collection<Object> set = new HashSet<>();
                 set.add( scopes );
                 set.add( scope );
                 scopes = set;

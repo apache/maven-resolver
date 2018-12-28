@@ -116,7 +116,7 @@ public final class ArtifactResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }

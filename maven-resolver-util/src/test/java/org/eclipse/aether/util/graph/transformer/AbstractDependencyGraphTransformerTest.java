@@ -75,7 +75,7 @@ public abstract class AbstractDependencyGraphTransformerTest
 
     protected List<DependencyNode> find( DependencyNode node, String id )
     {
-        LinkedList<DependencyNode> trail = new LinkedList<DependencyNode>();
+        LinkedList<DependencyNode> trail = new LinkedList<>();
         find( trail, node, id );
         return trail;
     }

@@ -47,7 +47,7 @@ public class ChecksumCalculatorTest
 
     private ChecksumCalculator newCalculator( String... algos )
     {
-        List<RepositoryLayout.Checksum> checksums = new ArrayList<RepositoryLayout.Checksum>();
+        List<RepositoryLayout.Checksum> checksums = new ArrayList<>();
         for ( String algo : algos )
         {
             checksums.add( new RepositoryLayout.Checksum( algo, URI.create( "irrelevant" ) ) );

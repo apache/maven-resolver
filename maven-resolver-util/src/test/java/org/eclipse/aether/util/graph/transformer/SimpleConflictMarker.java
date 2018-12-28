@@ -45,7 +45,7 @@ class SimpleConflictMarker
             (Map<DependencyNode, Object>) context.get( TransformationContextKeys.CONFLICT_IDS );
         if ( conflictIds == null )
         {
-            conflictIds = new IdentityHashMap<DependencyNode, Object>();
+            conflictIds = new IdentityHashMap<>();
             context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
         }
 

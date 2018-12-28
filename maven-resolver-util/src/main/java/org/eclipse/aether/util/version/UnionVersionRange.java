@@ -68,7 +68,7 @@ final class UnionVersionRange
         }
         else
         {
-            this.ranges = new HashSet<VersionRange>( ranges );
+            this.ranges = new HashSet<>( ranges );
             Bound lowerBound = null, upperBound = null;
             for ( VersionRange range : this.ranges )
             {

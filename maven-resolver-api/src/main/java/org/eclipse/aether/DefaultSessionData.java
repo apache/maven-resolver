@@ -35,7 +35,7 @@ public final class DefaultSessionData
 
     public DefaultSessionData()
     {
-        data = new ConcurrentHashMap<Object, Object>();
+        data = new ConcurrentHashMap<>();
     }
 
     public void set( Object key, Object value )

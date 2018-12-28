@@ -92,7 +92,7 @@ public final class DefaultServiceLocator
         Entry( Class<T> type )
         {
             this.type = requireNonNull( type, "service type cannot be null" );
-            providers = new LinkedHashSet<Object>( 8 );
+            providers = new LinkedHashSet<>( 8 );
         }
 
         public synchronized void setServices( T... services )
@@ -130,7 +130,7 @@ public final class DefaultServiceLocator
         {
             if ( instances == null )
             {
-                instances = new ArrayList<T>( providers.size() );
+                instances = new ArrayList<>( providers.size() );
                 for ( Object provider : providers )
                 {
                     T instance;
@@ -192,7 +192,7 @@ public final class DefaultServiceLocator
      */
     public DefaultServiceLocator()
     {
-        entries = new HashMap<Class<?>, Entry<?>>();
+        entries = new HashMap<>();
 
         addService( RepositorySystem.class, DefaultRepositorySystem.class );
         addService( ArtifactResolver.class, DefaultArtifactResolver.class );
@@ -224,7 +224,7 @@ public final class DefaultServiceLocator
         Entry<T> entry = (Entry<T>) entries.get( requireNonNull( type, "service type cannot be null" ) );
         if ( entry == null && create )
         {
-            entry = new Entry<T>( type );
+            entry = new Entry<>( type );
             entries.put( type, entry );
         }
         return entry;

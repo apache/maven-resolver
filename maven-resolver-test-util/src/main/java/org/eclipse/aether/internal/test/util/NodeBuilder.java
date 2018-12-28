@@ -58,11 +58,11 @@ public class NodeBuilder
 
     private String context;
 
-    private List<Artifact> relocations = new ArrayList<Artifact>();
+    private List<Artifact> relocations = new ArrayList<>();
 
     private VersionScheme versionScheme = new TestVersionScheme();
 
-    private Map<String, String> properties = new HashMap<String, String>( 0 );
+    private Map<String, String> properties = new HashMap<>( 0 );
 
     public NodeBuilder artifactId( String artifactId )
     {

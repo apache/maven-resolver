@@ -95,7 +95,7 @@ public final class VersionRangeResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }
@@ -122,7 +122,7 @@ public final class VersionRangeResult
     {
         if ( versions.isEmpty() )
         {
-            versions = new ArrayList<Version>();
+            versions = new ArrayList<>();
         }
         versions.add( version );
         return this;
@@ -199,7 +199,7 @@ public final class VersionRangeResult
         {
             if ( repositories.isEmpty() )
             {
-                repositories = new HashMap<Version, ArtifactRepository>();
+                repositories = new HashMap<>();
             }
             repositories.put( version, repository );
         }

@@ -35,7 +35,7 @@ public final class ExclusionsDependencyFilter
     implements DependencyFilter
 {
 
-    private final Set<String> excludes = new HashSet<String>();
+    private final Set<String> excludes = new HashSet<>();
 
     /**
      * Creates a new filter using the specified exclude patterns. A pattern can either be of the form

@@ -39,9 +39,9 @@ public final class ScopeDependencyFilter
     implements DependencyFilter
 {
 
-    private final Set<String> included = new HashSet<String>();
+    private final Set<String> included = new HashSet<>();
 
-    private final Set<String> excluded = new HashSet<String>();
+    private final Set<String> excluded = new HashSet<>();
 
     /**
      * Creates a new filter using the specified includes and excludes.

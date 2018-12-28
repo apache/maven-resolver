@@ -29,10 +29,10 @@ public class PrioritizedComponentTest
     @Test
     public void testIsDisabled()
     {
-        assertTrue( new PrioritizedComponent<String>( "", String.class, Float.NaN, 0 ).isDisabled() );
-        assertFalse( new PrioritizedComponent<String>( "", String.class, 0, 0 ).isDisabled() );
-        assertFalse( new PrioritizedComponent<String>( "", String.class, 1, 0 ).isDisabled() );
-        assertFalse( new PrioritizedComponent<String>( "", String.class, -1, 0 ).isDisabled() );
+        assertTrue(new PrioritizedComponent<>( "", String.class, Float.NaN, 0 ).isDisabled() );
+        assertFalse(new PrioritizedComponent<>( "", String.class, 0, 0 ).isDisabled() );
+        assertFalse(new PrioritizedComponent<>( "", String.class, 1, 0 ).isDisabled() );
+        assertFalse(new PrioritizedComponent<>( "", String.class, -1, 0 ).isDisabled() );
     }
 
     @Test
@@ -56,16 +56,16 @@ public class PrioritizedComponentTest
 
     private void assertCompare( int expected, float priority1, float priority2 )
     {
-        PrioritizedComponent<?> one = new PrioritizedComponent<String>( "", String.class, priority1, 0 );
-        PrioritizedComponent<?> two = new PrioritizedComponent<String>( "", String.class, priority2, 0 );
+        PrioritizedComponent<?> one = new PrioritizedComponent<>( "", String.class, priority1, 0 );
+        PrioritizedComponent<?> two = new PrioritizedComponent<>( "", String.class, priority2, 0 );
         assertEquals( expected, one.compareTo( two ) );
         assertEquals( -expected, two.compareTo( one ) );
     }
 
     private void assertCompare( int expected, float priority, int index1, int index2 )
     {
-        PrioritizedComponent<?> one = new PrioritizedComponent<String>( "", String.class, priority, index1 );
-        PrioritizedComponent<?> two = new PrioritizedComponent<String>( "", String.class, priority, index2 );
+        PrioritizedComponent<?> one = new PrioritizedComponent<>( "", String.class, priority, index1 );
+        PrioritizedComponent<?> two = new PrioritizedComponent<>( "", String.class, priority, index2 );
         assertEquals( expected, one.compareTo( two ) );
         assertEquals( -expected, two.compareTo( one ) );
     }

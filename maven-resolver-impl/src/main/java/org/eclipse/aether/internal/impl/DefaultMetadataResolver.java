@@ -167,7 +167,7 @@ public class DefaultMetadataResolver
 
         try
         {
-            Collection<Metadata> metadata = new ArrayList<Metadata>( requests.size() );
+            Collection<Metadata> metadata = new ArrayList<>( requests.size() );
             for ( MetadataRequest request : requests )
             {
                 metadata.add( request.getMetadata() );
@@ -186,11 +186,11 @@ public class DefaultMetadataResolver
     private List<MetadataResult> resolve( RepositorySystemSession session,
                                           Collection<? extends MetadataRequest> requests )
     {
-        List<MetadataResult> results = new ArrayList<MetadataResult>( requests.size() );
+        List<MetadataResult> results = new ArrayList<>( requests.size() );
 
-        List<ResolveTask> tasks = new ArrayList<ResolveTask>( requests.size() );
+        List<ResolveTask> tasks = new ArrayList<>( requests.size() );
 
-        Map<File, Long> localLastUpdates = new HashMap<File, Long>();
+        Map<File, Long> localLastUpdates = new HashMap<>();
 
         for ( MetadataRequest request : requests )
         {
@@ -275,13 +275,11 @@ public class DefaultMetadataResolver
                 }
             }
 
-            List<UpdateCheck<Metadata, MetadataTransferException>> checks =
-                new ArrayList<UpdateCheck<Metadata, MetadataTransferException>>();
+            List<UpdateCheck<Metadata, MetadataTransferException>> checks = new ArrayList<>();
             Exception exception = null;
             for ( RemoteRepository repo : repositories )
             {
-                UpdateCheck<Metadata, MetadataTransferException> check =
-                    new UpdateCheck<Metadata, MetadataTransferException>();
+                UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
                 check.setLocalLastUpdated( ( localLastUpdate != null ) ? localLastUpdate : 0 );
                 check.setItem( metadata );
 
@@ -400,7 +398,7 @@ public class DefaultMetadataResolver
 
     private List<RemoteRepository> getEnabledSourceRepositories( RemoteRepository repository, Metadata.Nature nature )
     {
-        List<RemoteRepository> repositories = new ArrayList<RemoteRepository>();
+        List<RemoteRepository> repositories = new ArrayList<>();
 
         if ( repository.isRepositoryManager() )
         {
@@ -558,7 +556,7 @@ public class DefaultMetadataResolver
 
             try
             {
-                List<RemoteRepository> repositories = new ArrayList<RemoteRepository>();
+                List<RemoteRepository> repositories = new ArrayList<>();
                 for ( UpdateCheck<Metadata, MetadataTransferException> check : checks )
                 {
                     repositories.add( check.getAuthoritativeRepository() );

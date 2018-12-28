@@ -148,7 +148,7 @@ public final class DependencyFilterUtils
      */
     public static DependencyFilter classpathFilter( Collection<String> classpathTypes )
     {
-        Collection<String> types = new HashSet<String>();
+        Collection<String> types = new HashSet<>();
 
         if ( classpathTypes != null )
         {
@@ -166,7 +166,7 @@ public final class DependencyFilterUtils
             }
         }
 
-        Collection<String> included = new HashSet<String>();
+        Collection<String> included = new HashSet<>();
         for ( String type : types )
         {
             if ( JavaScopes.COMPILE.equals( type ) )
@@ -188,7 +188,7 @@ public final class DependencyFilterUtils
             }
         }
 
-        Collection<String> excluded = new HashSet<String>();
+        Collection<String> excluded = new HashSet<>();
         Collections.addAll( excluded, JavaScopes.COMPILE, JavaScopes.PROVIDED, JavaScopes.SYSTEM, JavaScopes.RUNTIME,
                             JavaScopes.TEST );
         excluded.removeAll( included );

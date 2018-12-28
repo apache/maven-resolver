@@ -276,7 +276,7 @@ public final class Dependency
         {
             if ( exclusions.size() > 1 && !( exclusions instanceof Set ) )
             {
-                exclusions = new LinkedHashSet<Exclusion>( exclusions );
+                exclusions = new LinkedHashSet<>( exclusions );
             }
             this.exclusions = exclusions.toArray( new Exclusion[exclusions.size()] );
         }

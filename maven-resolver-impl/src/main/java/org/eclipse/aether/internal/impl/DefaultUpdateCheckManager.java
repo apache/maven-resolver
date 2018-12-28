@@ -372,7 +372,7 @@ public class DefaultUpdateCheckManager
         Set<String> mirroredUrls = Collections.emptySet();
         if ( repository.isRepositoryManager() )
         {
-            mirroredUrls = new TreeSet<String>();
+            mirroredUrls = new TreeSet<>();
             for ( RemoteRepository mirroredRepository : repository.getMirroredRepositories() )
             {
                 mirroredUrls.add( normalizeRepoUrl( mirroredRepository.getUrl() ) );
@@ -489,7 +489,7 @@ public class DefaultUpdateCheckManager
         while ( !( checkedFiles instanceof Map ) )
         {
             Object old = checkedFiles;
-            checkedFiles = new ConcurrentHashMap<Object, Object>( 256 );
+            checkedFiles = new ConcurrentHashMap<>( 256 );
             if ( data.set( SESSION_CHECKS, old, checkedFiles ) )
             {
                 break;
@@ -557,7 +557,7 @@ public class DefaultUpdateCheckManager
 
     private Properties write( File touchFile, String dataKey, String transferKey, Exception error )
     {
-        Map<String, String> updates = new HashMap<String, String>();
+        Map<String, String> updates = new HashMap<>();
 
         String timestamp = Long.toString( System.currentTimeMillis() );
 

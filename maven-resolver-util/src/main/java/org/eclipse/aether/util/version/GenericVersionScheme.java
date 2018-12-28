@@ -79,7 +79,7 @@ public final class GenericVersionScheme
     public VersionConstraint parseVersionConstraint( final String constraint )
         throws InvalidVersionSpecificationException
     {
-        Collection<VersionRange> ranges = new ArrayList<VersionRange>();
+        Collection<VersionRange> ranges = new ArrayList<>();
 
         String process = constraint;
 

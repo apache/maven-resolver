@@ -69,11 +69,11 @@ public final class ScopeDependencySelector
         }
         else
         {
-            copy = new HashSet<String>( scopes );
+            copy = new HashSet<>( scopes );
             if ( copy.size() <= 2 )
             {
                 // contains() is faster for smallish array (sorted for equals()!)
-                copy = new ArrayList<String>( new TreeSet<String>( copy ) );
+                copy = new ArrayList<>( new TreeSet<>( copy ) );
             }
         }
         return copy;

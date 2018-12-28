@@ -53,7 +53,7 @@ public class ConflictIdSorterTest
 
     private void expectOrder( List<String> sorted, String... ids )
     {
-        Queue<String> queue = new LinkedList<String>( sorted );
+        Queue<String> queue = new LinkedList<>( sorted );
 
         for ( String id : ids )
         {

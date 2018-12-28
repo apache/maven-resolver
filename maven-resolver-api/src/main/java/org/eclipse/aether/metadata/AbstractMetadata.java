@@ -74,7 +74,7 @@ public abstract class AbstractMetadata
     {
         if ( properties != null && !properties.isEmpty() )
         {
-            return Collections.unmodifiableMap( new HashMap<String, String>( properties ) );
+            return Collections.unmodifiableMap( new HashMap<>( properties ) );
         }
         else
         {

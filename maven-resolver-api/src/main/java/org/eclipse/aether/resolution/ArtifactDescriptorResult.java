@@ -129,7 +129,7 @@ public final class ArtifactDescriptorResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }
@@ -178,7 +178,7 @@ public final class ArtifactDescriptorResult
         {
             if ( relocations.isEmpty() )
             {
-                relocations = new ArrayList<Artifact>();
+                relocations = new ArrayList<>();
             }
             relocations.add( artifact );
         }
@@ -228,7 +228,7 @@ public final class ArtifactDescriptorResult
         {
             if ( aliases.isEmpty() )
             {
-                aliases = new ArrayList<Artifact>();
+                aliases = new ArrayList<>();
             }
             aliases.add( alias );
         }
@@ -321,7 +321,7 @@ public final class ArtifactDescriptorResult
         {
             if ( dependencies.isEmpty() )
             {
-                dependencies = new ArrayList<Dependency>();
+                dependencies = new ArrayList<>();
             }
             dependencies.add( dependency );
         }
@@ -369,7 +369,7 @@ public final class ArtifactDescriptorResult
         {
             if ( managedDependencies.isEmpty() )
             {
-                managedDependencies = new ArrayList<Dependency>();
+                managedDependencies = new ArrayList<>();
             }
             managedDependencies.add( dependency );
         }
@@ -417,7 +417,7 @@ public final class ArtifactDescriptorResult
         {
             if ( repositories.isEmpty() )
             {
-                repositories = new ArrayList<RemoteRepository>();
+                repositories = new ArrayList<>();
             }
             repositories.add( repository );
         }

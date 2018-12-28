@@ -79,7 +79,7 @@ public class TestFileUtils
             return;
         }
 
-        Collection<File> undeletables = new ArrayList<File>();
+        Collection<File> undeletables = new ArrayList<>();
 
         delete( file, undeletables );
 

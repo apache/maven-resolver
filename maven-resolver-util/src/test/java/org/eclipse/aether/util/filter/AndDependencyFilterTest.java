@@ -39,7 +39,7 @@ public class AndDependencyFilterTest
     {
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId( "test" );
-        List<DependencyNode> parents = new LinkedList<DependencyNode>();
+        List<DependencyNode> parents = new LinkedList<>();
 
         // Empty AND
         assertTrue( new AndDependencyFilter().accept( builder.build(), parents ) );
@@ -63,17 +63,17 @@ public class AndDependencyFilterTest
                                                                                                                parents ) );
 
         // User another constructor
-        Collection<DependencyFilter> filters = new LinkedList<DependencyFilter>();
+        Collection<DependencyFilter> filters = new LinkedList<>();
         filters.add( getDenyFilter() );
         filters.add( getAcceptFilter() );
         assertFalse( new AndDependencyFilter( filters ).accept( builder.build(), parents ) );
 
-        filters = new LinkedList<DependencyFilter>();
+        filters = new LinkedList<>();
         filters.add( getDenyFilter() );
         filters.add( getDenyFilter() );
         assertFalse( new AndDependencyFilter( filters ).accept( builder.build(), parents ) );
 
-        filters = new LinkedList<DependencyFilter>();
+        filters = new LinkedList<>();
         filters.add( getAcceptFilter() );
         filters.add( getAcceptFilter() );
         assertTrue( new AndDependencyFilter( filters ).accept( builder.build(), parents ) );

@@ -261,7 +261,7 @@ public class HttpServer
             LOGGER.info( "{} {}{}", req.getMethod(), req.getRequestURL(),
                     req.getQueryString() != null ? "?" + req.getQueryString() : "");
 
-            Map<String, String> headers = new TreeMap<String, String>( String.CASE_INSENSITIVE_ORDER );
+            Map<String, String> headers = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
             for ( Enumeration<String> en = req.getHeaderNames(); en.hasMoreElements(); )
             {
                 String name = en.nextElement();

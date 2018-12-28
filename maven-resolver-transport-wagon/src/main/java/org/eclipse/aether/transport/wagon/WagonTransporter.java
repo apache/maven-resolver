@@ -96,7 +96,7 @@ final class WagonTransporter
 
     private final Properties headers;
 
-    private final Queue<Wagon> wagons = new ConcurrentLinkedQueue<Wagon>();
+    private final Queue<Wagon> wagons = new ConcurrentLinkedQueue<>();
 
     private final AtomicBoolean closed = new AtomicBoolean();
 

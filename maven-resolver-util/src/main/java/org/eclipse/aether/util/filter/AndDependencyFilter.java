@@ -36,7 +36,7 @@ public final class AndDependencyFilter
     implements DependencyFilter
 {
 
-    private final Set<DependencyFilter> filters = new LinkedHashSet<DependencyFilter>();
+    private final Set<DependencyFilter> filters = new LinkedHashSet<>();
 
     /**
      * Creates a new filter from the specified filters. Prefer {@link #newInstance(DependencyFilter, DependencyFilter)}

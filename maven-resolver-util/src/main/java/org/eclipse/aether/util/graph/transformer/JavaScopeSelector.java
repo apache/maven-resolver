@@ -59,7 +59,7 @@ public final class JavaScopeSelector
 
     private String chooseEffectiveScope( Collection<ConflictItem> items )
     {
-        Set<String> scopes = new HashSet<String>();
+        Set<String> scopes = new HashSet<>();
         for ( ConflictItem item : items )
         {
             if ( item.getDepth() <= 1 )

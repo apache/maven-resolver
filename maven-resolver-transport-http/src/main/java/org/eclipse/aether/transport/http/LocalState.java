@@ -63,7 +63,7 @@ final class LocalState
             connMgr = GlobalState.newConnectionManager( sslConfig );
             userTokenKey = null;
             expectContinueKey = null;
-            authSchemePools = new ConcurrentHashMap<HttpHost, AuthSchemePool>();
+            authSchemePools = new ConcurrentHashMap<>();
         }
         else
         {

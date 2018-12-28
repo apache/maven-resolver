@@ -50,8 +50,8 @@ abstract class AbstractDepthFirstNodeListGenerator
 
     AbstractDepthFirstNodeListGenerator()
     {
-        nodes = new ArrayList<DependencyNode>( 128 );
-        visitedNodes = new IdentityHashMap<DependencyNode, Object>( 512 );
+        nodes = new ArrayList<>( 128 );
+        visitedNodes = new IdentityHashMap<>( 512 );
     }
 
     /**
@@ -72,7 +72,7 @@ abstract class AbstractDepthFirstNodeListGenerator
      */
     public List<Dependency> getDependencies( boolean includeUnresolved )
     {
-        List<Dependency> dependencies = new ArrayList<Dependency>( getNodes().size() );
+        List<Dependency> dependencies = new ArrayList<>( getNodes().size() );
 
         for ( DependencyNode node : getNodes() )
         {
@@ -97,7 +97,7 @@ abstract class AbstractDepthFirstNodeListGenerator
      */
     public List<Artifact> getArtifacts( boolean includeUnresolved )
     {
-        List<Artifact> artifacts = new ArrayList<Artifact>( getNodes().size() );
+        List<Artifact> artifacts = new ArrayList<>( getNodes().size() );
 
         for ( DependencyNode node : getNodes() )
         {
@@ -121,7 +121,7 @@ abstract class AbstractDepthFirstNodeListGenerator
      */
     public List<File> getFiles()
     {
-        List<File> files = new ArrayList<File>( getNodes().size() );
+        List<File> files = new ArrayList<>( getNodes().size() );
 
         for ( DependencyNode node : getNodes() )
         {

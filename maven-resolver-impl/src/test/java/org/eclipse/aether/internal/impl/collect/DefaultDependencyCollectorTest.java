@@ -387,7 +387,7 @@ public class DefaultDependencyCollectorTest
     {
         RemoteRepository repo2 = new RemoteRepository.Builder( "test", "default", "file:///" ).build();
 
-        final List<RemoteRepository> repos = new ArrayList<RemoteRepository>();
+        final List<RemoteRepository> repos = new ArrayList<>();
 
         collector.setArtifactDescriptorReader( new ArtifactDescriptorReader()
         {
@@ -539,15 +539,15 @@ public class DefaultDependencyCollectorTest
         implements DependencyManager
     {
 
-        private Map<String, String> versions = new HashMap<String, String>();
+        private Map<String, String> versions = new HashMap<>();
 
-        private Map<String, String> scopes = new HashMap<String, String>();
+        private Map<String, String> scopes = new HashMap<>();
 
-        private Map<String, Boolean> optionals = new HashMap<String, Boolean>();
+        private Map<String, Boolean> optionals = new HashMap<>();
 
-        private Map<String, String> paths = new HashMap<String, String>();
+        private Map<String, String> paths = new HashMap<>();
 
-        private Map<String, Collection<Exclusion>> exclusions = new HashMap<String, Collection<Exclusion>>();
+        private Map<String, Collection<Exclusion>> exclusions = new HashMap<>();
 
         public void add( Dependency d, String version, String scope, String localPath )
         {

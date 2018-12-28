@@ -44,7 +44,7 @@ public class DefaultRepositoryEventDispatcher
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryEventDispatcher.class );
 
-    private Collection<RepositoryListener> listeners = new ArrayList<RepositoryListener>();
+    private Collection<RepositoryListener> listeners = new ArrayList<>();
 
     public DefaultRepositoryEventDispatcher()
     {
@@ -67,7 +67,7 @@ public class DefaultRepositoryEventDispatcher
     {
         if ( listeners == null )
         {
-            this.listeners = new ArrayList<RepositoryListener>();
+            this.listeners = new ArrayList<>();
         }
         else
         {

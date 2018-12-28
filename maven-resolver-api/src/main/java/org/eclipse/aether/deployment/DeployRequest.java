@@ -94,7 +94,7 @@ public final class DeployRequest
         {
             if ( artifacts.isEmpty() )
             {
-                artifacts = new ArrayList<Artifact>();
+                artifacts = new ArrayList<>();
             }
             artifacts.add( artifact );
         }
@@ -142,7 +142,7 @@ public final class DeployRequest
         {
             if ( this.metadata.isEmpty() )
             {
-                this.metadata = new ArrayList<Metadata>();
+                this.metadata = new ArrayList<>();
             }
             this.metadata.add( metadata );
         }

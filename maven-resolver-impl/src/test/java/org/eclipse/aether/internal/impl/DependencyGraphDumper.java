@@ -41,7 +41,7 @@ public class DependencyGraphDumper
         Context context = new Context();
         dump( context, node, 0, true );
 
-        LinkedList<Indent> indents = new LinkedList<Indent>();
+        LinkedList<Indent> indents = new LinkedList<>();
         for ( Line line : context.lines )
         {
             if ( line.depth > indents.size() )
@@ -160,8 +160,8 @@ public class DependencyGraphDumper
 
         Context()
         {
-            this.lines = new ArrayList<Line>();
-            this.nodes = new IdentityHashMap<DependencyNode, Line>( 1024 );
+            this.lines = new ArrayList<>();
+            this.nodes = new IdentityHashMap<>( 1024 );
         }
 
     }

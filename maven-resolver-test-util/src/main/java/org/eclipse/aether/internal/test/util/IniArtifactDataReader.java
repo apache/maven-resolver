@@ -112,7 +112,7 @@ class IniArtifactDataReader
 
         State state = State.NONE;
 
-        Map<State, List<String>> sections = new HashMap<State, List<String>>();
+        Map<State, List<String>> sections = new HashMap<>();
 
         BufferedReader in = null;
         try
@@ -182,7 +182,7 @@ class IniArtifactDataReader
 
     private List<RemoteRepository> repositories( List<String> list )
     {
-        ArrayList<RemoteRepository> ret = new ArrayList<RemoteRepository>();
+        ArrayList<RemoteRepository> ret = new ArrayList<>();
         if ( list == null )
         {
             return ret;
@@ -201,13 +201,13 @@ class IniArtifactDataReader
 
     private List<Dependency> dependencies( List<String> list, boolean managed )
     {
-        List<Dependency> ret = new ArrayList<Dependency>();
+        List<Dependency> ret = new ArrayList<>();
         if ( list == null )
         {
             return ret;
         }
 
-        Collection<Exclusion> exclusions = new ArrayList<Exclusion>();
+        Collection<Exclusion> exclusions = new ArrayList<>();
 
         Boolean optional = null;
         Artifact artifact = null;
@@ -229,7 +229,7 @@ class IniArtifactDataReader
                     Dependency dep = new Dependency( artifact, scope, optional, exclusions );
                     ret.add( dep );
 
-                    exclusions = new ArrayList<Exclusion>();
+                    exclusions = new ArrayList<>();
                 }
 
                 ArtifactDefinition def = new ArtifactDefinition( coords );

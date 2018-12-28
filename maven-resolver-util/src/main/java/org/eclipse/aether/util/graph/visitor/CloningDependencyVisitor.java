@@ -47,8 +47,8 @@ public class CloningDependencyVisitor
      */
     public CloningDependencyVisitor()
     {
-        parents = new Stack<DependencyNode>();
-        clones = new IdentityHashMap<DependencyNode, DependencyNode>( 256 );
+        parents = new Stack<>();
+        clones = new IdentityHashMap<>( 256 );
     }
 
     /**

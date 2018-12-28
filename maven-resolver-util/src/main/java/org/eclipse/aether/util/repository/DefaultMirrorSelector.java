@@ -37,7 +37,7 @@ public final class DefaultMirrorSelector
 
     private static final String EXTERNAL_WILDCARD = "external:*";
 
-    private final List<MirrorDef> mirrors = new ArrayList<MirrorDef>();
+    private final List<MirrorDef> mirrors = new ArrayList<>();
 
     /**
      * Adds the specified mirror to this selector.

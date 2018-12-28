@@ -40,7 +40,7 @@ class SimpleArtifactTypeRegistry
      */
     SimpleArtifactTypeRegistry()
     {
-        types = new HashMap<String, ArtifactType>();
+        types = new HashMap<>();
     }
 
     /**

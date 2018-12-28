@@ -111,7 +111,7 @@ class NodeDefinition
         String props = m.group( 5 );
         if ( props != null )
         {
-            properties = new LinkedHashMap<String, String>();
+            properties = new LinkedHashMap<>();
             for ( String prop : props.split( "\\s*,\\s*" ) )
             {
                 int sep = prop.indexOf( ':' );
@@ -128,7 +128,7 @@ class NodeDefinition
         String relocs = m.group( 9 );
         if ( relocs != null )
         {
-            relocations = new ArrayList<String>();
+            relocations = new ArrayList<>();
             Collections.addAll( relocations, relocs.split( "\\s*,\\s*" ) );
         }
 

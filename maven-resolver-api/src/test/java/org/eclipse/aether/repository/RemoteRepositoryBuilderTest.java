@@ -157,7 +157,7 @@ public class RemoteRepositoryBuilderTest
         Builder builder = new Builder( prototype );
         RemoteRepository repo = builder.setMirroredRepositories( prototype.getMirroredRepositories() ).build();
         assertSame( prototype, repo );
-        List<RemoteRepository> mirrored = new ArrayList<RemoteRepository>( Arrays.asList( repo ) );
+        List<RemoteRepository> mirrored = new ArrayList<>( Arrays.asList( repo ) );
         repo = builder.setMirroredRepositories( mirrored ).build();
         assertEquals( mirrored, repo.getMirroredRepositories() );
     }

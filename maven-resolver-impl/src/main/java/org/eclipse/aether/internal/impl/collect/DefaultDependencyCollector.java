@@ -614,7 +614,7 @@ public class DefaultDependencyCollector
                                                                           ArtifactDescriptorRequest descriptorRequest )
     {
         return noDescriptor
-                ? new FutureResult<ArtifactDescriptorResult>( new ArtifactDescriptorResult( descriptorRequest ) )
+                ? new FutureResult<>( new ArtifactDescriptorResult( descriptorRequest ) )
                 : resolveCachedArtifactDescriptor( args.pool, descriptorRequest, args.session, d, results,
                 args );
     }

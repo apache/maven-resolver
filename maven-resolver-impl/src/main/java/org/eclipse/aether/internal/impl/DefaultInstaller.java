@@ -71,7 +71,7 @@ public class DefaultInstaller
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
 
     private SyncContextFactory syncContextFactory;
 
@@ -120,7 +120,7 @@ public class DefaultInstaller
     {
         if ( metadataFactories == null )
         {
-            this.metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+            this.metadataFactories = new ArrayList<>();
         }
         else
         {
@@ -159,9 +159,9 @@ public class DefaultInstaller
 
         List<? extends MetadataGenerator> generators = getMetadataGenerators( session, request );
 
-        List<Artifact> artifacts = new ArrayList<Artifact>( request.getArtifacts() );
+        List<Artifact> artifacts = new ArrayList<>( request.getArtifacts() );
 
-        IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<Metadata, Object>();
+        IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
 
         List<Metadata> metadatas = Utils.prepareMetadata( generators, artifacts );
 
@@ -218,7 +218,7 @@ public class DefaultInstaller
         PrioritizedComponents<MetadataGeneratorFactory> factories =
             Utils.sortMetadataGeneratorFactories( session, this.metadataFactories );
 
-        List<MetadataGenerator> generators = new ArrayList<MetadataGenerator>();
+        List<MetadataGenerator> generators = new ArrayList<>();
 
         for ( PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled() )
         {

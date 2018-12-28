@@ -87,7 +87,7 @@ public final class VersionResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }

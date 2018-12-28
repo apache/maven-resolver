@@ -41,7 +41,7 @@ public class OrDependencyFilterTest
     {
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId( "test" );
-        List<DependencyNode> parents = new LinkedList<DependencyNode>();
+        List<DependencyNode> parents = new LinkedList<>();
         // Empty OR
         assertFalse( new OrDependencyFilter().accept( builder.build(), parents ) );
 
@@ -64,12 +64,12 @@ public class OrDependencyFilterTest
                                                                                                               parents ) );
 
         // User another constructor
-        Collection<DependencyFilter> filters = new LinkedList<DependencyFilter>();
+        Collection<DependencyFilter> filters = new LinkedList<>();
         filters.add( getDenyFilter() );
         filters.add( getAcceptFilter() );
         assertTrue( new OrDependencyFilter( filters ).accept( builder.build(), parents ) );
 
-        filters = new LinkedList<DependencyFilter>();
+        filters = new LinkedList<>();
         filters.add( getDenyFilter() );
         filters.add( getDenyFilter() );
         assertFalse( new OrDependencyFilter( filters ).accept( builder.build(), parents ) );

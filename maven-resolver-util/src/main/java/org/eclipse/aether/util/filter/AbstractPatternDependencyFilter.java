@@ -40,7 +40,7 @@ class AbstractPatternDependencyFilter
     implements DependencyFilter
 {
 
-    private final Set<String> patterns = new HashSet<String>();
+    private final Set<String> patterns = new HashSet<>();
 
     private final VersionScheme versionScheme;
 

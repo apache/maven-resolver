@@ -52,7 +52,7 @@ public final class AndDependencyTraverser
     {
         if ( traversers != null && traversers.length > 0 )
         {
-            this.traversers = new LinkedHashSet<DependencyTraverser>( Arrays.asList( traversers ) );
+            this.traversers = new LinkedHashSet<>( Arrays.asList( traversers ) );
         }
         else
         {
@@ -69,7 +69,7 @@ public final class AndDependencyTraverser
     {
         if ( traversers != null && !traversers.isEmpty() )
         {
-            this.traversers = new LinkedHashSet<DependencyTraverser>( traversers );
+            this.traversers = new LinkedHashSet<>( traversers );
         }
         else
         {
@@ -138,7 +138,7 @@ public final class AndDependencyTraverser
             }
             else if ( traverser != childTraverser )
             {
-                childTraversers = new LinkedHashSet<DependencyTraverser>();
+                childTraversers = new LinkedHashSet<>();
                 if ( seen > 0 )
                 {
                     for ( DependencyTraverser s : traversers )

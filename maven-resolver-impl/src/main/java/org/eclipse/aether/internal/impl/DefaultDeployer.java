@@ -90,7 +90,7 @@ public class DefaultDeployer
 
     private UpdateCheckManager updateCheckManager;
 
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
 
     private SyncContextFactory syncContextFactory;
 
@@ -170,7 +170,7 @@ public class DefaultDeployer
     {
         if ( metadataFactories == null )
         {
-            this.metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+            this.metadataFactories = new ArrayList<>();
         }
         else
         {
@@ -241,13 +241,13 @@ public class DefaultDeployer
 
             FileTransformerManager fileTransformerManager = session.getFileTransformerManager();
 
-            List<ArtifactUpload> artifactUploads = new ArrayList<ArtifactUpload>();
-            List<MetadataUpload> metadataUploads = new ArrayList<MetadataUpload>();
-            IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<Metadata, Object>();
+            List<ArtifactUpload> artifactUploads = new ArrayList<>();
+            List<MetadataUpload> metadataUploads = new ArrayList<>();
+            IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
 
             EventCatapult catapult = new EventCatapult( session, trace, repository, repositoryEventDispatcher );
 
-            List<Artifact> artifacts = new ArrayList<Artifact>( request.getArtifacts() );
+            List<Artifact> artifacts = new ArrayList<>( request.getArtifacts() );
 
             List<Metadata> metadatas = Utils.prepareMetadata( generators, artifacts );
 
@@ -349,7 +349,7 @@ public class DefaultDeployer
         PrioritizedComponents<MetadataGeneratorFactory> factories =
             Utils.sortMetadataGeneratorFactories( session, this.metadataFactories );
 
-        List<MetadataGenerator> generators = new ArrayList<MetadataGenerator>();
+        List<MetadataGenerator> generators = new ArrayList<>();
 
         for ( PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled() )
         {
@@ -458,7 +458,7 @@ public class DefaultDeployer
             }
         }
 
-        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<Metadata, MetadataTransferException>();
+        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
         check.setItem( metadata );
         check.setFile( dstFile );
         check.setRepository( repository );

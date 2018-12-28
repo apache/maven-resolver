@@ -40,7 +40,7 @@ public final class AuthenticationBuilder
      */
     public AuthenticationBuilder()
     {
-        authentications = new ArrayList<Authentication>();
+        authentications = new ArrayList<>();
     }
 
     /**

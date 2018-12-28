@@ -37,7 +37,7 @@ public final class ChainedTransferListener
     extends AbstractTransferListener
 {
 
-    private final List<TransferListener> listeners = new CopyOnWriteArrayList<TransferListener>();
+    private final List<TransferListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * Creates a new multicast listener that delegates to the specified listeners. In contrast to the constructor, this

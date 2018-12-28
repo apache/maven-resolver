@@ -40,7 +40,7 @@ public class ExclusionDependencyFilterTest
 
         NodeBuilder builder = new NodeBuilder();
         builder.groupId( "com.example.test" ).artifactId( "testArtifact" );
-        List<DependencyNode> parents = new LinkedList<DependencyNode>();
+        List<DependencyNode> parents = new LinkedList<>();
         String[] excludes;
 
         excludes = new String[] { "com.example.test:testArtifact" };
