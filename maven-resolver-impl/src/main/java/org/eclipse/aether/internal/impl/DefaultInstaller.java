@@ -138,15 +138,10 @@ public class DefaultInstaller
     public InstallResult install( RepositorySystemSession session, InstallRequest request )
         throws InstallationException
     {
-        SyncContext syncContext = syncContextFactory.newInstance( session, false );
 
-        try
+        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             return install( syncContext, session, request );
-        }
-        finally
-        {
-            syncContext.close();
         }
     }
 

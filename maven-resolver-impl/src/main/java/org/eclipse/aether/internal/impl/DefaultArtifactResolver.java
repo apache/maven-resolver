@@ -206,9 +206,8 @@ public class DefaultArtifactResolver
                                                   Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
     {
-        SyncContext syncContext = syncContextFactory.newInstance( session, false );
 
-        try
+        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             Collection<Artifact> artifacts = new ArrayList<>( requests.size() );
             for ( ArtifactRequest request : requests )
@@ -223,10 +222,6 @@ public class DefaultArtifactResolver
             syncContext.acquire( artifacts, null );
 
             return resolve( session, requests );
-        }
-        finally
-        {
-            syncContext.close();
         }
     }
 
@@ -492,15 +487,10 @@ public class DefaultArtifactResolver
 
         try
         {
-            RepositoryConnector connector =
-                repositoryConnectorProvider.newRepositoryConnector( session, group.repository );
-            try
+            try ( RepositoryConnector connector =
+                          repositoryConnectorProvider.newRepositoryConnector( session, group.repository ) )
             {
                 connector.get( downloads, null );
-            }
-            finally
-            {
-                connector.close();
             }
         }
         catch ( NoRepositoryConnectorException e )

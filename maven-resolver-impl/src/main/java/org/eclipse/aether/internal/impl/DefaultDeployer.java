@@ -204,15 +204,9 @@ public class DefaultDeployer
                 + request.getRepository().getUrl() + ") is in offline mode", e );
         }
 
-        SyncContext syncContext = syncContextFactory.newInstance( session, false );
-
-        try
+        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             return deploy( syncContext, session, request );
-        }
-        finally
-        {
-            syncContext.close();
         }
     }
 
