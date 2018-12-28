@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -423,20 +424,15 @@ final class DataPool
                 return false;
             }
             GraphKey that = (GraphKey) obj;
-            return artifact.equals( that.artifact ) && repositories.equals( that.repositories )
-                && eq( selector, that.selector ) && eq( manager, that.manager ) && eq( traverser, that.traverser )
-                && eq( filter, that.filter );
+            return Objects.equals( artifact, that.artifact ) && Objects.equals( repositories, that.repositories )
+                && Objects.equals( selector, that.selector ) && Objects.equals( manager, that.manager )
+                && Objects.equals( traverser, that.traverser ) && Objects.equals( filter, that.filter );
         }
 
         @Override
         public int hashCode()
         {
             return hashCode;
-        }
-
-        private static <T> boolean eq( T o1, T o2 )
-        {
-            return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
         }
 
         private static int hash( Object o )

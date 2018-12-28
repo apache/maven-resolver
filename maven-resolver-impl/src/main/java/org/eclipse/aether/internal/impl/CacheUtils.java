@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -39,7 +40,7 @@ public final class CacheUtils
 
     public static <T> boolean eq( T s1, T s2 )
     {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( s1, s2 );
     }
 
     public static int hash( Object obj )
@@ -71,7 +72,7 @@ public final class CacheUtils
             return true;
         }
 
-        return eq( r1.getId(), r2.getId() ) && eq( r1.getUrl(), r2.getUrl() )
+        return Objects.equals( r1.getId(), r2.getId() ) && Objects.equals( r1.getUrl(), r2.getUrl() )
             && policyEquals( r1.getPolicy( false ), r2.getPolicy( false ) )
             && policyEquals( r1.getPolicy( true ), r2.getPolicy( true ) );
     }
@@ -83,7 +84,7 @@ public final class CacheUtils
             return true;
         }
         // update policy doesn't affect contents
-        return p1.isEnabled() == p2.isEnabled() && eq( p1.getChecksumPolicy(), p2.getChecksumPolicy() );
+        return p1.isEnabled() == p2.isEnabled() && Objects.equals( p1.getChecksumPolicy(), p2.getChecksumPolicy() );
     }
 
     public static boolean repositoriesEquals( List<RemoteRepository> r1, List<RemoteRepository> r2 )

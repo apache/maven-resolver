@@ -25,6 +25,8 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionRange;
 
+import java.util.Objects;
+
 /**
  * A constraint on versions for a dependency.
  */
@@ -100,12 +102,8 @@ final class TestVersionConstraint
 
         TestVersionConstraint that = (TestVersionConstraint) obj;
 
-        return eq( range, that.range ) && eq( version, that.getVersion() );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( range, that.range )
+                && Objects.equals( version, that.getVersion() );
     }
 
     @Override

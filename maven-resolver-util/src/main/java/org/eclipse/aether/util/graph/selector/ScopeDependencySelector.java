@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.TreeSet;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -130,12 +131,8 @@ public final class ScopeDependencySelector
         }
 
         ScopeDependencySelector that = (ScopeDependencySelector) obj;
-        return transitive == that.transitive && eq( included, that.included ) && eq( excluded, that.excluded );
-    }
-
-    private static <T> boolean eq( T o1, T o2 )
-    {
-        return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
+        return transitive == that.transitive && Objects.equals( included, that.included )
+                && Objects.equals( excluded, that.excluded );
     }
 
     @Override

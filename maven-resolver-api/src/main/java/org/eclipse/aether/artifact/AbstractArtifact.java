@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -115,7 +116,7 @@ public abstract class AbstractArtifact
     public Artifact setFile( File file )
     {
         File current = getFile();
-        if ( ( current == null ) ? file == null : current.equals( file ) )
+        if ( Objects.equals( current, file ) )
         {
             return this;
         }
@@ -193,15 +194,13 @@ public abstract class AbstractArtifact
 
         Artifact that = (Artifact) obj;
 
-        return getArtifactId().equals( that.getArtifactId() ) && getGroupId().equals( that.getGroupId() )
-            && getVersion().equals( that.getVersion() ) && getExtension().equals( that.getExtension() )
-            && getClassifier().equals( that.getClassifier() ) && eq( getFile(), that.getFile() )
-            && getProperties().equals( that.getProperties() );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( getArtifactId(), that.getArtifactId() )
+                && Objects.equals( getGroupId(), that.getGroupId() )
+                && Objects.equals( getVersion(), that.getVersion() )
+                && Objects.equals( getExtension(), that.getExtension() )
+                && Objects.equals( getClassifier(), that.getClassifier() )
+                && Objects.equals( getFile(), that.getFile() )
+                && Objects.equals( getProperties(), that.getProperties() );
     }
 
     /**

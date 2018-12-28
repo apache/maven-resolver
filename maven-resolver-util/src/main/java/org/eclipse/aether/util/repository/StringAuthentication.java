@@ -20,6 +20,8 @@ package org.eclipse.aether.util.repository;
  */
 
 import java.util.Map;
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.repository.Authentication;
@@ -69,12 +71,8 @@ final class StringAuthentication
             return false;
         }
         StringAuthentication that = (StringAuthentication) obj;
-        return eq( key, that.key ) && eq( value, that.value );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( key, that.key )
+                && Objects.equals( value, that.value );
     }
 
     @Override

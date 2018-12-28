@@ -21,6 +21,8 @@ package org.eclipse.aether.util.artifact;
 
 import org.eclipse.aether.artifact.Artifact;
 
+import java.util.Objects;
+
 /**
  * A utility class for artifact identifiers.
  */
@@ -165,23 +167,23 @@ public final class ArtifactIdUtils
         {
             return false;
         }
-        if ( !eq( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
+        if ( !Objects.equals( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getGroupId(), artifact2.getGroupId() ) )
+        if ( !Objects.equals( artifact1.getGroupId(), artifact2.getGroupId() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getExtension(), artifact2.getExtension() ) )
+        if ( !Objects.equals( artifact1.getExtension(), artifact2.getExtension() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getClassifier(), artifact2.getClassifier() ) )
+        if ( !Objects.equals( artifact1.getClassifier(), artifact2.getClassifier() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getVersion(), artifact2.getVersion() ) )
+        if ( !Objects.equals( artifact1.getVersion(), artifact2.getVersion() ) )
         {
             return false;
         }
@@ -203,23 +205,23 @@ public final class ArtifactIdUtils
         {
             return false;
         }
-        if ( !eq( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
+        if ( !Objects.equals( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getGroupId(), artifact2.getGroupId() ) )
+        if ( !Objects.equals( artifact1.getGroupId(), artifact2.getGroupId() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getExtension(), artifact2.getExtension() ) )
+        if ( !Objects.equals( artifact1.getExtension(), artifact2.getExtension() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getClassifier(), artifact2.getClassifier() ) )
+        if ( !Objects.equals( artifact1.getClassifier(), artifact2.getClassifier() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getBaseVersion(), artifact2.getBaseVersion() ) )
+        if ( !Objects.equals( artifact1.getBaseVersion(), artifact2.getBaseVersion() ) )
         {
             return false;
         }
@@ -242,28 +244,22 @@ public final class ArtifactIdUtils
         {
             return false;
         }
-        if ( !eq( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
+        if ( !Objects.equals( artifact1.getArtifactId(), artifact2.getArtifactId() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getGroupId(), artifact2.getGroupId() ) )
+        if ( !Objects.equals( artifact1.getGroupId(), artifact2.getGroupId() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getExtension(), artifact2.getExtension() ) )
+        if ( !Objects.equals( artifact1.getExtension(), artifact2.getExtension() ) )
         {
             return false;
         }
-        if ( !eq( artifact1.getClassifier(), artifact2.getClassifier() ) )
+        if ( !Objects.equals( artifact1.getClassifier(), artifact2.getClassifier() ) )
         {
             return false;
         }
         return true;
     }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
-    }
-
 }

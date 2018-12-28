@@ -21,6 +21,8 @@ package org.eclipse.aether.util.artifact;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.artifact.AbstractArtifact;
@@ -166,7 +168,7 @@ public final class SubArtifact
 
     public Artifact setFile( File file )
     {
-        if ( ( this.file == null ) ? file == null : this.file.equals( file ) )
+        if ( Objects.equals( this.file, file ) )
         {
             return this;
         }

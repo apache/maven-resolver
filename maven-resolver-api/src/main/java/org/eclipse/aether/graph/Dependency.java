@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import static java.util.Objects.requireNonNull;
+
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -170,7 +172,7 @@ public final class Dependency
      */
     public Dependency setOptional( Boolean optional )
     {
-        if ( eq( this.optional, optional ) )
+        if ( Objects.equals( this.optional, optional ) )
         {
             return this;
         }
@@ -237,13 +239,8 @@ public final class Dependency
 
         Dependency that = (Dependency) obj;
 
-        return artifact.equals( that.artifact ) && scope.equals( that.scope ) && eq( optional, that.optional )
-            && exclusions.equals( that.exclusions );
-    }
-
-    private static <T> boolean eq( T o1, T o2 )
-    {
-        return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
+        return Objects.equals( artifact, that.artifact ) && Objects.equals( scope, that.scope )
+                && Objects.equals( optional, that.optional ) && Objects.equals( exclusions, that.exclusions );
     }
 
     @Override

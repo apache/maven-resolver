@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -215,9 +216,8 @@ class AbstractPatternDependencyFilter
 
         final AbstractPatternDependencyFilter that = (AbstractPatternDependencyFilter) obj;
 
-        return this.patterns.equals( that.patterns )
-            && ( this.versionScheme == null ? that.versionScheme == null
-                            : this.versionScheme.equals( that.versionScheme ) );
+        return Objects.equals( this.patterns, that.patterns )
+            && Objects.equals( this.versionScheme, that.versionScheme );
     }
 
     @Override

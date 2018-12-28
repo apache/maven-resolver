@@ -23,6 +23,8 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionRange;
 
+import java.util.Objects;
+
 /**
  * A version range inspired by mathematical range syntax. For example, "[1.0,2.0)", "[1.0,)" or "[1.0]".
  */
@@ -191,12 +193,8 @@ final class GenericVersionRange
 
         GenericVersionRange that = (GenericVersionRange) obj;
 
-        return eq( upperBound, that.upperBound ) && eq( lowerBound, that.lowerBound );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( upperBound, that.upperBound )
+                && Objects.equals( lowerBound, that.lowerBound );
     }
 
     @Override

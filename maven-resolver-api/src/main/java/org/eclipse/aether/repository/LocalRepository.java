@@ -20,6 +20,7 @@ package org.eclipse.aether.repository;
  */
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * A repository on the local file system used to cache contents of remote repositories and to store locally installed
@@ -107,12 +108,7 @@ public final class LocalRepository
 
         LocalRepository that = (LocalRepository) obj;
 
-        return eq( basedir, that.basedir ) && eq( type, that.type );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( basedir, that.basedir ) && Objects.equals( type, that.type );
     }
 
     @Override
