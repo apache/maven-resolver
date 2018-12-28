@@ -150,17 +150,7 @@ final class PartialFile
                 raf = null;
                 lock = null;
             }
-            catch ( RuntimeException e )
-            {
-                close( raf );
-                raf = null;
-                if ( !lockFile.delete() )
-                {
-                    lockFile.deleteOnExit();
-                }
-                throw e;
-            }
-            catch ( IOException e )
+            catch ( RuntimeException | IOException e )
             {
                 close( raf );
                 raf = null;

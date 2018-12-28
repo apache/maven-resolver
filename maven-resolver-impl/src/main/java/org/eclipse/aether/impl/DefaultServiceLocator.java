@@ -170,11 +170,7 @@ public final class DefaultServiceLocator
                 }
                 return instance;
             }
-            catch ( Exception e )
-            {
-                serviceCreationFailed( type, impl, e );
-            }
-            catch ( LinkageError e )
+            catch ( Exception | LinkageError e )
             {
                 serviceCreationFailed( type, impl, e );
             }

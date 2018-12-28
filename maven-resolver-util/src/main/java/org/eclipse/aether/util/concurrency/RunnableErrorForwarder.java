@@ -74,12 +74,7 @@ public final class RunnableErrorForwarder
                 {
                     runnable.run();
                 }
-                catch ( RuntimeException e )
-                {
-                    error.compareAndSet( null, e );
-                    throw e;
-                }
-                catch ( Error e )
+                catch ( RuntimeException | Error e )
                 {
                     error.compareAndSet( null, e );
                     throw e;

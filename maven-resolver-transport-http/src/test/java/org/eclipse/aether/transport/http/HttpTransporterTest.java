@@ -980,11 +980,7 @@ public class HttpTransporterTest
             transporter.get( new GetTask( URI.create( "repo/file.txt" ) ) );
             fail( "Expected error" );
         }
-        catch ( ConnectTimeoutException e )
-        {
-            assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
-        }
-        catch ( ConnectException e )
+        catch ( ConnectTimeoutException | ConnectException e )
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }

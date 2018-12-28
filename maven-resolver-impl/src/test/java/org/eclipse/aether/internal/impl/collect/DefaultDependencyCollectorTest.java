@@ -168,11 +168,7 @@ public class DefaultDependencyCollectorTest
 
             return node;
         }
-        catch ( IndexOutOfBoundsException e )
-        {
-            throw new IllegalArgumentException( "illegal coordinates for child", e );
-        }
-        catch ( NullPointerException e )
+        catch ( IndexOutOfBoundsException | NullPointerException e )
         {
             throw new IllegalArgumentException( "illegal coordinates for child", e );
         }

@@ -48,11 +48,7 @@ public class Slf4jLoggerFactory
             Slf4jLoggerFactory.class.getClassLoader().loadClass( "org.slf4j.ILoggerFactory" );
             available = true;
         }
-        catch ( Exception e )
-        {
-            available = false;
-        }
-        catch ( LinkageError e )
+        catch ( Exception | LinkageError e )
         {
             available = false;
         }

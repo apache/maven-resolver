@@ -122,19 +122,7 @@ public class MemWagon
         {
             fillInputData( inputData );
         }
-        catch ( TransferFailedException e )
-        {
-            fireTransferError( resource, e, TransferEvent.REQUEST_GET );
-            cleanupGetTransfer( resource );
-            throw e;
-        }
-        catch ( ResourceDoesNotExistException e )
-        {
-            fireTransferError( resource, e, TransferEvent.REQUEST_GET );
-            cleanupGetTransfer( resource );
-            throw e;
-        }
-        catch ( AuthorizationException e )
+        catch ( TransferFailedException | AuthorizationException | ResourceDoesNotExistException e )
         {
             fireTransferError( resource, e, TransferEvent.REQUEST_GET );
             cleanupGetTransfer( resource );

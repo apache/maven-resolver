@@ -166,11 +166,7 @@ public class DefaultRepositoryEventDispatcher
                     throw new IllegalStateException( "unknown repository event type " + event.getType() );
             }
         }
-        catch ( Exception e )
-        {
-            logError( e, listener );
-        }
-        catch ( LinkageError e )
+        catch ( Exception | LinkageError e )
         {
             logError( e, listener );
         }
