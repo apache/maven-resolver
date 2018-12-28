@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -33,7 +31,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * A request to deploy artifacts and their accompanying metadata into the a remote repository.
  * 
- * @see RepositorySystem#deploy(RepositorySystemSession, DeployRequest)
+ * @see org.eclipse.aether.RepositorySystem#deploy(org.eclipse.aether.RepositorySystemSession, DeployRequest)
  */
 public final class DeployRequest
 {
@@ -94,7 +92,7 @@ public final class DeployRequest
         {
             if ( artifacts.isEmpty() )
             {
-                artifacts = new ArrayList<Artifact>();
+                artifacts = new ArrayList<>();
             }
             artifacts.add( artifact );
         }
@@ -142,7 +140,7 @@ public final class DeployRequest
         {
             if ( this.metadata.isEmpty() )
             {
-                this.metadata = new ArrayList<Metadata>();
+                this.metadata = new ArrayList<>();
             }
             this.metadata.add( metadata );
         }

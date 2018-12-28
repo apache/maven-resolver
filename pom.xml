@@ -71,7 +71,7 @@
     <javaVersion>7</javaVersion>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
-    <checkstyle.violation.ignore>UnusedImports,LineLength,InnerAssignment,MagicNumber,AvoidNestedBlocks,ParameterNumber,MethodLength,MemberName</checkstyle.violation.ignore>
+    <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.3.3</sisuVersion>
     <slf4jVersion>1.7.25</slf4jVersion>
   </properties>

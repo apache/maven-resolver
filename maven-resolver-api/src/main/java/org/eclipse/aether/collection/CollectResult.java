@@ -25,14 +25,13 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * The result of a dependency collection request.
  * 
- * @see RepositorySystem#collectDependencies(RepositorySystemSession, CollectRequest)
+ * @see RepositorySystem#collectDependencies(org.eclipse.aether.RepositorySystemSession, CollectRequest)
  */
 public final class CollectResult
 {
@@ -89,7 +88,7 @@ public final class CollectResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }
@@ -118,7 +117,7 @@ public final class CollectResult
         {
             if ( cycles.isEmpty() )
             {
-                cycles = new ArrayList<DependencyCycle>();
+                cycles = new ArrayList<>();
             }
             cycles.add( cycle );
         }

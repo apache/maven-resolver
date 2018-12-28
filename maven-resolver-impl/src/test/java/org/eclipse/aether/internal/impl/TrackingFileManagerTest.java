@@ -82,7 +82,7 @@ public class TrackingFileManagerTest
         // NOTE: The excessive repetitions are to check the update properly truncates the file
         File propFile = TestFileUtils.createTempFile( "key1=value1\nkey2 : value2\n".getBytes( StandardCharsets.UTF_8 ), 1000 );
 
-        Map<String, String> updates = new HashMap<String, String>();
+        Map<String, String> updates = new HashMap<>();
         updates.put( "key1", "v" );
         updates.put( "key2", null );
 
@@ -102,7 +102,7 @@ public class TrackingFileManagerTest
     {
         TrackingFileManager tfm = new TrackingFileManager();
 
-        Map<String, String> updates = new HashMap<String, String>();
+        Map<String, String> updates = new HashMap<>();
         updates.put( "k", "v" );
 
         for ( int i = 0; i < 1000; i++ )

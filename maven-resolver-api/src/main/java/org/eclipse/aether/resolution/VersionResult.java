@@ -25,13 +25,12 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.ArtifactRepository;
 
 /**
  * The result of a version resolution request.
  * 
- * @see RepositorySystem#resolveVersion(RepositorySystemSession, VersionRequest)
+ * @see RepositorySystem#resolveVersion(org.eclipse.aether.RepositorySystemSession, VersionRequest)
  */
 public final class VersionResult
 {
@@ -87,7 +86,7 @@ public final class VersionResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }

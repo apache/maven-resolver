@@ -51,7 +51,7 @@ public final class AndDependencySelector
     {
         if ( selectors != null && selectors.length > 0 )
         {
-            this.selectors = new LinkedHashSet<DependencySelector>( Arrays.asList( selectors ) );
+            this.selectors = new LinkedHashSet<>( Arrays.asList( selectors ) );
         }
         else
         {
@@ -68,7 +68,7 @@ public final class AndDependencySelector
     {
         if ( selectors != null && !selectors.isEmpty() )
         {
-            this.selectors = new LinkedHashSet<DependencySelector>( selectors );
+            this.selectors = new LinkedHashSet<>( selectors );
         }
         else
         {
@@ -137,7 +137,7 @@ public final class AndDependencySelector
             }
             else if ( selector != childSelector )
             {
-                childSelectors = new LinkedHashSet<DependencySelector>();
+                childSelectors = new LinkedHashSet<>();
                 if ( seen > 0 )
                 {
                     for ( DependencySelector s : selectors )

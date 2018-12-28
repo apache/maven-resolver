@@ -133,15 +133,16 @@ final class GlobalState
 
     private GlobalState()
     {
-        connectionManagers = new ConcurrentHashMap<SslConfig, ClientConnectionManager>();
-        userTokens = new ConcurrentHashMap<CompoundKey, Object>();
-        authSchemePools = new ConcurrentHashMap<HttpHost, AuthSchemePool>();
-        expectContinues = new ConcurrentHashMap<CompoundKey, Boolean>();
+        connectionManagers = new ConcurrentHashMap<>();
+        userTokens = new ConcurrentHashMap<>();
+        authSchemePools = new ConcurrentHashMap<>();
+        expectContinues = new ConcurrentHashMap<>();
     }
 
     public void close()
     {
-        for ( Iterator<Map.Entry<SslConfig, ClientConnectionManager>> it = connectionManagers.entrySet().iterator(); it.hasNext(); )
+        for ( Iterator<Map.Entry<SslConfig, ClientConnectionManager>> it = connectionManagers.entrySet().iterator();
+              it.hasNext(); )
         {
             ClientConnectionManager connMgr = it.next().getValue();
             it.remove();
@@ -168,6 +169,7 @@ final class GlobalState
         return manager;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     public static ClientConnectionManager newConnectionManager( SslConfig sslConfig )
     {
         SchemeRegistry schemeReg = new SchemeRegistry();

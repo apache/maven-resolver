@@ -47,7 +47,7 @@ final class DeferredCredentialsProvider
     DeferredCredentialsProvider()
     {
         delegate = new BasicCredentialsProvider();
-        factories = new HashMap<AuthScope, Factory>();
+        factories = new HashMap<>();
     }
 
     public void setCredentials( AuthScope authScope, Factory factory )

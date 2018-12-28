@@ -140,7 +140,7 @@ public class SubArtifactTest
     @Test
     public void testPropertiesCopied()
     {
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put( "key", "value1" );
 
         Artifact a = new SubArtifact( newMainArtifact( "gid:aid:ver" ), "", "pom", props, null );

@@ -50,7 +50,7 @@ class CachingArtifactTypeRegistry
     private CachingArtifactTypeRegistry( ArtifactTypeRegistry delegate )
     {
         this.delegate = delegate;
-        types = new HashMap<String, ArtifactType>();
+        types = new HashMap<>();
     }
 
     public ArtifactType get( String typeId )

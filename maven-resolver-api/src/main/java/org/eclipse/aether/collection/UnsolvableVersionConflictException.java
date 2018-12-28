@@ -57,7 +57,7 @@ public class UnsolvableVersionConflictException
         else
         {
             this.paths = paths;
-            this.versions = new LinkedHashSet<String>();
+            this.versions = new LinkedHashSet<>();
             for ( List<? extends DependencyNode> path : paths )
             {
                 VersionConstraint constraint = path.get( path.size() - 1 ).getVersionConstraint();
@@ -75,7 +75,7 @@ public class UnsolvableVersionConflictException
 
         if ( paths != null )
         {
-            Collection<String> strings = new LinkedHashSet<String>();
+            Collection<String> strings = new LinkedHashSet<>();
 
             for ( List<? extends DependencyNode> path : paths )
             {

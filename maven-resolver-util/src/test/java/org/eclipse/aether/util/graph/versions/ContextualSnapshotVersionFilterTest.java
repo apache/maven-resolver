@@ -60,6 +60,7 @@ public class ContextualSnapshotVersionFilterTest
         assertTrue( derive( filter, "g:a:1-SNAPSHOT" ) instanceof SnapshotVersionFilter );
     }
 
+    @SuppressWarnings( "EqualsWithItself" )
     @Test
     public void testEquals()
     {

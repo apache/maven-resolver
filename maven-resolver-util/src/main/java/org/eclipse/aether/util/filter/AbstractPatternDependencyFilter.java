@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -40,7 +41,7 @@ class AbstractPatternDependencyFilter
     implements DependencyFilter
 {
 
-    private final Set<String> patterns = new HashSet<String>();
+    private final Set<String> patterns = new HashSet<>();
 
     private final VersionScheme versionScheme;
 
@@ -153,7 +154,7 @@ class AbstractPatternDependencyFilter
         // support leading wildcard
         else if ( pattern.startsWith( "*" ) )
         {
-            final String suffix = pattern.substring( 1, pattern.length() );
+            final String suffix = pattern.substring( 1 );
 
             matches = token.endsWith( suffix );
         }
@@ -215,9 +216,8 @@ class AbstractPatternDependencyFilter
 
         final AbstractPatternDependencyFilter that = (AbstractPatternDependencyFilter) obj;
 
-        return this.patterns.equals( that.patterns )
-            && ( this.versionScheme == null ? that.versionScheme == null
-                            : this.versionScheme.equals( that.versionScheme ) );
+        return Objects.equals( this.patterns, that.patterns )
+            && Objects.equals( this.versionScheme, that.versionScheme );
     }
 
     @Override

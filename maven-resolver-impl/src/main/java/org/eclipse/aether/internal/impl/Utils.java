@@ -40,11 +40,10 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
 final class Utils
 {
 
-    public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories( RepositorySystemSession session,
-                                                                                                  Collection<? extends MetadataGeneratorFactory> factories )
+    public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
+            RepositorySystemSession session, Collection<? extends MetadataGeneratorFactory> factories )
     {
-        PrioritizedComponents<MetadataGeneratorFactory> result =
-            new PrioritizedComponents<MetadataGeneratorFactory>( session );
+        PrioritizedComponents<MetadataGeneratorFactory> result = new PrioritizedComponents<>( session );
         for ( MetadataGeneratorFactory factory : factories )
         {
             result.add( factory, factory.getPriority() );
@@ -55,7 +54,7 @@ final class Utils
     public static List<Metadata> prepareMetadata( List<? extends MetadataGenerator> generators,
                                                   List<? extends Artifact> artifacts )
     {
-        List<Metadata> metadatas = new ArrayList<Metadata>();
+        List<Metadata> metadatas = new ArrayList<>();
 
         for ( MetadataGenerator generator : generators )
         {
@@ -68,7 +67,7 @@ final class Utils
     public static List<Metadata> finishMetadata( List<? extends MetadataGenerator> generators,
                                                  List<? extends Artifact> artifacts )
     {
-        List<Metadata> metadatas = new ArrayList<Metadata>();
+        List<Metadata> metadatas = new ArrayList<>();
 
         for ( MetadataGenerator generator : generators )
         {
@@ -80,7 +79,7 @@ final class Utils
 
     public static <T> List<T> combine( Collection<? extends T> first, Collection<? extends T> second )
     {
-        List<T> result = new ArrayList<T>( first.size() + second.size() );
+        List<T> result = new ArrayList<>( first.size() + second.size() );
         result.addAll( first );
         result.addAll( second );
         return result;
@@ -93,7 +92,7 @@ final class Utils
         {
             return ResolutionErrorPolicy.CACHE_DISABLED;
         }
-        return rep.getArtifactPolicy( session, new ResolutionErrorPolicyRequest<Artifact>( artifact, repository ) );
+        return rep.getArtifactPolicy( session, new ResolutionErrorPolicyRequest<>( artifact, repository ) );
     }
 
     public static int getPolicy( RepositorySystemSession session, Metadata metadata, RemoteRepository repository )
@@ -103,7 +102,7 @@ final class Utils
         {
             return ResolutionErrorPolicy.CACHE_DISABLED;
         }
-        return rep.getMetadataPolicy( session, new ResolutionErrorPolicyRequest<Metadata>( metadata, repository ) );
+        return rep.getMetadataPolicy( session, new ResolutionErrorPolicyRequest<>( metadata, repository ) );
     }
 
     public static void appendClassLoader( StringBuilder buffer, Object component )

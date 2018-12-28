@@ -37,7 +37,6 @@ public class GenericVersionSchemeTest
 
     @Before
     public void setUp()
-        throws Exception
     {
         scheme = new GenericVersionScheme();
     }

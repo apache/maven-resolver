@@ -19,7 +19,6 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -27,8 +26,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.TransferResource;
 
 /**

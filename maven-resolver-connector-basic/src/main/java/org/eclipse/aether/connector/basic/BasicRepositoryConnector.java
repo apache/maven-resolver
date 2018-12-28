@@ -283,7 +283,8 @@ final class BasicRepositoryConnector
 
             List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getArtifact(), true, location );
 
-            Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(), checksums, listener );
+            Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(), checksums,
+                    listener );
             task.run();
         }
 
@@ -528,6 +529,7 @@ final class BasicRepositoryConnector
             this.checksums = safe( checksums );
         }
 
+        @SuppressWarnings( "checkstyle:innerassignment" )
         protected void runTask()
             throws Exception
         {

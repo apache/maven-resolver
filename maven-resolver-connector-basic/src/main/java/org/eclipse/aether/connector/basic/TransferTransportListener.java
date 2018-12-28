@@ -91,7 +91,8 @@ class TransferTransportListener<T extends Transfer>
         }
         if ( listener != null )
         {
-            eventBuilder.resetType( EventType.PROGRESSED ).addTransferredBytes( data.remaining() ).setDataBuffer( data );
+            eventBuilder.resetType( EventType.PROGRESSED ).addTransferredBytes( data.remaining() )
+                    .setDataBuffer( data );
             listener.transferProgressed( eventBuilder.build() );
         }
     }

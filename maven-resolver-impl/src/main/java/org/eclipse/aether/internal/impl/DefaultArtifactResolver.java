@@ -109,6 +109,7 @@ public class DefaultArtifactResolver
         // enables default constructor
     }
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
     DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
@@ -156,7 +157,8 @@ public class DefaultArtifactResolver
 
     public DefaultArtifactResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher,
+                "repository event dispatcher cannot be null" );
         return this;
     }
 
@@ -172,15 +174,18 @@ public class DefaultArtifactResolver
         return this;
     }
 
-    public DefaultArtifactResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
+    public DefaultArtifactResolver setRepositoryConnectorProvider(
+            RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider,
+                "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager,
+                "remote repository provider cannot be null" );
         return this;
     }
 
@@ -206,11 +211,10 @@ public class DefaultArtifactResolver
                                                   Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
     {
-        SyncContext syncContext = syncContextFactory.newInstance( session, false );
 
-        try
+        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
-            Collection<Artifact> artifacts = new ArrayList<Artifact>( requests.size() );
+            Collection<Artifact> artifacts = new ArrayList<>( requests.size() );
             for ( ArtifactRequest request : requests )
             {
                 if ( request.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) != null )
@@ -224,23 +228,20 @@ public class DefaultArtifactResolver
 
             return resolve( session, requests );
         }
-        finally
-        {
-            syncContext.close();
-        }
     }
 
+    @SuppressWarnings( "checkstyle:methodlength" )
     private List<ArtifactResult> resolve( RepositorySystemSession session,
                                           Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
     {
-        List<ArtifactResult> results = new ArrayList<ArtifactResult>( requests.size() );
+        List<ArtifactResult> results = new ArrayList<>( requests.size() );
         boolean failures = false;
 
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         WorkspaceReader workspace = session.getWorkspaceReader();
 
-        List<ResolutionGroup> groups = new ArrayList<ResolutionGroup>();
+        List<ResolutionGroup> groups = new ArrayList<>();
 
         for ( ArtifactRequest request : requests )
         {
@@ -492,15 +493,10 @@ public class DefaultArtifactResolver
 
         try
         {
-            RepositoryConnector connector =
-                repositoryConnectorProvider.newRepositoryConnector( session, group.repository );
-            try
+            try ( RepositoryConnector connector =
+                          repositoryConnectorProvider.newRepositoryConnector( session, group.repository ) )
             {
                 connector.get( downloads, null );
-            }
-            finally
-            {
-                connector.close();
             }
         }
         catch ( NoRepositoryConnectorException e )
@@ -517,7 +513,7 @@ public class DefaultArtifactResolver
     private List<ArtifactDownload> gatherDownloads( RepositorySystemSession session, ResolutionGroup group )
     {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-        List<ArtifactDownload> downloads = new ArrayList<ArtifactDownload>();
+        List<ArtifactDownload> downloads = new ArrayList<>();
 
         for ( ResolutionItem item : group.items )
         {
@@ -553,8 +549,7 @@ public class DefaultArtifactResolver
             int errorPolicy = Utils.getPolicy( session, artifact, group.repository );
             if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_ALL ) != 0 )
             {
-                UpdateCheck<Artifact, ArtifactTransferException> check =
-                    new UpdateCheck<Artifact, ArtifactTransferException>();
+                UpdateCheck<Artifact, ArtifactTransferException> check = new UpdateCheck<>();
                 check.setItem( artifact );
                 check.setFile( download.getFile() );
                 check.setFileValid( false );
@@ -600,8 +595,8 @@ public class DefaultArtifactResolver
                     artifact = artifact.setFile( getFile( session, artifact, download.getFile() ) );
                     item.result.setArtifact( artifact );
 
-                    lrm.add( session,
-                             new LocalArtifactRegistration( artifact, group.repository, download.getSupportedContexts() ) );
+                    lrm.add( session, new LocalArtifactRegistration(
+                            artifact, group.repository, download.getSupportedContexts() ) );
                 }
                 catch ( ArtifactTransferException e )
                 {
@@ -689,7 +684,7 @@ public class DefaultArtifactResolver
 
         final RemoteRepository repository;
 
-        final List<ResolutionItem> items = new ArrayList<ResolutionItem>();
+        final List<ResolutionItem> items = new ArrayList<>();
 
         ResolutionGroup( RemoteRepository repository )
         {

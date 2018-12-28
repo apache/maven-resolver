@@ -49,8 +49,8 @@ public final class TreeDependencyVisitor
     public TreeDependencyVisitor( DependencyVisitor visitor )
     {
         this.visitor = requireNonNull( visitor, "dependency visitor delegate cannot be null" );
-        visitedNodes = new IdentityHashMap<DependencyNode, Object>( 512 );
-        visits = new Stack<Boolean>();
+        visitedNodes = new IdentityHashMap<>( 512 );
+        visits = new Stack<>();
     }
 
     public boolean visitEnter( DependencyNode node )

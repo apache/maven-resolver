@@ -126,7 +126,8 @@ public class DefaultMetadataResolver
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull(
+                repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
@@ -136,15 +137,18 @@ public class DefaultMetadataResolver
         return this;
     }
 
-    public DefaultMetadataResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
+    public DefaultMetadataResolver setRepositoryConnectorProvider(
+            RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull(
+                repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultMetadataResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull(
+                remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
@@ -163,11 +167,10 @@ public class DefaultMetadataResolver
     public List<MetadataResult> resolveMetadata( RepositorySystemSession session,
                                                  Collection<? extends MetadataRequest> requests )
     {
-        SyncContext syncContext = syncContextFactory.newInstance( session, false );
 
-        try
+        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
-            Collection<Metadata> metadata = new ArrayList<Metadata>( requests.size() );
+            Collection<Metadata> metadata = new ArrayList<>( requests.size() );
             for ( MetadataRequest request : requests )
             {
                 metadata.add( request.getMetadata() );
@@ -177,20 +180,17 @@ public class DefaultMetadataResolver
 
             return resolve( session, requests );
         }
-        finally
-        {
-            syncContext.close();
-        }
     }
 
+    @SuppressWarnings( "checkstyle:methodlength" )
     private List<MetadataResult> resolve( RepositorySystemSession session,
                                           Collection<? extends MetadataRequest> requests )
     {
-        List<MetadataResult> results = new ArrayList<MetadataResult>( requests.size() );
+        List<MetadataResult> results = new ArrayList<>( requests.size() );
 
-        List<ResolveTask> tasks = new ArrayList<ResolveTask>( requests.size() );
+        List<ResolveTask> tasks = new ArrayList<>( requests.size() );
 
-        Map<File, Long> localLastUpdates = new HashMap<File, Long>();
+        Map<File, Long> localLastUpdates = new HashMap<>();
 
         for ( MetadataRequest request : requests )
         {
@@ -275,22 +275,19 @@ public class DefaultMetadataResolver
                 }
             }
 
-            List<UpdateCheck<Metadata, MetadataTransferException>> checks =
-                new ArrayList<UpdateCheck<Metadata, MetadataTransferException>>();
+            List<UpdateCheck<Metadata, MetadataTransferException>> checks = new ArrayList<>();
             Exception exception = null;
             for ( RemoteRepository repo : repositories )
             {
-                UpdateCheck<Metadata, MetadataTransferException> check =
-                    new UpdateCheck<Metadata, MetadataTransferException>();
+                UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
                 check.setLocalLastUpdated( ( localLastUpdate != null ) ? localLastUpdate : 0 );
                 check.setItem( metadata );
 
                 // use 'main' installation file for the check (-> use requested repository)
-                File checkFile =
-                    new File(
-                              session.getLocalRepository().getBasedir(),
-                              session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository,
-                                                                                            request.getRequestContext() ) );
+                File checkFile = new File(
+                        session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager()
+                                .getPathForRemoteMetadata( metadata, repository, request.getRequestContext() ) );
                 check.setFile( checkFile );
                 check.setRepository( repository );
                 check.setAuthoritativeRepository( repo );
@@ -319,12 +316,10 @@ public class DefaultMetadataResolver
                 RepositoryPolicy policy = getPolicy( session, repository, metadata.getNature() );
 
                 // install path may be different from lookup path
-                File installFile =
-                    new File(
-                              session.getLocalRepository().getBasedir(),
-                              session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata,
-                                                                                            request.getRepository(),
-                                                                                            request.getRequestContext() ) );
+                File installFile = new File(
+                        session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager().getPathForRemoteMetadata(
+                                metadata, request.getRepository(), request.getRequestContext() ) );
 
                 ResolveTask task =
                     new ResolveTask( session, trace, result, installFile, checks, policy.getChecksumPolicy() );
@@ -370,8 +365,8 @@ public class DefaultMetadataResolver
             {
                 Metadata metadata = task.request.getMetadata();
                 // re-lookup metadata for resolve
-                LocalMetadataRequest localRequest =
-                    new LocalMetadataRequest( metadata, task.request.getRepository(), task.request.getRequestContext() );
+                LocalMetadataRequest localRequest = new LocalMetadataRequest(
+                        metadata, task.request.getRepository(), task.request.getRequestContext() );
                 File metadataFile = session.getLocalRepositoryManager().find( session, localRequest ).getFile();
                 if ( metadataFile != null )
                 {
@@ -394,13 +389,12 @@ public class DefaultMetadataResolver
     {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         LocalMetadataResult localResult = lrm.find( session, new LocalMetadataRequest( metadata, null, null ) );
-        File localFile = localResult.getFile();
-        return localFile;
+        return localResult.getFile();
     }
 
     private List<RemoteRepository> getEnabledSourceRepositories( RemoteRepository repository, Metadata.Nature nature )
     {
-        List<RemoteRepository> repositories = new ArrayList<RemoteRepository>();
+        List<RemoteRepository> repositories = new ArrayList<>();
 
         if ( repository.isRepositoryManager() )
         {
@@ -558,7 +552,7 @@ public class DefaultMetadataResolver
 
             try
             {
-                List<RemoteRepository> repositories = new ArrayList<RemoteRepository>();
+                List<RemoteRepository> repositories = new ArrayList<>();
                 for ( UpdateCheck<Metadata, MetadataTransferException> check : checks )
                 {
                     repositories.add( check.getAuthoritativeRepository() );
@@ -573,15 +567,10 @@ public class DefaultMetadataResolver
                 download.setListener( SafeTransferListener.wrap( session ) );
                 download.setTrace( trace );
 
-                RepositoryConnector connector =
-                    repositoryConnectorProvider.newRepositoryConnector( session, requestRepository );
-                try
+                try ( RepositoryConnector connector =
+                              repositoryConnectorProvider.newRepositoryConnector( session, requestRepository ) )
                 {
                     connector.get( null, Arrays.asList( download ) );
-                }
-                finally
-                {
-                    connector.close();
                 }
 
                 exception = download.getException();

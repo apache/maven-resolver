@@ -50,7 +50,7 @@ public class ChecksumValidatorTest
 
         boolean tolerateFailure;
 
-        private List<String> callbacks = new ArrayList<String>();
+        private List<String> callbacks = new ArrayList<>();
 
         private Object conclusion;
 
@@ -81,7 +81,6 @@ public class ChecksumValidatorTest
         }
 
         public void onChecksumError( String algorithm, int kind, ChecksumFailureException exception )
-            throws ChecksumFailureException
         {
             callbacks.add( String.format( "error(%s, %04x, %s)", algorithm, kind, exception.getCause().getMessage() ) );
         }
@@ -122,11 +121,11 @@ public class ChecksumValidatorTest
         implements ChecksumValidator.ChecksumFetcher
     {
 
-        Map<URI, Object> checksums = new HashMap<URI, Object>();
+        Map<URI, Object> checksums = new HashMap<>();
 
-        List<File> checksumFiles = new ArrayList<File>();
+        List<File> checksumFiles = new ArrayList<>();
 
-        private List<URI> fetchedFiles = new ArrayList<URI>();
+        private List<URI> fetchedFiles = new ArrayList<>();
 
         public boolean fetchChecksum( URI remote, File local )
             throws Exception
@@ -153,7 +152,7 @@ public class ChecksumValidatorTest
 
         void assertFetchedFiles( String... algos )
         {
-            List<URI> expected = new ArrayList<URI>();
+            List<URI> expected = new ArrayList<>();
             for ( String algo : algos )
             {
                 expected.add( toUri( algo ) );
@@ -185,7 +184,7 @@ public class ChecksumValidatorTest
 
     private List<RepositoryLayout.Checksum> newChecksums( String... algos )
     {
-        List<RepositoryLayout.Checksum> checksums = new ArrayList<RepositoryLayout.Checksum>();
+        List<RepositoryLayout.Checksum> checksums = new ArrayList<>();
         for ( String algo : algos )
         {
             checksums.add( newChecksum( algo ) );
@@ -200,7 +199,7 @@ public class ChecksumValidatorTest
 
     private Map<String, ?> checksums( String... algoDigestPairs )
     {
-        Map<String, Object> checksums = new LinkedHashMap<String, Object>();
+        Map<String, Object> checksums = new LinkedHashMap<>();
         for ( int i = 0; i < algoDigestPairs.length; i += 2 )
         {
             String algo = algoDigestPairs[i];
@@ -250,7 +249,6 @@ public class ChecksumValidatorTest
 
     @Test
     public void testValidate_FailOnFirstMismatch()
-        throws Exception
     {
         ChecksumValidator validator = newValidator( SHA1 );
         fetcher.mock( SHA1, "foo" );
@@ -284,7 +282,6 @@ public class ChecksumValidatorTest
 
     @Test
     public void testValidate_FailOnEnd()
-        throws Exception
     {
         policy.inspectAll = true;
         ChecksumValidator validator = newValidator( SHA1, MD5 );
@@ -367,7 +364,6 @@ public class ChecksumValidatorTest
 
     @Test
     public void testHandle_Accept()
-        throws Exception
     {
         policy.tolerateFailure = true;
         ChecksumValidator validator = newValidator( SHA1 );
@@ -377,7 +373,6 @@ public class ChecksumValidatorTest
 
     @Test
     public void testHandle_Reject()
-        throws Exception
     {
         policy.tolerateFailure = false;
         ChecksumValidator validator = newValidator( SHA1 );
@@ -387,7 +382,6 @@ public class ChecksumValidatorTest
 
     @Test
     public void testRetry_ResetPolicy()
-        throws Exception
     {
         ChecksumValidator validator = newValidator( SHA1 );
         validator.retry();

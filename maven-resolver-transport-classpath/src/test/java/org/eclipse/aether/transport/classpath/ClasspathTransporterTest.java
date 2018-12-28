@@ -91,7 +91,6 @@ public class ClasspathTransporterTest
 
     @Test
     public void testClassify()
-        throws Exception
     {
         assertEquals( Transporter.ERROR_OTHER, transporter.classify( new FileNotFoundException() ) );
         assertEquals( Transporter.ERROR_NOT_FOUND, transporter.classify( new ResourceNotFoundException( "test" ) ) );

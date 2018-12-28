@@ -45,7 +45,7 @@ public final class RunnableErrorForwarder
 
     private final AtomicInteger counter = new AtomicInteger();
 
-    private final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
+    private final AtomicReference<Throwable> error = new AtomicReference<>();
 
     /**
      * Creates a new error forwarder for worker threads spawned by the current thread.
@@ -74,12 +74,7 @@ public final class RunnableErrorForwarder
                 {
                     runnable.run();
                 }
-                catch ( RuntimeException e )
-                {
-                    error.compareAndSet( null, e );
-                    throw e;
-                }
-                catch ( Error e )
+                catch ( RuntimeException | Error e )
                 {
                     error.compareAndSet( null, e );
                     throw e;

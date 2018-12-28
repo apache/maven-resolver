@@ -48,7 +48,7 @@ public final class DefaultTransporterProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTransporterProvider.class );
 
-    private Collection<TransporterFactory> factories = new ArrayList<TransporterFactory>();
+    private Collection<TransporterFactory> factories = new ArrayList<>();
 
     public DefaultTransporterProvider()
     {
@@ -76,7 +76,7 @@ public final class DefaultTransporterProvider
     {
         if ( factories == null )
         {
-            this.factories = new ArrayList<TransporterFactory>();
+            this.factories = new ArrayList<>();
         }
         else
         {
@@ -90,13 +90,13 @@ public final class DefaultTransporterProvider
     {
         requireNonNull( repository, "remote repository cannot be null" );
 
-        PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<TransporterFactory>( session );
+        PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<>( session );
         for ( TransporterFactory factory : this.factories )
         {
             factories.add( factory, factory.getPriority() );
         }
 
-        List<NoTransporterException> errors = new ArrayList<NoTransporterException>();
+        List<NoTransporterException> errors = new ArrayList<>();
         for ( PrioritizedComponent<TransporterFactory> factory : factories.getEnabled() )
         {
             try

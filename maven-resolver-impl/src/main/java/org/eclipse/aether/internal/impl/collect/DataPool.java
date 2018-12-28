@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -401,14 +402,7 @@ final class DataPool
             this.traverser = traverser;
             this.filter = filter;
 
-            int hash = 17;
-            hash = hash * 31 + artifact.hashCode();
-            hash = hash * 31 + repositories.hashCode();
-            hash = hash * 31 + hash( selector );
-            hash = hash * 31 + hash( manager );
-            hash = hash * 31 + hash( traverser );
-            hash = hash * 31 + hash( filter );
-            hashCode = hash;
+            hashCode = Objects.hash( artifact, repositories, selector, manager, traverser, filter );
         }
 
         @Override
@@ -423,9 +417,9 @@ final class DataPool
                 return false;
             }
             GraphKey that = (GraphKey) obj;
-            return artifact.equals( that.artifact ) && repositories.equals( that.repositories )
-                && eq( selector, that.selector ) && eq( manager, that.manager ) && eq( traverser, that.traverser )
-                && eq( filter, that.filter );
+            return Objects.equals( artifact, that.artifact ) && Objects.equals( repositories, that.repositories )
+                && Objects.equals( selector, that.selector ) && Objects.equals( manager, that.manager )
+                && Objects.equals( traverser, that.traverser ) && Objects.equals( filter, that.filter );
         }
 
         @Override
@@ -433,17 +427,5 @@ final class DataPool
         {
             return hashCode;
         }
-
-        private static <T> boolean eq( T o1, T o2 )
-        {
-            return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
-        }
-
-        private static int hash( Object o )
-        {
-            return ( o != null ) ? o.hashCode() : 0;
-        }
-
     }
-
 }

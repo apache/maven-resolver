@@ -41,7 +41,7 @@ public class ConsoleDependencyGraphDumper
 
     private PrintStream out;
 
-    private List<ChildInfo> childInfos = new ArrayList<ChildInfo>();
+    private List<ChildInfo> childInfos = new ArrayList<>();
 
     public ConsoleDependencyGraphDumper()
     {
@@ -85,19 +85,16 @@ public class ConsoleDependencyGraphDumper
             }
             buffer.append( "]" );
         }
+        String premanaged = DependencyManagerUtils.getPremanagedVersion( node );
+        if ( premanaged != null && !premanaged.equals( a.getBaseVersion() ) )
         {
-            String premanaged = DependencyManagerUtils.getPremanagedVersion( node );
-            if ( premanaged != null && !premanaged.equals( a.getBaseVersion() ) )
-            {
-                buffer.append( " (version managed from " ).append( premanaged ).append( ")" );
-            }
+            buffer.append( " (version managed from " ).append( premanaged ).append( ")" );
         }
+
+        premanaged = DependencyManagerUtils.getPremanagedScope( node );
+        if ( premanaged != null && !premanaged.equals( d.getScope() ) )
         {
-            String premanaged = DependencyManagerUtils.getPremanagedScope( node );
-            if ( premanaged != null && !premanaged.equals( d.getScope() ) )
-            {
-                buffer.append( " (scope managed from " ).append( premanaged ).append( ")" );
-            }
+            buffer.append( " (scope managed from " ).append( premanaged ).append( ")" );
         }
         DependencyNode winner = (DependencyNode) node.getData().get( ConflictResolver.NODE_DATA_WINNER );
         if ( winner != null && !ArtifactIdUtils.equalsId( a, winner.getArtifact() ) )

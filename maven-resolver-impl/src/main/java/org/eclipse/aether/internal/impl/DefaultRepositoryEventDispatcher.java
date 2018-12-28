@@ -44,7 +44,7 @@ public class DefaultRepositoryEventDispatcher
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryEventDispatcher.class );
 
-    private Collection<RepositoryListener> listeners = new ArrayList<RepositoryListener>();
+    private Collection<RepositoryListener> listeners = new ArrayList<>();
 
     public DefaultRepositoryEventDispatcher()
     {
@@ -67,7 +67,7 @@ public class DefaultRepositoryEventDispatcher
     {
         if ( listeners == null )
         {
-            this.listeners = new ArrayList<RepositoryListener>();
+            this.listeners = new ArrayList<>();
         }
         else
         {
@@ -166,11 +166,7 @@ public class DefaultRepositoryEventDispatcher
                     throw new IllegalStateException( "unknown repository event type " + event.getType() );
             }
         }
-        catch ( Exception e )
-        {
-            logError( e, listener );
-        }
-        catch ( LinkageError e )
+        catch ( Exception | LinkageError e )
         {
             logError( e, listener );
         }

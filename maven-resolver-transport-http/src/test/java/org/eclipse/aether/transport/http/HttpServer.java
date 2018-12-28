@@ -254,14 +254,12 @@ public class HttpServer
         extends AbstractHandler
     {
 
-        @SuppressWarnings( "unchecked" )
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
         {
             LOGGER.info( "{} {}{}", req.getMethod(), req.getRequestURL(),
                     req.getQueryString() != null ? "?" + req.getQueryString() : "");
 
-            Map<String, String> headers = new TreeMap<String, String>( String.CASE_INSENSITIVE_ORDER );
+            Map<String, String> headers = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
             for ( Enumeration<String> en = req.getHeaderNames(); en.hasMoreElements(); )
             {
                 String name = en.nextElement();
@@ -350,11 +348,9 @@ public class HttpServer
                 if ( checksumHeader != null )
                 {
                     Map<String, Object> checksums = ChecksumUtils.calc( file, Collections.singleton( "SHA-1" ) );
-                    switch ( checksumHeader )
+                    if ( checksumHeader == ChecksumHeader.NEXUS )
                     {
-                        case NEXUS:
-                            response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
-                            break;
+                        response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
                     }
                 }
                 if ( HttpMethod.HEAD.is( req.getMethod() ) )
@@ -474,7 +470,6 @@ public class HttpServer
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
         {
             String path = req.getPathInfo();
             if ( !path.startsWith( "/redirect/" ) )
@@ -539,7 +534,6 @@ public class HttpServer
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
         {
             if ( proxyUsername != null && proxyPassword != null )
             {

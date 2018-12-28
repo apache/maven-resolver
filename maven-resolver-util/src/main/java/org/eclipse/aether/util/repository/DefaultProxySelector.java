@@ -39,7 +39,7 @@ public final class DefaultProxySelector
     implements ProxySelector
 {
 
-    private List<ProxyDef> proxies = new ArrayList<ProxyDef>();
+    private List<ProxyDef> proxies = new ArrayList<>();
 
     /**
      * Adds the specified proxy definition to the selector. Proxy definitions are ordered, the first matching proxy for
@@ -59,7 +59,7 @@ public final class DefaultProxySelector
 
     public Proxy getProxy( RemoteRepository repository )
     {
-        Map<String, ProxyDef> candidates = new HashMap<String, ProxyDef>();
+        Map<String, ProxyDef> candidates = new HashMap<>();
 
         String host = repository.getHost();
         for ( ProxyDef proxy : proxies )
@@ -105,10 +105,11 @@ public final class DefaultProxySelector
 
         NonProxyHosts( String nonProxyHosts )
         {
-            List<Pattern> patterns = new ArrayList<Pattern>();
+            List<Pattern> patterns = new ArrayList<>();
             if ( nonProxyHosts != null )
             {
-                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" ); tokenizer.hasMoreTokens(); )
+                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" );
+                      tokenizer.hasMoreTokens(); )
                 {
                     String pattern = tokenizer.nextToken();
                     pattern = pattern.replace( ".", "\\." ).replace( "*", ".*" );

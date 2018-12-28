@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A skeleton class for metadata.
@@ -40,7 +41,7 @@ public abstract class AbstractMetadata
     public Metadata setFile( File file )
     {
         File current = getFile();
-        if ( ( current == null ) ? file == null : current.equals( file ) )
+        if ( Objects.equals( current, file ) )
         {
             return this;
         }
@@ -74,7 +75,7 @@ public abstract class AbstractMetadata
     {
         if ( properties != null && !properties.isEmpty() )
         {
-            return Collections.unmodifiableMap( new HashMap<String, String>( properties ) );
+            return Collections.unmodifiableMap( new HashMap<>( properties ) );
         }
         else
         {
@@ -123,15 +124,13 @@ public abstract class AbstractMetadata
 
         Metadata that = (Metadata) obj;
 
-        return getArtifactId().equals( that.getArtifactId() ) && getGroupId().equals( that.getGroupId() )
-            && getVersion().equals( that.getVersion() ) && getType().equals( that.getType() )
-            && getNature().equals( that.getNature() ) && eq( getFile(), that.getFile() )
-            && eq( getProperties(), that.getProperties() );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( getArtifactId(), that.getArtifactId() )
+                && Objects.equals( getGroupId(), that.getGroupId() )
+                && Objects.equals( getVersion(), that.getVersion() )
+                && Objects.equals( getType(), that.getType() )
+                && Objects.equals( getNature(), that.getNature() )
+                && Objects.equals( getFile(), that.getFile() )
+                && Objects.equals( getProperties(), that.getProperties() );
     }
 
     /**

@@ -127,11 +127,11 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession()
     {
-        systemProperties = new HashMap<String, String>();
+        systemProperties = new HashMap<>();
         systemPropertiesView = Collections.unmodifiableMap( systemProperties );
-        userProperties = new HashMap<String, String>();
+        userProperties = new HashMap<>();
         userPropertiesView = Collections.unmodifiableMap( userProperties );
-        configProperties = new HashMap<String, Object>();
+        configProperties = new HashMap<>();
         configPropertiesView = Collections.unmodifiableMap( configProperties );
         mirrorSelector = NullMirrorSelector.INSTANCE;
         proxySelector = NullProxySelector.INSTANCE;
@@ -212,7 +212,8 @@ public final class DefaultRepositorySystemSession
      *            descriptors, {@code false} to merge those with the originally specified repositories.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories( boolean ignoreArtifactDescriptorRepositories )
+    public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories(
+            boolean ignoreArtifactDescriptorRepositories )
     {
         failIfReadOnly();
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
@@ -250,7 +251,8 @@ public final class DefaultRepositorySystemSession
      *            errors should generally not be tolerated.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setArtifactDescriptorPolicy( ArtifactDescriptorPolicy artifactDescriptorPolicy )
+    public DefaultRepositorySystemSession setArtifactDescriptorPolicy(
+            ArtifactDescriptorPolicy artifactDescriptorPolicy )
     {
         failIfReadOnly();
         this.artifactDescriptorPolicy = artifactDescriptorPolicy;
@@ -398,16 +400,17 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private <T> Map<String, T> copySafe( Map<?, ?> table, Class<T> valueType )
     {
         Map<String, T> map;
         if ( table == null || table.isEmpty() )
         {
-            map = new HashMap<String, T>();
+            map = new HashMap<>();
         }
         else
         {
-            map = new HashMap<String, T>( (int) ( table.size() / 0.75f ) + 1 );
+            map = new HashMap<>( (int) ( table.size() / 0.75f ) + 1 );
             for ( Map.Entry<?, ?> entry : table.entrySet() )
             {
                 Object key = entry.getKey();
@@ -738,7 +741,8 @@ public final class DefaultRepositorySystemSession
      *            {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setDependencyGraphTransformer( DependencyGraphTransformer dependencyGraphTransformer )
+    public DefaultRepositorySystemSession setDependencyGraphTransformer(
+            DependencyGraphTransformer dependencyGraphTransformer )
     {
         failIfReadOnly();
         this.dependencyGraphTransformer = dependencyGraphTransformer;

@@ -46,11 +46,11 @@ public class TestLocalRepositoryManager
 
     private LocalRepository localRepository;
 
-    private Set<Artifact> unavailableArtifacts = new HashSet<Artifact>();
+    private Set<Artifact> unavailableArtifacts = new HashSet<>();
 
-    private Set<Artifact> artifactRegistrations = new HashSet<Artifact>();
+    private Set<Artifact> artifactRegistrations = new HashSet<>();
 
-    private Set<Metadata> metadataRegistrations = new HashSet<Metadata>();
+    private Set<Metadata> metadataRegistrations = new HashSet<>();
 
     public TestLocalRepositoryManager()
     {
@@ -77,10 +77,8 @@ public class TestLocalRepositoryManager
         String version = artifact.getVersion();
         String classifier = artifact.getClassifier();
 
-        String path =
-            String.format( "%s/%s/%s/%s-%s-%s%s.%s", groupId, artifactId, version, groupId, artifactId, version,
-                           classifier, extension );
-        return path;
+        return String.format( "%s/%s/%s/%s-%s-%s%s.%s", groupId, artifactId, version, groupId, artifactId, version,
+                       classifier, extension );
     }
 
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )

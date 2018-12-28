@@ -117,8 +117,8 @@ final class ChecksumCalculator
 
     private ChecksumCalculator( File targetFile, Collection<RepositoryLayout.Checksum> checksums )
     {
-        this.checksums = new ArrayList<Checksum>();
-        Set<String> algos = new HashSet<String>();
+        this.checksums = new ArrayList<>();
+        Set<String> algos = new HashSet<>();
         for ( RepositoryLayout.Checksum checksum : checksums )
         {
             String algo = checksum.getAlgorithm();
@@ -207,7 +207,7 @@ final class ChecksumCalculator
 
     public Map<String, Object> get()
     {
-        Map<String, Object> results = new HashMap<String, Object>();
+        Map<String, Object> results = new HashMap<>();
         for ( Checksum checksum : checksums )
         {
             results.put( checksum.algorithm, checksum.get() );

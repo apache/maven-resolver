@@ -33,7 +33,6 @@ import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -67,8 +66,8 @@ public final class ConflictResolver
 {
 
     /**
-     * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
-     * properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
+     * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
+     * configuration properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
      */
     public static final String CONFIG_PROP_VERBOSE = "aether.conflictResolver.verbose";
 
@@ -145,7 +144,7 @@ public final class ConflictResolver
             throw new RepositoryException( "conflict groups have not been identified" );
         }
 
-        Map<Object, Collection<Object>> cyclicPredecessors = new HashMap<Object, Collection<Object>>();
+        Map<Object, Collection<Object>> cyclicPredecessors = new HashMap<>();
         for ( Collection<?> cycle : conflictIdCycles )
         {
             for ( Object conflictId : cycle )
@@ -153,7 +152,7 @@ public final class ConflictResolver
                 Collection<Object> predecessors = cyclicPredecessors.get( conflictId );
                 if ( predecessors == null )
                 {
-                    predecessors = new HashSet<Object>();
+                    predecessors = new HashSet<>();
                     cyclicPredecessors.put( conflictId, predecessors );
                 }
                 predecessors.addAll( cycle );
@@ -362,7 +361,7 @@ public final class ConflictResolver
             }
             else
             {
-                Collection<String> scopes = new HashSet<String>();
+                Collection<String> scopes = new HashSet<>();
                 scopes.add( (String) derivedScopes );
                 scopes.add( derivedScope );
                 derivedScopes = scopes;
@@ -381,7 +380,7 @@ public final class ConflictResolver
         {
             if ( children == null )
             {
-                children = new ArrayList<ConflictItem>( 1 );
+                children = new ArrayList<>( 1 );
             }
             children.add( item );
         }
@@ -500,15 +499,15 @@ public final class ConflictResolver
         {
             this.conflictIds = conflictIds;
             verbose = ConfigUtils.getBoolean( context.getSession(), false, CONFIG_PROP_VERBOSE );
-            potentialAncestorIds = new HashSet<Object>( conflictIdCount * 2 );
-            resolvedIds = new HashMap<Object, DependencyNode>( conflictIdCount * 2 );
-            items = new ArrayList<ConflictItem>( 256 );
-            infos = new IdentityHashMap<List<DependencyNode>, NodeInfo>( 64 );
-            stack = new IdentityHashMap<List<DependencyNode>, Object>( 64 );
-            parentNodes = new ArrayList<DependencyNode>( 64 );
-            parentScopes = new ArrayList<String>( 64 );
-            parentOptionals = new ArrayList<Boolean>( 64 );
-            parentInfos = new ArrayList<NodeInfo>( 64 );
+            potentialAncestorIds = new HashSet<>( conflictIdCount * 2 );
+            resolvedIds = new HashMap<>( conflictIdCount * 2 );
+            items = new ArrayList<>( 256 );
+            infos = new IdentityHashMap<>( 64 );
+            stack = new IdentityHashMap<>( 64 );
+            parentNodes = new ArrayList<>( 64 );
+            parentScopes = new ArrayList<>( 64 );
+            parentOptionals = new ArrayList<>( 64 );
+            parentInfos = new ArrayList<>( 64 );
             conflictCtx = new ConflictContext( root, conflictIds, items );
             scopeCtx = new ScopeContext( null, null );
             versionSelector = ConflictResolver.this.versionSelector.getInstance( root, context );
@@ -519,7 +518,8 @@ public final class ConflictResolver
 
         void prepare( Object conflictId, Collection<Object> cyclicPredecessors )
         {
-            currentId = conflictCtx.conflictId = conflictId;
+            currentId = conflictId;
+            conflictCtx.conflictId = conflictId;
             conflictCtx.winner = null;
             conflictCtx.scope = null;
             conflictCtx.optional = null;
@@ -710,7 +710,8 @@ public final class ConflictResolver
         private void scopes( int parent, Dependency child )
         {
             scopeCtx.parentScope = ( parent > 0 ) ? parentScopes.get( parent - 1 ) : null;
-            scopeCtx.derivedScope = scopeCtx.childScope = scope( child );
+            scopeCtx.derivedScope = scope( child );
+            scopeCtx.childScope = scope( child );
         }
 
         private String scope( Dependency dependency )
@@ -721,7 +722,7 @@ public final class ConflictResolver
         private boolean deriveOptional( DependencyNode node, Object conflictId )
         {
             Dependency dep = node.getDependency();
-            boolean optional = ( dep != null ) ? dep.isOptional() : false;
+            boolean optional = ( dep != null ) && dep.isOptional();
             if ( optional || ( node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL ) != 0
                 || ( conflictId != null && resolvedIds.containsKey( conflictId ) ) )
             {
@@ -760,7 +761,8 @@ public final class ConflictResolver
         public ScopeContext( String parentScope, String childScope )
         {
             this.parentScope = ( parentScope != null ) ? parentScope : "";
-            derivedScope = this.childScope = ( childScope != null ) ? childScope : "";
+            derivedScope = ( childScope != null ) ? childScope : "";
+            this.childScope = ( childScope != null ) ? childScope : "";
         }
 
         /**
@@ -873,7 +875,8 @@ public final class ConflictResolver
          * @noreference This class is not intended to be instantiated by clients in production code, the constructor may
          *              change without notice and only exists to enable unit testing.
          */
-        public ConflictItem( DependencyNode parent, DependencyNode node, int depth, int optionalities, String... scopes )
+        public ConflictItem( DependencyNode parent, DependencyNode node, int depth, int optionalities,
+                             String... scopes )
         {
             this.parent = ( parent != null ) ? parent.getChildren() : null;
             this.artifact = ( parent != null ) ? parent.getArtifact() : null;
@@ -952,7 +955,7 @@ public final class ConflictResolver
             }
             else if ( !scopes.equals( scope ) )
             {
-                Collection<Object> set = new HashSet<Object>();
+                Collection<Object> set = new HashSet<>();
                 set.add( scopes );
                 set.add( scope );
                 scopes = set;

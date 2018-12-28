@@ -19,6 +19,8 @@ package org.eclipse.aether.repository;
  * under the License.
  */
 
+import java.util.Objects;
+
 /**
  * A proxy to use for connections to a repository.
  */
@@ -131,12 +133,9 @@ public final class Proxy
 
         Proxy that = (Proxy) obj;
 
-        return eq( type, that.type ) && eq( host, that.host ) && port == that.port && eq( auth, that.auth );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( type, that.type )
+                && Objects.equals( host, that.host ) && port == that.port
+                && Objects.equals( auth, that.auth );
     }
 
     @Override

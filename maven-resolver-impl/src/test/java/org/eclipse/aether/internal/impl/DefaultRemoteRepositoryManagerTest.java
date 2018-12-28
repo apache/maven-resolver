@@ -51,7 +51,6 @@ public class DefaultRemoteRepositoryManagerTest
 
     @Before
     public void setup()
-        throws Exception
     {
         session = TestUtils.newSession();
         session.setChecksumPolicy( null );
@@ -63,7 +62,6 @@ public class DefaultRemoteRepositoryManagerTest
 
     @After
     public void teardown()
-        throws Exception
     {
         manager = null;
         session = null;

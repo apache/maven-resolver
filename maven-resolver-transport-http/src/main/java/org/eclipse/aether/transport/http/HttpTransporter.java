@@ -162,28 +162,22 @@ final class HttpTransporter
     private static void configureClient( HttpParams params, RepositorySystemSession session,
                                          RemoteRepository repository, HttpHost proxy )
     {
-        AuthParams.setCredentialCharset( params,
-                                         ConfigUtils.getString( session,
-                                                                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
-                                                                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "."
-                                                                    + repository.getId(),
-                                                                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
+        AuthParams.setCredentialCharset( params, ConfigUtils.getString( session,
+                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
         ConnRouteParams.setDefaultProxy( params, proxy );
-        HttpConnectionParams.setConnectionTimeout( params,
-                                                   ConfigUtils.getInteger( session,
-                                                                           ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                                                                           ConfigurationProperties.CONNECT_TIMEOUT
-                                                                               + "." + repository.getId(),
-                                                                           ConfigurationProperties.CONNECT_TIMEOUT ) );
-        HttpConnectionParams.setSoTimeout( params,
-                                           ConfigUtils.getInteger( session,
-                                                                   ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                                                                   ConfigurationProperties.REQUEST_TIMEOUT + "."
-                                                                       + repository.getId(),
-                                                                   ConfigurationProperties.REQUEST_TIMEOUT ) );
+        HttpConnectionParams.setConnectionTimeout( params, ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT ) );
+        HttpConnectionParams.setSoTimeout( params, ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
+                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.REQUEST_TIMEOUT ) );
         HttpProtocolParams.setUserAgent( params, ConfigUtils.getString( session,
-                                                                        ConfigurationProperties.DEFAULT_USER_AGENT,
-                                                                        ConfigurationProperties.USER_AGENT ) );
+                ConfigurationProperties.DEFAULT_USER_AGENT,
+                ConfigurationProperties.USER_AGENT ) );
     }
 
     private static CredentialsProvider toCredentialsProvider( HttpHost server, AuthenticationContext serverAuthCtx,
@@ -346,6 +340,7 @@ final class HttpTransporter
         return response.containsHeader( HttpHeaders.DAV );
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private void mkdirs( URI uri, SharingHttpContext context )
     {
         List<URI> dirs = UriUtils.getDirectories( baseUri, uri );
@@ -453,12 +448,13 @@ final class HttpTransporter
         return request;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private <T extends HttpUriRequest> T resume( T request, GetTask task )
     {
         long resumeOffset = task.getResumeOffset();
         if ( resumeOffset > 0L && task.getDataFile() != null )
         {
-            request.setHeader( HttpHeaders.RANGE, "bytes=" + Long.toString( resumeOffset ) + '-' );
+            request.setHeader( HttpHeaders.RANGE, "bytes=" + resumeOffset + '-' );
             request.setHeader( HttpHeaders.IF_UNMODIFIED_SINCE,
                                DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60L * 1000L ) ) );
             request.setHeader( HttpHeaders.ACCEPT_ENCODING, "identity" );
@@ -466,6 +462,7 @@ final class HttpTransporter
         return request;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private void handleStatus( HttpResponse response )
         throws HttpResponseException
     {

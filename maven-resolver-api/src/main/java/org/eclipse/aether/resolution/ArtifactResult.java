@@ -25,7 +25,6 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
@@ -33,7 +32,7 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 /**
  * The result of an artifact resolution request.
  * 
- * @see RepositorySystem#resolveArtifacts(RepositorySystemSession, java.util.Collection)
+ * @see RepositorySystem#resolveArtifacts(org.eclipse.aether.RepositorySystemSession, java.util.Collection)
  * @see Artifact#getFile()
  */
 public final class ArtifactResult
@@ -116,7 +115,7 @@ public final class ArtifactResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }

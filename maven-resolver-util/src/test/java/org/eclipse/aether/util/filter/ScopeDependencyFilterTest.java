@@ -40,7 +40,7 @@ public class ScopeDependencyFilterTest
 
         NodeBuilder builder = new NodeBuilder();
         builder.scope( "compile" ).artifactId( "test" );
-        List<DependencyNode> parents = new LinkedList<DependencyNode>();
+        List<DependencyNode> parents = new LinkedList<>();
 
         // null or empty
         assertTrue( new ScopeDependencyFilter( null, null ).accept( builder.build(), parents ) );

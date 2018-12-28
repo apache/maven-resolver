@@ -72,12 +72,12 @@ final class ChecksumValidator
                               Collection<Checksum> checksums )
     {
         this.dataFile = dataFile;
-        this.tempFiles = new HashSet<File>();
+        this.tempFiles = new HashSet<>();
         this.fileProcessor = fileProcessor;
         this.checksumFetcher = checksumFetcher;
         this.checksumPolicy = checksumPolicy;
         this.checksums = checksums;
-        checksumFiles = new HashMap<File, Object>();
+        checksumFiles = new HashMap<>();
     }
 
     public ChecksumCalculator newChecksumCalculator( File targetFile )

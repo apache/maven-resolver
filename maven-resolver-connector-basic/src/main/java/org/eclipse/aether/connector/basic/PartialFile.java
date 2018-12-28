@@ -150,17 +150,7 @@ final class PartialFile
                 raf = null;
                 lock = null;
             }
-            catch ( RuntimeException e )
-            {
-                close( raf );
-                raf = null;
-                if ( !lockFile.delete() )
-                {
-                    lockFile.deleteOnExit();
-                }
-                throw e;
-            }
-            catch ( IOException e )
+            catch ( RuntimeException | IOException e )
             {
                 close( raf );
                 raf = null;
@@ -292,7 +282,8 @@ final class PartialFile
                 catch ( IOException e )
                 {
                     lockFile.close();
-                    LOGGER.debug( "Cannot create resumable file {}: {}", partFile.getAbsolutePath(), e.getMessage(), e );
+                    LOGGER.debug( "Cannot create resumable file {}: {}", partFile.getAbsolutePath(), e.getMessage(),
+                            e );
                     // fall through and try non-resumable/temporary file location
                 }
             }

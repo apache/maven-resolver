@@ -48,7 +48,7 @@ public final class DefaultRepositoryLayoutProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryLayoutProvider.class );
 
-    private Collection<RepositoryLayoutFactory> factories = new ArrayList<RepositoryLayoutFactory>();
+    private Collection<RepositoryLayoutFactory> factories = new ArrayList<>();
 
     public DefaultRepositoryLayoutProvider()
     {
@@ -76,7 +76,7 @@ public final class DefaultRepositoryLayoutProvider
     {
         if ( factories == null )
         {
-            this.factories = new ArrayList<RepositoryLayoutFactory>();
+            this.factories = new ArrayList<>();
         }
         else
         {
@@ -90,20 +90,18 @@ public final class DefaultRepositoryLayoutProvider
     {
         requireNonNull( repository, "remote repository cannot be null" );
 
-        PrioritizedComponents<RepositoryLayoutFactory> factories =
-            new PrioritizedComponents<RepositoryLayoutFactory>( session );
+        PrioritizedComponents<RepositoryLayoutFactory> factories = new PrioritizedComponents<>( session );
         for ( RepositoryLayoutFactory factory : this.factories )
         {
             factories.add( factory, factory.getPriority() );
         }
 
-        List<NoRepositoryLayoutException> errors = new ArrayList<NoRepositoryLayoutException>();
+        List<NoRepositoryLayoutException> errors = new ArrayList<>();
         for ( PrioritizedComponent<RepositoryLayoutFactory> factory : factories.getEnabled() )
         {
             try
             {
-                RepositoryLayout layout = factory.getComponent().newInstance( session, repository );
-                return layout;
+                return factory.getComponent().newInstance( session, repository );
             }
             catch ( NoRepositoryLayoutException e )
             {

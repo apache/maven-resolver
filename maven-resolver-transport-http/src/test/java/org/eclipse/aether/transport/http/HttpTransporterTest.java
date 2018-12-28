@@ -709,7 +709,7 @@ public class HttpTransporterTest
     public void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader()
         throws Exception
     {
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<>();
         headers.put( "Expect", "100-continue" );
         session.setConfigProperty( ConfigurationProperties.HTTP_HEADERS + ".test", headers );
         httpServer.setAuthentication( "testuser", "testpass" );
@@ -928,8 +928,8 @@ public class HttpTransporterTest
         httpServer.setAuthentication( "testuser", "testpass" );
         auth = new AuthenticationBuilder().addUsername( "testuser" ).addPassword( "testpass" ).build();
         newTransporter( httpServer.getHttpUrl() );
-        final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
-        Thread threads[] = new Thread[20];
+        final AtomicReference<Throwable> error = new AtomicReference<>();
+        Thread[] threads = new Thread[20];
         for ( int i = 0; i < threads.length; i++ )
         {
             final String path = "repo/file.txt?i=" + i;
@@ -980,11 +980,7 @@ public class HttpTransporterTest
             transporter.get( new GetTask( URI.create( "repo/file.txt" ) ) );
             fail( "Expected error" );
         }
-        catch ( ConnectTimeoutException e )
-        {
-            assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
-        }
-        catch ( ConnectException e )
+        catch ( ConnectTimeoutException | ConnectException e )
         {
             assertEquals( Transporter.ERROR_OTHER, transporter.classify( e ) );
         }
@@ -1033,7 +1029,7 @@ public class HttpTransporterTest
     public void testCustomHeaders()
         throws Exception
     {
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<>();
         headers.put( "User-Agent", "Custom/1.0" );
         headers.put( "X-CustomHeader", "Custom-Value" );
         session.setConfigProperty( ConfigurationProperties.USER_AGENT, "SomeTest/1.0" );

@@ -36,7 +36,6 @@ final class TestVersionScheme
 {
 
     public Version parseVersion( final String version )
-        throws InvalidVersionSpecificationException
     {
         return new TestVersion( version );
     }
@@ -50,7 +49,7 @@ final class TestVersionScheme
     public VersionConstraint parseVersionConstraint( final String constraint )
         throws InvalidVersionSpecificationException
     {
-        Collection<VersionRange> ranges = new ArrayList<VersionRange>();
+        Collection<VersionRange> ranges = new ArrayList<>();
 
         String process = constraint;
 

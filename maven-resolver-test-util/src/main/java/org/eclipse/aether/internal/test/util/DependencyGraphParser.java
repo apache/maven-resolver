@@ -52,7 +52,8 @@ import org.eclipse.aether.version.VersionScheme;
  * comment   ::= "#" rest-of-line
  * indent    ::= "|  "*  ("+" | "\\") "- "
  * reference ::= "^" id
- * node      ::= coords (range)? space (scope("&lt;" premanagedScope)?)? space "optional"? space ("relocations=" coords ("," coords)*)? ("(" id ")")?
+ * node      ::= coords (range)? space (scope("&lt;" premanagedScope)?)? space "optional"? space
+ *                  ("relocations=" coords ("," coords)*)? ("(" id ")")?
  * coords    ::= groupId ":" artifactId (":" extension (":" classifier)?)? ":" version
  * </pre>
  * 
@@ -172,7 +173,7 @@ public class DependencyGraphParser
 
         BufferedReader reader = new BufferedReader( new InputStreamReader( res.openStream(), StandardCharsets.UTF_8 ) );
 
-        List<DependencyNode> ret = new ArrayList<DependencyNode>();
+        List<DependencyNode> ret = new ArrayList<>();
         DependencyNode root = null;
         while ( ( root = parse( reader ) ) != null )
         {
@@ -191,8 +192,7 @@ public class DependencyGraphParser
         try
         {
             reader = new BufferedReader( new InputStreamReader( resource.openStream(), StandardCharsets.UTF_8 ) );
-            final DependencyNode node = parse( reader );
-            return node;
+            return parse( reader );
         }
         finally
         {
@@ -222,8 +222,8 @@ public class DependencyGraphParser
         DependencyNode node = null;
         int prevLevel = 0;
 
-        Map<String, DependencyNode> nodes = new HashMap<String, DependencyNode>();
-        LinkedList<DependencyNode> stack = new LinkedList<DependencyNode>();
+        Map<String, DependencyNode> nodes = new HashMap<>();
+        LinkedList<DependencyNode> stack = new LinkedList<>();
         boolean isRootNode = true;
 
         while ( ( line = in.readLine() ) != null )
@@ -352,7 +352,7 @@ public class DependencyGraphParser
             node.setManagedBits( managedBits );
             if ( def.relocations != null )
             {
-                List<Artifact> relocations = new ArrayList<Artifact>();
+                List<Artifact> relocations = new ArrayList<>();
                 for ( String relocation : def.relocations )
                 {
                     relocations.add( new DefaultArtifact( relocation ) );
@@ -387,7 +387,7 @@ public class DependencyGraphParser
     {
         StringBuilder ret = new StringBuilder();
 
-        List<NodeEntry> entries = new ArrayList<NodeEntry>();
+        List<NodeEntry> entries = new ArrayList<>();
 
         addNode( root, 0, entries );
 
@@ -425,7 +425,8 @@ public class DependencyGraphParser
         {
             Artifact artifact = dependency.getArtifact();
 
-            defBuilder.append( artifact.getGroupId() ).append( ":" ).append( artifact.getArtifactId() ).append( ":" ).append( artifact.getExtension() ).append( ":" ).append( artifact.getVersion() );
+            defBuilder.append( artifact.getGroupId() ).append( ":" ).append( artifact.getArtifactId() ).append( ":" )
+                    .append( artifact.getExtension() ).append( ":" ).append( artifact.getVersion() );
             if ( dependency.getScope() != null && ( !"".equals( dependency.getScope() ) ) )
             {
                 defBuilder.append( ":" ).append( dependency.getScope() );

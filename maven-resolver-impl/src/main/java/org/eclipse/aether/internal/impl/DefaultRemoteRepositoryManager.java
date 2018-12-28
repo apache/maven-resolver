@@ -119,7 +119,8 @@ public class DefaultRemoteRepositoryManager
 
     public DefaultRemoteRepositoryManager setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
     {
-        this.checksumPolicyProvider = requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
+        this.checksumPolicyProvider = requireNonNull(
+                checksumPolicyProvider, "checksum policy provider cannot be null" );
         return this;
     }
 
@@ -137,7 +138,7 @@ public class DefaultRemoteRepositoryManager
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
 
-        List<RemoteRepository> result = new ArrayList<RemoteRepository>( dominantRepositories );
+        List<RemoteRepository> result = new ArrayList<>( dominantRepositories );
 
         next: for ( RemoteRepository recessiveRepository : recessiveRepositories )
         {
@@ -274,8 +275,7 @@ public class DefaultRemoteRepositoryManager
     {
         RepositoryPolicy policy1 = releases ? repository.getPolicy( false ) : null;
         RepositoryPolicy policy2 = snapshots ? repository.getPolicy( true ) : null;
-        RepositoryPolicy policy = merge( session, policy1, policy2, true );
-        return policy;
+        return merge( session, policy1, policy2, true );
     }
 
     private RepositoryPolicy merge( RepositorySystemSession session, RepositoryPolicy policy1,
@@ -330,6 +330,7 @@ public class DefaultRemoteRepositoryManager
         else
         {
             String checksums = session.getChecksumPolicy();
+            //noinspection StatementWithEmptyBody
             if ( globalPolicy && !StringUtils.isEmpty( checksums ) )
             {
                 // use global override
@@ -342,6 +343,7 @@ public class DefaultRemoteRepositoryManager
             }
 
             String updates = session.getUpdatePolicy();
+            //noinspection StatementWithEmptyBody
             if ( globalPolicy && !StringUtils.isEmpty( updates ) )
             {
                 // use global override

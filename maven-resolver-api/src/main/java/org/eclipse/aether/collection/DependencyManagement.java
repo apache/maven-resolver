@@ -22,13 +22,12 @@ package org.eclipse.aether.collection;
 import java.util.Collection;
 import java.util.Map;
 
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 
 /**
  * The management updates to apply to a dependency.
  * 
- * @see DependencyManager#manageDependency(Dependency)
+ * @see DependencyManager#manageDependency(org.eclipse.aether.graph.Dependency)
  */
 public final class DependencyManagement
 {

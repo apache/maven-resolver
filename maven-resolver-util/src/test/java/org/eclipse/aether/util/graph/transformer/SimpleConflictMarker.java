@@ -28,7 +28,6 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 
 /**
  * Set "groupId:artId:classifier:extension" as conflict marker for every node.
@@ -45,7 +44,7 @@ class SimpleConflictMarker
             (Map<DependencyNode, Object>) context.get( TransformationContextKeys.CONFLICT_IDS );
         if ( conflictIds == null )
         {
-            conflictIds = new IdentityHashMap<DependencyNode, Object>();
+            conflictIds = new IdentityHashMap<>();
             context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
         }
 

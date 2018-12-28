@@ -64,11 +64,12 @@ final class UnionVersionRange
         if ( ranges == null || ranges.isEmpty() )
         {
             this.ranges = Collections.emptySet();
-            lowerBound = upperBound = null;
+            lowerBound = null;
+            upperBound = null;
         }
         else
         {
-            this.ranges = new HashSet<VersionRange>( ranges );
+            this.ranges = new HashSet<>( ranges );
             Bound lowerBound = null, upperBound = null;
             for ( VersionRange range : this.ranges )
             {
@@ -156,11 +157,11 @@ final class UnionVersionRange
         return ranges.equals( that.ranges );
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     @Override
     public int hashCode()
     {
-        int hash = 97 * ranges.hashCode();
-        return hash;
+        return 97 * ranges.hashCode();
     }
 
     @Override

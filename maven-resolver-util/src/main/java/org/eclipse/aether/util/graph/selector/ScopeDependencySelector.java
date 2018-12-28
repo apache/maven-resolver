@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.TreeSet;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -69,11 +70,11 @@ public final class ScopeDependencySelector
         }
         else
         {
-            copy = new HashSet<String>( scopes );
+            copy = new HashSet<>( scopes );
             if ( copy.size() <= 2 )
             {
                 // contains() is faster for smallish array (sorted for equals()!)
-                copy = new ArrayList<String>( new TreeSet<String>( copy ) );
+                copy = new ArrayList<>( new TreeSet<>( copy ) );
             }
         }
         return copy;
@@ -104,7 +105,8 @@ public final class ScopeDependencySelector
         }
 
         String scope = dependency.getScope();
-        return ( included == null || included.contains( scope ) ) && ( excluded == null || !excluded.contains( scope ) );
+        return ( included == null || included.contains( scope ) )
+                && ( excluded == null || !excluded.contains( scope ) );
     }
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
@@ -130,12 +132,8 @@ public final class ScopeDependencySelector
         }
 
         ScopeDependencySelector that = (ScopeDependencySelector) obj;
-        return transitive == that.transitive && eq( included, that.included ) && eq( excluded, that.excluded );
-    }
-
-    private static <T> boolean eq( T o1, T o2 )
-    {
-        return ( o1 != null ) ? o1.equals( o2 ) : o2 == null;
+        return transitive == that.transitive && Objects.equals( included, that.included )
+                && Objects.equals( excluded, that.excluded );
     }
 
     @Override

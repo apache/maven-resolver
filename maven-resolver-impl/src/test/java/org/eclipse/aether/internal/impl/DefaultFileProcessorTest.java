@@ -113,7 +113,6 @@ public class DefaultFileProcessorTest
         ProgressListener listener = new ProgressListener()
         {
             public void progressed( ByteBuffer buffer )
-                throws IOException
             {
                 progressed.addAndGet( buffer.remaining() );
             }

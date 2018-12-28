@@ -184,7 +184,7 @@ public final class AuthenticationContext
         this.repository = repository;
         this.proxy = proxy;
         this.auth = auth;
-        authData = new HashMap<String, Object>();
+        authData = new HashMap<>();
     }
 
     /**

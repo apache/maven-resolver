@@ -39,7 +39,7 @@ class DefaultDependencyGraphTransformationContext
     DefaultDependencyGraphTransformationContext( RepositorySystemSession session )
     {
         this.session = session;
-        this.map = new HashMap<Object, Object>();
+        this.map = new HashMap<>();
     }
 
     public RepositorySystemSession getSession()

@@ -328,7 +328,7 @@ public final class ConfigUtils
             }
             else if ( value instanceof Collection )
             {
-                return Collections.unmodifiableList( new ArrayList<Object>( (Collection<?>) value ) );
+                return Collections.unmodifiableList( new ArrayList<>( (Collection<?>) value ) );
             }
         }
 

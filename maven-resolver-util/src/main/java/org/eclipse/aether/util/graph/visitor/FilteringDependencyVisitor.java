@@ -51,8 +51,8 @@ public final class FilteringDependencyVisitor
     {
         this.visitor = requireNonNull( visitor, "dependency visitor delegate cannot be null" );
         this.filter = filter;
-        this.accepts = new Stack<Boolean>();
-        this.parents = new Stack<DependencyNode>();
+        this.accepts = new Stack<>();
+        this.parents = new Stack<>();
     }
 
     /**

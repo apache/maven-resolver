@@ -33,7 +33,7 @@ public final class DefaultAuthenticationSelector
     implements AuthenticationSelector
 {
 
-    private final Map<String, Authentication> repos = new HashMap<String, Authentication>();
+    private final Map<String, Authentication> repos = new HashMap<>();
 
     /**
      * Adds the specified authentication info for the given repository identifier.

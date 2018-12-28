@@ -70,9 +70,9 @@ public final class PathRecordingDependencyVisitor
     {
         this.filter = filter;
         this.excludeChildrenOfMatches = excludeChildrenOfMatches;
-        paths = new ArrayList<List<DependencyNode>>();
-        parents = new Stack<DependencyNode>();
-        visited = new IdentityHashMap<DependencyNode, Object>( 128 );
+        paths = new ArrayList<>();
+        parents = new Stack<>();
+        visited = new IdentityHashMap<>( 128 );
     }
 
     /**

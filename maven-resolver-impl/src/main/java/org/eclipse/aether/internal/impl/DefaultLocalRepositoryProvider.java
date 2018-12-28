@@ -48,7 +48,7 @@ public class DefaultLocalRepositoryProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultLocalRepositoryProvider.class );
 
-    private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<LocalRepositoryManagerFactory>();
+    private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<>();
 
     public DefaultLocalRepositoryProvider()
     {
@@ -72,11 +72,12 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories( Collection<LocalRepositoryManagerFactory> factories )
+    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories(
+            Collection<LocalRepositoryManagerFactory> factories )
     {
         if ( factories == null )
         {
-            managerFactories = new ArrayList<LocalRepositoryManagerFactory>( 2 );
+            managerFactories = new ArrayList<>( 2 );
         }
         else
         {
@@ -85,17 +86,17 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session, LocalRepository repository )
+    public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
+                                                             LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
-        PrioritizedComponents<LocalRepositoryManagerFactory> factories =
-            new PrioritizedComponents<LocalRepositoryManagerFactory>( session );
+        PrioritizedComponents<LocalRepositoryManagerFactory> factories = new PrioritizedComponents<>( session );
         for ( LocalRepositoryManagerFactory factory : this.managerFactories )
         {
             factories.add( factory, factory.getPriority() );
         }
 
-        List<NoLocalRepositoryManagerException> errors = new ArrayList<NoLocalRepositoryManagerException>();
+        List<NoLocalRepositoryManagerException> errors = new ArrayList<>();
         for ( PrioritizedComponent<LocalRepositoryManagerFactory> factory : factories.getEnabled() )
         {
             try

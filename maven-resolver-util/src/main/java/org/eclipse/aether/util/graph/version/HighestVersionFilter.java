@@ -45,7 +45,8 @@ public final class HighestVersionFilter
         for ( boolean hasNext = it.hasNext(); hasNext; )
         {
             it.next();
-            if ( hasNext = it.hasNext() )
+            hasNext = it.hasNext();
+            if ( hasNext )
             {
                 it.remove();
             }

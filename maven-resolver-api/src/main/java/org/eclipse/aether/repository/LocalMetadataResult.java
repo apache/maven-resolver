@@ -22,12 +22,10 @@ package org.eclipse.aether.repository;
 import java.io.File;
 import static java.util.Objects.requireNonNull;
 
-import org.eclipse.aether.RepositorySystemSession;
-
 /**
  * A result from the local repository about the existence of metadata.
  *
- * @see LocalRepositoryManager#find(RepositorySystemSession, LocalMetadataRequest)
+ * @see LocalRepositoryManager#find(org.eclipse.aether.RepositorySystemSession, LocalMetadataRequest)
  */
 public final class LocalMetadataResult
 {

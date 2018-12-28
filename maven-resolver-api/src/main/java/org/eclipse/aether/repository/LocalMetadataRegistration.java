@@ -22,13 +22,12 @@ package org.eclipse.aether.repository;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.metadata.Metadata;
 
 /**
  * A request to register metadata within the local repository.
  * 
- * @see LocalRepositoryManager#add(RepositorySystemSession, LocalMetadataRegistration)
+ * @see LocalRepositoryManager#add(org.eclipse.aether.RepositorySystemSession, LocalMetadataRegistration)
  */
 public final class LocalMetadataRegistration
 {

@@ -30,7 +30,7 @@ public final class DefaultRepositoryCache
     implements RepositoryCache
 {
 
-    private final Map<Object, Object> cache = new ConcurrentHashMap<Object, Object>( 256 );
+    private final Map<Object, Object> cache = new ConcurrentHashMap<>( 256 );
 
     public Object get( RepositorySystemSession session, Object key )
     {

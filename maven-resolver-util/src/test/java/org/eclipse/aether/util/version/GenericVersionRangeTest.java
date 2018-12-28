@@ -44,10 +44,7 @@ public class GenericVersionRangeTest
         }
         catch ( InvalidVersionSpecificationException e )
         {
-            AssertionError error =
-                new AssertionError( range + " should be valid but failed to parse due to: " + e.getMessage() );
-            error.initCause( e );
-            throw error;
+            throw new AssertionError( range + " should be valid but failed to parse due to: " + e.getMessage(), e );
         }
     }
 

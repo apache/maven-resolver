@@ -44,7 +44,6 @@ public class IniArtifactDataReaderTest
 
     @Before
     public void setup()
-        throws Exception
     {
         this.parser = new IniArtifactDataReader( "org/eclipse/aether/internal/test/util/" );
     }

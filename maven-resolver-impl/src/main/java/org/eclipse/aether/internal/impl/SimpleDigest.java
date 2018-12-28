@@ -69,6 +69,7 @@ class SimpleDigest
         }
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     public String digest()
     {
         if ( digest != null )

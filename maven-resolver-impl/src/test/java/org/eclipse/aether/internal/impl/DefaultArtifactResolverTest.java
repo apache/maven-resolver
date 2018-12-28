@@ -90,7 +90,6 @@ public class DefaultArtifactResolverTest
 
     @Before
     public void setup()
-        throws IOException
     {
         UpdateCheckManager updateCheckManager = new StaticUpdateCheckManager( true );
         repositoryConnectorProvider = new StubRepositoryConnectorProvider();
@@ -128,7 +127,7 @@ public class DefaultArtifactResolverTest
         throws IOException, ArtifactResolutionException
     {
         File tmpFile = TestFileUtils.createTempFile( "tmp" );
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
         artifact = artifact.setProperties( properties );
 
@@ -146,10 +145,10 @@ public class DefaultArtifactResolverTest
 
     @Test
     public void testResolveLocalArtifactUnsuccessful()
-        throws IOException, ArtifactResolutionException
+        throws IOException
     {
         File tmpFile = TestFileUtils.createTempFile( "tmp" );
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
         artifact = artifact.setProperties( properties );
 
@@ -182,7 +181,7 @@ public class DefaultArtifactResolverTest
 
     @Test
     public void testResolveRemoteArtifact()
-        throws IOException, ArtifactResolutionException
+        throws ArtifactResolutionException
     {
         connector.setExpectGet( artifact );
 
@@ -204,7 +203,6 @@ public class DefaultArtifactResolverTest
 
     @Test
     public void testResolveRemoteArtifactUnsuccessful()
-        throws IOException, ArtifactResolutionException
     {
         RecordingRepositoryConnector connector = new RecordingRepositoryConnector()
         {
@@ -287,7 +285,7 @@ public class DefaultArtifactResolverTest
         ArtifactRequest request1 = new ArtifactRequest( artifact1, Arrays.asList( remoteRepo ), "" );
         ArtifactRequest request2 = new ArtifactRequest( artifact2, Arrays.asList( remoteRepo ), "" );
 
-        connector.setExpectGet( new Artifact[] { artifact1, artifact2 } );
+        connector.setExpectGet( artifact1, artifact2 );
         try
         {
             resolver.resolveArtifacts( session, Arrays.asList( request1, request2 ) );
@@ -373,7 +371,7 @@ public class DefaultArtifactResolverTest
 
     @Test
     public void testResolveFromWorkspaceFallbackToRepository()
-        throws IOException, ArtifactResolutionException
+        throws ArtifactResolutionException
     {
         WorkspaceReader workspace = new WorkspaceReader()
         {
@@ -422,7 +420,7 @@ public class DefaultArtifactResolverTest
         session.setRepositoryListener( listener );
 
         File tmpFile = TestFileUtils.createTempFile( "tmp" );
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
         artifact = artifact.setProperties( properties );
 
@@ -444,12 +442,11 @@ public class DefaultArtifactResolverTest
 
     @Test
     public void testRepositoryEventsUnsuccessfulLocal()
-        throws IOException
     {
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener( listener );
 
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         properties.put( ArtifactProperties.LOCAL_PATH, "doesnotexist" );
         artifact = artifact.setProperties( properties );
 
@@ -459,7 +456,7 @@ public class DefaultArtifactResolverTest
             resolver.resolveArtifact( session, request );
             fail( "expected exception" );
         }
-        catch ( ArtifactResolutionException e )
+        catch ( ArtifactResolutionException ignored )
         {
         }
 
@@ -515,7 +512,6 @@ public class DefaultArtifactResolverTest
 
     @Test
     public void testRepositoryEventsUnsuccessfulRemote()
-        throws IOException, ArtifactResolutionException
     {
         RecordingRepositoryConnector connector = new RecordingRepositoryConnector()
         {
@@ -545,7 +541,7 @@ public class DefaultArtifactResolverTest
             resolver.resolveArtifact( session, request );
             fail( "expected exception" );
         }
-        catch ( ArtifactResolutionException e )
+        catch ( ArtifactResolutionException ignored )
         {
         }
 
@@ -632,7 +628,7 @@ public class DefaultArtifactResolverTest
             resolver.resolveArtifact( session, request );
             fail( "expected exception" );
         }
-        catch ( ArtifactResolutionException e )
+        catch ( ArtifactResolutionException ignored )
         {
         }
 
@@ -790,8 +786,7 @@ public class DefaultArtifactResolverTest
 
             public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
             {
-                LocalMetadataResult result = new LocalMetadataResult( request );
-                return result;
+                return new LocalMetadataResult( request );
             }
 
             public void add( RepositorySystemSession session, LocalMetadataRegistration request )
@@ -805,7 +800,6 @@ public class DefaultArtifactResolverTest
         {
 
             public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
-                throws VersionResolutionException
             {
                 return new VersionResult( request ).setRepository( new LocalRepository( "id" ) ).setVersion( request.getArtifact().getVersion() );
             }
@@ -875,8 +869,7 @@ public class DefaultArtifactResolverTest
 
             public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
             {
-                LocalMetadataResult result = new LocalMetadataResult( request );
-                return result;
+                return new LocalMetadataResult( request );
             }
 
             public void add( RepositorySystemSession session, LocalMetadataRegistration request )
@@ -890,7 +883,6 @@ public class DefaultArtifactResolverTest
         {
 
             public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
-                throws VersionResolutionException
             {
                 return new VersionResult( request ).setVersion( request.getArtifact().getVersion() );
             }

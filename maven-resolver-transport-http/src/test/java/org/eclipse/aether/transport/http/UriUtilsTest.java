@@ -87,7 +87,7 @@ public class UriUtilsTest
 
     private void assertUris( List<URI> actual, String... expected )
     {
-        List<String> uris = new ArrayList<String>( actual.size() );
+        List<String> uris = new ArrayList<>( actual.size() );
         for ( URI uri : actual )
         {
             uris.add( uri.toString() );

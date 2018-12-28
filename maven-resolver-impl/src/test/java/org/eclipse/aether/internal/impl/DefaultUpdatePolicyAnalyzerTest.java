@@ -41,7 +41,6 @@ public class DefaultUpdatePolicyAnalyzerTest
 
     @Before
     public void setup()
-        throws Exception
     {
         analyzer = new DefaultUpdatePolicyAnalyzer();
         session = TestUtils.newSession();
@@ -54,7 +53,6 @@ public class DefaultUpdatePolicyAnalyzerTest
 
     @Test
     public void testIsUpdateRequired_PolicyNever()
-        throws Exception
     {
         String policy = RepositoryPolicy.UPDATE_POLICY_NEVER;
         assertEquals( false, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
@@ -66,7 +64,6 @@ public class DefaultUpdatePolicyAnalyzerTest
 
     @Test
     public void testIsUpdateRequired_PolicyAlways()
-        throws Exception
     {
         String policy = RepositoryPolicy.UPDATE_POLICY_ALWAYS;
         assertEquals( true, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
@@ -78,7 +75,6 @@ public class DefaultUpdatePolicyAnalyzerTest
 
     @Test
     public void testIsUpdateRequired_PolicyDaily()
-        throws Exception
     {
         Calendar cal = Calendar.getInstance();
         cal.set( Calendar.HOUR_OF_DAY, 0 );
@@ -90,14 +86,13 @@ public class DefaultUpdatePolicyAnalyzerTest
         String policy = RepositoryPolicy.UPDATE_POLICY_DAILY;
         assertEquals( true, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
         assertEquals( false, analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight + 0, policy ) );
+        assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight, policy ) );
         assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight + 1, policy ) );
         assertEquals( true, analyzer.isUpdatedRequired( session, localMidnight - 1, policy ) );
     }
 
     @Test
     public void testIsUpdateRequired_PolicyInterval()
-        throws Exception
     {
         String policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":5";
         assertEquals( true, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );

@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -91,7 +90,7 @@ public final class InstallRequest
         {
             if ( artifacts.isEmpty() )
             {
-                artifacts = new ArrayList<Artifact>();
+                artifacts = new ArrayList<>();
             }
             artifacts.add( artifact );
         }
@@ -139,7 +138,7 @@ public final class InstallRequest
         {
             if ( this.metadata.isEmpty() )
             {
-                this.metadata = new ArrayList<Metadata>();
+                this.metadata = new ArrayList<>();
             }
             this.metadata.add( metadata );
         }

@@ -72,8 +72,8 @@ public class DefaultRepositoryCacheTest
     public void testConcurrency()
         throws Exception
     {
-        final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
-        Thread threads[] = new Thread[20];
+        final AtomicReference<Throwable> error = new AtomicReference<>();
+        Thread[] threads = new Thread[20];
         for ( int i = 0; i < threads.length; i++ )
         {
             threads[i] = new Thread()

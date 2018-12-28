@@ -142,7 +142,7 @@ class EnhancedLocalRepositoryManager
 
     private Collection<String> getRepositoryKeys( RemoteRepository repository, Collection<String> contexts )
     {
-        Collection<String> keys = new HashSet<String>();
+        Collection<String> keys = new HashSet<>();
 
         if ( contexts != null )
         {
@@ -173,7 +173,7 @@ class EnhancedLocalRepositoryManager
 
     private void addRepo( File artifactFile, Collection<String> repositories )
     {
-        Map<String, String> updates = new HashMap<String, String>();
+        Map<String, String> updates = new HashMap<>();
         for ( String repository : repositories )
         {
             updates.put( getKey( artifactFile, repository ), "" );

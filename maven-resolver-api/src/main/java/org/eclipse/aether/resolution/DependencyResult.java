@@ -24,14 +24,13 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * The result of a dependency resolution request.
  * 
- * @see RepositorySystem#resolveDependencies(RepositorySystemSession, DependencyRequest)
+ * @see RepositorySystem#resolveDependencies(org.eclipse.aether.RepositorySystemSession, DependencyRequest)
  */
 public final class DependencyResult
 {

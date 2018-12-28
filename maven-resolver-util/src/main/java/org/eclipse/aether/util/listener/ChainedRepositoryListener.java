@@ -36,7 +36,7 @@ public final class ChainedRepositoryListener
     extends AbstractRepositoryListener
 {
 
-    private final List<RepositoryListener> listeners = new CopyOnWriteArrayList<RepositoryListener>();
+    private final List<RepositoryListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * Creates a new multicast listener that delegates to the specified listeners. In contrast to the constructor, this
@@ -125,6 +125,7 @@ public final class ChainedRepositoryListener
         }
     }
 
+    @SuppressWarnings( "EmptyMethod" )
     protected void handleError( RepositoryEvent event, RepositoryListener listener, RuntimeException error )
     {
         // default just swallows errors

@@ -22,14 +22,13 @@ package org.eclipse.aether.repository;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A request to register an artifact within the local repository. Certain local repository implementations can refuse to
  * serve physically present artifacts if those haven't been previously registered to them.
  * 
- * @see LocalRepositoryManager#add(RepositorySystemSession, LocalArtifactRegistration)
+ * @see LocalRepositoryManager#add(org.eclipse.aether.RepositorySystemSession, LocalArtifactRegistration)
  */
 public final class LocalArtifactRegistration
 {

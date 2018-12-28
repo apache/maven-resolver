@@ -224,7 +224,7 @@ public class PartialFileTest
     public void init()
         throws Exception
     {
-        closeables = new ArrayList<Closeable>();
+        closeables = new ArrayList<>();
         remoteAccessChecker = new StubRemoteAccessChecker();
         dstFile = TestFileUtils.createTempFile( "Hello World!" );
         partFile = new File( dstFile.getPath() + PartialFile.EXT_PART );

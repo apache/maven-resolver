@@ -46,7 +46,6 @@ public class DefaultChecksumPolicyProviderTest
 
     @Before
     public void setup()
-        throws Exception
     {
         session = TestUtils.newSession();
         provider = new DefaultChecksumPolicyProvider();
@@ -56,7 +55,6 @@ public class DefaultChecksumPolicyProviderTest
 
     @After
     public void teardown()
-        throws Exception
     {
         provider = null;
         session = null;

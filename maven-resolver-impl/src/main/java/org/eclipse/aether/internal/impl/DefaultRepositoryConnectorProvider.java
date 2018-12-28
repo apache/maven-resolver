@@ -50,7 +50,7 @@ public class DefaultRepositoryConnectorProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryConnectorProvider.class );
 
-    private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<RepositoryConnectorFactory>();
+    private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<>();
 
     public DefaultRepositoryConnectorProvider()
     {
@@ -74,11 +74,12 @@ public class DefaultRepositoryConnectorProvider
         return this;
     }
 
-    public DefaultRepositoryConnectorProvider setRepositoryConnectorFactories( Collection<RepositoryConnectorFactory> factories )
+    public DefaultRepositoryConnectorProvider setRepositoryConnectorFactories(
+            Collection<RepositoryConnectorFactory> factories )
     {
         if ( factories == null )
         {
-            this.connectorFactories = new ArrayList<RepositoryConnectorFactory>();
+            this.connectorFactories = new ArrayList<>();
         }
         else
         {
@@ -92,14 +93,13 @@ public class DefaultRepositoryConnectorProvider
     {
         requireNonNull( repository, "remote repository cannot be null" );
 
-        PrioritizedComponents<RepositoryConnectorFactory> factories =
-            new PrioritizedComponents<RepositoryConnectorFactory>( session );
+        PrioritizedComponents<RepositoryConnectorFactory> factories = new PrioritizedComponents<>( session );
         for ( RepositoryConnectorFactory factory : this.connectorFactories )
         {
             factories.add( factory, factory.getPriority() );
         }
 
-        List<NoRepositoryConnectorException> errors = new ArrayList<NoRepositoryConnectorException>();
+        List<NoRepositoryConnectorException> errors = new ArrayList<>();
         for ( PrioritizedComponent<RepositoryConnectorFactory> factory : factories.getEnabled() )
         {
             try

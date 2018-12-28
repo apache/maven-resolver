@@ -71,7 +71,7 @@ public class DefaultInstaller
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
 
     private SyncContextFactory syncContextFactory;
 
@@ -106,7 +106,8 @@ public class DefaultInstaller
 
     public DefaultInstaller setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher,
+                "repository event dispatcher cannot be null" );
         return this;
     }
 
@@ -120,7 +121,7 @@ public class DefaultInstaller
     {
         if ( metadataFactories == null )
         {
-            this.metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+            this.metadataFactories = new ArrayList<>();
         }
         else
         {
@@ -138,15 +139,10 @@ public class DefaultInstaller
     public InstallResult install( RepositorySystemSession session, InstallRequest request )
         throws InstallationException
     {
-        SyncContext syncContext = syncContextFactory.newInstance( session, false );
 
-        try
+        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             return install( syncContext, session, request );
-        }
-        finally
-        {
-            syncContext.close();
         }
     }
 
@@ -159,9 +155,9 @@ public class DefaultInstaller
 
         List<? extends MetadataGenerator> generators = getMetadataGenerators( session, request );
 
-        List<Artifact> artifacts = new ArrayList<Artifact>( request.getArtifacts() );
+        List<Artifact> artifacts = new ArrayList<>( request.getArtifacts() );
 
-        IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<Metadata, Object>();
+        IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
 
         List<Metadata> metadatas = Utils.prepareMetadata( generators, artifacts );
 
@@ -218,7 +214,7 @@ public class DefaultInstaller
         PrioritizedComponents<MetadataGeneratorFactory> factories =
             Utils.sortMetadataGeneratorFactories( session, this.metadataFactories );
 
-        List<MetadataGenerator> generators = new ArrayList<MetadataGenerator>();
+        List<MetadataGenerator> generators = new ArrayList<>();
 
         for ( PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled() )
         {
@@ -239,7 +235,8 @@ public class DefaultInstaller
 
         File srcFile = artifact.getFile();
 
-        Collection<FileTransformer> fileTransformers = session.getFileTransformerManager().getTransformersForArtifact( artifact );
+        Collection<FileTransformer> fileTransformers = session.getFileTransformerManager()
+                .getTransformersForArtifact( artifact );
         if ( fileTransformers.isEmpty() )
         {
             install( session, trace, artifact, lrm, srcFile, null );
@@ -306,7 +303,8 @@ public class DefaultInstaller
         catch ( Exception e )
         {
             exception = e;
-            throw new InstallationException( "Failed to install artifact " + targetArtifact + ": " + e.getMessage(), e );
+            throw new InstallationException( "Failed to install artifact " + targetArtifact + ": " + e.getMessage(),
+                    e );
         }
         finally
         {

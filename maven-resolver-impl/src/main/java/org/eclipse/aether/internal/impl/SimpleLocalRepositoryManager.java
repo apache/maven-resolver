@@ -134,7 +134,7 @@ class SimpleLocalRepositoryManager
 
             buffer.append( '-' );
 
-            SortedSet<String> subKeys = new TreeSet<String>();
+            SortedSet<String> subKeys = new TreeSet<>();
             for ( RemoteRepository mirroredRepo : repository.getMirroredRepositories() )
             {
                 subKeys.add( mirroredRepo.getId() );

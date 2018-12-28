@@ -54,10 +54,10 @@ public class PrioritizedComponentsTest
     {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
-        Map<Object, Object> config = new HashMap<Object, Object>();
+        Map<Object, Object> config = new HashMap<>();
         config.put( ConfigurationProperties.PREFIX_PRIORITY + comp1.getClass().getName(), 6 );
         config.put( ConfigurationProperties.PREFIX_PRIORITY + comp2.getClass().getName(), 7 );
-        PrioritizedComponents<Exception> components = new PrioritizedComponents<Exception>( config );
+        PrioritizedComponents<Exception> components = new PrioritizedComponents<>( config );
         components.add( comp1, 1 );
         components.add( comp2, 0 );
         List<PrioritizedComponent<Exception>> sorted = components.getEnabled();
@@ -73,9 +73,9 @@ public class PrioritizedComponentsTest
     {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
-        Map<Object, Object> config = new HashMap<Object, Object>();
+        Map<Object, Object> config = new HashMap<>();
         config.put( ConfigurationProperties.IMPLICIT_PRIORITIES, true );
-        PrioritizedComponents<Exception> components = new PrioritizedComponents<Exception>( config );
+        PrioritizedComponents<Exception> components = new PrioritizedComponents<>( config );
         components.add( comp1, 1 );
         components.add( comp2, 2 );
         List<PrioritizedComponent<Exception>> sorted = components.getEnabled();
@@ -89,8 +89,8 @@ public class PrioritizedComponentsTest
     {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
-        Map<Object, Object> config = new HashMap<Object, Object>();
-        PrioritizedComponents<Exception> components = new PrioritizedComponents<Exception>( config );
+        Map<Object, Object> config = new HashMap<>();
+        PrioritizedComponents<Exception> components = new PrioritizedComponents<>( config );
 
         components.add( new UnsupportedOperationException(), Float.NaN );
         List<PrioritizedComponent<Exception>> sorted = components.getEnabled();

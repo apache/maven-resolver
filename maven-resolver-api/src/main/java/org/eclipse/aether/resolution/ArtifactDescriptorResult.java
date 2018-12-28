@@ -27,7 +27,6 @@ import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -36,7 +35,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * The result from reading an artifact descriptor.
  * 
- * @see RepositorySystem#readArtifactDescriptor(RepositorySystemSession, ArtifactDescriptorRequest)
+ * @see RepositorySystem#readArtifactDescriptor(org.eclipse.aether.RepositorySystemSession, ArtifactDescriptorRequest)
  */
 public final class ArtifactDescriptorResult
 {
@@ -73,7 +72,8 @@ public final class ArtifactDescriptorResult
         exceptions = Collections.emptyList();
         relocations = Collections.emptyList();
         aliases = Collections.emptyList();
-        dependencies = managedDependencies = Collections.emptyList();
+        dependencies = Collections.emptyList();
+        managedDependencies = Collections.emptyList();
         repositories = Collections.emptyList();
         properties = Collections.emptyMap();
     }
@@ -129,7 +129,7 @@ public final class ArtifactDescriptorResult
         {
             if ( exceptions.isEmpty() )
             {
-                exceptions = new ArrayList<Exception>();
+                exceptions = new ArrayList<>();
             }
             exceptions.add( exception );
         }
@@ -178,7 +178,7 @@ public final class ArtifactDescriptorResult
         {
             if ( relocations.isEmpty() )
             {
-                relocations = new ArrayList<Artifact>();
+                relocations = new ArrayList<>();
             }
             relocations.add( artifact );
         }
@@ -228,7 +228,7 @@ public final class ArtifactDescriptorResult
         {
             if ( aliases.isEmpty() )
             {
-                aliases = new ArrayList<Artifact>();
+                aliases = new ArrayList<>();
             }
             aliases.add( alias );
         }
@@ -321,7 +321,7 @@ public final class ArtifactDescriptorResult
         {
             if ( dependencies.isEmpty() )
             {
-                dependencies = new ArrayList<Dependency>();
+                dependencies = new ArrayList<>();
             }
             dependencies.add( dependency );
         }
@@ -369,7 +369,7 @@ public final class ArtifactDescriptorResult
         {
             if ( managedDependencies.isEmpty() )
             {
-                managedDependencies = new ArrayList<Dependency>();
+                managedDependencies = new ArrayList<>();
             }
             managedDependencies.add( dependency );
         }
@@ -417,7 +417,7 @@ public final class ArtifactDescriptorResult
         {
             if ( repositories.isEmpty() )
             {
-                repositories = new ArrayList<RemoteRepository>();
+                repositories = new ArrayList<>();
             }
             repositories.add( repository );
         }

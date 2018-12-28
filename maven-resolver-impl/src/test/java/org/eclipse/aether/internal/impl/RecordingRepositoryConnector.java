@@ -60,13 +60,13 @@ class RecordingRepositoryConnector
 
     private Metadata[] expectPutMD;
 
-    private List<Artifact> actualGet = new ArrayList<Artifact>();
+    private List<Artifact> actualGet = new ArrayList<>();
 
-    private List<Metadata> actualGetMD = new ArrayList<Metadata>();
+    private List<Metadata> actualGetMD = new ArrayList<>();
 
-    private List<Artifact> actualPut = new ArrayList<Artifact>();
+    private List<Artifact> actualPut = new ArrayList<>();
 
-    private List<Metadata> actualPutMD = new ArrayList<Metadata>();
+    private List<Metadata> actualPutMD = new ArrayList<>();
 
     public RecordingRepositoryConnector( RepositorySystemSession session, Artifact[] expectGet, Artifact[] expectPut,
                                          Metadata[] expectGetMD, Metadata[] expectPutMD )
@@ -200,7 +200,6 @@ class RecordingRepositoryConnector
     }
 
     private void fireDone( Transfer transfer )
-        throws Exception
     {
         TransferListener listener = transfer.getListener();
         if ( listener == null )
@@ -232,7 +231,7 @@ class RecordingRepositoryConnector
         assertSeenExpected( actualPutMD, expectPutMD );
     }
 
-    private void assertSeenExpected( List<? extends Object> actual, Object[] expected )
+    private void assertSeenExpected( List<?> actual, Object[] expected )
     {
         if ( expected == null )
         {
@@ -289,10 +288,10 @@ class RecordingRepositoryConnector
 
     public void resetActual()
     {
-        this.actualGet = new ArrayList<Artifact>();
-        this.actualGetMD = new ArrayList<Metadata>();
-        this.actualPut = new ArrayList<Artifact>();
-        this.actualPutMD = new ArrayList<Metadata>();
+        this.actualGet = new ArrayList<>();
+        this.actualGetMD = new ArrayList<>();
+        this.actualPut = new ArrayList<>();
+        this.actualPutMD = new ArrayList<>();
     }
 
 }

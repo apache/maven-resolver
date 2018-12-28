@@ -197,7 +197,7 @@ public final class DefaultArtifact
         }
         else
         {
-            properties = new HashMap<String, String>();
+            properties = new HashMap<>();
             if ( recessive != null )
             {
                 properties.putAll( recessive );

@@ -40,7 +40,7 @@ public class ExclusionDependencyFilterTest
 
         NodeBuilder builder = new NodeBuilder();
         builder.groupId( "com.example.test" ).artifactId( "testArtifact" );
-        List<DependencyNode> parents = new LinkedList<DependencyNode>();
+        List<DependencyNode> parents = new LinkedList<>();
         String[] excludes;
 
         excludes = new String[] { "com.example.test:testArtifact" };
@@ -55,6 +55,6 @@ public class ExclusionDependencyFilterTest
         excludes = new String[] { "otherArtifact" };
         assertTrue( new ExclusionsDependencyFilter( Arrays.asList( excludes ) ).accept( builder.build(), parents ) );
 
-        assertTrue( new ExclusionsDependencyFilter( (Collection<String>) null ).accept( builder.build(), parents ) );
+        assertTrue( new ExclusionsDependencyFilter( null ).accept( builder.build(), parents ) );
     }
 }

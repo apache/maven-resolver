@@ -55,7 +55,8 @@ public final class ChecksumUtils
         throws IOException
     {
         String checksum = "";
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( new FileInputStream( checksumFile ), StandardCharsets.UTF_8 ), 512 ) )
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader(
+                new FileInputStream( checksumFile ), StandardCharsets.UTF_8 ), 512 ) )
         {
             while ( true )
             {
@@ -118,9 +119,9 @@ public final class ChecksumUtils
     private static Map<String, Object> calc( InputStream data, Collection<String> algos )
         throws IOException
     {
-        Map<String, Object> results = new LinkedHashMap<String, Object>();
+        Map<String, Object> results = new LinkedHashMap<>();
 
-        Map<String, MessageDigest> digests = new LinkedHashMap<String, MessageDigest>();
+        Map<String, MessageDigest> digests = new LinkedHashMap<>();
         for ( String algo : algos )
         {
             try
@@ -167,6 +168,7 @@ public final class ChecksumUtils
      * @param bytes The bytes to represent in hex notation, may be be {@code null}.
      * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
      */
+    @SuppressWarnings( "checkstyle:magicnumber" )
     public static String toHexString( byte[] bytes )
     {
         if ( bytes == null )

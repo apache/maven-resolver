@@ -55,7 +55,7 @@ final class PrioritizedComponents<T>
         useInsertionOrder =
             ConfigUtils.getBoolean( configProps, ConfigurationProperties.DEFAULT_IMPLICIT_PRIORITIES,
                                     ConfigurationProperties.IMPLICIT_PRIORITIES );
-        components = new ArrayList<PrioritizedComponent<T>>();
+        components = new ArrayList<>();
         firstDisabled = 0;
     }
 
@@ -64,7 +64,7 @@ final class PrioritizedComponents<T>
         Class<?> type = getImplClass( component );
         int index = components.size();
         priority = useInsertionOrder ? -index : ConfigUtils.getFloat( configProps, priority, getConfigKeys( type ) );
-        PrioritizedComponent<T> pc = new PrioritizedComponent<T>( component, type, priority, index );
+        PrioritizedComponent<T> pc = new PrioritizedComponent<>( component, type, priority, index );
 
         if ( !useInsertionOrder )
         {
@@ -104,13 +104,14 @@ final class PrioritizedComponents<T>
 
     static String[] getConfigKeys( Class<?> type )
     {
-        List<String> keys = new ArrayList<String>();
+        List<String> keys = new ArrayList<>();
         keys.add( ConfigurationProperties.PREFIX_PRIORITY + type.getName() );
         String sn = type.getSimpleName();
         keys.add( ConfigurationProperties.PREFIX_PRIORITY + sn );
         if ( sn.endsWith( FACTORY_SUFFIX ) )
         {
-            keys.add( ConfigurationProperties.PREFIX_PRIORITY + sn.substring( 0, sn.length() - FACTORY_SUFFIX.length() ) );
+            keys.add(
+              ConfigurationProperties.PREFIX_PRIORITY + sn.substring( 0, sn.length() - FACTORY_SUFFIX.length() ) );
         }
         return keys.toArray( new String[keys.size()] );
     }

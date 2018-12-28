@@ -106,7 +106,7 @@ public final class ClassicDependencyManager
             {
                 if ( managedVersions == this.managedVersions )
                 {
-                    managedVersions = new HashMap<Object, String>( this.managedVersions );
+                    managedVersions = new HashMap<>( this.managedVersions );
                 }
                 managedVersions.put( key, version );
             }
@@ -116,7 +116,7 @@ public final class ClassicDependencyManager
             {
                 if ( managedScopes == this.managedScopes )
                 {
-                    managedScopes = new HashMap<Object, String>( this.managedScopes );
+                    managedScopes = new HashMap<>( this.managedScopes );
                 }
                 managedScopes.put( key, scope );
             }
@@ -126,7 +126,7 @@ public final class ClassicDependencyManager
             {
                 if ( managedOptionals == this.managedOptionals )
                 {
-                    managedOptionals = new HashMap<Object, Boolean>( this.managedOptionals );
+                    managedOptionals = new HashMap<>( this.managedOptionals );
                 }
                 managedOptionals.put( key, optional );
             }
@@ -136,7 +136,7 @@ public final class ClassicDependencyManager
             {
                 if ( managedLocalPaths == this.managedLocalPaths )
                 {
-                    managedLocalPaths = new HashMap<Object, String>( this.managedLocalPaths );
+                    managedLocalPaths = new HashMap<>( this.managedLocalPaths );
                 }
                 managedLocalPaths.put( key, localPath );
             }
@@ -146,12 +146,12 @@ public final class ClassicDependencyManager
             {
                 if ( managedExclusions == this.managedExclusions )
                 {
-                    managedExclusions = new HashMap<Object, Collection<Exclusion>>( this.managedExclusions );
+                    managedExclusions = new HashMap<>( this.managedExclusions );
                 }
                 Collection<Exclusion> managed = managedExclusions.get( key );
                 if ( managed == null )
                 {
-                    managed = new LinkedHashSet<Exclusion>();
+                    managed = new LinkedHashSet<>();
                     managedExclusions.put( key, managed );
                 }
                 managed.addAll( exclusions );
@@ -193,13 +193,13 @@ public final class ClassicDependencyManager
                     && dependency.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) != null )
                 {
                     Map<String, String> properties =
-                        new HashMap<String, String>( dependency.getArtifact().getProperties() );
+                        new HashMap<>( dependency.getArtifact().getProperties() );
                     properties.remove( ArtifactProperties.LOCAL_PATH );
                     management.setProperties( properties );
                 }
             }
 
-            if ( ( scope != null && JavaScopes.SYSTEM.equals( scope ) )
+            if ( ( JavaScopes.SYSTEM.equals( scope ) )
                 || ( scope == null && JavaScopes.SYSTEM.equals( dependency.getScope() ) ) )
             {
                 String localPath = managedLocalPaths.get( key );
@@ -210,7 +210,7 @@ public final class ClassicDependencyManager
                         management = new DependencyManagement();
                     }
                     Map<String, String> properties =
-                        new HashMap<String, String>( dependency.getArtifact().getProperties() );
+                        new HashMap<>( dependency.getArtifact().getProperties() );
                     properties.put( ArtifactProperties.LOCAL_PATH, localPath );
                     management.setProperties( properties );
                 }
@@ -234,7 +234,7 @@ public final class ClassicDependencyManager
             {
                 management = new DependencyManagement();
             }
-            Collection<Exclusion> result = new LinkedHashSet<Exclusion>( dependency.getExclusions() );
+            Collection<Exclusion> result = new LinkedHashSet<>( dependency.getExclusions() );
             result.addAll( exclusions );
             management.setExclusions( result );
         }

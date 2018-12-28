@@ -83,7 +83,8 @@ public class ArtifactNotFoundException
      * @param fromCache {@code true} if the exception was played back from the error cache, {@code false} if the
      *            exception actually just occurred.
      */
-    public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository, String message, boolean fromCache )
+    public ArtifactNotFoundException( Artifact artifact, RemoteRepository repository, String message,
+                                      boolean fromCache )
     {
         super( artifact, repository, message, fromCache );
     }

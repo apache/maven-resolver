@@ -20,6 +20,7 @@ package org.eclipse.aether.transport.http;
  */
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -89,13 +90,10 @@ final class SslConfig
             return false;
         }
         SslConfig that = (SslConfig) obj;
-        return eq( context, that.context ) && eq( verifier, that.verifier )
-            && Arrays.equals( cipherSuites, that.cipherSuites ) && Arrays.equals( protocols, that.protocols );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( context, that.context )
+                && Objects.equals( verifier, that.verifier )
+                && Arrays.equals( cipherSuites, that.cipherSuites )
+                && Arrays.equals( protocols, that.protocols );
     }
 
     @Override

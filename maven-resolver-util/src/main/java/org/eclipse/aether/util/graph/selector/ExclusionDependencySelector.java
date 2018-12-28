@@ -61,7 +61,7 @@ public final class ExclusionDependencySelector
     {
         if ( exclusions != null && !exclusions.isEmpty() )
         {
-            TreeSet<Exclusion> sorted = new TreeSet<Exclusion>( ExclusionComparator.INSTANCE );
+            TreeSet<Exclusion> sorted = new TreeSet<>( ExclusionComparator.INSTANCE );
             sorted.addAll( exclusions );
             this.exclusions = sorted.toArray( new Exclusion[sorted.size()] );
         }

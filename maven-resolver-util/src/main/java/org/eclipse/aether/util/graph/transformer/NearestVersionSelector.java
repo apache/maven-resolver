@@ -170,8 +170,8 @@ public final class NearestVersionSelector
 
         ConflictGroup()
         {
-            constraints = new HashSet<VersionConstraint>();
-            candidates = new ArrayList<ConflictItem>( 64 );
+            constraints = new HashSet<>();
+            candidates = new ArrayList<>( 64 );
         }
 
         @Override

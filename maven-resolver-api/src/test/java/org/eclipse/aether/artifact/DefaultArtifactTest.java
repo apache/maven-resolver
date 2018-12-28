@@ -132,7 +132,7 @@ public class DefaultArtifactTest
         assertEquals( "true", a.getProperties().get( ArtifactProperties.INCLUDES_DEPENDENCIES ) );
         assertEquals( "true", a.getProperties().get( ArtifactProperties.CONSTITUTES_BUILD_PATH ) );
 
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put( "someNonStandardProperty", "someNonStandardProperty" );
         a = new DefaultArtifact( "gid", "aid", "cls", "ext", "ver", props, type );
         assertEquals( "ext", a.getExtension() );
@@ -143,7 +143,7 @@ public class DefaultArtifactTest
         assertEquals( "true", a.getProperties().get( ArtifactProperties.CONSTITUTES_BUILD_PATH ) );
         assertEquals( "someNonStandardProperty", a.getProperties().get( "someNonStandardProperty" ) );
 
-        props = new HashMap<String, String>();
+        props = new HashMap<>();
         props.put( "someNonStandardProperty", "someNonStandardProperty" );
         props.put( ArtifactProperties.CONSTITUTES_BUILD_PATH, "rubbish" );
         props.put( ArtifactProperties.INCLUDES_DEPENDENCIES, "rubbish" );
@@ -160,7 +160,7 @@ public class DefaultArtifactTest
     @Test
     public void testPropertiesCopied()
     {
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put( "key", "value1" );
 
         Artifact a = new DefaultArtifact( "gid:aid:1", props );

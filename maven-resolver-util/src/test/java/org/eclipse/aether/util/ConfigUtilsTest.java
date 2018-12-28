@@ -34,7 +34,7 @@ import org.junit.Test;
 public class ConfigUtilsTest
 {
 
-    Map<Object, Object> config = new HashMap<Object, Object>();
+    Map<Object, Object> config = new HashMap<>();
 
     @Test
     public void testGetObject_Default()

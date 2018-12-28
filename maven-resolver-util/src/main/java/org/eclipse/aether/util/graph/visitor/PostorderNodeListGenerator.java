@@ -37,7 +37,7 @@ public final class PostorderNodeListGenerator
      */
     public PostorderNodeListGenerator()
     {
-        visits = new Stack<Boolean>();
+        visits = new Stack<>();
     }
 
     @Override

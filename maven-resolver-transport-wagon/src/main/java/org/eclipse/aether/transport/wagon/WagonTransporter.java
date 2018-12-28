@@ -96,7 +96,7 @@ final class WagonTransporter
 
     private final Properties headers;
 
-    private final Queue<Wagon> wagons = new ConcurrentLinkedQueue<Wagon>();
+    private final Queue<Wagon> wagons = new ConcurrentLinkedQueue<>();
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -154,21 +154,21 @@ final class WagonTransporter
 
         String suffix = '.' + repoId;
 
-        String fileMode = ConfigUtils.getString( session, (String) null, CONFIG_PROP_FILE_MODE + suffix );
+        String fileMode = ConfigUtils.getString( session, null, CONFIG_PROP_FILE_MODE + suffix );
         if ( fileMode != null )
         {
             perms.setFileMode( fileMode );
             result = perms;
         }
 
-        String dirMode = ConfigUtils.getString( session, (String) null, CONFIG_PROP_DIR_MODE + suffix );
+        String dirMode = ConfigUtils.getString( session, null, CONFIG_PROP_DIR_MODE + suffix );
         if ( dirMode != null )
         {
             perms.setDirectoryMode( dirMode );
             result = perms;
         }
 
-        String group = ConfigUtils.getString( session, (String) null, CONFIG_PROP_GROUP + suffix );
+        String group = ConfigUtils.getString( session, null, CONFIG_PROP_GROUP + suffix );
         if ( group != null )
         {
             perms.setGroup( group );

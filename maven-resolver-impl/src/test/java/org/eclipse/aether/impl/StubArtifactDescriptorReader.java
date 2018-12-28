@@ -20,7 +20,6 @@ package org.eclipse.aether.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
@@ -33,8 +32,7 @@ public class StubArtifactDescriptorReader
                                                             ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException
     {
-        ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
-        return result;
+        return new ArtifactDescriptorResult( request );
     }
 
 }

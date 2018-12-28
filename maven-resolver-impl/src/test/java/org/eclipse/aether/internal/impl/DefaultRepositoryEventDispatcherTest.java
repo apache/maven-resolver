@@ -40,7 +40,6 @@ public class DefaultRepositoryEventDispatcherTest
 
     @Test
     public void testDispatchHandlesAllEventTypes()
-        throws Exception
     {
         DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher();
 
@@ -75,7 +74,6 @@ public class DefaultRepositoryEventDispatcherTest
         public String methodName;
 
         public Object invoke( Object proxy, Method method, Object[] args )
-            throws Throwable
         {
             if ( args.length == 1 && args[0] instanceof RepositoryEvent )
             {

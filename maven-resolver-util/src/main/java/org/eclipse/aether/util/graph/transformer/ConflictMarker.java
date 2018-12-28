@@ -57,8 +57,8 @@ public final class ConflictMarker
         Map<String, Object> stats = (Map<String, Object>) context.get( TransformationContextKeys.STATS );
         long time1 = System.nanoTime();
 
-        Map<DependencyNode, Object> nodes = new IdentityHashMap<DependencyNode, Object>( 1024 );
-        Map<Object, ConflictGroup> groups = new HashMap<Object, ConflictGroup>( 1024 );
+        Map<DependencyNode, Object> nodes = new IdentityHashMap<>( 1024 );
+        Map<Object, ConflictGroup> groups = new HashMap<>( 1024 );
 
         analyze( node, nodes, groups, new int[] { 0 } );
 
@@ -175,7 +175,7 @@ public final class ConflictMarker
             }
         }
 
-        Set<Object> keys = new HashSet<Object>();
+        Set<Object> keys = new HashSet<>();
         keys.addAll( keys1 );
         keys.addAll( keys2 );
         return keys;
@@ -201,7 +201,7 @@ public final class ConflictMarker
             }
             else
             {
-                keys = new HashSet<Object>();
+                keys = new HashSet<>();
                 keys.add( key );
 
                 for ( Artifact relocation : node.getRelocations() )
@@ -223,7 +223,7 @@ public final class ConflictMarker
 
     private Map<DependencyNode, Object> mark( Collection<DependencyNode> nodes, Map<Object, ConflictGroup> groups )
     {
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<DependencyNode, Object>( nodes.size() + 1 );
+        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<>( nodes.size() + 1 );
 
         for ( DependencyNode node : nodes )
         {

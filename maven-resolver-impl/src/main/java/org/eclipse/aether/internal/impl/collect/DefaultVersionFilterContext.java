@@ -41,9 +41,6 @@ import org.eclipse.aether.version.VersionConstraint;
 final class DefaultVersionFilterContext
     implements VersionFilter.VersionFilterContext
 {
-
-    private final Iterator<Version> EMPTY = Collections.<Version>emptySet().iterator();
-
     private final RepositorySystemSession session;
 
     private Dependency dependency;
@@ -91,7 +88,7 @@ final class DefaultVersionFilterContext
             }
             return Collections.singletonList( iterator().next() );
         }
-        List<Version> versions = new ArrayList<Version>( count );
+        List<Version> versions = new ArrayList<>( count );
         for ( Version version : this )
         {
             versions.add( version );
@@ -131,7 +128,7 @@ final class DefaultVersionFilterContext
 
     public Iterator<Version> iterator()
     {
-        return ( count > 0 ) ? new VersionIterator() : EMPTY;
+        return ( count > 0 ) ? new VersionIterator() : Collections.<Version>emptySet().iterator();
     }
 
     @Override
@@ -164,6 +161,7 @@ final class DefaultVersionFilterContext
             advance();
         }
 
+        @SuppressWarnings( "StatementWithEmptyBody" )
         private void advance()
         {
             for ( next = index + 1; next < size && deleted[next] != (byte) 0; next++ )

@@ -24,15 +24,13 @@ import java.util.Collection;
 import java.util.Collections;
 import static java.util.Objects.requireNonNull;
 
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 /**
  * The result of installing artifacts and their accompanying metadata into the a remote repository.
  * 
- * @see RepositorySystem#install(RepositorySystemSession, InstallRequest)
+ * @see org.eclipse.aether.RepositorySystem#install(org.eclipse.aether.RepositorySystemSession, InstallRequest)
  */
 public final class InstallResult
 {
@@ -106,7 +104,7 @@ public final class InstallResult
         {
             if ( artifacts.isEmpty() )
             {
-                artifacts = new ArrayList<Artifact>();
+                artifacts = new ArrayList<>();
             }
             artifacts.add( artifact );
         }
@@ -155,7 +153,7 @@ public final class InstallResult
         {
             if ( this.metadata.isEmpty() )
             {
-                this.metadata = new ArrayList<Metadata>();
+                this.metadata = new ArrayList<>();
             }
             this.metadata.add( metadata );
         }

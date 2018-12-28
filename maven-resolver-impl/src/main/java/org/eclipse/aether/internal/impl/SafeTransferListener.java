@@ -57,7 +57,8 @@ class SafeTransferListener
 
     private void logError( TransferEvent event, Throwable e )
     {
-        LOGGER.debug( "Failed to dispatch transfer event '{}' to {}", event,  listener.getClass().getCanonicalName(), e );
+        LOGGER.debug( "Failed to dispatch transfer event '{}' to {}", event,  listener.getClass().getCanonicalName(),
+                e );
     }
 
     @Override

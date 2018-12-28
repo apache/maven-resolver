@@ -55,7 +55,6 @@ public class ChecksumUtilTest
 
     @BeforeClass
     public static void beforeClass()
-        throws IOException
     {
         emptyChecksums.put( "MD5", "d41d8cd98f00b204e9800998ecf8427e" );
         emptyChecksums.put( "SHA-1", "da39a3ee5e6b4b0d3255bfef95601890afd80709" );

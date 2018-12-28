@@ -116,7 +116,8 @@ public class DefaultUpdateCheckManager
         Artifact artifact = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File artifactFile = requireNonNull( check.getFile(), String.format( "The artifact '%s' has no file attached", artifact ) );
+        File artifactFile = requireNonNull( check.getFile(), String.format( "The artifact '%s' has no file attached",
+                artifact ) );
 
         boolean fileExists = check.isFileValid() && artifactFile.exists();
 
@@ -242,7 +243,8 @@ public class DefaultUpdateCheckManager
         Metadata metadata = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File metadataFile = requireNonNull( check.getFile(), String.format( "The metadata '%s' has no file attached", metadata ) );
+        File metadataFile = requireNonNull( check.getFile(), String.format( "The metadata '%s' has no file attached",
+                metadata ) );
 
         boolean fileExists = check.isFileValid() && metadataFile.exists();
 
@@ -372,7 +374,7 @@ public class DefaultUpdateCheckManager
         Set<String> mirroredUrls = Collections.emptySet();
         if ( repository.isRepositoryManager() )
         {
-            mirroredUrls = new TreeSet<String>();
+            mirroredUrls = new TreeSet<>();
             for ( RemoteRepository mirroredRepository : repository.getMirroredRepositories() )
             {
                 mirroredUrls.add( normalizeRepoUrl( mirroredRepository.getUrl() ) );
@@ -489,7 +491,7 @@ public class DefaultUpdateCheckManager
         while ( !( checkedFiles instanceof Map ) )
         {
             Object old = checkedFiles;
-            checkedFiles = new ConcurrentHashMap<Object, Object>( 256 );
+            checkedFiles = new ConcurrentHashMap<>( 256 );
             if ( data.set( SESSION_CHECKS, old, checkedFiles ) )
             {
                 break;
@@ -557,7 +559,7 @@ public class DefaultUpdateCheckManager
 
     private Properties write( File touchFile, String dataKey, String transferKey, Exception error )
     {
-        Map<String, String> updates = new HashMap<String, String>();
+        Map<String, String> updates = new HashMap<>();
 
         String timestamp = Long.toString( System.currentTimeMillis() );
 

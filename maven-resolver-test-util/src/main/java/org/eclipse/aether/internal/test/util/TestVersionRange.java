@@ -23,6 +23,8 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionRange;
 
+import java.util.Objects;
+
 /**
  * A version range inspired by mathematical range syntax. For example, "[1.0,2.0)", "[1.0,)" or "[1.0]".
  */
@@ -89,7 +91,8 @@ final class TestVersionRange
                     + ", single version must be surrounded by []" );
             }
 
-            lowerBound = upperBound = new TestVersion( process.trim() );
+            lowerBound = new TestVersion( process.trim() );
+            upperBound = new TestVersion( process.trim() );
         }
         else
         {
@@ -202,12 +205,8 @@ final class TestVersionRange
         TestVersionRange that = (TestVersionRange) obj;
 
         return upperBoundInclusive == that.upperBoundInclusive && lowerBoundInclusive == that.lowerBoundInclusive
-            && eq( upperBound, that.upperBound ) && eq( lowerBound, that.lowerBound );
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+            && Objects.equals( upperBound, that.upperBound )
+            && Objects.equals( lowerBound, that.lowerBound );
     }
 
     @Override

@@ -37,7 +37,7 @@ final class AuthSchemePool
 
     AuthSchemePool()
     {
-        authSchemes = new LinkedList<AuthScheme>();
+        authSchemes = new LinkedList<>();
     }
 
     public synchronized AuthScheme get()

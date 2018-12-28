@@ -152,8 +152,9 @@ public class AetherModule
 
     @Provides
     @Singleton
-    Set<LocalRepositoryManagerFactory> provideLocalRepositoryManagerFactories( @Named( "simple" ) LocalRepositoryManagerFactory simple,
-                                                                               @Named( "enhanced" ) LocalRepositoryManagerFactory enhanced )
+    Set<LocalRepositoryManagerFactory> provideLocalRepositoryManagerFactories(
+            @Named( "simple" ) LocalRepositoryManagerFactory simple,
+            @Named( "enhanced" ) LocalRepositoryManagerFactory enhanced )
     {
         Set<LocalRepositoryManagerFactory> factories = new HashSet<>();
         factories.add( simple );

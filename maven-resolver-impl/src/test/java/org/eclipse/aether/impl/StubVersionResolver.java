@@ -20,7 +20,6 @@ package org.eclipse.aether.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
@@ -32,8 +31,7 @@ public class StubVersionResolver
     public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
         throws VersionResolutionException
     {
-        VersionResult result = new VersionResult( request );
-        return result;
+        return new VersionResult( request );
     }
 
 }

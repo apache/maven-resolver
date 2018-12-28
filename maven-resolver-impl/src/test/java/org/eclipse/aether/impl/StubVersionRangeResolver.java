@@ -20,9 +20,7 @@ package org.eclipse.aether.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 
 public class StubVersionRangeResolver
@@ -30,10 +28,8 @@ public class StubVersionRangeResolver
 {
 
     public VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
-        throws VersionRangeResolutionException
     {
-        VersionRangeResult result = new VersionRangeResult( request );
-        return result;
+        return new VersionRangeResult( request );
     }
 
 }

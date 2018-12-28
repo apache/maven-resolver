@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -32,7 +31,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * A request to resolve a metaversion.
  * 
- * @see RepositorySystem#resolveVersion(RepositorySystemSession, VersionRequest)
+ * @see RepositorySystem#resolveVersion(org.eclipse.aether.RepositorySystemSession, VersionRequest)
  */
 public final class VersionRequest
 {
@@ -130,7 +129,7 @@ public final class VersionRequest
         {
             if ( this.repositories.isEmpty() )
             {
-                this.repositories = new ArrayList<RemoteRepository>();
+                this.repositories = new ArrayList<>();
             }
             this.repositories.add( repository );
         }

@@ -21,6 +21,8 @@ package org.eclipse.aether.util.repository;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.repository.Authentication;
@@ -79,6 +81,7 @@ final class SecretAuthentication
         return ( chars != null ) ? chars.clone() : null;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private char[] xor( char[] chars )
     {
         if ( chars != null )
@@ -140,7 +143,7 @@ final class SecretAuthentication
             return false;
         }
         SecretAuthentication that = (SecretAuthentication) obj;
-        if ( !eq( key, that.key ) || secretHash != that.secretHash )
+        if ( !Objects.equals( key, that.key ) || secretHash != that.secretHash )
         {
             return false;
         }
@@ -157,11 +160,6 @@ final class SecretAuthentication
             clear( secret );
             clear( thatSecret );
         }
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
     }
 
     @Override

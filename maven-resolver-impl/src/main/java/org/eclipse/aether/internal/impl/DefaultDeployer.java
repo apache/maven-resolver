@@ -90,7 +90,7 @@ public class DefaultDeployer
 
     private UpdateCheckManager updateCheckManager;
 
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
 
     private SyncContextFactory syncContextFactory;
 
@@ -101,6 +101,7 @@ public class DefaultDeployer
         // enables default constructor
     }
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
     DefaultDeployer( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                      RepositoryConnectorProvider repositoryConnectorProvider,
@@ -138,19 +139,22 @@ public class DefaultDeployer
 
     public DefaultDeployer setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull(
+                repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultDeployer setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull(
+                repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultDeployer setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull(
+                remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
@@ -170,7 +174,7 @@ public class DefaultDeployer
     {
         if ( metadataFactories == null )
         {
-            this.metadataFactories = new ArrayList<MetadataGeneratorFactory>();
+            this.metadataFactories = new ArrayList<>();
         }
         else
         {
@@ -204,15 +208,9 @@ public class DefaultDeployer
                 + request.getRepository().getUrl() + ") is in offline mode", e );
         }
 
-        SyncContext syncContext = syncContextFactory.newInstance( session, false );
-
-        try
+        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             return deploy( syncContext, session, request );
-        }
-        finally
-        {
-            syncContext.close();
         }
     }
 
@@ -241,13 +239,13 @@ public class DefaultDeployer
 
             FileTransformerManager fileTransformerManager = session.getFileTransformerManager();
 
-            List<ArtifactUpload> artifactUploads = new ArrayList<ArtifactUpload>();
-            List<MetadataUpload> metadataUploads = new ArrayList<MetadataUpload>();
-            IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<Metadata, Object>();
+            List<ArtifactUpload> artifactUploads = new ArrayList<>();
+            List<MetadataUpload> metadataUploads = new ArrayList<>();
+            IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
 
             EventCatapult catapult = new EventCatapult( session, trace, repository, repositoryEventDispatcher );
 
-            List<Artifact> artifacts = new ArrayList<Artifact>( request.getArtifacts() );
+            List<Artifact> artifacts = new ArrayList<>( request.getArtifacts() );
 
             List<Metadata> metadatas = Utils.prepareMetadata( generators, artifacts );
 
@@ -270,14 +268,16 @@ public class DefaultDeployer
 
                 artifacts.set( i, artifact );
 
-                Collection<FileTransformer> fileTransformers = fileTransformerManager.getTransformersForArtifact( artifact );
+                Collection<FileTransformer> fileTransformers =
+                        fileTransformerManager.getTransformersForArtifact( artifact );
                 if ( !fileTransformers.isEmpty() )
                 {
                     for ( FileTransformer fileTransformer : fileTransformers )
                     {
                         Artifact targetArtifact = fileTransformer.transformArtifact( artifact );
 
-                        ArtifactUpload upload = new ArtifactUpload( targetArtifact, artifact.getFile(), fileTransformer );
+                        ArtifactUpload upload = new ArtifactUpload( targetArtifact, artifact.getFile(),
+                                fileTransformer );
                         upload.setTrace( trace );
                         upload.setListener( new ArtifactUploadListener( catapult, upload ) );
                         artifactUploads.add( upload );
@@ -349,7 +349,7 @@ public class DefaultDeployer
         PrioritizedComponents<MetadataGeneratorFactory> factories =
             Utils.sortMetadataGeneratorFactories( session, this.metadataFactories );
 
-        List<MetadataGenerator> generators = new ArrayList<MetadataGenerator>();
+        List<MetadataGenerator> generators = new ArrayList<>();
 
         for ( PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled() )
         {
@@ -377,19 +377,17 @@ public class DefaultDeployer
         {
             if ( !( (MergeableMetadata) metadata ).isMerged() )
             {
-                {
-                    RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    repositoryEventDispatcher.dispatch( event.build() );
+                RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                repositoryEventDispatcher.dispatch( event.build() );
 
-                    event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADING );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    repositoryEventDispatcher.dispatch( event.build() );
-                }
+                event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADING );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                repositoryEventDispatcher.dispatch( event.build() );
 
                 RepositoryPolicy policy = getPolicy( session, repository, metadata.getNature() );
                 MetadataDownload download = new MetadataDownload();
@@ -407,24 +405,21 @@ public class DefaultDeployer
                     dstFile.delete();
                 }
 
-                {
-                    RepositoryEvent.Builder event =
-                        new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADED );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    event.setException( error );
-                    event.setFile( dstFile );
-                    repositoryEventDispatcher.dispatch( event.build() );
+                event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADED );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                event.setException( error );
+                event.setFile( dstFile );
+                repositoryEventDispatcher.dispatch( event.build() );
 
-                    event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVED );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    event.setException( error );
-                    event.setFile( dstFile );
-                    repositoryEventDispatcher.dispatch( event.build() );
-                }
+                event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVED );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                event.setException( error );
+                event.setFile( dstFile );
+                repositoryEventDispatcher.dispatch( event.build() );
 
                 if ( error != null && !( error instanceof MetadataNotFoundException ) )
                 {
@@ -458,7 +453,7 @@ public class DefaultDeployer
             }
         }
 
-        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<Metadata, MetadataTransferException>();
+        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
         check.setItem( metadata );
         check.setFile( dstFile );
         check.setRepository( repository );

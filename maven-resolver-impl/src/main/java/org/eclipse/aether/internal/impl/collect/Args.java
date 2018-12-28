@@ -50,6 +50,7 @@ class Args
 
     final ExecutorService executor;
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
           DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
           CollectRequest request, ExecutorService executor )

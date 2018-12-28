@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import static java.util.Objects.requireNonNull;
+
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,7 +104,8 @@ public final class RemoteRepository
         }
         else
         {
-            protocol = host = "";
+            protocol = "";
+            host = "";
         }
     }
 
@@ -253,15 +256,12 @@ public final class RemoteRepository
 
         RemoteRepository that = (RemoteRepository) obj;
 
-        return eq( url, that.url ) && eq( type, that.type ) && eq( id, that.id )
-            && eq( releasePolicy, that.releasePolicy ) && eq( snapshotPolicy, that.snapshotPolicy )
-            && eq( proxy, that.proxy ) && eq( authentication, that.authentication )
-            && eq( mirroredRepositories, that.mirroredRepositories ) && repositoryManager == that.repositoryManager;
-    }
-
-    private static <T> boolean eq( T s1, T s2 )
-    {
-        return s1 != null ? s1.equals( s2 ) : s2 == null;
+        return Objects.equals( url, that.url ) && Objects.equals( type, that.type )
+                && Objects.equals( id, that.id ) && Objects.equals( releasePolicy, that.releasePolicy )
+                && Objects.equals( snapshotPolicy, that.snapshotPolicy ) && Objects.equals( proxy, that.proxy )
+                && Objects.equals( authentication, that.authentication )
+                && Objects.equals( mirroredRepositories, that.mirroredRepositories )
+                && repositoryManager == that.repositoryManager;
     }
 
     @Override
@@ -361,7 +361,7 @@ public final class RemoteRepository
 
         private <T> void delta( int flag, T builder, T prototype )
         {
-            boolean equal = ( builder != null ) ? builder.equals( prototype ) : prototype == null;
+            boolean equal = Objects.equals( builder, prototype );
             if ( equal )
             {
                 delta &= ~flag;
@@ -428,7 +428,8 @@ public final class RemoteRepository
          */
         public Builder setPolicy( RepositoryPolicy policy )
         {
-            this.releasePolicy = this.snapshotPolicy = ( policy != null ) ? policy : DEFAULT_POLICY;
+            this.releasePolicy = ( policy != null ) ? policy : DEFAULT_POLICY;
+            this.snapshotPolicy = ( policy != null ) ? policy : DEFAULT_POLICY;
             if ( prototype != null )
             {
                 delta( RELEASES, this.releasePolicy, prototype.getPolicy( false ) );
@@ -511,7 +512,7 @@ public final class RemoteRepository
         {
             if ( this.mirroredRepositories == null )
             {
-                this.mirroredRepositories = new ArrayList<RemoteRepository>();
+                this.mirroredRepositories = new ArrayList<>();
             }
             else
             {
@@ -542,7 +543,7 @@ public final class RemoteRepository
             {
                 if ( this.mirroredRepositories == null )
                 {
-                    this.mirroredRepositories = new ArrayList<RemoteRepository>();
+                    this.mirroredRepositories = new ArrayList<>();
                     if ( prototype != null )
                     {
                         mirroredRepositories.addAll( prototype.getMirroredRepositories() );
