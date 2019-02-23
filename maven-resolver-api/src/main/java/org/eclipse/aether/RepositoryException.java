@@ -49,6 +49,9 @@ public class RepositoryException
     }
 
     /**
+     * @param  prefix The prefix.
+     * @param cause The exception that caused this one, may be {@code null}.
+     * @return The message.
      * @noreference This method is not intended to be used by clients.
      */
     protected static String getMessage( String prefix, Throwable cause )

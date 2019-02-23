@@ -530,7 +530,7 @@ public final class RemoteRepository
 
         /**
          * Adds the specified repository to the list of repositories being mirrored by the repository. If this builder
-         * was {@link #RemoteRepository.Builder(RemoteRepository) constructed from a prototype}, the given repository
+         * was {@link Builder constructed from a prototype}, the given repository
          * will be added to the list of mirrored repositories from the prototype.
          * 
          * @param mirroredRepository The repository being mirrored by the repository, may be {@code null}.
