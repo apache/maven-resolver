@@ -56,6 +56,9 @@ public final class DefaultArtifact
      * 
      * @param coords The artifact coordinates in the format
      *            {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}, must not be {@code null}.
+     *
+     * @throws IllegalArgumentException If the artifact coordinates found in {@code coords} do not match the expected
+     * format.
      */
     public DefaultArtifact( String coords )
     {
@@ -69,6 +72,9 @@ public final class DefaultArtifact
      * @param coords The artifact coordinates in the format
      *            {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}, must not be {@code null}.
      * @param properties The artifact properties, may be {@code null}.
+     *
+     * @throws IllegalArgumentException If the artifact coordinates found in {@code coords} do not match the expected
+     * format.
      */
     public DefaultArtifact( String coords, Map<String, String> properties )
     {
