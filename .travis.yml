@@ -1,8 +1,5 @@
 language: java
 
-sudo: false
-dist: trusty
-
 matrix:
   include:
     - os: linux
@@ -10,15 +7,16 @@ matrix:
     - os: linux
       jdk: openjdk8
     - os: linux
-      jdk: openjdk10
+      jdk: openjdk11
+    - os: linux
+      jdk: openjdk12
 
 before_install:
 # https://github.com/travis-ci/travis-ci/issues/8408
   - unset _JAVA_OPTIONS
 
-install: mvn clean dependency:go-offline -V
-
 before_script: true
+install: true
 
 script:
   - mvn verify
