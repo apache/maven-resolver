@@ -91,9 +91,15 @@ public class DefaultArtifactTest
     }
 
     @Test( expected = IllegalArgumentException.class )
-    public void testDefaultArtifactBadString()
+    public void testDefaultArtifactContainsGroupAndArtifactOnly()
     {
         new DefaultArtifact( "gid:aid" );
+    }
+
+    @Test( expected = IllegalArgumentException.class )
+    public void testDefaultArtifactContainsGroupOnly()
+    {
+        new DefaultArtifact( "gid" );
     }
 
     @Test
