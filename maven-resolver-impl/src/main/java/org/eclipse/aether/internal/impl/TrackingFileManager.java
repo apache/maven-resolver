@@ -19,6 +19,9 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +37,7 @@ import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.WeakHashMap;
 
 /**
  * Manages potentially concurrent accesses to a properties file.
@@ -42,6 +46,14 @@ class TrackingFileManager
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( TrackingFileManager.class );
+    private final LoadingCache<File, Object> fileLockCache = CacheBuilder.newBuilder().build( new CacheLoader<File, Object>()
+    {
+        @Override
+        public Object load( File file )
+        {
+            return getLockInternal( file );
+        }
+    } );
 
     public Properties read( File file )
     {
@@ -177,6 +189,11 @@ class TrackingFileManager
     }
 
     private Object getLock( File file )
+    {
+        return fileLockCache.getUnchecked( file );
+    }
+
+    private Object getLockInternal( File file )
     {
         /*
          * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
