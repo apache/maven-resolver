@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -218,8 +219,9 @@ public class TestFileProcessor
             {
                 try
                 {
-                    buffer.rewind();
-                    buffer.limit( bytes );
+                    // Explicit cast for compatibility with covariant return type on JDK 9's ByteBuffer
+                    ( ( Buffer ) buffer ).rewind();
+                    ( ( Buffer ) buffer ).limit( bytes );
                     listener.progressed( buffer );
                 }
                 catch ( Exception e )

@@ -22,6 +22,7 @@ package org.eclipse.aether.spi.connector.transport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -251,8 +252,9 @@ public abstract class AbstractTransporter
         for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
         {
             os.write( array, 0, read );
-            buffer.rewind();
-            buffer.limit( read );
+            // Explicit cast for compatibility with covariant return type on JDK 9's ByteBuffer
+            ( (Buffer) buffer ).rewind();
+            ( (Buffer) buffer ).limit( read );
             listener.transportProgressed( buffer );
         }
     }

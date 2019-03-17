@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -164,8 +165,9 @@ final class ChecksumCalculator
                 {
                     read -= total - dataOffset;
                 }
-                buffer.rewind();
-                buffer.limit( read );
+                // Explicit cast for compatibility with covariant return type on JDK 9's ByteBuffer
+                ( (Buffer) buffer ).rewind();
+                ( (Buffer) buffer ).limit( read );
                 update( buffer );
             }
 
@@ -199,9 +201,10 @@ final class ChecksumCalculator
     {
         for ( Checksum checksum : checksums )
         {
-            data.mark();
+            // Cast ByteBuffer to Byte for JDK8 support
+            ( ( Buffer ) data ).mark();
             checksum.update( data );
-            data.reset();
+            ( ( Buffer ) data ).reset();
         }
     }
 
