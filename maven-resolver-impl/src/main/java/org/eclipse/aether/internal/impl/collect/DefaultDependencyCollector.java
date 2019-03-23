@@ -420,15 +420,15 @@ public class DefaultDependencyCollector
         Args args = context.getArgs();
         Results results = context.getResults();
 
+        if ( context.getDepSelector() != null && !context.getDepSelector().selectDependency( dc.origDependency ) )
+        {
+            return null;
+        }
+
         PremanagedDependency preManaged =
                 PremanagedDependency.create( context.getDepManager(), dc.origDependency, dc.disableVersionManagement,
                         args.premanagedState );
         Dependency dependency = preManaged.managedDependency;
-
-        if ( context.getDepSelector() != null && !context.getDepSelector().selectDependency( dependency ) )
-        {
-            return null;
-        }
 
         boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
 
