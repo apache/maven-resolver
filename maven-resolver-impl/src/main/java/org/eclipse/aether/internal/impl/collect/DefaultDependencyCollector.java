@@ -71,6 +71,7 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.FutureResult;
 import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
@@ -89,6 +90,10 @@ public class DefaultDependencyCollector
 
     static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
 
+    private static final String CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS = "aether.artifact.descriptor.threads";
+    private static final String CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS_ALT = "maven.artifact.descriptor.threads";
+    private static final int DEFAULT_NUM_ARTIFACT_DESCRIPTOR_THREADS = 5;
+
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultDependencyCollector.class );
 
     private RemoteRepositoryManager remoteRepositoryManager;
@@ -96,8 +101,6 @@ public class DefaultDependencyCollector
     private ArtifactDescriptorReader descriptorReader;
 
     private VersionRangeResolver versionRangeResolver;
-
-    private final ExecutorService executor = getExecutor();
 
     public DefaultDependencyCollector()
     {
@@ -139,17 +142,27 @@ public class DefaultDependencyCollector
         return this;
     }
 
-    /**
-     * Setup executor with 5 daemon threads in pool.
-     */
-    private ExecutorService getExecutor(  )
-    {
-        return new ThreadPoolExecutor( 5, 5, 3L, TimeUnit.SECONDS,
-                                new LinkedBlockingQueue<Runnable>(),
-                                new WorkerThreadFactory( null ) );
-    }
-
     public CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
+                    throws DependencyCollectionException
+    {
+        int numThreads = ConfigUtils.getInteger( session, DEFAULT_NUM_ARTIFACT_DESCRIPTOR_THREADS, 
+                                                 CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS,
+                                                 CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS_ALT );
+        LOGGER.debug( "{} = {} ", CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS, numThreads );
+        ThreadPoolExecutor executor = new ThreadPoolExecutor( numThreads, numThreads, 3L, TimeUnit.SECONDS,
+                                                              new LinkedBlockingQueue<Runnable>(),
+                                                              new WorkerThreadFactory( "artifact-descriptor-resolver" ) );
+        try 
+        {
+            return collectDependenciesWithExecutor( session, request, executor );            
+        }
+        finally 
+        {
+            executor.shutdown();
+        }
+    }
+    
+    private CollectResult collectDependenciesWithExecutor( RepositorySystemSession session, CollectRequest request, ExecutorService executor )
         throws DependencyCollectionException
     {
         session = DependencyCollectionUtils.optimizeSession( session );
@@ -167,7 +180,8 @@ public class DefaultDependencyCollector
         context.setDependencies( request.getDependencies() );
         context.setCollectResult( result );
         context.setTrace( trace );
-        Args args = new Args( session, trace, null, null, context, null, request );
+        
+        Args args = new Args( session, trace, null, null, context, null, request, executor );
         context.setArgs( args );
 
         Map<String, Object> stats = LOGGER.isDebugEnabled() ? new LinkedHashMap<String, Object>() : null;
@@ -218,7 +232,7 @@ public class DefaultDependencyCollector
 
             DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
 
-            args = new Args( session, trace, pool, nodes, context, versionContext, request );
+            args = new Args( session, trace, pool, nodes, context, versionContext, request, executor );
             Results results = new Results( result, session );
             context.setArgs( args );
             context.setResults( results );
@@ -403,7 +417,7 @@ public class DefaultDependencyCollector
 
     private Future<DependencyContext> asyncProcessDependency( final DependencyContext dc )
     {
-        return executor.submit( new Callable<DependencyContext>()
+        return dc.args.executor.submit( new Callable<DependencyContext>()
         {
 
             public DependencyContext call()
@@ -617,7 +631,7 @@ public class DefaultDependencyCollector
         Future<ArtifactDescriptorResult> descriptorResult = pool.getDescriptor( key, descriptorRequest );
         if ( descriptorResult == null )
         {
-            descriptorResult = executor.submit( new Callable<ArtifactDescriptorResult>()
+            descriptorResult = args.executor.submit( new Callable<ArtifactDescriptorResult>()
             {
 
                 public ArtifactDescriptorResult call()

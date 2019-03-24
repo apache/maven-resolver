@@ -19,6 +19,8 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.util.concurrent.ExecutorService;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.collection.CollectRequest;
@@ -45,11 +47,13 @@ class Args
     final DefaultVersionFilterContext versionContext;
 
     final CollectRequest request;
+    
+    final ExecutorService executor;
 
 
     Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
                  DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
-                 CollectRequest request )
+                 CollectRequest request, ExecutorService executor )
     {
         this.session = session;
         this.request = request;
@@ -60,6 +64,7 @@ class Args
         this.nodes = nodes;
         this.collectionContext = collectionContext;
         this.versionContext = versionContext;
+        this.executor = executor;
     }
 
 }
