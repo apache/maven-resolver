@@ -567,8 +567,6 @@ public class DefaultDependencyCollector
         context.setManagedDependencies( descriptorResult.getManagedDependencies() );
 
         DefaultDependencyCollectionContext childContext = context.createChildContext();
-        new DefaultDependencyCollectionContext( context.getSession(), context.getArtifact(), context.getDependency(),
-                context.getManagedDependencies() );
         Args args = context.getArgs();
 
         final List<RemoteRepository> childRepos = args.ignoreRepos ? context.getRepositories()
