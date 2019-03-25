@@ -19,12 +19,19 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 
 class PremanagedDependency
@@ -35,6 +42,16 @@ class PremanagedDependency
 
     final Boolean premanagedOptional;
 
+    /**
+     * @since 1.1.0
+     */
+    final Collection<Exclusion> premanagedExclusions;
+
+    /**
+     * @since 1.1.0
+     */
+    final Map<String, String> premanagedProperties;
+
     final int managedBits;
 
     final Dependency managedDependency;
@@ -42,11 +59,22 @@ class PremanagedDependency
     final boolean premanagedState;
 
     PremanagedDependency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
+                          Collection<Exclusion> premanagedExclusions, Map<String, String> premanagedProperties,
                           int managedBits, Dependency managedDependency, boolean premanagedState )
     {
         this.premanagedVersion = premanagedVersion;
         this.premanagedScope = premanagedScope;
         this.premanagedOptional = premanagedOptional;
+        this.premanagedExclusions =
+            premanagedExclusions != null
+                ? Collections.unmodifiableCollection( new ArrayList<>( premanagedExclusions ) )
+                : null;
+
+        this.premanagedProperties =
+            premanagedProperties != null
+                ? Collections.unmodifiableMap( new HashMap<>( premanagedProperties ) )
+                : null;
+
         this.managedBits = managedBits;
         this.managedDependency = managedDependency;
         this.premanagedState = premanagedState;
@@ -61,6 +89,8 @@ class PremanagedDependency
         String premanagedVersion = null;
         String premanagedScope = null;
         Boolean premanagedOptional = null;
+        Collection<Exclusion> premanagedExclusions = null;
+        Map<String, String> premanagedProperties = null;
 
         if ( depMngt != null )
         {
@@ -74,6 +104,7 @@ class PremanagedDependency
             if ( depMngt.getProperties() != null )
             {
                 Artifact artifact = dependency.getArtifact();
+                premanagedProperties = artifact.getProperties();
                 dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
                 managedBits |= DependencyNode.MANAGED_PROPERTIES;
             }
@@ -91,12 +122,15 @@ class PremanagedDependency
             }
             if ( depMngt.getExclusions() != null )
             {
+                premanagedExclusions = dependency.getExclusions();
                 dependency = dependency.setExclusions( depMngt.getExclusions() );
                 managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
             }
         }
-        return new PremanagedDependency( premanagedVersion, premanagedScope, premanagedOptional, managedBits,
-                                         dependency, premanagedState );
+        return new PremanagedDependency( premanagedVersion, premanagedScope, premanagedOptional,
+                                         premanagedExclusions, premanagedProperties, managedBits, dependency,
+                                         premanagedState );
+
     }
 
     public void applyTo( DefaultDependencyNode child )
@@ -107,6 +141,8 @@ class PremanagedDependency
             child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
             child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
             child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
+            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_EXCLUSIONS, premanagedExclusions );
+            child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_PROPERTIES, premanagedProperties );
         }
     }
 }
