@@ -19,9 +19,13 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +39,9 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import java.util.WeakHashMap;
 
 /**
  * Manages potentially concurrent accesses to a properties file.
@@ -46,14 +50,36 @@ class TrackingFileManager
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( TrackingFileManager.class );
-    private final LoadingCache<File, Object> fileLockCache = CacheBuilder.newBuilder().build( new CacheLoader<File, Object>()
+
+    private final LoadingCache<File, Object> fileLockCache;
+
+    TrackingFileManager()
     {
-        @Override
-        public Object load( File file )
+        this( Collections.emptyMap() );
+    }
+
+    TrackingFileManager( RepositorySystemSession session )
+    {
+        this( session.getConfigProperties() );
+    }
+
+    TrackingFileManager( Map<?, ?> configurationProperties )
+    {
+        long maxSize = ConfigUtils.getLong( configurationProperties,
+                ConfigurationProperties.DEFAULT_TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE,
+                ConfigurationProperties.TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE );
+
+        fileLockCache = CacheBuilder.newBuilder()
+                .maximumSize( maxSize )
+                .build( new CacheLoader<File, Object>()
         {
-            return getLockInternal( file );
-        }
-    } );
+            @Override
+            public Object load( File file )
+            {
+                return getLockInternal( file );
+            }
+        } );
+    }
 
     public Properties read( File file )
     {
@@ -191,6 +217,12 @@ class TrackingFileManager
     private Object getLock( File file )
     {
         return fileLockCache.getUnchecked( file );
+    }
+
+    @VisibleForTesting
+    LoadingCache<File, Object> getFileLockCache()
+    {
+        return fileLockCache;
     }
 
     private Object getLockInternal( File file )

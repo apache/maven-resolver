@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.eclipse.aether.internal.impl.TrackingFileManager;
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.junit.Test;
 
@@ -57,6 +57,7 @@ public class TrackingFileManagerTest
 
         props = tfm.read( propFile );
         assertNull( String.valueOf( props ), props );
+        assertEquals( 1, tfm.getFileLockCache().asMap().size() );
     }
 
     @Test
@@ -71,6 +72,10 @@ public class TrackingFileManagerTest
             assertNotNull( tfm.read( propFile ) );
             assertTrue( "Leaked file: " + propFile, propFile.delete() );
         }
+
+        int size = tfm.getFileLockCache().asMap().size();
+        assertTrue(size > 900);
+        assertTrue(size <= 1000);
     }
 
     @Test
@@ -87,6 +92,7 @@ public class TrackingFileManagerTest
         updates.put( "key2", null );
 
         tfm.update( propFile, updates );
+        assertEquals( 1, tfm.getFileLockCache().asMap().size() );
 
         Properties props = tfm.read( propFile );
 
@@ -94,6 +100,7 @@ public class TrackingFileManagerTest
         assertEquals( String.valueOf( props ), 1, props.size() );
         assertEquals( "v", props.get( "key1" ) );
         assertNull( String.valueOf( props.get( "key2" ) ), props.get( "key2" ) );
+        assertEquals( 1, tfm.getFileLockCache().asMap().size() );
     }
 
     @Test
@@ -111,6 +118,9 @@ public class TrackingFileManagerTest
             assertNotNull( tfm.update( propFile, updates ) );
             assertTrue( "Leaked file: " + propFile, propFile.delete() );
         }
+        int size = tfm.getFileLockCache().asMap().size();
+        assertTrue(size > 900);
+        assertTrue(size <= 1000);
     }
 
     @Test
@@ -164,6 +174,23 @@ public class TrackingFileManagerTest
         }
 
         assertEquals( Collections.emptyList(), errors );
+        assertEquals( 4, tfm.getFileLockCache().asMap().size() );
     }
 
+    @Test
+    public void testCacheSizeConfig()
+            throws Exception
+    {
+        TrackingFileManager tfm = new TrackingFileManager(
+                Collections.singletonMap( ConfigurationProperties.TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE, 5L )
+        );
+
+        for ( int i = 0; i < 1000; i++ )
+        {
+            File propFile = TestFileUtils.createTempFile( "#COMMENT\nkey1=value1\nkey2 : value2" );
+            assertNotNull( tfm.read( propFile ) );
+        }
+
+        assertEquals( 5, tfm.getFileLockCache().asMap().size() );
+    }
 }

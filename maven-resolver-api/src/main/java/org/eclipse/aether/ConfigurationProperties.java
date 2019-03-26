@@ -144,6 +144,24 @@ public final class ConfigurationProperties
      */
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
 
+    /**
+     * The prefix for configuration for internal components.
+     */
+    private static final String PREFIX_INTERNAL = PREFIX_AETHER + "internal.";
+
+    /**
+     * The size of the file lock name cache, used by the TrackingFileManager to map Files to their interned, canonical
+     * names.
+     *
+     * @see #DEFAULT_TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE
+     */
+    public static final String TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE = PREFIX_INTERNAL + "trackingFileManager.fileLockCacheSize";
+
+    /**
+     * The default size if {@link #TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE} isn't set.
+     */
+    public static final long DEFAULT_TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE = 1024L;
+
     private ConfigurationProperties()
     {
         // hide constructor

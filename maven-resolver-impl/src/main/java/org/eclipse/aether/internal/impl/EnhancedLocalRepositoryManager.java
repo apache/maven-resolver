@@ -75,7 +75,7 @@ class EnhancedLocalRepositoryManager
             filename = "_remote.repositories";
         }
         trackingFilename = filename;
-        trackingFileManager = new TrackingFileManager();
+        trackingFileManager = new TrackingFileManager( session );
     }
 
     @Override
