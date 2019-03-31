@@ -43,12 +43,12 @@ class PremanagedDependency
     final Boolean premanagedOptional;
 
     /**
-     * @since 1.1.0
+     * @since 1.4.0
      */
     final Collection<Exclusion> premanagedExclusions;
 
     /**
-     * @since 1.1.0
+     * @since 1.4.0
      */
     final Map<String, String> premanagedProperties;
 

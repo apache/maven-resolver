@@ -91,7 +91,6 @@ public class DefaultDependencyCollector
     static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
 
     private static final String CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS = "aether.artifact.descriptor.threads";
-    private static final String CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS_ALT = "maven.artifact.descriptor.threads";
     private static final int DEFAULT_NUM_ARTIFACT_DESCRIPTOR_THREADS = 5;
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultDependencyCollector.class );
@@ -146,8 +145,7 @@ public class DefaultDependencyCollector
                     throws DependencyCollectionException
     {
         int numThreads = ConfigUtils.getInteger( session, DEFAULT_NUM_ARTIFACT_DESCRIPTOR_THREADS, 
-                                                 CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS,
-                                                 CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS_ALT );
+                                                 CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS );
         LOGGER.debug( "{} = {} ", CONFIG_PROP_NUM_ARTIFACT_DESCRIPTOR_THREADS, numThreads );
         ThreadPoolExecutor executor = new ThreadPoolExecutor( numThreads, numThreads, 3L, TimeUnit.SECONDS,
                                                               new LinkedBlockingQueue<Runnable>(),
