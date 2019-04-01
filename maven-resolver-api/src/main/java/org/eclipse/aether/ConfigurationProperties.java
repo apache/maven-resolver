@@ -162,6 +162,18 @@ public final class ConfigurationProperties
      */
     public static final long DEFAULT_TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE = 1024L;
 
+    /**
+     * The size of the properties cache, used by the TrackingFileManager to map Files to their parsed properties.
+     *
+     * @see #DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_CACHE_SIZE
+     */
+    public static final String TRACKING_FILE_MANAGER_FILE_PROPERTIES_CACHE_SIZE = PREFIX_INTERNAL + "trackingFileManager.propertiesCacheSize";
+
+    /**
+     * The default size if {@link #TRACKING_FILE_MANAGER_FILE_PROPERTIES_CACHE_SIZE} isn't set.
+     */
+    public static final long DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_CACHE_SIZE = 1024L;
+
     private ConfigurationProperties()
     {
         // hide constructor

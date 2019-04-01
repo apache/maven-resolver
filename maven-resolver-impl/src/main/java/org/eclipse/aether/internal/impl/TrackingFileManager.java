@@ -50,8 +50,12 @@ class TrackingFileManager
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( TrackingFileManager.class );
-
+    /** Cache mapping Files to their canonical names, for use as a lock. */
     private final LoadingCache<File, Object> fileLockCache;
+    /** Cache mapping Files to their parsed properties. */
+    private final LoadingCache<File, Properties> propertiesCache;
+    /** Marker for nulls in the cache. Guava doesn't allow null return values from CacheLoaders. */
+    private final Properties NULL_PROPERTIES = new Properties();
 
     TrackingFileManager()
     {
@@ -65,12 +69,12 @@ class TrackingFileManager
 
     TrackingFileManager( Map<?, ?> configurationProperties )
     {
-        long maxSize = ConfigUtils.getLong( configurationProperties,
+        long lockCacheMaxSize = ConfigUtils.getLong( configurationProperties,
                 ConfigurationProperties.DEFAULT_TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE,
                 ConfigurationProperties.TRACKING_FILE_MANAGER_FILE_LOCK_CACHE_SIZE );
 
         fileLockCache = CacheBuilder.newBuilder()
-                .maximumSize( maxSize )
+                .maximumSize( lockCacheMaxSize )
                 .build( new CacheLoader<File, Object>()
         {
             @Override
@@ -79,42 +83,73 @@ class TrackingFileManager
                 return getLockInternal( file );
             }
         } );
+
+        long propertiesCacheMaxSize = ConfigUtils.getLong( configurationProperties,
+                ConfigurationProperties.DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_CACHE_SIZE,
+                ConfigurationProperties.TRACKING_FILE_MANAGER_FILE_PROPERTIES_CACHE_SIZE );
+
+        propertiesCache = CacheBuilder.newBuilder()
+                .maximumSize( propertiesCacheMaxSize )
+                .build( new CacheLoader<File, Properties>()
+        {
+            @Override
+            public Properties load( File file )
+            {
+                return readInternal( file );
+            }
+        } );
     }
 
     public Properties read( File file )
     {
         synchronized ( getLock( file ) )
         {
-            FileLock lock = null;
-            FileInputStream stream = null;
-            try
+            Properties props = propertiesCache.getUnchecked( file );
+            if ( props != NULL_PROPERTIES )
             {
-                if ( !file.exists() )
-                {
-                    return null;
-                }
-
-                stream = new FileInputStream( file );
-
-                lock = lock( stream.getChannel(), Math.max( 1, file.length() ), true );
-
-                Properties props = new Properties();
-                props.load( stream );
-
-                return props;
-            }
-            catch ( IOException e )
-            {
-                LOGGER.warn( "Failed to read tracking file {}", file, e );
-            }
-            finally
-            {
-                release( lock, file );
-                close( stream, file );
+                return ( Properties ) props.clone();
             }
         }
-
         return null;
+    }
+
+    @VisibleForTesting
+    LoadingCache<File, Properties> getPropertiesCache()
+    {
+        return propertiesCache;
+    }
+
+    private Properties readInternal( File file )
+    {
+        FileLock lock = null;
+        FileInputStream stream = null;
+        try
+        {
+            if ( !file.exists() )
+            {
+                return NULL_PROPERTIES;
+            }
+
+            stream = new FileInputStream( file );
+
+            lock = lock( stream.getChannel(), Math.max( 1, file.length() ), true );
+
+            Properties props = new Properties();
+            props.load( stream );
+
+            return props;
+        }
+        catch ( IOException e )
+        {
+            LOGGER.warn( "Failed to read tracking file {}", file, e );
+        }
+        finally
+        {
+            release( lock, file );
+            close( stream, file );
+        }
+
+        return NULL_PROPERTIES;
     }
 
     public Properties update( File file, Map<String, String> updates )
@@ -178,6 +213,7 @@ class TrackingFileManager
             {
                 release( lock, file );
                 close( raf, file );
+                propertiesCache.invalidate( file );
             }
         }
 

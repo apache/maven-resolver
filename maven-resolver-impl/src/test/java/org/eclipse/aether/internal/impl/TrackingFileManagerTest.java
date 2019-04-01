@@ -54,6 +54,7 @@ public class TrackingFileManagerTest
         assertEquals( "value2", props.get( "key2" ) );
 
         assertTrue( "Leaked file: " + propFile, propFile.delete() );
+        tfm.getPropertiesCache().invalidate( propFile );
 
         props = tfm.read( propFile );
         assertNull( String.valueOf( props ), props );
@@ -71,6 +72,7 @@ public class TrackingFileManagerTest
             File propFile = TestFileUtils.createTempFile( "#COMMENT\nkey1=value1\nkey2 : value2" );
             assertNotNull( tfm.read( propFile ) );
             assertTrue( "Leaked file: " + propFile, propFile.delete() );
+            tfm.getPropertiesCache().invalidate( propFile );
         }
 
         int size = tfm.getFileLockCache().asMap().size();
