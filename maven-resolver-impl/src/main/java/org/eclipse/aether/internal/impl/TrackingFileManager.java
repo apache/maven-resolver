@@ -42,6 +42,7 @@ import java.nio.channels.OverlappingFileLockException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Manages potentially concurrent accesses to a properties file.
@@ -87,9 +88,13 @@ class TrackingFileManager
         long propertiesCacheMaxSize = ConfigUtils.getLong( configurationProperties,
                 ConfigurationProperties.DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_CACHE_SIZE,
                 ConfigurationProperties.TRACKING_FILE_MANAGER_FILE_PROPERTIES_CACHE_SIZE );
+        long propertiesCacheExpireAfterAccess = ConfigUtils.getLong( configurationProperties,
+                ConfigurationProperties.DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_EXPIRE_AFTER_ACCESS,
+                ConfigurationProperties.TRACKING_FILE_MANAGER_FILE_PROPERTIES_EXPIRE_AFTER_ACCESS );
 
         propertiesCache = CacheBuilder.newBuilder()
                 .maximumSize( propertiesCacheMaxSize )
+                .expireAfterAccess( propertiesCacheExpireAfterAccess, TimeUnit.SECONDS )
                 .build( new CacheLoader<File, Properties>()
         {
             @Override

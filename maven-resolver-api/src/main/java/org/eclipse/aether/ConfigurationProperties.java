@@ -174,6 +174,18 @@ public final class ConfigurationProperties
      */
     public static final long DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_CACHE_SIZE = 1024L;
 
+    /**
+     * The number of seconds to keep entries in the properties cache, used by the TrackingFileManager to map Files to their parsed properties.
+     *
+     * @see #DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_CACHE_SIZE
+     */
+    public static final String TRACKING_FILE_MANAGER_FILE_PROPERTIES_EXPIRE_AFTER_ACCESS = PREFIX_INTERNAL + "trackingFileManager.propertiesExpireAfterWrite";
+
+    /**
+     * The default number of seconds if {@link #TRACKING_FILE_MANAGER_FILE_PROPERTIES_EXPIRE_AFTER_ACCESS} isn't set.
+     */
+    public static final long DEFAULT_TRACKING_FILE_MANAGER_PROPERTIES_EXPIRE_AFTER_ACCESS = 60L;
+
     private ConfigurationProperties()
     {
         // hide constructor
