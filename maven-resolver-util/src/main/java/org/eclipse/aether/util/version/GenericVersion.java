@@ -198,6 +198,7 @@ final class GenericVersion
             QUALIFIERS.put( "snapshot", -1 );
             QUALIFIERS.put( "ga", 0 );
             QUALIFIERS.put( "final", 0 );
+            QUALIFIERS.put( "release", 0 );
             QUALIFIERS.put( "", 0 );
             QUALIFIERS.put( "sp", 1 );
         }
