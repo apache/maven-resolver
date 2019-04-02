@@ -168,6 +168,7 @@ public class GenericVersionTest
         assertOrder( X_EQ_Y, "A", "A.ga.ga" );
         assertOrder( X_EQ_Y, "A", "A-ga-ga" );
         assertOrder( X_EQ_Y, "1", "1-final" );
+        assertOrder( X_EQ_Y, "1", "1-release" );
         assertOrder( X_LT_Y, "1", "1-sp" );
 
         assertOrder( X_LT_Y, "A.rc.1", "A.ga.1" );
@@ -251,6 +252,8 @@ public class GenericVersionTest
         assertOrder( X_EQ_Y, "1.ga", "1.Ga" );
         assertOrder( X_EQ_Y, "1.final", "1.FINAL" );
         assertOrder( X_EQ_Y, "1.final", "1.Final" );
+        assertOrder( X_EQ_Y, "1.release", "1.RELEASE" );
+        assertOrder( X_EQ_Y, "1.release", "1.Release" );
 
         assertOrder( X_EQ_Y, "1.sp", "1.SP" );
         assertOrder( X_EQ_Y, "1.sp", "1.Sp" );
