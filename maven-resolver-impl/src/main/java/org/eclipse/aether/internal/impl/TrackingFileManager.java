@@ -32,9 +32,9 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages potentially concurrent accesses to a properties file.
@@ -293,15 +293,10 @@ class TrackingFileManager
     }
 
     /**
-     * Canonicalized files by their path (the same canonicalized file may be registered under different paths). This
-     * cache is especially useful on Windows platform where canonicalization is relatively expensive.
+     * All tracking files cache entries by their canonicalized file for 5 minutes until they are released.
+     * The entries are refreshed upon access (their timestamp is updated).
      */
-    private static ConcurrentHashMap<String, File> canonicalizedCache = new ConcurrentHashMap<>();
-
-    /**
-     * All tracking files cache entries by their canonicalized file.
-     */
-    private static ConcurrentHashMap<File, CacheEntry> cache = new ConcurrentHashMap<>();
+    private static Map<File, CacheEntry> cache = Collections.synchronizedMap(new LRUCache<File, CacheEntry>(10000, 5*60*1000));
 
     private CacheEntry getCacheEntry( File file )
     {
@@ -313,8 +308,9 @@ class TrackingFileManager
             // those entries will prevail at the end.
             // since jdk8 we could use computeIfAbsent for better consistency
             cacheEntry = new CacheEntry( file );
-            cache.put( key, cacheEntry );
         }
+        // make sure that element's ttl is always refreshed in LRUCache
+        cache.put(key, cacheEntry);
         return cacheEntry;
     }
 
@@ -365,14 +361,7 @@ class TrackingFileManager
 
     private File canonicalize( File file ) throws IOException
     {
-        String p = file.getPath();
-        File canonicalized = canonicalizedCache.get( p );
-        if ( canonicalized == null )
-        {
-            canonicalized = file.getCanonicalFile();
-            canonicalizedCache.put( p, canonicalized );
-        }
-        return canonicalized;
+        return file.getCanonicalFile();
     }
 
 }
