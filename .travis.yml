@@ -19,7 +19,7 @@ before_script: true
 install: true
 
 script:
-  - mvn verify
+  - mvn -V -P+run-its clean verify
 
 cache:
   directories:
