@@ -56,7 +56,7 @@ public class GetDependencyHierarchy
         session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, true );
         session.setConfigProperty( DependencyManagerUtils.CONFIG_PROP_VERBOSE, true );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.1.0" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
 
         ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
         descriptorRequest.setArtifact( artifact );

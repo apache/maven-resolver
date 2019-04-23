@@ -50,7 +50,7 @@ public class GetDependencyTree
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-aether-provider:3.1.0" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
 
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRoot( new Dependency( artifact, "" ) );

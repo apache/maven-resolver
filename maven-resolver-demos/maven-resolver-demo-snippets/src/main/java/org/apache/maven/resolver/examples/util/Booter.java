@@ -39,8 +39,8 @@ public class Booter
     public static RepositorySystem newRepositorySystem()
     {
         return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
-        // return org.eclipse.aether.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
-        // return org.eclipse.aether.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
+        // return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
+        // return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
     }
 
     public static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )

@@ -48,7 +48,7 @@ public class ResolveArtifact
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-util:1.0.0.v20140518" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:1.3.3" );
 
         ArtifactRequest artifactRequest = new ArtifactRequest();
         artifactRequest.setArtifact( artifact );

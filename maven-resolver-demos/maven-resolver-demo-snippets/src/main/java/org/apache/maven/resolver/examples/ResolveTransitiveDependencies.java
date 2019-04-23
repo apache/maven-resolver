@@ -55,7 +55,7 @@ public class ResolveTransitiveDependencies
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-impl:1.0.0.v20140518" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-impl:1.3.3" );
 
         DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter( JavaScopes.COMPILE );
 
