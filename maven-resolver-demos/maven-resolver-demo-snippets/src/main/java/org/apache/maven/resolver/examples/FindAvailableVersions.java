@@ -51,7 +51,7 @@ public class FindAvailableVersions
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.eclipse.aether:aether-util:[0,)" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:[0,)" );
 
         VersionRangeRequest rangeRequest = new VersionRangeRequest();
         rangeRequest.setArtifact( artifact );
