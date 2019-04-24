@@ -45,6 +45,7 @@ public class SnapshotVersionFilterTest
         assertSame( filter, derive( filter, "g:a:1" ) );
     }
 
+    @SuppressWarnings( "EqualsWithItself" )
     @Test
     public void testEquals()
     {

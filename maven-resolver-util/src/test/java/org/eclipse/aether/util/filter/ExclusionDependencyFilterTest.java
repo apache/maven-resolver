@@ -55,6 +55,6 @@ public class ExclusionDependencyFilterTest
         excludes = new String[] { "otherArtifact" };
         assertTrue( new ExclusionsDependencyFilter( Arrays.asList( excludes ) ).accept( builder.build(), parents ) );
 
-        assertTrue( new ExclusionsDependencyFilter( (Collection<String>) null ).accept( builder.build(), parents ) );
+        assertTrue( new ExclusionsDependencyFilter( null ).accept( builder.build(), parents ) );
     }
 }

@@ -329,6 +329,7 @@ public class DefaultRemoteRepositoryManager
         else
         {
             String checksums = session.getChecksumPolicy();
+            //noinspection StatementWithEmptyBody
             if ( globalPolicy && !StringUtils.isEmpty( checksums ) )
             {
                 // use global override
@@ -341,6 +342,7 @@ public class DefaultRemoteRepositoryManager
             }
 
             String updates = session.getUpdatePolicy();
+            //noinspection StatementWithEmptyBody
             if ( globalPolicy && !StringUtils.isEmpty( updates ) )
             {
                 // use global override

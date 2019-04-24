@@ -164,6 +164,7 @@ final class DefaultVersionFilterContext
             advance();
         }
 
+        @SuppressWarnings( "StatementWithEmptyBody" )
         private void advance()
         {
             for ( next = index + 1; next < size && deleted[next] != (byte) 0; next++ )

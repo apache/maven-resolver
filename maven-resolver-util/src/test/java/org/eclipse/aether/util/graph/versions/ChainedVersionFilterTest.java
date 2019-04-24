@@ -73,6 +73,7 @@ public class ChainedVersionFilterTest
         assertSame( filter1, derive( filter, "g:a:1" ) );
     }
 
+    @SuppressWarnings( "EqualsWithItself" )
     @Test
     public void testEquals()
     {

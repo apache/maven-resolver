@@ -154,7 +154,7 @@ class AbstractPatternDependencyFilter
         // support leading wildcard
         else if ( pattern.startsWith( "*" ) )
         {
-            final String suffix = pattern.substring( 1, pattern.length() );
+            final String suffix = pattern.substring( 1 );
 
             matches = token.endsWith( suffix );
         }

@@ -86,7 +86,7 @@ public class DefaultUpdatePolicyAnalyzerTest
         String policy = RepositoryPolicy.UPDATE_POLICY_DAILY;
         assertEquals( true, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
         assertEquals( false, analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight + 0, policy ) );
+        assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight, policy ) );
         assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight + 1, policy ) );
         assertEquals( true, analyzer.isUpdatedRequired( session, localMidnight - 1, policy ) );
     }

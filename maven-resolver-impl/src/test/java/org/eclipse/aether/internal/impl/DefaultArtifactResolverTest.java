@@ -285,7 +285,7 @@ public class DefaultArtifactResolverTest
         ArtifactRequest request1 = new ArtifactRequest( artifact1, Arrays.asList( remoteRepo ), "" );
         ArtifactRequest request2 = new ArtifactRequest( artifact2, Arrays.asList( remoteRepo ), "" );
 
-        connector.setExpectGet( new Artifact[] { artifact1, artifact2 } );
+        connector.setExpectGet( artifact1, artifact2 );
         try
         {
             resolver.resolveArtifacts( session, Arrays.asList( request1, request2 ) );
