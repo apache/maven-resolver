@@ -458,7 +458,7 @@ final class HttpTransporter
         long resumeOffset = task.getResumeOffset();
         if ( resumeOffset > 0L && task.getDataFile() != null )
         {
-            request.setHeader( HttpHeaders.RANGE, "bytes=" + Long.toString( resumeOffset ) + '-' );
+            request.setHeader( HttpHeaders.RANGE, "bytes=" + resumeOffset + '-' );
             request.setHeader( HttpHeaders.IF_UNMODIFIED_SINCE,
                                DateUtils.formatDate( new Date( task.getDataFile().lastModified() - 60L * 1000L ) ) );
             request.setHeader( HttpHeaders.ACCEPT_ENCODING, "identity" );

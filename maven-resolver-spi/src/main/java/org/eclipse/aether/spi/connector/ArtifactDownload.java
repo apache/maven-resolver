@@ -80,15 +80,6 @@ public final class ArtifactDownload
         return this;
     }
 
-    /**
-     * {@inheritDoc} <em>Note:</em> In case of {@link #isExistenceCheck()}, this method may return {@code null}.
-     */
-    @Override
-    public File getFile()
-    {
-        return super.getFile();
-    }
-
     @Override
     public ArtifactDownload setFile( File file )
     {

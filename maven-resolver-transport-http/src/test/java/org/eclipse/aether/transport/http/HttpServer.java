@@ -350,11 +350,9 @@ public class HttpServer
                 if ( checksumHeader != null )
                 {
                     Map<String, Object> checksums = ChecksumUtils.calc( file, Collections.singleton( "SHA-1" ) );
-                    switch ( checksumHeader )
+                    if ( checksumHeader == ChecksumHeader.NEXUS )
                     {
-                        case NEXUS:
-                            response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
-                            break;
+                        response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
                     }
                 }
                 if ( HttpMethod.HEAD.is( req.getMethod() ) )

@@ -49,7 +49,6 @@ public class IniArtifactDescriptorReaderTest
 
     @Before
     public void setup()
-        throws IOException
     {
         reader = new IniArtifactDescriptorReader( "org/eclipse/aether/internal/test/util/" );
         session = TestUtils.newSession();

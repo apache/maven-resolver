@@ -126,6 +126,7 @@ public final class ChainedTransferListener
         }
     }
 
+    @SuppressWarnings( "EmptyMethod" )
     protected void handleError( TransferEvent event, TransferListener listener, RuntimeException error )
     {
         // default just swallows errors

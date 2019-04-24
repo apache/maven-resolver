@@ -57,9 +57,7 @@ class SimpleArtifactTypeRegistry
 
     public ArtifactType get( String typeId )
     {
-        ArtifactType type = types.get( typeId );
-
-        return type;
+        return types.get( typeId );
     }
 
     @Override

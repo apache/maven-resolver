@@ -126,7 +126,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test( expected = Exception.class )
     public void testCheckMetadataFailOnNoFile()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setItem( metadata.setFile( null ) );
@@ -137,7 +136,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataUpdatePolicyRequired()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
 
@@ -163,7 +161,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataUpdatePolicyNotRequired()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
 
@@ -188,7 +185,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadata()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_DAILY );
@@ -216,7 +212,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataNoLocalFile()
-        throws Exception
     {
         metadata.getFile().delete();
 
@@ -233,7 +228,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataNotFoundInRepoCachingEnabled()
-        throws Exception
     {
         metadata.getFile().delete();
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
@@ -254,7 +248,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataNotFoundInRepoCachingDisabled()
-        throws Exception
     {
         metadata.getFile().delete();
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, false ) );
@@ -274,7 +267,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataErrorFromRepoCachingEnabled()
-        throws Exception
     {
         metadata.getFile().delete();
 
@@ -297,7 +289,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataErrorFromRepoCachingDisabled()
-        throws Exception
     {
         metadata.getFile().delete();
 
@@ -318,7 +309,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -336,7 +326,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataSessionStateModes()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -360,7 +349,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -388,7 +376,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -408,7 +395,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataWhenLocallyMissingEvenIfUpdatePolicyIsNever()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
@@ -423,7 +409,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataWhenLocallyPresentButInvalidEvenIfUpdatePolicyIsNever()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
@@ -440,7 +425,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataWhenLocallyDeletedEvenIfTimestampUpToDate()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
@@ -457,7 +441,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckMetadataNotWhenUpdatePolicyIsNeverAndTimestampIsUnavailable()
-        throws Exception
     {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
@@ -469,7 +452,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test( expected = NullPointerException.class )
     public void testCheckArtifactFailOnNoFile()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem( artifact.setFile( null ) );
@@ -481,7 +463,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactUpdatePolicyRequired()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem( artifact );
@@ -511,7 +492,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactUpdatePolicyNotRequired()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem( artifact );
@@ -540,7 +520,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifact()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         long fifteenMinutes = new Date().getTime() - ( 15L * 60L * 1000L );
@@ -570,7 +549,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactNoLocalFile()
-        throws Exception
     {
         artifact.getFile().delete();
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
@@ -585,7 +563,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactNotFoundInRepoCachingEnabled()
-        throws Exception
     {
         artifact.getFile().delete();
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
@@ -605,7 +582,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactNotFoundInRepoCachingDisabled()
-        throws Exception
     {
         artifact.getFile().delete();
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( false, false ) );
@@ -624,7 +600,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactErrorFromRepoCachingEnabled()
-        throws Exception
     {
         artifact.getFile().delete();
 
@@ -645,7 +620,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactErrorFromRepoCachingDisabled()
-        throws Exception
     {
         artifact.getFile().delete();
 
@@ -665,7 +639,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -683,7 +656,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactSessionStateModes()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -707,7 +679,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -735,7 +706,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_ALWAYS );
@@ -754,7 +724,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactWhenLocallyMissingEvenIfUpdatePolicyIsNever()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
@@ -769,7 +738,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactWhenLocallyPresentButInvalidEvenIfUpdatePolicyIsNever()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );
@@ -786,7 +754,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactWhenLocallyDeletedEvenIfTimestampUpToDate()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
@@ -803,7 +770,6 @@ public class DefaultUpdateCheckManagerTest
 
     @Test
     public void testCheckArtifactNotWhenUpdatePolicyIsNeverAndTimestampIsUnavailable()
-        throws Exception
     {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );

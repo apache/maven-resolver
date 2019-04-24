@@ -99,7 +99,6 @@ public class DefaultDependencyCollectorTest
 
     @Before
     public void setup()
-        throws IOException
     {
         session = TestUtils.newSession();
 
@@ -176,7 +175,7 @@ public class DefaultDependencyCollectorTest
 
     @Test
     public void testSimpleCollection()
-        throws IOException, DependencyCollectionException
+        throws DependencyCollectionException
     {
         Dependency dependency = newDep( "gid:aid:ext:ver", "compile" );
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
@@ -198,7 +197,6 @@ public class DefaultDependencyCollectorTest
 
     @Test
     public void testMissingDependencyDescription()
-        throws IOException
     {
         CollectRequest request =
             new CollectRequest( newDep( "missing:description:ext:ver" ), Arrays.asList( repository ) );
@@ -222,7 +220,7 @@ public class DefaultDependencyCollectorTest
 
     @Test
     public void testDuplicates()
-        throws IOException, DependencyCollectionException
+        throws DependencyCollectionException
     {
         Dependency dependency = newDep( "duplicate:transitive:ext:dependency" );
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
@@ -358,7 +356,7 @@ public class DefaultDependencyCollectorTest
 
     @Test
     public void testCollectMultipleDependencies()
-        throws IOException, DependencyCollectionException
+        throws DependencyCollectionException
     {
         Dependency root1 = newDep( "gid:aid:ext:ver", "compile" );
         Dependency root2 = newDep( "gid:aid2:ext:ver", "compile" );
@@ -389,7 +387,6 @@ public class DefaultDependencyCollectorTest
         {
             public ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
                                                                     ArtifactDescriptorRequest request )
-                throws ArtifactDescriptorException
             {
                 repos.addAll( request.getRepositories() );
                 return new ArtifactDescriptorResult( request );
@@ -408,7 +405,7 @@ public class DefaultDependencyCollectorTest
 
     @Test
     public void testManagedVersionScope()
-        throws IOException, DependencyCollectionException
+        throws DependencyCollectionException
     {
         Dependency dependency = newDep( "managed:aid:ext:ver" );
         CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
@@ -502,7 +499,7 @@ public class DefaultDependencyCollectorTest
      */
     @Test
     public void testSelectionBeforeManagement()
-        throws IOException, DependencyCollectionException
+        throws DependencyCollectionException
     {
         session.setDependencySelector( new ScopeDependencySelector( "provided", "test" ) );
         session.setDependencyManager( new ClassicDependencyManager() );

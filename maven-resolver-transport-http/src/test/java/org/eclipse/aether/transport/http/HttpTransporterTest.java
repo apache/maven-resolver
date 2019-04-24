@@ -929,7 +929,7 @@ public class HttpTransporterTest
         auth = new AuthenticationBuilder().addUsername( "testuser" ).addPassword( "testpass" ).build();
         newTransporter( httpServer.getHttpUrl() );
         final AtomicReference<Throwable> error = new AtomicReference<>();
-        Thread threads[] = new Thread[20];
+        Thread[] threads = new Thread[20];
         for ( int i = 0; i < threads.length; i++ )
         {
             final String path = "repo/file.txt?i=" + i;

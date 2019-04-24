@@ -67,13 +67,11 @@ final class X509HostnameVerifierAdapter
     }
 
     public void verify( String host, X509Certificate cert )
-        throws SSLException
     {
         throw new UnsupportedOperationException();
     }
 
     public void verify( String host, String[] cns, String[] subjectAlts )
-        throws SSLException
     {
         throw new UnsupportedOperationException();
     }

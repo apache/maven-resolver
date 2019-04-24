@@ -222,7 +222,7 @@ public final class Dependency
     @Override
     public String toString()
     {
-        return String.valueOf( getArtifact() ) + " (" + getScope() + ( isOptional() ? "?" : "" ) + ")";
+        return getArtifact() + " (" + getScope() + ( isOptional() ? "?" : "" ) + ")";
     }
 
     @Override

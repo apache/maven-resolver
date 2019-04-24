@@ -191,8 +191,7 @@ public class DependencyGraphParser
         try
         {
             reader = new BufferedReader( new InputStreamReader( resource.openStream(), StandardCharsets.UTF_8 ) );
-            final DependencyNode node = parse( reader );
-            return node;
+            return parse( reader );
         }
         finally
         {

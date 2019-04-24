@@ -30,10 +30,8 @@ public class StubVersionRangeResolver
 {
 
     public VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
-        throws VersionRangeResolutionException
     {
-        VersionRangeResult result = new VersionRangeResult( request );
-        return result;
+        return new VersionRangeResult( request );
     }
 
 }

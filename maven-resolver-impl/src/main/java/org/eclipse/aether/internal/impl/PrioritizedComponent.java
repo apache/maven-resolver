@@ -76,7 +76,7 @@ final class PrioritizedComponent<T>
     @Override
     public String toString()
     {
-        return priority + " (#" + index + "): " + String.valueOf( component );
+        return priority + " (#" + index + "): " + component;
     }
 
 }

@@ -33,8 +33,7 @@ public class StubArtifactDescriptorReader
                                                             ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException
     {
-        ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
-        return result;
+        return new ArtifactDescriptorResult( request );
     }
 
 }

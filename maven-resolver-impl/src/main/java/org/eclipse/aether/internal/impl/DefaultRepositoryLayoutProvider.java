@@ -101,8 +101,7 @@ public final class DefaultRepositoryLayoutProvider
         {
             try
             {
-                RepositoryLayout layout = factory.getComponent().newInstance( session, repository );
-                return layout;
+                return factory.getComponent().newInstance( session, repository );
             }
             catch ( NoRepositoryLayoutException e )
             {

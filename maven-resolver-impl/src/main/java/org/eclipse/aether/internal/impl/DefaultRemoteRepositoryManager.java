@@ -274,8 +274,7 @@ public class DefaultRemoteRepositoryManager
     {
         RepositoryPolicy policy1 = releases ? repository.getPolicy( false ) : null;
         RepositoryPolicy policy2 = snapshots ? repository.getPolicy( true ) : null;
-        RepositoryPolicy policy = merge( session, policy1, policy2, true );
-        return policy;
+        return merge( session, policy1, policy2, true );
     }
 
     private RepositoryPolicy merge( RepositorySystemSession session, RepositoryPolicy policy1,

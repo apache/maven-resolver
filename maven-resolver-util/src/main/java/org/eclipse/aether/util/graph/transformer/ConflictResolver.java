@@ -721,7 +721,7 @@ public final class ConflictResolver
         private boolean deriveOptional( DependencyNode node, Object conflictId )
         {
             Dependency dep = node.getDependency();
-            boolean optional = ( dep != null ) ? dep.isOptional() : false;
+            boolean optional = ( dep != null ) && dep.isOptional();
             if ( optional || ( node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL ) != 0
                 || ( conflictId != null && resolvedIds.containsKey( conflictId ) ) )
             {

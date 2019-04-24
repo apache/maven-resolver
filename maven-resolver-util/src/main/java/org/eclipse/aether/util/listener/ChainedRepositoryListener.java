@@ -125,6 +125,7 @@ public final class ChainedRepositoryListener
         }
     }
 
+    @SuppressWarnings( "EmptyMethod" )
     protected void handleError( RepositoryEvent event, RepositoryListener listener, RuntimeException error )
     {
         // default just swallows errors

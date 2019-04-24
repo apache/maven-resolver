@@ -68,7 +68,6 @@ public class SimpleLocalRepositoryManagerTest
 
     @Test
     public void testGetPathForLocalArtifact()
-        throws Exception
     {
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
@@ -84,7 +83,6 @@ public class SimpleLocalRepositoryManagerTest
 
     @Test
     public void testGetPathForRemoteArtifact()
-        throws Exception
     {
         RemoteRepository remoteRepo = new RemoteRepository.Builder( "repo", "default", "ram:/void" ).build();
 

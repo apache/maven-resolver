@@ -199,7 +199,7 @@ public final class ClassicDependencyManager
                 }
             }
 
-            if ( ( scope != null && JavaScopes.SYSTEM.equals( scope ) )
+            if ( ( JavaScopes.SYSTEM.equals( scope ) )
                 || ( scope == null && JavaScopes.SYSTEM.equals( dependency.getScope() ) ) )
             {
                 String localPath = managedLocalPaths.get( key );

@@ -387,8 +387,7 @@ public class DefaultMetadataResolver
     {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         LocalMetadataResult localResult = lrm.find( session, new LocalMetadataRequest( metadata, null, null ) );
-        File localFile = localResult.getFile();
-        return localFile;
+        return localResult.getFile();
     }
 
     private List<RemoteRepository> getEnabledSourceRepositories( RemoteRepository repository, Metadata.Nature nature )

@@ -36,7 +36,6 @@ final class TestVersionScheme
 {
 
     public Version parseVersion( final String version )
-        throws InvalidVersionSpecificationException
     {
         return new TestVersion( version );
     }

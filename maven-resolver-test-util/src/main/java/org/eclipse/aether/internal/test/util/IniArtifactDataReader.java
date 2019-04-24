@@ -175,9 +175,7 @@ class IniArtifactDataReader
         List<Dependency> managedDependencies = dependencies( sections.get( State.MANAGEDDEPENDENCIES ), true );
         List<RemoteRepository> repositories = repositories( sections.get( State.REPOSITORIES ) );
 
-        ArtifactDescription description =
-            new ArtifactDescription( relocation, dependencies, managedDependencies, repositories );
-        return description;
+        return new ArtifactDescription( relocation, dependencies, managedDependencies, repositories );
     }
 
     private List<RemoteRepository> repositories( List<String> list )

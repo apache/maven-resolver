@@ -73,7 +73,7 @@ public class DefaultRepositoryCacheTest
         throws Exception
     {
         final AtomicReference<Throwable> error = new AtomicReference<>();
-        Thread threads[] = new Thread[20];
+        Thread[] threads = new Thread[20];
         for ( int i = 0; i < threads.length; i++ )
         {
             threads[i] = new Thread()

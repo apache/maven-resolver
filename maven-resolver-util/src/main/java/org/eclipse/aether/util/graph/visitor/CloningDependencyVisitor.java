@@ -69,8 +69,7 @@ public class CloningDependencyVisitor
      */
     protected DependencyNode clone( DependencyNode node )
     {
-        DefaultDependencyNode clone = new DefaultDependencyNode( node );
-        return clone;
+        return new DefaultDependencyNode( node );
     }
 
     public final boolean visitEnter( DependencyNode node )

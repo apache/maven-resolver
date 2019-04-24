@@ -73,7 +73,6 @@ public class JreProxySelectorTest
 
     @Test
     public void testGetProxy_InvalidUrl()
-        throws Exception
     {
         RemoteRepository repo = new RemoteRepository.Builder( "test", "default", "http://host:invalid" ).build();
         assertNull( selector.getProxy( repo ) );
@@ -81,7 +80,6 @@ public class JreProxySelectorTest
 
     @Test
     public void testGetProxy_OpaqueUrl()
-        throws Exception
     {
         RemoteRepository repo = new RemoteRepository.Builder( "test", "default", "classpath:base" ).build();
         assertNull( selector.getProxy( repo ) );
@@ -89,7 +87,6 @@ public class JreProxySelectorTest
 
     @Test
     public void testGetProxy_NullSelector()
-        throws Exception
     {
         RemoteRepository repo = new RemoteRepository.Builder( "test", "default", "http://repo.eclipse.org/" ).build();
         java.net.ProxySelector.setDefault( null );
@@ -98,7 +95,6 @@ public class JreProxySelectorTest
 
     @Test
     public void testGetProxy_NoProxies()
-        throws Exception
     {
         RemoteRepository repo = new RemoteRepository.Builder( "test", "default", "http://repo.eclipse.org/" ).build();
         java.net.ProxySelector.setDefault( new AbstractProxySelector()
@@ -115,7 +111,6 @@ public class JreProxySelectorTest
 
     @Test
     public void testGetProxy_DirectProxy()
-        throws Exception
     {
         RemoteRepository repo = new RemoteRepository.Builder( "test", "default", "http://repo.eclipse.org/" ).build();
         final InetSocketAddress addr = InetSocketAddress.createUnresolved( "proxy", 8080 );

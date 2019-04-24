@@ -159,8 +159,7 @@ final class UnionVersionRange
     @Override
     public int hashCode()
     {
-        int hash = 97 * ranges.hashCode();
-        return hash;
+        return 97 * ranges.hashCode();
     }
 
     @Override

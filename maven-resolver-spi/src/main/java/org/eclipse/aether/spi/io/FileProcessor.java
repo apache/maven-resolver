@@ -104,7 +104,7 @@ public interface FileProcessor
      * 
      * @see FileProcessor#copy(File, File, ProgressListener)
      */
-    public interface ProgressListener
+    interface ProgressListener
     {
 
         void progressed( ByteBuffer buffer )

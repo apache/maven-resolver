@@ -32,7 +32,6 @@ class StubVersionResolver
 {
 
     public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
-        throws VersionResolutionException
     {
         VersionResult result = new VersionResult( request ).setVersion( request.getArtifact().getVersion() );
         if ( request.getRepositories().size() > 0 )

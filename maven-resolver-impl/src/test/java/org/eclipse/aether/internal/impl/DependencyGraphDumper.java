@@ -123,7 +123,7 @@ public class DependencyGraphDumper
         }
     }
 
-    static enum Indent
+    enum Indent
     {
 
         NO_CHILDREN( "   " ),

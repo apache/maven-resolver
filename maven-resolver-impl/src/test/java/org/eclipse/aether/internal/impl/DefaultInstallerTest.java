@@ -430,7 +430,6 @@ public class DefaultInstallerTest
         {
             @Override
             public InputStream transformData( File file )
-                throws IOException, TransformException
             {
                 return new ByteArrayInputStream( "transformed data".getBytes( StandardCharsets.UTF_8 ) );
             }
