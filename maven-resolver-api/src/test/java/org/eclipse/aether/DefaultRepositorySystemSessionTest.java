@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Objects;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;

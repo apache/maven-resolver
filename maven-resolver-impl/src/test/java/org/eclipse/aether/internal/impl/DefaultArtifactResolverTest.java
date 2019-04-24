@@ -456,7 +456,7 @@ public class DefaultArtifactResolverTest
             resolver.resolveArtifact( session, request );
             fail( "expected exception" );
         }
-        catch ( ArtifactResolutionException e )
+        catch ( ArtifactResolutionException ignored )
         {
         }
 
@@ -541,7 +541,7 @@ public class DefaultArtifactResolverTest
             resolver.resolveArtifact( session, request );
             fail( "expected exception" );
         }
-        catch ( ArtifactResolutionException e )
+        catch ( ArtifactResolutionException ignored )
         {
         }
 
@@ -628,7 +628,7 @@ public class DefaultArtifactResolverTest
             resolver.resolveArtifact( session, request );
             fail( "expected exception" );
         }
-        catch ( ArtifactResolutionException e )
+        catch ( ArtifactResolutionException ignored )
         {
         }
 

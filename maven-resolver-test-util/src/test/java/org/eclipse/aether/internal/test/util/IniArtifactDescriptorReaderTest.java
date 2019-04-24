@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.test.util;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,7 +29,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
-import org.eclipse.aether.internal.test.util.IniArtifactDescriptorReader;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;

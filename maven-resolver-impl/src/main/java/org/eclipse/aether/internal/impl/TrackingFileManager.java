@@ -210,7 +210,7 @@ class TrackingFileManager
             {
                 if ( attempts <= 0 )
                 {
-                    throw (IOException) new IOException().initCause( e );
+                    throw new IOException( e );
                 }
                 try
                 {

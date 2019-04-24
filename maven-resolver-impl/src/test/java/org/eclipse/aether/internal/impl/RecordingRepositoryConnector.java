@@ -200,7 +200,6 @@ class RecordingRepositoryConnector
     }
 
     private void fireDone( Transfer transfer )
-        throws Exception
     {
         TransferListener listener = transfer.getListener();
         if ( listener == null )
@@ -232,7 +231,7 @@ class RecordingRepositoryConnector
         assertSeenExpected( actualPutMD, expectPutMD );
     }
 
-    private void assertSeenExpected( List<? extends Object> actual, Object[] expected )
+    private void assertSeenExpected( List<?> actual, Object[] expected )
     {
         if ( expected == null )
         {

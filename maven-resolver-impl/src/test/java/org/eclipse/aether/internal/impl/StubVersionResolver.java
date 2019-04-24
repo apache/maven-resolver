@@ -22,7 +22,6 @@ package org.eclipse.aether.internal.impl;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.resolution.VersionRequest;
-import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 
 /* *

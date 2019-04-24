@@ -417,9 +417,7 @@ public class DefaultDependencyCollector
     {
         return dc.args.executor.submit( new Callable<DependencyContext>()
         {
-
             public DependencyContext call()
-                throws Exception
             {
                 return processDependency( dc );
             }
@@ -631,9 +629,7 @@ public class DefaultDependencyCollector
         {
             descriptorResult = args.executor.submit( new Callable<ArtifactDescriptorResult>()
             {
-
                 public ArtifactDescriptorResult call()
-                        throws Exception
                 {
                     try
                     {

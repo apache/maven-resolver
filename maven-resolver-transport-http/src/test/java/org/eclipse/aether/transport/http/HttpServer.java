@@ -254,9 +254,7 @@ public class HttpServer
         extends AbstractHandler
     {
 
-        @SuppressWarnings( "unchecked" )
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
         {
             LOGGER.info( "{} {}{}", req.getMethod(), req.getRequestURL(),
                     req.getQueryString() != null ? "?" + req.getQueryString() : "");
@@ -472,7 +470,6 @@ public class HttpServer
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
         {
             String path = req.getPathInfo();
             if ( !path.startsWith( "/redirect/" ) )
@@ -537,7 +534,6 @@ public class HttpServer
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
         {
             if ( proxyUsername != null && proxyPassword != null )
             {
