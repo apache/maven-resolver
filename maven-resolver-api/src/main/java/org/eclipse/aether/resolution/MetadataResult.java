@@ -22,14 +22,13 @@ package org.eclipse.aether.resolution;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 
 /**
  * The result of a metadata resolution request.
  * 
- * @see RepositorySystem#resolveMetadata(RepositorySystemSession, java.util.Collection)
+ * @see RepositorySystem#resolveMetadata(org.eclipse.aether.RepositorySystemSession, java.util.Collection)
  */
 public final class MetadataResult
 {

@@ -162,28 +162,22 @@ final class HttpTransporter
     private static void configureClient( HttpParams params, RepositorySystemSession session,
                                          RemoteRepository repository, HttpHost proxy )
     {
-        AuthParams.setCredentialCharset( params,
-                                         ConfigUtils.getString( session,
-                                                                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
-                                                                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "."
-                                                                    + repository.getId(),
-                                                                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
+        AuthParams.setCredentialCharset( params, ConfigUtils.getString( session,
+                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
         ConnRouteParams.setDefaultProxy( params, proxy );
-        HttpConnectionParams.setConnectionTimeout( params,
-                                                   ConfigUtils.getInteger( session,
-                                                                           ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                                                                           ConfigurationProperties.CONNECT_TIMEOUT
-                                                                               + "." + repository.getId(),
-                                                                           ConfigurationProperties.CONNECT_TIMEOUT ) );
-        HttpConnectionParams.setSoTimeout( params,
-                                           ConfigUtils.getInteger( session,
-                                                                   ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                                                                   ConfigurationProperties.REQUEST_TIMEOUT + "."
-                                                                       + repository.getId(),
-                                                                   ConfigurationProperties.REQUEST_TIMEOUT ) );
+        HttpConnectionParams.setConnectionTimeout( params, ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT ) );
+        HttpConnectionParams.setSoTimeout( params, ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
+                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.REQUEST_TIMEOUT ) );
         HttpProtocolParams.setUserAgent( params, ConfigUtils.getString( session,
-                                                                        ConfigurationProperties.DEFAULT_USER_AGENT,
-                                                                        ConfigurationProperties.USER_AGENT ) );
+                ConfigurationProperties.DEFAULT_USER_AGENT,
+                ConfigurationProperties.USER_AGENT ) );
     }
 
     private static CredentialsProvider toCredentialsProvider( HttpHost server, AuthenticationContext serverAuthCtx,

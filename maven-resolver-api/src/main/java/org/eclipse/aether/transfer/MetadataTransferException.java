@@ -69,7 +69,8 @@ public class MetadataTransferException
      * @param fromCache {@code true} if the exception was played back from the error cache, {@code false} if the
      *            exception actually just occurred.
      */
-    public MetadataTransferException( Metadata metadata, RemoteRepository repository, String message, boolean fromCache )
+    public MetadataTransferException( Metadata metadata, RemoteRepository repository, String message,
+                                      boolean fromCache )
     {
         super( message );
         this.metadata = metadata;

@@ -52,7 +52,8 @@ import org.eclipse.aether.version.VersionScheme;
  * comment   ::= "#" rest-of-line
  * indent    ::= "|  "*  ("+" | "\\") "- "
  * reference ::= "^" id
- * node      ::= coords (range)? space (scope("&lt;" premanagedScope)?)? space "optional"? space ("relocations=" coords ("," coords)*)? ("(" id ")")?
+ * node      ::= coords (range)? space (scope("&lt;" premanagedScope)?)? space "optional"? space
+ *                  ("relocations=" coords ("," coords)*)? ("(" id ")")?
  * coords    ::= groupId ":" artifactId (":" extension (":" classifier)?)? ":" version
  * </pre>
  * 
@@ -424,7 +425,8 @@ public class DependencyGraphParser
         {
             Artifact artifact = dependency.getArtifact();
 
-            defBuilder.append( artifact.getGroupId() ).append( ":" ).append( artifact.getArtifactId() ).append( ":" ).append( artifact.getExtension() ).append( ":" ).append( artifact.getVersion() );
+            defBuilder.append( artifact.getGroupId() ).append( ":" ).append( artifact.getArtifactId() ).append( ":" )
+                    .append( artifact.getExtension() ).append( ":" ).append( artifact.getVersion() );
             if ( dependency.getScope() != null && ( !"".equals( dependency.getScope() ) ) )
             {
                 defBuilder.append( ":" ).append( dependency.getScope() );

@@ -74,7 +74,8 @@ public class DefaultRepositoryConnectorProvider
         return this;
     }
 
-    public DefaultRepositoryConnectorProvider setRepositoryConnectorFactories( Collection<RepositoryConnectorFactory> factories )
+    public DefaultRepositoryConnectorProvider setRepositoryConnectorFactories(
+            Collection<RepositoryConnectorFactory> factories )
     {
         if ( factories == null )
         {

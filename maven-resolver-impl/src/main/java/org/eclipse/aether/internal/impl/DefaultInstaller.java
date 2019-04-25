@@ -106,7 +106,8 @@ public class DefaultInstaller
 
     public DefaultInstaller setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher,
+                "repository event dispatcher cannot be null" );
         return this;
     }
 
@@ -234,7 +235,8 @@ public class DefaultInstaller
 
         File srcFile = artifact.getFile();
 
-        Collection<FileTransformer> fileTransformers = session.getFileTransformerManager().getTransformersForArtifact( artifact );
+        Collection<FileTransformer> fileTransformers = session.getFileTransformerManager()
+                .getTransformersForArtifact( artifact );
         if ( fileTransformers.isEmpty() )
         {
             install( session, trace, artifact, lrm, srcFile, null );
@@ -301,7 +303,8 @@ public class DefaultInstaller
         catch ( Exception e )
         {
             exception = e;
-            throw new InstallationException( "Failed to install artifact " + targetArtifact + ": " + e.getMessage(), e );
+            throw new InstallationException( "Failed to install artifact " + targetArtifact + ": " + e.getMessage(),
+                    e );
         }
         finally
         {

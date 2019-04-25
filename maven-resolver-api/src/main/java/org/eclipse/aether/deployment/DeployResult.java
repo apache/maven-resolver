@@ -25,14 +25,13 @@ import java.util.Collections;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 /**
  * The result of deploying artifacts and their accompanying metadata into the a remote repository.
  * 
- * @see RepositorySystem#deploy(RepositorySystemSession, DeployRequest)
+ * @see RepositorySystem#deploy(org.eclipse.aether.RepositorySystemSession, DeployRequest)
  */
 public final class DeployResult
 {

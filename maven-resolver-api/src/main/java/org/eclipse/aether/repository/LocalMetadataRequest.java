@@ -19,13 +19,12 @@ package org.eclipse.aether.repository;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.metadata.Metadata;
 
 /**
  * A query to the local repository for the existence of metadata.
  * 
- * @see LocalRepositoryManager#find(RepositorySystemSession, LocalMetadataRequest)
+ * @see LocalRepositoryManager#find(org.eclipse.aether.RepositorySystemSession, LocalMetadataRequest)
  */
 public final class LocalMetadataRequest
 {

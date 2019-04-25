@@ -125,7 +125,8 @@ public class DefaultDependencyCollector
 
     public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull(
+                remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
@@ -146,9 +147,9 @@ public class DefaultDependencyCollector
     {
         int numThreads = ConfigUtils.getInteger( session, DEFAULT_THREADS, CONFIG_PROP_THREADS );
         LOGGER.debug( "{} = {} ", CONFIG_PROP_THREADS, numThreads );
-        ThreadPoolExecutor executor = new ThreadPoolExecutor( numThreads, numThreads, 3L, TimeUnit.SECONDS,
-                                                              new LinkedBlockingQueue<Runnable>(),
-                                                              new WorkerThreadFactory( "artifact-descriptor-resolver" ) );
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                numThreads, numThreads, 3L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>(), new WorkerThreadFactory( "artifact-descriptor-resolver" ) );
         try
         {
             return collectDependenciesWithExecutor( session, request, executor );
@@ -159,7 +160,8 @@ public class DefaultDependencyCollector
         }
     }
 
-    private CollectResult collectDependenciesWithExecutor( RepositorySystemSession session, CollectRequest request, ExecutorService executor )
+    private CollectResult collectDependenciesWithExecutor( RepositorySystemSession session, CollectRequest request,
+                                                           ExecutorService executor )
         throws DependencyCollectionException
     {
         session = DependencyCollectionUtils.optimizeSession( session );
@@ -199,7 +201,8 @@ public class DefaultDependencyCollector
                                                                               true );
             }
             context.setDependencies( mergeDeps( context.getDependencies(), descriptorResult.getDependencies() ) );
-            context.setManagedDependencies( mergeDeps( managedDependencies, descriptorResult.getManagedDependencies() ) );
+            context.setManagedDependencies( mergeDeps( managedDependencies,
+                    descriptorResult.getManagedDependencies() ) );
 
             node = new DefaultDependencyNode( root );
             node.setRequestContext( request.getRequestContext() );
@@ -494,7 +497,7 @@ public class DefaultDependencyCollector
             if ( noResult )
             {
                 List<RemoteRepository> repos =
-                        getRemoteRepositories( dc.rangeResult.getRepository( dc.version ), dc.context.getRepositories() );
+                      getRemoteRepositories( dc.rangeResult.getRepository( dc.version ), dc.context.getRepositories() );
                 addDependencyNode( dc.args.nodes.top(), dc.relocations, dc.preManaged, dc.rangeResult, dc.version,
                                    dc.managedDependency, null, repos, dc.args.request.getRequestContext() );
             }
@@ -617,11 +620,9 @@ public class DefaultDependencyCollector
                 args );
     }
 
-    private Future<ArtifactDescriptorResult> resolveCachedArtifactDescriptor( final DataPool pool,
-                                                                              final ArtifactDescriptorRequest descriptorRequest,
-                                                                              final RepositorySystemSession session,
-                                                                              final Dependency d, final Results results,
-                                                                              final Args args )
+    private Future<ArtifactDescriptorResult> resolveCachedArtifactDescriptor(
+            final DataPool pool, final ArtifactDescriptorRequest descriptorRequest,
+            final RepositorySystemSession session, final Dependency d, final Results results, final Args args )
     {
         final Object key = pool.toKey( descriptorRequest );
         Future<ArtifactDescriptorResult> descriptorResult = pool.getDescriptor( key, descriptorRequest );

@@ -72,7 +72,8 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories( Collection<LocalRepositoryManagerFactory> factories )
+    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories(
+            Collection<LocalRepositoryManagerFactory> factories )
     {
         if ( factories == null )
         {
@@ -85,7 +86,8 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session, LocalRepository repository )
+    public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
+                                                             LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
         PrioritizedComponents<LocalRepositoryManagerFactory> factories = new PrioritizedComponents<>( session );

@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -32,7 +31,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * A request to read an artifact descriptor.
  * 
- * @see RepositorySystem#readArtifactDescriptor(RepositorySystemSession, ArtifactDescriptorRequest)
+ * @see RepositorySystem#readArtifactDescriptor(org.eclipse.aether.RepositorySystemSession, ArtifactDescriptorRequest)
  */
 public final class ArtifactDescriptorRequest
 {

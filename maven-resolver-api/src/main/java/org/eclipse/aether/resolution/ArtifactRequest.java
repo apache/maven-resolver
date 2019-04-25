@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
@@ -33,7 +32,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * A request to resolve an artifact.
  * 
- * @see RepositorySystem#resolveArtifacts(RepositorySystemSession, java.util.Collection)
+ * @see RepositorySystem#resolveArtifacts(org.eclipse.aether.RepositorySystemSession, java.util.Collection)
  * @see Artifact#getFile()
  */
 public final class ArtifactRequest

@@ -22,7 +22,6 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.Collection;
 import java.util.Map;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 
@@ -33,10 +32,10 @@ public final class DependencyManagerUtils
 {
 
     /**
-     * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
-     * properties} used to store a {@link Boolean} flag controlling the verbose mode for dependency management. If
-     * enabled, the original attributes of a dependency before its update due to dependency managemnent will be recorded
-     * in the node's {@link DependencyNode#getData() custom data} when building a dependency graph.
+     * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
+     * configuration properties} used to store a {@link Boolean} flag controlling the verbose mode for dependency
+     * management. If enabled, the original attributes of a dependency before its update due to dependency managemnent
+     * will be recorded * in the node's {@link DependencyNode#getData() custom data} when building a dependency graph.
      */
     public static final String CONFIG_PROP_VERBOSE = "aether.dependencyManager.verbose";
 

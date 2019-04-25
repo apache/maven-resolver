@@ -115,7 +115,8 @@ public final class BasicRepositoryConnectorFactory
      */
     public BasicRepositoryConnectorFactory setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
     {
-        this.checksumPolicyProvider = requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
+        this.checksumPolicyProvider = requireNonNull(
+                checksumPolicyProvider, "checksum policy provider cannot be null" );
         return this;
     }
 

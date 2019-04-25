@@ -58,6 +58,7 @@ class PremanagedDependency
 
     final boolean premanagedState;
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     PremanagedDependency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
                           Collection<Exclusion> premanagedExclusions, Map<String, String> premanagedProperties,
                           int managedBits, Dependency managedDependency, boolean premanagedState )

@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
@@ -37,7 +36,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  * retrieved from the artifact descriptor of the root dependency. And last, only direct dependencies can be specified in
  * which case the root node of the resulting graph has no associated dependency.
  * 
- * @see RepositorySystem#collectDependencies(RepositorySystemSession, CollectRequest)
+ * @see RepositorySystem#collectDependencies(org.eclipse.aether.RepositorySystemSession, CollectRequest)
  */
 public final class CollectRequest
 {

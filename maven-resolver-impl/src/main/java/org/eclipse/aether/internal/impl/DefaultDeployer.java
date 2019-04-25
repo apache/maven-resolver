@@ -101,6 +101,7 @@ public class DefaultDeployer
         // enables default constructor
     }
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
     DefaultDeployer( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                      RepositoryConnectorProvider repositoryConnectorProvider,
@@ -138,19 +139,22 @@ public class DefaultDeployer
 
     public DefaultDeployer setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull(
+                repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
     public DefaultDeployer setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull(
+                repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultDeployer setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull(
+                remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
@@ -264,14 +268,16 @@ public class DefaultDeployer
 
                 artifacts.set( i, artifact );
 
-                Collection<FileTransformer> fileTransformers = fileTransformerManager.getTransformersForArtifact( artifact );
+                Collection<FileTransformer> fileTransformers =
+                        fileTransformerManager.getTransformersForArtifact( artifact );
                 if ( !fileTransformers.isEmpty() )
                 {
                     for ( FileTransformer fileTransformer : fileTransformers )
                     {
                         Artifact targetArtifact = fileTransformer.transformArtifact( artifact );
 
-                        ArtifactUpload upload = new ArtifactUpload( targetArtifact, artifact.getFile(), fileTransformer );
+                        ArtifactUpload upload = new ArtifactUpload( targetArtifact, artifact.getFile(),
+                                fileTransformer );
                         upload.setTrace( trace );
                         upload.setListener( new ArtifactUploadListener( catapult, upload ) );
                         artifactUploads.add( upload );
@@ -372,7 +378,8 @@ public class DefaultDeployer
             if ( !( (MergeableMetadata) metadata ).isMerged() )
             {
                 {
-                    RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
+                    RepositoryEvent.Builder event =
+                            new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
                     event.setTrace( catapult.getTrace() );
                     event.setMetadata( metadata );
                     event.setRepository( repository );

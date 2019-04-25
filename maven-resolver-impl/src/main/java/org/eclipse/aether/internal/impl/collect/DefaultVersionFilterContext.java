@@ -41,9 +41,6 @@ import org.eclipse.aether.version.VersionConstraint;
 final class DefaultVersionFilterContext
     implements VersionFilter.VersionFilterContext
 {
-
-    private final Iterator<Version> EMPTY = Collections.<Version>emptySet().iterator();
-
     private final RepositorySystemSession session;
 
     private Dependency dependency;
@@ -131,7 +128,7 @@ final class DefaultVersionFilterContext
 
     public Iterator<Version> iterator()
     {
-        return ( count > 0 ) ? new VersionIterator() : EMPTY;
+        return ( count > 0 ) ? new VersionIterator() : Collections.<Version>emptySet().iterator();
     }
 
     @Override

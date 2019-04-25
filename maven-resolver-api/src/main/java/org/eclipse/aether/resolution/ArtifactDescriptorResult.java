@@ -27,7 +27,6 @@ import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -36,7 +35,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * The result from reading an artifact descriptor.
  * 
- * @see RepositorySystem#readArtifactDescriptor(RepositorySystemSession, ArtifactDescriptorRequest)
+ * @see RepositorySystem#readArtifactDescriptor(org.eclipse.aether.RepositorySystemSession, ArtifactDescriptorRequest)
  */
 public final class ArtifactDescriptorResult
 {

@@ -85,7 +85,8 @@ public class MetadataNotFoundException
      * @param fromCache {@code true} if the exception was played back from the error cache, {@code false} if the
      *            exception actually just occurred.
      */
-    public MetadataNotFoundException( Metadata metadata, RemoteRepository repository, String message, boolean fromCache )
+    public MetadataNotFoundException( Metadata metadata, RemoteRepository repository, String message,
+                                      boolean fromCache )
     {
         super( metadata, repository, message, fromCache );
     }

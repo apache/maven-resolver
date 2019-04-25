@@ -141,7 +141,8 @@ final class GlobalState
 
     public void close()
     {
-        for ( Iterator<Map.Entry<SslConfig, ClientConnectionManager>> it = connectionManagers.entrySet().iterator(); it.hasNext(); )
+        for ( Iterator<Map.Entry<SslConfig, ClientConnectionManager>> it = connectionManagers.entrySet().iterator();
+              it.hasNext(); )
         {
             ClientConnectionManager connMgr = it.next().getValue();
             it.remove();

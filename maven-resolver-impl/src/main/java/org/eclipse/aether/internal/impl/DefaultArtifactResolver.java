@@ -109,6 +109,7 @@ public class DefaultArtifactResolver
         // enables default constructor
     }
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
     DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
@@ -156,7 +157,8 @@ public class DefaultArtifactResolver
 
     public DefaultArtifactResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher,
+                "repository event dispatcher cannot be null" );
         return this;
     }
 
@@ -172,15 +174,18 @@ public class DefaultArtifactResolver
         return this;
     }
 
-    public DefaultArtifactResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
+    public DefaultArtifactResolver setRepositoryConnectorProvider(
+            RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider,
+                "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultArtifactResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager,
+                "remote repository provider cannot be null" );
         return this;
     }
 
@@ -225,6 +230,7 @@ public class DefaultArtifactResolver
         }
     }
 
+    @SuppressWarnings( "checkstyle:methodlength" )
     private List<ArtifactResult> resolve( RepositorySystemSession session,
                                           Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
@@ -589,8 +595,8 @@ public class DefaultArtifactResolver
                     artifact = artifact.setFile( getFile( session, artifact, download.getFile() ) );
                     item.result.setArtifact( artifact );
 
-                    lrm.add( session,
-                             new LocalArtifactRegistration( artifact, group.repository, download.getSupportedContexts() ) );
+                    lrm.add( session, new LocalArtifactRegistration(
+                            artifact, group.repository, download.getSupportedContexts() ) );
                 }
                 catch ( ArtifactTransferException e )
                 {

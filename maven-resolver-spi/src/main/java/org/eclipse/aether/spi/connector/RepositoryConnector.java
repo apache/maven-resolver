@@ -65,7 +65,8 @@ public interface RepositoryConnector
      * @param artifactUploads The artifact uploads to perform, may be {@code null} or empty.
      * @param metadataUploads The metadata uploads to perform, may be {@code null} or empty.
      */
-    void put( Collection<? extends ArtifactUpload> artifactUploads, Collection<? extends MetadataUpload> metadataUploads );
+    void put( Collection<? extends ArtifactUpload> artifactUploads,
+              Collection<? extends MetadataUpload> metadataUploads );
 
     /**
      * Closes this connector and frees any network resources associated with it. Once closed, a connector must not be

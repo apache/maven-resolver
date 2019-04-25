@@ -108,7 +108,8 @@ public final class DefaultProxySelector
             List<Pattern> patterns = new ArrayList<>();
             if ( nonProxyHosts != null )
             {
-                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" ); tokenizer.hasMoreTokens(); )
+                for ( StringTokenizer tokenizer = new StringTokenizer( nonProxyHosts, "|" );
+                      tokenizer.hasMoreTokens(); )
                 {
                     String pattern = tokenizer.nextToken();
                     pattern = pattern.replace( ".", "\\." ).replace( "*", ".*" );

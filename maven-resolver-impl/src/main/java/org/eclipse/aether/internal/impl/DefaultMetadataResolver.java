@@ -126,7 +126,8 @@ public class DefaultMetadataResolver
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
     {
-        this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher, "repository event dispatcher cannot be null" );
+        this.repositoryEventDispatcher = requireNonNull(
+                repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         return this;
     }
 
@@ -136,15 +137,18 @@ public class DefaultMetadataResolver
         return this;
     }
 
-    public DefaultMetadataResolver setRepositoryConnectorProvider( RepositoryConnectorProvider repositoryConnectorProvider )
+    public DefaultMetadataResolver setRepositoryConnectorProvider(
+            RepositoryConnectorProvider repositoryConnectorProvider )
     {
-        this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider, "repository connector provider cannot be null" );
+        this.repositoryConnectorProvider = requireNonNull(
+                repositoryConnectorProvider, "repository connector provider cannot be null" );
         return this;
     }
 
     public DefaultMetadataResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull(
+                remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 
@@ -178,6 +182,7 @@ public class DefaultMetadataResolver
         }
     }
 
+    @SuppressWarnings( "checkstyle:methodlength" )
     private List<MetadataResult> resolve( RepositorySystemSession session,
                                           Collection<? extends MetadataRequest> requests )
     {
@@ -279,11 +284,10 @@ public class DefaultMetadataResolver
                 check.setItem( metadata );
 
                 // use 'main' installation file for the check (-> use requested repository)
-                File checkFile =
-                    new File(
-                              session.getLocalRepository().getBasedir(),
-                              session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository,
-                                                                                            request.getRequestContext() ) );
+                File checkFile = new File(
+                        session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager()
+                                .getPathForRemoteMetadata( metadata, repository, request.getRequestContext() ) );
                 check.setFile( checkFile );
                 check.setRepository( repository );
                 check.setAuthoritativeRepository( repo );
@@ -312,12 +316,10 @@ public class DefaultMetadataResolver
                 RepositoryPolicy policy = getPolicy( session, repository, metadata.getNature() );
 
                 // install path may be different from lookup path
-                File installFile =
-                    new File(
-                              session.getLocalRepository().getBasedir(),
-                              session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata,
-                                                                                            request.getRepository(),
-                                                                                            request.getRequestContext() ) );
+                File installFile = new File(
+                        session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager().getPathForRemoteMetadata(
+                                metadata, request.getRepository(), request.getRequestContext() ) );
 
                 ResolveTask task =
                     new ResolveTask( session, trace, result, installFile, checks, policy.getChecksumPolicy() );
@@ -363,8 +365,8 @@ public class DefaultMetadataResolver
             {
                 Metadata metadata = task.request.getMetadata();
                 // re-lookup metadata for resolve
-                LocalMetadataRequest localRequest =
-                    new LocalMetadataRequest( metadata, task.request.getRepository(), task.request.getRequestContext() );
+                LocalMetadataRequest localRequest = new LocalMetadataRequest(
+                        metadata, task.request.getRepository(), task.request.getRequestContext() );
                 File metadataFile = session.getLocalRepositoryManager().find( session, localRequest ).getFile();
                 if ( metadataFile != null )
                 {

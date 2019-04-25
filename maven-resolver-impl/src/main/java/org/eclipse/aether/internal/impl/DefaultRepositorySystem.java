@@ -116,6 +116,7 @@ public class DefaultRepositorySystem
         // enables default constructor
     }
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
     DefaultRepositorySystem( VersionResolver versionResolver, VersionRangeResolver versionRangeResolver,
                              ArtifactResolver artifactResolver, MetadataResolver metadataResolver,
@@ -170,7 +171,8 @@ public class DefaultRepositorySystem
 
     public DefaultRepositorySystem setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
     {
-        this.versionRangeResolver = requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
+        this.versionRangeResolver = requireNonNull(
+                versionRangeResolver, "version range resolver cannot be null" );
         return this;
     }
 
@@ -188,7 +190,8 @@ public class DefaultRepositorySystem
 
     public DefaultRepositorySystem setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
     {
-        this.artifactDescriptorReader = requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
+        this.artifactDescriptorReader = requireNonNull(
+                artifactDescriptorReader, "artifact descriptor reader cannot be null" );
         return this;
     }
 
@@ -212,7 +215,8 @@ public class DefaultRepositorySystem
 
     public DefaultRepositorySystem setLocalRepositoryProvider( LocalRepositoryProvider localRepositoryProvider )
     {
-        this.localRepositoryProvider = requireNonNull( localRepositoryProvider, "local repository provider cannot be null" );
+        this.localRepositoryProvider = requireNonNull(
+                localRepositoryProvider, "local repository provider cannot be null" );
         return this;
     }
 
@@ -224,7 +228,8 @@ public class DefaultRepositorySystem
 
     public DefaultRepositorySystem setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
-        this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.remoteRepositoryManager = requireNonNull(
+                remoteRepositoryManager, "remote repository provider cannot be null" );
         return this;
     }
 

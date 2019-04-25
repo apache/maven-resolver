@@ -26,14 +26,14 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
 /**
- * Provides information about an artifact that is relevant to transitive dependency resolution. Each artifact is expected
- * to have an accompanying <em>artifact descriptor</em> that among others lists the direct dependencies of the artifact.
+ * Provides information about an artifact that is relevant to transitive dependency resolution.
+ * Each artifact is expected to have an accompanying <em>artifact descriptor</em> that among others lists
+ * the direct dependencies of the artifact.
  * 
  * @provisional This type is provisional and can be changed, moved or removed without prior notice.
  */
 public interface ArtifactDescriptorReader
 {
-
     /**
      * Gets information about an artifact like its direct dependencies and potential relocations. Implementations must
      * respect the {@link RepositorySystemSession#getArtifactDescriptorPolicy() artifact descriptor policy} of the
@@ -45,7 +45,8 @@ public interface ArtifactDescriptorReader
      * @throws ArtifactDescriptorException If the artifact descriptor could not be read.
      * @see RepositorySystem#readArtifactDescriptor(RepositorySystemSession, ArtifactDescriptorRequest)
      */
-    ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session, ArtifactDescriptorRequest request )
+    ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
+                                                     ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException;
 
 }

@@ -69,7 +69,8 @@ public class ArtifactTransferException
      * @param fromCache {@code true} if the exception was played back from the error cache, {@code false} if the
      *            exception actually just occurred.
      */
-    public ArtifactTransferException( Artifact artifact, RemoteRepository repository, String message, boolean fromCache )
+    public ArtifactTransferException( Artifact artifact, RemoteRepository repository, String message,
+                                      boolean fromCache )
     {
         super( message );
         this.artifact = artifact;

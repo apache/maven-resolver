@@ -282,7 +282,8 @@ final class PartialFile
                 catch ( IOException e )
                 {
                     lockFile.close();
-                    LOGGER.debug( "Cannot create resumable file {}: {}", partFile.getAbsolutePath(), e.getMessage(), e );
+                    LOGGER.debug( "Cannot create resumable file {}: {}", partFile.getAbsolutePath(), e.getMessage(),
+                            e );
                     // fall through and try non-resumable/temporary file location
                 }
             }

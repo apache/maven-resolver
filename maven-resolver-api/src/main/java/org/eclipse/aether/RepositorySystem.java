@@ -107,7 +107,8 @@ public interface RepositorySystem
      * @see RepositorySystemSession#getArtifactDescriptorPolicy()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session, ArtifactDescriptorRequest request )
+    ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
+                                                     ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException;
 
     /**
@@ -225,7 +226,8 @@ public interface RepositorySystem
      * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
      *             given.
      */
-    LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session, LocalRepository localRepository );
+    LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
+                                                      LocalRepository localRepository );
 
     /**
      * Creates a new synchronization context.

@@ -33,7 +33,6 @@ import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -67,8 +66,8 @@ public final class ConflictResolver
 {
 
     /**
-     * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
-     * properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
+     * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
+     * configuration properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
      */
     public static final String CONFIG_PROP_VERBOSE = "aether.conflictResolver.verbose";
 
@@ -876,7 +875,8 @@ public final class ConflictResolver
          * @noreference This class is not intended to be instantiated by clients in production code, the constructor may
          *              change without notice and only exists to enable unit testing.
          */
-        public ConflictItem( DependencyNode parent, DependencyNode node, int depth, int optionalities, String... scopes )
+        public ConflictItem( DependencyNode parent, DependencyNode node, int depth, int optionalities,
+                             String... scopes )
         {
             this.parent = ( parent != null ) ? parent.getChildren() : null;
             this.artifact = ( parent != null ) ? parent.getArtifact() : null;

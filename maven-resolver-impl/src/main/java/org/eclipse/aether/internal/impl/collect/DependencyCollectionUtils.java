@@ -48,6 +48,7 @@ import org.eclipse.aether.version.Version;
 public class DependencyCollectionUtils
 {
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     static DefaultDependencyNode addDependencyNode( DependencyNode parent, List<Artifact> relocations,
                                                     PremanagedDependency preManaged, VersionRangeResult rangeResult,
                                                     Version version, Dependency d, Collection<Artifact> aliases,
@@ -65,6 +66,7 @@ public class DependencyCollectionUtils
         return child;
     }
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     static DefaultDependencyNode createDependencyNode( DependencyNode parent, List<Artifact> relocations,
                                                        PremanagedDependency preManaged, VersionRangeResult rangeResult,
                                                        Version version, Dependency d,

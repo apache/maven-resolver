@@ -20,7 +20,6 @@ package org.eclipse.aether.resolution;
  */
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -28,7 +27,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * A request to resolve metadata from either a remote repository or the local repository.
  * 
- * @see RepositorySystem#resolveMetadata(RepositorySystemSession, java.util.Collection)
+ * @see RepositorySystem#resolveMetadata(org.eclipse.aether.RepositorySystemSession, java.util.Collection)
  * @see Metadata#getFile()
  */
 public final class MetadataRequest

@@ -40,8 +40,8 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
 final class Utils
 {
 
-    public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories( RepositorySystemSession session,
-                                                                                                  Collection<? extends MetadataGeneratorFactory> factories )
+    public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
+            RepositorySystemSession session, Collection<? extends MetadataGeneratorFactory> factories )
     {
         PrioritizedComponents<MetadataGeneratorFactory> result = new PrioritizedComponents<>( session );
         for ( MetadataGeneratorFactory factory : factories )

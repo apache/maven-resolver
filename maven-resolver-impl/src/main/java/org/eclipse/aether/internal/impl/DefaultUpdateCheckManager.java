@@ -116,7 +116,8 @@ public class DefaultUpdateCheckManager
         Artifact artifact = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File artifactFile = requireNonNull( check.getFile(), String.format( "The artifact '%s' has no file attached", artifact ) );
+        File artifactFile = requireNonNull( check.getFile(), String.format( "The artifact '%s' has no file attached",
+                artifact ) );
 
         boolean fileExists = check.isFileValid() && artifactFile.exists();
 
@@ -242,7 +243,8 @@ public class DefaultUpdateCheckManager
         Metadata metadata = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File metadataFile = requireNonNull( check.getFile(), String.format( "The metadata '%s' has no file attached", metadata ) );
+        File metadataFile = requireNonNull( check.getFile(), String.format( "The metadata '%s' has no file attached",
+                metadata ) );
 
         boolean fileExists = check.isFileValid() && metadataFile.exists();
 

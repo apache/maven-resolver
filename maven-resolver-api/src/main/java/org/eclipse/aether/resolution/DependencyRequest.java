@@ -20,7 +20,6 @@ package org.eclipse.aether.resolution;
  */
 
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -31,7 +30,7 @@ import org.eclipse.aether.graph.DependencyNode;
  * A request to resolve transitive dependencies. This request can either be supplied with a {@link CollectRequest} to
  * calculate the transitive dependencies or with an already resolved dependency graph.
  * 
- * @see RepositorySystem#resolveDependencies(RepositorySystemSession, DependencyRequest)
+ * @see RepositorySystem#resolveDependencies(org.eclipse.aether.RepositorySystemSession, DependencyRequest)
  * @see Artifact#getFile()
  */
 public final class DependencyRequest

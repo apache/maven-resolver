@@ -55,7 +55,8 @@ public final class ChecksumUtils
         throws IOException
     {
         String checksum = "";
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( new FileInputStream( checksumFile ), StandardCharsets.UTF_8 ), 512 ) )
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader(
+                new FileInputStream( checksumFile ), StandardCharsets.UTF_8 ), 512 ) )
         {
             while ( true )
             {

@@ -105,7 +105,8 @@ public final class ScopeDependencySelector
         }
 
         String scope = dependency.getScope();
-        return ( included == null || included.contains( scope ) ) && ( excluded == null || !excluded.contains( scope ) );
+        return ( included == null || included.contains( scope ) )
+                && ( excluded == null || !excluded.contains( scope ) );
     }
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )

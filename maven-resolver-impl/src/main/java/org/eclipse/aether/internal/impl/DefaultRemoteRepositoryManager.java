@@ -119,7 +119,8 @@ public class DefaultRemoteRepositoryManager
 
     public DefaultRemoteRepositoryManager setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
     {
-        this.checksumPolicyProvider = requireNonNull( checksumPolicyProvider, "checksum policy provider cannot be null" );
+        this.checksumPolicyProvider = requireNonNull(
+                checksumPolicyProvider, "checksum policy provider cannot be null" );
         return this;
     }
 

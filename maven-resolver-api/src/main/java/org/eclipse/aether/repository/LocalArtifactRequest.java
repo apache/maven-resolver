@@ -22,13 +22,12 @@ package org.eclipse.aether.repository;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A query to the local repository for the existence of an artifact.
  * 
- * @see LocalRepositoryManager#find(RepositorySystemSession, LocalArtifactRequest)
+ * @see LocalRepositoryManager#find(org.eclipse.aether.RepositorySystemSession, LocalArtifactRequest)
  */
 public final class LocalArtifactRequest
 {

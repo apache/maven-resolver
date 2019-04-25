@@ -67,7 +67,8 @@ public final class TransferResource
     /**
      * Creates a new transfer resource with the specified properties.
      *
-     * @param repositoryId The ID of the repository used to transfer the resource, may be {@code null} or empty if unknown.
+     * @param repositoryId The ID of the repository used to transfer the resource, may be {@code null} or
+     *                     empty if unknown.
      * @param repositoryUrl The base URL of the repository, may be {@code null} or empty if unknown. If not empty, a
      *            trailing slash will automatically be added if missing.
      * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
