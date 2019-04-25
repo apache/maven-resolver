@@ -168,6 +168,7 @@ public final class ChecksumUtils
      * @param bytes The bytes to represent in hex notation, may be be {@code null}.
      * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
      */
+    @SuppressWarnings( "checkstyle:magicnumber" )
     public static String toHexString( byte[] bytes )
     {
         if ( bytes == null )

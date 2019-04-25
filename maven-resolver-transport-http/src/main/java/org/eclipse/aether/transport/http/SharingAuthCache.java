@@ -44,6 +44,7 @@ final class SharingAuthCache
         authSchemes = new HashMap<>();
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private static HttpHost toKey( HttpHost host )
     {
         if ( host.getPort() <= 0 )

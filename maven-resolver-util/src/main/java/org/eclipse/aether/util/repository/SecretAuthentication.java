@@ -81,6 +81,7 @@ final class SecretAuthentication
         return ( chars != null ) ? chars.clone() : null;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private char[] xor( char[] chars )
     {
         if ( chars != null )

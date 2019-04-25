@@ -169,6 +169,7 @@ final class GlobalState
         return manager;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     public static ClientConnectionManager newConnectionManager( SslConfig sslConfig )
     {
         SchemeRegistry schemeReg = new SchemeRegistry();

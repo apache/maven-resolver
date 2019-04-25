@@ -340,6 +340,7 @@ final class HttpTransporter
         return response.containsHeader( HttpHeaders.DAV );
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private void mkdirs( URI uri, SharingHttpContext context )
     {
         List<URI> dirs = UriUtils.getDirectories( baseUri, uri );
@@ -447,6 +448,7 @@ final class HttpTransporter
         return request;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private <T extends HttpUriRequest> T resume( T request, GetTask task )
     {
         long resumeOffset = task.getResumeOffset();
@@ -460,6 +462,7 @@ final class HttpTransporter
         return request;
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     private void handleStatus( HttpResponse response )
         throws HttpResponseException
     {

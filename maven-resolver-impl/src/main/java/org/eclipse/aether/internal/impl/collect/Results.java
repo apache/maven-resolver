@@ -35,6 +35,7 @@ class Results
 
     String errorPath;
 
+    @SuppressWarnings( { "checkstyle:magicnumber" } )
     Results( CollectResult result, RepositorySystemSession session )
     {
         this.result = result;

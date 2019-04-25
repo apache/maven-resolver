@@ -194,6 +194,7 @@ class TrackingFileManager
         }
     }
 
+    @SuppressWarnings( { "checkstyle:magicnumber" } )
     private FileLock lock( FileChannel channel, long size, boolean shared )
         throws IOException
     {

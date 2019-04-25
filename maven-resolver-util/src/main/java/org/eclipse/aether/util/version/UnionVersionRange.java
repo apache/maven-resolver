@@ -157,6 +157,7 @@ final class UnionVersionRange
         return ranges.equals( that.ranges );
     }
 
+    @SuppressWarnings( "checkstyle:magicnumber" )
     @Override
     public int hashCode()
     {
