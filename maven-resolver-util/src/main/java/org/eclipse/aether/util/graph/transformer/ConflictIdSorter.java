@@ -67,19 +67,17 @@ public final class ConflictIdSorter
 
         Map<Object, ConflictId> ids = new LinkedHashMap<>( 256 );
 
+        ConflictId id = null;
+        Object key = conflictIds.get( node );
+        if ( key != null )
         {
-            ConflictId id = null;
-            Object key = conflictIds.get( node );
-            if ( key != null )
-            {
-                id = new ConflictId( key, 0 );
-                ids.put( key, id );
-            }
-
-            Map<DependencyNode, Object> visited = new IdentityHashMap<>( conflictIds.size() );
-
-            buildConflitIdDAG( ids, node, id, 0, visited, conflictIds );
+            id = new ConflictId( key, 0 );
+            ids.put( key, id );
         }
+
+        Map<DependencyNode, Object> visited = new IdentityHashMap<>( conflictIds.size() );
+
+        buildConflitIdDAG( ids, node, id, 0, visited, conflictIds );
 
         long time2 = System.nanoTime();
 

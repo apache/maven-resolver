@@ -377,20 +377,17 @@ public class DefaultDeployer
         {
             if ( !( (MergeableMetadata) metadata ).isMerged() )
             {
-                {
-                    RepositoryEvent.Builder event =
-                            new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    repositoryEventDispatcher.dispatch( event.build() );
+                RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                repositoryEventDispatcher.dispatch( event.build() );
 
-                    event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADING );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    repositoryEventDispatcher.dispatch( event.build() );
-                }
+                event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADING );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                repositoryEventDispatcher.dispatch( event.build() );
 
                 RepositoryPolicy policy = getPolicy( session, repository, metadata.getNature() );
                 MetadataDownload download = new MetadataDownload();
@@ -408,24 +405,21 @@ public class DefaultDeployer
                     dstFile.delete();
                 }
 
-                {
-                    RepositoryEvent.Builder event =
-                        new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADED );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    event.setException( error );
-                    event.setFile( dstFile );
-                    repositoryEventDispatcher.dispatch( event.build() );
+                event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADED );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                event.setException( error );
+                event.setFile( dstFile );
+                repositoryEventDispatcher.dispatch( event.build() );
 
-                    event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVED );
-                    event.setTrace( catapult.getTrace() );
-                    event.setMetadata( metadata );
-                    event.setRepository( repository );
-                    event.setException( error );
-                    event.setFile( dstFile );
-                    repositoryEventDispatcher.dispatch( event.build() );
-                }
+                event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVED );
+                event.setTrace( catapult.getTrace() );
+                event.setMetadata( metadata );
+                event.setRepository( repository );
+                event.setException( error );
+                event.setFile( dstFile );
+                repositoryEventDispatcher.dispatch( event.build() );
 
                 if ( error != null && !( error instanceof MetadataNotFoundException ) )
                 {
