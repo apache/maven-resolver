@@ -100,7 +100,7 @@ final class GenericVersionRange
             else
             {
                 lowerBound = parse( version );
-                upperBound = lowerBound ;
+                upperBound = lowerBound;
             }
         }
         else

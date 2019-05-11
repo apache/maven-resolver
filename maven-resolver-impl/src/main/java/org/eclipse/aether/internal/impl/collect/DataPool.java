@@ -402,14 +402,7 @@ final class DataPool
             this.traverser = traverser;
             this.filter = filter;
 
-            int hash = 17;
-            hash = hash * 31 + artifact.hashCode();
-            hash = hash * 31 + repositories.hashCode();
-            hash = hash * 31 + hash( selector );
-            hash = hash * 31 + hash( manager );
-            hash = hash * 31 + hash( traverser );
-            hash = hash * 31 + hash( filter );
-            hashCode = hash;
+            hashCode = Objects.hash( artifact, repositories, selector, manager, traverser, filter );
         }
 
         @Override
@@ -434,12 +427,5 @@ final class DataPool
         {
             return hashCode;
         }
-
-        private static int hash( Object o )
-        {
-            return ( o != null ) ? o.hashCode() : 0;
-        }
-
     }
-
 }

@@ -31,7 +31,7 @@ import org.eclipse.aether.metadata.Metadata;
 /**
  * A request to install artifacts and their accompanying metadata into the local repository.
  * 
- * @see RepositorySystem#install(org.eclipse.aether.RepositorySystemSession, InstallRequest)
+ * @see RepositorySystem#install(RepositorySystemSession, InstallRequest)
  */
 public final class InstallRequest
 {
