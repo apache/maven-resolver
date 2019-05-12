@@ -8,9 +8,9 @@ package org.eclipse.aether.util.graph.transformer;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -80,6 +80,35 @@ public class NearestVersionSelectorTest
 
         List<DependencyNode> trail = find( root, "j" );
         assertEquals( 5, trail.size() );
+    }
+
+    // This test must be assertTrue() as soon as MRESOLVER-62 is fixed
+    @Test
+    public void testCycleUnderneathRemovedNode()
+        throws Exception
+    {
+        DependencyNode root = parseResource("cycle-underneath-removed-node.txt" );
+
+        assertSame( root, transform( root ) );
+        List<DependencyNode> trail = find( root, "y" );
+        assertEquals( 6, trail.size() );
+
+        // Node y should have children removed
+        assertFalse( trail.get(0).getChildren().isEmpty() );
+    }
+
+    // This test must be assertFalse() as soon as MRESOLVER-62 is fixed
+    @Test
+    public void testCycleUnderneathRemovedNode2()
+        throws Exception
+    {
+        DependencyNode root = parseResource("cycle-underneath-removed-node2.txt" );
+
+        assertSame( root, transform( root ) );
+
+        // Node x should be present
+        List<DependencyNode> trail = find( root, "x" );
+        assertTrue( trail.isEmpty() );
     }
 
     @Test

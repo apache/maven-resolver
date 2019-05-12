@@ -1,0 +1,17 @@
+# This graph has a cycle (x <-> y) underneath a node that is removed from the tree (a:1).
+# However, this cycle also appears as a child of another cycle.
+# Specifically, q:2 depends on x and is part of a cycle (p <-> q).
+# When conflicts are resolved, x should be included.
+(null)
++- gid:a:1
+|  \- gid:x:1                  (x)
+|     \- gid:y:1
+|        \- ^x
++- gid:a:2
+\- gid:m:1
+   \- gid:n:1
+      +- gid:p:1
+      |  \- gid:q:1
+      \- gid:q:2
+         |- gid:p:2
+         \- ^x
