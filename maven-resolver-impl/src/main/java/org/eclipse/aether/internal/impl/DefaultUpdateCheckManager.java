@@ -215,16 +215,18 @@ public class DefaultUpdateCheckManager
     {
         if ( error == null || error.length() <= 0 )
         {
-            return new ArtifactNotFoundException( artifact, repository, "Failure to find " + artifact + " in "
-                + repository.getUrl() + " was cached in the local repository, "
-                + "resolution will not be reattempted until the update interval of " + repository.getId()
+            return new ArtifactNotFoundException( artifact, repository, artifact
+                + " was not found in " + repository.getUrl() + " during a previous attempt. This failure was"
+                + " cached in the local repository and"
+                + " resolution is not reattempted until the update interval of " + repository.getId()
                 + " has elapsed or updates are forced", true );
         }
         else
         {
-            return new ArtifactTransferException( artifact, repository, "Failure to transfer " + artifact + " from "
-                + repository.getUrl() + " was cached in the local repository, "
-                + "resolution will not be reattempted until the update interval of " + repository.getId()
+            return new ArtifactTransferException( artifact, repository, artifact + " failed to transfer from "
+                + repository.getUrl() + " during a previous attempt. This failure"
+                + " was cached in the local repository and"
+                + " resolution is not reattempted until the update interval of " + repository.getId()
                 + " has elapsed or updates are forced. Original error: " + error, true );
         }
     }
@@ -326,16 +328,18 @@ public class DefaultUpdateCheckManager
     {
         if ( error == null || error.length() <= 0 )
         {
-            return new MetadataNotFoundException( metadata, repository, "Failure to find " + metadata + " in "
-                + repository.getUrl() + " was cached in the local repository, "
-                + "resolution will not be reattempted until the update interval of " + repository.getId()
+            return new MetadataNotFoundException( metadata, repository, metadata + " was not found in "
+                + repository.getUrl() + " during a previous attempt."
+                + " This failure was cached in the local repository and"
+                + " resolution is not be reattempted until the update interval of " + repository.getId()
                 + " has elapsed or updates are forced", true );
         }
         else
         {
-            return new MetadataTransferException( metadata, repository, "Failure to transfer " + metadata + " from "
-                + repository.getUrl() + " was cached in the local repository, "
-                + "resolution will not be reattempted until the update interval of " + repository.getId()
+            return new MetadataTransferException( metadata, repository, metadata + "failed to transfer from "
+                + repository.getUrl() + " during a previous attempt."
+                + " This failure was cached in the local repository and"
+                + " resolution will not be reattempted until the update interval of " + repository.getId()
                 + " has elapsed or updates are forced. Original error: " + error, true );
         }
     }
