@@ -19,16 +19,13 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
@@ -46,7 +43,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.util.concurrency.FutureResult;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -61,8 +57,8 @@ final class DataPool
 
     private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
 
-    public static final Future<ArtifactDescriptorResult> NO_DESCRIPTOR =
-        new FutureResult<>( new ArtifactDescriptorResult( new ArtifactDescriptorRequest() ) );
+    static final ArtifactDescriptorResult NO_DESCRIPTOR =
+        new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
 
     private ObjectPool<Artifact> artifacts;
 
@@ -124,12 +120,12 @@ final class DataPool
         return dependencies.intern( dependency );
     }
 
-    public Object toKey( ArtifactDescriptorRequest request )
+    Object toKey( ArtifactDescriptorRequest request )
     {
         return request.getArtifact();
     }
 
-    public Future<ArtifactDescriptorResult> getDescriptor( Object key, ArtifactDescriptorRequest request )
+    ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
     {
         Descriptor descriptor = descriptors.get( key );
         if ( descriptor != null )
@@ -139,22 +135,22 @@ final class DataPool
         return null;
     }
 
-    public void putDescriptor( Object key, Future<ArtifactDescriptorResult> futureResult )
+    void putDescriptor( Object key, ArtifactDescriptorResult result )
     {
-        descriptors.put( key, new GoodDescriptor( futureResult ) );
+        descriptors.put( key, new GoodDescriptor( result ) );
     }
 
-    public void putDescriptor( Object key, ArtifactDescriptorException exception )
+    void putDescriptor( Object key, ArtifactDescriptorException e )
     {
         descriptors.put( key, BadDescriptor.INSTANCE );
     }
 
-    public Object toKey( VersionRangeRequest request )
+    Object toKey( VersionRangeRequest request )
     {
         return new ConstraintKey( request );
     }
 
-    public VersionRangeResult getConstraint( Object key, VersionRangeRequest request )
+    VersionRangeResult getConstraint( Object key, VersionRangeRequest request )
     {
         Constraint constraint = constraints.get( key );
         if ( constraint != null )
@@ -164,15 +160,15 @@ final class DataPool
         return null;
     }
 
-    public void putConstraint( Object key, VersionRangeResult result )
+    void putConstraint( Object key, VersionRangeResult result )
     {
         constraints.put( key, new Constraint( result ) );
     }
 
-    public Object toKey( Artifact artifact, DefaultDependencyCollectionContext context )
+    public Object toKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
+                         DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
     {
-        return new GraphKey( artifact, context.getRepositories(), context.getDepSelector(),
-                             context.getDepManager(), context.getDepTraverser(), context.getVerFilter() );
+        return new GraphKey( artifact, repositories, selector, manager, traverser, filter );
     }
 
     public List<DependencyNode> getChildren( Object key )
@@ -187,78 +183,64 @@ final class DataPool
 
     abstract static class Descriptor
     {
-        public abstract Future<ArtifactDescriptorResult> toResult( ArtifactDescriptorRequest request );
+
+        public abstract ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request );
+
     }
 
     static final class GoodDescriptor
         extends Descriptor
     {
-        Future<ArtifactDescriptorResult> futureResult;
 
-        GoodDescriptor( Future<ArtifactDescriptorResult> futureResult )
+        final Artifact artifact;
+
+        final List<Artifact> relocations;
+
+        final Collection<Artifact> aliases;
+
+        final List<RemoteRepository> repositories;
+
+        final List<Dependency> dependencies;
+
+        final List<Dependency> managedDependencies;
+
+        GoodDescriptor( ArtifactDescriptorResult result )
         {
-            this.futureResult = futureResult;
+            artifact = result.getArtifact();
+            relocations = result.getRelocations();
+            aliases = result.getAliases();
+            dependencies = result.getDependencies();
+            managedDependencies = result.getManagedDependencies();
+            repositories = result.getRepositories();
         }
 
-        public Future<ArtifactDescriptorResult> toResult( final ArtifactDescriptorRequest request )
+        public ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request )
         {
-            return new Future<ArtifactDescriptorResult>()
-            {
-                public boolean cancel( boolean mayInterruptIfRunning )
-                {
-                    return futureResult.cancel( mayInterruptIfRunning );
-                }
-
-                public boolean isCancelled()
-                {
-                    return futureResult.isCancelled();
-                }
-
-                public boolean isDone()
-                {
-                    return futureResult.isDone();
-                }
-
-                public ArtifactDescriptorResult get()
-                    throws InterruptedException, ExecutionException
-                {
-                    ArtifactDescriptorResult result = futureResult.get();
-                    return wrap( request, result );
-                }
-                public ArtifactDescriptorResult get( long timeout, TimeUnit unit )
-                    throws InterruptedException, ExecutionException, TimeoutException
-                {
-                    ArtifactDescriptorResult result = futureResult.get( timeout, unit );
-                    return wrap( request, result );
-                }
-            };
+            ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
+            result.setArtifact( artifact );
+            result.setRelocations( relocations );
+            result.setAliases( aliases );
+            result.setDependencies( dependencies );
+            result.setManagedDependencies( managedDependencies );
+            result.setRepositories( repositories );
+            return result;
         }
 
-        private ArtifactDescriptorResult wrap( ArtifactDescriptorRequest request, ArtifactDescriptorResult result )
-        {
-            ArtifactDescriptorResult wrapped = new ArtifactDescriptorResult( request );
-            wrapped.setArtifact( result.getArtifact() );
-            wrapped.setRelocations( result.getRelocations() );
-            wrapped.setAliases( result.getAliases() );
-            wrapped.setDependencies( result.getDependencies() );
-            wrapped.setManagedDependencies( result.getManagedDependencies() );
-            wrapped.setRepositories( result.getRepositories() );
-            return wrapped;
-        }
     }
 
     static final class BadDescriptor
         extends Descriptor
     {
+
         static final BadDescriptor INSTANCE = new BadDescriptor();
 
-        public Future<ArtifactDescriptorResult> toResult( ArtifactDescriptorRequest request )
+        public ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request )
         {
             return NO_DESCRIPTOR;
         }
     }
 
-    static final class Constraint
+    private static final class Constraint
     {
         final VersionRepo[] repositories;
 
@@ -276,7 +258,7 @@ final class DataPool
             }
         }
 
-        public VersionRangeResult toResult( VersionRangeRequest request )
+        VersionRangeResult toResult( VersionRangeRequest request )
         {
             VersionRangeResult result = new VersionRangeResult( request );
             for ( VersionRepo vr : repositories )

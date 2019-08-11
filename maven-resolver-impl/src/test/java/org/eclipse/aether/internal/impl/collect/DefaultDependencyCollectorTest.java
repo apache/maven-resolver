@@ -68,7 +68,6 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
-import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -567,44 +566,6 @@ public class DefaultDependencyCollectorTest
         CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:1" ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertEquals( 1, result.getRoot().getChildren().size() );
-    }
-
-    /**
-     * Tests that scope based dependency selection happens before dependency management.
-     * <p>
-     * This is not really correct (see MRESOLVER-9), but there are a number of tests
-     * in the Maven and Maven Integration Testing projects that currently rely on this
-     * behaviour.
-     */
-    @Test
-    public void testSelectionBeforeManagement()
-        throws DependencyCollectionException
-    {
-        session.setDependencySelector( new ScopeDependencySelector( "provided", "test" ) );
-        session.setDependencyManager( new ClassicDependencyManager() );
-
-        Dependency dependency = newDep( "gid3:aid1:ext:1", "compile" );
-        CollectRequest request = new CollectRequest( dependency, Arrays.asList( repository ) );
-        CollectResult result = collector.collectDependencies( session, request );
-
-        assertEquals( 0, result.getExceptions().size() );
-
-        DependencyNode root = result.getRoot();
-        Dependency newDependency = root.getDependency();
-
-        assertEquals( dependency, newDependency );
-        assertEquals( dependency.getArtifact(), newDependency.getArtifact() );
-
-        assertEquals( 1, root.getChildren().size() );
-
-        Dependency expect = newDep( "gid3:aid2:ext:1", "compile" );
-        DependencyNode childLevel1 = root.getChildren().get( 0 );
-        assertEquals( expect, childLevel1.getDependency() );
-
-        // With proper dependency management, the test scope of aid3 would
-        // be managed to compile, and we would get another child.
-        // Currently, the dependency gets filtered by ScopeDependencyManager.
-        assertEquals( 0, childLevel1.getChildren().size() );
     }
 
     static class TestDependencyManager
