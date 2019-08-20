@@ -135,6 +135,20 @@ public class PathRecordingDependencyVisitorTest
         assertPath( paths.get( 3 ), "a", "x", "x" );
     }
 
+    @Test
+    public void testGetPaths_HandlesCycles_threePaths()
+        throws Exception
+    {
+        DependencyNode root = parse( "cycle-3paths.txt" );
+
+        PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor( new ArtifactMatcher(), false );
+        root.accept( visitor );
+
+        List<List<DependencyNode>> paths = visitor.getPaths();
+        assertEquals( paths.toString(), 4, paths.size() );
+        assertPath( paths.get( 0 ), "a", "b", "c");
+    }
+
     private static class ArtifactMatcher
         implements DependencyFilter
     {
