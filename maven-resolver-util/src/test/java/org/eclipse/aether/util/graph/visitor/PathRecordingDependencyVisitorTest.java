@@ -141,12 +141,12 @@ public class PathRecordingDependencyVisitorTest
     {
         DependencyNode root = parse( "cycle-3paths.txt" );
 
-        PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor( new ArtifactMatcher(), false );
+        PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor( new ArtifactMatcher() );
         root.accept( visitor );
 
         List<List<DependencyNode>> paths = visitor.getPaths();
-        assertEquals( paths.toString(), 4, paths.size() );
-        assertPath( paths.get( 0 ), "a", "b", "c");
+        assertEquals( paths.toString(), 1, paths.size() );
+        assertPath( paths.get( 0 ), "a", "b");
     }
 
     private static class ArtifactMatcher
