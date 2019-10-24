@@ -21,9 +21,7 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
@@ -41,8 +39,6 @@ public final class PathRecordingDependencyVisitor
     private final List<List<DependencyNode>> paths;
 
     private final Stack<DependencyNode> parents;
-
-    private final Map<DependencyNode, Object> visited;
 
     private final boolean excludeChildrenOfMatches;
 
@@ -72,7 +68,6 @@ public final class PathRecordingDependencyVisitor
         this.excludeChildrenOfMatches = excludeChildrenOfMatches;
         paths = new ArrayList<>();
         parents = new Stack<>();
-        visited = new IdentityHashMap<>( 128 );
     }
 
     /**
@@ -101,6 +96,7 @@ public final class PathRecordingDependencyVisitor
     {
         boolean accept = filter == null || filter.accept( node, parents );
 
+        boolean hasDuplicateNodeInParent = parents.contains( node );
         parents.push( node );
 
         if ( accept )
@@ -118,18 +114,12 @@ public final class PathRecordingDependencyVisitor
             }
         }
 
-        if ( visited.put( node, Boolean.TRUE ) != null )
-        {
-            return false;
-        }
-
-        return true;
+        return !hasDuplicateNodeInParent;
     }
 
     public boolean visitLeave( DependencyNode node )
     {
         parents.pop();
-        visited.remove( node );
 
         return true;
     }
