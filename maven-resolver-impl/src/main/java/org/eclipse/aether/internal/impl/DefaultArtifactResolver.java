@@ -24,9 +24,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import static java.util.Objects.requireNonNull;
+
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -238,6 +241,8 @@ public class DefaultArtifactResolver
         List<ArtifactResult> results = new ArrayList<>( requests.size() );
         boolean failures = false;
 
+        Map<ArtifactResult, VersionResult> versionResults = new HashMap<>();
+
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         WorkspaceReader workspace = session.getWorkspaceReader();
 
@@ -286,6 +291,8 @@ public class DefaultArtifactResolver
                 result.addException( e );
                 continue;
             }
+
+            versionResults.put( result, versionResult );
 
             artifact = artifact.setVersion( versionResult.getVersion() );
 
@@ -404,8 +411,44 @@ public class DefaultArtifactResolver
         for ( ArtifactResult result : results )
         {
             ArtifactRequest request = result.getRequest();
+            RequestTrace trace = request.getTrace();
 
             Artifact artifact = result.getArtifact();
+            if ( artifact == null || artifact.getFile() == null )
+            {
+                VersionResult versionResult = versionResults.get( result );
+                if ( versionResult != null )
+                {
+                    LocalArtifactResult local =
+                            lrm.find( session, new LocalArtifactRequest(
+                                    request.getArtifact(), request.getRepositories(), request.getRequestContext() ) );
+                    if ( isLocallyInstalled( local, versionResult ) )
+                    {
+                       if ( local.getRepository() != null )
+                       {
+                           result.setRepository( local.getRepository() );
+                       }
+                       else
+                       {
+                           result.setRepository( lrm.getRepository() );
+                       }
+                       Artifact requestArtifact = request.getArtifact();
+                       try
+                       {
+                           requestArtifact = requestArtifact.setFile(
+                                   getFile( session, requestArtifact, local.getFile() ) );
+                           result.setArtifact( requestArtifact );
+                           artifactResolved( session, trace, requestArtifact, result.getRepository(), null );
+                       }
+                       catch ( ArtifactTransferException e )
+                       {
+                           result.addException( e );
+                       }
+                    }
+                }
+            }
+
+            artifact = result.getArtifact();
             if ( artifact == null || artifact.getFile() == null )
             {
                 failures = true;
@@ -414,7 +457,6 @@ public class DefaultArtifactResolver
                     Exception exception = new ArtifactNotFoundException( request.getArtifact(), null );
                     result.addException( exception );
                 }
-                RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
                 artifactResolved( session, trace, request.getArtifact(), null, result.getExceptions() );
             }
         }

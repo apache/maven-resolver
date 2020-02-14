@@ -220,6 +220,7 @@ public class DefaultArtifactResolverTest
 
         };
 
+        connector.fail = true;
         connector.setExpectGet( artifact );
         repositoryConnectorProvider.setConnector( connector );
 
@@ -528,6 +529,7 @@ public class DefaultArtifactResolverTest
             }
 
         };
+        connector.fail = true;
         repositoryConnectorProvider.setConnector( connector );
 
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
