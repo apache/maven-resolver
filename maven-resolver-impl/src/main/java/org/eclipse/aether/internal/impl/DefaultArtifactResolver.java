@@ -231,7 +231,7 @@ public class DefaultArtifactResolver
     }
 
     @SuppressWarnings( "checkstyle:methodlength" )
-    private List<ArtifactResult> resolve( RepositorySystemSession session,
+    private synchronized List<ArtifactResult> resolve( RepositorySystemSession session,
                                           Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
     {
