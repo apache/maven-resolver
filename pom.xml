@@ -74,6 +74,7 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.3.3</sisuVersion>
     <slf4jVersion>1.7.25</slf4jVersion>
+    <project.build.outputTimestamp>2020-04-07T21:04:00Z</project.build.outputTimestamp>
   </properties>
 
   <modules>
