@@ -1,0 +1,9 @@
+# see https://s.apache.org/asfyaml
+github:
+  description: "Apache Maven Artifact Resolver"
+  homepage: https://maven.apache.org/resolver/
+  labels:
+    - java
+    - build-management
+    - apache-maven
+    - maven
