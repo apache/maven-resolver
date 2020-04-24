@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver-demos</artifactId>
-    <version>1.4.2-SNAPSHOT</version>
+    <version>1.4.2</version>
   </parent>
 
   <artifactId>maven-resolver-demo-maven-plugin</artifactId>
@@ -89,7 +89,7 @@
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <!-- This is needed to prevent jar plugin to fail based on wrong automatic module name. -->
-          <archive combine.self="override"/>
+          <archive combine.self="override" />
         </configuration>
       </plugin>
     </plugins>
