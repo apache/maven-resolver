@@ -7,3 +7,5 @@ target/
 *.ipr
 *.iws
 pom.xml.versionsBackup
+.checkstyle
+
