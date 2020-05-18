@@ -33,7 +33,6 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.StreamingWagon;
 import org.apache.maven.wagon.Wagon;
@@ -185,32 +184,21 @@ final class WagonTransporter
 
         if ( authContext != null )
         {
-            auth = new AuthenticationInfo()
-            {
-                @Override
-                public String getUserName()
-                {
-                    return authContext.get( AuthenticationContext.USERNAME );
-                }
-
-                @Override
-                public String getPassword()
-                {
-                    return authContext.get( AuthenticationContext.PASSWORD );
-                }
-
-                @Override
-                public String getPrivateKey()
-                {
-                    return authContext.get( AuthenticationContext.PRIVATE_KEY_PATH );
-                }
-
-                @Override
-                public String getPassphrase()
-                {
-                    return authContext.get( AuthenticationContext.PRIVATE_KEY_PASSPHRASE );
-                }
-            };
+            auth = new AuthenticationInfo();
+            auth.setUserName( authContext.get( AuthenticationContext.USERNAME ) );
+            auth.setPassword( authContext.get( AuthenticationContext.PASSWORD ) );
+            auth.setPrivateKey( authContext.get( AuthenticationContext.PRIVATE_KEY_PATH ) );
+            auth.setPassphrase( authContext.get( AuthenticationContext.PRIVATE_KEY_PASSPHRASE ) );
+            //MNG-5583 per endpoint PKI authentication
+            auth.setKeyAlias( authContext.get( "getKeyAlias" ) );
+            auth.setKeyPassword( authContext.get( "getKeyPassword" ) );
+            auth.setKeyStore( authContext.get( "getKeyStore" ) );
+            auth.setKeyStorePassword( authContext.get( "getKeyStorePassword" ) );
+            auth.setKeyStoreType( authContext.get( "getKeyStoreType" ) );
+            auth.setTrustStore( authContext.get( "getTrustStore" ) );
+            auth.setTrustStorePassword( authContext.get( "getTrustStorePassword" ) );
+            auth.setTrustStoreType( authContext.get( "getTrustStoreType" ) );
+            //see DefaultRepositorySystemSessionFactory
         }
 
         return auth;
