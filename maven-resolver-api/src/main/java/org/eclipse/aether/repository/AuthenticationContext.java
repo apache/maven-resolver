@@ -280,7 +280,10 @@ public final class AuthenticationContext
                         Authentication authInner = session.
                                 getAuthenticationSelector().
                                 getAuthentication( repository );
-                        authInner.fill( this, key, data );
+                        if ( authInner != null )
+                        {
+                            authInner.fill( this, key, data );
+                        }
                         
                     }
                     finally
