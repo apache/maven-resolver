@@ -127,6 +127,40 @@ public final class AuthenticationContext
      * {@link javax.net.ssl.HostnameVerifier}.
      */
     public static final String SSL_HOSTNAME_VERIFIER = "ssl.hostnameVerifier";
+    
+    /**
+     * private key alias, used for http client certification authentication
+     */
+    public static final String SSL_KEY_ALIAS = "ssl.keyAlias";
+    /**
+     * private key password
+     */
+    public static final String SSL_KEY_PASSWORD = "ssl.keyPassword";
+    /**
+     * private key store password
+     */
+    public static final String SSL_KEY_STORE_PASSWORD = "ssl.keyStorePassword";
+    /**
+     * key store filename, or named keystore in platform specific edge cases
+     */
+    public static final String SSL_KEY_STORE = "ssl.keyStore";
+    /**
+     * key store type, default is JKS
+     */
+    public static final String SSL_KEY_STORE_TYPE = "ssl.keyStoreType";
+    /**
+     * trust store filename or named trust store in platform specific edge cases
+     */
+    public static final String SSL_TRUST_STORE = "ssl.trustStore";
+    /**
+     * trust store password
+     */
+    public static final String SSL_TRUST_STORE_PASSWORD = "ssl.trustStorePassword";
+    /**
+     * the trust store type, default is JKS
+     */
+    public static final String SSL_TRUST_STORE_TYPE = "ssl.trustStoreType";
+
 
     private final RepositorySystemSession session;
 

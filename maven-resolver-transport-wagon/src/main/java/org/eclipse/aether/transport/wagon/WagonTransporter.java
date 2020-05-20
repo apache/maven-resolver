@@ -189,15 +189,14 @@ final class WagonTransporter
             auth.setPassword( authContext.get( AuthenticationContext.PASSWORD ) );
             auth.setPrivateKey( authContext.get( AuthenticationContext.PRIVATE_KEY_PATH ) );
             auth.setPassphrase( authContext.get( AuthenticationContext.PRIVATE_KEY_PASSPHRASE ) );
-            //MNG-5583 per endpoint PKI authentication
-            auth.setKeyAlias( authContext.get( "getKeyAlias" ) );
-            auth.setKeyPassword( authContext.get( "getKeyPassword" ) );
-            auth.setKeyStore( authContext.get( "getKeyStore" ) );
-            auth.setKeyStorePassword( authContext.get( "getKeyStorePassword" ) );
-            auth.setKeyStoreType( authContext.get( "getKeyStoreType" ) );
-            auth.setTrustStore( authContext.get( "getTrustStore" ) );
-            auth.setTrustStorePassword( authContext.get( "getTrustStorePassword" ) );
-            auth.setTrustStoreType( authContext.get( "getTrustStoreType" ) );
+            auth.setKeyAlias( authContext.get( AuthenticationContext.SSL_KEY_ALIAS ) );
+            auth.setKeyPassword( authContext.get( AuthenticationContext.SSL_KEY_PASSWORD ) );
+            auth.setKeyStore( authContext.get( AuthenticationContext.SSL_KEY_STORE ) );
+            auth.setKeyStorePassword( authContext.get( AuthenticationContext.SSL_KEY_STORE_PASSWORD ) );
+            auth.setKeyStoreType( authContext.get( AuthenticationContext.SSL_KEY_STORE_TYPE ) );
+            auth.setTrustStore( authContext.get( AuthenticationContext.SSL_TRUST_STORE ) );
+            auth.setTrustStorePassword( authContext.get( AuthenticationContext.SSL_TRUST_STORE_PASSWORD ) );
+            auth.setTrustStoreType( authContext.get( AuthenticationContext.SSL_TRUST_STORE_TYPE ) );
             //see DefaultRepositorySystemSessionFactory
         }
 
