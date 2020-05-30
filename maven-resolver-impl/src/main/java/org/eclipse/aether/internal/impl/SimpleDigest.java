@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -24,10 +24,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * A simple digester for strings.
+ * A simple digester for strings. It will traverse through a list of digest algorithms and pick the
+ * strongest one available.
  */
 class SimpleDigest
 {
+
+    private static final String[] HASH_ALGOS = new String[] { "SHA-512", "SHA-256", "SHA-1", "MD5" };
 
     private MessageDigest digest;
 
@@ -35,15 +38,13 @@ class SimpleDigest
 
     SimpleDigest()
     {
-        try
-        {
-            digest = MessageDigest.getInstance( "SHA-1" );
-        }
-        catch ( NoSuchAlgorithmException e )
+        for ( String hashAlgo : HASH_ALGOS )
         {
             try
             {
-                digest = MessageDigest.getInstance( "MD5" );
+                digest = MessageDigest.getInstance( hashAlgo );
+                hash = 0;
+                break;
             }
             catch ( NoSuchAlgorithmException ne )
             {
