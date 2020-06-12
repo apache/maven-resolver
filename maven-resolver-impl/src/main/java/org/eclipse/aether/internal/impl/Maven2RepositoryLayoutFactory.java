@@ -48,8 +48,7 @@ public final class Maven2RepositoryLayoutFactory
     static final String CONFIG_PROP_SIGNATURE_CHECKSUMS = "aether.checksums.forSignature";
     static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
     
-    static final List<String> DEFAULT_CHECKSUMS_ALGORITHMS = 
-            Arrays.asList( "SHA-512", "SHA-256", "SHA-1", "MD5" );
+    static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-512,SHA-256,SHA-1,MD5";
 
     private float priority;
 
@@ -78,9 +77,8 @@ public final class Maven2RepositoryLayoutFactory
             throw new NoRepositoryLayoutException( repository );
         }
         boolean forSignature = ConfigUtils.getBoolean( session, false, CONFIG_PROP_SIGNATURE_CHECKSUMS );
-        List<String> checksumsAlgorithms = ( List<String> ) ConfigUtils.getList( session, 
-                DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS );
-        
+        List<String> checksumsAlgorithms = Arrays.asList( ConfigUtils.getString( session, 
+                DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS ).split( "," ) );
         return forSignature
                 ? new Maven2RepositoryLayout( checksumsAlgorithms ) 
                 : new Maven2RepositoryLayoutEx( checksumsAlgorithms );

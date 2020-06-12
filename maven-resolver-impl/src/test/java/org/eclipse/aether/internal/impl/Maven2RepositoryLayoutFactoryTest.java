@@ -165,7 +165,7 @@ public class Maven2RepositoryLayoutFactoryTest
     @Test
     public void testArtifactChecksums_DownloadWithCustomAlgorithms() throws NoRepositoryLayoutException
     {
-        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, Arrays.asList("SHA-256", "SHA-1") );
+        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, "SHA-256,SHA-1");
         layout = factory.newInstance( session, newRepo( "default" ) );
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" );
         URI uri = layout.getLocation( artifact, false );
@@ -191,7 +191,7 @@ public class Maven2RepositoryLayoutFactoryTest
     @Test
     public void testArtifactChecksums_UploadWithCustomAlgorithms() throws NoRepositoryLayoutException
     {
-        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, Arrays.asList("SHA-512", "MD5") );
+        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, "SHA-512,MD5" );
         layout = factory.newInstance( session, newRepo( "default" ) );
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" );
         URI uri = layout.getLocation( artifact, true );
