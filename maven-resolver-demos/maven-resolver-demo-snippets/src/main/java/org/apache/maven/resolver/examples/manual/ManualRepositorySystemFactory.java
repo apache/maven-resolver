@@ -8,9 +8,9 @@ package org.apache.maven.resolver.examples.manual;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -55,8 +55,8 @@ public class ManualRepositorySystemFactory
             @Override
             public void serviceCreationFailed( Class<?> type, Class<?> impl, Throwable exception )
             {
-               LOGGER.error( "Service creation failed for {} implementation {}: {}",
-                        type, impl, exception.getMessage(), exception );
+               LOGGER.error( "Service creation failed for {} with implementation {}",
+                        type, impl, exception );
             }
         } );
 

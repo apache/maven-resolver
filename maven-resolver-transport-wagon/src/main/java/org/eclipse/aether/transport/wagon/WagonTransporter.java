@@ -8,9 +8,9 @@ package org.eclipse.aether.transport.wagon;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -124,8 +124,8 @@ final class WagonTransporter
         }
         catch ( Exception e )
         {
-            LOGGER.debug( "No transport {}", e.getMessage(), e );
-            throw new NoTransporterException( repository, e.getMessage(), e );
+            LOGGER.debug( "No transport {}", e );
+            throw new NoTransporterException( repository, e );
         }
 
         repoAuthContext = AuthenticationContext.forRepository( session, repository );
@@ -300,7 +300,7 @@ final class WagonTransporter
             }
             catch ( Exception e )
             {
-                LOGGER.debug( "Could not set user agent for wagon {}: {}", wagon.getClass().getName(), e.getMessage() );
+                LOGGER.debug( "Could not set user agent for Wagon {}", wagon.getClass().getName(), e );
             }
         }
 
@@ -325,17 +325,8 @@ final class WagonTransporter
             }
             catch ( Exception e )
             {
-                String msg =
-                    "Could not apply configuration for " + repository.getId() + " to wagon "
-                        + wagon.getClass().getName() + ":" + e.getMessage();
-                if ( LOGGER.isDebugEnabled() )
-                {
-                    LOGGER.warn( msg, e );
-                }
-                else
-                {
-                    LOGGER.warn( msg );
-                }
+                LOGGER.warn( "Could not apply configuration for {} to Wagon {}",
+                        repository.getId(), wagon.getClass().getName(), e );
             }
         }
 
@@ -353,7 +344,7 @@ final class WagonTransporter
         }
         catch ( Exception e )
         {
-            LOGGER.debug( "Could not disconnect wagon {}", wagon, e );
+            LOGGER.debug( "Could not disconnect Wagon {}", wagon, e );
         }
     }
 

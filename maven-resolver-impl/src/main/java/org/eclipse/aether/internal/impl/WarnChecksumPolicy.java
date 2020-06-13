@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -36,16 +36,8 @@ final class WarnChecksumPolicy
 
     public boolean onTransferChecksumFailure( ChecksumFailureException exception )
     {
-        String msg =
-            "Could not validate integrity of download from " + resource.getRepositoryUrl() + resource.getResourceName();
-        if ( logger.isDebugEnabled() )
-        {
-            logger.warn( msg, exception );
-        }
-        else
-        {
-            logger.warn( msg + ": " + exception.getMessage() );
-        }
+        logger.warn( "Could not validate integrity of download from {}{}", resource.getRepositoryUrl(),
+                resource.getResourceName(), exception );
         return true;
     }
 

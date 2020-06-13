@@ -8,9 +8,9 @@ package org.eclipse.aether.connector.basic;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -500,7 +500,7 @@ final class BasicRepositoryConnector
 
         private final File file;
 
-        private final FileTransformer fileTransformer; 
+        private final FileTransformer fileTransformer;
 
         private final Collection<RepositoryLayout.Checksum> checksums;
 
@@ -511,9 +511,9 @@ final class BasicRepositoryConnector
         }
 
         /**
-         * <strong>IMPORTANT</strong> When using a fileTransformer, the content of the file is stored in memory to 
+         * <strong>IMPORTANT</strong> When using a fileTransformer, the content of the file is stored in memory to
          * ensure that file content and checksums stay in sync!
-         * 
+         *
          * @param path
          * @param file
          * @param fileTransformer
@@ -538,7 +538,7 @@ final class BasicRepositoryConnector
                 // transform data once to byte array, ensure constant data for checksum
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 byte[] buffer = new byte[1024];
-                
+
                 try ( InputStream transformData = fileTransformer.transformData( file ) )
                 {
                     for ( int read; ( read = transformData.read( buffer, 0, buffer.length ) ) != -1; )
@@ -559,7 +559,7 @@ final class BasicRepositoryConnector
         }
 
         /**
-         * 
+         *
          * @param file source
          * @param bytes transformed data from file or {@code null}
          * @param location target
@@ -577,7 +577,7 @@ final class BasicRepositoryConnector
                 {
                     algos.add( checksum.getAlgorithm() );
                 }
-                
+
                 Map<String, Object> sumsByAlgo;
                 if ( bytes != null )
                 {
@@ -595,15 +595,7 @@ final class BasicRepositoryConnector
             }
             catch ( IOException e )
             {
-                String msg = "Failed to upload checksums for " + file + ": " + e.getMessage();
-                if ( LOGGER.isDebugEnabled() )
-                {
-                    LOGGER.warn( msg, e );
-                }
-                else
-                {
-                    LOGGER.warn( msg );
-                }
+                LOGGER.warn( "Failed to upload checksums for {}", file, e );
             }
         }
 
@@ -619,15 +611,7 @@ final class BasicRepositoryConnector
             }
             catch ( Exception e )
             {
-                String msg = "Failed to upload checksum " + location + ": " + e.getMessage();
-                if ( LOGGER.isDebugEnabled() )
-                {
-                    LOGGER.warn( msg, e );
-                }
-                else
-                {
-                    LOGGER.warn( msg );
-                }
+                LOGGER.warn( "Failed to upload checksum to {}", location, e );
             }
         }
 

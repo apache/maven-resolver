@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -107,7 +107,7 @@ public class DefaultUpdateCheckManager
         if ( check.getLocalLastUpdated() != 0
             && !isUpdatedRequired( session, check.getLocalLastUpdated(), check.getPolicy() ) )
         {
-            LOGGER.debug( "Skipped remote request for {}, locally installed artifact up-to-date.", check.getItem() );
+            LOGGER.debug( "Skipped remote request for {}, locally installed artifact up-to-date", check.getItem() );
 
             check.setRequired( false );
             return;
@@ -161,11 +161,7 @@ public class DefaultUpdateCheckManager
         }
         else if ( isAlreadyUpdated( session, updateKey ) )
         {
-            if ( LOGGER.isDebugEnabled() )
-            {
-                LOGGER.debug( "Skipped remote request for " + check.getItem()
-                    + ", already updated during this session." );
-            }
+            LOGGER.debug( "Skipped remote request for {}, already updated during this session", check.getItem() );
 
             check.setRequired( false );
             if ( error != null )
@@ -179,7 +175,7 @@ public class DefaultUpdateCheckManager
         }
         else if ( fileExists )
         {
-            LOGGER.debug( "Skipped remote request for {}, locally cached artifact up-to-date.", check.getItem() );
+            LOGGER.debug( "Skipped remote request for {}, locally cached artifact up-to-date", check.getItem() );
 
             check.setRequired( false );
         }
@@ -234,7 +230,7 @@ public class DefaultUpdateCheckManager
         if ( check.getLocalLastUpdated() != 0
             && !isUpdatedRequired( session, check.getLocalLastUpdated(), check.getPolicy() ) )
         {
-            LOGGER.debug( "Skipped remote request for {} locally installed metadata up-to-date.", check.getItem() );
+            LOGGER.debug( "Skipped remote request for {} locally installed metadata up-to-date", check.getItem() );
 
             check.setRequired( false );
             return;
@@ -288,7 +284,7 @@ public class DefaultUpdateCheckManager
         }
         else if ( isAlreadyUpdated( session, updateKey ) )
         {
-            LOGGER.debug( "Skipped remote request for {}, already updated during this session.", check.getItem() );
+            LOGGER.debug( "Skipped remote request for {}, already updated during this session", check.getItem() );
 
             check.setRequired( false );
             if ( error != null )
@@ -302,7 +298,7 @@ public class DefaultUpdateCheckManager
         }
         else if ( fileExists )
         {
-            LOGGER.debug( "Skipped remote request for {}, locally cached metadata up-to-date.", check.getItem() );
+            LOGGER.debug( "Skipped remote request for {}, locally cached metadata up-to-date", check.getItem() );
 
             check.setRequired( false );
         }
@@ -349,7 +345,7 @@ public class DefaultUpdateCheckManager
         }
         catch ( NumberFormatException e )
         {
-            LOGGER.debug( "Cannot parse lastUpdated date: \'{}\'. Ignoring.", value, e );
+            LOGGER.debug( "Cannot parse last updated date {}, ignoring it", value, e );
             return 1;
         }
     }

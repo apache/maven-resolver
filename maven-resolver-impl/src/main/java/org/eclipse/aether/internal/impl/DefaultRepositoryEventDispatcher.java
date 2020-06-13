@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -174,17 +174,7 @@ public class DefaultRepositoryEventDispatcher
 
     private void logError( Throwable e, Object listener )
     {
-        String msg =
-            "Failed to dispatch repository event to " + listener.getClass().getCanonicalName() + ": " + e.getMessage();
-
-        if ( LOGGER.isDebugEnabled() )
-        {
-            LOGGER.warn( msg, e );
-        }
-        else
-        {
-            LOGGER.warn( msg );
-        }
+        LOGGER.warn( "Failed to dispatch repository event to {}", listener.getClass().getCanonicalName(), e );
     }
 
 }
