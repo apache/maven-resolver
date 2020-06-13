@@ -72,7 +72,7 @@
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
-    <sisuVersion>0.3.3</sisuVersion>
+    <sisuVersion>0.3.4</sisuVersion>
     <slf4jVersion>1.7.30</slf4jVersion>
     <project.build.outputTimestamp>2020-04-24T12:26:44Z</project.build.outputTimestamp>
   </properties>
