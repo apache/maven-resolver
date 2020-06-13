@@ -33,11 +33,11 @@ under the License.
       hours to reach all mirrors.<p/>
 
       <p>In order to guard against corrupted downloads/installations, it is highly recommended to
-      <a href="http://www.apache.org/dev/release-signing#verifying-signature">verify the signature</a>
+      <a href="https://www.apache.org/dev/release-signing#verifying-signature">verify the signature</a>
       of the release bundles against the public <a href="https://www.apache.org/dist/maven/KEYS">KEYS</a> used by the Apache Maven
       developers.</p>
 
-      <p>${project.name} is distributed under the <a href="http://www.apache.org/licenses/">Apache License, version 2.0</a>.</p>
+      <p>${project.name} is distributed under the <a href="https://www.apache.org/licenses/">Apache License, version 2.0</a>.</p>
 
       <p></p>We <b>strongly</b> encourage our users to configure a Maven repository mirror closer to their location, please read <a href="/guides/mini/guide-mirror-settings.html">How to Use Mirrors for Repositories</a>.</p>
 
@@ -85,7 +85,7 @@ under the License.
 
         <p>
           You may also consult the
-          <a href="http://www.apache.org/mirrors/">complete list of
+          <a href="https://www.apache.org/mirrors/">complete list of
             mirrors.</a>
         </p>
 
@@ -117,7 +117,7 @@ under the License.
 
       <subsection name="Previous Versions">
         
-      <p>Older non-recommended releases can be found on our <a href="http://archive.apache.org/dist/maven/resolver/">archive site</a>.</p>
+      <p>Older non-recommended releases can be found on our <a href="https://archive.apache.org/dist/maven/resolver/">archive site</a>.</p>
 
       </subsection>
     </section>

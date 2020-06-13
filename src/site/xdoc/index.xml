@@ -61,8 +61,8 @@
           <area shape="rect" coords="6,284,212,320"   href="/ref/current/maven-repository-metadata/" />
           <area shape="rect" coords="0,1,266,329"     href="/ref/current/" />
           <area shape="rect" coords="689,200,775,236" href="/wagon/" />
-          <area shape="rect" coords="689,243,791,278" href="http://hc.apache.org/httpcomponents-client-ga/index.html" />
-          <area shape="rect" coords="689,34,774,70"   href="http://ant.apache.org/" />
+          <area shape="rect" coords="689,243,791,278" href="https://hc.apache.org/httpcomponents-client-ga/index.html" />
+          <area shape="rect" coords="689,34,774,70"   href="https://ant.apache.org/" />
         </map>
       </p>
 

@@ -29,12 +29,12 @@ under the License.
       <item name="JavaDocs" href="apidocs/index.html"/>
       <item name="Source Xref" href="xref/index.html"/>
       <!--item name="FAQ" href="faq.html"/-->
-      <item name="License" href="http://www.apache.org/licenses/"/>
+      <item name="License" href="https://www.apache.org/licenses/"/>
       <item name="Download" href="download.html"/>
     </menu>
     <menu name="See Also">
       <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-ant-tasks/"/>
-      <item name="Aether wiki" href="http://wiki.eclipse.org/Aether"/>
+      <item name="Aether wiki" href="https://wiki.eclipse.org/Aether"/>
     </menu>
 
     <menu ref="modules"/>
