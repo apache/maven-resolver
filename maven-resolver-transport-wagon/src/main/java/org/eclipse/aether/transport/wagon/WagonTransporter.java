@@ -33,7 +33,6 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.StreamingWagon;
 import org.apache.maven.wagon.Wagon;
@@ -185,32 +184,20 @@ final class WagonTransporter
 
         if ( authContext != null )
         {
-            auth = new AuthenticationInfo()
-            {
-                @Override
-                public String getUserName()
-                {
-                    return authContext.get( AuthenticationContext.USERNAME );
-                }
-
-                @Override
-                public String getPassword()
-                {
-                    return authContext.get( AuthenticationContext.PASSWORD );
-                }
-
-                @Override
-                public String getPrivateKey()
-                {
-                    return authContext.get( AuthenticationContext.PRIVATE_KEY_PATH );
-                }
-
-                @Override
-                public String getPassphrase()
-                {
-                    return authContext.get( AuthenticationContext.PRIVATE_KEY_PASSPHRASE );
-                }
-            };
+            auth = new AuthenticationInfo();
+            auth.setUserName( authContext.get( AuthenticationContext.USERNAME ) );
+            auth.setPassword( authContext.get( AuthenticationContext.PASSWORD ) );
+            auth.setPrivateKey( authContext.get( AuthenticationContext.PRIVATE_KEY_PATH ) );
+            auth.setPassphrase( authContext.get( AuthenticationContext.PRIVATE_KEY_PASSPHRASE ) );
+            auth.setKeyAlias( authContext.get( AuthenticationContext.SSL_KEY_ALIAS ) );
+            auth.setKeyPassword( authContext.get( AuthenticationContext.SSL_KEY_PASSWORD ) );
+            auth.setKeyStore( authContext.get( AuthenticationContext.SSL_KEY_STORE ) );
+            auth.setKeyStorePassword( authContext.get( AuthenticationContext.SSL_KEY_STORE_PASSWORD ) );
+            auth.setKeyStoreType( authContext.get( AuthenticationContext.SSL_KEY_STORE_TYPE ) );
+            auth.setTrustStore( authContext.get( AuthenticationContext.SSL_TRUST_STORE ) );
+            auth.setTrustStorePassword( authContext.get( AuthenticationContext.SSL_TRUST_STORE_PASSWORD ) );
+            auth.setTrustStoreType( authContext.get( AuthenticationContext.SSL_TRUST_STORE_TYPE ) );
+            //see DefaultRepositorySystemSessionFactory
         }
 
         return auth;

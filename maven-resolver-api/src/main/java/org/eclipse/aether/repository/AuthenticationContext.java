@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
-
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
@@ -128,6 +127,40 @@ public final class AuthenticationContext
      * {@link javax.net.ssl.HostnameVerifier}.
      */
     public static final String SSL_HOSTNAME_VERIFIER = "ssl.hostnameVerifier";
+    
+    /**
+     * private key alias, used for http client certification authentication
+     */
+    public static final String SSL_KEY_ALIAS = "ssl.keyAlias";
+    /**
+     * private key password
+     */
+    public static final String SSL_KEY_PASSWORD = "ssl.keyPassword";
+    /**
+     * private key store password
+     */
+    public static final String SSL_KEY_STORE_PASSWORD = "ssl.keyStorePassword";
+    /**
+     * key store filename, or named keystore in platform specific edge cases
+     */
+    public static final String SSL_KEY_STORE = "ssl.keyStore";
+    /**
+     * key store type, default is JKS
+     */
+    public static final String SSL_KEY_STORE_TYPE = "ssl.keyStoreType";
+    /**
+     * trust store filename or named trust store in platform specific edge cases
+     */
+    public static final String SSL_TRUST_STORE = "ssl.trustStore";
+    /**
+     * trust store password
+     */
+    public static final String SSL_TRUST_STORE_PASSWORD = "ssl.trustStorePassword";
+    /**
+     * the trust store type, default is JKS
+     */
+    public static final String SSL_TRUST_STORE_TYPE = "ssl.trustStoreType";
+
 
     private final RepositorySystemSession session;
 
@@ -198,8 +231,9 @@ public final class AuthenticationContext
     }
 
     /**
-     * Gets the repository requiring authentication. If {@link #getProxy()} is not {@code null}, the data gathered by
-     * this authentication context does not apply to the repository's host but rather the proxy.
+     * Gets the repository requiring authentication. If {@link #getProxy()} is 
+     * not {@code null}, the data gathered by this authentication context does 
+     * not apply to the repository's host but rather the proxy.
      * 
      * @return The repository to be contacted, never {@code null}.
      */
@@ -272,6 +306,19 @@ public final class AuthenticationContext
                     {
                         fillingAuthData = true;
                         auth.fill( this, key, data );
+                        
+                        //MNG-5583 per endpoint PKI authentication
+                        //at some point, there's a bit of code that drops any
+                        //string authentication parameters...
+                        //repopulate it here if necessary.
+                        Authentication authInner = session.
+                                getAuthenticationSelector().
+                                getAuthentication( repository );
+                        if ( authInner != null )
+                        {
+                            authInner.fill( this, key, data );
+                        }
+                        
                     }
                     finally
                     {
