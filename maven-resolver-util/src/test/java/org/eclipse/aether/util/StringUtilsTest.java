@@ -24,8 +24,7 @@ import static org.junit.Assert.*;
 import org.eclipse.aether.util.StringUtils;
 import org.junit.Test;
 
-/**
- */
+@SuppressWarnings( "deprecation" )
 public class StringUtilsTest
 {
 
