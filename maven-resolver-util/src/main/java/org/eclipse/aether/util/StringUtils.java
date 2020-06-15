@@ -22,6 +22,7 @@ package org.eclipse.aether.util;
 /**
  * A utility class to ease string processing.
  */
+@Deprecated
 public final class StringUtils
 {
 
@@ -35,6 +36,7 @@ public final class StringUtils
      * 
      * @param string The string to check, may be {@code null}.
      * @return {@code true} if the string is {@code null} or of zero length, {@code false} otherwise.
+     * @deprecated use {@code org.apache.commons.lang3.StringUtils.isEmpty()} instead
      */
     public static boolean isEmpty( String string )
     {
