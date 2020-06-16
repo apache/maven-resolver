@@ -88,6 +88,8 @@ public class DefaultArtifactResolver
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultArtifactResolver.class );
 
+    private static final Object LOCK = new Object();
+
     private FileProcessor fileProcessor;
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
@@ -226,7 +228,10 @@ public class DefaultArtifactResolver
 
             syncContext.acquire( artifacts, null );
 
-            return resolve( session, requests );
+            synchronized ( LOCK )
+            {
+                return resolve( session, requests );
+            }
         }
     }
 
