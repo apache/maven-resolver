@@ -351,7 +351,7 @@
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>4.2.1</version>
+          <version>4.1.0</version><!-- 4.2.0+ requires Maven 3+ and Java 8 -->
           <configuration>
             <manifestLocation>${project.build.directory}/osgi</manifestLocation>
             <instructions>
