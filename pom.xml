@@ -351,8 +351,10 @@
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>4.1.0</version><!-- 4.2.0+ requires Maven 3+ and Java 8 -->
+          <!-- 4.1.0 depends on bndlib that contins aQute/bnd/osgi/Analyzer Java 8 classs
+               4.2.0 requires Maven 3+ and Java 8 -->
           <configuration>
+          <version>4.0.0</version>
             <manifestLocation>${project.build.directory}/osgi</manifestLocation>
             <instructions>
               <Bundle-SymbolicName>${Bundle-SymbolicName}</Bundle-SymbolicName>
