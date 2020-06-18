@@ -21,7 +21,7 @@ package org.eclipse.aether.transport.http;
 
 import java.io.Closeable;
 
-import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.protocol.BasicHttpContext;
 
 /**
@@ -43,13 +43,13 @@ final class SharingHttpContext
     {
         this.state = state;
         authCache = new SharingAuthCache( state );
-        super.setAttribute( ClientContext.AUTH_CACHE, authCache );
+        super.setAttribute( HttpClientContext.AUTH_CACHE, authCache );
     }
 
     @Override
     public Object getAttribute( String id )
     {
-        if ( ClientContext.USER_TOKEN.equals( id ) )
+        if ( HttpClientContext.USER_TOKEN.equals( id ) )
         {
             return state.getUserToken();
         }
@@ -59,7 +59,7 @@ final class SharingHttpContext
     @Override
     public void setAttribute( String id, Object obj )
     {
-        if ( ClientContext.USER_TOKEN.equals( id ) )
+        if ( HttpClientContext.USER_TOKEN.equals( id ) )
         {
             state.setUserToken( obj );
         }
@@ -72,7 +72,7 @@ final class SharingHttpContext
     @Override
     public Object removeAttribute( String id )
     {
-        if ( ClientContext.USER_TOKEN.equals( id ) )
+        if ( HttpClientContext.USER_TOKEN.equals( id ) )
         {
             state.setUserToken( null );
             return null;
