@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -338,10 +338,12 @@ public class DefaultUpdateCheckManagerTest
         resetSessionData( session );
         manager.touchMetadata( session, check );
 
+        // TODO This will be changed to 'enabled' in a future version
         session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "true" );
         manager.checkMetadata( session, check );
         assertEquals( false, check.isRequired() );
 
+        // TODO This will be changed to 'disabled' in a future version
         session.setConfigProperty( DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "false" );
         manager.checkMetadata( session, check );
         assertEquals( true, check.isRequired() );

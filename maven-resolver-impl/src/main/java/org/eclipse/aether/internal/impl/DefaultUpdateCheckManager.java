@@ -446,8 +446,8 @@ public class DefaultUpdateCheckManager
 
     private int getSessionState( RepositorySystemSession session )
     {
-        String mode = ConfigUtils.getString( session, "true", CONFIG_PROP_SESSION_STATE );
-        if ( Boolean.parseBoolean( mode ) )
+        String mode = ConfigUtils.getString( session, "enabled", CONFIG_PROP_SESSION_STATE );
+        if ( Boolean.parseBoolean( mode ) || "enabled".equalsIgnoreCase( mode ) )
         {
             // perform update check at most once per session, regardless of update policy
             return STATE_ENABLED;
