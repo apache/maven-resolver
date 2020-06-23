@@ -46,9 +46,9 @@ If the value is not given in the target type the following conversions are appli
 From | To | With
 --- | --- | ---
 `String` | `boolean` | [`Boolean.parseBoolean(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String))
-`String` | `int` | [`Integer.valueOf(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#valueOf(java.lang.String))
-`String` | `long` | [`Long.valueOf(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Long.html#valueOf(java.lang.String))
-`String` | `float` | [`Float.valueOf(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Float.html#valueOf(java.lang.String))
+`String` | `int` | [`Integer.parseInt(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#parseInt(java.lang.String))
+`String` | `long` | [`Long.parseLong(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Long.html#parseLong(java.lang.String))
+`String` | `float` | [`Float.parseFloat(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Float.html#parseFloat(java.lang.String))
 
 ## Set Configuration from Apache Maven
 
