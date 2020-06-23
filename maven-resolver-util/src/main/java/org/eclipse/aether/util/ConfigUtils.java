@@ -142,7 +142,7 @@ public final class ConfigUtils
 
             try
             {
-                return Integer.valueOf( (String) value );
+                return Integer.parseInt( (String) value );
             }
             catch ( Exception e )
             {
@@ -190,7 +190,7 @@ public final class ConfigUtils
 
             try
             {
-                return Long.valueOf( (String) value );
+                return Long.parseLong( (String) value );
             }
             catch ( Exception e )
             {
@@ -238,7 +238,7 @@ public final class ConfigUtils
 
             try
             {
-                return Float.valueOf( (String) value );
+                return Float.parseFloat( (String) value );
             }
             catch ( Exception e )
             {
