@@ -124,7 +124,7 @@ public class DefaultUpdatePolicyAnalyzer
         try
         {
             String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
-            minutes = Integer.valueOf( s );
+            minutes = Integer.parseInt( s );
         }
         catch ( RuntimeException e )
         {

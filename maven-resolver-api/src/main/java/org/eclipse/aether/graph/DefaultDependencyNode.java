@@ -70,7 +70,7 @@ public final class DefaultDependencyNode
     {
         this.dependency = dependency;
         artifact = ( dependency != null ) ? dependency.getArtifact() : null;
-        children = new ArrayList<DependencyNode>( 0 );
+        children = new ArrayList<>( 0 );
         aliases = Collections.emptyList();
         relocations = Collections.emptyList();
         repositories = Collections.emptyList();
@@ -88,7 +88,7 @@ public final class DefaultDependencyNode
     public DefaultDependencyNode( Artifact artifact )
     {
         this.artifact = artifact;
-        children = new ArrayList<DependencyNode>( 0 );
+        children = new ArrayList<>( 0 );
         aliases = Collections.emptyList();
         relocations = Collections.emptyList();
         repositories = Collections.emptyList();

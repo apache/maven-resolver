@@ -284,7 +284,7 @@ public class DefaultRemoteRepositoryManagerTest
             else if ( policy != null && policy.startsWith( RepositoryPolicy.UPDATE_POLICY_INTERVAL ) )
             {
                 String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
-                return Integer.valueOf( s );
+                return Integer.parseInt( s );
             }
             else
             {

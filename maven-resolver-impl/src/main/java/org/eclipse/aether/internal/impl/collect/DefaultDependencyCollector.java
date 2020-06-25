@@ -157,7 +157,7 @@ public class DefaultDependencyCollector
         List<Dependency> dependencies = request.getDependencies();
         List<Dependency> managedDependencies = request.getManagedDependencies();
 
-        Map<String, Object> stats = new LinkedHashMap<String, Object>();
+        Map<String, Object> stats = new LinkedHashMap<>();
         long time1 = System.nanoTime();
 
         DefaultDependencyNode node;
@@ -317,7 +317,7 @@ public class DefaultDependencyCollector
         {
             int initialCapacity = dominant.size() + recessive.size();
             result = new ArrayList<>( initialCapacity );
-            Collection<String> ids = new HashSet<String>( initialCapacity, 1.0f );
+            Collection<String> ids = new HashSet<>( initialCapacity, 1.0f );
             for ( Dependency dependency : dominant )
             {
                 ids.add( getId( dependency.getArtifact() ) );
