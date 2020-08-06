@@ -1,0 +1,62 @@
+${esc.hash} Global Sync Context for Maven Resolver
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<span style="color: red; font-size: 16pt">***Note***: *This component is still considered to be experimental, use with caution!*</span>
+
+The Global Sync Context is Java global lock factory for Maven Resolver to provide a concurrent-safe
+access from a single Maven instance to the same local Maven repository.
+
+For further details about the factory read the [Javadoc](./apidocs/org/eclipse/aether/synccontext/GlobalSyncContextFactory.html).
+
+${esc.hash}${esc.hash} Open Issues/Notes
+
+- It only works when dependency injection is used and not the bundled `AetherModule` or
+  `ServiceLocator` (Maven uses dependency injection).
+- Usage from plugins has not been tested yet.
+- The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
+  of dependency injection.
+- The installation process has not been streamlined yet.
+
+${esc.hash}${esc.hash} Installation/Testing
+
+- Clone Maven Resolver, switch to `MRESOLVER-130` branch and perform `mvn install`.
+- Clone Maven, switch to `master` branch, change the Resolver version in Maven's parent POM: `${project.version}`.
+- Extract `apache-maven-3.7.0-SNAPSHOT-bin.tar.gz` to a location of your choice.
+- Add/modify the following entries in `${maven.home}/conf/logging/simplelogger.properties`:
+      ```
+      org.slf4j.simpleLogger.showDateTime=true
+      org.slf4j.simpleLogger.showThreadName=true
+      org.slf4j.simpleLogger.showShortLogName=true
+      org.slf4j.simpleLogger.log.org.eclipse.aether=trace
+      ```
+- Go back to Resolver and run `mvn dependency:copy-dependencies -pl maven-resolver-synccontext-global`.
+- Copy the following dependencies from `maven-resolver-synccontext-global/target/dependency`
+  to `${maven.home}/lib/ext/`:
+      ```
+      ├── javax.annotation-api-1.3.2.jar
+      └── maven-resolver-synccontext-global-${project.version}.jar
+      ```
+    Dependencies which are already bundled with Maven have been omitted.
+- Now start a multithreaded Maven (`3.7.0-SNAPSHOT`) build on your project and you should see at least these lines:
+      ```
+      4626 [main] [TRACE] GlobalSyncContextFactory$GlobalSyncContext - Acquiring global...
+      35318 [main] [TRACE] GlobalSyncContextFactory$GlobalSyncContext - Releasing global...
+      ```
