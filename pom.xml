@@ -517,6 +517,7 @@
       </activation>
       <modules>
         <module>maven-resolver-synccontext-global</module>
+        <module>maven-resolver-synccontext-redisson</module>
       </modules>
     </profile>
   </profiles>
