@@ -21,8 +21,8 @@ under the License.
 
 <span style="color: red; font-size: 16pt">***Note***: *This component is still considered to be experimental, use with caution!*</span>
 
-The Global Sync Context is Java global lock factory for Maven Resolver to provide a concurrent-safe
-access from a single Maven instance to the same local Maven repository.
+The Global Sync Context Factory is Java global lock factory for Maven Resolver to provide a
+concurrent-safe access from a single Maven instance to the same local Maven repository.
 
 For further details about the factory read the [Javadoc](./apidocs/org/eclipse/aether/synccontext/GlobalSyncContextFactory.html).
 
