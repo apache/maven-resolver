@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -111,59 +111,6 @@ public class TrackingFileManagerTest
             assertNotNull( tfm.update( propFile, updates ) );
             assertTrue( "Leaked file: " + propFile, propFile.delete() );
         }
-    }
-
-    @Test
-    public void testLockingOnCanonicalPath()
-        throws Exception
-    {
-        final TrackingFileManager tfm = new TrackingFileManager();
-
-        final File propFile = TestFileUtils.createTempFile( "#COMMENT\nkey1=value1\nkey2 : value2" );
-
-        final List<Throwable> errors = Collections.synchronizedList( new ArrayList<Throwable>() );
-
-        Thread[] threads = new Thread[4];
-        for ( int i = 0; i < threads.length; i++ )
-        {
-            String path = propFile.getParent();
-            for ( int j = 0; j < i; j++ )
-            {
-                path += "/.";
-            }
-            path += "/" + propFile.getName();
-            final File file = new File( path );
-
-            threads[i] = new Thread()
-            {
-                public void run()
-                {
-                    try
-                    {
-                        for ( int i = 0; i < 1000; i++ )
-                        {
-                            assertNotNull( tfm.read( file ) );
-                        }
-                    }
-                    catch ( Throwable e )
-                    {
-                        errors.add( e );
-                    }
-                }
-            };
-        }
-
-        for ( Thread thread1 : threads )
-        {
-            thread1.start();
-        }
-
-        for ( Thread thread : threads )
-        {
-            thread.join();
-        }
-
-        assertEquals( Collections.emptyList(), errors );
     }
 
 }
