@@ -35,61 +35,59 @@ ${esc.hash}${esc.hash} Open Issues/Notes
 - Usage from plugins has not been tested yet.
 - The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
   of dependency injection.
-- The installation process has not been streamlined yet.
 
 ${esc.hash}${esc.hash} Installation/Testing
 
-- Clone Maven Resolver and perform `mvn install`.
-- Clone Maven, change the Resolver version in Maven's parent POM to `${project.version}` and perform `mvn install`.
-- Extract `apache-maven-3.7.0-SNAPSHOT-bin.tar.gz` to a location of your choice.
-- Modify `${maven.home}/bin/m2.conf` by adding `optionally ${maven.home}/lib/ext/redisson/*.jar`
-  right after the `${maven.home}/conf/logging` line.
+- Create the directory `${maven.home}/lib/ext/redisson/`.
+- Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/redisson/*.jar`
+  right after the `${maven.conf}/logging` line.
+- Copy the following dependencies from Maven Central to `${maven.home}/lib/ext/redisson/`:
+      <pre class="source">
+      ├── <a href="https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.10.7/byte-buddy-1.10.7.jar">byte-buddy-1.10.7.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar">cache-api-1.0.0.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.11.1/jackson-annotations-2.11.1.jar">jackson-annotations-2.11.1.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.11.1/jackson-core-2.11.1.jar">jackson-core-2.11.1.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.11.1/jackson-databind-2.11.1.jar">jackson-databind-2.11.1.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.11.1/jackson-dataformat-yaml-2.11.1.jar">jackson-dataformat-yaml-2.11.1.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar">javax.annotation-api-1.3.2.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling/2.0.9.Final/jboss-marshalling-2.0.9.Final.jar">jboss-marshalling-2.0.9.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling-river/2.0.9.Final/jboss-marshalling-river-2.0.9.Final.jar">jboss-marshalling-river-2.0.9.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/org/jodd/jodd-bean/5.0.13/jodd-bean-5.0.13.jar">jodd-bean-5.0.13.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/org/jodd/jodd-core/5.0.13/jodd-core-5.0.13.jar">jodd-core-5.0.13.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.51.Final/netty-buffer-4.1.51.Final.jar">netty-buffer-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.51.Final/netty-codec-4.1.51.Final.jar">netty-codec-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.51.Final/netty-codec-dns-4.1.51.Final.jar">netty-codec-dns-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-common/4.1.51.Final/netty-common-4.1.51.Final.jar">netty-common-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-handler/4.1.51.Final/netty-handler-4.1.51.Final.jar">netty-handler-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.51.Final/netty-resolver-4.1.51.Final.jar">netty-resolver-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.51.Final/netty-resolver-dns-4.1.51.Final.jar">netty-resolver-dns-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.51.Final/netty-transport-4.1.51.Final.jar">netty-transport-4.1.51.Final.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3.jar">reactive-streams-1.0.3.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/projectreactor/reactor-core/3.3.4.RELEASE/reactor-core-3.3.4.RELEASE.jar">reactor-core-3.3.4.RELEASE.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/3.13.3/redisson-3.13.3.jar">redisson-3.13.3.jar</a>
+      ├── <a href="https://repo1.maven.org/maven2/io/reactivex/rxjava2/rxjava/2.2.19/rxjava-2.2.19.jar">rxjava-2.2.19.jar</a>
+      └── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.26/snakeyaml-1.26.jar">snakeyaml-1.26.jar</a></pre>
+- Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
+- Now start a multithreaded Maven build on your project.
+
+${esc.hash}${esc.hash}${esc.hash} Debugging
+
 - Add/modify the following entries in `${maven.home}/conf/logging/simplelogger.properties`:
       ```
       org.slf4j.simpleLogger.showDateTime=true
       org.slf4j.simpleLogger.showThreadName=true
       org.slf4j.simpleLogger.showShortLogName=true
-      org.slf4j.simpleLogger.log.org.eclipse.aether=trace
+      org.slf4j.simpleLogger.log.org.eclipse.aether.synccontext=trace
       #org.slf4j.simpleLogger.log.org.redisson=debug
       #org.slf4j.simpleLogger.log.io.netty=debug
       ```
-- Go back to Resolver and run `mvn dependency:copy-dependencies -pl maven-resolver-synccontext-redisson`.
-- Copy the following dependencies from `maven-resolver-synccontext-redisson/target/dependency`
-  to `${maven.home}/lib/ext/redisson/`:
-      ```
-      ├── byte-buddy-1.10.7.jar
-      ├── cache-api-1.0.0.jar
-      ├── jackson-annotations-2.11.1.jar
-      ├── jackson-core-2.11.1.jar
-      ├── jackson-databind-2.11.1.jar
-      ├── jackson-dataformat-yaml-2.11.1.jar
-      ├── javax.annotation-api-1.3.2.jar
-      ├── jboss-marshalling-2.0.9.Final.jar
-      ├── jboss-marshalling-river-2.0.9.Final.jar
-      ├── jodd-bean-5.0.13.jar
-      ├── jodd-core-5.0.13.jar
-      ├── maven-resolver-synccontext-redisson-${project.version}.jar
-      ├── netty-buffer-4.1.51.Final.jar
-      ├── netty-codec-4.1.51.Final.jar
-      ├── netty-codec-dns-4.1.51.Final.jar
-      ├── netty-common-4.1.51.Final.jar
-      ├── netty-handler-4.1.51.Final.jar
-      ├── netty-resolver-4.1.51.Final.jar
-      ├── netty-resolver-dns-4.1.51.Final.jar
-      ├── netty-transport-4.1.51.Final.jar
-      ├── reactive-streams-1.0.3.jar
-      ├── reactor-core-3.3.4.RELEASE.jar
-      ├── redisson-3.13.3.jar
-      ├── rxjava-2.2.19.jar
-      └── snakeyaml-1.26.jar
-      ```
-    Dependencies which are already bundled with Maven have been omitted.
-- Start your Redis instance on a machine of your choice (ideally `localhost`).
-- Now start a multithreaded Maven (`3.7.0-SNAPSHOT`) build on your project and you should see at least these lines:
+- Now start a multithreaded Maven  build on your project and you should see at least these lines:
       ```
       # This line does not appear for the default configuration
-      2316 [main] [TRACE] RedissonSyncContextFactory - Reading Redisson config file from '${maven.home}/conf/maven-resolver-redisson.yaml'
+      2316 [main] [TRACE] RedissonSyncContextFactory - Reading Redisson config file from '${maven.conf}/maven-resolver-redisson.yaml'
       4626 [main] [TRACE] RedissonSyncContextFactory - Created Redisson client with id '1c8db59b-7939-4014-8506-ae841c74608c'
+      ...
       35318 [main] [TRACE] RedissonSyncContextFactory - Shutting down Redisson client with id '1c8db59b-7939-4014-8506-ae841c74608c'
       ```
 
@@ -97,7 +95,7 @@ ${esc.hash}${esc.hash} Configuration Options
 
 Option | Type | Description | Default Value
 --- | --- | --- | --- | ---
-`aether.syncContext.redisson.configFile` | String | Path to a Redisson configuration file in YAML format. Read [official documentation](https://github.com/redisson/redisson/wiki/2.-Configuration) for details. | `${maven.home}/conf/maven-resolver-redisson.yaml`
+`aether.syncContext.redisson.configFile` | String | Path to a Redisson configuration file in YAML format. Read [official documentation](https://github.com/redisson/redisson/wiki/2.-Configuration) for details. | `${maven.conf}/maven-resolver-redisson.yaml`
 `aether.syncContext.redisson.discriminator` | String | A discriminator uniquely identifying a host and repository pair. If the generation of the default value fails, it will use `sha1('')`. | `sha1('${esc.dollar}{hostname:-localhost}:${maven.repo.local}')`
 
 ${esc.hash}${esc.hash} Set Configuration from Apache Maven

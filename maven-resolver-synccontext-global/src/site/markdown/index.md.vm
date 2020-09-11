@@ -33,29 +33,24 @@ ${esc.hash}${esc.hash} Open Issues/Notes
 - Usage from plugins has not been tested yet.
 - The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
   of dependency injection.
-- The installation process has not been streamlined yet.
 
 ${esc.hash}${esc.hash} Installation/Testing
+- Copy the following dependencies from Maven Central to `${maven.home}/lib/ext/`:
+      <pre class="source">
+      ├── <a href="https://repo1.maven.org/maven2/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar">javax.annotation-api-1.3.2.jar</a>
+      └── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a></pre>
+- Now start a multithreaded Maven build on your project.
 
-- Clone Maven Resolver and perform `mvn install`.
-- Clone Maven, change the Resolver version in Maven's parent POM to `${project.version}` and perform `mvn install`.
-- Extract `apache-maven-3.7.0-SNAPSHOT-bin.tar.gz` to a location of your choice.
-- Add/modify the following entries in `${maven.home}/conf/logging/simplelogger.properties`:
+${esc.hash}${esc.hash}${esc.hash} Debugging
+
+- Add/modify the following entries in `${maven.conf}/logging/simplelogger.properties`:
       ```
       org.slf4j.simpleLogger.showDateTime=true
       org.slf4j.simpleLogger.showThreadName=true
       org.slf4j.simpleLogger.showShortLogName=true
-      org.slf4j.simpleLogger.log.org.eclipse.aether=trace
+      org.slf4j.simpleLogger.log.org.eclipse.aether.synccontext=trace
       ```
-- Go back to Resolver and run `mvn dependency:copy-dependencies -pl maven-resolver-synccontext-global`.
-- Copy the following dependencies from `maven-resolver-synccontext-global/target/dependency`
-  to `${maven.home}/lib/ext/`:
-      ```
-      ├── javax.annotation-api-1.3.2.jar
-      └── maven-resolver-synccontext-global-${project.version}.jar
-      ```
-    Dependencies which are already bundled with Maven have been omitted.
-- Now start a multithreaded Maven (`3.7.0-SNAPSHOT`) build on your project and you should see at least these lines:
+- Now start a multithreaded Maven build on your project and you should see at least these lines:
       ```
       4626 [main] [TRACE] GlobalSyncContextFactory$GlobalSyncContext - Acquiring global...
       35318 [main] [TRACE] GlobalSyncContextFactory$GlobalSyncContext - Releasing global...
