@@ -146,4 +146,12 @@ public final class ScopeDependencySelector
         return hash;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "%s(included: %s, excluded: %s, transitive: %s)", getClass().getSimpleName(), included, excluded, transitive
+        );
+    }
+
 }

@@ -190,6 +190,21 @@ public final class ExclusionDependencySelector
         return hashCode;
     }
 
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder().append( this.getClass().getSimpleName() ).append( '(' );
+        for ( int i = 0; i < this.exclusions.length; i++ )
+        {
+            builder.append( this.exclusions[i] );
+            if ( i < this.exclusions.length - 1 )
+            {
+                builder.append( ", " );
+            }
+        }
+        return builder.append( ')' ).toString();
+    }
+
     private static class ExclusionComparator
         implements Comparator<Exclusion>
     {

@@ -19,10 +19,12 @@ package org.eclipse.aether.util.graph.selector;
  * under the License.
  */
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -201,6 +203,23 @@ public final class AndDependencySelector
             hashCode = hash;
         }
         return hashCode;
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder().append( this.getClass().getSimpleName() ).append( '(' );
+        List<DependencySelector> dependencySelectors = new ArrayList<>( this.selectors );
+        for ( int i = 0; i < dependencySelectors.size(); i++ )
+        {
+            final DependencySelector selector = dependencySelectors.get( i );
+            builder.append( selector.toString() );
+            if ( i < dependencySelectors.size() - 1 )
+            {
+                builder.append( " && " );
+            }
+        }
+        return builder.append( ')' ).toString();
     }
 
 }

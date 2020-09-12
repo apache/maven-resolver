@@ -76,4 +76,10 @@ public final class StaticDependencySelector
         return hash;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format( "%s(%s)", this.getClass().getSimpleName(), this.select ? "Select all" : "Exclude all" );
+    }
+
 }
