@@ -65,6 +65,11 @@ public class AndDependencySelectorTest
             return child;
         }
 
+        @Override
+        public String toString()
+        {
+            return "Dummy(" + select + ')';
+        }
     }
 
     @Test
@@ -148,6 +153,16 @@ public class AndDependencySelectorTest
         DependencySelector selector1 = new AndDependencySelector( other1, other2 );
         DependencySelector selector2 = new AndDependencySelector( other2, other1 );
         assertEquals( selector1.hashCode(), selector2.hashCode() );
+    }
+
+    @Test
+    public void testToString()
+    {
+        DependencySelector andSelector = new AndDependencySelector(
+            new DummyDependencySelector( true ),
+            new DummyDependencySelector( false )
+        );
+        assertEquals("AndDependencySelector(Dummy(true) && Dummy(false))", andSelector.toString());
     }
 
 }

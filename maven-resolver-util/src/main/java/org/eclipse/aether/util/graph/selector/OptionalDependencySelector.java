@@ -86,4 +86,10 @@ public final class OptionalDependencySelector
         return hash;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format( "%s(depth: %d)", this.getClass().getSimpleName(), this.depth );
+    }
+
 }

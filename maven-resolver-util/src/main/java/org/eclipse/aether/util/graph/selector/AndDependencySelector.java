@@ -22,6 +22,7 @@ package org.eclipse.aether.util.graph.selector;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -201,6 +202,23 @@ public final class AndDependencySelector
             hashCode = hash;
         }
         return hashCode;
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder().append( this.getClass().getSimpleName() ).append( '(' );
+        Iterator<? extends DependencySelector> iterator = this.selectors.iterator();
+        while ( iterator.hasNext() )
+        {
+            final DependencySelector selector = iterator.next();
+            builder.append( selector.toString() );
+            if ( iterator.hasNext() ) // not last
+            {
+                builder.append( " && " );
+            }
+        }
+        return builder.append( ')' ).toString();
     }
 
 }
