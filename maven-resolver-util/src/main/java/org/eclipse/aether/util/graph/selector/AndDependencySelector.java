@@ -19,12 +19,11 @@ package org.eclipse.aether.util.graph.selector;
  * under the License.
  */
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -209,12 +208,12 @@ public final class AndDependencySelector
     public String toString()
     {
         StringBuilder builder = new StringBuilder().append( this.getClass().getSimpleName() ).append( '(' );
-        List<DependencySelector> dependencySelectors = new ArrayList<>( this.selectors );
-        for ( int i = 0; i < dependencySelectors.size(); i++ )
+        Iterator<? extends DependencySelector> iterator = this.selectors.iterator();
+        while (iterator.hasNext())
         {
-            final DependencySelector selector = dependencySelectors.get( i );
+            final DependencySelector selector = iterator.next();
             builder.append( selector.toString() );
-            if ( i < dependencySelectors.size() - 1 )
+            if ( iterator.hasNext() ) // not last
             {
                 builder.append( " && " );
             }
