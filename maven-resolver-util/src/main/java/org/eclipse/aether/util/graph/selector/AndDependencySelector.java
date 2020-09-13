@@ -209,7 +209,7 @@ public final class AndDependencySelector
     {
         StringBuilder builder = new StringBuilder().append( this.getClass().getSimpleName() ).append( '(' );
         Iterator<? extends DependencySelector> iterator = this.selectors.iterator();
-        while (iterator.hasNext())
+        while ( iterator.hasNext() )
         {
             final DependencySelector selector = iterator.next();
             builder.append( selector.toString() );
