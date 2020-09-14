@@ -349,28 +349,24 @@
           </configuration>
         </plugin>
         <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <version>3.5.1</version>
-          <!-- 4.0/4.1 depends on bndlib that contains aQute/bnd/osgi/Analyzer Java 8 classes
-               4.2.0   requires Maven 3+ and Java 8 -->
-          <configuration>
-            <manifestLocation>${project.build.directory}/osgi</manifestLocation>
-            <instructions>
-              <Bundle-SymbolicName>${Bundle-SymbolicName}</Bundle-SymbolicName>
-              <Bundle-DocURL>${project.url}</Bundle-DocURL>
-              <_removeheaders>Bnd-LastModified,Include-Resource</_removeheaders>
-              <!-- Export all packages except those with "internal" in their names -->
-              <_exportcontents>!*internal*,*</_exportcontents>
-            </instructions>
-          </configuration>
+          <groupId>biz.aQute.bnd</groupId>
+          <artifactId>bnd-maven-plugin</artifactId>
+          <version>5.1.2</version>
           <executions>
             <execution>
-              <id>bundle-manifest</id>
-              <phase>process-classes</phase>
+              <id>bnd-process</id>
               <goals>
-                <goal>manifest</goal>
+                <goal>bnd-process</goal>
               </goals>
+              <configuration>
+                <bnd>
+                  Bundle-SymbolicName: ${Bundle-SymbolicName}
+                  # Export packages not containing the substring 'internal'
+                  -exportcontents: ${removeall;${packages};${packages;NAMED;*internal*}}
+                  # Reproducible build
+                  -noextraheaders: true
+                </bnd>
+              </configuration>
             </execution>
           </executions>
         </plugin>
@@ -387,6 +383,27 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-minimum-java-version</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>1.8.0</version><!-- for bnd-maven-plugin -->
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <profiles>
