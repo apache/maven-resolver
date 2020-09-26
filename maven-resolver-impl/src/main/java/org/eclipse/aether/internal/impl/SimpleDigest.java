@@ -30,7 +30,7 @@ import java.security.NoSuchAlgorithmException;
 class SimpleDigest
 {
 
-    private static final String[] HASH_ALGOS = new String[] { "SHA-512", "SHA-256", "SHA-1", "MD5" };
+    private static final String[] HASH_ALGOS = new String[] { "SHA-1", "MD5" };
 
     private MessageDigest digest;
 
