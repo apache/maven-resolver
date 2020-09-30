@@ -155,11 +155,9 @@ public class Maven2RepositoryLayoutFactoryTest
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" );
         URI uri = layout.getLocation( artifact, false );
         List<Checksum> checksums = layout.getChecksums( artifact, false, uri );
-        assertEquals( 4, checksums.size() );
-        assertChecksum( checksums.get( 0 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha512", "SHA-512" );
-        assertChecksum( checksums.get( 1 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha256", "SHA-256" );
-        assertChecksum( checksums.get( 2 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", "SHA-1" );
-        assertChecksum( checksums.get( 3 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.md5", "MD5" );
+        assertEquals( 2, checksums.size() );
+        assertChecksum( checksums.get( 0 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", "SHA-1" );
+        assertChecksum( checksums.get( 1 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.md5", "MD5" );
     }
 
     @Test
@@ -181,11 +179,9 @@ public class Maven2RepositoryLayoutFactoryTest
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "ext", "1.0" );
         URI uri = layout.getLocation( artifact, true );
         List<Checksum> checksums = layout.getChecksums( artifact, true, uri );
-        assertEquals( 4, checksums.size() );
-        assertChecksum( checksums.get( 0 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha512", "SHA-512" );
-        assertChecksum( checksums.get( 1 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha256", "SHA-256" );
-        assertChecksum( checksums.get( 2 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", "SHA-1" );
-        assertChecksum( checksums.get( 3 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.md5", "MD5" );
+        assertEquals( 2, checksums.size() );
+        assertChecksum( checksums.get( 0 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", "SHA-1" );
+        assertChecksum( checksums.get( 1 ), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.md5", "MD5" );
     }
 
     @Test
@@ -209,14 +205,10 @@ public class Maven2RepositoryLayoutFactoryTest
                                  Metadata.Nature.RELEASE_OR_SNAPSHOT );
         URI uri = layout.getLocation( metadata, false );
         List<Checksum> checksums = layout.getChecksums( metadata, false, uri );
-        assertEquals( 4, checksums.size() );
-        assertChecksum( checksums.get( 0 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha512",
-                        "SHA-512" );
-        assertChecksum( checksums.get( 1 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha256",
-                        "SHA-256" );
-        assertChecksum( checksums.get( 2 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha1",
+        assertEquals( 2, checksums.size() );
+        assertChecksum( checksums.get( 0 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha1",
                         "SHA-1" );
-        assertChecksum( checksums.get( 3 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.md5", "MD5" );
+        assertChecksum( checksums.get( 1 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.md5", "MD5" );
     }
 
     @Test
@@ -227,14 +219,10 @@ public class Maven2RepositoryLayoutFactoryTest
                                  Metadata.Nature.RELEASE_OR_SNAPSHOT );
         URI uri = layout.getLocation( metadata, true );
         List<Checksum> checksums = layout.getChecksums( metadata, true, uri );
-        assertEquals( 4, checksums.size() );
-        assertChecksum( checksums.get( 0 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha512",
-                        "SHA-512" );
-        assertChecksum( checksums.get( 1 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha256",
-                        "SHA-256" );
-        assertChecksum( checksums.get( 2 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha1",
+        assertEquals( 2, checksums.size() );
+        assertChecksum( checksums.get( 0 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.sha1",
                         "SHA-1" );
-        assertChecksum( checksums.get( 3 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.md5", "MD5" );
+        assertChecksum( checksums.get( 1 ), "org/apache/maven/plugins/maven-jar-plugin/maven-metadata.xml.md5", "MD5" );
     }
 
     @Test
@@ -243,7 +231,7 @@ public class Maven2RepositoryLayoutFactoryTest
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "asc", "1.0" );
         URI uri = layout.getLocation( artifact, false );
         List<Checksum> checksums = layout.getChecksums( artifact, false, uri );
-        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-512", "SHA-256", "SHA-1", "MD5" );
+        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-1", "MD5" );
 
         artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
         uri = layout.getLocation( artifact, false );
@@ -257,7 +245,7 @@ public class Maven2RepositoryLayoutFactoryTest
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "asc", "1.0" );
         URI uri = layout.getLocation( artifact, true );
         List<Checksum> checksums = layout.getChecksums( artifact, true, uri );
-        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-512", "SHA-256", "SHA-1", "MD5" );
+        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.asc", "SHA-1", "MD5" );
 
         artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
         uri = layout.getLocation( artifact, true );
@@ -274,7 +262,7 @@ public class Maven2RepositoryLayoutFactoryTest
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
         URI uri = layout.getLocation( artifact, true );
         List<Checksum> checksums = layout.getChecksums( artifact, true, uri );
-        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.jar.asc", "SHA-512", "SHA-256", "SHA-1", "MD5" );
+        assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.jar.asc", "SHA-1", "MD5" );
     }
 
 }

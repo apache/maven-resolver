@@ -48,7 +48,7 @@ public final class Maven2RepositoryLayoutFactory
     static final String CONFIG_PROP_SIGNATURE_CHECKSUMS = "aether.checksums.forSignature";
     static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
 
-    static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-512,SHA-256,SHA-1,MD5";
+    static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
     private float priority;
 
