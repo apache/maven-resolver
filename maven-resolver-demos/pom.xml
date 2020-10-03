@@ -38,7 +38,7 @@
 
   <modules>
     <module>maven-resolver-demo-snippets</module>
-    <module>maven-resolver-demo-maven-plugin</module>
+    <module>resolver-demo-maven-plugin</module>
   </modules>
 
   <build>
