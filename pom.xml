@@ -383,27 +383,6 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>enforce-minimum-java-version</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireJavaVersion>
-                  <version>1.8.0</version><!-- for bnd-maven-plugin -->
-                </requireJavaVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
 
   <profiles>
@@ -518,6 +497,10 @@
                     <requireJavaVersion>
                       <version>(,9)</version>
                       <message>Release with Java 7 or 8 due to changed signatures of java.nio.ByteBuffer (MRESOLVER-67)</message>
+                    </requireJavaVersion>
+                    <requireJavaVersion>
+                      <version>1.8.0</version>
+                      <message>bnd-maven-plugin requires at least Java 8 to run</message>
                     </requireJavaVersion>
                   </rules>
                 </configuration>
