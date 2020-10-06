@@ -17,4 +17,7 @@
  * under the License.
  */
 
-asfMavenTlpStdBuild()
+// Currently we can only build with JDK8+ based on the usage
+// of bnd-maven-plugin.
+asfMavenTlpStdBuild( 'jdks' : [ "8", "11", "15" ] )
+
