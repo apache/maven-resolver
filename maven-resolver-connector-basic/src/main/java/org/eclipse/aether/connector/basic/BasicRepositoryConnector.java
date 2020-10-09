@@ -549,12 +549,12 @@ final class BasicRepositoryConnector
 
                 byte[] bytes = baos.toByteArray();
                 transporter.put( new PutTask( path ).setDataBytes( bytes ).setListener( listener ) );
-                uploadChecksums( file, bytes, path );
+                uploadChecksums( file, bytes );
             }
             else
             {
                 transporter.put( new PutTask( path ).setDataFile( file ).setListener( listener ) );
-                uploadChecksums( file, null , path );
+                uploadChecksums( file, null );
             }
         }
 
@@ -562,9 +562,8 @@ final class BasicRepositoryConnector
          *
          * @param file source
          * @param bytes transformed data from file or {@code null}
-         * @param location target
          */
-        private void uploadChecksums( File file, byte[] bytes, URI location )
+        private void uploadChecksums( File file, byte[] bytes )
         {
             if ( checksums.isEmpty() )
             {
