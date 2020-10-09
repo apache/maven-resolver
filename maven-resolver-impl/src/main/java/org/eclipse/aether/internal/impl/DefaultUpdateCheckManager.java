@@ -121,11 +121,11 @@ public class DefaultUpdateCheckManager
 
         boolean fileExists = check.isFileValid() && artifactFile.exists();
 
-        File touchFile = getTouchFile( artifact, artifactFile );
+        File touchFile = getArtifactTouchFile( artifactFile );
         Properties props = read( touchFile );
 
         String updateKey = getUpdateKey( session, artifactFile, repository );
-        String dataKey = getDataKey( artifact, artifactFile, repository );
+        String dataKey = getDataKey( repository );
 
         String error = getError( props, dataKey );
 
@@ -151,7 +151,7 @@ public class DefaultUpdateCheckManager
         else
         {
             // artifact could not be transferred
-            String transferKey = getTransferKey( session, artifact, artifactFile, repository );
+            String transferKey = getTransferKey( session, repository );
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
@@ -246,11 +246,11 @@ public class DefaultUpdateCheckManager
 
         boolean fileExists = check.isFileValid() && metadataFile.exists();
 
-        File touchFile = getTouchFile( metadata, metadataFile );
+        File touchFile = getMetadataTouchFile( metadataFile );
         Properties props = read( touchFile );
 
         String updateKey = getUpdateKey( session, metadataFile, repository );
-        String dataKey = getDataKey( metadata, metadataFile, check.getAuthoritativeRepository() );
+        String dataKey = getDataKey( metadataFile );
 
         String error = getError( props, dataKey );
 
@@ -276,7 +276,7 @@ public class DefaultUpdateCheckManager
         else
         {
             // metadata could not be transferred
-            String transferKey = getTransferKey( session, metadata, metadataFile, repository );
+            String transferKey = getTransferKey( session, metadataFile, repository );
             lastUpdated = getLastUpdated( props, transferKey );
         }
 
@@ -359,17 +359,17 @@ public class DefaultUpdateCheckManager
         return props.getProperty( key + ERROR_KEY_SUFFIX );
     }
 
-    private File getTouchFile( Artifact artifact, File artifactFile )
+    private File getArtifactTouchFile( File artifactFile )
     {
         return new File( artifactFile.getPath() + UPDATED_KEY_SUFFIX );
     }
 
-    private File getTouchFile( Metadata metadata, File metadataFile )
+    private File getMetadataTouchFile( File metadataFile )
     {
         return new File( metadataFile.getParent(), "resolver-status.properties" );
     }
 
-    private String getDataKey( Artifact artifact, File artifactFile, RemoteRepository repository )
+    private String getDataKey( RemoteRepository repository )
     {
         Set<String> mirroredUrls = Collections.emptySet();
         if ( repository.isRepositoryManager() )
@@ -392,19 +392,18 @@ public class DefaultUpdateCheckManager
         return buffer.toString();
     }
 
-    private String getTransferKey( RepositorySystemSession session, Artifact artifact, File artifactFile,
-                                   RemoteRepository repository )
+    private String getTransferKey( RepositorySystemSession session, RemoteRepository repository )
     {
         return getRepoKey( session, repository );
     }
 
-    private String getDataKey( Metadata metadata, File metadataFile, RemoteRepository repository )
+    private String getDataKey( File metadataFile )
     {
         return metadataFile.getName();
     }
 
-    private String getTransferKey( RepositorySystemSession session, Metadata metadata, File metadataFile,
-                                   RemoteRepository repository )
+    private String getTransferKey( RepositorySystemSession session, File metadataFile,
+                                  RemoteRepository repository )
     {
         return metadataFile.getName() + '/' + getRepoKey( session, repository );
     }
@@ -514,13 +513,12 @@ public class DefaultUpdateCheckManager
 
     public void touchArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
-        Artifact artifact = check.getItem();
         File artifactFile = check.getFile();
-        File touchFile = getTouchFile( artifact, artifactFile );
+        File touchFile = getArtifactTouchFile( artifactFile );
 
         String updateKey = getUpdateKey( session, artifactFile, check.getRepository() );
-        String dataKey = getDataKey( artifact, artifactFile, check.getAuthoritativeRepository() );
-        String transferKey = getTransferKey( session, artifact, artifactFile, check.getRepository() );
+        String dataKey = getDataKey( check.getAuthoritativeRepository() );
+        String transferKey = getTransferKey( session, check.getRepository() );
 
         setUpdated( session, updateKey );
         Properties props = write( touchFile, dataKey, transferKey, check.getException() );
@@ -545,13 +543,12 @@ public class DefaultUpdateCheckManager
 
     public void touchMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
-        Metadata metadata = check.getItem();
         File metadataFile = check.getFile();
-        File touchFile = getTouchFile( metadata, metadataFile );
+        File touchFile = getMetadataTouchFile( metadataFile );
 
         String updateKey = getUpdateKey( session, metadataFile, check.getRepository() );
-        String dataKey = getDataKey( metadata, metadataFile, check.getAuthoritativeRepository() );
-        String transferKey = getTransferKey( session, metadata, metadataFile, check.getRepository() );
+        String dataKey = getDataKey( metadataFile );
+        String transferKey = getTransferKey( session, metadataFile, check.getRepository() );
 
         setUpdated( session, updateKey );
         write( touchFile, dataKey, transferKey, check.getException() );

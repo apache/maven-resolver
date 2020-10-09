@@ -134,7 +134,7 @@ final class WagonTransporter
         repoAuthContext = AuthenticationContext.forRepository( session, repository );
         proxyAuthContext = AuthenticationContext.forProxy( session, repository );
 
-        wagonAuth = getAuthenticationInfo( repository, repoAuthContext );
+        wagonAuth = getAuthenticationInfo( repoAuthContext );
         wagonProxy = getProxy( repository, proxyAuthContext );
 
         headers = new Properties();
@@ -181,8 +181,7 @@ final class WagonTransporter
         return result;
     }
 
-    private AuthenticationInfo getAuthenticationInfo( RemoteRepository repository,
-                                                      final AuthenticationContext authContext )
+    private AuthenticationInfo getAuthenticationInfo( final AuthenticationContext authContext )
     {
         AuthenticationInfo auth = null;
 
