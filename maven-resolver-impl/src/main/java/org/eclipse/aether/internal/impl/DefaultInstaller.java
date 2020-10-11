@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -170,16 +171,16 @@ public class DefaultInstaller
             result.addMetadata( metadata );
         }
 
-        for ( int i = 0; i < artifacts.size(); i++ )
+        for ( ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); )
         {
-            Artifact artifact = artifacts.get( i );
+            Artifact artifact = iterator.next();
 
             for ( MetadataGenerator generator : generators )
             {
                 artifact = generator.transformArtifact( artifact );
             }
 
-            artifacts.set( i, artifact );
+            iterator.set( artifact );
 
             install( session, trace, artifact );
             result.addArtifact( artifact );

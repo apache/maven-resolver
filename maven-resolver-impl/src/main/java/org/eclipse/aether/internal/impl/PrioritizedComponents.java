@@ -133,13 +133,13 @@ final class PrioritizedComponents<T>
 
     public void list( StringBuilder buffer )
     {
-        for ( int i = 0; i < components.size(); i++ )
+        int i = 0;
+        for ( PrioritizedComponent<?> component : components )
         {
-            if ( i > 0 )
+            if ( i++ > 0 )
             {
                 buffer.append( ", " );
             }
-            PrioritizedComponent<?> component = components.get( i );
             buffer.append( component.getType().getSimpleName() );
             if ( component.isDisabled() )
             {

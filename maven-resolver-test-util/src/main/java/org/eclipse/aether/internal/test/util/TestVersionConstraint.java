@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * A constraint on versions for a dependency.
  */
-final class TestVersionConstraint
+public final class TestVersionConstraint
     implements VersionConstraint
 {
 
@@ -43,7 +43,7 @@ final class TestVersionConstraint
      *
      * @param range The version range, must not be {@code null}.
      */
-    TestVersionConstraint( VersionRange range )
+    public TestVersionConstraint( VersionRange range )
     {
         this.range = requireNonNull( range, "version range cannot be null" );
         this.version = null;
@@ -54,7 +54,7 @@ final class TestVersionConstraint
      *
      * @param version The version, must not be {@code null}.
      */
-    TestVersionConstraint( Version version )
+    public TestVersionConstraint( Version version )
     {
         this.version = requireNonNull( version, "version cannot be null" );
         this.range = null;

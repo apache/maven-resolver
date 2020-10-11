@@ -21,10 +21,8 @@ package org.eclipse.aether.internal.impl.collect;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.VersionFilter;
@@ -47,9 +45,7 @@ final class DefaultVersionFilterContext
 
     VersionRangeResult result;
 
-    int count;
-
-    byte[] deleted = new byte[64];
+    private List<Version> versions;
 
     DefaultVersionFilterContext( RepositorySystemSession session )
     {
@@ -60,40 +56,12 @@ final class DefaultVersionFilterContext
     {
         this.dependency = dependency;
         this.result = result;
-        count = result.getVersions().size();
-        if ( deleted.length < count )
-        {
-            deleted = new byte[count];
-        }
-        else
-        {
-            for ( int i = count - 1; i >= 0; i-- )
-            {
-                deleted[i] = (byte) 0;
-            }
-        }
+        this.versions = new ArrayList<>( result.getVersions() );
     }
 
     public List<Version> get()
     {
-        if ( count == result.getVersions().size() )
-        {
-            return result.getVersions();
-        }
-        if ( count <= 1 )
-        {
-            if ( count <= 0 )
-            {
-                return Collections.emptyList();
-            }
-            return Collections.singletonList( iterator().next() );
-        }
-        List<Version> versions = new ArrayList<>( count );
-        for ( Version version : this )
-        {
-            versions.add( version );
-        }
-        return versions;
+        return new ArrayList<>( versions );
     }
 
     public RepositorySystemSession getSession()
@@ -113,7 +81,7 @@ final class DefaultVersionFilterContext
 
     public int getCount()
     {
-        return count;
+        return versions.size();
     }
 
     public ArtifactRepository getRepository( Version version )
@@ -128,7 +96,7 @@ final class DefaultVersionFilterContext
 
     public Iterator<Version> iterator()
     {
-        return ( count > 0 ) ? new VersionIterator() : Collections.<Version>emptySet().iterator();
+        return versions.iterator();
     }
 
     @Override
@@ -136,80 +104,4 @@ final class DefaultVersionFilterContext
     {
         return dependency + " " + result.getVersions();
     }
-
-    private class VersionIterator
-        implements Iterator<Version>
-    {
-
-        private final List<Version> versions;
-
-        private final int size;
-
-        private int count;
-
-        private int index;
-
-        private int next;
-
-        VersionIterator()
-        {
-            count = DefaultVersionFilterContext.this.count;
-            index = -1;
-            next = 0;
-            versions = result.getVersions();
-            size = versions.size();
-            advance();
-        }
-
-        @SuppressWarnings( "StatementWithEmptyBody" )
-        private void advance()
-        {
-            for ( next = index + 1; next < size && deleted[next] != (byte) 0; next++ )
-            {
-                // just advancing index
-            }
-        }
-
-        public boolean hasNext()
-        {
-            return next < size;
-        }
-
-        public Version next()
-        {
-            if ( count != DefaultVersionFilterContext.this.count )
-            {
-                throw new ConcurrentModificationException();
-            }
-            if ( next >= size )
-            {
-                throw new NoSuchElementException();
-            }
-            index = next;
-            advance();
-            return versions.get( index );
-        }
-
-        public void remove()
-        {
-            if ( count != DefaultVersionFilterContext.this.count )
-            {
-                throw new ConcurrentModificationException();
-            }
-            if ( index < 0 || deleted[index] == (byte) 1 )
-            {
-                throw new IllegalStateException();
-            }
-            deleted[index] = (byte) 1;
-            count = --DefaultVersionFilterContext.this.count;
-        }
-
-        @Override
-        public String toString()
-        {
-            return ( index < 0 ) ? "null" : String.valueOf( versions.get( index ) );
-        }
-
-    }
-
 }

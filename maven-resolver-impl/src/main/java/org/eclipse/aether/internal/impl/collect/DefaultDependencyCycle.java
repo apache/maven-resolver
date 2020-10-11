@@ -73,13 +73,14 @@ final class DefaultDependencyCycle
     public String toString()
     {
         StringBuilder buffer = new StringBuilder( 256 );
-        for ( int i = 0, n = dependencies.size(); i < n; i++ )
+        int i = 0;
+        for ( Dependency dependency : dependencies )
         {
-            if ( i > 0 )
+            if ( i++ > 0 )
             {
                 buffer.append( " -> " );
             }
-            buffer.append( ArtifactIdUtils.toVersionlessId( dependencies.get( i ).getArtifact() ) );
+            buffer.append( ArtifactIdUtils.toVersionlessId( dependency.getArtifact() ) );
         }
         return buffer.toString();
     }

@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl.collect;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -320,10 +321,11 @@ final class DataPool
             {
                 return false;
             }
-            for ( int i = 0, n = repos1.size(); i < n; i++ )
+            for ( Iterator<RemoteRepository> it1 = repos1.iterator(), it2 = repos2.iterator();
+                  it1.hasNext() && it2.hasNext(); )
             {
-                RemoteRepository repo1 = repos1.get( i );
-                RemoteRepository repo2 = repos2.get( i );
+                RemoteRepository repo1 = it1.next();
+                RemoteRepository repo2 = it2.next();
                 if ( repo1.isRepositoryManager() != repo2.isRepositoryManager() )
                 {
                     return false;
