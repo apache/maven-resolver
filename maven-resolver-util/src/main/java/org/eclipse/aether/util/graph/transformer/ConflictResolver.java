@@ -536,9 +536,9 @@ public final class ConflictResolver
             List<DependencyNode> previousParent = null;
             int previousDepth = 0;
             totalConflictItems += items.size();
-            for ( int i = items.size() - 1; i >= 0; i-- )
+            for ( ListIterator<ConflictItem> iterator = items.listIterator( items.size() ); iterator.hasPrevious(); )
             {
-                ConflictItem item = items.get( i );
+                ConflictItem item = iterator.previous();
                 if ( item.parent == previousParent )
                 {
                     item.depth = previousDepth;
@@ -619,18 +619,20 @@ public final class ConflictResolver
                 {
                     if ( ( changes & NodeInfo.CHANGE_SCOPE ) != 0 )
                     {
-                        for ( int i = info.children.size() - 1; i >= 0; i-- )
+                        ListIterator<ConflictItem> itemIterator = info.children.listIterator( info.children.size() );
+                        while ( itemIterator.hasPrevious() )
                         {
-                            ConflictItem item = info.children.get( i );
+                            ConflictItem item = itemIterator.previous();
                             String childScope = deriveScope( item.node, null );
                             item.addScope( childScope );
                         }
                     }
                     if ( ( changes & NodeInfo.CHANGE_OPTIONAL ) != 0 )
                     {
-                        for ( int i = info.children.size() - 1; i >= 0; i-- )
+                        ListIterator<ConflictItem> itemIterator = info.children.listIterator( info.children.size() );
+                        while ( itemIterator.hasPrevious() )
                         {
-                            ConflictItem item = info.children.get( i );
+                            ConflictItem item = itemIterator.previous();
                             boolean childOptional = deriveOptional( item.node, null );
                             item.addOptional( childOptional );
                         }

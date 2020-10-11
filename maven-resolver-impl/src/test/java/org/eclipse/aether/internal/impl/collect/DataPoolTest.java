@@ -25,7 +25,10 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.junit.Test;
+
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -64,4 +67,19 @@ public class DataPoolTest
         assertEquals( result.getAliases(), cached.getAliases() );
     }
 
+    @Test
+    public void testConstraintKey()
+    {
+        VersionRangeRequest request = new VersionRangeRequest();
+        request.setRepositories(
+            Collections.singletonList( new RemoteRepository.Builder( "some-id", "some-type", "http://www.example.com" ).build() )
+        );
+        request.setArtifact( new DefaultArtifact("group:artifact:1.0") );
+
+        DataPool pool = newDataPool();
+
+        Object key1 = pool.toKey( request );
+        Object key2 = pool.toKey( request );
+        assertEquals(key1, key2);
+    }
 }

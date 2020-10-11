@@ -24,13 +24,13 @@ import org.eclipse.aether.version.Version;
 /**
  * Version ordering by {@link String#compareToIgnoreCase(String)}.
  */
-final class TestVersion
+public final class TestVersion
     implements Version
 {
 
     private String version;
 
-    TestVersion( String version )
+    public TestVersion( String version )
     {
         this.version = version == null ? "" : version;
     }

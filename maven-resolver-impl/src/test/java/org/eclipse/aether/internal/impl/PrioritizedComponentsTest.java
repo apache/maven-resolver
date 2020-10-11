@@ -23,6 +23,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,5 +112,21 @@ public class PrioritizedComponentsTest
         assertEquals( 2, sorted.size() );
         assertSame( comp1, sorted.get( 0 ).getComponent() );
         assertSame( comp2, sorted.get( 1 ).getComponent() );
+    }
+
+    @Test
+    public void testList()
+    {
+        Exception comp1 = new IllegalArgumentException();
+        Exception comp2 = new NullPointerException();
+
+        PrioritizedComponents<Exception> components = new PrioritizedComponents<>( Collections.emptyMap() );
+        components.add( comp1, 1 );
+        components.add( comp2, 0 );
+
+        StringBuilder stringBuilder = new StringBuilder();
+        components.list( stringBuilder );
+
+        assertEquals( "IllegalArgumentException, NullPointerException", stringBuilder.toString() );
     }
 }

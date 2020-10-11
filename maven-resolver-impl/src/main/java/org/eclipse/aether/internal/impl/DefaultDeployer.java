@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import static java.util.Objects.requireNonNull;
+
+import java.util.ListIterator;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -257,16 +259,16 @@ public class DefaultDeployer
                 processedMetadata.put( metadata, null );
             }
 
-            for ( int i = 0; i < artifacts.size(); i++ )
+            for ( ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); )
             {
-                Artifact artifact = artifacts.get( i );
+                Artifact artifact = iterator.next();
 
                 for ( MetadataGenerator generator : generators )
                 {
                     artifact = generator.transformArtifact( artifact );
                 }
 
-                artifacts.set( i, artifact );
+                iterator.set( artifact );
 
                 Collection<FileTransformer> fileTransformers =
                         fileTransformerManager.getTransformersForArtifact( artifact );
