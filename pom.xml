@@ -73,6 +73,7 @@
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.3.4</sisuVersion>
+    <guiceVersion>4.2.3</guiceVersion>
     <slf4jVersion>1.7.30</slf4jVersion>
     <project.build.outputTimestamp>2020-10-02T18:05:13Z</project.build.outputTimestamp>
   </properties>
@@ -191,9 +192,9 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.sonatype.sisu</groupId>
-        <artifactId>sisu-guice</artifactId>
-        <version>3.2.6</version>
+        <groupId>com.google.inject</groupId>
+        <artifactId>guice</artifactId>
+        <version>${guiceVersion}</version>
         <classifier>no_aop</classifier>
         <exclusions>
           <exclusion>
