@@ -68,7 +68,7 @@
   </distributionManagement>
 
   <properties>
-    <javaVersion>7</javaVersion>
+    <javaVersion>8</javaVersion>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
@@ -89,6 +89,8 @@
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-http</module>
     <module>maven-resolver-transport-wagon</module>
+    <module>maven-resolver-synccontext-global</module>
+    <module>maven-resolver-synccontext-redisson</module>
     <module>maven-resolver-demos</module>
   </modules>
 
@@ -390,22 +392,23 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>1.19</version>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>java18</artifactId>
+            <version>1.0</version>
+          </signature>
+        </configuration>
         <executions>
           <execution>
-            <id>enforce-minimum-java-version</id>
+            <id>check-java-compat</id>
+            <phase>process-classes</phase>
             <goals>
-              <goal>enforce</goal>
+              <goal>check</goal>
             </goals>
-            <configuration>
-              <rules>
-                <requireJavaVersion>
-                  <version>1.8.0</version>
-                  <message>bnd-maven-plugin requires at least Java 8 to run</message>
-                </requireJavaVersion>
-              </rules>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -522,7 +525,7 @@
                   <rules>
                     <requireJavaVersion>
                       <version>(,9)</version>
-                      <message>Release with Java 7 or 8 due to changed signatures of java.nio.ByteBuffer (MRESOLVER-67)</message>
+                      <message>Release with Java 8 due to changed signatures of java.nio.ByteBuffer (MRESOLVER-67)</message>
                     </requireJavaVersion>
                   </rules>
                 </configuration>
@@ -531,16 +534,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-      <id>java8-modules</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <modules>
-        <module>maven-resolver-synccontext-global</module>
-        <module>maven-resolver-synccontext-redisson</module>
-      </modules>
     </profile>
   </profiles>
 </project>
