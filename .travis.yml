@@ -4,8 +4,6 @@ dist: trusty
 matrix:
   include:
     - os: linux
-      jdk: openjdk7
-    - os: linux
       jdk: openjdk8
     - os: linux
       jdk: openjdk11
