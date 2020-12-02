@@ -70,6 +70,7 @@
   <properties>
     <javaVersion>8</javaVersion>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
+    <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.3.4</sisuVersion>
@@ -85,6 +86,9 @@
     <module>maven-resolver-api</module>
     <module>maven-resolver-spi</module>
     <module>maven-resolver-util</module>
+    <module>maven-resolver-named-locks</module>
+    <module>maven-resolver-named-locks-hazelcast</module>
+    <module>maven-resolver-named-locks-redisson</module>
     <module>maven-resolver-impl</module>
     <module>maven-resolver-test-util</module>
     <module>maven-resolver-connector-basic</module>
@@ -92,8 +96,6 @@
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-http</module>
     <module>maven-resolver-transport-wagon</module>
-    <module>maven-resolver-synccontext-global</module>
-    <module>maven-resolver-synccontext-redisson</module>
     <module>maven-resolver-demos</module>
   </modules>
 
@@ -112,6 +114,11 @@
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-util</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-named-locks</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -370,6 +377,26 @@
               <java.io.tmpdir>${project.build.directory}/surefire-tmp</java.io.tmpdir>
             </systemPropertyVariables>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <configuration>
+            <failIfNoTests>false</failIfNoTests>
+            <argLine>-Xmx128m</argLine>
+            <redirectTestOutputToFile>${failsafe.redirectTestOutputToFile}</redirectTestOutputToFile>
+            <systemPropertyVariables>
+              <java.io.tmpdir>${project.build.directory}/failsafe-tmp</java.io.tmpdir>
+            </systemPropertyVariables>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.eclipse.sisu</groupId>

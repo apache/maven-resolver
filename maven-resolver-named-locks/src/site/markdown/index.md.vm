@@ -1,0 +1,33 @@
+${esc.hash} Named Locks
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+Named locks are essentially locks that are assigned to some given (opaque) ID. If you work with multiple
+resources that each can have unique ID assigned (file w/ file an absolute path, some entities with unique ID),
+then you can use named locks to make sure they are being protected from concurrent read and write actions.
+
+Named locks provide support classes for implementations, and provide out of the box two named lock implementation.
+
+Out of the box "local" (local to JVM) named lock implementations are following:
+
+- `rwlock-local` implemented in `org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory` that uses
+  JVM `java.util.concurrent.locks.ReentrantReadWriteLock`.
+- `semaphore-local` implemented in `org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory` that uses
+  JVM `java.util.concurrent.Semaphore`.
