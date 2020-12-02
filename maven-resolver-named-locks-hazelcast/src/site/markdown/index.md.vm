@@ -1,0 +1,51 @@
+${esc.hash} Named Locks using Hazelcast
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+This module implement named locks using Hazelcast. It provides two implementations, that are distributed and rely on
+Hazelcast 4.x ISemaphores.
+
+Out of the box "hazelcast" (distributed) named lock implementations are following:
+
+- `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory` that uses
+  Hazelcast backed `com.hazelcast.cp.ISemaphore`. Full Hazelcast member is used here.
+- `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`
+  that uses Hazelcast Client backed `com.hazelcast.cp.ISemaphore`. This implementation uses Hazelcast Client, so
+  connection to some existing Hazelcast cluster, and its existence is a requirement.
+
+${esc.hash}${esc.hash} Open Issues/Notes
+
+- It only works when Sisu DI is used and not the bundled `AetherModule` or
+  `ServiceLocator` (Maven uses Sisu dependency injection).
+- Usage from plugins has not been tested yet.
+- The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
+  of dependency injection.
+
+${esc.hash}${esc.hash} Installation/Testing
+
+- Create the directory `${maven.home}/lib/ext/hazelcast/`.
+- Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/hazelcast/*.jar`
+  right after the `${maven.conf}/logging` line.
+- Copy the following dependency from Maven Central to `${maven.home}/lib/ext/hazelcast/`:
+      <pre class="source">
+      ├── <a href="https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/4.1.1/hazelcast-4.1.1.jar">hazelcast-4.1.1.jar</a></pre>
+- Optionally configure Hazelcast instance with `${maven.conf}/hazelcast.xml` or `${maven.conf}/hazelcast-client.xml`
+  (see Hazelcast documentation for possibilities, or, see test resources of this project as starter).
+- Now start a multithreaded Maven build on your project and make sure `NamedSyncContextFactory` is being used.
