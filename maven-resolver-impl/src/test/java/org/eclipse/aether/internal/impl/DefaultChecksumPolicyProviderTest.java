@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -88,7 +88,7 @@ public class DefaultChecksumPolicyProviderTest
         assertNull( policy );
     }
 
-    @Test
+    @Test( expected = IllegalArgumentException.class )
     public void testNewChecksumPolicy_Unknown()
     {
         ChecksumPolicy policy = provider.newChecksumPolicy( session, repository, resource, CHECKSUM_POLICY_UNKNOWN );
@@ -101,7 +101,7 @@ public class DefaultChecksumPolicyProviderTest
     {
         String[] policies =
             { RepositoryPolicy.CHECKSUM_POLICY_FAIL, RepositoryPolicy.CHECKSUM_POLICY_WARN,
-                RepositoryPolicy.CHECKSUM_POLICY_IGNORE, CHECKSUM_POLICY_UNKNOWN };
+                RepositoryPolicy.CHECKSUM_POLICY_IGNORE };
         for ( String policy : policies )
         {
             assertEquals( policy, policy, provider.getEffectiveChecksumPolicy( session, policy, policy ) );
@@ -124,7 +124,7 @@ public class DefaultChecksumPolicyProviderTest
         }
     }
 
-    @Test
+    @Test( expected = IllegalArgumentException.class )
     public void testGetEffectiveChecksumPolicy_UnknownPolicies()
     {
         String[][] testCases =
