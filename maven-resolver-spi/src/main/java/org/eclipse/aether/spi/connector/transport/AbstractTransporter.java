@@ -8,9 +8,9 @@ package org.eclipse.aether.spi.connector.transport;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -47,13 +48,15 @@ public abstract class AbstractTransporter
     public void peek( PeekTask task )
         throws Exception
     {
+        Objects.requireNonNull( "task", "task cannot be null" );
+
         failIfClosed( task );
         implPeek( task );
     }
 
     /**
      * Implements {@link #peek(PeekTask)}, gets only called if the transporter has not been closed.
-     * 
+     *
      * @param task The existence check to perform, must not be {@code null}.
      * @throws Exception If the existence of the specified resource could not be confirmed.
      */
@@ -63,13 +66,15 @@ public abstract class AbstractTransporter
     public void get( GetTask task )
         throws Exception
     {
+        Objects.requireNonNull( "task", "task cannot be null" );
+
         failIfClosed( task );
         implGet( task );
     }
 
     /**
      * Implements {@link #get(GetTask)}, gets only called if the transporter has not been closed.
-     * 
+     *
      * @param task The download to perform, must not be {@code null}.
      * @throws Exception If the transfer failed.
      */
@@ -80,7 +85,7 @@ public abstract class AbstractTransporter
      * Performs stream-based I/O for the specified download task and notifies the configured transport listener.
      * Subclasses might want to invoke this utility method from within their {@link #implGet(GetTask)} to avoid
      * boilerplate I/O code.
-     * 
+     *
      * @param task The download to perform, must not be {@code null}.
      * @param is The input stream to download the data from, must not be {@code null}.
      * @param close {@code true} if the supplied input stream should be automatically closed, {@code false} to leave the
@@ -143,13 +148,15 @@ public abstract class AbstractTransporter
     public void put( PutTask task )
         throws Exception
     {
+        Objects.requireNonNull( "task", "task cannot be null" );
+
         failIfClosed( task );
         implPut( task );
     }
 
     /**
      * Implements {@link #put(PutTask)}, gets only called if the transporter has not been closed.
-     * 
+     *
      * @param task The upload to perform, must not be {@code null}.
      * @throws Exception If the transfer failed.
      */
@@ -160,7 +167,7 @@ public abstract class AbstractTransporter
      * Performs stream-based I/O for the specified upload task and notifies the configured transport listener.
      * Subclasses might want to invoke this utility method from within their {@link #implPut(PutTask)} to avoid
      * boilerplate I/O code.
-     * 
+     *
      * @param task The upload to perform, must not be {@code null}.
      * @param os The output stream to upload the data to, must not be {@code null}.
      * @param close {@code true} if the supplied output stream should be automatically closed, {@code false} to leave

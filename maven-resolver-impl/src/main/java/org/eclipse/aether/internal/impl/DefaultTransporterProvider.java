@@ -88,7 +88,8 @@ public final class DefaultTransporterProvider
     public Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        requireNonNull( repository, "remote repository cannot be null" );
+        requireNonNull( "session", "session cannot be null" );
+        requireNonNull( "repository", "repository cannot be null" );
 
         PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<>( session );
         for ( TransporterFactory factory : this.factories )

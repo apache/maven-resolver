@@ -29,6 +29,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.UUID;
@@ -415,6 +416,8 @@ final class WagonTransporter
     private void execute( TransportTask task, TaskRunner runner )
         throws Exception
     {
+        Objects.requireNonNull( "task", "task cannot be null" );
+
         if ( closed.get() )
         {
             throw new IllegalStateException( "transporter closed, cannot execute task " + task );
@@ -625,9 +628,9 @@ final class WagonTransporter
             throws IOException
         {
             File tmp = newTempFile();
-            
+
             try ( InputStream in = task.newInputStream();
-                    OutputStream out = new FileOutputStream( tmp ) ) 
+                    OutputStream out = new FileOutputStream( tmp ) )
             {
                 copy( out, in );
             }
