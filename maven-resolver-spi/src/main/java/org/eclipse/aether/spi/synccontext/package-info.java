@@ -1,5 +1,4 @@
-package org.eclipse.aether.internal.impl;
-
+// CHECKSTYLE_OFF: RegexpHeader
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,34 +17,8 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.Collection;
-
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.eclipse.aether.metadata.Metadata;
-
 /**
- * 
+ * The contract for synchronization context implementations.
  */
-public class StubSyncContextFactory
-    implements SyncContextFactory
-{
+package org.eclipse.aether.spi.synccontext;
 
-    public SyncContext newInstance( RepositorySystemSession session, boolean shared )
-    {
-        return new SyncContext()
-        {
-            public void close()
-            {
-            }
-
-            public void acquire( Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas )
-            {
-            }
-        };
-    }
-
-}

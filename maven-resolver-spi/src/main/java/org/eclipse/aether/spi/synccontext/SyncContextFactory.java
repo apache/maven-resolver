@@ -1,4 +1,4 @@
-package org.eclipse.aether.impl;
+package org.eclipse.aether.spi.synccontext;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,8 +26,6 @@ import org.eclipse.aether.SyncContext;
 /**
  * A factory to create synchronization contexts. A synchronization context is used to coordinate concurrent access to
  * artifacts or metadata.
- * 
- * @provisional This type is provisional and can be changed, moved or removed without prior notice.
  */
 public interface SyncContextFactory
 {

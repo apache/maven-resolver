@@ -43,7 +43,7 @@ import org.eclipse.aether.impl.Installer;
 import org.eclipse.aether.impl.MetadataGenerator;
 import org.eclipse.aether.impl.MetadataGeneratorFactory;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.impl.SyncContextFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;

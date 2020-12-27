@@ -45,7 +45,7 @@ import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.impl.SyncContextFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.ConfigUtils;
