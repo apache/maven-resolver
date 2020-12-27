@@ -48,7 +48,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-impl</artifactId>
+      <artifactId>maven-resolver-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-spi</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
