@@ -62,6 +62,7 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.LoggerFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 /**
  * A simple service locator that is already setup with all components from this library. To acquire a complete

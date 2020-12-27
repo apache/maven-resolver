@@ -1,4 +1,4 @@
-package org.eclipse.aether.impl;
+package org.eclipse.aether.spi.synccontext;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

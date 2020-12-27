@@ -48,7 +48,7 @@ import org.eclipse.aether.impl.Installer;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
-import org.eclipse.aether.impl.SyncContextFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.installation.InstallRequest;
