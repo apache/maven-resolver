@@ -90,7 +90,7 @@ public class DefaultUpdateCheckManager
     @Inject
     DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
-        trackingFileManager = new TrackingFileManager();
+        this();
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
     }
 
