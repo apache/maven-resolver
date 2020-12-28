@@ -62,6 +62,8 @@ public class DefaultUpdateCheckManager
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
 
+    private final TrackingFileManager trackingFileManager;
+
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     private static final String UPDATED_KEY_SUFFIX = ".lastUpdated";
@@ -82,12 +84,13 @@ public class DefaultUpdateCheckManager
 
     public DefaultUpdateCheckManager()
     {
-        // enables default constructor
+        trackingFileManager = new TrackingFileManager();
     }
 
     @Inject
     DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
+        this();
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
     }
 
@@ -507,7 +510,7 @@ public class DefaultUpdateCheckManager
 
     private Properties read( File touchFile )
     {
-        Properties props = new TrackingFileManager().read( touchFile );
+        Properties props = trackingFileManager.read( touchFile );
         return ( props != null ) ? props : new Properties();
     }
 
@@ -584,7 +587,7 @@ public class DefaultUpdateCheckManager
             updates.put( transferKey + UPDATED_KEY_SUFFIX, timestamp );
         }
 
-        return new TrackingFileManager().update( touchFile, updates );
+        return trackingFileManager.update( touchFile, updates );
     }
 
 }
