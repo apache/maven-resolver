@@ -55,6 +55,12 @@ public interface RemoteRepositoryManager
                                                   List<RemoteRepository> recessiveRepositories,
                                                   boolean recessiveIsRaw );
 
+    List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
+                                                  List<RemoteRepository> dominantRepositories,
+                                                  List<RemoteRepository> recessiveRepositories,
+                                                  boolean recessiveIsRaw,
+                                                  boolean prepend );
+
     /**
      * Gets the effective repository policy for the specified remote repository by merging the applicable
      * snapshot/release policy of the repository with global settings from the supplied session.

@@ -43,6 +43,15 @@ public class StubRemoteRepositoryManager
         return dominantRepositories;
     }
 
+    public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
+                                                         List<RemoteRepository> dominantRepositories,
+                                                         List<RemoteRepository> recessiveRepositories,
+                                                         boolean recessiveIsRaw,
+                                                         boolean prepend )
+    {
+        return dominantRepositories;
+    }
+
     public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
                                        boolean snapshots )
     {
