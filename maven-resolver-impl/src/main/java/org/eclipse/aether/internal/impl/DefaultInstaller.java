@@ -53,8 +53,6 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transform.FileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +61,7 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public class DefaultInstaller
-    implements Installer, Service
+    implements Installer
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultInstaller.class );
@@ -76,27 +74,14 @@ public class DefaultInstaller
 
     private SyncContextFactory syncContextFactory;
 
-    public DefaultInstaller()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+    public DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                       Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
     public DefaultInstaller setFileProcessor( FileProcessor fileProcessor )

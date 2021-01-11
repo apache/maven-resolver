@@ -20,15 +20,26 @@ package org.eclipse.aether.internal.impl;
  */
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.impl.ArtifactDescriptorReader;
+import org.eclipse.aether.impl.ArtifactResolver;
+import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.impl.Deployer;
+import org.eclipse.aether.impl.Installer;
+import org.eclipse.aether.impl.LocalRepositoryProvider;
+import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.util.repository.DefaultAuthenticationSelector;
 import org.eclipse.aether.util.repository.DefaultMirrorSelector;
@@ -46,9 +57,23 @@ public class DefaultRepositorySystemTest
     @Before
     public void init()
     {
-        DefaultRemoteRepositoryManager remoteRepoManager = new DefaultRemoteRepositoryManager();
-        system = new DefaultRepositorySystem();
-        system.setRemoteRepositoryManager( remoteRepoManager );
+        DefaultRemoteRepositoryManager remoteRepoManager = new DefaultRemoteRepositoryManager(
+            new DefaultUpdatePolicyAnalyzer(),
+            new DefaultChecksumPolicyProvider()
+        );
+        system = new DefaultRepositorySystem(
+            mock(VersionResolver.class),
+            mock(VersionRangeResolver.class),
+            mock(ArtifactResolver.class),
+            mock(MetadataResolver.class),
+            mock(ArtifactDescriptorReader.class),
+            mock(DependencyCollector.class),
+            mock(Installer.class),
+            mock(Deployer.class),
+            mock(LocalRepositoryProvider.class),
+            mock(SyncContextFactory.class),
+            remoteRepoManager
+        );
         session = TestUtils.newSession();
     }
 

@@ -63,8 +63,6 @@ import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -77,7 +75,7 @@ import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
  */
 @Named
 public class DefaultMetadataResolver
-    implements MetadataResolver, Service
+    implements MetadataResolver
 {
 
     private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
@@ -94,13 +92,8 @@ public class DefaultMetadataResolver
 
     private OfflineController offlineController;
 
-    public DefaultMetadataResolver()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
+    public DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
                              UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
@@ -112,16 +105,6 @@ public class DefaultMetadataResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )

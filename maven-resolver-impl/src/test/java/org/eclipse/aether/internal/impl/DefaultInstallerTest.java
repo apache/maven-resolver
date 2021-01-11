@@ -95,10 +95,12 @@ public class DefaultInstallerTest
 
         localArtifactFile = new File( session.getLocalRepository().getBasedir(), localArtifactPath );
 
-        installer = new DefaultInstaller();
-        installer.setFileProcessor( new TestFileProcessor() );
-        installer.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        installer.setSyncContextFactory( new StubSyncContextFactory() );
+        installer = new DefaultInstaller(
+            new TestFileProcessor(),
+            new StubRepositoryEventDispatcher(),
+            null,
+            new StubSyncContextFactory()
+        );
         request = new InstallRequest();
         listener = new RecordingRepositoryListener();
         session.setRepositoryListener( listener );

@@ -63,8 +63,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
@@ -76,7 +74,7 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public class DefaultDependencyCollector
-    implements DependencyCollector, Service
+    implements DependencyCollector
 {
 
     private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
@@ -95,26 +93,14 @@ public class DefaultDependencyCollector
 
     private VersionRangeResolver versionRangeResolver;
 
-    public DefaultDependencyCollector()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    DefaultDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
+    public DefaultDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
                                 ArtifactDescriptorReader artifactDescriptorReader,
                                 VersionRangeResolver versionRangeResolver )
     {
         setRemoteRepositoryManager( remoteRepositoryManager );
         setArtifactDescriptorReader( artifactDescriptorReader );
         setVersionRangeResolver( versionRangeResolver );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
-        setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
     }
 
     public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )

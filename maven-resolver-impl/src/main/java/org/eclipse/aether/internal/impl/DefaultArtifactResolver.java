@@ -67,8 +67,6 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -81,7 +79,7 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public class DefaultArtifactResolver
-    implements ArtifactResolver, Service
+    implements ArtifactResolver
 {
 
     private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
@@ -104,14 +102,9 @@ public class DefaultArtifactResolver
 
     private OfflineController offlineController;
 
-    public DefaultArtifactResolver()
-    {
-        // enables default constructor
-    }
-
     @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
-    DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+    public DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
@@ -125,18 +118,6 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setVersionResolver( locator.getService( VersionResolver.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     /**

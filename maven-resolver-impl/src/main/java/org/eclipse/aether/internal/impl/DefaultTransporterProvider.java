@@ -33,8 +33,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,27 +41,17 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public final class DefaultTransporterProvider
-    implements TransporterProvider, Service
+    implements TransporterProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTransporterProvider.class );
 
     private Collection<TransporterFactory> factories = new ArrayList<>();
 
-    public DefaultTransporterProvider()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
+    public DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
     {
         setTransporterFactories( transporterFactories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setTransporterFactories( locator.getServices( TransporterFactory.class ) );
     }
 
     public DefaultTransporterProvider addTransporterFactory( TransporterFactory factory )

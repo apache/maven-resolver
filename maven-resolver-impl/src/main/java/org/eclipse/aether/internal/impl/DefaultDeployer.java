@@ -64,8 +64,6 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
@@ -80,7 +78,7 @@ import org.eclipse.aether.transform.FileTransformerManager;
  */
 @Named
 public class DefaultDeployer
-    implements Deployer, Service
+    implements Deployer
 {
     private FileProcessor fileProcessor;
 
@@ -98,14 +96,9 @@ public class DefaultDeployer
 
     private OfflineController offlineController;
 
-    public DefaultDeployer()
-    {
-        // enables default constructor
-    }
-
     @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
-    DefaultDeployer( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+    public DefaultDeployer( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                      RepositoryConnectorProvider repositoryConnectorProvider,
                      RemoteRepositoryManager remoteRepositoryManager, UpdateCheckManager updateCheckManager,
                      Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory,
@@ -119,18 +112,6 @@ public class DefaultDeployer
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     public DefaultDeployer setFileProcessor( FileProcessor fileProcessor )

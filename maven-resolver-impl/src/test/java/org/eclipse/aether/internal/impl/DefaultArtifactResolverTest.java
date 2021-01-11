@@ -38,8 +38,6 @@ import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
-import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
-import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
@@ -96,15 +94,16 @@ public class DefaultArtifactResolverTest
         VersionResolver versionResolver = new StubVersionResolver();
         session = TestUtils.newSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
-        resolver = new DefaultArtifactResolver();
-        resolver.setFileProcessor( new TestFileProcessor() );
-        resolver.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        resolver.setVersionResolver( versionResolver );
-        resolver.setUpdateCheckManager( updateCheckManager );
-        resolver.setRepositoryConnectorProvider( repositoryConnectorProvider );
-        resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
-        resolver.setSyncContextFactory( new StubSyncContextFactory() );
-        resolver.setOfflineController( new DefaultOfflineController() );
+        resolver = new DefaultArtifactResolver(
+            new TestFileProcessor(),
+            new StubRepositoryEventDispatcher(),
+            versionResolver,
+            updateCheckManager,
+            repositoryConnectorProvider,
+            new StubRemoteRepositoryManager(),
+            new StubSyncContextFactory(),
+            new DefaultOfflineController()
+        );
 
         artifact = new DefaultArtifact( "gid", "aid", "", "ext", "ver" );
 
@@ -272,7 +271,7 @@ public class DefaultArtifactResolverTest
         };
 
         repositoryConnectorProvider.setConnector( connector );
-        resolver.setUpdateCheckManager( new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() ) );
+        resolver.setUpdateCheckManager( new DefaultUpdateCheckManager( new DefaultUpdatePolicyAnalyzer() ) );
 
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
         session.setUpdatePolicy( RepositoryPolicy.UPDATE_POLICY_NEVER );

@@ -26,8 +26,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 /**
@@ -37,7 +35,7 @@ import org.eclipse.aether.transfer.NoTransporterException;
  */
 @Named( "wagon" )
 public final class WagonTransporterFactory
-    implements TransporterFactory, Service
+    implements TransporterFactory
 {
 
     private WagonProvider wagonProvider;
@@ -46,27 +44,11 @@ public final class WagonTransporterFactory
 
     private float priority = -1.0f;
 
-    /**
-     * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
-     * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
-     * will occur.
-     */
-    public WagonTransporterFactory()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    WagonTransporterFactory( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator )
+    public WagonTransporterFactory( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator )
     {
         setWagonProvider( wagonProvider );
         setWagonConfigurator( wagonConfigurator );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setWagonProvider( locator.getService( WagonProvider.class ) );
-        setWagonConfigurator( locator.getService( WagonConfigurator.class ) );
     }
 
     /**

@@ -32,7 +32,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheck;
-import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
@@ -80,7 +79,7 @@ public class DefaultUpdateCheckManagerTest
         session = TestUtils.newSession();
         repository =
             new RemoteRepository.Builder( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
-        manager = new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() );
+        manager = new DefaultUpdateCheckManager( new DefaultUpdatePolicyAnalyzer() );
         metadata =
             new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT,
                                  metadataFile );

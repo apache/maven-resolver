@@ -77,8 +77,6 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 
@@ -86,7 +84,7 @@ import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
  */
 @Named
 public class DefaultRepositorySystem
-    implements RepositorySystem, Service
+    implements RepositorySystem
 {
 
     private VersionResolver versionResolver;
@@ -111,14 +109,9 @@ public class DefaultRepositorySystem
 
     private RemoteRepositoryManager remoteRepositoryManager;
 
-    public DefaultRepositorySystem()
-    {
-        // enables default constructor
-    }
-
     @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
-    DefaultRepositorySystem( VersionResolver versionResolver, VersionRangeResolver versionRangeResolver,
+    public DefaultRepositorySystem( VersionResolver versionResolver, VersionRangeResolver versionRangeResolver,
                              ArtifactResolver artifactResolver, MetadataResolver metadataResolver,
                              ArtifactDescriptorReader artifactDescriptorReader,
                              DependencyCollector dependencyCollector, Installer installer, Deployer deployer,
@@ -136,21 +129,6 @@ public class DefaultRepositorySystem
         setLocalRepositoryProvider( localRepositoryProvider );
         setSyncContextFactory( syncContextFactory );
         setRemoteRepositoryManager( remoteRepositoryManager );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setVersionResolver( locator.getService( VersionResolver.class ) );
-        setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
-        setArtifactResolver( locator.getService( ArtifactResolver.class ) );
-        setMetadataResolver( locator.getService( MetadataResolver.class ) );
-        setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
-        setDependencyCollector( locator.getService( DependencyCollector.class ) );
-        setInstaller( locator.getService( Installer.class ) );
-        setDeployer( locator.getService( Deployer.class ) );
-        setLocalRepositoryProvider( locator.getService( LocalRepositoryProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
     /**

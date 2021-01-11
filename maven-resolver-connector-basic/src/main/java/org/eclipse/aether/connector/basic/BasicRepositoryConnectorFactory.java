@@ -32,8 +32,6 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 /**
@@ -43,7 +41,7 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
  */
 @Named( "basic" )
 public final class BasicRepositoryConnectorFactory
-    implements RepositoryConnectorFactory, Service
+    implements RepositoryConnectorFactory
 {
     private TransporterProvider transporterProvider;
 
@@ -55,32 +53,16 @@ public final class BasicRepositoryConnectorFactory
 
     private float priority;
 
-    /**
-     * Creates an (uninitialized) instance of this connector factory. <em>Note:</em> In case of manual instantiation by
-     * clients, the new factory needs to be configured via its various mutators before first use or runtime errors will
-     * occur.
-     */
-    public BasicRepositoryConnectorFactory()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    BasicRepositoryConnectorFactory( TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
-                                     ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor )
+    public BasicRepositoryConnectorFactory( TransporterProvider transporterProvider,
+                                            RepositoryLayoutProvider layoutProvider,
+                                            ChecksumPolicyProvider checksumPolicyProvider,
+                                            FileProcessor fileProcessor )
     {
         setTransporterProvider( transporterProvider );
         setRepositoryLayoutProvider( layoutProvider );
         setChecksumPolicyProvider( checksumPolicyProvider );
         setFileProcessor( fileProcessor );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setTransporterProvider( locator.getService( TransporterProvider.class ) );
-        setRepositoryLayoutProvider( locator.getService( RepositoryLayoutProvider.class ) );
-        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
-        setFileProcessor( locator.getService( FileProcessor.class ) );
     }
 
     /**

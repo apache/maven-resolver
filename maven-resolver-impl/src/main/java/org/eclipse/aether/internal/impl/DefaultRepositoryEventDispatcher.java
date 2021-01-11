@@ -30,8 +30,6 @@ import javax.inject.Named;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,20 +37,15 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public class DefaultRepositoryEventDispatcher
-    implements RepositoryEventDispatcher, Service
+    implements RepositoryEventDispatcher
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryEventDispatcher.class );
 
     private Collection<RepositoryListener> listeners = new ArrayList<>();
 
-    public DefaultRepositoryEventDispatcher()
-    {
-        // enables no-arg constructor
-    }
-
     @Inject
-    DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
+    public DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
     {
         setRepositoryListeners( listeners );
     }
@@ -74,11 +67,6 @@ public class DefaultRepositoryEventDispatcher
             this.listeners = listeners;
         }
         return this;
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRepositoryListeners( locator.getServices( RepositoryListener.class ) );
     }
 
     public void dispatch( RepositoryEvent event )

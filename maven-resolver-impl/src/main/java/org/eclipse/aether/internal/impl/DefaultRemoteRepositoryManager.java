@@ -41,8 +41,6 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +48,7 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public class DefaultRemoteRepositoryManager
-    implements RemoteRepositoryManager, Service
+    implements RemoteRepositoryManager
 {
 
     private static final class LoggedMirror
@@ -92,23 +90,12 @@ public class DefaultRemoteRepositoryManager
 
     private ChecksumPolicyProvider checksumPolicyProvider;
 
-    public DefaultRemoteRepositoryManager()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer,
+    public DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer,
                                     ChecksumPolicyProvider checksumPolicyProvider )
     {
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
         setChecksumPolicyProvider( checksumPolicyProvider );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
-        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
     }
 
     public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )

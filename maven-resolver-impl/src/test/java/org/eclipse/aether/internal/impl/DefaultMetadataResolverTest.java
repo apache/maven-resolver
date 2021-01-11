@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -73,13 +72,14 @@ public class DefaultMetadataResolverTest
         session = TestUtils.newSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
         connectorProvider = new StubRepositoryConnectorProvider();
-        resolver = new DefaultMetadataResolver();
-        resolver.setUpdateCheckManager( new StaticUpdateCheckManager( true ) );
-        resolver.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        resolver.setRepositoryConnectorProvider( connectorProvider );
-        resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
-        resolver.setSyncContextFactory( new StubSyncContextFactory() );
-        resolver.setOfflineController( new DefaultOfflineController() );
+        resolver = new DefaultMetadataResolver(
+            new StubRepositoryEventDispatcher(),
+            new StaticUpdateCheckManager( true ),
+            connectorProvider,
+            new StubRemoteRepositoryManager(),
+            new StubSyncContextFactory(),
+            new DefaultOfflineController()
+        );
         repository =
             new RemoteRepository.Builder( "test-DMRT", "default",
                                           TestFileUtils.createTempDir().toURI().toURL().toString() ).build();

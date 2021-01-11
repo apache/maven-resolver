@@ -22,8 +22,6 @@ package org.eclipse.aether.internal.impl.slf4j;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.sisu.Nullable;
@@ -35,7 +33,7 @@ import org.slf4j.spi.LocationAwareLogger;
  */
 @Named( "slf4j" )
 public class Slf4jLoggerFactory
-    implements LoggerFactory, Service
+    implements LoggerFactory
 {
 
     private static final boolean AVAILABLE;
@@ -62,23 +60,10 @@ public class Slf4jLoggerFactory
 
     private ILoggerFactory factory;
 
-    /**
-     * Creates an instance of this logger factory.
-     */
-    public Slf4jLoggerFactory()
-    {
-        // enables no-arg constructor
-    }
-
     @Inject
-    Slf4jLoggerFactory( @Nullable ILoggerFactory factory )
+    public Slf4jLoggerFactory( @Nullable ILoggerFactory factory )
     {
         setLoggerFactory( factory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( ILoggerFactory.class ) );
     }
 
     public Slf4jLoggerFactory setLoggerFactory( ILoggerFactory factory )

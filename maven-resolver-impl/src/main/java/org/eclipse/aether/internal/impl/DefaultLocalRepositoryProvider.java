@@ -34,8 +34,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,27 +41,17 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public class DefaultLocalRepositoryProvider
-    implements LocalRepositoryProvider, Service
+    implements LocalRepositoryProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultLocalRepositoryProvider.class );
 
     private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<>();
 
-    public DefaultLocalRepositoryProvider()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
+    public DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
     {
         setLocalRepositoryManagerFactories( factories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLocalRepositoryManagerFactories( locator.getServices( LocalRepositoryManagerFactory.class ) );
     }
 
     public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )

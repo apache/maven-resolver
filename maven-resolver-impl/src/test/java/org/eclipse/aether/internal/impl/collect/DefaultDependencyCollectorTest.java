@@ -105,10 +105,8 @@ public class DefaultDependencyCollectorTest
     {
         session = TestUtils.newSession();
 
-        collector = new DefaultDependencyCollector();
-        collector.setArtifactDescriptorReader( newReader( "" ) );
-        collector.setVersionRangeResolver( new StubVersionRangeResolver() );
-        collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(), newReader( "" ), new StubVersionRangeResolver());
 
         parser = new DependencyGraphParser( "artifact-descriptions/" );
 

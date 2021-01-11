@@ -43,8 +43,6 @@ import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
@@ -57,7 +55,7 @@ import org.slf4j.LoggerFactory;
  */
 @Named
 public class DefaultUpdateCheckManager
-    implements UpdateCheckManager, Service
+    implements UpdateCheckManager
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
@@ -82,21 +80,11 @@ public class DefaultUpdateCheckManager
 
     private static final int STATE_DISABLED = 2;
 
-    public DefaultUpdateCheckManager()
+    @Inject
+    public DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
         trackingFileManager = new TrackingFileManager();
-    }
-
-    @Inject
-    DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
-    {
-        this();
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
     }
 
     public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
