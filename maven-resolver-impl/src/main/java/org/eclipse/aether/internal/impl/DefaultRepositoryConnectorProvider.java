@@ -48,12 +48,16 @@ public class DefaultRepositoryConnectorProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryConnectorProvider.class );
 
-    private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<>();
+    private final Collection<RepositoryConnectorFactory> connectorFactories;
 
     @Inject
     public DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories )
     {
-        setRepositoryConnectorFactories( connectorFactories );
+        this.connectorFactories = new ArrayList<>();
+        if ( connectorFactories != null )
+        {
+            this.connectorFactories.addAll( connectorFactories );
+        }
     }
 
     public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory( RepositoryConnectorFactory factory )
@@ -62,20 +66,7 @@ public class DefaultRepositoryConnectorProvider
         return this;
     }
 
-    public DefaultRepositoryConnectorProvider setRepositoryConnectorFactories(
-            Collection<RepositoryConnectorFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.connectorFactories = new ArrayList<>();
-        }
-        else
-        {
-            this.connectorFactories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public RepositoryConnector newRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {
