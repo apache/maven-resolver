@@ -42,12 +42,16 @@ public class DefaultRepositoryEventDispatcher
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryEventDispatcher.class );
 
-    private Collection<RepositoryListener> listeners = new ArrayList<>();
+    private final Collection<RepositoryListener> listeners;
 
     @Inject
     public DefaultRepositoryEventDispatcher( Set<RepositoryListener> listeners )
     {
-        setRepositoryListeners( listeners );
+        this.listeners = new ArrayList<>();
+        if ( listeners != null )
+        {
+            this.listeners.addAll( listeners );
+        }
     }
 
     public DefaultRepositoryEventDispatcher addRepositoryListener( RepositoryListener listener )
@@ -56,19 +60,7 @@ public class DefaultRepositoryEventDispatcher
         return this;
     }
 
-    public DefaultRepositoryEventDispatcher setRepositoryListeners( Collection<RepositoryListener> listeners )
-    {
-        if ( listeners == null )
-        {
-            this.listeners = new ArrayList<>();
-        }
-        else
-        {
-            this.listeners = listeners;
-        }
-        return this;
-    }
-
+    @Override
     public void dispatch( RepositoryEvent event )
     {
         if ( !listeners.isEmpty() )

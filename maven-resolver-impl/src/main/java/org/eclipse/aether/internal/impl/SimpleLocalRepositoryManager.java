@@ -62,6 +62,7 @@ class SimpleLocalRepositoryManager
         repository = new LocalRepository( basedir.getAbsoluteFile(), type );
     }
 
+    @Override
     public LocalRepository getRepository()
     {
         return repository;
@@ -100,21 +101,25 @@ class SimpleLocalRepositoryManager
         return path.toString();
     }
 
+    @Override
     public String getPathForLocalArtifact( Artifact artifact )
     {
         return getPathForArtifact( artifact, true );
     }
 
+    @Override
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
     {
         return getPathForArtifact( artifact, false );
     }
 
+    @Override
     public String getPathForLocalMetadata( Metadata metadata )
     {
         return getPath( metadata, "local" );
     }
 
+    @Override
     public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
     {
         return getPath( metadata, getRepositoryKey( repository, context ) );
@@ -199,6 +204,7 @@ class SimpleLocalRepositoryManager
         return result;
     }
 
+    @Override
     public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
     {
         String path = getPathForArtifact( request.getArtifact(), false );
@@ -214,6 +220,7 @@ class SimpleLocalRepositoryManager
         return result;
     }
 
+    @Override
     public void add( RepositorySystemSession session, LocalArtifactRegistration request )
     {
         // noop
@@ -225,6 +232,7 @@ class SimpleLocalRepositoryManager
         return String.valueOf( getRepository() );
     }
 
+    @Override
     public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
     {
         LocalMetadataResult result = new LocalMetadataResult( request );
@@ -253,6 +261,7 @@ class SimpleLocalRepositoryManager
         return result;
     }
 
+    @Override
     public void add( RepositorySystemSession session, LocalMetadataRegistration request )
     {
         // noop

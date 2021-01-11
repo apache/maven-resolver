@@ -39,6 +39,7 @@ public class LoggerFactoryProvider
     @Named( "slf4j" )
     private Provider<LoggerFactory> slf4j;
 
+    @Override
     public LoggerFactory get()
     {
             return slf4j.get();

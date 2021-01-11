@@ -38,11 +38,7 @@ public class DefaultUpdatePolicyAnalyzer
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
 
-    public DefaultUpdatePolicyAnalyzer()
-    {
-        // enables default constructor
-    }
-
+    @Override
     public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )
     {
         return ordinalOfUpdatePolicy( policy1 ) < ordinalOfUpdatePolicy( policy2 ) ? policy1 : policy2;
@@ -70,6 +66,7 @@ public class DefaultUpdatePolicyAnalyzer
         }
     }
 
+    @Override
     public boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
     {
         boolean checkForUpdates;

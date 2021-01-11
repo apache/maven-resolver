@@ -52,6 +52,7 @@ public final class Maven2RepositoryLayoutFactory
 
     private float priority;
 
+    @Override
     public float getPriority()
     {
         return priority;
@@ -69,6 +70,7 @@ public final class Maven2RepositoryLayoutFactory
         return this;
     }
 
+    @Override
     public RepositoryLayout newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryLayoutException
     {
@@ -108,6 +110,7 @@ public final class Maven2RepositoryLayoutFactory
             }
         }
 
+        @Override
         public URI getLocation( Artifact artifact, boolean upload )
         {
             StringBuilder path = new StringBuilder( 128 );
@@ -133,6 +136,7 @@ public final class Maven2RepositoryLayoutFactory
             return toUri( path.toString() );
         }
 
+        @Override
         public URI getLocation( Metadata metadata, boolean upload )
         {
             StringBuilder path = new StringBuilder( 128 );
@@ -157,11 +161,13 @@ public final class Maven2RepositoryLayoutFactory
             return toUri( path.toString() );
         }
 
+        @Override
         public List<Checksum> getChecksums( Artifact artifact, boolean upload, URI location )
         {
             return getChecksums( location );
         }
 
+        @Override
         public List<Checksum> getChecksums( Metadata metadata, boolean upload, URI location )
         {
             return getChecksums( location );

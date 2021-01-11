@@ -40,11 +40,7 @@ public class EnhancedLocalRepositoryManagerFactory
 {
     private float priority = 10.0f;
 
-    public EnhancedLocalRepositoryManagerFactory()
-    {
-        // enable no-arg constructor
-    }
-
+    @Override
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
@@ -58,6 +54,7 @@ public class EnhancedLocalRepositoryManagerFactory
         }
     }
 
+    @Override
     public float getPriority()
     {
         return priority;

@@ -46,12 +46,16 @@ public final class DefaultRepositoryLayoutProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryLayoutProvider.class );
 
-    private Collection<RepositoryLayoutFactory> factories = new ArrayList<>();
+    private final Collection<RepositoryLayoutFactory> factories;
 
     @Inject
-    public DefaultRepositoryLayoutProvider( Set<RepositoryLayoutFactory> layoutFactories )
+    public DefaultRepositoryLayoutProvider( Set<RepositoryLayoutFactory> factories )
     {
-        setRepositoryLayoutFactories( layoutFactories );
+        this.factories = new ArrayList<>();
+        if ( factories != null )
+        {
+            this.factories.addAll( factories );
+        }
     }
 
     public DefaultRepositoryLayoutProvider addRepositoryLayoutFactory( RepositoryLayoutFactory factory )
@@ -60,19 +64,7 @@ public final class DefaultRepositoryLayoutProvider
         return this;
     }
 
-    public DefaultRepositoryLayoutProvider setRepositoryLayoutFactories( Collection<RepositoryLayoutFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.factories = new ArrayList<>();
-        }
-        else
-        {
-            this.factories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public RepositoryLayout newRepositoryLayout( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryLayoutException
     {

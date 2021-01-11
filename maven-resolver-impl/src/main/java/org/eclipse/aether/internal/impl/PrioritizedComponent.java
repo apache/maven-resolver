@@ -59,6 +59,7 @@ final class PrioritizedComponent<T>
         return Float.isNaN( priority );
     }
 
+    @Override
     public int compareTo( PrioritizedComponent<?> o )
     {
         int rel = ( isDisabled() ? 1 : 0 ) - ( o.isDisabled() ? 1 : 0 );

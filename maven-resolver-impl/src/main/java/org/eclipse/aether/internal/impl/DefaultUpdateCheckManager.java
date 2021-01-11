@@ -62,7 +62,7 @@ public class DefaultUpdateCheckManager
 
     private final TrackingFileManager trackingFileManager;
 
-    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
+    private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     private static final String UPDATED_KEY_SUFFIX = ".lastUpdated";
 
@@ -84,15 +84,10 @@ public class DefaultUpdateCheckManager
     public DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
         trackingFileManager = new TrackingFileManager();
-        setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
-    }
-
-    public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
-    {
         this.updatePolicyAnalyzer = requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
-        return this;
     }
 
+    @Override
     public void checkArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
         if ( check.getLocalLastUpdated() != 0
@@ -218,6 +213,7 @@ public class DefaultUpdateCheckManager
         }
     }
 
+    @Override
     public void checkMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
         if ( check.getLocalLastUpdated() != 0
@@ -502,6 +498,7 @@ public class DefaultUpdateCheckManager
         return ( props != null ) ? props : new Properties();
     }
 
+    @Override
     public void touchArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
         File artifactFile = check.getFile();
@@ -532,6 +529,7 @@ public class DefaultUpdateCheckManager
         return false;
     }
 
+    @Override
     public void touchMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
         File metadataFile = check.getFile();

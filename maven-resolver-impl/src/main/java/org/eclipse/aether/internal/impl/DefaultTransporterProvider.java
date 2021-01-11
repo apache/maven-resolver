@@ -46,12 +46,16 @@ public final class DefaultTransporterProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTransporterProvider.class );
 
-    private Collection<TransporterFactory> factories = new ArrayList<>();
+    private final Collection<TransporterFactory> factories;
 
     @Inject
     public DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
     {
-        setTransporterFactories( transporterFactories );
+        this.factories = new ArrayList<>();
+        if ( transporterFactories != null )
+        {
+            this.factories.addAll( transporterFactories );
+        }
     }
 
     public DefaultTransporterProvider addTransporterFactory( TransporterFactory factory )
@@ -60,19 +64,7 @@ public final class DefaultTransporterProvider
         return this;
     }
 
-    public DefaultTransporterProvider setTransporterFactories( Collection<TransporterFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.factories = new ArrayList<>();
-        }
-        else
-        {
-            this.factories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
