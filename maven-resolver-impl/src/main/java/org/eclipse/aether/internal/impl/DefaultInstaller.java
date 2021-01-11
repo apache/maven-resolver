@@ -66,62 +66,30 @@ public class DefaultInstaller
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultInstaller.class );
 
-    private FileProcessor fileProcessor;
+    private final FileProcessor fileProcessor;
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
+    private final Collection<MetadataGeneratorFactory> metadataFactories;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
     @Inject
     public DefaultInstaller( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                       Set<MetadataGeneratorFactory> metadataFactories, SyncContextFactory syncContextFactory )
     {
-        setFileProcessor( fileProcessor );
-        setRepositoryEventDispatcher( repositoryEventDispatcher );
-        setMetadataGeneratorFactories( metadataFactories );
-        setSyncContextFactory( syncContextFactory );
-    }
-
-    public DefaultInstaller setFileProcessor( FileProcessor fileProcessor )
-    {
         this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
-        return this;
-    }
-
-    public DefaultInstaller setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
-    {
         this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher,
-                "repository event dispatcher cannot be null" );
-        return this;
-    }
-
-    public DefaultInstaller addMetadataGeneratorFactory( MetadataGeneratorFactory factory )
-    {
-        metadataFactories.add( requireNonNull( factory, "metadata generator factory cannot be null" ) );
-        return this;
-    }
-
-    public DefaultInstaller setMetadataGeneratorFactories( Collection<MetadataGeneratorFactory> metadataFactories )
-    {
-        if ( metadataFactories == null )
+            "repository event dispatcher cannot be null" );
+        this.metadataFactories = new ArrayList<>();
+        if ( metadataFactories != null )
         {
-            this.metadataFactories = new ArrayList<>();
+            this.metadataFactories.addAll( metadataFactories );
         }
-        else
-        {
-            this.metadataFactories = metadataFactories;
-        }
-        return this;
-    }
-
-    public DefaultInstaller setSyncContextFactory( SyncContextFactory syncContextFactory )
-    {
         this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
-        return this;
     }
 
+    @Override
     public InstallResult install( RepositorySystemSession session, InstallRequest request )
         throws InstallationException
     {
