@@ -86,31 +86,21 @@ public class DefaultRemoteRepositoryManager
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRemoteRepositoryManager.class );
 
-    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
+    private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
-    private ChecksumPolicyProvider checksumPolicyProvider;
+    private final ChecksumPolicyProvider checksumPolicyProvider;
 
     @Inject
     public DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer,
                                     ChecksumPolicyProvider checksumPolicyProvider )
     {
-        setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
-        setChecksumPolicyProvider( checksumPolicyProvider );
-    }
-
-    public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
-    {
-        this.updatePolicyAnalyzer = requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
-        return this;
-    }
-
-    public DefaultRemoteRepositoryManager setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
-    {
+        this.updatePolicyAnalyzer = requireNonNull(
+            updatePolicyAnalyzer, "update policy analyzer cannot be null" );
         this.checksumPolicyProvider = requireNonNull(
-                checksumPolicyProvider, "checksum policy provider cannot be null" );
-        return this;
+            checksumPolicyProvider, "checksum policy provider cannot be null" );
     }
 
+    @Override
     public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
                                                          List<RemoteRepository> dominantRepositories,
                                                          List<RemoteRepository> recessiveRepositories,
@@ -257,6 +247,7 @@ public class DefaultRemoteRepositoryManager
         return merged.setReleasePolicy( releases ).setSnapshotPolicy( snapshots ).build();
     }
 
+    @Override
     public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
                                        boolean snapshots )
     {
