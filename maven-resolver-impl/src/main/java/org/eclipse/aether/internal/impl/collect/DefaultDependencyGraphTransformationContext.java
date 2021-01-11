@@ -42,16 +42,19 @@ class DefaultDependencyGraphTransformationContext
         this.map = new HashMap<>();
     }
 
+    @Override
     public RepositorySystemSession getSession()
     {
         return session;
     }
 
+    @Override
     public Object get( Object key )
     {
         return map.get( requireNonNull( key, "key cannot be null" ) );
     }
 
+    @Override
     public Object put( Object key, Object value )
     {
         requireNonNull( key, "key cannot be null" );

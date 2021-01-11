@@ -87,43 +87,27 @@ public class DefaultDependencyCollector
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultDependencyCollector.class );
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private ArtifactDescriptorReader descriptorReader;
+    private final ArtifactDescriptorReader descriptorReader;
 
-    private VersionRangeResolver versionRangeResolver;
+    private final VersionRangeResolver versionRangeResolver;
 
     @Inject
     public DefaultDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
                                 ArtifactDescriptorReader artifactDescriptorReader,
                                 VersionRangeResolver versionRangeResolver )
     {
-        setRemoteRepositoryManager( remoteRepositoryManager );
-        setArtifactDescriptorReader( artifactDescriptorReader );
-        setVersionRangeResolver( versionRangeResolver );
-    }
-
-    public DefaultDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
-    {
         this.remoteRepositoryManager =
-                requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
-        return this;
-    }
-
-    public DefaultDependencyCollector setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
-    {
-        descriptorReader = requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
-        return this;
-    }
-
-    public DefaultDependencyCollector setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
-    {
+            requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        this.descriptorReader =
+            requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
         this.versionRangeResolver =
-                requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
-        return this;
+            requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
     }
 
     @SuppressWarnings( "checkstyle:methodlength" )
+    @Override
     public CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
         throws DependencyCollectionException
     {

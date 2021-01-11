@@ -59,11 +59,13 @@ final class DefaultDependencyCycle
         this.cycleEntry = cycleEntry;
     }
 
+    @Override
     public List<Dependency> getPrecedingDependencies()
     {
         return dependencies.subList( 0, cycleEntry );
     }
 
+    @Override
     public List<Dependency> getCyclicDependencies()
     {
         return dependencies.subList( cycleEntry, dependencies.size() );
