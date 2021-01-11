@@ -235,6 +235,15 @@ public class DefaultMetadataResolverTest
     public void testFavorLocal()
         throws IOException
     {
+        resolver = new DefaultMetadataResolver(
+            new StubRepositoryEventDispatcher(),
+            new StaticUpdateCheckManager( true, true ),
+            connectorProvider,
+            new StubRemoteRepositoryManager(),
+            new StubSyncContextFactory(),
+            new DefaultOfflineController()
+        );
+
         lrm.add( session, new LocalMetadataRegistration( metadata ) );
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata( metadata );
         File file = new File( session.getLocalRepository().getBasedir(), path );
@@ -242,7 +251,6 @@ public class DefaultMetadataResolverTest
 
         MetadataRequest request = new MetadataRequest( metadata, repository, "" );
         request.setFavorLocalRepository( true );
-        resolver.setUpdateCheckManager( new StaticUpdateCheckManager( true, true ) );
 
         List<MetadataResult> results = resolver.resolveMetadata( session, Arrays.asList( request ) );
 

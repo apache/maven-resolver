@@ -80,17 +80,17 @@ public class DefaultMetadataResolver
 
     private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private UpdateCheckManager updateCheckManager;
+    private final UpdateCheckManager updateCheckManager;
 
-    private RepositoryConnectorProvider repositoryConnectorProvider;
+    private final RepositoryConnectorProvider repositoryConnectorProvider;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private OfflineController offlineController;
+    private final OfflineController offlineController;
 
     @Inject
     public DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
@@ -99,54 +99,18 @@ public class DefaultMetadataResolver
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
                              OfflineController offlineController )
     {
-        setRepositoryEventDispatcher( repositoryEventDispatcher );
-        setUpdateCheckManager( updateCheckManager );
-        setRepositoryConnectorProvider( repositoryConnectorProvider );
-        setRemoteRepositoryManager( remoteRepositoryManager );
-        setSyncContextFactory( syncContextFactory );
-        setOfflineController( offlineController );
-    }
-
-    public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
-    {
         this.repositoryEventDispatcher = requireNonNull(
-                repositoryEventDispatcher, "repository event dispatcher cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setUpdateCheckManager( UpdateCheckManager updateCheckManager )
-    {
+            repositoryEventDispatcher, "repository event dispatcher cannot be null" );
         this.updateCheckManager = requireNonNull( updateCheckManager, "update check manager cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setRepositoryConnectorProvider(
-            RepositoryConnectorProvider repositoryConnectorProvider )
-    {
         this.repositoryConnectorProvider = requireNonNull(
-                repositoryConnectorProvider, "repository connector provider cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
-    {
+            repositoryConnectorProvider, "repository connector provider cannot be null" );
         this.remoteRepositoryManager = requireNonNull(
-                remoteRepositoryManager, "remote repository provider cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setSyncContextFactory( SyncContextFactory syncContextFactory )
-    {
+            remoteRepositoryManager, "remote repository provider cannot be null" );
         this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setOfflineController( OfflineController offlineController )
-    {
         this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
-        return this;
     }
 
+    @Override
     public List<MetadataResult> resolveMetadata( RepositorySystemSession session,
                                                  Collection<? extends MetadataRequest> requests )
     {
