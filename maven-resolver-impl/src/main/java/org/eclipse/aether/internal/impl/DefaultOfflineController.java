@@ -43,11 +43,7 @@ public class DefaultOfflineController
 
     private static final Pattern SEP = Pattern.compile( "\\s*,\\s*" );
 
-    public DefaultOfflineController()
-    {
-        // enables default constructor
-    }
-
+    @Override
     public void checkOffline( RepositorySystemSession session, RemoteRepository repository )
         throws RepositoryOfflineException
     {
