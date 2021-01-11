@@ -46,12 +46,16 @@ public class DefaultLocalRepositoryProvider
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultLocalRepositoryProvider.class );
 
-    private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<>();
+    private final Collection<LocalRepositoryManagerFactory> managerFactories;
 
     @Inject
     public DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
     {
-        setLocalRepositoryManagerFactories( factories );
+        this.managerFactories = new ArrayList<>();
+        if ( factories != null )
+        {
+            this.managerFactories.addAll( factories );
+        }
     }
 
     public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )
@@ -60,20 +64,7 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories(
-            Collection<LocalRepositoryManagerFactory> factories )
-    {
-        if ( factories == null )
-        {
-            managerFactories = new ArrayList<>( 2 );
-        }
-        else
-        {
-            managerFactories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
                                                              LocalRepository repository )
         throws NoLocalRepositoryManagerException
