@@ -87,27 +87,27 @@ public class DefaultRepositorySystem
     implements RepositorySystem
 {
 
-    private VersionResolver versionResolver;
+    private final VersionResolver versionResolver;
 
-    private VersionRangeResolver versionRangeResolver;
+    private final VersionRangeResolver versionRangeResolver;
 
-    private ArtifactResolver artifactResolver;
+    private final ArtifactResolver artifactResolver;
 
-    private MetadataResolver metadataResolver;
+    private final MetadataResolver metadataResolver;
 
-    private ArtifactDescriptorReader artifactDescriptorReader;
+    private final ArtifactDescriptorReader artifactDescriptorReader;
 
-    private DependencyCollector dependencyCollector;
+    private final DependencyCollector dependencyCollector;
 
-    private Installer installer;
+    private final Installer installer;
 
-    private Deployer deployer;
+    private final Deployer deployer;
 
-    private LocalRepositoryProvider localRepositoryProvider;
+    private final LocalRepositoryProvider localRepositoryProvider;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
@@ -118,99 +118,31 @@ public class DefaultRepositorySystem
                              LocalRepositoryProvider localRepositoryProvider, SyncContextFactory syncContextFactory,
                              RemoteRepositoryManager remoteRepositoryManager )
     {
-        setVersionResolver( versionResolver );
-        setVersionRangeResolver( versionRangeResolver );
-        setArtifactResolver( artifactResolver );
-        setMetadataResolver( metadataResolver );
-        setArtifactDescriptorReader( artifactDescriptorReader );
-        setDependencyCollector( dependencyCollector );
-        setInstaller( installer );
-        setDeployer( deployer );
-        setLocalRepositoryProvider( localRepositoryProvider );
-        setSyncContextFactory( syncContextFactory );
-        setRemoteRepositoryManager( remoteRepositoryManager );
-    }
-
-    /**
-     * @deprecated not used any more since MRESOLVER-36 move to slf4j, added back in MRESOLVER-64 for compatibility
-     */
-    @Deprecated
-    public DefaultRepositorySystem setLoggerFactory( org.eclipse.aether.spi.log.LoggerFactory loggerFactory )
-    {
-        // this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
-    }
-
-    public DefaultRepositorySystem setVersionResolver( VersionResolver versionResolver )
-    {
-        this.versionResolver = requireNonNull( versionResolver, "version resolver cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
-    {
+        this.versionResolver = requireNonNull(
+            versionResolver, "version resolver cannot be null" );
         this.versionRangeResolver = requireNonNull(
-                versionRangeResolver, "version range resolver cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setArtifactResolver( ArtifactResolver artifactResolver )
-    {
-        this.artifactResolver = requireNonNull( artifactResolver, "artifact resolver cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setMetadataResolver( MetadataResolver metadataResolver )
-    {
-        this.metadataResolver = requireNonNull( metadataResolver, "metadata resolver cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
-    {
+            versionRangeResolver, "version range resolver cannot be null" );
+        this.artifactResolver = requireNonNull(
+            artifactResolver, "artifact resolver cannot be null" );
+        this.metadataResolver = requireNonNull(
+            metadataResolver, "metadata resolver cannot be null" );
         this.artifactDescriptorReader = requireNonNull(
-                artifactDescriptorReader, "artifact descriptor reader cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setDependencyCollector( DependencyCollector dependencyCollector )
-    {
-        this.dependencyCollector = requireNonNull( dependencyCollector, "dependency collector cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setInstaller( Installer installer )
-    {
-        this.installer = requireNonNull( installer, "installer cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setDeployer( Deployer deployer )
-    {
-        this.deployer = requireNonNull( deployer, "deployer cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setLocalRepositoryProvider( LocalRepositoryProvider localRepositoryProvider )
-    {
+            artifactDescriptorReader, "artifact descriptor reader cannot be null" );
+        this.dependencyCollector = requireNonNull(
+            dependencyCollector, "dependency collector cannot be null" );
+        this.installer = requireNonNull(
+            installer, "installer cannot be null" );
+        this.deployer = requireNonNull(
+            deployer, "deployer cannot be null" );
         this.localRepositoryProvider = requireNonNull(
-                localRepositoryProvider, "local repository provider cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setSyncContextFactory( SyncContextFactory syncContextFactory )
-    {
-        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
-        return this;
-    }
-
-    public DefaultRepositorySystem setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
-    {
+            localRepositoryProvider, "local repository provider cannot be null" );
+        this.syncContextFactory = requireNonNull(
+            syncContextFactory, "sync context factory cannot be null" );
         this.remoteRepositoryManager = requireNonNull(
-                remoteRepositoryManager, "remote repository provider cannot be null" );
-        return this;
+            remoteRepositoryManager, "remote repository provider cannot be null" );
     }
 
+    @Override
     public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
         throws VersionResolutionException
     {
@@ -218,6 +150,7 @@ public class DefaultRepositorySystem
         return versionResolver.resolveVersion( session, request );
     }
 
+    @Override
     public VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
         throws VersionRangeResolutionException
     {
@@ -225,6 +158,7 @@ public class DefaultRepositorySystem
         return versionRangeResolver.resolveVersionRange( session, request );
     }
 
+    @Override
     public ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
                                                             ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException
@@ -233,6 +167,7 @@ public class DefaultRepositorySystem
         return artifactDescriptorReader.readArtifactDescriptor( session, request );
     }
 
+    @Override
     public ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
         throws ArtifactResolutionException
     {
@@ -240,6 +175,7 @@ public class DefaultRepositorySystem
         return artifactResolver.resolveArtifact( session, request );
     }
 
+    @Override
     public List<ArtifactResult> resolveArtifacts( RepositorySystemSession session,
                                                   Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
@@ -248,6 +184,7 @@ public class DefaultRepositorySystem
         return artifactResolver.resolveArtifacts( session, requests );
     }
 
+    @Override
     public List<MetadataResult> resolveMetadata( RepositorySystemSession session,
                                                  Collection<? extends MetadataRequest> requests )
     {
@@ -255,6 +192,7 @@ public class DefaultRepositorySystem
         return metadataResolver.resolveMetadata( session, requests );
     }
 
+    @Override
     public CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
         throws DependencyCollectionException
     {
@@ -262,6 +200,7 @@ public class DefaultRepositorySystem
         return dependencyCollector.collectDependencies( session, request );
     }
 
+    @Override
     public DependencyResult resolveDependencies( RepositorySystemSession session, DependencyRequest request )
         throws DependencyResolutionException
     {
@@ -350,6 +289,7 @@ public class DefaultRepositorySystem
         }
     }
 
+    @Override
     public InstallResult install( RepositorySystemSession session, InstallRequest request )
         throws InstallationException
     {
@@ -357,6 +297,7 @@ public class DefaultRepositorySystem
         return installer.install( session, request );
     }
 
+    @Override
     public DeployResult deploy( RepositorySystemSession session, DeployRequest request )
         throws DeploymentException
     {
@@ -364,6 +305,7 @@ public class DefaultRepositorySystem
         return deployer.deploy( session, request );
     }
 
+    @Override
     public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
                                                              LocalRepository localRepository )
     {
@@ -377,12 +319,14 @@ public class DefaultRepositorySystem
         }
     }
 
+    @Override
     public SyncContext newSyncContext( RepositorySystemSession session, boolean shared )
     {
         validateSession( session );
         return syncContextFactory.newInstance( session, shared );
     }
 
+    @Override
     public List<RemoteRepository> newResolutionRepositories( RepositorySystemSession session,
                                                              List<RemoteRepository> repositories )
     {
@@ -393,6 +337,7 @@ public class DefaultRepositorySystem
         return repositories;
     }
 
+    @Override
     public RemoteRepository newDeploymentRepository( RepositorySystemSession session, RemoteRepository repository )
     {
         validateSession( session );
