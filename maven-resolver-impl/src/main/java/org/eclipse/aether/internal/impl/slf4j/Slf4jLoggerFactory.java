@@ -72,6 +72,7 @@ public class Slf4jLoggerFactory
         return this;
     }
 
+    @Override
     public Logger getLogger( String name )
     {
         org.slf4j.Logger logger = getFactory().getLogger( name );
@@ -102,31 +103,37 @@ public class Slf4jLoggerFactory
             this.logger = logger;
         }
 
+        @Override
         public boolean isDebugEnabled()
         {
             return logger.isDebugEnabled();
         }
 
+        @Override
         public void debug( String msg )
         {
             logger.debug( msg );
         }
 
+        @Override
         public void debug( String msg, Throwable error )
         {
             logger.debug( msg, error );
         }
 
+        @Override
         public boolean isWarnEnabled()
         {
             return logger.isWarnEnabled();
         }
 
+        @Override
         public void warn( String msg )
         {
             logger.warn( msg );
         }
 
+        @Override
         public void warn( String msg, Throwable error )
         {
             logger.warn( msg, error );
@@ -147,31 +154,37 @@ public class Slf4jLoggerFactory
             this.logger = logger;
         }
 
+        @Override
         public boolean isDebugEnabled()
         {
             return logger.isDebugEnabled();
         }
 
+        @Override
         public void debug( String msg )
         {
             logger.log( null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, null );
         }
 
+        @Override
         public void debug( String msg, Throwable error )
         {
             logger.log( null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, error );
         }
 
+        @Override
         public boolean isWarnEnabled()
         {
             return logger.isWarnEnabled();
         }
 
+        @Override
         public void warn( String msg )
         {
             logger.log( null, FQCN, LocationAwareLogger.WARN_INT, msg, null, null );
         }
 
+        @Override
         public void warn( String msg, Throwable error )
         {
             logger.log( null, FQCN, LocationAwareLogger.WARN_INT, msg, null, error );
