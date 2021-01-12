@@ -43,13 +43,13 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 public final class BasicRepositoryConnectorFactory
     implements RepositoryConnectorFactory
 {
-    private TransporterProvider transporterProvider;
+    private final TransporterProvider transporterProvider;
 
-    private RepositoryLayoutProvider layoutProvider;
+    private final RepositoryLayoutProvider layoutProvider;
 
-    private ChecksumPolicyProvider checksumPolicyProvider;
+    private final ChecksumPolicyProvider checksumPolicyProvider;
 
-    private FileProcessor fileProcessor;
+    private final FileProcessor fileProcessor;
 
     private float priority;
 
@@ -59,61 +59,17 @@ public final class BasicRepositoryConnectorFactory
                                             ChecksumPolicyProvider checksumPolicyProvider,
                                             FileProcessor fileProcessor )
     {
-        setTransporterProvider( transporterProvider );
-        setRepositoryLayoutProvider( layoutProvider );
-        setChecksumPolicyProvider( checksumPolicyProvider );
-        setFileProcessor( fileProcessor );
-    }
-
-    /**
-     * Sets the transporter provider to use for this component.
-     *
-     * @param transporterProvider The transporter provider to use, must not be {@code null}.
-     * @return This component for chaining, never {@code null}.
-     */
-    public BasicRepositoryConnectorFactory setTransporterProvider( TransporterProvider transporterProvider )
-    {
-        this.transporterProvider = requireNonNull( transporterProvider, "transporter provider cannot be null" );
-        return this;
-    }
-
-    /**
-     * Sets the repository layout provider to use for this component.
-     *
-     * @param layoutProvider The repository layout provider to use, must not be {@code null}.
-     * @return This component for chaining, never {@code null}.
-     */
-    public BasicRepositoryConnectorFactory setRepositoryLayoutProvider( RepositoryLayoutProvider layoutProvider )
-    {
-        this.layoutProvider =  requireNonNull( layoutProvider, "repository layout provider cannot be null" );
-        return this;
-    }
-
-    /**
-     * Sets the checksum policy provider to use for this component.
-     *
-     * @param checksumPolicyProvider The checksum policy provider to use, must not be {@code null}.
-     * @return This component for chaining, never {@code null}.
-     */
-    public BasicRepositoryConnectorFactory setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
-    {
+        this.transporterProvider = requireNonNull(
+            transporterProvider, "transporter provider cannot be null" );
+        this.layoutProvider =  requireNonNull(
+            layoutProvider, "repository layout provider cannot be null" );
         this.checksumPolicyProvider = requireNonNull(
-                checksumPolicyProvider, "checksum policy provider cannot be null" );
-        return this;
+            checksumPolicyProvider, "checksum policy provider cannot be null" );
+        this.fileProcessor = requireNonNull(
+            fileProcessor, "file processor cannot be null" );
     }
 
-    /**
-     * Sets the file processor to use for this component.
-     *
-     * @param fileProcessor The file processor to use, must not be {@code null}.
-     * @return This component for chaining, never {@code null}.
-     */
-    public BasicRepositoryConnectorFactory setFileProcessor( FileProcessor fileProcessor )
-    {
-        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
-        return this;
-    }
-
+    @Override
     public float getPriority()
     {
         return priority;
@@ -131,6 +87,7 @@ public final class BasicRepositoryConnectorFactory
         return this;
     }
 
+    @Override
     public RepositoryConnector newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {
