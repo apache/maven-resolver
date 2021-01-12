@@ -108,6 +108,7 @@ final class ClasspathTransporter
         return url;
     }
 
+    @Override
     public int classify( Throwable error )
     {
         if ( error instanceof ResourceNotFoundException )

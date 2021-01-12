@@ -80,6 +80,7 @@ final class SharingHttpContext
         return super.removeAttribute( id );
     }
 
+    @Override
     public void close()
     {
         authCache.clear();

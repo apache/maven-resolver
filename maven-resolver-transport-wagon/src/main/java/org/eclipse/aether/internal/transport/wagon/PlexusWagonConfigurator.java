@@ -59,6 +59,7 @@ public class PlexusWagonConfigurator
         this.container = requireNonNull( container, "plexus container cannot be null" );
     }
 
+    @Override
     public void configure( Wagon wagon, Object configuration )
         throws Exception
     {

@@ -47,6 +47,7 @@ public final class FileTransporterFactory
         // enables default constructor
     }
 
+    @Override
     public float getPriority()
     {
         return priority;
@@ -64,6 +65,7 @@ public final class FileTransporterFactory
         return this;
     }
 
+    @Override
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {

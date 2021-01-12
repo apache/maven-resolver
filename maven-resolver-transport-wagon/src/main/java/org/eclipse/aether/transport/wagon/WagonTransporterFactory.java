@@ -38,41 +38,17 @@ public final class WagonTransporterFactory
     implements TransporterFactory
 {
 
-    private WagonProvider wagonProvider;
+    private final WagonProvider wagonProvider;
 
-    private WagonConfigurator wagonConfigurator;
+    private final WagonConfigurator wagonConfigurator;
 
     private float priority = -1.0f;
 
     @Inject
     public WagonTransporterFactory( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator )
     {
-        setWagonProvider( wagonProvider );
-        setWagonConfigurator( wagonConfigurator );
-    }
-
-    /**
-     * Sets the wagon provider to use to acquire and release wagon instances.
-     * 
-     * @param wagonProvider The wagon provider to use, may be {@code null}.
-     * @return This factory for chaining, never {@code null}.
-     */
-    public WagonTransporterFactory setWagonProvider( WagonProvider wagonProvider )
-    {
         this.wagonProvider = wagonProvider;
-        return this;
-    }
-
-    /**
-     * Sets the wagon configurator to use to apply provider-specific configuration to wagon instances.
-     * 
-     * @param wagonConfigurator The wagon configurator to use, may be {@code null}.
-     * @return This factory for chaining, never {@code null}.
-     */
-    public WagonTransporterFactory setWagonConfigurator( WagonConfigurator wagonConfigurator )
-    {
         this.wagonConfigurator = wagonConfigurator;
-        return this;
     }
 
     public float getPriority()

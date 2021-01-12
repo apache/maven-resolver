@@ -59,6 +59,7 @@ final class FileTransporter
         return basedir;
     }
 
+    @Override
     public int classify( Throwable error )
     {
         if ( error instanceof ResourceNotFoundException )

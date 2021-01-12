@@ -385,6 +385,7 @@ final class WagonTransporter
         return wagon;
     }
 
+    @Override
     public int classify( Throwable error )
     {
         if ( error instanceof ResourceDoesNotExistException )
@@ -394,18 +395,21 @@ final class WagonTransporter
         return ERROR_OTHER;
     }
 
+    @Override
     public void peek( PeekTask task )
         throws Exception
     {
         execute( task, new PeekTaskRunner( task ) );
     }
 
+    @Override
     public void get( GetTask task )
         throws Exception
     {
         execute( task, new GetTaskRunner( task ) );
     }
 
+    @Override
     public void put( PutTask task )
         throws Exception
     {
@@ -465,6 +469,7 @@ final class WagonTransporter
         }
     }
 
+    @Override
     public void close()
     {
         if ( closed.compareAndSet( false, true ) )
