@@ -24,8 +24,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * A simple digester for strings. It will traverse through a list of digest algorithms and pick the
  * strongest one available.
@@ -51,7 +49,11 @@ class SimpleDigest
             {
             }
         }
-        this.digest = requireNonNull( md, "Not supported digests: " + Arrays.toString( HASH_ALGOS ) );
+        if ( md == null )
+        {
+            throw new IllegalStateException( "Not supported digests: " + Arrays.toString( HASH_ALGOS ) );
+        }
+        this.digest = md;
     }
 
     public void update( String data )
