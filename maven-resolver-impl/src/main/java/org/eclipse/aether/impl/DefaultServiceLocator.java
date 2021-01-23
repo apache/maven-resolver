@@ -206,6 +206,7 @@ public final class DefaultServiceLocator
         addService( UpdateCheckManager.class, DefaultUpdateCheckManager.class );
         addService( UpdatePolicyAnalyzer.class, DefaultUpdatePolicyAnalyzer.class );
         addService( FileProcessor.class, DefaultFileProcessor.class );
+        addService( org.eclipse.aether.impl.SyncContextFactory.class, DefaultSyncContextFactory.class );
         addService( SyncContextFactory.class, DefaultSyncContextFactory.class );
         addService( RepositoryEventDispatcher.class, DefaultRepositoryEventDispatcher.class );
         addService( OfflineController.class, DefaultOfflineController.class );
