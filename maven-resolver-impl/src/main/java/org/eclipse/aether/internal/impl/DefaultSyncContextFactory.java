@@ -35,7 +35,7 @@ import org.eclipse.aether.metadata.Metadata;
  */
 @Named
 public class DefaultSyncContextFactory
-    implements SyncContextFactory
+    implements SyncContextFactory, org.eclipse.aether.impl.SyncContextFactory
 {
 
     public SyncContext newInstance( RepositorySystemSession session, boolean shared )
