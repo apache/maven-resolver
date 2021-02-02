@@ -76,7 +76,10 @@ import org.eclipse.aether.spi.synccontext.SyncContextFactory;
  * 
  * <em>Note:</em> This class is not thread-safe. Clients are expected to create the service locator and the repository
  * system on a single thread.
+ *
+ * @deprecated Use some out-of-the-box DI implementation instead.
  */
+@Deprecated
 public final class DefaultServiceLocator
     implements ServiceLocator
 {
