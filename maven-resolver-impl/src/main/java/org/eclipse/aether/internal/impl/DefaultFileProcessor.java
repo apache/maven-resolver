@@ -29,12 +29,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.spi.io.FileProcessor;
 
 /**
  * A utility class helping with file-based operations.
  */
+@Singleton
 @Named
 public class DefaultFileProcessor
     implements FileProcessor

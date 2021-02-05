@@ -26,6 +26,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultRepositoryEventDispatcher
     implements RepositoryEventDispatcher, Service
