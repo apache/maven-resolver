@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -75,6 +76,7 @@ import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultMetadataResolver
     implements MetadataResolver, Service

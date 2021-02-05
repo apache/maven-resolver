@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.util.Objects;
 
@@ -32,6 +33,7 @@ import org.eclipse.aether.transfer.TransferResource;
 
 /**
  */
+@Singleton
 @Named
 public final class DefaultChecksumPolicyProvider
     implements ChecksumPolicyProvider

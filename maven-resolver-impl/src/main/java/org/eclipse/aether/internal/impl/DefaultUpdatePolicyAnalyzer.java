@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.Calendar;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultUpdatePolicyAnalyzer
     implements UpdatePolicyAnalyzer
