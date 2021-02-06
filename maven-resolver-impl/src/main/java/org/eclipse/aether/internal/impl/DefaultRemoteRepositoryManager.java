@@ -27,6 +27,7 @@ import static java.util.Objects.requireNonNull;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.aether.RepositoryCache;
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultRemoteRepositoryManager
     implements RemoteRepositoryManager

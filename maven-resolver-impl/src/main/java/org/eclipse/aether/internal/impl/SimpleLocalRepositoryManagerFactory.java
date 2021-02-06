@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
@@ -30,6 +31,7 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 /**
  * Creates local repository managers for repository type {@code "simple"}.
  */
+@Singleton
 @Named( "simple" )
 public class SimpleLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory

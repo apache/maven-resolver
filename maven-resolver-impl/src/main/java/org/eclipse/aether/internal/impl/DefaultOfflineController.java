@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.regex.Pattern;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.OfflineController;
@@ -32,6 +33,7 @@ import org.eclipse.aether.util.ConfigUtils;
 /**
  * 
  */
+@Singleton
 @Named
 public class DefaultOfflineController
     implements OfflineController

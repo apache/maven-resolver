@@ -27,6 +27,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultLocalRepositoryProvider
     implements LocalRepositoryProvider

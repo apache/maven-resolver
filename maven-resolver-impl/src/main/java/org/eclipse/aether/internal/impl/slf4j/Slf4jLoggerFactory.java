@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.slf4j;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
@@ -31,6 +32,7 @@ import org.slf4j.spi.LocationAwareLogger;
 /**
  * A logger factory that delegates to <a href="http://www.slf4j.org/" target="_blank">SLF4J</a> logging.
  */
+@Singleton
 @Named( "slf4j" )
 public class Slf4jLoggerFactory
     implements LoggerFactory

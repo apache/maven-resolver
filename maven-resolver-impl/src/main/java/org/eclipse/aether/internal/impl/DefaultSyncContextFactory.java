@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.Collection;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
@@ -33,6 +34,7 @@ import org.eclipse.aether.metadata.Metadata;
  * A factory to create synchronization contexts. This default implementation does not provide any real
  * synchronization but merely completes the repository system.
  */
+@Singleton
 @Named
 public class DefaultSyncContextFactory
     implements SyncContextFactory, org.eclipse.aether.impl.SyncContextFactory

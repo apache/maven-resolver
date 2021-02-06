@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
@@ -34,6 +35,7 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
  * rejected in case the current resolution request does not match the known source repositories of an artifact, thereby
  * emulating physically separated artifact caches per remote repository.
  */
+@Singleton
 @Named( "enhanced" )
 public class EnhancedLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory

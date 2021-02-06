@@ -26,6 +26,7 @@ import static java.util.Objects.requireNonNull;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -82,6 +83,7 @@ import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultRepositorySystem
     implements RepositorySystem
