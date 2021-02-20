@@ -38,7 +38,7 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.transport.http</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-    <jettyVersion>9.2.26.v20180806</jettyVersion>
+    <jettyVersion>9.4.36.v20210114</jettyVersion>
   </properties>
 
   <dependencies>
@@ -57,7 +57,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.12</version>
+      <version>4.5.13</version>
       <exclusions>
         <exclusion>
           <!-- using jcl-over-slf4j instead -->
@@ -69,7 +69,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>4.4.13</version>
+      <version>4.4.14</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

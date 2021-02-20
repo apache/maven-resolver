@@ -145,12 +145,12 @@ public class HttpServer
     {
         if ( httpsConnector == null )
         {
-            SslContextFactory ssl = new SslContextFactory();
+            SslContextFactory.Server ssl = new SslContextFactory.Server();
+            ssl.setNeedClientAuth( true );
             ssl.setKeyStorePath( new File( "src/test/resources/ssl/server-store" ).getAbsolutePath() );
             ssl.setKeyStorePassword( "server-pwd" );
             ssl.setTrustStorePath( new File( "src/test/resources/ssl/client-store" ).getAbsolutePath() );
             ssl.setTrustStorePassword( "client-pwd" );
-            ssl.setNeedClientAuth( true );
             httpsConnector = new ServerConnector( server, ssl );
             server.addConnector( httpsConnector );
             try
