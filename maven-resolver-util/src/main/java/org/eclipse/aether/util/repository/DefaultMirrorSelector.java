@@ -41,6 +41,13 @@ public final class DefaultMirrorSelector
 
     private final List<MirrorDef> mirrors = new ArrayList<>();
 
+    @Deprecated
+    public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
+                                      String mirrorOfIds, String mirrorOfTypes )
+    {
+        return add( id, url, type, repositoryManager, false, mirrorOfIds, mirrorOfTypes );
+    }
+
     /**
      * Adds the specified mirror to this selector.
      * 
@@ -48,6 +55,7 @@ public final class DefaultMirrorSelector
      * @param url The URL of the mirror, must not be {@code null}.
      * @param type The content type of the mirror, must not be {@code null}.
      * @param repositoryManager A flag whether the mirror is a repository manager or a simple server.
+     * @param blocked A flag whether the mirror blocks any download request.
      * @param mirrorOfIds The identifier(s) of remote repositories to mirror, must not be {@code null}. Multiple
      *            identifiers can be separated by comma and additionally the wildcards "*", "external:http:*" and
      *            "external:*" can be used to match all (external) repositories, prefixing a repo id with an
@@ -57,10 +65,10 @@ public final class DefaultMirrorSelector
      *            wildcard "*" and the "!" negation syntax are supported. For example "*,!p2".
      * @return This selector for chaining, never {@code null}.
      */
-    public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
+    public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager, boolean blocked,
                                       String mirrorOfIds, String mirrorOfTypes )
     {
-        mirrors.add( new MirrorDef( id, url, type, repositoryManager, mirrorOfIds, mirrorOfTypes ) );
+        mirrors.add( new MirrorDef( id, url, type, repositoryManager, blocked, mirrorOfIds, mirrorOfTypes ) );
 
         return this;
     }
@@ -78,6 +86,8 @@ public final class DefaultMirrorSelector
             new RemoteRepository.Builder( mirror.id, repository.getContentType(), mirror.url );
 
         builder.setRepositoryManager( mirror.repositoryManager );
+
+        builder.setBlocked( mirror.blocked );
 
         if ( mirror.type != null && mirror.type.length() > 0 )
         {
@@ -285,17 +295,20 @@ public final class DefaultMirrorSelector
 
         final boolean repositoryManager;
 
+        final boolean blocked;
+
         final String mirrorOfIds;
 
         final String mirrorOfTypes;
 
-        MirrorDef( String id, String url, String type, boolean repositoryManager, String mirrorOfIds,
-                          String mirrorOfTypes )
+        MirrorDef( String id, String url, String type, boolean repositoryManager, boolean blocked, String mirrorOfIds,
+                   String mirrorOfTypes )
         {
             this.id = id;
             this.url = url;
             this.type = type;
             this.repositoryManager = repositoryManager;
+            this.blocked = blocked;
             this.mirrorOfIds = mirrorOfIds;
             this.mirrorOfTypes = mirrorOfTypes;
         }
