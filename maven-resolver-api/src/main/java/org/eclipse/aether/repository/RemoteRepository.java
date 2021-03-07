@@ -61,6 +61,8 @@ public final class RemoteRepository
 
     private final boolean repositoryManager;
 
+    private boolean blocked;
+
     RemoteRepository( Builder builder )
     {
         if ( builder.prototype != null )
@@ -78,6 +80,7 @@ public final class RemoteRepository
             repositoryManager =
                 ( builder.delta & Builder.REPOMAN ) != 0 ? builder.repositoryManager
                                 : builder.prototype.repositoryManager;
+            blocked = ( builder.delta & Builder.BLOCKED ) != 0 ? builder.blocked : builder.prototype.blocked;
             mirroredRepositories =
                 ( builder.delta & Builder.MIRRORED ) != 0 ? copy( builder.mirroredRepositories )
                                 : builder.prototype.mirroredRepositories;
@@ -92,6 +95,7 @@ public final class RemoteRepository
             proxy = builder.proxy;
             authentication = builder.authentication;
             repositoryManager = builder.repositoryManager;
+            blocked = builder.blocked;
             mirroredRepositories = copy( builder.mirroredRepositories );
         }
 
@@ -210,6 +214,16 @@ public final class RemoteRepository
         return repositoryManager;
     }
 
+    /**
+     * Indicates whether this repository is blocked against any download request.
+     * 
+     * @return {@code true} if this repository is blocked against any download request, {@code false} otherwise.
+     */
+    public boolean isBlocked()
+    {
+        return blocked;
+    }
+
     @Override
     public String toString()
     {
@@ -237,6 +251,10 @@ public final class RemoteRepository
         if ( isRepositoryManager() )
         {
             buffer.append( ", managed" );
+        }
+        if ( isBlocked() )
+        {
+            buffer.append( ", blocked" );
         }
         buffer.append( ")" );
         return buffer.toString();
@@ -294,7 +312,7 @@ public final class RemoteRepository
         private static final RepositoryPolicy DEFAULT_POLICY = new RepositoryPolicy();
 
         static final int ID = 0x0001, TYPE = 0x0002, URL = 0x0004, RELEASES = 0x0008, SNAPSHOTS = 0x0010,
-                        PROXY = 0x0020, AUTH = 0x0040, MIRRORED = 0x0080, REPOMAN = 0x0100;
+                        PROXY = 0x0020, AUTH = 0x0040, MIRRORED = 0x0080, REPOMAN = 0x0100, BLOCKED = 0x0200;
 
         int delta;
 
@@ -317,6 +335,8 @@ public final class RemoteRepository
         List<RemoteRepository> mirroredRepositories;
 
         boolean repositoryManager;
+
+        boolean blocked;
 
         /**
          * Creates a new repository builder.
@@ -575,6 +595,22 @@ public final class RemoteRepository
             return this;
         }
 
+
+        /**
+         * Marks the repository as blocked or not.
+         * 
+         * @param blocked {@code true} if the repository should not be allowed to get any request.
+         * @return This builder for chaining, never {@code null}.
+         */
+        public Builder setBlocked( boolean blocked )
+        {
+            this.blocked = blocked;
+            if ( prototype != null )
+            {
+                delta( BLOCKED, this.blocked, prototype.isBlocked() );
+            }
+            return this;
+        }
     }
 
 }

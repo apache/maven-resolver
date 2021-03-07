@@ -495,6 +495,20 @@ public class DefaultArtifactResolver
 
         try
         {
+            RemoteRepository repo = group.repository;
+            if ( repo.isBlocked() )
+            {
+                if ( repo.getMirroredRepositories().isEmpty() )
+                {
+                    throw new NoRepositoryConnectorException( repo, "Blocked repository: " + repo );
+                }
+                else
+                {
+                    throw new NoRepositoryConnectorException( repo, "Blocking mirror for repositories: "
+                        + repo.getMirroredRepositories() );
+                }
+            }
+
             try ( RepositoryConnector connector =
                           repositoryConnectorProvider.newRepositoryConnector( session, group.repository ) )
             {
