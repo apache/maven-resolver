@@ -61,7 +61,7 @@ public final class RemoteRepository
 
     private final boolean repositoryManager;
 
-    private boolean blocked;
+    private final boolean blocked;
 
     RemoteRepository( Builder builder )
     {
