@@ -502,7 +502,7 @@ public class DefaultArtifactResolver
                 }
                 else
                 {
-                    throw new NoRepositoryConnectorException( repo, "Blocking mirror for repositories: "
+                    throw new NoRepositoryConnectorException( repo, "Blocked mirror for repositories: "
                         + repo.getMirroredRepositories() );
                 }
             }

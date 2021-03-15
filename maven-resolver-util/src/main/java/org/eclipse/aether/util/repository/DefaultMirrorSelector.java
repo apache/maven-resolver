@@ -55,7 +55,7 @@ public final class DefaultMirrorSelector
      * @param url The URL of the mirror, must not be {@code null}.
      * @param type The content type of the mirror, must not be {@code null}.
      * @param repositoryManager A flag whether the mirror is a repository manager or a simple server.
-     * @param blocked A flag whether the mirror blocks any download request.
+     * @param blocked A flag whether the mirror is blocked from performing any download requests.
      * @param mirrorOfIds The identifier(s) of remote repositories to mirror, must not be {@code null}. Multiple
      *            identifiers can be separated by comma and additionally the wildcards "*", "external:http:*" and
      *            "external:*" can be used to match all (external) repositories, prefixing a repo id with an
