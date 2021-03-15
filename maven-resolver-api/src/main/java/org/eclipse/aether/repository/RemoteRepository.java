@@ -217,7 +217,8 @@ public final class RemoteRepository
     /**
      * Indicates whether this repository is blocked from performing any download requests.
      * 
-     * @return {@code true} if this repository is blocked from performing any download requests, {@code false} otherwise.
+     * @return {@code true} if this repository is blocked from performing any download requests,
+     *         {@code false} otherwise.
      */
     public boolean isBlocked()
     {
