@@ -215,9 +215,9 @@ public final class RemoteRepository
     }
 
     /**
-     * Indicates whether this repository is blocked against any download request.
+     * Indicates whether this repository is blocked from performing any download requests.
      * 
-     * @return {@code true} if this repository is blocked against any download request, {@code false} otherwise.
+     * @return {@code true} if this repository is blocked from performing any download requests, {@code false} otherwise.
      */
     public boolean isBlocked()
     {
@@ -599,7 +599,7 @@ public final class RemoteRepository
         /**
          * Marks the repository as blocked or not.
          * 
-         * @param blocked {@code true} if the repository should not be allowed to get any request.
+         * @param blocked {@code true} if the repository should not be allowed to perform any requests.
          * @return This builder for chaining, never {@code null}.
          */
         public Builder setBlocked( boolean blocked )
