@@ -353,6 +353,7 @@ public class DefaultArtifactResolver
                 LOGGER.debug( "Verifying availability of {} from {}", local.getFile(), repos );
             }
 
+            LOGGER.debug( "Resolving artifact {} from {}", artifact, repos );
             AtomicBoolean resolved = new AtomicBoolean( false );
             Iterator<ResolutionGroup> groupIt = groups.iterator();
             for ( RemoteRepository repo : repos )
