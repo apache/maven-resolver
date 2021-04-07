@@ -68,8 +68,6 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -83,132 +81,58 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultArtifactResolver
-    implements ArtifactResolver, Service
+    implements ArtifactResolver
 {
 
     private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultArtifactResolver.class );
 
-    private FileProcessor fileProcessor;
+    private final FileProcessor fileProcessor;
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private VersionResolver versionResolver;
+    private final VersionResolver versionResolver;
 
-    private UpdateCheckManager updateCheckManager;
+    private final UpdateCheckManager updateCheckManager;
 
-    private RepositoryConnectorProvider repositoryConnectorProvider;
+    private final RepositoryConnectorProvider repositoryConnectorProvider;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private OfflineController offlineController;
-
-    public DefaultArtifactResolver()
-    {
-        // enables default constructor
-    }
+    private final OfflineController offlineController;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
-    DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
+    public DefaultArtifactResolver( FileProcessor fileProcessor, RepositoryEventDispatcher repositoryEventDispatcher,
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
                              OfflineController offlineController )
     {
-        setFileProcessor( fileProcessor );
-        setRepositoryEventDispatcher( repositoryEventDispatcher );
-        setVersionResolver( versionResolver );
-        setUpdateCheckManager( updateCheckManager );
-        setRepositoryConnectorProvider( repositoryConnectorProvider );
-        setRemoteRepositoryManager( remoteRepositoryManager );
-        setSyncContextFactory( syncContextFactory );
-        setOfflineController( offlineController );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setVersionResolver( locator.getService( VersionResolver.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
-    }
-
-    /**
-     * @deprecated not used any more since MRESOLVER-36 move to slf4j, added back in MRESOLVER-64 for compatibility
-     */
-    @Deprecated
-    public DefaultArtifactResolver setLoggerFactory( org.eclipse.aether.spi.log.LoggerFactory loggerFactory )
-    {
-        // this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
-    }
-
-    public DefaultArtifactResolver setFileProcessor( FileProcessor fileProcessor )
-    {
         this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
-        return this;
-    }
-
-    public DefaultArtifactResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
-    {
         this.repositoryEventDispatcher = requireNonNull( repositoryEventDispatcher,
-                "repository event dispatcher cannot be null" );
-        return this;
-    }
-
-    public DefaultArtifactResolver setVersionResolver( VersionResolver versionResolver )
-    {
+            "repository event dispatcher cannot be null" );
         this.versionResolver = requireNonNull( versionResolver, "version resolver cannot be null" );
-        return this;
-    }
-
-    public DefaultArtifactResolver setUpdateCheckManager( UpdateCheckManager updateCheckManager )
-    {
         this.updateCheckManager = requireNonNull( updateCheckManager, "update check manager cannot be null" );
-        return this;
-    }
-
-    public DefaultArtifactResolver setRepositoryConnectorProvider(
-            RepositoryConnectorProvider repositoryConnectorProvider )
-    {
         this.repositoryConnectorProvider = requireNonNull( repositoryConnectorProvider,
-                "repository connector provider cannot be null" );
-        return this;
-    }
-
-    public DefaultArtifactResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
-    {
+            "repository connector provider cannot be null" );
         this.remoteRepositoryManager = requireNonNull( remoteRepositoryManager,
-                "remote repository provider cannot be null" );
-        return this;
-    }
-
-    public DefaultArtifactResolver setSyncContextFactory( SyncContextFactory syncContextFactory )
-    {
+            "remote repository provider cannot be null" );
         this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
-        return this;
-    }
-
-    public DefaultArtifactResolver setOfflineController( OfflineController offlineController )
-    {
         this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
-        return this;
     }
 
+    @Override
     public ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
         throws ArtifactResolutionException
     {
         return resolveArtifacts( session, Collections.singleton( request ) ).get( 0 );
     }
 
+    @Override
     public List<ArtifactResult> resolveArtifacts( RepositorySystemSession session,
                                                   Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException

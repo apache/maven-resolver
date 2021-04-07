@@ -36,8 +36,6 @@ import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,27 +45,21 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultRepositoryConnectorProvider
-    implements RepositoryConnectorProvider, Service
+    implements RepositoryConnectorProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryConnectorProvider.class );
 
-    private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<>();
-
-    public DefaultRepositoryConnectorProvider()
-    {
-        // enables default constructor
-    }
+    private final Collection<RepositoryConnectorFactory> connectorFactories;
 
     @Inject
-    DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories )
+    public DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories )
     {
-        setRepositoryConnectorFactories( connectorFactories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        connectorFactories = locator.getServices( RepositoryConnectorFactory.class );
+        this.connectorFactories = new ArrayList<>();
+        if ( connectorFactories != null )
+        {
+            this.connectorFactories.addAll( connectorFactories );
+        }
     }
 
     public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory( RepositoryConnectorFactory factory )
@@ -76,20 +68,7 @@ public class DefaultRepositoryConnectorProvider
         return this;
     }
 
-    public DefaultRepositoryConnectorProvider setRepositoryConnectorFactories(
-            Collection<RepositoryConnectorFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.connectorFactories = new ArrayList<>();
-        }
-        else
-        {
-            this.connectorFactories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public RepositoryConnector newRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {

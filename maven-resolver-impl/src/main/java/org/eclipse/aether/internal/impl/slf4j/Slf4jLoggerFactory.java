@@ -23,8 +23,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.sisu.Nullable;
@@ -37,7 +35,7 @@ import org.slf4j.spi.LocationAwareLogger;
 @Singleton
 @Named( "slf4j" )
 public class Slf4jLoggerFactory
-    implements LoggerFactory, Service
+    implements LoggerFactory
 {
 
     private static final boolean AVAILABLE;
@@ -64,23 +62,10 @@ public class Slf4jLoggerFactory
 
     private ILoggerFactory factory;
 
-    /**
-     * Creates an instance of this logger factory.
-     */
-    public Slf4jLoggerFactory()
-    {
-        // enables no-arg constructor
-    }
-
     @Inject
-    Slf4jLoggerFactory( @Nullable ILoggerFactory factory )
+    public Slf4jLoggerFactory( @Nullable ILoggerFactory factory )
     {
         setLoggerFactory( factory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( ILoggerFactory.class ) );
     }
 
     public Slf4jLoggerFactory setLoggerFactory( ILoggerFactory factory )
@@ -89,6 +74,7 @@ public class Slf4jLoggerFactory
         return this;
     }
 
+    @Override
     public Logger getLogger( String name )
     {
         org.slf4j.Logger logger = getFactory().getLogger( name );
@@ -119,31 +105,37 @@ public class Slf4jLoggerFactory
             this.logger = logger;
         }
 
+        @Override
         public boolean isDebugEnabled()
         {
             return logger.isDebugEnabled();
         }
 
+        @Override
         public void debug( String msg )
         {
             logger.debug( msg );
         }
 
+        @Override
         public void debug( String msg, Throwable error )
         {
             logger.debug( msg, error );
         }
 
+        @Override
         public boolean isWarnEnabled()
         {
             return logger.isWarnEnabled();
         }
 
+        @Override
         public void warn( String msg )
         {
             logger.warn( msg );
         }
 
+        @Override
         public void warn( String msg, Throwable error )
         {
             logger.warn( msg, error );
@@ -164,31 +156,37 @@ public class Slf4jLoggerFactory
             this.logger = logger;
         }
 
+        @Override
         public boolean isDebugEnabled()
         {
             return logger.isDebugEnabled();
         }
 
+        @Override
         public void debug( String msg )
         {
             logger.log( null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, null );
         }
 
+        @Override
         public void debug( String msg, Throwable error )
         {
             logger.log( null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, error );
         }
 
+        @Override
         public boolean isWarnEnabled()
         {
             return logger.isWarnEnabled();
         }
 
+        @Override
         public void warn( String msg )
         {
             logger.log( null, FQCN, LocationAwareLogger.WARN_INT, msg, null, null );
         }
 
+        @Override
         public void warn( String msg, Throwable error )
         {
             logger.log( null, FQCN, LocationAwareLogger.WARN_INT, msg, null, error );

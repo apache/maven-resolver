@@ -105,10 +105,8 @@ public class DefaultDependencyCollectorTest
     {
         session = TestUtils.newSession();
 
-        collector = new DefaultDependencyCollector();
-        collector.setArtifactDescriptorReader( newReader( "" ) );
-        collector.setVersionRangeResolver( new StubVersionRangeResolver() );
-        collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(), newReader( "" ), new StubVersionRangeResolver());
 
         parser = new DependencyGraphParser( "artifact-descriptions/" );
 
@@ -275,8 +273,10 @@ public class DefaultDependencyCollectorTest
     public void testCyclicDependenciesBig()
         throws Exception
     {
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(), newReader( "cycle-big/" ), new StubVersionRangeResolver());
+
         CollectRequest request = new CollectRequest( newDep( "1:2:pom:5.50-SNAPSHOT" ), Arrays.asList( repository ) );
-        collector.setArtifactDescriptorReader( newReader( "cycle-big/" ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertNotNull( result.getRoot() );
         // we only care about the performance here, this test must not hang or run out of mem
@@ -286,8 +286,10 @@ public class DefaultDependencyCollectorTest
     public void testCyclicProjects()
         throws Exception
     {
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(), newReader( "versionless-cycle/" ), new StubVersionRangeResolver());
+
         CollectRequest request = new CollectRequest( newDep( "test:a:2" ), Arrays.asList( repository ) );
-        collector.setArtifactDescriptorReader( newReader( "versionless-cycle/" ) );
         CollectResult result = collector.collectDependencies( session, request );
         DependencyNode root = result.getRoot();
         DependencyNode a1 = path( root, 0, 0 );
@@ -386,15 +388,19 @@ public class DefaultDependencyCollectorTest
 
         final List<RemoteRepository> repos = new ArrayList<>();
 
-        collector.setArtifactDescriptorReader( new ArtifactDescriptorReader()
-        {
-            public ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
-                                                                    ArtifactDescriptorRequest request )
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(),
+            new ArtifactDescriptorReader()
             {
-                repos.addAll( request.getRepositories() );
-                return new ArtifactDescriptorResult( request );
-            }
-        } );
+                public ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
+                                                                        ArtifactDescriptorRequest request )
+                {
+                    repos.addAll( request.getRepositories() );
+                    return new ArtifactDescriptorResult( request );
+                }
+            },
+            new StubVersionRangeResolver()
+        );
 
         List<Dependency> dependencies = Arrays.asList( newDep( "verrange:parent:jar:1[1,)", "compile" ) );
         CollectRequest request = new CollectRequest( dependencies, null, Arrays.asList( repository, repo2 ) );
@@ -437,7 +443,8 @@ public class DefaultDependencyCollectorTest
     public void testDependencyManagement()
         throws IOException, DependencyCollectionException
     {
-        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(), newReader( "managed/" ), new StubVersionRangeResolver());
 
         DependencyNode root = parser.parseResource( "expectedSubtreeComparisonResult.txt" );
         TestDependencyManager depMgmt = new TestDependencyManager();
@@ -487,7 +494,9 @@ public class DefaultDependencyCollectorTest
     public void testDependencyManagement_TransitiveDependencyManager()
             throws DependencyCollectionException, IOException
     {
-        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(), newReader( "managed/" ), new StubVersionRangeResolver());
+
         parser = new DependencyGraphParser( "artifact-descriptions/managed/" );
         session.setDependencyManager( new TransitiveDependencyManager() );
         final Dependency root = newDep( "gid:root:ext:ver", "compile" );
@@ -515,7 +524,9 @@ public class DefaultDependencyCollectorTest
     public void testDependencyManagement_DefaultDependencyManager()
         throws DependencyCollectionException, IOException
     {
-        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
+        collector = new DefaultDependencyCollector(
+            new StubRemoteRepositoryManager(), newReader( "managed/" ), new StubVersionRangeResolver());
+
         parser = new DependencyGraphParser( "artifact-descriptions/managed/" );
         session.setDependencyManager( new DefaultDependencyManager() );
         final Dependency root = newDep( "gid:root:ext:ver", "compile" );

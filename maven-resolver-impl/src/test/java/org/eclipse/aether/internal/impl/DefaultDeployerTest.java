@@ -95,14 +95,16 @@ public class DefaultDeployerTest
         session = TestUtils.newSession();
         connectorProvider = new StubRepositoryConnectorProvider();
 
-        deployer = new DefaultDeployer();
-        deployer.setRepositoryConnectorProvider( connectorProvider );
-        deployer.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
-        deployer.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        deployer.setUpdateCheckManager( new StaticUpdateCheckManager( true ) );
-        deployer.setFileProcessor( new TestFileProcessor() );
-        deployer.setSyncContextFactory( new StubSyncContextFactory() );
-        deployer.setOfflineController( new DefaultOfflineController() );
+        deployer = new DefaultDeployer(
+            new TestFileProcessor(),
+            new StubRepositoryEventDispatcher(),
+            connectorProvider,
+            new StubRemoteRepositoryManager(),
+            new StaticUpdateCheckManager( true ),
+            null,
+            new StubSyncContextFactory(),
+            new DefaultOfflineController()
+        );
 
         request = new DeployRequest();
         request.setRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );

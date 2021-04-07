@@ -34,8 +34,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,27 +43,21 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public final class DefaultTransporterProvider
-    implements TransporterProvider, Service
+    implements TransporterProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTransporterProvider.class );
 
-    private Collection<TransporterFactory> factories = new ArrayList<>();
-
-    public DefaultTransporterProvider()
-    {
-        // enables default constructor
-    }
+    private final Collection<TransporterFactory> factories;
 
     @Inject
-    DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
+    public DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
     {
-        setTransporterFactories( transporterFactories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setTransporterFactories( locator.getServices( TransporterFactory.class ) );
+        this.factories = new ArrayList<>();
+        if ( transporterFactories != null )
+        {
+            this.factories.addAll( transporterFactories );
+        }
     }
 
     public DefaultTransporterProvider addTransporterFactory( TransporterFactory factory )
@@ -74,19 +66,7 @@ public final class DefaultTransporterProvider
         return this;
     }
 
-    public DefaultTransporterProvider setTransporterFactories( Collection<TransporterFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.factories = new ArrayList<>();
-        }
-        else
-        {
-            this.factories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {

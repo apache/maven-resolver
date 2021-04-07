@@ -151,6 +151,7 @@ final class LocalState
         pool.put( authScheme );
     }
 
+    @Override
     public void close()
     {
         if ( global == null )

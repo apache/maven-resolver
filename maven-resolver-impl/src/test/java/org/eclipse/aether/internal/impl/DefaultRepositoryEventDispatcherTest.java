@@ -41,7 +41,9 @@ public class DefaultRepositoryEventDispatcherTest
     @Test
     public void testDispatchHandlesAllEventTypes()
     {
-        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher();
+        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher(
+            null
+        );
 
         ListenerHandler handler = new ListenerHandler();
 

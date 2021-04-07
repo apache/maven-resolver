@@ -51,6 +51,7 @@ public class DefaultFileProcessor
      * @return {@code true} if and only if the directory was created, along with all necessary parent directories;
      *         {@code false} otherwise
      */
+    @Override
     public boolean mkdirs( File directory )
     {
         if ( directory == null )
@@ -81,6 +82,7 @@ public class DefaultFileProcessor
         return ( parentDir != null && ( mkdirs( parentDir ) || parentDir.exists() ) && canonDir.mkdir() );
     }
 
+    @Override
     public void write( File target, String data )
         throws IOException
     {
@@ -115,6 +117,7 @@ public class DefaultFileProcessor
         }
     }
 
+    @Override
     public void write( File target, InputStream source )
         throws IOException
     {
@@ -146,12 +149,14 @@ public class DefaultFileProcessor
         }
     }
 
+    @Override
     public void copy( File source, File target )
         throws IOException
     {
         copy( source, target, null );
     }
 
+    @Override
     public long copy( File source, File target, ProgressListener listener )
         throws IOException
     {
@@ -245,6 +250,7 @@ public class DefaultFileProcessor
         return total;
     }
 
+    @Override
     public void move( File source, File target )
         throws IOException
     {

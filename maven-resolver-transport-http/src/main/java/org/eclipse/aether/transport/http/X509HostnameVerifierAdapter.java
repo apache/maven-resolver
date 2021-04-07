@@ -52,11 +52,13 @@ final class X509HostnameVerifierAdapter
         this.verifier = verifier;
     }
 
+    @Override
     public boolean verify( String hostname, SSLSession session )
     {
         return verifier.verify( hostname, session );
     }
 
+    @Override
     public void verify( String host, SSLSocket socket )
         throws IOException
     {
@@ -66,11 +68,13 @@ final class X509HostnameVerifierAdapter
         }
     }
 
+    @Override
     public void verify( String host, X509Certificate cert )
     {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void verify( String host, String[] cns, String[] subjectAlts )
     {
         throw new UnsupportedOperationException();

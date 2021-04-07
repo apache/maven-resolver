@@ -95,10 +95,12 @@ public class DefaultInstallerTest
 
         localArtifactFile = new File( session.getLocalRepository().getBasedir(), localArtifactPath );
 
-        installer = new DefaultInstaller();
-        installer.setFileProcessor( new TestFileProcessor() );
-        installer.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        installer.setSyncContextFactory( new StubSyncContextFactory() );
+        installer = new DefaultInstaller(
+            new TestFileProcessor(),
+            new StubRepositoryEventDispatcher(),
+            null,
+            new StubSyncContextFactory()
+        );
         request = new InstallRequest();
         listener = new RecordingRepositoryListener();
         session.setRepositoryListener( listener );
@@ -381,15 +383,20 @@ public class DefaultInstallerTest
         request.addArtifact( artifact );
         installer.install( session, request );
 
-        installer.setFileProcessor( new DefaultFileProcessor()
-        {
-            @Override
-            public long copy( File src, File target, ProgressListener listener )
-                throws IOException
+        installer = new DefaultInstaller(
+            new DefaultFileProcessor()
             {
-                throw new IOException( "copy called" );
-            }
-        } );
+                @Override
+                public long copy( File src, File target, ProgressListener listener )
+                    throws IOException
+                {
+                    throw new IOException( "copy called" );
+                }
+            },
+            new StubRepositoryEventDispatcher(),
+            null,
+            new StubSyncContextFactory()
+        );
 
         request = new InstallRequest();
         request.addArtifact( artifact );

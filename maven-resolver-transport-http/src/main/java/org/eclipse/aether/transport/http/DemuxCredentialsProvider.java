@@ -57,16 +57,19 @@ final class DemuxCredentialsProvider
         return serverCredentialsProvider;
     }
 
+    @Override
     public Credentials getCredentials( AuthScope authScope )
     {
         return getDelegate( authScope ).getCredentials( authScope );
     }
 
+    @Override
     public void setCredentials( AuthScope authScope, Credentials credentials )
     {
         getDelegate( authScope ).setCredentials( authScope, credentials );
     }
 
+    @Override
     public void clear()
     {
         serverCredentialsProvider.clear();

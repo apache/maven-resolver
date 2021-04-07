@@ -34,8 +34,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,27 +43,21 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public final class DefaultRepositoryLayoutProvider
-    implements RepositoryLayoutProvider, Service
+    implements RepositoryLayoutProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryLayoutProvider.class );
 
-    private Collection<RepositoryLayoutFactory> factories = new ArrayList<>();
-
-    public DefaultRepositoryLayoutProvider()
-    {
-        // enables default constructor
-    }
+    private final Collection<RepositoryLayoutFactory> factories;
 
     @Inject
-    DefaultRepositoryLayoutProvider( Set<RepositoryLayoutFactory> layoutFactories )
+    public DefaultRepositoryLayoutProvider( Set<RepositoryLayoutFactory> factories )
     {
-        setRepositoryLayoutFactories( layoutFactories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRepositoryLayoutFactories( locator.getServices( RepositoryLayoutFactory.class ) );
+        this.factories = new ArrayList<>();
+        if ( factories != null )
+        {
+            this.factories.addAll( factories );
+        }
     }
 
     public DefaultRepositoryLayoutProvider addRepositoryLayoutFactory( RepositoryLayoutFactory factory )
@@ -74,19 +66,7 @@ public final class DefaultRepositoryLayoutProvider
         return this;
     }
 
-    public DefaultRepositoryLayoutProvider setRepositoryLayoutFactories( Collection<RepositoryLayoutFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.factories = new ArrayList<>();
-        }
-        else
-        {
-            this.factories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public RepositoryLayout newRepositoryLayout( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryLayoutException
     {

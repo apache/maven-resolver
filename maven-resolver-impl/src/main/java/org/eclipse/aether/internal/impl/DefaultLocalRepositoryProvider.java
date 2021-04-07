@@ -35,8 +35,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,27 +43,21 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultLocalRepositoryProvider
-    implements LocalRepositoryProvider, Service
+    implements LocalRepositoryProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultLocalRepositoryProvider.class );
 
-    private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<>();
-
-    public DefaultLocalRepositoryProvider()
-    {
-        // enables default constructor
-    }
+    private final Collection<LocalRepositoryManagerFactory> managerFactories;
 
     @Inject
-    DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
+    public DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
     {
-        setLocalRepositoryManagerFactories( factories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLocalRepositoryManagerFactories( locator.getServices( LocalRepositoryManagerFactory.class ) );
+        this.managerFactories = new ArrayList<>();
+        if ( factories != null )
+        {
+            this.managerFactories.addAll( factories );
+        }
     }
 
     public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )
@@ -74,20 +66,7 @@ public class DefaultLocalRepositoryProvider
         return this;
     }
 
-    public DefaultLocalRepositoryProvider setLocalRepositoryManagerFactories(
-            Collection<LocalRepositoryManagerFactory> factories )
-    {
-        if ( factories == null )
-        {
-            managerFactories = new ArrayList<>( 2 );
-        }
-        else
-        {
-            managerFactories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
                                                              LocalRepository repository )
         throws NoLocalRepositoryManagerException

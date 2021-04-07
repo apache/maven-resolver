@@ -139,6 +139,7 @@ final class GlobalState
         expectContinues = new ConcurrentHashMap<>();
     }
 
+    @Override
     public void close()
     {
         for ( Iterator<Map.Entry<SslConfig, ClientConnectionManager>> it = connectionManagers.entrySet().iterator();

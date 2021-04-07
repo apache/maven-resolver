@@ -55,6 +55,7 @@ final class SharingAuthCache
         return host;
     }
 
+    @Override
     public AuthScheme get( HttpHost host )
     {
         host = toKey( host );
@@ -67,6 +68,7 @@ final class SharingAuthCache
         return authScheme;
     }
 
+    @Override
     public void put( HttpHost host, AuthScheme authScheme )
     {
         if ( authScheme != null )
@@ -79,11 +81,13 @@ final class SharingAuthCache
         }
     }
 
+    @Override
     public void remove( HttpHost host )
     {
         authSchemes.remove( toKey( host ) );
     }
 
+    @Override
     public void clear()
     {
         share();

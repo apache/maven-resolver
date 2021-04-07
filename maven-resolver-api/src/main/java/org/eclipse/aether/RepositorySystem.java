@@ -8,9 +8,9 @@ package org.eclipse.aether;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -56,9 +56,9 @@ import org.eclipse.aether.resolution.VersionResult;
 
 /**
  * The main entry point to the repository system and its functionality. Note that obtaining a concrete implementation of
- * this interface (e.g. via dependency injection, service locator, etc.) is dependent on the application and its
+ * this interface (e.g. via dependency injection, etc.) is dependent on the application and its
  * specific needs, please consult the online documentation for examples and directions on booting the system.
- * 
+ *
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
@@ -73,7 +73,7 @@ public interface RepositorySystem
      * <p>
      * The supplied request may also refer to a single concrete version rather than a version range. In this case
      * though, the result contains simply the (parsed) input version, regardless of the repositories and their contents.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The version range request, must not be {@code null}.
      * @return The version range result, never {@code null}.
@@ -87,7 +87,7 @@ public interface RepositorySystem
     /**
      * Resolves an artifact's meta version (if any) to a concrete version. For example, resolves "1.0-SNAPSHOT" to
      * "1.0-20090208.132618-23".
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The version request, must not be {@code null}.
      * @return The version result, never {@code null}.
@@ -99,7 +99,7 @@ public interface RepositorySystem
 
     /**
      * Gets information about an artifact like its direct dependencies and potential relocations.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The descriptor request, must not be {@code null}.
      * @return The descriptor result, never {@code null}.
@@ -115,7 +115,7 @@ public interface RepositorySystem
      * Collects the transitive dependencies of an artifact and builds a dependency graph. Note that this operation is
      * only concerned about determining the coordinates of the transitive dependencies. To also resolve the actual
      * artifact files, use {@link #resolveDependencies(RepositorySystemSession, DependencyRequest)}.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The collection request, must not be {@code null}.
      * @return The collection result, never {@code null}.
@@ -134,7 +134,7 @@ public interface RepositorySystem
      * Collects and resolves the transitive dependencies of an artifact. This operation is essentially a combination of
      * {@link #collectDependencies(RepositorySystemSession, CollectRequest)} and
      * {@link #resolveArtifacts(RepositorySystemSession, Collection)}.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The dependency request, must not be {@code null}.
      * @return The dependency result, never {@code null}.
@@ -150,7 +150,7 @@ public interface RepositorySystem
      * artifact that is already resolved will be skipped and is not re-resolved. In general, callers must not assume any
      * relationship between an artifact's resolved filename and its coordinates. Note that this method assumes that any
      * relocations have already been processed.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The resolution request, must not be {@code null}.
      * @return The resolution result, never {@code null}.
@@ -166,7 +166,7 @@ public interface RepositorySystem
      * necessary. Artifacts that are already resolved will be skipped and are not re-resolved. In general, callers must
      * not assume any relationship between an artifact's filename and its coordinates. Note that this method assumes
      * that any relocations have already been processed.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param requests The resolution requests, must not be {@code null}.
      * @return The resolution results (in request order), never {@code null}.
@@ -181,7 +181,7 @@ public interface RepositorySystem
     /**
      * Resolves the paths for a collection of metadata. Metadata will be downloaded to the local repository if
      * necessary, e.g. because it hasn't been cached yet or the cache is deemed outdated.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param requests The resolution requests, must not be {@code null}.
      * @return The resolution results (in request order), never {@code null}.
@@ -193,7 +193,7 @@ public interface RepositorySystem
 
     /**
      * Installs a collection of artifacts and their accompanying metadata to the local repository.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The installation request, must not be {@code null}.
      * @return The installation result, never {@code null}.
@@ -204,7 +204,7 @@ public interface RepositorySystem
 
     /**
      * Uploads a collection of artifacts and their accompanying metadata to a remote repository.
-     * 
+     *
      * @param session The repository session, must not be {@code null}.
      * @param request The deployment request, must not be {@code null}.
      * @return The deployment result, never {@code null}.
@@ -219,7 +219,7 @@ public interface RepositorySystem
      * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
      * invocation is one of the last steps of setting up a new session, in particular any configuration properties
      * should have been set already.
-     * 
+     *
      * @param session The repository system session from which to configure the manager, must not be {@code null}.
      * @param localRepository The local repository to create a manager for, must not be {@code null}.
      * @return The local repository manager, never {@code null}.
@@ -231,7 +231,7 @@ public interface RepositorySystem
 
     /**
      * Creates a new synchronization context.
-     * 
+     *
      * @param session The repository session during which the context will be used, must not be {@code null}.
      * @param shared A flag indicating whether access to the artifacts/metadata associated with the new context can be
      *            shared among concurrent readers or whether access needs to be exclusive to the calling thread.
@@ -247,7 +247,7 @@ public interface RepositorySystem
      * to already carry any required authentication or proxy configuration. This method can be used to apply the
      * authentication/proxy configuration from a session to a bare repository definition to obtain the complete
      * repository definition for use in the resolution request.
-     * 
+     *
      * @param session The repository system session from which to configure the repositories, must not be {@code null}.
      * @param repositories The repository prototypes from which to derive the resolution repositories, must not be
      *            {@code null} or contain {@code null} elements.
@@ -267,7 +267,7 @@ public interface RepositorySystem
      * required authentication or proxy configuration. This method can be used to apply the authentication/proxy
      * configuration from a session to a bare repository definition to obtain the complete repository definition for use
      * in the deploy request.
-     * 
+     *
      * @param session The repository system session from which to configure the repository, must not be {@code null}.
      * @param repository The repository prototype from which to derive the deployment repository, must not be
      *            {@code null}.

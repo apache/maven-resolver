@@ -53,6 +53,7 @@ class CachingArtifactTypeRegistry
         types = new HashMap<>();
     }
 
+    @Override
     public ArtifactType get( String typeId )
     {
         ArtifactType type = types.get( typeId );

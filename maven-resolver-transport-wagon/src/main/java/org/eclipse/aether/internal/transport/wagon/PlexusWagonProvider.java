@@ -50,12 +50,14 @@ public class PlexusWagonProvider
         this.container = requireNonNull( container, "plexus container cannot be null" );
     }
 
+    @Override
     public Wagon lookup( String roleHint )
         throws Exception
     {
         return container.lookup( Wagon.class, roleHint );
     }
 
+    @Override
     public void release( Wagon wagon )
     {
         try

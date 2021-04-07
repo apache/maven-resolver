@@ -64,36 +64,43 @@ final class DefaultVersionFilterContext
         return new ArrayList<>( versions );
     }
 
+    @Override
     public RepositorySystemSession getSession()
     {
         return session;
     }
 
+    @Override
     public Dependency getDependency()
     {
         return dependency;
     }
 
+    @Override
     public VersionConstraint getVersionConstraint()
     {
         return result.getVersionConstraint();
     }
 
+    @Override
     public int getCount()
     {
         return versions.size();
     }
 
+    @Override
     public ArtifactRepository getRepository( Version version )
     {
         return result.getRepository( version );
     }
 
+    @Override
     public List<RemoteRepository> getRepositories()
     {
         return Collections.unmodifiableList( result.getRequest().getRepositories() );
     }
 
+    @Override
     public Iterator<Version> iterator()
     {
         return versions.iterator();

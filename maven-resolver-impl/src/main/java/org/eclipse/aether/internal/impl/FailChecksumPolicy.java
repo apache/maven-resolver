@@ -34,6 +34,7 @@ final class FailChecksumPolicy
         super( resource );
     }
 
+    @Override
     public boolean onTransferChecksumFailure( ChecksumFailureException error )
     {
         return false;

@@ -44,8 +44,6 @@ import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
@@ -59,14 +57,14 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultUpdateCheckManager
-    implements UpdateCheckManager, Service
+    implements UpdateCheckManager
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
 
     private final TrackingFileManager trackingFileManager;
 
-    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
+    private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     private static final String UPDATED_KEY_SUFFIX = ".lastUpdated";
 
@@ -84,29 +82,14 @@ public class DefaultUpdateCheckManager
 
     private static final int STATE_DISABLED = 2;
 
-    public DefaultUpdateCheckManager()
+    @Inject
+    public DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
         trackingFileManager = new TrackingFileManager();
-    }
-
-    @Inject
-    DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
-    {
-        this();
-        setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
-    }
-
-    public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
-    {
         this.updatePolicyAnalyzer = requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
-        return this;
     }
 
+    @Override
     public void checkArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
         if ( check.getLocalLastUpdated() != 0
@@ -232,6 +215,7 @@ public class DefaultUpdateCheckManager
         }
     }
 
+    @Override
     public void checkMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
         if ( check.getLocalLastUpdated() != 0
@@ -516,6 +500,7 @@ public class DefaultUpdateCheckManager
         return ( props != null ) ? props : new Properties();
     }
 
+    @Override
     public void touchArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
         File artifactFile = check.getFile();
@@ -546,6 +531,7 @@ public class DefaultUpdateCheckManager
         return false;
     }
 
+    @Override
     public void touchMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
         File metadataFile = check.getFile();
