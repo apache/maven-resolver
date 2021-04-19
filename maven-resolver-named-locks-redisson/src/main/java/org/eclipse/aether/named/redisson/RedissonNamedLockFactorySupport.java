@@ -56,6 +56,7 @@ public abstract class RedissonNamedLockFactorySupport
     @Override
     public void shutdown()
     {
+        logger.trace( "Shutting down Redisson client with id '{}'", redissonClient.getId() );
         redissonClient.shutdown();
     }
 
