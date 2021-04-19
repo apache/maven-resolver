@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class NamedLockFactorySupport implements NamedLockFactory
 {
-    protected final Logger log = LoggerFactory.getLogger( getClass() );
+    protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final ConcurrentHashMap<String, NamedLockHolder> locks;
 
@@ -86,7 +86,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
             if ( !locks.isEmpty() )
             {
                 // report leak
-                log.warn( "Lock leak, referenced locks still exist {}", locks );
+                logger.warn( "Lock leak, referenced locks still exist {}", locks );
             }
         }
         finally

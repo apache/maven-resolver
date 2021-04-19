@@ -70,7 +70,7 @@ public class DiscriminatingNameMapper implements NameMapper
 
     private static final String DEFAULT_HOSTNAME = "localhost";
 
-    private final Logger log = LoggerFactory.getLogger( getClass() );
+    private final static Logger LOGGER = LoggerFactory.getLogger( DiscriminatingNameMapper.class );
 
     private final NameMapper nameMapper;
 
@@ -101,7 +101,7 @@ public class DiscriminatingNameMapper implements NameMapper
         }
         catch ( UnknownHostException e )
         {
-            log.warn( "Failed to get hostname, using '{}'", DEFAULT_HOSTNAME, e );
+            LOGGER.warn( "Failed to get hostname, using '{}'", DEFAULT_HOSTNAME, e );
             return DEFAULT_HOSTNAME;
         }
     }
@@ -130,7 +130,7 @@ public class DiscriminatingNameMapper implements NameMapper
             }
             catch ( Exception e )
             {
-                log.warn( "Failed to calculate discriminator digest, using '{}'", DEFAULT_DISCRIMINATOR_DIGEST, e );
+                LOGGER.warn( "Failed to calculate discriminator digest, using '{}'", DEFAULT_DISCRIMINATOR_DIGEST, e );
                 return DEFAULT_DISCRIMINATOR_DIGEST;
             }
         }

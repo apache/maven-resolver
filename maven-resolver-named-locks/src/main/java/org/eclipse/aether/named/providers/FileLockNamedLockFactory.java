@@ -94,7 +94,7 @@ public class FileLockNamedLockFactory
             }
             else
             {
-                log.warn( "No FileChannel for lock named '{}'", lock.name() );
+                logger.warn( "No FileChannel for lock '{}'", lock.name() );
             }
         }
         finally

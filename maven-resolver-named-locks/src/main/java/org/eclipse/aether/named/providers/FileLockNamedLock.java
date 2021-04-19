@@ -132,7 +132,7 @@ public final class FileLockNamedLock
         Deque<FileLock> steps = threadSteps.computeIfAbsent( Thread.currentThread(), k -> new ArrayDeque<>() );
         if ( steps.isEmpty() )
         {
-            throw new IllegalStateException( "Wrong API usage: unlock w/o lock" );
+            throw new IllegalStateException( "Wrong API usage: unlock without lock" );
         }
         try
         {

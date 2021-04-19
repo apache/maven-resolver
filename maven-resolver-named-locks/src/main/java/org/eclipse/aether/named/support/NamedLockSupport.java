@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class NamedLockSupport implements NamedLock
 {
-    protected final Logger log = LoggerFactory.getLogger( getClass() );
+    protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final String name;
 

@@ -91,7 +91,7 @@ public abstract class RedissonNamedLockFactorySupport
 
         if ( configFilePath != null )
         {
-            log.trace( "Reading Redisson config file from '{}'", configFilePath );
+            logger.trace( "Reading Redisson config file from '{}'", configFilePath );
             try ( InputStream is = Files.newInputStream( configFilePath ) )
             {
                 config = Config.fromYAML( is );
@@ -110,7 +110,7 @@ public abstract class RedissonNamedLockFactorySupport
         }
 
         RedissonClient redissonClient = Redisson.create( config );
-        log.trace( "Created Redisson client with id '{}'", redissonClient.getId() );
+        logger.trace( "Created Redisson client with id '{}'", redissonClient.getId() );
 
         return redissonClient;
     }
