@@ -35,7 +35,7 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport
      */
     public interface AdaptedSemaphore
     {
-        boolean tryAcquire( int perms, long timeout, TimeUnit unit ) throws InterruptedException;
+        boolean tryAcquire( int perms, long time, TimeUnit unit ) throws InterruptedException;
 
         void release( int perms );
     }

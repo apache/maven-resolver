@@ -83,7 +83,7 @@ public final class NamedLockFactoryAdapter
 
         private final NamedLockFactory namedLockFactory;
 
-        private final long timeOut;
+        private final long time;
 
         private final TimeUnit timeUnit;
 
@@ -91,7 +91,7 @@ public final class NamedLockFactoryAdapter
 
         private AdaptedLockSyncContext( final RepositorySystemSession session, final boolean shared,
                                         final NameMapper lockNaming, final NamedLockFactory namedLockFactory,
-                                        final long timeOut, final TimeUnit timeUnit )
+                                        final long time, final TimeUnit timeUnit )
         {
             this.session = session;
             this.shared = shared;
@@ -99,7 +99,7 @@ public final class NamedLockFactoryAdapter
             this.sessionAwareNamedLockFactory = namedLockFactory instanceof SessionAwareNamedLockFactory
                     ? (SessionAwareNamedLockFactory) namedLockFactory : null;
             this.namedLockFactory = namedLockFactory;
-            this.timeOut = timeOut;
+            this.time = time;
             this.timeUnit = timeUnit;
             this.locks = new ArrayDeque<>();
         }
@@ -127,11 +127,11 @@ public final class NamedLockFactoryAdapter
                     boolean locked;
                     if ( shared )
                     {
-                        locked = namedLock.lockShared( timeOut, timeUnit );
+                        locked = namedLock.lockShared( time, timeUnit );
                     }
                     else
                     {
-                        locked = namedLock.lockExclusively( timeOut, timeUnit );
+                        locked = namedLock.lockExclusively( time, timeUnit );
                     }
 
                     if ( !locked )

@@ -59,12 +59,12 @@ public final class NamedSyncContextFactory
         "aether.syncContext.named.nameMapper", GAVNameMapper.NAME
     );
 
-    private static final long TIMEOUT = Long.getLong(
-            "aether.syncContext.named.timeout", 30L
+    private static final long TIME = Long.getLong(
+            "aether.syncContext.named.time", 30L
     );
 
-    private static final TimeUnit TIMEOUT_UNIT = TimeUnit.valueOf( System.getProperty(
-            "aether.syncContext.named.timeout.unit", TimeUnit.SECONDS.name()
+    private static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
+            "aether.syncContext.named.time.unit", TimeUnit.SECONDS.name()
     ) );
 
     private final NamedLockFactoryAdapter namedLockFactoryAdapter;
@@ -111,7 +111,7 @@ public final class NamedSyncContextFactory
             throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + FACTORY_NAME
                     + ", known ones: " + factories.keySet() );
         }
-        return new NamedLockFactoryAdapter( nameMapper, factory, TIMEOUT, TIMEOUT_UNIT );
+        return new NamedLockFactoryAdapter( nameMapper, factory, TIME, TIME_UNIT );
     }
 
     @Override

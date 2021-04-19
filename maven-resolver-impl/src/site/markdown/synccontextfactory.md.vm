@@ -61,9 +61,9 @@ You can control and configure several aspects of `NamedSyncContextFactory`:
 
 - `aether.syncContext.named.factory` (optional, default is `rwlock-local`): the named lock factory to be used.
 - `aether.syncContext.named.nameMapper` (optional, default is `gav`): creates lock names out of artifact coordinates.
-- `aether.syncContext.named.timeout` (optional, default is 30): the time out value for being blocked on trying to acquire a lock.
-- `aether.syncContext.named.timeout.unit` (optional, default is `java.util.concurrent.TimeUnit.SECONDS`): the time unit
-  of time out value.
+- `aether.syncContext.named.time` (optional, default is 30): the time value for being blocked by trying to acquire a lock.
+- `aether.syncContext.named.time.unit` (optional, default is `java.util.concurrent.TimeUnit.SECONDS`): the time unit
+  of time value.
 
 For the `aether.syncContext.named.nameMapper` property following values are allowed:
 
