@@ -63,6 +63,6 @@ public class TakariNamedLockFactory extends FileLockNamedLockFactory implements 
     @Override
     public NamedLockSupport getLock( final String filename )
     {
-        throw new IllegalStateException( "This factory is session aware" );
+        throw new UnsupportedOperationException( "This factory is session aware" );
     }
 }
