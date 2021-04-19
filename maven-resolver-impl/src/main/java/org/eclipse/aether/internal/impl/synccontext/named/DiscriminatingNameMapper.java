@@ -70,7 +70,7 @@ public class DiscriminatingNameMapper implements NameMapper
 
     private static final String DEFAULT_HOSTNAME = "localhost";
 
-    private final static Logger LOGGER = LoggerFactory.getLogger( DiscriminatingNameMapper.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger( DiscriminatingNameMapper.class );
 
     private final NameMapper nameMapper;
 

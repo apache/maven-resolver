@@ -138,7 +138,8 @@ public final class NamedLockFactoryAdapter
                     {
                         namedLock.close();
                         throw new IllegalStateException(
-                                "Could not acquire " + ( shared ? "read" : "write" ) + " lock for '" + namedLock.name() + "'" );
+                                "Could not acquire " + ( shared ? "read" : "write" )
+                                + " lock for '" + namedLock.name() + "'" );
                     }
 
                     locks.push( namedLock );
