@@ -51,7 +51,7 @@ public class RedissonSemaphoreNamedLockFactory
 
         private RedissonSemaphore( final RSemaphore semaphore )
         {
-            semaphore.addPermits( Integer.MAX_VALUE );
+            semaphore.trySetPermits( Integer.MAX_VALUE );
             this.semaphore = semaphore;
         }
 
