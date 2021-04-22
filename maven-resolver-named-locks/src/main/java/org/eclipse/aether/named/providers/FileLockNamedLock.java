@@ -23,10 +23,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.named.support.NamedLockSupport;
@@ -74,18 +76,12 @@ public final class FileLockNamedLock
             }
             return noOtherThreadExclusive;
         }
-        try
+
+        FileLock fileLock = realLock( true, unit.toMillis( time ) );
+        if ( fileLock != null )
         {
-            FileLock fileLock = fileChannel.tryLock( LOCK_POSITION, LOCK_SIZE, true );
-            if ( fileLock != null )
-            {
-                steps.push( fileLock );
-                return true;
-            }
-        }
-        catch ( IOException e )
-        {
-            throw new UncheckedIOException( e );
+            steps.push( fileLock );
+            return true;
         }
         return false;
     }
@@ -110,18 +106,12 @@ public final class FileLockNamedLock
         { // some other thread already posses lock, we want exclusive -> fail
             return false;
         }
-        try
+
+        FileLock fileLock = realLock( false, unit.toMillis( time ) );
+        if ( fileLock != null )
         {
-            FileLock fileLock = fileChannel.tryLock( LOCK_POSITION, LOCK_SIZE, false );
-            if ( fileLock != null )
-            {
-                steps.push( fileLock );
-                return true;
-            }
-        }
-        catch ( IOException e )
-        {
-            throw new UncheckedIOException( e );
+            steps.push( fileLock );
+            return true;
         }
         return false;
     }
@@ -142,6 +132,77 @@ public final class FileLockNamedLock
         {
             throw new UncheckedIOException( e );
         }
+    }
+
+    private FileLock realLock( final boolean shared, final long maxWaitMillis )
+    {
+        boolean interrupted = false;
+        long now = System.currentTimeMillis();
+        final long barrier = now + maxWaitMillis;
+        FileLock result = null;
+        int attempt = 1;
+        try
+        {
+            while ( now < barrier && result == null )
+            {
+                try
+                {
+                    result = fileChannel.tryLock( LOCK_POSITION, LOCK_SIZE, shared );
+                    if ( result == null )
+                    {
+                        logger.trace( "Interrupted {} while on {}", Thread.currentThread().getName(), name() );
+                        interrupted = Thread.interrupted();
+                        break;
+                    }
+                }
+                catch ( OverlappingFileLockException e )
+                {
+                    logger.trace( "Overlap on {}, sleeping", name() );
+                    try
+                    {
+                        Thread.sleep( 100 );
+                    }
+                    catch ( InterruptedException intEx )
+                    {
+                        interrupted = true;
+                        break;
+                    }
+                }
+                catch ( IOException e )
+                {
+                    if ( e.getMessage().toLowerCase( Locale.ENGLISH ).contains( "deadlock" ) )
+                    {
+                        logger.trace( "Deadlock on {}, sleeping", name() );
+                        try
+                        {
+                            Thread.sleep( 100 );
+                        }
+                        catch ( InterruptedException intEx )
+                        {
+                            interrupted = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        logger.trace( "Failure on {}", name(), e );
+                        throw new UncheckedIOException( e );
+                    }
+                }
+                now = System.currentTimeMillis();
+                attempt++;
+            }
+        }
+        finally
+        {
+            if ( interrupted )
+            {
+                logger.trace( "Interrupted thread {} while in lock {}", Thread.currentThread().getName(), name() );
+                Thread.currentThread().interrupt();
+            }
+
+        }
+        return result;
     }
 
     private FileLock dummyLock( final boolean shared )
