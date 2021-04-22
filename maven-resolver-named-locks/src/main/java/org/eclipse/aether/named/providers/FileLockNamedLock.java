@@ -77,7 +77,7 @@ public final class FileLockNamedLock
             return noOtherThreadExclusive;
         }
 
-        FileLock fileLock = realLock( true, unit.toMillis( time ) );
+        FileLock fileLock = realLock( true, unit.toNanos( time ) );
         if ( fileLock != null )
         {
             steps.push( fileLock );
@@ -107,7 +107,7 @@ public final class FileLockNamedLock
             return false;
         }
 
-        FileLock fileLock = realLock( false, unit.toMillis( time ) );
+        FileLock fileLock = realLock( false, unit.toNanos( time ) );
         if ( fileLock != null )
         {
             steps.push( fileLock );
@@ -134,11 +134,11 @@ public final class FileLockNamedLock
         }
     }
 
-    private FileLock realLock( final boolean shared, final long maxWaitMillis )
+    private FileLock realLock( final boolean shared, final long maxWaitNanos )
     {
         boolean interrupted = false;
-        long now = System.currentTimeMillis();
-        final long barrier = now + maxWaitMillis;
+        long now = System.nanoTime();
+        final long barrier = now + maxWaitNanos;
         FileLock result = null;
         int attempt = 1;
         try
@@ -150,14 +150,15 @@ public final class FileLockNamedLock
                     result = fileChannel.tryLock( LOCK_POSITION, LOCK_SIZE, shared );
                     if ( result == null )
                     {
-                        logger.trace( "Interrupted {} while on {}", Thread.currentThread().getName(), name() );
+                        logger.trace( "Attempt {}: Interrupted {} while on {}",
+                                attempt, Thread.currentThread().getName(), name() );
                         interrupted = Thread.interrupted();
                         break;
                     }
                 }
                 catch ( OverlappingFileLockException e )
                 {
-                    logger.trace( "Overlap on {}, sleeping", name() );
+                    logger.trace( "Attempt {}: Overlap on {}, sleeping", attempt, name() );
                     try
                     {
                         Thread.sleep( 100 );
@@ -172,7 +173,7 @@ public final class FileLockNamedLock
                 {
                     if ( e.getMessage().toLowerCase( Locale.ENGLISH ).contains( "deadlock" ) )
                     {
-                        logger.trace( "Deadlock on {}, sleeping", name() );
+                        logger.trace( "Attempt {}: Deadlock on {}, sleeping", attempt, name() );
                         try
                         {
                             Thread.sleep( 100 );
@@ -185,11 +186,11 @@ public final class FileLockNamedLock
                     }
                     else
                     {
-                        logger.trace( "Failure on {}", name(), e );
+                        logger.trace( "Attempt {}: Failure on {}", attempt, name(), e );
                         throw new UncheckedIOException( e );
                     }
                 }
-                now = System.currentTimeMillis();
+                now = System.nanoTime();
                 attempt++;
             }
         }
