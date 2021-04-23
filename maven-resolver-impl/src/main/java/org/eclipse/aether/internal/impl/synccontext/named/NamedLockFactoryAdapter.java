@@ -136,6 +136,9 @@ public final class NamedLockFactoryAdapter
 
                     if ( !locked )
                     {
+                        LOGGER.trace( "Failed to acquire {} lock for '{}'",
+                                shared ? "read" : "write", key );
+
                         namedLock.close();
                         throw new IllegalStateException(
                                 "Could not acquire " + ( shared ? "read" : "write" )
