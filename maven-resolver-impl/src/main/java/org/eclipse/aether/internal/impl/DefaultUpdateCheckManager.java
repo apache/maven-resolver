@@ -337,7 +337,7 @@ public class DefaultUpdateCheckManager
         }
         else
         {
-            return new MetadataTransferException( metadata, repository, metadata + "failed to transfer from "
+            return new MetadataTransferException( metadata, repository, metadata + " failed to transfer from "
                 + repository.getUrl() + " during a previous attempt."
                 + " This failure was cached in the local repository and"
                 + " resolution will not be reattempted until the update interval of " + repository.getId()
