@@ -131,6 +131,15 @@ public class DefaultRemoteRepositoryManager
                                                          List<RemoteRepository> recessiveRepositories,
                                                          boolean recessiveIsRaw )
     {
+        return aggregateRepositories( session, dominantRepositories, recessiveRepositories, recessiveIsRaw, false );
+    }
+
+    public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
+                                                         List<RemoteRepository> dominantRepositories,
+                                                         List<RemoteRepository> recessiveRepositories,
+                                                         boolean recessiveIsRaw,
+                                                         boolean prepend )
+    {
         if ( recessiveRepositories.isEmpty() )
         {
             return dominantRepositories;
@@ -203,7 +212,14 @@ public class DefaultRemoteRepositoryManager
                 }
             }
 
-            result.add( repository );
+            if ( prepend )
+            {
+                result.add( 0, repository );
+            }
+            else
+            {
+                result.add( repository );
+            }
         }
 
         return result;
