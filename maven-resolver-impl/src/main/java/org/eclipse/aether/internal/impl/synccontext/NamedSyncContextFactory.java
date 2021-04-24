@@ -26,8 +26,6 @@ import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.takari.TakariNamedLockFactory;
-import org.eclipse.aether.internal.impl.synccontext.named.takari.TakariNameMapper;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
@@ -88,11 +86,9 @@ public final class NamedSyncContextFactory
         nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
         nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
         nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        nameMappers.put( TakariNameMapper.NAME, new TakariNameMapper() );
         HashMap<String, NamedLockFactory> factories = new HashMap<>();
         factories.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
         factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
-        factories.put( TakariNamedLockFactory.NAME, new TakariNamedLockFactory() );
         this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, factories );
     }
 

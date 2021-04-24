@@ -8,9 +8,9 @@ package org.eclipse.aether.impl.guice;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -49,8 +49,6 @@ import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.takari.TakariNamedLockFactory;
-import org.eclipse.aether.internal.impl.synccontext.named.takari.TakariNameMapper;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
@@ -96,7 +94,7 @@ import com.google.inject.name.Names;
  * for all components from this library. To acquire a complete repository system, clients need to bind an artifact
  * descriptor reader, a version resolver, a version range resolver, zero or more metadata generator factories, some
  * repository connector and transporter factories to access remote repositories.
- * 
+ *
  * @noextend This class must not be extended by clients and will eventually be marked {@code final} without prior
  *           notice.
  */
@@ -174,15 +172,11 @@ public class AetherModule
             .to( GAVNameMapper.class ).in( Singleton.class );
         bind( NameMapper.class ).annotatedWith( Names.named( DiscriminatingNameMapper.NAME ) )
             .to( DiscriminatingNameMapper.class ).in( Singleton.class );
-        bind( NameMapper.class ).annotatedWith( Names.named( TakariNameMapper.NAME ) )
-            .to( TakariNameMapper.class ).in( Singleton.class );
 
         bind( NamedLockFactory.class ).annotatedWith( Names.named( LocalReadWriteLockNamedLockFactory.NAME ) )
                 .to( LocalReadWriteLockNamedLockFactory.class ).in( Singleton.class );
         bind( NamedLockFactory.class ).annotatedWith( Names.named( LocalSemaphoreNamedLockFactory.NAME ) )
                 .to( LocalSemaphoreNamedLockFactory.class ).in( Singleton.class );
-        bind( NamedLockFactory.class ).annotatedWith( Names.named( TakariNamedLockFactory.NAME ) )
-            .to( TakariNamedLockFactory.class ).in( Singleton.class );
 
         install( new Slf4jModule() );
 
@@ -207,14 +201,12 @@ public class AetherModule
     Map<String, NameMapper> provideNameMappers(
         @Named( StaticNameMapper.NAME ) NameMapper staticNameMapper,
         @Named( GAVNameMapper.NAME ) NameMapper gavNameMapper,
-        @Named( DiscriminatingNameMapper.NAME ) NameMapper discriminatingNameMapper,
-        @Named( TakariNameMapper.NAME ) NameMapper takariNameMapper )
+        @Named( DiscriminatingNameMapper.NAME ) NameMapper discriminatingNameMapper )
     {
         Map<String, NameMapper> nameMappers = new HashMap<>();
         nameMappers.put( StaticNameMapper.NAME, staticNameMapper );
         nameMappers.put( GAVNameMapper.NAME, gavNameMapper );
         nameMappers.put( DiscriminatingNameMapper.NAME, discriminatingNameMapper );
-        nameMappers.put( TakariNameMapper.NAME, takariNameMapper );
         return Collections.unmodifiableMap( nameMappers );
     }
 
@@ -222,13 +214,11 @@ public class AetherModule
     @Singleton
     Map<String, NamedLockFactory> provideNamedLockFactories(
             @Named( LocalReadWriteLockNamedLockFactory.NAME ) NamedLockFactory localRwLock,
-            @Named( LocalSemaphoreNamedLockFactory.NAME ) NamedLockFactory localSemaphore,
-            @Named( TakariNamedLockFactory.NAME ) NamedLockFactory takariLockFactory )
+            @Named( LocalSemaphoreNamedLockFactory.NAME ) NamedLockFactory localSemaphore )
     {
         Map<String, NamedLockFactory> factories = new HashMap<>();
         factories.put( LocalReadWriteLockNamedLockFactory.NAME, localRwLock );
         factories.put( LocalSemaphoreNamedLockFactory.NAME, localSemaphore );
-        factories.put( TakariNamedLockFactory.NAME, takariLockFactory );
         return Collections.unmodifiableMap( factories );
     }
 
