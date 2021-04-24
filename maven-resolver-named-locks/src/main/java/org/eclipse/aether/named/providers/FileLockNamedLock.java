@@ -30,6 +30,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.aether.named.support.NamedLockSupport;
 
@@ -47,6 +48,8 @@ public final class FileLockNamedLock
 
     private final FileChannel fileChannel;
 
+    private final ReentrantLock fairLock;
+
     public FileLockNamedLock( final String name,
                               final FileChannel fileChannel,
                               final FileLockNamedLockFactory factory )
@@ -54,83 +57,115 @@ public final class FileLockNamedLock
         super( name, factory );
         this.threadSteps = new HashMap<>();
         this.fileChannel = fileChannel;
+        this.fairLock = new ReentrantLock( true );
     }
 
     @Override
-    public synchronized boolean lockShared( final long time, final TimeUnit unit )
+    public boolean lockShared( final long time, final TimeUnit unit )
     {
-        Deque<FileLock> steps = threadSteps.computeIfAbsent( Thread.currentThread(), k -> new ArrayDeque<>() );
-        if ( !steps.isEmpty() )
-        { // we already own shared or exclusive lock
-            steps.push( dummyLock( true ) );
-            return true;
-        }
-        if ( threadSteps.size() > 1 )
-        { // we may succeed (w/o locking file as JVM already hold lock) if any other thread does not have exclusive
-            boolean noOtherThreadExclusive = threadSteps.values().stream()
-                    .flatMap( Collection::stream )
-                    .allMatch( FileLock::isShared );
-            if ( noOtherThreadExclusive )
-            {
-                steps.push( dummyLock( true ) );
-            }
-            return noOtherThreadExclusive;
-        }
-
-        FileLock fileLock = realLock( true, unit.toNanos( time ) );
-        if ( fileLock != null )
-        {
-            steps.push( fileLock );
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public synchronized boolean lockExclusively( final long time, final TimeUnit unit )
-    {
-        Deque<FileLock> steps = threadSteps.computeIfAbsent( Thread.currentThread(), k -> new ArrayDeque<>() );
-        if ( !steps.isEmpty() )
-        { // we already own shared or exclusive lock
-            if ( steps.stream().anyMatch( l -> !l.isShared() ) )
-            {
-                steps.push( dummyLock( false ) );
-                return true;
-            }
-            else
-            {
-                return false; // Lock upgrade not supported
-            }
-        }
-        if ( threadSteps.size() > 1 )
-        { // some other thread already posses lock, we want exclusive -> fail
-            return false;
-        }
-
-        FileLock fileLock = realLock( false, unit.toNanos( time ) );
-        if ( fileLock != null )
-        {
-            steps.push( fileLock );
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public synchronized void unlock()
-    {
-        Deque<FileLock> steps = threadSteps.computeIfAbsent( Thread.currentThread(), k -> new ArrayDeque<>() );
-        if ( steps.isEmpty() )
-        {
-            throw new IllegalStateException( "Wrong API usage: unlock without lock" );
-        }
+        fairLock.lock();
         try
         {
-            steps.pop().release();
+            Deque<FileLock> steps = threadSteps.computeIfAbsent( Thread.currentThread(), k -> new ArrayDeque<>() );
+            if ( !steps.isEmpty() )
+            { // we already own shared or exclusive lock
+                logger.trace( "{} steps not empty: lock assumed", name() );
+                steps.push( dummyLock( true ) );
+                return true;
+            }
+            if ( threadSteps.size() > 1 )
+            { // we may succeed (w/o locking file as JVM already hold lock) if any other thread does not have exclusive
+                boolean noOtherThreadExclusive = threadSteps.values().stream()
+                                                            .flatMap( Collection::stream )
+                                                            .allMatch( FileLock::isShared );
+                logger.trace( "{} other threads hold it: can lock = {}", name(), noOtherThreadExclusive );
+                if ( noOtherThreadExclusive )
+                {
+                    steps.push( dummyLock( true ) );
+                }
+                return noOtherThreadExclusive;
+            }
+
+            logger.trace( "{} steps empty: getting real shared lock", name() );
+            FileLock fileLock = realLock( true, unit.toNanos( time ) );
+            if ( fileLock != null )
+            {
+                steps.push( fileLock );
+                return true;
+            }
+            return false;
         }
-        catch ( IOException e )
+        finally
         {
-            throw new UncheckedIOException( e );
+            fairLock.unlock();
+        }
+    }
+
+    @Override
+    public boolean lockExclusively( final long time, final TimeUnit unit )
+    {
+        fairLock.lock();
+        try
+        {
+            Deque<FileLock> steps = threadSteps.computeIfAbsent( Thread.currentThread(), k -> new ArrayDeque<>() );
+            if ( !steps.isEmpty() )
+            { // we already own shared or exclusive lock
+                if ( steps.stream().anyMatch( l -> !l.isShared() ) )
+                {
+                    logger.trace( "{} steps not empty, has exclusive lock: lock assumed", name() );
+                    steps.push( dummyLock( false ) );
+                    return true;
+                }
+                else
+                {
+                    logger.trace( "{} steps not empty, has not exclusive lock: lock-upgrade not supported", name() );
+                    return false; // Lock upgrade not supported
+                }
+            }
+            if ( threadSteps.size() > 1 )
+            { // some other thread already posses lock, we want exclusive -> fail
+                logger.trace( "{} other threads hold it: cannot lock exclusively", name() );
+                return false;
+            }
+
+            logger.trace( "{} steps empty: getting real exclusive lock", name() );
+            FileLock fileLock = realLock( false, unit.toNanos( time ) );
+            if ( fileLock != null )
+            {
+                steps.push( fileLock );
+                return true;
+            }
+            return false;
+        }
+        finally
+        {
+            fairLock.unlock();
+        }
+    }
+
+    @Override
+    public void unlock()
+    {
+        fairLock.lock();
+        try
+        {
+            Deque<FileLock> steps = threadSteps.computeIfAbsent( Thread.currentThread(), k -> new ArrayDeque<>() );
+            if ( steps.isEmpty() )
+            {
+                throw new IllegalStateException( "Wrong API usage: unlock without lock" );
+            }
+            try
+            {
+                steps.pop().release();
+            }
+            catch ( IOException e )
+            {
+                throw new UncheckedIOException( e );
+            }
+        }
+        finally
+        {
+            fairLock.unlock();
         }
     }
 
