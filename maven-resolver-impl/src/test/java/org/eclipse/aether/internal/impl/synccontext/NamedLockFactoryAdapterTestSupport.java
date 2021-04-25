@@ -67,7 +67,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
 
     public static void createAdapter() {
         Objects.requireNonNull(namedLockFactory, "NamedLockFactory not set");
-        adapter = new NamedLockFactoryAdapter(nameMapper, namedLockFactory, ADAPTER_TIME, ADAPTER_TIME_UNIT);
+        adapter = new NamedLockFactoryAdapter(new ResolverLockFactory( nameMapper, namedLockFactory ), ADAPTER_TIME, ADAPTER_TIME_UNIT);
     }
 
     @AfterClass

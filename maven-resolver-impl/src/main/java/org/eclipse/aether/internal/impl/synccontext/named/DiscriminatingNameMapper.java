@@ -34,19 +34,16 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Discriminating {@link NameMapper}, that wraps another {@link NameMapper} and adds a "discriminator" as prefix, that
  * makes lock names unique including the hostname and local repository (by default). The discriminator may be passed
  * in via {@link RepositorySystemSession} or is automatically calculated based on the local hostname and repository
  * path. The implementation retains order of collection elements as it got it from
- * {@link NameMapper#nameLocks(RepositorySystemSession, Collection, Collection)} method.
+ * {@link NameMapper#nameLock(RepositorySystemSession, Artifact)} method.
  * <p>
  * The default setup wraps {@link GAVNameMapper}, but manually may be created any instance needed.
  */
@@ -84,13 +81,17 @@ public class DiscriminatingNameMapper implements NameMapper
     }
 
     @Override
-    public Collection<String> nameLocks( final RepositorySystemSession session,
-                                         final Collection<? extends Artifact> artifacts,
-                                         final Collection<? extends Metadata> metadatas )
+    public String nameLock( final RepositorySystemSession session, final Artifact artifact )
     {
         String discriminator = createDiscriminator( session );
-        return nameMapper.nameLocks( session, artifacts, metadatas ).stream().map( s -> discriminator + ":" + s )
-                         .collect( toList() );
+        return discriminator + ":" + nameMapper.nameLock( session, artifact );
+    }
+
+    @Override
+    public String nameLock( final RepositorySystemSession session, Metadata metadata )
+    {
+        String discriminator = createDiscriminator( session );
+        return discriminator + ":" + nameMapper.nameLock( session, metadata );
     }
 
     private String getHostname()

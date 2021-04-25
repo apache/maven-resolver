@@ -25,8 +25,6 @@ import org.eclipse.aether.metadata.Metadata;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Collection;
-import java.util.TreeSet;
 
 /**
  * Artifact GAV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
@@ -39,44 +37,29 @@ public class GAVNameMapper implements NameMapper
     public static final String NAME = "gav";
 
     @Override
-    public Collection<String> nameLocks( final RepositorySystemSession session,
-                                         final Collection<? extends Artifact> artifacts,
-                                         final Collection<? extends Metadata> metadatas )
+    public String nameLock( final RepositorySystemSession session, final Artifact artifact )
     {
-        // Deadlock prevention: https://stackoverflow.com/a/16780988/696632
-        // We must acquire multiple locks always in the same order!
-        Collection<String> keys = new TreeSet<>();
-        if ( artifacts != null )
-        {
-            for ( Artifact artifact : artifacts )
-            {
-                String key = "artifact:" + artifact.getGroupId()
-                             + ":" + artifact.getArtifactId()
-                             + ":" + artifact.getBaseVersion();
-                keys.add( key );
-            }
-        }
+        return "artifact:" + artifact.getGroupId()
+               + ":" + artifact.getArtifactId()
+               + ":" + artifact.getBaseVersion();
+    }
 
-        if ( metadatas != null )
+    @Override
+    public String nameLock( final RepositorySystemSession session, final Metadata metadata )
+    {
+        StringBuilder key = new StringBuilder( "metadata:" );
+        if ( !metadata.getGroupId().isEmpty() )
         {
-            for ( Metadata metadata : metadatas )
+            key.append( metadata.getGroupId() );
+            if ( !metadata.getArtifactId().isEmpty() )
             {
-                StringBuilder key = new StringBuilder( "metadata:" );
-                if ( !metadata.getGroupId().isEmpty() )
+                key.append( ':' ).append( metadata.getArtifactId() );
+                if ( !metadata.getVersion().isEmpty() )
                 {
-                    key.append( metadata.getGroupId() );
-                    if ( !metadata.getArtifactId().isEmpty() )
-                    {
-                        key.append( ':' ).append( metadata.getArtifactId() );
-                        if ( !metadata.getVersion().isEmpty() )
-                        {
-                            key.append( ':' ).append( metadata.getVersion() );
-                        }
-                    }
+                    key.append( ':' ).append( metadata.getVersion() );
                 }
-                keys.add( key.toString() );
             }
         }
-        return keys;
+        return key.toString();
     }
 }

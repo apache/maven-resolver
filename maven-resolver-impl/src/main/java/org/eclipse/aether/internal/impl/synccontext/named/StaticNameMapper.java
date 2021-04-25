@@ -27,8 +27,6 @@ import org.eclipse.aether.util.ConfigUtils;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
 
 /**
@@ -65,10 +63,14 @@ public class StaticNameMapper implements NameMapper
     }
 
     @Override
-    public Collection<String> nameLocks( final RepositorySystemSession session,
-                                         final Collection<? extends Artifact> artifacts,
-                                         final Collection<? extends Metadata> metadatas )
+    public String nameLock( final RepositorySystemSession session, Artifact artifact )
     {
-        return Collections.singletonList( ConfigUtils.getString( session, name, CONFIG_PROP_NAME ) );
+        return ConfigUtils.getString( session, name, CONFIG_PROP_NAME );
+    }
+
+    @Override
+    public String nameLock( final RepositorySystemSession session, Metadata metadata )
+    {
+        return ConfigUtils.getString( session, name, CONFIG_PROP_NAME );
     }
 }

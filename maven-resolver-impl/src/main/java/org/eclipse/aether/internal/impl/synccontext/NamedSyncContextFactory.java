@@ -25,6 +25,7 @@ import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapp
 import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
+import org.eclipse.aether.internal.impl.synccontext.named.ResolverLockFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
@@ -107,7 +108,7 @@ public final class NamedSyncContextFactory
             throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + FACTORY_NAME
                     + ", known ones: " + factories.keySet() );
         }
-        return new NamedLockFactoryAdapter( nameMapper, factory, TIME, TIME_UNIT );
+        return new NamedLockFactoryAdapter( new ResolverLockFactory( nameMapper, factory ), TIME, TIME_UNIT );
     }
 
     @Override
