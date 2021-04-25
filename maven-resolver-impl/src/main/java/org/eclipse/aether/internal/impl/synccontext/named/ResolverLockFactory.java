@@ -92,14 +92,14 @@ public final class ResolverLockFactory
     {
         LocalArtifactRequest request = new LocalArtifactRequest( artifact, null, null );
         LocalArtifactResult result = session.getLocalRepositoryManager().find( session, request );
-        return result.isAvailable();
+        return result.getFile() != null;
     }
 
     private boolean isMetadataAvailable( final RepositorySystemSession session, final Metadata metadata )
     {
         LocalMetadataRequest request = new LocalMetadataRequest( metadata, null, null );
         LocalMetadataResult result = session.getLocalRepositoryManager().find( session, request );
-        return !result.isStale();
+        return result.getFile() != null;
     }
 
     /**
