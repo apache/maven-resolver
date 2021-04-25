@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl.slf4j;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -33,9 +33,12 @@ import org.slf4j.spi.LocationAwareLogger;
 
 /**
  * A logger factory that delegates to <a href="http://www.slf4j.org/" target="_blank">SLF4J</a> logging.
+ *
+ * @deprecated Use SLF4J instead
  */
 @Singleton
 @Named( "slf4j" )
+@Deprecated
 public class Slf4jLoggerFactory
     implements LoggerFactory, Service
 {
