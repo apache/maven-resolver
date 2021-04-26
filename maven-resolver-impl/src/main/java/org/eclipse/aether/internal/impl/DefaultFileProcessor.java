@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -44,7 +45,7 @@ public class DefaultFileProcessor
      * Thread-safe variant of {@link File#mkdirs()}. Creates the directory named by the given abstract pathname,
      * including any necessary but nonexistent parent directories. Note that if this operation fails it may have
      * succeeded in creating some of the necessary parent directories.
-     * 
+     *
      * @param directory The directory to create, may be {@code null}.
      * @return {@code true} if and only if the directory was created, along with all necessary parent directories;
      *         {@code false} otherwise
@@ -229,8 +230,8 @@ public class DefaultFileProcessor
             {
                 try
                 {
-                    buffer.rewind();
-                    buffer.limit( bytes );
+                    ( (Buffer) buffer ).rewind();
+                    ( (Buffer) buffer ).limit( bytes );
                     listener.progressed( buffer );
                 }
                 catch ( Exception e )
