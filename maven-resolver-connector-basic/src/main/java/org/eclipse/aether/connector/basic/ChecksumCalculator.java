@@ -8,9 +8,9 @@ package org.eclipse.aether.connector.basic;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -165,7 +166,7 @@ final class ChecksumCalculator
                     read -= total - dataOffset;
                 }
                 buffer.rewind();
-                buffer.limit( read );
+                ( (Buffer) buffer ).limit( read );
                 update( buffer );
             }
 
@@ -199,9 +200,9 @@ final class ChecksumCalculator
     {
         for ( Checksum checksum : checksums )
         {
-            data.mark();
+            ( (Buffer) data ).mark();
             checksum.update( data );
-            data.reset();
+            ( (Buffer) data ).reset();
         }
     }
 
