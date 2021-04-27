@@ -51,7 +51,7 @@ public class ResolveTransitiveDependencies
         System.out.println( "------------------------------------------------------------" );
         System.out.println( ResolveTransitiveDependencies.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory(args) );
+        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 

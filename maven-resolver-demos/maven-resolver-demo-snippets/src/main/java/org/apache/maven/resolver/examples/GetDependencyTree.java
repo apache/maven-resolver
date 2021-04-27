@@ -46,7 +46,7 @@ public class GetDependencyTree
         System.out.println( "------------------------------------------------------------" );
         System.out.println( GetDependencyTree.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory(args) );
+        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 

@@ -41,9 +41,10 @@ public class Booter
 
     public static final String SISU = "sisu";
 
-    public static String selectFactory(String[] args)
+    public static String selectFactory( String[] args )
     {
-        if ( args == null || args.length == 0 ) {
+        if ( args == null || args.length == 0 )
+        {
             return MANUAL;
         }
         else
@@ -54,14 +55,15 @@ public class Booter
 
     public static RepositorySystem newRepositorySystem( final String factory )
     {
-        if (MANUAL.equals(factory)) {
+        if ( MANUAL.equals( factory ) )
+        {
             return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
         }
-        else if (GUICE.equals(factory))
+        else if ( GUICE.equals( factory ) )
         {
             return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
         }
-        else if (SISU.equals(factory))
+        else if ( SISU.equals( factory ) )
         {
             return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
         }

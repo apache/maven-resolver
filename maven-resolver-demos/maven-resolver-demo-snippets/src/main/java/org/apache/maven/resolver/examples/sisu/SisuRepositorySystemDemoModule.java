@@ -20,48 +20,44 @@ package org.apache.maven.resolver.examples.sisu;
  */
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.inject.Binder;
 import com.google.inject.Module;
-import org.apache.maven.model.building.DefaultModelBuilderFactory;
-import org.apache.maven.model.building.ModelBuilder;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.sisu.launch.Main;
-import org.eclipse.sisu.space.BeanScanning;
+import org.apache.maven.repository.internal.MavenResolverModule;
+import org.eclipse.sisu.bean.LifecycleModule;
+import org.eclipse.sisu.inject.MutableBeanLocator;
+import org.eclipse.sisu.wire.ParameterKeys;
 
 /**
  * A factory for repository system instances that employs Eclipse Sisu to wire up the system's components.
  */
-@Named
-public class SisuRepositorySystemFactory
+public class SisuRepositorySystemDemoModule implements Module
 {
-
-    @Inject
-    private RepositorySystem repositorySystem;
-
-    public static RepositorySystem newRepositorySystem()
+    @Override
+    public void configure( final Binder binder )
     {
-        final Module app = Main.wire(
-            BeanScanning.INDEX,
-            new SisuRepositorySystemDemoModule()
-        );
-        final Injector injector = Guice.createInjector( app );
-        return injector.getInstance( SisuRepositorySystemFactory.class ).repositorySystem;
+        binder.install( new LifecycleModule() );
+        binder.install( new MavenResolverModule() );
+        binder.bind( ParameterKeys.PROPERTIES ).toInstance( System.getProperties() );
+        binder.bind( ShutdownThread.class ).asEagerSingleton();
     }
 
-    @Named
-    private static class ModelBuilderProvider
-        implements Provider<ModelBuilder>
+    static final class ShutdownThread
+        extends Thread
     {
+        private final MutableBeanLocator locator;
 
-        public ModelBuilder get()
+        @Inject
+        ShutdownThread( final MutableBeanLocator locator )
         {
-            return new DefaultModelBuilderFactory().newInstance();
+            this.locator = locator;
+            Runtime.getRuntime().addShutdownHook( this );
         }
 
+        @Override
+        public void run()
+        {
+            locator.clear();
+        }
     }
-
 }

@@ -40,7 +40,8 @@ public class ResolverDemo
         throws DependencyResolutionException
     {
         Resolver resolver = new Resolver(
-            factory,"http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
+            factory,
+            "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
                 
         ResolverResult result = resolver.resolve( "com.mycompany.app", "super-app", "1.0" );
 
@@ -61,7 +62,8 @@ public class ResolverDemo
         throws InstallationException, DeploymentException
     {
         Resolver resolver = new Resolver(
-            factory,"http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
+            factory,
+            "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
         
         Artifact artifact = new DefaultArtifact( "com.mycompany.super", "super-core", "jar", "0.1-SNAPSHOT" );
         artifact = artifact.setFile( new File( "jar-from-whatever-process.jar" ) );
