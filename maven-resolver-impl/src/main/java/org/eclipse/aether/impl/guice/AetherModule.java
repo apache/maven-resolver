@@ -52,7 +52,6 @@ import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
@@ -83,6 +82,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.log.LoggerFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.slf4j.ILoggerFactory;
 
 import com.google.inject.AbstractModule;
@@ -146,8 +146,6 @@ public class AetherModule
         .to( DefaultUpdatePolicyAnalyzer.class ).in( Singleton.class );
         bind( FileProcessor.class ) //
         .to( DefaultFileProcessor.class ).in( Singleton.class );
-        bind( SyncContextFactory.class ) //
-        .to( org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( RepositoryEventDispatcher.class ) //
         .to( DefaultRepositoryEventDispatcher.class ).in( Singleton.class );
         bind( OfflineController.class ) //
