@@ -36,9 +36,6 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.internal.impl.synccontext.named.NoopNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
-import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
-import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 /**
@@ -57,10 +54,6 @@ public final class DefaultSyncContextFactory
     public static final String GLOBAL = "global";
 
     public static final String NOLOCK = "nolock";
-
-    private static final String FACTORY_NAME = System.getProperty(
-        "aether.syncContext.named.factory", LocalReadWriteLockNamedLockFactory.NAME
-    );
 
     private static final String NAME_MAPPER = System.getProperty(
         "aether.syncContext.named.nameMapper", GAVNameMapper.NAME
@@ -81,9 +74,9 @@ public final class DefaultSyncContextFactory
      */
     @Inject
     public DefaultSyncContextFactory( final Map<String, NameMapper> nameMappers,
-                                      final Map<String, NamedLockFactory> factories )
+                                      final NamedLockFactorySelector selector )
     {
-        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, factories );
+        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, selector );
     }
 
     /**
@@ -96,17 +89,14 @@ public final class DefaultSyncContextFactory
         nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
         nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
         nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        Map<String, NamedLockFactory> factories = new HashMap<>();
-        factories.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
-        factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
-        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, factories );
+        NamedLockFactorySelector selector = new NamedLockFactorySelector();
+        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, selector );
     }
 
     private static NamedLockFactoryAdapter selectAndAdapt( final Map<String, NameMapper> nameMappers,
-                                                           final Map<String, NamedLockFactory> factories )
+                                                           final NamedLockFactorySelector selector )
     {
         String nameMapperName = NAME_MAPPER;
-        String factoryName = FACTORY_NAME;
         if ( SYNC_CONTEXT_FACTORY_NAME != null && !SYNC_CONTEXT_FACTORY_NAME.equals( NAMED ) )
         {
             switch ( SYNC_CONTEXT_FACTORY_NAME )
@@ -130,14 +120,8 @@ public final class DefaultSyncContextFactory
             throw new IllegalArgumentException( "Unknown NameMapper name: " + nameMapperName
                 + ", known ones: " + nameMappers.keySet() );
         }
-        NamedLockFactory factory = factories.get( factoryName );
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + factoryName
-                + ", known ones: " + factories.keySet() );
-        }
 
-        return new NamedLockFactoryAdapter( nameMapper, factory, TIME, TIME_UNIT );
+        return new NamedLockFactoryAdapter( nameMapper, selector.getNamedLockFactory(), TIME, TIME_UNIT );
     }
 
     @Override
