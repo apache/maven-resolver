@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext;
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,44 +20,30 @@ package org.eclipse.aether.internal.impl.synccontext;
  */
 
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 /**
- * A factory to create synchronization contexts. This default implementation does not provide any real
- * synchronization but merely completes the repository system.
+ * No-op {@link NameMapper}, always returns empty collection.
  */
 @Singleton
-@Named( NoLockSyncContextFactory.NAME )
-public class NoLockSyncContextFactory
-    implements SyncContextFactoryDelegate
+@Named( NoopNameMapper.NAME )
+public class NoopNameMapper
+    implements NameMapper
 {
-    public static final String NAME = "nolock";
+    public static final String NAME = "noop";
 
     @Override
-    public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
+    public Collection<String> nameLocks( final RepositorySystemSession session,
+                                         final Collection<? extends Artifact> artifacts,
+                                         final Collection<? extends Metadata> metadatas )
     {
-        return new DefaultSyncContext();
-    }
-
-    private static class DefaultSyncContext
-        implements SyncContext
-    {
-        @Override
-        public void acquire( final Collection<? extends Artifact> artifact,
-                             final Collection<? extends Metadata> metadata )
-        {
-        }
-
-        @Override
-        public void close()
-        {
-        }
+        return Collections.emptyList();
     }
 }

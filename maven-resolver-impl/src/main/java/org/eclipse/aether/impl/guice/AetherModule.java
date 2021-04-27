@@ -43,10 +43,6 @@ import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.GlobalSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.NamedSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.NoLockSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.SyncContextFactoryDelegate;
 import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
@@ -164,12 +160,6 @@ public class AetherModule
         bind( org.eclipse.aether.impl.SyncContextFactory.class )
                 .to( org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class )
                 .in( Singleton.class );
-        bind( SyncContextFactoryDelegate.class ).annotatedWith( Names.named( NoLockSyncContextFactory.NAME ) )
-                .to( NoLockSyncContextFactory.class ).in( Singleton.class );
-        bind( SyncContextFactoryDelegate.class ).annotatedWith( Names.named( GlobalSyncContextFactory.NAME ) )
-                .to( GlobalSyncContextFactory.class ).in( Singleton.class );
-        bind( SyncContextFactoryDelegate.class ).annotatedWith( Names.named( NamedSyncContextFactory.NAME ) )
-                .to( NamedSyncContextFactory.class ).in( Singleton.class );
 
         bind( NameMapper.class ).annotatedWith( Names.named( StaticNameMapper.NAME ) )
             .to( StaticNameMapper.class ).in( Singleton.class );
@@ -185,20 +175,6 @@ public class AetherModule
 
         install( new Slf4jModule() );
 
-    }
-
-    @Provides
-    @Singleton
-    Map<String, SyncContextFactoryDelegate> provideSyncContextFactoryDelegates(
-            @Named( NoLockSyncContextFactory.NAME ) SyncContextFactoryDelegate nolock,
-            @Named( GlobalSyncContextFactory.NAME ) SyncContextFactoryDelegate global,
-            @Named( NamedSyncContextFactory.NAME ) SyncContextFactoryDelegate named )
-    {
-        Map<String, SyncContextFactoryDelegate> factories = new HashMap<>();
-        factories.put( NoLockSyncContextFactory.NAME, nolock );
-        factories.put( GlobalSyncContextFactory.NAME, global );
-        factories.put( NamedSyncContextFactory.NAME, named );
-        return Collections.unmodifiableMap( factories );
     }
 
     @Provides

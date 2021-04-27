@@ -19,68 +19,136 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.SyncContext;
+import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
+import org.eclipse.aether.internal.impl.synccontext.named.NoopNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
+import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
+import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 /**
- * Default {@link SyncContextFactory} implementation that delegates to some {@link SyncContextFactoryDelegate}
- * implementation.
+ * Default {@link SyncContextFactory} implementation that uses named locks, but supports "presets" for "global" and
+ * "nolock" behaviour as well.
  */
 @Singleton
 @Named
 public final class DefaultSyncContextFactory
         implements SyncContextFactory
 {
-    private static final String SYNC_CONTEXT_FACTORY_NAME = System.getProperty(
-            "aether.syncContext.impl", NamedSyncContextFactory.NAME
+    private static final String SYNC_CONTEXT_FACTORY_NAME = System.getProperty( "aether.syncContext.impl" );
+
+    public static final String NAMED = "named";
+
+    public static final String GLOBAL = "global";
+
+    public static final String NOLOCK = "nolock";
+
+    private static final String FACTORY_NAME = System.getProperty(
+        "aether.syncContext.named.factory", LocalReadWriteLockNamedLockFactory.NAME
     );
 
-    private final SyncContextFactoryDelegate delegate;
+    private static final String NAME_MAPPER = System.getProperty(
+        "aether.syncContext.named.nameMapper", GAVNameMapper.NAME
+    );
+
+    private static final long TIME = Long.getLong(
+        "aether.syncContext.named.time", 30L
+    );
+
+    private static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
+        "aether.syncContext.named.time.unit", TimeUnit.SECONDS.name()
+    ) );
+
+    private final NamedLockFactoryAdapter namedLockFactoryAdapter;
 
     /**
      * Constructor used with DI, where factories are injected and selected based on key.
      */
     @Inject
-    public DefaultSyncContextFactory( final Map<String, SyncContextFactoryDelegate> delegates )
+    public DefaultSyncContextFactory( final Map<String, NameMapper> nameMappers,
+                                      final Map<String, NamedLockFactory> factories )
     {
-        Objects.requireNonNull( delegates );
-        this.delegate = selectDelegate( delegates );
+        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, factories );
     }
 
     /**
-     * Default constructor
+     * Default constructor for ServiceLocator.
      */
     public DefaultSyncContextFactory()
     {
-        Map<String, SyncContextFactoryDelegate> delegates = new HashMap<>( 3 );
-        delegates.put( NoLockSyncContextFactory.NAME, new NoLockSyncContextFactory() );
-        delegates.put( GlobalSyncContextFactory.NAME, new GlobalSyncContextFactory() );
-        delegates.put( NamedSyncContextFactory.NAME, new NamedSyncContextFactory() );
-        this.delegate = selectDelegate( delegates );
+        Map<String, NameMapper> nameMappers = new HashMap<>();
+        nameMappers.put( NoopNameMapper.NAME, new NoopNameMapper() );
+        nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
+        nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
+        nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
+        Map<String, NamedLockFactory> factories = new HashMap<>();
+        factories.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
+        factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
+        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, factories );
     }
 
-    private SyncContextFactoryDelegate selectDelegate( final Map<String, SyncContextFactoryDelegate> delegates )
+    private static NamedLockFactoryAdapter selectAndAdapt( final Map<String, NameMapper> nameMappers,
+                                                           final Map<String, NamedLockFactory> factories )
     {
-        SyncContextFactoryDelegate delegate = delegates.get( SYNC_CONTEXT_FACTORY_NAME );
-        if ( delegate == null )
+        String nameMapperName = NAME_MAPPER;
+        String factoryName = FACTORY_NAME;
+        if ( SYNC_CONTEXT_FACTORY_NAME != null && !SYNC_CONTEXT_FACTORY_NAME.equals( NAMED ) )
         {
-            throw new IllegalArgumentException( "Unknown SyncContextFactory impl: " + SYNC_CONTEXT_FACTORY_NAME
-                    + ", known ones: " + delegates.keySet() );
+            switch ( SYNC_CONTEXT_FACTORY_NAME )
+            {
+                case GLOBAL:
+                    nameMapperName = StaticNameMapper.NAME;
+                    break;
+                case NOLOCK:
+                    nameMapperName = NoopNameMapper.NAME;
+                    break;
+                default:
+                    throw new IllegalArgumentException( "Unknown SyncContextFactory impl: " + SYNC_CONTEXT_FACTORY_NAME
+                        + ", known ones: " + NAMED + ", " + GLOBAL + ", " + NOLOCK );
+            }
+
         }
-        return delegate;
+
+        NameMapper nameMapper = nameMappers.get( nameMapperName );
+        if ( nameMapper == null )
+        {
+            throw new IllegalArgumentException( "Unknown NameMapper name: " + nameMapperName
+                + ", known ones: " + nameMappers.keySet() );
+        }
+        NamedLockFactory factory = factories.get( factoryName );
+        if ( factory == null )
+        {
+            throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + factoryName
+                + ", known ones: " + factories.keySet() );
+        }
+
+        return new NamedLockFactoryAdapter( nameMapper, factory, TIME, TIME_UNIT );
     }
 
     @Override
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
-        return delegate.newInstance( session, shared );
+        return namedLockFactoryAdapter.newInstance( session, shared );
+    }
+
+    @PreDestroy
+    public void shutdown()
+    {
+        namedLockFactoryAdapter.shutdown();
     }
 }
