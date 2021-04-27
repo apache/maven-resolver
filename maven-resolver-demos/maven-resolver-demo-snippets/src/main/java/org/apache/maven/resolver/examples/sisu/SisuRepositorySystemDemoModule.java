@@ -29,7 +29,7 @@ import org.eclipse.sisu.inject.MutableBeanLocator;
 import org.eclipse.sisu.wire.ParameterKeys;
 
 /**
- * A factory for repository system instances that employs Eclipse Sisu to wire up the system's components.
+ * Sisu module for demo snippets.
  */
 public class SisuRepositorySystemDemoModule implements Module
 {

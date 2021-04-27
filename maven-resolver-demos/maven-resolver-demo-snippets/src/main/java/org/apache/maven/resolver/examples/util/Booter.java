@@ -35,7 +35,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 public class Booter
 {
-    public static final String MANUAL = "manual";
+    public static final String SERVICE_LOCATOR = "serviceLocator";
 
     public static final String GUICE = "guice";
 
@@ -45,7 +45,7 @@ public class Booter
     {
         if ( args == null || args.length == 0 )
         {
-            return MANUAL;
+            return SERVICE_LOCATOR;
         }
         else
         {
@@ -55,7 +55,7 @@ public class Booter
 
     public static RepositorySystem newRepositorySystem( final String factory )
     {
-        if ( MANUAL.equals( factory ) )
+        if ( SERVICE_LOCATOR.equals( factory ) )
         {
             return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
         }

@@ -29,7 +29,7 @@ public class AllResolverDemosTest
 {
     @Test
     public void serviceLocator() throws Exception {
-        AllResolverDemos.main( new String[] {Booter.MANUAL} );
+        AllResolverDemos.main( new String[] {Booter.SERVICE_LOCATOR} );
     }
 
     @Test
