@@ -35,12 +35,40 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 public class Booter
 {
+    public static final String MANUAL = "manual";
 
-    public static RepositorySystem newRepositorySystem()
+    public static final String GUICE = "guice";
+
+    public static final String SISU = "sisu";
+
+    public static String selectFactory(String[] args)
     {
-        return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
-        // return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
-        // return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
+        if ( args == null || args.length == 0 ) {
+            return MANUAL;
+        }
+        else
+        {
+            return args[0];
+        }
+    }
+
+    public static RepositorySystem newRepositorySystem( final String factory )
+    {
+        if (MANUAL.equals(factory)) {
+            return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
+        }
+        else if (GUICE.equals(factory))
+        {
+            return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
+        }
+        else if (SISU.equals(factory))
+        {
+            return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
+        }
+        else
+        {
+            throw new IllegalArgumentException( "Unknown factory: " + factory );
+        }
     }
 
     public static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )

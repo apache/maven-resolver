@@ -36,10 +36,11 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 public class ResolverDemo
 {
 
-    public void resolve() 
+    public void resolve( final String factory )
         throws DependencyResolutionException
     {
-        Resolver resolver = new Resolver( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
+        Resolver resolver = new Resolver(
+            factory,"http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
                 
         ResolverResult result = resolver.resolve( "com.mycompany.app", "super-app", "1.0" );
 
@@ -56,10 +57,11 @@ public class ResolverDemo
         String classpath = result.getResolvedClassPath();        
     }
     
-    public void installAndDeploy() 
+    public void installAndDeploy( final String factory )
         throws InstallationException, DeploymentException
     {
-        Resolver resolver = new Resolver( "http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
+        Resolver resolver = new Resolver(
+            factory,"http://localhost:8081/nexus/content/groups/public", "target/aether-repo" );
         
         Artifact artifact = new DefaultArtifact( "com.mycompany.super", "super-core", "jar", "0.1-SNAPSHOT" );
         artifact = artifact.setFile( new File( "jar-from-whatever-process.jar" ) );

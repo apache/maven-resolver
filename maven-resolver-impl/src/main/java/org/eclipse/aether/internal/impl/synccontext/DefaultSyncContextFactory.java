@@ -37,7 +37,7 @@ import java.util.Objects;
 @Singleton
 @Named
 public final class DefaultSyncContextFactory
-        implements SyncContextFactory, org.eclipse.aether.impl.SyncContextFactory
+        implements SyncContextFactory
 {
     private static final String SYNC_CONTEXT_FACTORY_NAME = System.getProperty(
             "aether.syncContext.impl", NamedSyncContextFactory.NAME

@@ -147,7 +147,7 @@ public class AetherModule
         bind( FileProcessor.class ) //
         .to( DefaultFileProcessor.class ).in( Singleton.class );
         bind( SyncContextFactory.class ) //
-        .to( DefaultSyncContextFactory.class ).in( Singleton.class );
+        .to( org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( RepositoryEventDispatcher.class ) //
         .to( DefaultRepositoryEventDispatcher.class ).in( Singleton.class );
         bind( OfflineController.class ) //
@@ -159,6 +159,10 @@ public class AetherModule
         bind( LocalRepositoryManagerFactory.class ).annotatedWith( Names.named( "enhanced" ) ) //
         .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
 
+        bind( SyncContextFactory.class ).to( DefaultSyncContextFactory.class ).in( Singleton.class );
+        bind( org.eclipse.aether.impl.SyncContextFactory.class )
+                .to( org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class )
+                .in( Singleton.class );
         bind( SyncContextFactoryDelegate.class ).annotatedWith( Names.named( NoLockSyncContextFactory.NAME ) )
                 .to( NoLockSyncContextFactory.class ).in( Singleton.class );
         bind( SyncContextFactoryDelegate.class ).annotatedWith( Names.named( GlobalSyncContextFactory.NAME ) )
