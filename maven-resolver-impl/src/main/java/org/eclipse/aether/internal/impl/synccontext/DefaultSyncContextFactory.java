@@ -121,7 +121,7 @@ public final class DefaultSyncContextFactory
                 + ", known ones: " + nameMappers.keySet() );
         }
 
-        return new NamedLockFactoryAdapter( nameMapper, selector.getNamedLockFactory(), TIME, TIME_UNIT );
+        return new NamedLockFactoryAdapter( nameMapper, selector.getSelected(), TIME, TIME_UNIT );
     }
 
     @Override

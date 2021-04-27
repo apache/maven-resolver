@@ -66,7 +66,7 @@ public final class NamedLockFactorySelector
     /**
      * Returns the selected {@link NamedLockFactory}, never null.
      */
-    public NamedLockFactory getNamedLockFactory()
+    public NamedLockFactory getSelected()
     {
         return namedLockFactory;
     }

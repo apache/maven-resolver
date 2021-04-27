@@ -23,14 +23,11 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.eclipse.aether.internal.impl.TrackingFileManager;
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactorySelector;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.junit.Test;
 
@@ -38,13 +35,12 @@ import org.junit.Test;
  */
 public class DefaultTrackingFileManagerTest
 {
+    private final TrackingFileManager tfm = new DefaultTrackingFileManager( new NamedLockFactorySelector() );
 
     @Test
     public void testRead()
         throws Exception
     {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
-
         File propFile = TestFileUtils.createTempFile( "#COMMENT\nkey1=value1\nkey2 : value2" );
         Properties props = tfm.read( propFile );
 
@@ -63,8 +59,6 @@ public class DefaultTrackingFileManagerTest
     public void testReadNoFileLeak()
         throws Exception
     {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
-
         for ( int i = 0; i < 1000; i++ )
         {
             File propFile = TestFileUtils.createTempFile( "#COMMENT\nkey1=value1\nkey2 : value2" );
@@ -77,8 +71,6 @@ public class DefaultTrackingFileManagerTest
     public void testUpdate()
         throws Exception
     {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
-
         // NOTE: The excessive repetitions are to check the update properly truncates the file
         File propFile = TestFileUtils.createTempFile( "key1=value1\nkey2 : value2\n".getBytes( StandardCharsets.UTF_8 ), 1000 );
 
@@ -100,8 +92,6 @@ public class DefaultTrackingFileManagerTest
     public void testUpdateNoFileLeak()
         throws Exception
     {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
-
         Map<String, String> updates = new HashMap<>();
         updates.put( "k", "v" );
 

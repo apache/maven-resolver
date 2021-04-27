@@ -27,11 +27,17 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactorySelector;
+import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.spi.locator.Service;
+import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +47,30 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public final class DefaultTrackingFileManager
-    implements TrackingFileManager
+    implements TrackingFileManager, Service
 {
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTrackingFileManager.class );
+
+    private NamedLockFactory namedLockFactory;
+
+    public DefaultTrackingFileManager()
+    {
+        // ctor for ServiceLocator
+    }
+
+    @Inject
+    public DefaultTrackingFileManager( final NamedLockFactorySelector selector )
+    {
+        this.namedLockFactory = selector.getSelected();
+    }
+
+    @Override
+    public void initService( final ServiceLocator locator )
+    {
+        NamedLockFactorySelector select = Objects.requireNonNull(
+            locator.getService( NamedLockFactorySelector.class ) );
+        this.namedLockFactory = select.getSelected();
+    }
 
     @Override
     public Properties read( File file )
