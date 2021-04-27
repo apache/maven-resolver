@@ -36,11 +36,13 @@ public class SisuRepositorySystemDemoModule implements Module
     public void configure( final Binder binder )
     {
         binder.install( new LifecycleModule() );
-        // NOTE: this module below is needed due following:, while maven-resolver-provider:3.5.4 DOES have SISU index,
+        // NOTE: this module below is needed due following: while maven-resolver-provider:3.5.4 DOES have SISU index,
         // the also needed module maven-model-builder:3.5.4 DOES NOT have SISU index (has plexus/components.xml).
         // To keep things simple, and not bring in deprecated Plexus, we rather install custom Guicemodule
         // (MavenDemoModule) to provide the "missing components" (while resolver components are discovered by SISU)
         // making resolver complete.
+        // To demo SISU, resolver is completed with components discovered by SISU (using SISU index, that all
+        // resolver modules have), and the handful components registered directly to Guice in MavenDemoModule module.
         binder.install( new MavenDemoModule() );
         binder.bind( ParameterKeys.PROPERTIES ).toInstance( System.getProperties() );
         binder.bind( ShutdownThread.class ).asEagerSingleton();

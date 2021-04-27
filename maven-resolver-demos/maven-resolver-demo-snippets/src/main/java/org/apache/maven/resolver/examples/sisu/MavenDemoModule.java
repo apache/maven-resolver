@@ -42,7 +42,8 @@ import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.VersionResolver;
 
 /**
- * Module completing Resolver with component implementations found in Maven's maven-resolver-provider.
+ * Module with component implementations found in Maven's maven-resolver-provider and maven-model-builder. This module
+ * binds ONLY components found OUTSIDE resolver.
  */
 public class MavenDemoModule
     extends AbstractModule
