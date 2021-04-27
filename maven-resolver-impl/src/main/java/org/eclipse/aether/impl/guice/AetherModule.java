@@ -40,6 +40,8 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.GlobalSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.NamedSyncContextFactory;
@@ -158,6 +160,7 @@ public class AetherModule
         .to( SimpleLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( LocalRepositoryManagerFactory.class ).annotatedWith( Names.named( "enhanced" ) ) //
         .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
+        bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
         bind( SyncContextFactoryDelegate.class ).annotatedWith( Names.named( NoLockSyncContextFactory.NAME ) )
                 .to( NoLockSyncContextFactory.class ).in( Singleton.class );

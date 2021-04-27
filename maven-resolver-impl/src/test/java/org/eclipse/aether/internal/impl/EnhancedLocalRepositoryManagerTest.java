@@ -64,6 +64,8 @@ public class EnhancedLocalRepositoryManagerTest
 
     private String testContext = "project/compile";
 
+    private TrackingFileManager trackingFileManager;
+
     private RepositorySystemSession session;
 
     private Metadata metadata;
@@ -96,7 +98,8 @@ public class EnhancedLocalRepositoryManagerTest
 
         basedir = TestFileUtils.createTempDir( "enhanced-repo" );
         session = TestUtils.newSession();
-        manager = new EnhancedLocalRepositoryManager( basedir, session );
+        trackingFileManager = new DefaultTrackingFileManager();
+        manager = new EnhancedLocalRepositoryManager( basedir, session, trackingFileManager );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
     }

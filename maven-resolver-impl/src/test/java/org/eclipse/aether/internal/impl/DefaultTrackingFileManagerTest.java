@@ -36,14 +36,14 @@ import org.junit.Test;
 
 /**
  */
-public class TrackingFileManagerTest
+public class DefaultTrackingFileManagerTest
 {
 
     @Test
     public void testRead()
         throws Exception
     {
-        TrackingFileManager tfm = new TrackingFileManager();
+        TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         File propFile = TestFileUtils.createTempFile( "#COMMENT\nkey1=value1\nkey2 : value2" );
         Properties props = tfm.read( propFile );
@@ -63,7 +63,7 @@ public class TrackingFileManagerTest
     public void testReadNoFileLeak()
         throws Exception
     {
-        TrackingFileManager tfm = new TrackingFileManager();
+        TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         for ( int i = 0; i < 1000; i++ )
         {
@@ -77,7 +77,7 @@ public class TrackingFileManagerTest
     public void testUpdate()
         throws Exception
     {
-        TrackingFileManager tfm = new TrackingFileManager();
+        TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         // NOTE: The excessive repetitions are to check the update properly truncates the file
         File propFile = TestFileUtils.createTempFile( "key1=value1\nkey2 : value2\n".getBytes( StandardCharsets.UTF_8 ), 1000 );
@@ -100,7 +100,7 @@ public class TrackingFileManagerTest
     public void testUpdateNoFileLeak()
         throws Exception
     {
-        TrackingFileManager tfm = new TrackingFileManager();
+        TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         Map<String, String> updates = new HashMap<>();
         updates.put( "k", "v" );

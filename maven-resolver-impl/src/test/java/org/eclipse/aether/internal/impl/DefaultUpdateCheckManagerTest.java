@@ -80,7 +80,9 @@ public class DefaultUpdateCheckManagerTest
         session = TestUtils.newSession();
         repository =
             new RemoteRepository.Builder( "id", "default", TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
-        manager = new DefaultUpdateCheckManager().setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() );
+        manager = new DefaultUpdateCheckManager()
+            .setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() )
+            .setTrackingFileManager( new DefaultTrackingFileManager() );
         metadata =
             new DefaultMetadata( "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT,
                                  metadataFile );

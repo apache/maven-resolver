@@ -33,6 +33,8 @@ import static java.util.Objects.requireNonNull;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider;
+import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
 import org.eclipse.aether.internal.impl.DefaultDeployer;
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
@@ -217,6 +219,7 @@ public final class DefaultServiceLocator
         addService( LocalRepositoryManagerFactory.class, SimpleLocalRepositoryManagerFactory.class );
         addService( LocalRepositoryManagerFactory.class, EnhancedLocalRepositoryManagerFactory.class );
         addService( LoggerFactory.class, Slf4jLoggerFactory.class );
+        addService( TrackingFileManager.class, DefaultTrackingFileManager.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )
