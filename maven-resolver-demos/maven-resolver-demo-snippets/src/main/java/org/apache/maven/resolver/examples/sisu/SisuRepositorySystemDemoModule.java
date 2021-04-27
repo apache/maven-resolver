@@ -23,7 +23,6 @@ import javax.inject.Inject;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import org.apache.maven.repository.internal.MavenResolverModule;
 import org.eclipse.sisu.bean.LifecycleModule;
 import org.eclipse.sisu.inject.MutableBeanLocator;
 import org.eclipse.sisu.wire.ParameterKeys;
@@ -37,7 +36,12 @@ public class SisuRepositorySystemDemoModule implements Module
     public void configure( final Binder binder )
     {
         binder.install( new LifecycleModule() );
-        binder.install( new MavenResolverModule() );
+        // NOTE: this module below is needed due following:, while maven-resolver-provider:3.5.4 DOES have SISU index,
+        // the also needed module maven-model-builder:3.5.4 DOES NOT have SISU index (has plexus/components.xml).
+        // To keep things simple, and not bring in deprecated Plexus, we rather install custom Guicemodule
+        // (MavenDemoModule) to provide the "missing components" (while resolver components are discovered by SISU)
+        // making resolver complete.
+        binder.install( new MavenDemoModule() );
         binder.bind( ParameterKeys.PROPERTIES ).toInstance( System.getProperties() );
         binder.bind( ShutdownThread.class ).asEagerSingleton();
     }
