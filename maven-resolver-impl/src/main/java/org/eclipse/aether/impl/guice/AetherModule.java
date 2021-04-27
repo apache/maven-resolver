@@ -43,6 +43,7 @@ import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
@@ -157,6 +158,7 @@ public class AetherModule
         .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
+        bind( NamedLockFactorySelector.class ).in( Singleton.class );
         bind( SyncContextFactory.class ).to( DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( org.eclipse.aether.impl.SyncContextFactory.class )
                 .to( org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class )
