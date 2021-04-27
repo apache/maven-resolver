@@ -59,11 +59,11 @@ public final class DefaultSyncContextFactory
         "aether.syncContext.named.nameMapper", GAVNameMapper.NAME
     );
 
-    private static final long TIME = Long.getLong(
+    public static final long TIME = Long.getLong(
         "aether.syncContext.named.time", 30L
     );
 
-    private static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
+    public static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
         "aether.syncContext.named.time.unit", TimeUnit.SECONDS.name()
     ) );
 
