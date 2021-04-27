@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
+
+import java.util.Objects;
 import java.util.Properties;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -65,7 +67,9 @@ class EnhancedLocalRepositoryManager
 
     private final TrackingFileManager trackingFileManager;
 
-    EnhancedLocalRepositoryManager( File basedir, RepositorySystemSession session )
+    EnhancedLocalRepositoryManager( File basedir,
+                                    RepositorySystemSession session,
+                                    TrackingFileManager trackingFileManager )
     {
         super( basedir, "enhanced" );
         String filename = ConfigUtils.getString( session, "", "aether.enhancedLocalRepository.trackingFilename" );
@@ -74,8 +78,8 @@ class EnhancedLocalRepositoryManager
         {
             filename = "_remote.repositories";
         }
-        trackingFilename = filename;
-        trackingFileManager = new TrackingFileManager();
+        this.trackingFilename = filename;
+        this.trackingFileManager = Objects.requireNonNull( trackingFileManager );
     }
 
     @Override

@@ -64,7 +64,7 @@ public class DefaultUpdateCheckManager
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
 
-    private final TrackingFileManager trackingFileManager;
+    private TrackingFileManager trackingFileManager;
 
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
@@ -86,19 +86,26 @@ public class DefaultUpdateCheckManager
 
     public DefaultUpdateCheckManager()
     {
-        trackingFileManager = new TrackingFileManager();
+        // default ctor for ServiceLocator
     }
 
     @Inject
-    DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
+    DefaultUpdateCheckManager( TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
-        this();
+        setTrackingFileManager( trackingFileManager );
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
     }
 
     public void initService( ServiceLocator locator )
     {
+        setTrackingFileManager( locator.getService( TrackingFileManager.class ) );
         setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
+    }
+
+    public DefaultUpdateCheckManager setTrackingFileManager( TrackingFileManager trackingFileManager )
+    {
+        this.trackingFileManager = requireNonNull( trackingFileManager );
+        return this;
     }
 
     public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
