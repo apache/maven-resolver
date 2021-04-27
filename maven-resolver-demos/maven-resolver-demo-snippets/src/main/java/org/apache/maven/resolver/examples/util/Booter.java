@@ -55,21 +55,16 @@ public class Booter
 
     public static RepositorySystem newRepositorySystem( final String factory )
     {
-        if ( SERVICE_LOCATOR.equals( factory ) )
+        switch ( factory ) 
         {
-            return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
-        }
-        else if ( GUICE.equals( factory ) )
-        {
-            return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
-        }
-        else if ( SISU.equals( factory ) )
-        {
-            return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
-        }
-        else
-        {
-            throw new IllegalArgumentException( "Unknown factory: " + factory );
+            case SERVICE_LOCATOR:
+                return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
+            case GUICE:
+                return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
+            case SISU:
+                return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
+            default:
+                throw new IllegalArgumentException( "Unknown factory: " + factory );
         }
     }
 
