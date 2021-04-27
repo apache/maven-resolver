@@ -49,7 +49,7 @@ public class GetDependencyHierarchy
         System.out.println( "------------------------------------------------------------" );
         System.out.println( GetDependencyHierarchy.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem();
+        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
         DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( system );
 

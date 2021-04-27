@@ -54,10 +54,10 @@ public class Resolver
 
     private LocalRepository localRepository;
 
-    public Resolver( String remoteRepository, String localRepository )
+    public Resolver( String factory, String remoteRepository, String localRepository )
     {
         this.remoteRepository = remoteRepository;
-        this.repositorySystem = Booter.newRepositorySystem();
+        this.repositorySystem = Booter.newRepositorySystem( factory );
         this.localRepository = new LocalRepository( localRepository );
     }
 

@@ -8,9 +8,9 @@ package org.apache.maven.resolver.examples;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,6 +19,7 @@ package org.apache.maven.resolver.examples;
  * under the License.
  */
 
+import org.apache.maven.resolver.examples.util.Booter;
 import org.junit.Test;
 
 /**
@@ -27,7 +28,17 @@ import org.junit.Test;
 public class AllResolverDemosTest
 {
     @Test
-    public void runMain() throws Exception {
-        AllResolverDemos.main( new String[0] );
+    public void serviceLocator() throws Exception {
+        AllResolverDemos.main( new String[] {Booter.SERVICE_LOCATOR} );
+    }
+
+    @Test
+    public void guice() throws Exception {
+        AllResolverDemos.main( new String[] {Booter.GUICE} );
+    }
+
+    @Test
+    public void sisu() throws Exception {
+        AllResolverDemos.main( new String[] {Booter.SISU} );
     }
 }

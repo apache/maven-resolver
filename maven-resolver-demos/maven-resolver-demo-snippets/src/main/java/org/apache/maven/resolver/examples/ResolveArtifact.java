@@ -44,7 +44,7 @@ public class ResolveArtifact
         System.out.println( "------------------------------------------------------------" );
         System.out.println( ResolveArtifact.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem();
+        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 

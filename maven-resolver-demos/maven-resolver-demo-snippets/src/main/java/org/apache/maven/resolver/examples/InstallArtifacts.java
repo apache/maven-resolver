@@ -46,7 +46,7 @@ public class InstallArtifacts
         System.out.println( "------------------------------------------------------------" );
         System.out.println( InstallArtifacts.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem();
+        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 

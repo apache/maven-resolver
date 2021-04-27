@@ -35,12 +35,37 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 public class Booter
 {
+    public static final String SERVICE_LOCATOR = "serviceLocator";
 
-    public static RepositorySystem newRepositorySystem()
+    public static final String GUICE = "guice";
+
+    public static final String SISU = "sisu";
+
+    public static String selectFactory( String[] args )
     {
-        return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
-        // return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
-        // return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
+        if ( args == null || args.length == 0 )
+        {
+            return SERVICE_LOCATOR;
+        }
+        else
+        {
+            return args[0];
+        }
+    }
+
+    public static RepositorySystem newRepositorySystem( final String factory )
+    {
+        switch ( factory ) 
+        {
+            case SERVICE_LOCATOR:
+                return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
+            case GUICE:
+                return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
+            case SISU:
+                return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
+            default:
+                throw new IllegalArgumentException( "Unknown factory: " + factory );
+        }
     }
 
     public static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )
