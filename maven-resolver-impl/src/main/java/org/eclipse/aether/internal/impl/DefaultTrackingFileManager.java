@@ -42,9 +42,6 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory.TIME;
-import static org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory.TIME_UNIT;
-
 /**
  * Manages access to a properties file.
  */
@@ -67,7 +64,7 @@ public final class DefaultTrackingFileManager
     @Inject
     public DefaultTrackingFileManager( final NamedLockFactorySelector selector )
     {
-        this.namedLockFactory = selector.getSelected();
+        this.namedLockFactory = selector.getSelectedNamedLockFactory();
     }
 
     @Override
@@ -75,7 +72,7 @@ public final class DefaultTrackingFileManager
     {
         NamedLockFactorySelector select = Objects.requireNonNull(
             locator.getService( NamedLockFactorySelector.class ) );
-        this.namedLockFactory = select.getSelected();
+        this.namedLockFactory = select.getSelectedNamedLockFactory();
     }
 
     private String getFileKey( final File file )
@@ -88,7 +85,7 @@ public final class DefaultTrackingFileManager
     {
         try ( NamedLock lock = namedLockFactory.getLock( getFileKey( file ) ) )
         {
-            if ( lock.lockShared( TIME, TIME_UNIT ) )
+            if ( lock.lockShared( NamedLockFactorySelector.TIME, NamedLockFactorySelector.TIME_UNIT ) )
             {
                 try
                 {
@@ -139,7 +136,7 @@ public final class DefaultTrackingFileManager
     {
         try ( NamedLock lock = namedLockFactory.getLock( getFileKey( file ) ) )
         {
-            if ( lock.lockExclusively( TIME, TIME_UNIT ) )
+            if ( lock.lockExclusively( NamedLockFactorySelector.TIME, NamedLockFactorySelector.TIME_UNIT ) )
             {
                 try
                 {

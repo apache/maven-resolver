@@ -73,6 +73,7 @@ import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
+import org.eclipse.aether.named.providers.NoopNamedLockFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
@@ -168,10 +169,12 @@ public class AetherModule
         bind( NameMapper.class ).annotatedWith( Names.named( DiscriminatingNameMapper.NAME ) )
             .to( DiscriminatingNameMapper.class ).in( Singleton.class );
 
+        bind( NamedLockFactory.class ).annotatedWith( Names.named( NoopNamedLockFactory.NAME ) )
+            .to( NoopNamedLockFactory.class ).in( Singleton.class );
         bind( NamedLockFactory.class ).annotatedWith( Names.named( LocalReadWriteLockNamedLockFactory.NAME ) )
-                .to( LocalReadWriteLockNamedLockFactory.class ).in( Singleton.class );
+            .to( LocalReadWriteLockNamedLockFactory.class ).in( Singleton.class );
         bind( NamedLockFactory.class ).annotatedWith( Names.named( LocalSemaphoreNamedLockFactory.NAME ) )
-                .to( LocalSemaphoreNamedLockFactory.class ).in( Singleton.class );
+            .to( LocalSemaphoreNamedLockFactory.class ).in( Singleton.class );
 
         install( new Slf4jModule() );
 

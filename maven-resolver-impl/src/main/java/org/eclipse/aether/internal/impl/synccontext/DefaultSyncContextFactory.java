@@ -19,9 +19,7 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -30,12 +28,9 @@ import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
-import org.eclipse.aether.internal.impl.synccontext.named.NoopNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
+import org.eclipse.aether.spi.locator.Service;
+import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 /**
@@ -45,83 +40,40 @@ import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 @Singleton
 @Named
 public final class DefaultSyncContextFactory
-        implements SyncContextFactory
+        implements SyncContextFactory, Service
 {
-    private static final String SYNC_CONTEXT_FACTORY_NAME = System.getProperty( "aether.syncContext.impl" );
-
-    public static final String NAMED = "named";
-
-    public static final String GLOBAL = "global";
-
-    public static final String NOLOCK = "nolock";
-
-    private static final String NAME_MAPPER = System.getProperty(
-        "aether.syncContext.named.nameMapper", GAVNameMapper.NAME
-    );
-
-    public static final long TIME = Long.getLong(
-        "aether.syncContext.named.time", 30L
-    );
-
-    public static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
-        "aether.syncContext.named.time.unit", TimeUnit.SECONDS.name()
-    ) );
-
-    private final NamedLockFactoryAdapter namedLockFactoryAdapter;
+    private NamedLockFactoryAdapter namedLockFactoryAdapter;
 
     /**
      * Constructor used with DI, where factories are injected and selected based on key.
      */
     @Inject
-    public DefaultSyncContextFactory( final Map<String, NameMapper> nameMappers,
-                                      final NamedLockFactorySelector selector )
+    public DefaultSyncContextFactory( final NamedLockFactorySelector selector )
     {
-        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, selector );
+        this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
+            selector.getSelectedNameMapper(),
+            selector.getSelectedNamedLockFactory(),
+            NamedLockFactorySelector.TIME,
+            NamedLockFactorySelector.TIME_UNIT
+        );
     }
 
-    /**
-     * Default constructor for ServiceLocator.
-     */
     public DefaultSyncContextFactory()
     {
-        Map<String, NameMapper> nameMappers = new HashMap<>();
-        nameMappers.put( NoopNameMapper.NAME, new NoopNameMapper() );
-        nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
-        nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
-        nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        NamedLockFactorySelector selector = new NamedLockFactorySelector();
-        this.namedLockFactoryAdapter = selectAndAdapt( nameMappers, selector );
+        // ctor for ServiceLoader
     }
 
-    private static NamedLockFactoryAdapter selectAndAdapt( final Map<String, NameMapper> nameMappers,
-                                                           final NamedLockFactorySelector selector )
+    @Override
+    public void initService( final ServiceLocator locator )
     {
-        String nameMapperName = NAME_MAPPER;
-        if ( SYNC_CONTEXT_FACTORY_NAME != null && !SYNC_CONTEXT_FACTORY_NAME.equals( NAMED ) )
-        {
-            switch ( SYNC_CONTEXT_FACTORY_NAME )
-            {
-                case GLOBAL:
-                    nameMapperName = StaticNameMapper.NAME;
-                    break;
-                case NOLOCK:
-                    nameMapperName = NoopNameMapper.NAME;
-                    break;
-                default:
-                    throw new IllegalArgumentException( "Unknown SyncContextFactory impl: " + SYNC_CONTEXT_FACTORY_NAME
-                        + ", known ones: " + NAMED + ", " + GLOBAL + ", " + NOLOCK );
-            }
-
-        }
-
-        NameMapper nameMapper = nameMappers.get( nameMapperName );
-        if ( nameMapper == null )
-        {
-            throw new IllegalArgumentException( "Unknown NameMapper name: " + nameMapperName
-                + ", known ones: " + nameMappers.keySet() );
-        }
-
-        return new NamedLockFactoryAdapter( nameMapper, selector.getSelected(), TIME, TIME_UNIT );
+        NamedLockFactorySelector selector = Objects.requireNonNull(
+            locator.getService( NamedLockFactorySelector.class ) );
+        this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
+            selector.getSelectedNameMapper(),
+            selector.getSelectedNamedLockFactory(),
+            NamedLockFactorySelector.TIME,
+            NamedLockFactorySelector.TIME_UNIT
+        );
     }
 
     @Override
