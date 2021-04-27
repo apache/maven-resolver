@@ -34,8 +34,7 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 /**
- * Default {@link SyncContextFactory} implementation that uses named locks, but supports "presets" for "global" and
- * "nolock" behaviour as well.
+ * Default {@link SyncContextFactory} implementation that uses named locks.
  */
 @Singleton
 @Named

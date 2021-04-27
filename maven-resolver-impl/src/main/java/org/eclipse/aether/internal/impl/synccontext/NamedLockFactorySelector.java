@@ -37,8 +37,8 @@ import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
 
 /**
- * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentiall
- * all the configuration is here.
+ * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
+ * all the named locks configuration is here.
  */
 @Singleton
 @Named
@@ -102,7 +102,7 @@ public final class NamedLockFactorySelector
     }
 
     /**
-     * Returns the selected {@link NamedLockFactory}, never null.
+     * Returns the selected {@link NameMapper}, never null.
      */
     public NameMapper getSelectedNameMapper()
     {
