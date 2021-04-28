@@ -122,7 +122,7 @@ public final class DefaultTrackingFileManager
             }
             else
             {
-                throw new IllegalStateException( "Could not acquire shared lock for: " + file );
+                throw new IllegalStateException( "Could not acquire read lock for: " + file );
             }
         }
         catch ( InterruptedException e )
@@ -205,7 +205,7 @@ public final class DefaultTrackingFileManager
             }
             else
             {
-                throw new IllegalStateException( "Could not acquire exclusive lock for: " + file );
+                throw new IllegalStateException( "Could not acquire write lock for: " + file );
             }
         }
         catch ( InterruptedException e )
