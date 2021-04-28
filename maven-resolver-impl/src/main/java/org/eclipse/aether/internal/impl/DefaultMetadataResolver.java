@@ -66,6 +66,7 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.spi.synccontext.SyncContextHint;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -170,17 +171,25 @@ public class DefaultMetadataResolver
                                                  Collection<? extends MetadataRequest> requests )
     {
 
-        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
+        SyncContextHint.SCOPE.set( SyncContextHint.Scope.RESOLVE ); // HACK
+        try
         {
-            Collection<Metadata> metadata = new ArrayList<>( requests.size() );
-            for ( MetadataRequest request : requests )
+            try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
             {
-                metadata.add( request.getMetadata() );
+                Collection<Metadata> metadata = new ArrayList<>( requests.size() );
+                for ( MetadataRequest request : requests )
+                {
+                    metadata.add( request.getMetadata() );
+                }
+
+                syncContext.acquire( null, metadata );
+
+                return resolve( session, requests );
             }
-
-            syncContext.acquire( null, metadata );
-
-            return resolve( session, requests );
+        }
+        finally
+        {
+            SyncContextHint.SCOPE.set( null ); // HACK
         }
     }
 

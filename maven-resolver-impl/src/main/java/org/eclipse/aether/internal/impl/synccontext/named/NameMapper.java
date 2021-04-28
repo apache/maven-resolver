@@ -23,8 +23,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
-import java.util.Collection;
-
 /**
  * Component mapping lock names to passed in artifacts and metadata as required.
  */
@@ -37,6 +35,7 @@ public interface NameMapper
      * same criteria) to avoid deadlocks by acquiring locks in same order, essentially disregarding the order of
      * the input collections.
      */
-    Collection<String> nameLocks( RepositorySystemSession session, Collection<? extends Artifact> artifacts,
-                                  Collection<? extends Metadata> metadatas );
+    String nameLock( RepositorySystemSession session, Artifact artifact );
+
+    String nameLock( RepositorySystemSession session, Metadata metadata );
 }

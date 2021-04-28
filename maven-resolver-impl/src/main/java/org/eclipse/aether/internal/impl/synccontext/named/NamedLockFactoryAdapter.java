@@ -39,19 +39,16 @@ import java.util.concurrent.TimeUnit;
  */
 public final class NamedLockFactoryAdapter
 {
-    private final NameMapper nameMapper;
-
-    private final NamedLockFactory namedLockFactory;
+    private final ResolverLockFactory resolverLockFactory;
 
     private final long time;
 
     private final TimeUnit timeUnit;
 
-    public NamedLockFactoryAdapter( final NameMapper nameMapper, final NamedLockFactory namedLockFactory,
+    public NamedLockFactoryAdapter( final ResolverLockFactory resolverLockFactory,
                                     final long time, final TimeUnit timeUnit )
     {
-        this.nameMapper = Objects.requireNonNull( nameMapper );
-        this.namedLockFactory = Objects.requireNonNull( namedLockFactory );
+        this.resolverLockFactory = resolverLockFactory;
         if ( time < 0L )
         {
             throw new IllegalArgumentException( "time cannot be negative" );
@@ -62,12 +59,12 @@ public final class NamedLockFactoryAdapter
 
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
-        return new AdaptedLockSyncContext( session, shared, nameMapper, namedLockFactory, time, timeUnit );
+        return new AdaptedLockSyncContext( session, shared, resolverLockFactory, time, timeUnit );
     }
 
     public void shutdown()
     {
-        namedLockFactory.shutdown();
+        resolverLockFactory.shutdown();
     }
 
     private static class AdaptedLockSyncContext implements SyncContext
@@ -78,28 +75,21 @@ public final class NamedLockFactoryAdapter
 
         private final boolean shared;
 
-        private final NameMapper lockNaming;
-
-        private final SessionAwareNamedLockFactory sessionAwareNamedLockFactory;
-
-        private final NamedLockFactory namedLockFactory;
+        private final ResolverLockFactory resolverLockFactory;
 
         private final long time;
 
         private final TimeUnit timeUnit;
 
-        private final Deque<NamedLock> locks;
+        private final Deque<ResolverLock> locks;
 
         private AdaptedLockSyncContext( final RepositorySystemSession session, final boolean shared,
-                                        final NameMapper lockNaming, final NamedLockFactory namedLockFactory,
+                                        final ResolverLockFactory resolverLockFactory,
                                         final long time, final TimeUnit timeUnit )
         {
             this.session = session;
             this.shared = shared;
-            this.lockNaming = lockNaming;
-            this.sessionAwareNamedLockFactory = namedLockFactory instanceof SessionAwareNamedLockFactory
-                    ? (SessionAwareNamedLockFactory) namedLockFactory : null;
-            this.namedLockFactory = namedLockFactory;
+            this.resolverLockFactory = resolverLockFactory;
             this.time = time;
             this.timeUnit = timeUnit;
             this.locks = new ArrayDeque<>();
@@ -108,45 +98,35 @@ public final class NamedLockFactoryAdapter
         @Override
         public void acquire( Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas )
         {
-            Collection<String> keys = lockNaming.nameLocks( session, artifacts, metadatas );
-            if ( keys.isEmpty() )
+            Collection<ResolverLock> resolverLocks = resolverLockFactory.resolverLocks(
+                    session, shared, artifacts, metadatas );
+            if ( resolverLocks.isEmpty() )
             {
                 return;
             }
 
-            LOGGER.trace( "Need {} {} lock(s) for {}", keys.size(), shared ? "read" : "write", keys );
+            LOGGER.trace( "Need {} {} lock(s) for {}", resolverLocks.size(), shared ? "read" : "write", resolverLocks );
             int acquiredLockCount = 0;
-            for ( String key : keys )
+            for ( ResolverLock resolverLock : resolverLocks )
             {
-                NamedLock namedLock = sessionAwareNamedLockFactory != null ? sessionAwareNamedLockFactory
-                        .getLock( session, key ) : namedLockFactory.getLock( key );
                 try
                 {
-                     LOGGER.trace( "Acquiring {} lock for '{}'",
-                             shared ? "read" : "write", key );
+                     LOGGER.trace( "Acquiring effective {} lock for '{}'",
+                             resolverLock.isEffectiveShared() ? "read" : "write", resolverLock.key() );
 
-                    boolean locked;
-                    if ( shared )
-                    {
-                        locked = namedLock.lockShared( time, timeUnit );
-                    }
-                    else
-                    {
-                        locked = namedLock.lockExclusively( time, timeUnit );
-                    }
-
+                    boolean locked = resolverLock.tryLock( time, timeUnit );
                     if ( !locked )
                     {
-                        LOGGER.trace( "Failed to acquire {} lock for '{}'",
-                                shared ? "read" : "write", key );
+                        LOGGER.trace( "Failed to acquire effective {} lock for '{}'",
+                                resolverLock.isEffectiveShared() ? "read" : "write", resolverLock.key() );
 
-                        namedLock.close();
+                        resolverLock.close();
                         throw new IllegalStateException(
-                                "Could not acquire " + ( shared ? "read" : "write" )
-                                + " lock for '" + namedLock.name() + "'" );
+                                "Could not acquire effective " + ( resolverLock.isEffectiveShared() ? "read" : "write" )
+                                + " lock for '" + resolverLock.key() + "'" );
                     }
 
-                    locks.push( namedLock );
+                    locks.push( resolverLock );
                     acquiredLockCount++;
                 }
                 catch ( InterruptedException e )
@@ -170,11 +150,11 @@ public final class NamedLockFactoryAdapter
             int released = 0;
             while ( !locks.isEmpty() )
             {
-                try ( NamedLock namedLock = locks.pop() )
+                try ( ResolverLock resolverLock = locks.pop() )
                 {
                     LOGGER.trace( "Releasing {} lock for '{}'",
-                            shared ? "read" : "write", namedLock.name() );
-                    namedLock.unlock();
+                            shared ? "read" : "write", resolverLock.key() );
+                    resolverLock.unlock();
                     released++;
                 }
             }

@@ -70,6 +70,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.spi.synccontext.SyncContextHint;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -214,21 +215,29 @@ public class DefaultArtifactResolver
         throws ArtifactResolutionException
     {
 
-        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
+        SyncContextHint.SCOPE.set( SyncContextHint.Scope.RESOLVE ); // HACK
+        try
         {
-            Collection<Artifact> artifacts = new ArrayList<>( requests.size() );
-            for ( ArtifactRequest request : requests )
+            try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
             {
-                if ( request.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) != null )
+                Collection<Artifact> artifacts = new ArrayList<>( requests.size() );
+                for ( ArtifactRequest request : requests )
                 {
-                    continue;
+                    if ( request.getArtifact().getProperty( ArtifactProperties.LOCAL_PATH, null ) != null )
+                    {
+                        continue;
+                    }
+                    artifacts.add( request.getArtifact() );
                 }
-                artifacts.add( request.getArtifact() );
+
+                syncContext.acquire( artifacts, null );
+
+                return resolve( session, requests );
             }
-
-            syncContext.acquire( artifacts, null );
-
-            return resolve( session, requests );
+        }
+        finally
+        {
+            SyncContextHint.SCOPE.set( null );
         }
     }
 
