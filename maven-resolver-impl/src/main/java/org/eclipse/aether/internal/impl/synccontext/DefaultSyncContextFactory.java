@@ -19,68 +19,71 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import java.util.Objects;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.SyncContext;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
+import org.eclipse.aether.spi.locator.Service;
+import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 /**
- * Default {@link SyncContextFactory} implementation that delegates to some {@link SyncContextFactoryDelegate}
- * implementation.
+ * Default {@link SyncContextFactory} implementation that uses named locks.
  */
 @Singleton
 @Named
 public final class DefaultSyncContextFactory
-        implements SyncContextFactory
+        implements SyncContextFactory, Service
 {
-    private static final String SYNC_CONTEXT_FACTORY_NAME = System.getProperty(
-            "aether.syncContext.impl", NamedSyncContextFactory.NAME
-    );
-
-    private final SyncContextFactoryDelegate delegate;
+    private NamedLockFactoryAdapter namedLockFactoryAdapter;
 
     /**
      * Constructor used with DI, where factories are injected and selected based on key.
      */
     @Inject
-    public DefaultSyncContextFactory( final Map<String, SyncContextFactoryDelegate> delegates )
+    public DefaultSyncContextFactory( final NamedLockFactorySelector selector )
     {
-        Objects.requireNonNull( delegates );
-        this.delegate = selectDelegate( delegates );
+        this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
+            selector.getSelectedNameMapper(),
+            selector.getSelectedNamedLockFactory(),
+            NamedLockFactorySelector.TIME,
+            NamedLockFactorySelector.TIME_UNIT
+        );
     }
 
-    /**
-     * Default constructor
-     */
     public DefaultSyncContextFactory()
     {
-        Map<String, SyncContextFactoryDelegate> delegates = new HashMap<>( 3 );
-        delegates.put( NoLockSyncContextFactory.NAME, new NoLockSyncContextFactory() );
-        delegates.put( GlobalSyncContextFactory.NAME, new GlobalSyncContextFactory() );
-        delegates.put( NamedSyncContextFactory.NAME, new NamedSyncContextFactory() );
-        this.delegate = selectDelegate( delegates );
+        // ctor for ServiceLoader
     }
 
-    private SyncContextFactoryDelegate selectDelegate( final Map<String, SyncContextFactoryDelegate> delegates )
+    @Override
+    public void initService( final ServiceLocator locator )
     {
-        SyncContextFactoryDelegate delegate = delegates.get( SYNC_CONTEXT_FACTORY_NAME );
-        if ( delegate == null )
-        {
-            throw new IllegalArgumentException( "Unknown SyncContextFactory impl: " + SYNC_CONTEXT_FACTORY_NAME
-                    + ", known ones: " + delegates.keySet() );
-        }
-        return delegate;
+        NamedLockFactorySelector selector = Objects.requireNonNull(
+            locator.getService( NamedLockFactorySelector.class ) );
+        this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
+            selector.getSelectedNameMapper(),
+            selector.getSelectedNamedLockFactory(),
+            NamedLockFactorySelector.TIME,
+            NamedLockFactorySelector.TIME_UNIT
+        );
     }
 
     @Override
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
-        return delegate.newInstance( session, shared );
+        return namedLockFactoryAdapter.newInstance( session, shared );
+    }
+
+    @PreDestroy
+    public void shutdown()
+    {
+        namedLockFactoryAdapter.shutdown();
     }
 }
