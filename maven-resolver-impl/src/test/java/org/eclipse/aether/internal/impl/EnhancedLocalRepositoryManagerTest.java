@@ -31,7 +31,7 @@ import java.util.Collections;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManager;
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactorySelector;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
@@ -98,7 +98,7 @@ public class EnhancedLocalRepositoryManagerTest
 
         basedir = TestFileUtils.createTempDir( "enhanced-repo" );
         session = TestUtils.newSession();
-        trackingFileManager = new DefaultTrackingFileManager();
+        trackingFileManager = new DefaultTrackingFileManager( new NamedLockFactorySelector() );
         manager = new EnhancedLocalRepositoryManager( basedir, session, trackingFileManager );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );

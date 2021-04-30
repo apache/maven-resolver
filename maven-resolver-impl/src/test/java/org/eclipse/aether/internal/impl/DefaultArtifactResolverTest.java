@@ -38,8 +38,7 @@ import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
-import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
-import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactorySelector;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
@@ -274,7 +273,7 @@ public class DefaultArtifactResolverTest
         repositoryConnectorProvider.setConnector( connector );
         resolver.setUpdateCheckManager( new DefaultUpdateCheckManager()
             .setUpdatePolicyAnalyzer( new DefaultUpdatePolicyAnalyzer() )
-            .setTrackingFileManager( new DefaultTrackingFileManager() )
+            .setTrackingFileManager( new DefaultTrackingFileManager( new NamedLockFactorySelector() ) )
         );
 
         session.setResolutionErrorPolicy( new SimpleResolutionErrorPolicy( true, false ) );
