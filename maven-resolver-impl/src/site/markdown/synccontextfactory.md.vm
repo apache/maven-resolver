@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-In this module there are several implementations of `SyncContextFactory`. The `SyncContextFactory` component is
+This module among others, implements `SyncContextFactory`. The `SyncContextFactory` component is
 responsible to synchronize (coordinate) access to shared resources in Maven Resolver internals. Some examples:
 - single threaded (ST) build on a single host: given resolution by default happens in multi threaded (MT) way, files
   in a local repository must be protected from simultaneous access. In this case, it is enough for coordination to
@@ -38,22 +38,8 @@ a cross process, and in MP multi-host case a cross process and cross host coordi
 
 The defaults in Maven Resolver cover ST and MT cases out of the box (by default).
 
-${esc.hash}${esc.hash} Provided Implementations
-
-This module provides a default implementation for the interface `org.eclipse.aether.spi.synccontext.SyncContextFactory`
-that is able to delegate to three implementations:
-
-- `named` (the default) is backed by named locks, and provide locks for MT and MP builds.
-- `global` (was experimental in pre 1.7.0 version) is using a single JVM
-  `java.util.concurrent.locks.ReentrantReadWriteLock` to protect read and write actions, hence suitable in MT
-  builds only. But, even in MT builds it is inferior from `named` due congestion on single lock instance.
-- `nolock` (was default in pre 1.7.0 version) is actually a no-op implementation. It is fundamentally flawed, as
-  even single threaded builds may produce concurrency issues (see MRESOLVER-153). Should not be used by end-users,
-  is left for "R&D" reasons only.
-
-To choose which `SyncContextFactory` you want to use, the `aether.syncContext.impl` JVM system property should be set
-to some value from those above. In case of wrong value, the factory constructor, hence, Maven itself will fail to
-initialize. The default value used if none is set by user is `named`.
+This module implementation for the interface `org.eclipse.aether.spi.synccontext.SyncContextFactory`
+uses resolver named locks.
 
 ${esc.hash}${esc.hash} Configuration Options for "named" `SyncContextFactory`
 
@@ -65,17 +51,19 @@ You can control and configure several aspects of `NamedSyncContextFactory`:
 - `aether.syncContext.named.time.unit` (optional, default is `java.util.concurrent.TimeUnit.SECONDS`): the time unit
   of time value.
 
-For the `aether.syncContext.named.nameMapper` property following values are allowed:
-
-- `discriminating` (default), uses hostname + local repo + GAV to create unique lock names for artifacts.
-- `gav` uses GAV to create unique lock names for artifacts and metadata. Is not unique if multiple local repositories are involved.
-- `static` uses static (same) string as lock name for any input, effectively providing functionality same as "global"
-  locking SyncContextFactory.
-
 For the `aether.syncContext.named.factory` property following values are allowed:
 
 - `rwlock-local` (default), uses JVM `ReentrantReadWriteLock` per lock name, usable for MT builds.
 - `semaphore-local`, uses JVM `Semaphore` per lock name, usable for MT builds.
+- `noop`, implement no-op locking (no locking). For experimenting only. Has same functionality as old "nolock"
+  SyncContextFactory implementation.
+
+For the `aether.syncContext.named.nameMapper` property following values are allowed:
+
+- `discriminating` (default), uses hostname + local repo + GAV to create unique lock names for artifacts.
+- `gav` uses GAV to create unique lock names for artifacts and metadata. Is not unique if multiple local repositories are involved.
+- `static` uses static (same) string as lock name for any input. Effectively providing functionality same as old
+  "global" locking SyncContextFactory.
 
 Extra values for factory (these need extra setup and will work with Sisu DI only):
 
