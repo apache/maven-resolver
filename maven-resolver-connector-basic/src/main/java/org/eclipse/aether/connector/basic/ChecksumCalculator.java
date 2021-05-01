@@ -165,7 +165,7 @@ final class ChecksumCalculator
                 {
                     read -= total - dataOffset;
                 }
-                buffer.rewind();
+                ( (Buffer) buffer ).rewind();
                 ( (Buffer) buffer ).limit( read );
                 update( buffer );
             }

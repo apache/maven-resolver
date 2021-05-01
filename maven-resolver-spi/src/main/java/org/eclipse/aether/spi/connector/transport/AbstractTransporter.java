@@ -252,7 +252,7 @@ public abstract class AbstractTransporter
         for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
         {
             os.write( array, 0, read );
-            buffer.rewind();
+            ( (Buffer) buffer ).rewind();
             ( (Buffer) buffer ).limit( read );
             listener.transportProgressed( buffer );
         }

@@ -219,7 +219,7 @@ public class TestFileProcessor
             {
                 try
                 {
-                    buffer.rewind();
+                    ( (Buffer) buffer ).rewind();
                     ( (Buffer) buffer ).limit( bytes );
                     listener.progressed( buffer );
                 }
