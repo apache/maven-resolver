@@ -121,12 +121,12 @@ final class HttpTransporter
         }
         try
         {
-            baseUri = new URI( repository.getUrl() ).parseServerAuthority();
+            this.baseUri = new URI( repository.getUrl() ).parseServerAuthority();
             if ( baseUri.isOpaque() )
             {
                 throw new URISyntaxException( repository.getUrl(), "URL must not be opaque" );
             }
-            server = URIUtils.extractHost( baseUri );
+            this.server = URIUtils.extractHost( baseUri );
             if ( server == null )
             {
                 throw new URISyntaxException( repository.getUrl(), "URL lacks host name" );
@@ -136,14 +136,14 @@ final class HttpTransporter
         {
             throw new NoTransporterException( repository, e.getMessage(), e );
         }
-        proxy = toHost( repository.getProxy() );
+        this.proxy = toHost( repository.getProxy() );
 
-        repoAuthContext = AuthenticationContext.forRepository( session, repository );
-        proxyAuthContext = AuthenticationContext.forProxy( session, repository );
+        this.repoAuthContext = AuthenticationContext.forRepository( session, repository );
+        this.proxyAuthContext = AuthenticationContext.forProxy( session, repository );
 
-        state = new LocalState( session, repository, new SslConfig( session, repoAuthContext ) );
+        this.state = new LocalState( session, repository, new SslConfig( session, repoAuthContext ) );
 
-        headers = ConfigUtils.getMap( session, Collections.emptyMap(),
+        this.headers = ConfigUtils.getMap( session, Collections.emptyMap(),
                 ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
                 ConfigurationProperties.HTTP_HEADERS );
 
