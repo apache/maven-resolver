@@ -19,6 +19,7 @@ package org.eclipse.aether.transport.http;
  * under the License.
  */
 
+import java.io.Closeable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -34,6 +35,7 @@ import org.eclipse.aether.transport.http.GlobalState.CompoundKey;
  * communication with server.
  */
 final class LocalState
+    implements Closeable
 {
     private final GlobalState global;
 
