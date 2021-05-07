@@ -31,10 +31,14 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.util.ConfigUtils;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * Container for HTTP-related state that can be shared across incarnations of the transporter to optimize the
@@ -173,12 +177,25 @@ final class GlobalState
     @SuppressWarnings( "checkstyle:magicnumber" )
     public static HttpClientConnectionManager newConnectionManager( SslConfig sslConfig )
     {
-        PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(
-                RegistryBuilder.<ConnectionSocketFactory>create()
-                               .register( "http", new PlainConnectionSocketFactory() )
-                               .register( "https", new SslSocketFactory( sslConfig ) )
-                               .build()
-        );
+        RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register( "http", PlainConnectionSocketFactory.getSocketFactory() );
+
+        if ( sslConfig == null )
+        {
+            registryBuilder.register( "https", SSLConnectionSocketFactory.getSystemSocketFactory() );
+        }
+        else
+        {
+            SSLSocketFactory sslSocketFactory = ( sslConfig.context != null )
+                    ? sslConfig.context.getSocketFactory() : (SSLSocketFactory) SSLSocketFactory.getDefault();
+
+            HostnameVerifier hostnameVerifier = ( sslConfig.verifier != null )
+                    ? sslConfig.verifier : SSLConnectionSocketFactory.getDefaultHostnameVerifier();
+
+            registryBuilder.register( "https", new SSLConnectionSocketFactory(
+                    sslSocketFactory, sslConfig.protocols, sslConfig.cipherSuites, hostnameVerifier ) );
+        }
+        PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager( registryBuilder.build() );
         connMgr.setMaxTotal( 100 );
         connMgr.setDefaultMaxPerRoute( 50 );
         return connMgr;

@@ -19,20 +19,6 @@ package org.eclipse.aether.transport.http;
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InterruptedIOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -40,9 +26,11 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
@@ -51,8 +39,16 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.DateUtils;
 import org.apache.http.client.utils.URIUtils;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.auth.BasicSchemeFactory;
+import org.apache.http.impl.auth.DigestSchemeFactory;
+import org.apache.http.impl.auth.KerberosSchemeFactory;
+import org.apache.http.impl.auth.NTLMSchemeFactory;
+import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -71,6 +67,21 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A transporter for HTTP/HTTPS.
@@ -132,20 +143,57 @@ final class HttpTransporter
 
         state = new LocalState( session, repository, new SslConfig( session, repoAuthContext ) );
 
-        headers =
-            ConfigUtils.getMap( session, Collections.emptyMap(), ConfigurationProperties.HTTP_HEADERS + "."
-                + repository.getId(), ConfigurationProperties.HTTP_HEADERS );
+        headers = ConfigUtils.getMap( session, Collections.emptyMap(),
+                ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_HEADERS );
 
-        HttpClientBuilder clientBuilder = HttpClientBuilder.create()
-                                 .setConnectionManager( state.getConnectionManager() )
-                                 .setConnectionManagerShared( true );
+        String credentialEncoding = ConfigUtils.getString( session,
+                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING );
+        int connectTimeout = ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT );
+        int requestTimeout = ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
+                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.REQUEST_TIMEOUT );
+        String userAgent = ConfigUtils.getString( session,
+                ConfigurationProperties.DEFAULT_USER_AGENT,
+                ConfigurationProperties.USER_AGENT,
+                ConfigurationProperties.DEFAULT_USER_AGENT );
 
-        configureClient( clientBuilder, session, repository, proxy );
+        Charset credentialsCharset = Charset.forName( credentialEncoding );
 
-        clientBuilder.setDefaultCredentialsProvider(
-                toCredentialsProvider( server, repoAuthContext, proxy, proxyAuthContext ) );
+        Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
+                .register( AuthSchemes.BASIC, new BasicSchemeFactory( credentialsCharset ) )
+                .register( AuthSchemes.DIGEST, new DigestSchemeFactory( credentialsCharset ) )
+                .register( AuthSchemes.NTLM, new NTLMSchemeFactory() )
+                .register( AuthSchemes.SPNEGO, new SPNegoSchemeFactory() )
+                .register( AuthSchemes.KERBEROS, new KerberosSchemeFactory() )
+                .build();
 
-        this.client = clientBuilder.build();
+        SocketConfig socketConfig = SocketConfig.custom()
+                 .setSoTimeout( requestTimeout ).build();
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout( connectTimeout )
+                .setConnectionRequestTimeout( connectTimeout )
+                .setSocketTimeout( requestTimeout ).build();
+
+        this.client = HttpClientBuilder.create()
+                .setUserAgent( userAgent )
+                .setDefaultSocketConfig( socketConfig )
+                .setDefaultRequestConfig( requestConfig )
+                .setDefaultAuthSchemeRegistry( authSchemeRegistry )
+                .setConnectionManager( state.getConnectionManager() )
+                .setConnectionManagerShared( true )
+                .setDefaultCredentialsProvider(
+                       toCredentialsProvider( server, repoAuthContext, proxy, proxyAuthContext )
+                )
+                .setProxy( proxy )
+                .build();
     }
 
     private static HttpHost toHost( Proxy proxy )
@@ -156,39 +204,6 @@ final class HttpTransporter
             host = new HttpHost( proxy.getHost(), proxy.getPort() );
         }
         return host;
-    }
-
-    private static void configureClient( HttpClientBuilder builder, RepositorySystemSession session,
-                                         RemoteRepository repository, HttpHost proxy )
-    {
-        // TODO: seems unused and untested (not test for it) so unsure do we want to bother with this
-//
-//        AuthParams.setCredentialCharset( params, ConfigUtils.getString( session,
-//                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
-//                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
-//                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
-
-        RequestConfig.Builder requestConfig = RequestConfig.custom();
-        requestConfig.setProxy( proxy );
-        requestConfig.setContentCompressionEnabled( true );
-        requestConfig.setSocketTimeout(
-                ConfigUtils.getInteger( session,
-                        ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                        ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
-                        ConfigurationProperties.REQUEST_TIMEOUT )
-        );
-        requestConfig.setConnectTimeout(
-                ConfigUtils.getInteger( session,
-                        ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                        ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                        ConfigurationProperties.CONNECT_TIMEOUT )
-        );
-        builder.setDefaultRequestConfig( requestConfig.build() );
-
-        builder.setUserAgent( ConfigUtils.getString( session,
-                ConfigurationProperties.DEFAULT_USER_AGENT,
-                ConfigurationProperties.USER_AGENT )
-        );
     }
 
     private static CredentialsProvider toCredentialsProvider( HttpHost server, AuthenticationContext serverAuthCtx,
