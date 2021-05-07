@@ -227,6 +227,7 @@ final class HttpTransporter
         return UriUtils.resolve( baseUri, task.getLocation() );
     }
 
+    @Override
     public int classify( Throwable error )
     {
         if ( error instanceof HttpResponseException
@@ -575,27 +576,32 @@ final class HttpTransporter
             this.task = task;
         }
 
+        @Override
         public boolean isRepeatable()
         {
             return true;
         }
 
+        @Override
         public boolean isStreaming()
         {
             return false;
         }
 
+        @Override
         public long getContentLength()
         {
             return task.getDataLength();
         }
 
+        @Override
         public InputStream getContent()
             throws IOException
         {
             return task.newInputStream();
         }
 
+        @Override
         public void writeTo( OutputStream os )
             throws IOException
         {
