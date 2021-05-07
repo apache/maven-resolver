@@ -161,8 +161,7 @@ final class HttpTransporter
                 ConfigurationProperties.REQUEST_TIMEOUT );
         String userAgent = ConfigUtils.getString( session,
                 ConfigurationProperties.DEFAULT_USER_AGENT,
-                ConfigurationProperties.USER_AGENT,
-                ConfigurationProperties.DEFAULT_USER_AGENT );
+                ConfigurationProperties.USER_AGENT );
 
         Charset credentialsCharset = Charset.forName( credentialEncoding );
 
