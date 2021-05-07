@@ -19,13 +19,12 @@ package org.eclipse.aether.transport.http;
  * under the License.
  */
 
-import java.io.Closeable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScheme;
-import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transport.http.GlobalState.CompoundKey;
@@ -35,12 +34,10 @@ import org.eclipse.aether.transport.http.GlobalState.CompoundKey;
  * communication with server.
  */
 final class LocalState
-    implements Closeable
 {
-
     private final GlobalState global;
 
-    private final ClientConnectionManager connMgr;
+    private final HttpClientConnectionManager connMgr;
 
     private final CompoundKey userTokenKey;
 
@@ -74,7 +71,7 @@ final class LocalState
         }
     }
 
-    public ClientConnectionManager getConnectionManager()
+    public HttpClientConnectionManager getConnectionManager()
     {
         return connMgr;
     }
