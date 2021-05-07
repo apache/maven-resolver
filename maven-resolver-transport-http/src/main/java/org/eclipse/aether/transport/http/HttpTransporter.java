@@ -51,7 +51,6 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.DateUtils;
 import org.apache.http.client.utils.URIUtils;
-import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -169,15 +168,6 @@ final class HttpTransporter
 //                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
 //                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
 
-        SocketConfig.Builder socketConfig = SocketConfig.custom();
-        socketConfig.setSoTimeout(
-                ConfigUtils.getInteger( session,
-                        ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                        ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
-                        ConfigurationProperties.REQUEST_TIMEOUT )
-        );
-        builder.setDefaultSocketConfig( socketConfig.build() );
-
         RequestConfig.Builder requestConfig = RequestConfig.custom();
         requestConfig.setProxy( proxy );
         requestConfig.setContentCompressionEnabled( true );
@@ -197,7 +187,8 @@ final class HttpTransporter
 
         builder.setUserAgent( ConfigUtils.getString( session,
                 ConfigurationProperties.DEFAULT_USER_AGENT,
-                ConfigurationProperties.USER_AGENT ) );
+                ConfigurationProperties.USER_AGENT )
+        );
     }
 
     private static CredentialsProvider toCredentialsProvider( HttpHost server, AuthenticationContext serverAuthCtx,
