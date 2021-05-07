@@ -162,6 +162,7 @@ final class HttpTransporter
     private static void configureClient( HttpClientBuilder builder, RepositorySystemSession session,
                                          RemoteRepository repository, HttpHost proxy )
     {
+        // TODO: seems unused and untested (not test for it) so unsure do we want to bother with this
 //
 //        AuthParams.setCredentialCharset( params, ConfigUtils.getString( session,
 //                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
@@ -180,12 +181,6 @@ final class HttpTransporter
         RequestConfig.Builder requestConfig = RequestConfig.custom();
         requestConfig.setProxy( proxy );
         requestConfig.setContentCompressionEnabled( true );
-//        requestConfig.setConnectionRequestTimeout(
-//                ConfigUtils.getInteger( session,
-//                        ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-//                        ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
-//                        ConfigurationProperties.REQUEST_TIMEOUT )
-//        );
         requestConfig.setSocketTimeout(
                 ConfigUtils.getInteger( session,
                         ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
