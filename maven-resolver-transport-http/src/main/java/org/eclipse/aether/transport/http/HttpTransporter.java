@@ -19,19 +19,6 @@ package org.eclipse.aether.transport.http;
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InterruptedIOException;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -39,11 +26,12 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.params.AuthParams;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
@@ -51,14 +39,18 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.DateUtils;
 import org.apache.http.client.utils.URIUtils;
-import org.apache.http.conn.params.ConnRouteParams;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DecompressingHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.impl.auth.BasicSchemeFactory;
+import org.apache.http.impl.auth.DigestSchemeFactory;
+import org.apache.http.impl.auth.KerberosSchemeFactory;
+import org.apache.http.impl.auth.NTLMSchemeFactory;
+import org.apache.http.impl.auth.SPNegoSchemeFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -75,6 +67,21 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A transporter for HTTP/HTTPS.
@@ -98,7 +105,7 @@ final class HttpTransporter
 
     private final HttpHost proxy;
 
-    private final HttpClient client;
+    private final CloseableHttpClient client;
 
     private final Map<?, ?> headers;
 
@@ -114,12 +121,12 @@ final class HttpTransporter
         }
         try
         {
-            baseUri = new URI( repository.getUrl() ).parseServerAuthority();
+            this.baseUri = new URI( repository.getUrl() ).parseServerAuthority();
             if ( baseUri.isOpaque() )
             {
                 throw new URISyntaxException( repository.getUrl(), "URL must not be opaque" );
             }
-            server = URIUtils.extractHost( baseUri );
+            this.server = URIUtils.extractHost( baseUri );
             if ( server == null )
             {
                 throw new URISyntaxException( repository.getUrl(), "URL lacks host name" );
@@ -129,24 +136,63 @@ final class HttpTransporter
         {
             throw new NoTransporterException( repository, e.getMessage(), e );
         }
-        proxy = toHost( repository.getProxy() );
+        this.proxy = toHost( repository.getProxy() );
 
-        repoAuthContext = AuthenticationContext.forRepository( session, repository );
-        proxyAuthContext = AuthenticationContext.forProxy( session, repository );
+        this.repoAuthContext = AuthenticationContext.forRepository( session, repository );
+        this.proxyAuthContext = AuthenticationContext.forProxy( session, repository );
 
-        state = new LocalState( session, repository, new SslConfig( session, repoAuthContext ) );
+        this.state = new LocalState( session, repository, new SslConfig( session, repoAuthContext ) );
 
-        headers =
-            ConfigUtils.getMap( session, Collections.emptyMap(), ConfigurationProperties.HTTP_HEADERS + "."
-                + repository.getId(), ConfigurationProperties.HTTP_HEADERS );
+        this.headers = ConfigUtils.getMap( session, Collections.emptyMap(),
+                ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_HEADERS );
 
-        DefaultHttpClient client = new DefaultHttpClient( state.getConnectionManager() );
+        String credentialEncoding = ConfigUtils.getString( session,
+                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING );
+        int connectTimeout = ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT );
+        int requestTimeout = ConfigUtils.getInteger( session,
+                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
+                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.REQUEST_TIMEOUT );
+        String userAgent = ConfigUtils.getString( session,
+                ConfigurationProperties.DEFAULT_USER_AGENT,
+                ConfigurationProperties.USER_AGENT );
 
-        configureClient( client.getParams(), session, repository, proxy );
+        Charset credentialsCharset = Charset.forName( credentialEncoding );
 
-        client.setCredentialsProvider( toCredentialsProvider( server, repoAuthContext, proxy, proxyAuthContext ) );
+        Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
+                .register( AuthSchemes.BASIC, new BasicSchemeFactory( credentialsCharset ) )
+                .register( AuthSchemes.DIGEST, new DigestSchemeFactory( credentialsCharset ) )
+                .register( AuthSchemes.NTLM, new NTLMSchemeFactory() )
+                .register( AuthSchemes.SPNEGO, new SPNegoSchemeFactory() )
+                .register( AuthSchemes.KERBEROS, new KerberosSchemeFactory() )
+                .build();
 
-        this.client = new DecompressingHttpClient( client );
+        SocketConfig socketConfig = SocketConfig.custom()
+                 .setSoTimeout( requestTimeout ).build();
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout( connectTimeout )
+                .setConnectionRequestTimeout( connectTimeout )
+                .setSocketTimeout( requestTimeout ).build();
+
+        this.client = HttpClientBuilder.create()
+                .setUserAgent( userAgent )
+                .setDefaultSocketConfig( socketConfig )
+                .setDefaultRequestConfig( requestConfig )
+                .setDefaultAuthSchemeRegistry( authSchemeRegistry )
+                .setConnectionManager( state.getConnectionManager() )
+                .setConnectionManagerShared( true )
+                .setDefaultCredentialsProvider(
+                       toCredentialsProvider( server, repoAuthContext, proxy, proxyAuthContext )
+                )
+                .setProxy( proxy )
+                .build();
     }
 
     private static HttpHost toHost( Proxy proxy )
@@ -157,27 +203,6 @@ final class HttpTransporter
             host = new HttpHost( proxy.getHost(), proxy.getPort() );
         }
         return host;
-    }
-
-    private static void configureClient( HttpParams params, RepositorySystemSession session,
-                                         RemoteRepository repository, HttpHost proxy )
-    {
-        AuthParams.setCredentialCharset( params, ConfigUtils.getString( session,
-                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
-                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
-                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING ) );
-        ConnRouteParams.setDefaultProxy( params, proxy );
-        HttpConnectionParams.setConnectionTimeout( params, ConfigUtils.getInteger( session,
-                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.CONNECT_TIMEOUT ) );
-        HttpConnectionParams.setSoTimeout( params, ConfigUtils.getInteger( session,
-                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.REQUEST_TIMEOUT ) );
-        HttpProtocolParams.setUserAgent( params, ConfigUtils.getString( session,
-                ConfigurationProperties.DEFAULT_USER_AGENT,
-                ConfigurationProperties.USER_AGENT ) );
     }
 
     private static CredentialsProvider toCredentialsProvider( HttpHost server, AuthenticationContext serverAuthCtx,
@@ -216,6 +241,7 @@ final class HttpTransporter
         return UriUtils.resolve( baseUri, task.getLocation() );
     }
 
+    @Override
     public int classify( Throwable error )
     {
         if ( error instanceof HttpResponseException
@@ -476,6 +502,14 @@ final class HttpTransporter
     @Override
     protected void implClose()
     {
+        try
+        {
+            client.close();
+        }
+        catch ( IOException e )
+        {
+            throw new UncheckedIOException( e );
+        }
         AuthenticationContext.close( repoAuthContext );
         AuthenticationContext.close( proxyAuthContext );
         state.close();
@@ -556,27 +590,32 @@ final class HttpTransporter
             this.task = task;
         }
 
+        @Override
         public boolean isRepeatable()
         {
             return true;
         }
 
+        @Override
         public boolean isStreaming()
         {
             return false;
         }
 
+        @Override
         public long getContentLength()
         {
             return task.getDataLength();
         }
 
+        @Override
         public InputStream getContent()
             throws IOException
         {
             return task.newInputStream();
         }
 
+        @Override
         public void writeTo( OutputStream os )
             throws IOException
         {
