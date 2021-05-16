@@ -23,8 +23,12 @@ import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.eclipse.aether.named.support.NamedLockSupport;
 import org.redisson.api.RSemaphore;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,12 +41,31 @@ public class RedissonSemaphoreNamedLockFactory
 {
     public static final String NAME = "semaphore-redisson";
 
+    private final ConcurrentMap<String, RSemaphore> semaphores;
+
+    @Inject
+    public RedissonSemaphoreNamedLockFactory()
+    {
+        super();
+        this.semaphores = new ConcurrentHashMap<>();
+    }
+
     @Override
     protected NamedLockSupport createLock( final String name )
     {
+        RSemaphore semaphore = semaphores.computeIfAbsent(
+                name, k -> redissonClient.getSemaphore( NAME_PREFIX + k ) );
+
         return new AdaptedSemaphoreNamedLock(
-                   name, this, new RedissonSemaphore( redissonClient.getSemaphore( NAME_PREFIX + name ) )
-    );
+                   name, this, new RedissonSemaphore( semaphore )
+        );
+    }
+
+    @Override
+    protected void destroyLock( NamedLockSupport lock )
+    {
+        RSemaphore semaphore = semaphores.remove( lock.name() );
+        semaphore.delete();
     }
 
     private static final class RedissonSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore
