@@ -27,6 +27,7 @@ import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
@@ -47,7 +48,7 @@ public class HazelcastSemaphoreNamedLockFactory
 
     private final boolean manageHazelcast;
 
-    private final ConcurrentHashMap<String, ISemaphore> semaphores;
+    private final ConcurrentMap<String, ISemaphore> semaphores;
 
     public HazelcastSemaphoreNamedLockFactory(
         final HazelcastInstance hazelcastInstance,
