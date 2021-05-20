@@ -24,7 +24,6 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
@@ -38,7 +37,6 @@ import org.eclipse.sisu.space.BeanScanning;
 @Named
 public class SisuRepositorySystemFactory
 {
-
     @Inject
     private RepositorySystem repositorySystem;
 
@@ -48,20 +46,16 @@ public class SisuRepositorySystemFactory
             BeanScanning.INDEX,
             new SisuRepositorySystemDemoModule()
         );
-        final Injector injector = Guice.createInjector( app );
-        return injector.getInstance( SisuRepositorySystemFactory.class ).repositorySystem;
+        return Guice.createInjector( app ).getInstance( SisuRepositorySystemFactory.class ).repositorySystem;
     }
 
     @Named
     private static class ModelBuilderProvider
         implements Provider<ModelBuilder>
     {
-
         public ModelBuilder get()
         {
             return new DefaultModelBuilderFactory().newInstance();
         }
-
     }
-
 }
