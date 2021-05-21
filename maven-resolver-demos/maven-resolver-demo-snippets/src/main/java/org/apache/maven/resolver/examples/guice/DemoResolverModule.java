@@ -82,7 +82,8 @@ class DemoResolverModule
     }
 
     @Provides
-    ModelBuilder provideModelBuilder() {
+    ModelBuilder provideModelBuilder() 
+    {
         return new DefaultModelBuilderFactory().newInstance();
     }
 }
