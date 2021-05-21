@@ -28,7 +28,6 @@ import javax.inject.Singleton;
 
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
-import org.apache.maven.repository.internal.MavenResolverModule;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
@@ -59,7 +58,6 @@ class DemoResolverModule
                 .to( BasicRepositoryConnectorFactory.class );
         bind( TransporterFactory.class ).annotatedWith( Names.named( "file" ) ).to( FileTransporterFactory.class );
         bind( TransporterFactory.class ).annotatedWith( Names.named( "http" ) ).to( HttpTransporterFactory.class );
-        bind( ModelBuilder.class ).toProvider( () -> new DefaultModelBuilderFactory().newInstance() );
     }
 
     @Provides
@@ -81,5 +79,10 @@ class DemoResolverModule
         factories.add( file );
         factories.add( http );
         return Collections.unmodifiableSet( factories );
+    }
+
+    @Provides
+    ModelBuilder provideModelBuilder() {
+        return new DefaultModelBuilderFactory().newInstance();
     }
 }
