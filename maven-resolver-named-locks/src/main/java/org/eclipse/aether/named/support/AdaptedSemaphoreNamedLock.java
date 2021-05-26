@@ -42,8 +42,8 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport
 
     /**
      * Count of permissions involved with "nop" locking. When required lock step is preceded with a step that already
-     * fulfills currently requested locking, no locking is needed. In other words, caller already possesses the access to
-     * lock protected resource. The "nop" locking is used to track proper "boxing" of lock/unlock calls.
+     * fulfills currently requested locking, no locking is needed. In other words, caller already possesses the access
+     * to lock protected resource. The "nop" locking is used to track proper "boxing" of lock/unlock calls.
      */
     private static final int NONE = 0;
 
