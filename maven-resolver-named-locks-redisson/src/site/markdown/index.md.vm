@@ -45,16 +45,12 @@ ${esc.hash}${esc.hash} Installation/Testing
 - Copy the following dependencies from Maven Central to `${maven.home}/lib/ext/redisson/`:
   <pre class="source">
   ├── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.10.14/byte-buddy-1.10.14.jar">byte-buddy-1.10.14.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar">cache-api-1.0.0.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.12.1/jackson-annotations-2.12.1.jar">jackson-annotations-2.12.1.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.12.1/jackson-core-2.12.1.jar">jackson-core-2.12.1.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.12.1/jackson-databind-2.12.1.jar">jackson-databind-2.12.1.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.12.1/jackson-dataformat-yaml-2.12.1.jar">jackson-dataformat-yaml-2.12.1.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling/2.0.11.Final/jboss-marshalling-2.0.11.Final.jar">jboss-marshalling-2.0.11.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling-river/2.0.11.Final/jboss-marshalling-river-2.0.11.Final.jar">jboss-marshalling-river-2.0.11.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/jodd/jodd-bean/5.1.6/jodd-bean-5.1.6.jar">jodd-bean-5.1.6.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/jodd/jodd-core/5.1.6/jodd-core-5.1.6.jar">jodd-core-5.1.6.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.60.Final/netty-buffer-4.1.60.Final.jar">netty-buffer-4.1.60.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.60.Final/netty-codec-4.1.60.Final.jar">netty-codec-4.1.60.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.60.Final/netty-codec-dns-4.1.60.Final.jar">netty-codec-dns-4.1.60.Final.jar</a>
@@ -63,10 +59,7 @@ ${esc.hash}${esc.hash} Installation/Testing
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.60.Final/netty-resolver-4.1.60.Final.jar">netty-resolver-4.1.60.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.60.Final/netty-resolver-dns-4.1.60.Final.jar">netty-resolver-dns-4.1.60.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.60.Final/netty-transport-4.1.60.Final.jar">netty-transport-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3.jar">reactive-streams-1.0.3.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/projectreactor/reactor-core/3.4.2/reactor-core-3.4.2.jar">reactor-core-3.4.2.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/3.15.3/redisson-3.15.3.jar">redisson-3.15.3.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/reactivex/rxjava3/rxjava/3.0.10/rxjava-3.0.10.jar">rxjava-3.0.10.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.27/snakeyaml-1.27.jar">snakeyaml-1.27.jar</a></pre>
 - Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
 - Now start a multithreaded Maven build on your project.

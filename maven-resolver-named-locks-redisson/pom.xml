@@ -53,6 +53,28 @@
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
       <version>3.15.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.cache</groupId>
+          <artifactId>cache-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>net.bytebuddy</groupId>
+          <artifactId>byte-buddy</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.projectreactor</groupId>
+          <artifactId>reactor-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jodd</groupId>
+          <artifactId>jodd-bean</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.reactivex.rxjava3</groupId>
+          <artifactId>rxjava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
