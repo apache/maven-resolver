@@ -40,9 +40,15 @@ public class RedissonSemaphoreNamedLockFactory
     @Override
     protected NamedLockSupport createLock( final String name )
     {
-        return new AdaptedSemaphoreNamedLock(
-                   name, this, new RedissonSemaphore( redissonClient.getSemaphore( NAME_PREFIX + name ) )
-    );
+        RSemaphore semaphore = redissonClient.getSemaphore( NAME_PREFIX + name );
+        return new AdaptedSemaphoreNamedLock( name, this, new RedissonSemaphore( semaphore ) )
+        {
+            @Override
+            public void destroy()
+            {
+                semaphore.delete();
+            }
+        };
     }
 
     private static final class RedissonSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore

@@ -98,9 +98,9 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
 
     protected abstract NamedLockSupport createLock( final String name );
 
-    protected void destroyLock( final NamedLockSupport lock )
+    private void destroyLock( final NamedLockSupport lock )
     {
-        // override if needed
+        lock.destroy();
     }
 
     private static final class NamedLockHolder

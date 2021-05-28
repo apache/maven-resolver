@@ -51,4 +51,12 @@ public abstract class NamedLockSupport implements NamedLock
     {
         factory.closeLock( this );
     }
+
+    /**
+     * Some implementations may need to perform some action when the lock is about to be destroyed.
+     */
+    public void destroy()
+    {
+        // override if needed
+    }
 }

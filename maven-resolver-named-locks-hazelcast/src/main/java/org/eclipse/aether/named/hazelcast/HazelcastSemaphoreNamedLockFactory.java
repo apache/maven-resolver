@@ -26,8 +26,6 @@ import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock.AdaptedSemapho
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
@@ -48,8 +46,6 @@ public class HazelcastSemaphoreNamedLockFactory
 
     private final boolean manageHazelcast;
 
-    private final ConcurrentMap<String, ISemaphore> semaphores;
-
     public HazelcastSemaphoreNamedLockFactory(
         final HazelcastInstance hazelcastInstance,
         final BiFunction<HazelcastInstance, String, ISemaphore> semaphoreFunction,
@@ -61,16 +57,27 @@ public class HazelcastSemaphoreNamedLockFactory
         this.semaphoreFunction = semaphoreFunction;
         this.destroySemaphore = destroySemaphore;
         this.manageHazelcast = manageHazelcast;
-        this.semaphores = new ConcurrentHashMap<>();
     }
 
     @Override
     protected NamedLockSupport createLock( final String name )
     {
-        ISemaphore semaphore = semaphores.computeIfAbsent(
-                name, k -> semaphoreFunction.apply( hazelcastInstance, k )
-        );
-        return new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) );
+        ISemaphore semaphore = semaphoreFunction.apply( hazelcastInstance, name );
+        if ( destroySemaphore )
+        {
+            return new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) )
+            {
+                @Override
+                public void destroy()
+                {
+                    semaphore.destroy();
+                }
+            };
+        }
+        else
+        {
+            return new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) );
+        }
     }
 
     @Override
@@ -79,16 +86,6 @@ public class HazelcastSemaphoreNamedLockFactory
         if ( manageHazelcast )
         {
             hazelcastInstance.shutdown();
-        }
-    }
-
-    @Override
-    protected void destroyLock( final NamedLockSupport lock )
-    {
-        ISemaphore semaphore = semaphores.remove( lock.name() );
-        if ( destroySemaphore )
-        {
-            semaphore.destroy();
         }
     }
 
