@@ -68,7 +68,7 @@ public class HazelcastSemaphoreNamedLockFactory
             return new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) )
             {
                 @Override
-                public void destroy()
+                protected void destroy()
                 {
                     semaphore.destroy();
                 }

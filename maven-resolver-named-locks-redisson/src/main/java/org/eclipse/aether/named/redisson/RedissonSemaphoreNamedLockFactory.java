@@ -44,7 +44,7 @@ public class RedissonSemaphoreNamedLockFactory
         return new AdaptedSemaphoreNamedLock( name, this, new RedissonSemaphore( semaphore ) )
         {
             @Override
-            public void destroy()
+            protected void destroy()
             {
                 semaphore.delete();
             }
