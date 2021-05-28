@@ -55,7 +55,7 @@ public abstract class NamedLockSupport implements NamedLock
     /**
      * Some implementations may need to perform some action when the lock is about to be destroyed.
      */
-    public void destroy()
+    protected void destroy()
     {
         // override if needed
     }

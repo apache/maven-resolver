@@ -69,7 +69,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
         {
             if ( v != null && v.decRef() == 0 )
             {
-                destroyLock( v.namedLock );
+                v.namedLock.destroy();
                 destroyed.set( true );
                 return null;
             }
@@ -97,11 +97,6 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
     }
 
     protected abstract NamedLockSupport createLock( final String name );
-
-    private void destroyLock( final NamedLockSupport lock )
-    {
-        lock.destroy();
-    }
 
     private static final class NamedLockHolder
     {
