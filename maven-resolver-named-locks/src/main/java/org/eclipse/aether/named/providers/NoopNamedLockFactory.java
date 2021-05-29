@@ -33,19 +33,21 @@ import org.eclipse.aether.named.support.NamedLockSupport;
 @Singleton
 @Named( NoopNamedLockFactory.NAME )
 public class NoopNamedLockFactory
-    extends NamedLockFactorySupport
+    extends NamedLockFactorySupport<Void>
 {
   public static final String NAME = "noop";
 
   @Override
-  protected NoopNamedLock createLock( final String name )
+  protected NamedLockHolder<Void> createLock( final String name )
   {
-    return new NoopNamedLock( name, this );
+    return new NamedLockHolder<>(
+            null, new NoopNamedLock( name, this )
+    );
   }
 
   private static final class NoopNamedLock extends NamedLockSupport
   {
-    private NoopNamedLock( final String name, final NamedLockFactorySupport factory )
+    private NoopNamedLock( final String name, final NamedLockFactorySupport<?> factory )
     {
       super( name, factory );
     }

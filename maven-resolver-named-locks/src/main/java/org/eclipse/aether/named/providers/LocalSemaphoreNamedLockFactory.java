@@ -34,14 +34,17 @@ import org.eclipse.aether.named.support.NamedLockFactorySupport;
 @Singleton
 @Named( LocalSemaphoreNamedLockFactory.NAME )
 public class LocalSemaphoreNamedLockFactory
-    extends NamedLockFactorySupport
+    extends NamedLockFactorySupport<Semaphore>
 {
   public static final String NAME = "semaphore-local";
 
   @Override
-  protected AdaptedSemaphoreNamedLock createLock( final String name )
+  protected NamedLockHolder<Semaphore> createLock( final String name )
   {
-    return new AdaptedSemaphoreNamedLock( name, this, new JVMSemaphore() );
+    Semaphore semaphore = new Semaphore( Integer.MAX_VALUE );
+    return new NamedLockHolder<>(
+            null, new AdaptedSemaphoreNamedLock( name, this, new JVMSemaphore( semaphore ) )
+    );
   }
 
   /**
@@ -52,9 +55,9 @@ public class LocalSemaphoreNamedLockFactory
   {
     private final Semaphore semaphore;
 
-    private JVMSemaphore()
+    private JVMSemaphore( final Semaphore semaphore )
     {
-      this.semaphore = new Semaphore( Integer.MAX_VALUE );
+      this.semaphore = semaphore;
     }
 
     @Override

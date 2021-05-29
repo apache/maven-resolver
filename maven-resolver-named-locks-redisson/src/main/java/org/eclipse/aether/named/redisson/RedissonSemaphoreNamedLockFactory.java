@@ -20,7 +20,6 @@ package org.eclipse.aether.named.redisson;
  */
 
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
-import org.eclipse.aether.named.support.NamedLockSupport;
 import org.redisson.api.RSemaphore;
 
 import javax.inject.Named;
@@ -32,17 +31,23 @@ import java.util.concurrent.TimeUnit;
  */
 @Singleton
 @Named( RedissonSemaphoreNamedLockFactory.NAME )
-public class RedissonSemaphoreNamedLockFactory
-    extends RedissonNamedLockFactorySupport
+public class RedissonSemaphoreNamedLockFactory extends RedissonNamedLockFactorySupport<RSemaphore>
 {
     public static final String NAME = "semaphore-redisson";
 
     @Override
-    protected NamedLockSupport createLock( final String name )
+    protected NamedLockHolder<RSemaphore> createLock( final String name )
     {
-        return new AdaptedSemaphoreNamedLock(
-                   name, this, new RedissonSemaphore( redissonClient.getSemaphore( NAME_PREFIX + name ) )
-    );
+        RSemaphore semaphore = redissonClient.getSemaphore( NAME_PREFIX + name );
+        semaphore.trySetPermits( Integer.MAX_VALUE );
+        return new NamedLockHolder<>( semaphore, new AdaptedSemaphoreNamedLock( name, this,
+                new RedissonSemaphore( redissonClient.getSemaphore( NAME_PREFIX + name ) ) ) );
+    }
+
+    @Override
+    protected void destroyLock( String name, NamedLockHolder<RSemaphore> holder )
+    {
+        holder.getImplementation().delete();
     }
 
     private static final class RedissonSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore
@@ -51,13 +56,11 @@ public class RedissonSemaphoreNamedLockFactory
 
         private RedissonSemaphore( final RSemaphore semaphore )
         {
-            semaphore.trySetPermits( Integer.MAX_VALUE );
             this.semaphore = semaphore;
         }
 
         @Override
-        public boolean tryAcquire( final int perms, final long time, final TimeUnit unit )
-            throws InterruptedException
+        public boolean tryAcquire( final int perms, final long time, final TimeUnit unit ) throws InterruptedException
         {
             return semaphore.tryAcquire( perms, time, unit );
         }

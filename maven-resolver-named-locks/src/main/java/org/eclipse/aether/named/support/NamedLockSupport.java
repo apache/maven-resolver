@@ -32,9 +32,9 @@ public abstract class NamedLockSupport implements NamedLock
 
     private final String name;
 
-    private final NamedLockFactorySupport factory;
+    private final NamedLockFactorySupport<?> factory;
 
-    public NamedLockSupport( final String name, final NamedLockFactorySupport factory )
+    public NamedLockSupport( final String name, final NamedLockFactorySupport<?> factory )
     {
         this.name = name;
         this.factory = factory;
@@ -49,6 +49,6 @@ public abstract class NamedLockSupport implements NamedLock
     @Override
     public void close()
     {
-        factory.closeLock( this );
+        factory.closeLock( name );
     }
 }

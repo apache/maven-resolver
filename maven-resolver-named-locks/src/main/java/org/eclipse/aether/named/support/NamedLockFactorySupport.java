@@ -23,19 +23,21 @@ import org.eclipse.aether.named.NamedLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Support class for {@link NamedLockFactory} implementations providing reference counting.
+ *
+ * @param <I> the backing implementation type.
  */
-public abstract class NamedLockFactorySupport implements NamedLockFactory
+public abstract class NamedLockFactorySupport<I> implements NamedLockFactory
 {
     protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
-    private final ConcurrentMap<String, NamedLockHolder> locks;
+    private final ConcurrentMap<String, NamedLockHolder<I>> locks;
 
     public NamedLockFactorySupport()
     {
@@ -49,7 +51,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
         {
             if ( v == null )
             {
-                v = new NamedLockHolder( createLock( k ) );
+                v = createLock( k );
             }
             v.incRef();
             return v;
@@ -62,20 +64,17 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
         // override if needed
     }
 
-    public boolean closeLock( final NamedLockSupport lock )
+    public void closeLock( final String name )
     {
-        AtomicBoolean destroyed = new AtomicBoolean( false );
-        locks.compute( lock.name(), ( k, v ) ->
+        locks.compute( name, ( k, v ) ->
         {
             if ( v != null && v.decRef() == 0 )
             {
-                destroyLock( v.namedLock );
-                destroyed.set( true );
+                destroyLock( k, v );
                 return null;
             }
             return v;
         } );
-        return destroyed.get();
     }
 
 
@@ -96,23 +95,45 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
         }
     }
 
-    protected abstract NamedLockSupport createLock( final String name );
+    /**
+     * Implementation should create and return {@link NamedLockSupport} for given {@code name}, this method should never
+     * return {@code null}.
+     */
+    protected abstract NamedLockHolder<I> createLock( final String name );
 
-    protected void destroyLock( final NamedLockSupport lock )
+    /**
+     * Implementation may override this (empty) method to perform some sort of implementation specific clean-up for
+     * given name and holder. Invoked when reference count for holder returned by {@link #createLock(String)} drops to
+     * zero.
+     */
+    protected void destroyLock( final String name, final NamedLockHolder<I> holder )
     {
         // override if needed
     }
 
-    private static final class NamedLockHolder
+    /**
+     * This class is a "holder" for backing implementation (if needed), named lock and reference count.
+     *
+     * @param <I>
+     */
+    protected static final class NamedLockHolder<I>
     {
+        private final I implementation;
+
         private final NamedLockSupport namedLock;
 
         private final AtomicInteger referenceCount;
 
-        private NamedLockHolder( NamedLockSupport namedLock )
+        public NamedLockHolder( final I implementation, final NamedLockSupport namedLock )
         {
-            this.namedLock = namedLock;
+            this.implementation = implementation;
+            this.namedLock = Objects.requireNonNull( namedLock );
             this.referenceCount = new AtomicInteger( 0 );
+        }
+
+        public I getImplementation()
+        {
+            return implementation;
         }
 
         private int incRef()
