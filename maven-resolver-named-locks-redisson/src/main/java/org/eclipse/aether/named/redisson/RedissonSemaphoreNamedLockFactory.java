@@ -40,8 +40,10 @@ public class RedissonSemaphoreNamedLockFactory extends RedissonNamedLockFactoryS
     {
         RSemaphore semaphore = redissonClient.getSemaphore( NAME_PREFIX + name );
         semaphore.trySetPermits( Integer.MAX_VALUE );
-        return new NamedLockHolder<>( semaphore, new AdaptedSemaphoreNamedLock( name, this,
-                new RedissonSemaphore( redissonClient.getSemaphore( NAME_PREFIX + name ) ) ) );
+        return new NamedLockHolder<>(
+                semaphore,
+                new AdaptedSemaphoreNamedLock( name, this, new RedissonSemaphore( semaphore ) )
+        );
     }
 
     @Override

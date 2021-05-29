@@ -61,7 +61,8 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport
 
     private final AdaptedSemaphore semaphore;
 
-    public AdaptedSemaphoreNamedLock( final String name, final NamedLockFactorySupport<?> factory,
+    public AdaptedSemaphoreNamedLock( final String name,
+                                      final NamedLockFactorySupport<?> factory,
                                       final AdaptedSemaphore semaphore )
     {
         super( name, factory );

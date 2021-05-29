@@ -48,7 +48,8 @@ public class ReadWriteLockNamedLock extends NamedLockSupport
 
     private final ReadWriteLock readWriteLock;
 
-    public ReadWriteLockNamedLock( final String name, final NamedLockFactorySupport<?> factory,
+    public ReadWriteLockNamedLock( final String name,
+                                   final NamedLockFactorySupport<?> factory,
                                    final ReadWriteLock readWriteLock )
     {
         super( name, factory );
