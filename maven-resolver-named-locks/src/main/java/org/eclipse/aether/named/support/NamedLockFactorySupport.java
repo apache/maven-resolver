@@ -23,15 +23,16 @@ import org.eclipse.aether.named.NamedLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Support class for {@link NamedLockFactory} implementations providing reference counting.
  */
-public abstract class NamedLockFactorySupport implements NamedLockFactory
+public abstract class NamedLockFactorySupport
+    implements NamedLockFactory
 {
     protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
@@ -62,20 +63,17 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
         // override if needed
     }
 
-    public boolean closeLock( final NamedLockSupport lock )
+    public void closeLock( final String name )
     {
-        AtomicBoolean destroyed = new AtomicBoolean( false );
-        locks.compute( lock.name(), ( k, v ) ->
+        locks.compute( name, ( k, v ) ->
         {
             if ( v != null && v.decRef() == 0 )
             {
-                destroyLock( v.namedLock );
-                destroyed.set( true );
+                destroyLock( v.namedLock.name() );
                 return null;
             }
             return v;
         } );
-        return destroyed.get();
     }
 
 
@@ -96,9 +94,17 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
         }
     }
 
+    /**
+     * Implementations shall create and return {@link NamedLockSupport} for given {@code name}, this method must never
+     * return {@code null}.
+     */
     protected abstract NamedLockSupport createLock( final String name );
 
-    protected void destroyLock( final NamedLockSupport lock )
+    /**
+     * Implementation may override this (empty) method to perform some sort of implementation specific cleanup for
+     * given lock name. Invoked when reference count for given name drops to zero and named lock was removed.
+     */
+    protected void destroyLock( final String name )
     {
         // override if needed
     }
@@ -109,9 +115,9 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory
 
         private final AtomicInteger referenceCount;
 
-        private NamedLockHolder( NamedLockSupport namedLock )
+        private NamedLockHolder( final NamedLockSupport namedLock )
         {
-            this.namedLock = namedLock;
+            this.namedLock = Objects.requireNonNull( namedLock );
             this.referenceCount = new AtomicInteger( 0 );
         }
 

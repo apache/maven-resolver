@@ -36,37 +36,38 @@ import org.eclipse.aether.named.support.NamedLockFactorySupport;
 public class LocalSemaphoreNamedLockFactory
     extends NamedLockFactorySupport
 {
-  public static final String NAME = "semaphore-local";
-
-  @Override
-  protected AdaptedSemaphoreNamedLock createLock( final String name )
-  {
-    return new AdaptedSemaphoreNamedLock( name, this, new JVMSemaphore() );
-  }
-
-  /**
-   * Adapted JVM {@link java.util.concurrent.Semaphore}.
-   */
-  private static final class JVMSemaphore
-      implements AdaptedSemaphoreNamedLock.AdaptedSemaphore
-  {
-    private final Semaphore semaphore;
-
-    private JVMSemaphore()
-    {
-      this.semaphore = new Semaphore( Integer.MAX_VALUE );
-    }
+    public static final String NAME = "semaphore-local";
 
     @Override
-    public boolean tryAcquire( final int perms, final long time, final TimeUnit unit ) throws InterruptedException
+    protected AdaptedSemaphoreNamedLock createLock( final String name )
     {
-      return semaphore.tryAcquire( perms, time, unit );
+      Semaphore semaphore = new Semaphore( Integer.MAX_VALUE );
+      return new AdaptedSemaphoreNamedLock( name, this, new JVMSemaphore( semaphore ) );
     }
 
-    @Override
-    public void release( final int perms )
+    /**
+     * Adapted JVM {@link java.util.concurrent.Semaphore}.
+     */
+    private static final class JVMSemaphore
+        implements AdaptedSemaphoreNamedLock.AdaptedSemaphore
     {
-      semaphore.release( perms );
+        private final Semaphore semaphore;
+
+        private JVMSemaphore( final Semaphore semaphore )
+        {
+          this.semaphore = semaphore;
+        }
+
+        @Override
+        public boolean tryAcquire( final int perms, final long time, final TimeUnit unit ) throws InterruptedException
+        {
+             return semaphore.tryAcquire( perms, time, unit );
+        }
+
+        @Override
+        public void release( final int perms )
+        {
+            semaphore.release( perms );
+        }
     }
-  }
 }

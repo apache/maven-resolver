@@ -19,13 +19,12 @@ package org.eclipse.aether.named.providers;
  * under the License.
  */
 
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.eclipse.aether.named.support.NamedLockFactorySupport;
+import org.eclipse.aether.named.support.ReadWriteLockNamedLock;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-
-import org.eclipse.aether.named.support.ReadWriteLockNamedLock;
-import org.eclipse.aether.named.support.NamedLockFactorySupport;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * A JVM-local named lock factory that uses named {@link ReentrantReadWriteLock}s.
@@ -35,15 +34,11 @@ import org.eclipse.aether.named.support.NamedLockFactorySupport;
 public class LocalReadWriteLockNamedLockFactory
     extends NamedLockFactorySupport
 {
-  public static final String NAME = "rwlock-local";
+    public static final String NAME = "rwlock-local";
 
-  @Override
-  protected ReadWriteLockNamedLock createLock( final String name )
-  {
-    return new ReadWriteLockNamedLock(
-        name,
-        this,
-        new ReentrantReadWriteLock()
-    );
-  }
+    @Override
+    protected ReadWriteLockNamedLock createLock( final String name )
+    {
+        return new ReadWriteLockNamedLock( name, this, new ReentrantReadWriteLock() );
+    }
 }

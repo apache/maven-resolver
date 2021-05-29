@@ -20,11 +20,12 @@ package org.eclipse.aether.named.redisson;
  */
 
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
-import org.eclipse.aether.named.support.NamedLockSupport;
 import org.redisson.api.RSemaphore;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,12 +38,34 @@ public class RedissonSemaphoreNamedLockFactory
 {
     public static final String NAME = "semaphore-redisson";
 
-    @Override
-    protected NamedLockSupport createLock( final String name )
+    private final ConcurrentMap<String, RSemaphore> semaphores;
+
+    public RedissonSemaphoreNamedLockFactory()
     {
-        return new AdaptedSemaphoreNamedLock(
-                   name, this, new RedissonSemaphore( redissonClient.getSemaphore( NAME_PREFIX + name ) )
-    );
+        this.semaphores = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    protected AdaptedSemaphoreNamedLock createLock( final String name )
+    {
+        RSemaphore semaphore = semaphores.computeIfAbsent( name, k ->
+        {
+            RSemaphore result = redissonClient.getSemaphore( NAME_PREFIX + k );
+            result.trySetPermits( Integer.MAX_VALUE );
+            return result;
+        } );
+        return new AdaptedSemaphoreNamedLock( name, this, new RedissonSemaphore( semaphore ) );
+    }
+
+    @Override
+    protected void destroyLock( final String name )
+    {
+        RSemaphore semaphore = semaphores.remove( name );
+        if ( semaphore == null )
+        {
+            throw new IllegalStateException( "Semaphore expected but does not exist: " + name );
+        }
+        semaphore.delete();
     }
 
     private static final class RedissonSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore
@@ -51,13 +74,11 @@ public class RedissonSemaphoreNamedLockFactory
 
         private RedissonSemaphore( final RSemaphore semaphore )
         {
-            semaphore.trySetPermits( Integer.MAX_VALUE );
             this.semaphore = semaphore;
         }
 
         @Override
-        public boolean tryAcquire( final int perms, final long time, final TimeUnit unit )
-            throws InterruptedException
+        public boolean tryAcquire( final int perms, final long time, final TimeUnit unit ) throws InterruptedException
         {
             return semaphore.tryAcquire( perms, time, unit );
         }
