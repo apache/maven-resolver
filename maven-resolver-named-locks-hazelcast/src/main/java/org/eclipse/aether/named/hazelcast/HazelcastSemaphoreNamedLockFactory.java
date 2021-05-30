@@ -87,10 +87,10 @@ public class HazelcastSemaphoreNamedLockFactory
     @Override
     protected void destroyLock( final NamedLockSupport lock )
     {
+        String name = lock.name();
+        ISemaphore semaphore = semaphores.remove( name );
         if ( destroySemaphore )
         {
-            String name = lock.name();
-            ISemaphore semaphore = semaphores.get( name );
             if ( semaphore == null )
             {
                 throw new IllegalStateException( "Semaphore expected but not exists: " + name );

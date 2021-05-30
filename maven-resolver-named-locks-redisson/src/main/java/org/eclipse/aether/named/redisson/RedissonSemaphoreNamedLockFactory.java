@@ -61,7 +61,7 @@ public class RedissonSemaphoreNamedLockFactory
     protected void destroyLock( final NamedLockSupport lock )
     {
         String name = lock.name();
-        RSemaphore semaphore = semaphores.get( name );
+        RSemaphore semaphore = semaphores.remove( name );
         if ( semaphore == null )
         {
             throw new IllegalStateException( "Semaphore expected but not exists: " + name );
