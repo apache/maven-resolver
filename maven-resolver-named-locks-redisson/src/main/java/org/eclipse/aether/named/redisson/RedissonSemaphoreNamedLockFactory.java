@@ -24,6 +24,7 @@ import org.redisson.api.RSemaphore;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,25 +32,39 @@ import java.util.concurrent.TimeUnit;
  */
 @Singleton
 @Named( RedissonSemaphoreNamedLockFactory.NAME )
-public class RedissonSemaphoreNamedLockFactory extends RedissonNamedLockFactorySupport<RSemaphore>
+public class RedissonSemaphoreNamedLockFactory
+    extends RedissonNamedLockFactorySupport
 {
     public static final String NAME = "semaphore-redisson";
 
-    @Override
-    protected NamedLockHolder<RSemaphore> createLock( final String name )
+    private final ConcurrentHashMap<String, RSemaphore> semaphores;
+
+    public RedissonSemaphoreNamedLockFactory()
     {
-        RSemaphore semaphore = redissonClient.getSemaphore( NAME_PREFIX + name );
-        semaphore.trySetPermits( Integer.MAX_VALUE );
-        return new NamedLockHolder<>(
-                semaphore,
-                new AdaptedSemaphoreNamedLock( name, this, new RedissonSemaphore( semaphore ) )
-        );
+        this.semaphores = new ConcurrentHashMap<>();
     }
 
     @Override
-    protected void destroyLock( String name, NamedLockHolder<RSemaphore> holder )
+    protected AdaptedSemaphoreNamedLock createLock( final String name )
     {
-        holder.getImplementation().delete();
+        RSemaphore semaphore = semaphores.computeIfAbsent( name, k ->
+        {
+            RSemaphore result = redissonClient.getSemaphore( NAME_PREFIX + k );
+            result.trySetPermits( Integer.MAX_VALUE );
+            return result;
+        } );
+        return new AdaptedSemaphoreNamedLock( name, this, new RedissonSemaphore( semaphore ) );
+    }
+
+    @Override
+    protected void destroyLock( String name )
+    {
+        RSemaphore semaphore = semaphores.get( name );
+        if ( semaphore == null )
+        {
+            throw new IllegalStateException( "Semaphore expected but not exists: " + name );
+        }
+        semaphore.delete();
     }
 
     private static final class RedissonSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore

@@ -29,7 +29,8 @@ import java.util.concurrent.locks.ReadWriteLock;
  * reentrancy, non re-entrant locks will NOT work. It is the responsibility of an adapting lock, to ensure that
  * above lock requirement stands.
  */
-public class ReadWriteLockNamedLock extends NamedLockSupport
+public class ReadWriteLockNamedLock
+    extends NamedLockSupport
 {
     private enum Step
     {
@@ -49,7 +50,7 @@ public class ReadWriteLockNamedLock extends NamedLockSupport
     private final ReadWriteLock readWriteLock;
 
     public ReadWriteLockNamedLock( final String name,
-                                   final NamedLockFactorySupport<?> factory,
+                                   final NamedLockFactorySupport factory,
                                    final ReadWriteLock readWriteLock )
     {
         super( name, factory );

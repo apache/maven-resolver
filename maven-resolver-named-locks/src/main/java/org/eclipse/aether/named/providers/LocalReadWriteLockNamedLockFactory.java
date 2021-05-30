@@ -31,16 +31,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 @Singleton
 @Named( LocalReadWriteLockNamedLockFactory.NAME )
-public class LocalReadWriteLockNamedLockFactory extends NamedLockFactorySupport<ReentrantReadWriteLock>
+public class LocalReadWriteLockNamedLockFactory
+    extends NamedLockFactorySupport
 {
     public static final String NAME = "rwlock-local";
 
     @Override
-    protected NamedLockHolder<ReentrantReadWriteLock> createLock( final String name )
+    protected ReadWriteLockNamedLock createLock( final String name )
     {
-        ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
-        return new NamedLockHolder<>(
-                null, new ReadWriteLockNamedLock( name, this, rwLock )
-        );
+        return new ReadWriteLockNamedLock( name, this, new ReentrantReadWriteLock() );
     }
 }

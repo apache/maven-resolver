@@ -32,11 +32,9 @@ import java.nio.file.Paths;
 
 /**
  * Support class for factories using {@link RedissonClient}.
- *
- * @param <I> The type of redisson object backing named lock.
  */
-public abstract class RedissonNamedLockFactorySupport<I>
-    extends NamedLockFactorySupport<I>
+public abstract class RedissonNamedLockFactorySupport
+    extends NamedLockFactorySupport
 {
     protected static final String NAME_PREFIX = "maven:resolver:";
 

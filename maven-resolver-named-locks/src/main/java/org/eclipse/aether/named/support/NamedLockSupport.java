@@ -26,15 +26,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Support class for {@link NamedLock} implementations providing reference counting.
  */
-public abstract class NamedLockSupport implements NamedLock
+public abstract class NamedLockSupport
+    implements NamedLock
 {
     protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final String name;
 
-    private final NamedLockFactorySupport<?> factory;
+    private final NamedLockFactorySupport factory;
 
-    public NamedLockSupport( final String name, final NamedLockFactorySupport<?> factory )
+    public NamedLockSupport( final String name, final NamedLockFactorySupport factory )
     {
         this.name = name;
         this.factory = factory;

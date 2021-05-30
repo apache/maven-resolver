@@ -27,7 +27,8 @@ import java.util.concurrent.TimeUnit;
  * Named lock support implementation that is using "adapted" semaphore (to be able to use semaphores not sharing common
  * API).
  */
-public class AdaptedSemaphoreNamedLock extends NamedLockSupport
+public class AdaptedSemaphoreNamedLock
+    extends NamedLockSupport
 {
     /**
      * Wrapper for semaphore-like stuff, that do not share common ancestor. Semaphore must be created to support {@link
@@ -62,7 +63,7 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport
     private final AdaptedSemaphore semaphore;
 
     public AdaptedSemaphoreNamedLock( final String name,
-                                      final NamedLockFactorySupport<?> factory,
+                                      final NamedLockFactorySupport factory,
                                       final AdaptedSemaphore semaphore )
     {
         super( name, factory );

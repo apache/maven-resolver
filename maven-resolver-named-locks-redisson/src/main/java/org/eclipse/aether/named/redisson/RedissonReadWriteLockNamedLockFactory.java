@@ -31,17 +31,14 @@ import javax.inject.Singleton;
 @Singleton
 @Named( RedissonReadWriteLockNamedLockFactory.NAME )
 public class RedissonReadWriteLockNamedLockFactory
-    extends RedissonNamedLockFactorySupport<RReadWriteLock>
+    extends RedissonNamedLockFactorySupport
 {
     public static final String NAME = "rwlock-redisson";
 
     @Override
-    protected NamedLockHolder<RReadWriteLock> createLock( final String name )
+    protected ReadWriteLockNamedLock createLock( final String name )
     {
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock( NAME_PREFIX + name );
-        return new NamedLockHolder<>(
-                readWriteLock,
-                new ReadWriteLockNamedLock( name, this, readWriteLock )
-        );
+        return new ReadWriteLockNamedLock( name, this, readWriteLock );
     }
 }

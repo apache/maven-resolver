@@ -25,6 +25,7 @@ import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock.AdaptedSemaphore;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
@@ -33,7 +34,7 @@ import java.util.function.BiFunction;
  * use {@link HazelcastInstance} backed by Hazelcast Server or Hazelcast Client.
  */
 public class HazelcastSemaphoreNamedLockFactory
-    extends NamedLockFactorySupport<ISemaphore>
+    extends NamedLockFactorySupport
 {
     protected static final String NAME_PREFIX = "maven:resolver:";
 
@@ -44,6 +45,8 @@ public class HazelcastSemaphoreNamedLockFactory
     private final boolean destroySemaphore;
 
     private final boolean manageHazelcast;
+
+    private final ConcurrentHashMap<String, ISemaphore> semaphores;
 
     public HazelcastSemaphoreNamedLockFactory(
         final HazelcastInstance hazelcastInstance,
@@ -56,16 +59,19 @@ public class HazelcastSemaphoreNamedLockFactory
         this.semaphoreFunction = semaphoreFunction;
         this.destroySemaphore = destroySemaphore;
         this.manageHazelcast = manageHazelcast;
+        this.semaphores = new ConcurrentHashMap<>();
     }
 
     @Override
-    protected NamedLockHolder<ISemaphore> createLock( final String name )
+    protected AdaptedSemaphoreNamedLock createLock( final String name )
     {
-        ISemaphore semaphore = semaphoreFunction.apply( hazelcastInstance, name );
-        return new NamedLockHolder<>(
-                semaphore,
-                new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) )
-        );
+        ISemaphore semaphore = semaphores.computeIfAbsent( name, k ->
+        {
+            ISemaphore result = semaphoreFunction.apply( hazelcastInstance, k );
+            result.init( Integer.MAX_VALUE );
+            return result;
+        } );
+        return new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) );
     }
 
     @Override
@@ -78,11 +84,16 @@ public class HazelcastSemaphoreNamedLockFactory
     }
 
     @Override
-    protected void destroyLock( final String name, final NamedLockHolder<ISemaphore> holder )
+    protected void destroyLock( final String name )
     {
         if ( destroySemaphore )
         {
-            holder.getImplementation().destroy();
+            ISemaphore semaphore = semaphores.get( name );
+            if ( semaphore == null )
+            {
+                throw new IllegalStateException( "Semaphore expected but not exists: " + name );
+            }
+            semaphore.destroy();
         }
     }
 
@@ -92,7 +103,6 @@ public class HazelcastSemaphoreNamedLockFactory
 
         private HazelcastSemaphore( final ISemaphore semaphore )
         {
-            semaphore.init( Integer.MAX_VALUE );
             this.semaphore = semaphore;
         }
 

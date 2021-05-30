@@ -30,14 +30,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Support class for {@link NamedLockFactory} implementations providing reference counting.
- *
- * @param <I> the backing implementation type.
  */
-public abstract class NamedLockFactorySupport<I> implements NamedLockFactory
+public abstract class NamedLockFactorySupport
+    implements NamedLockFactory
 {
     protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
-    private final ConcurrentMap<String, NamedLockHolder<I>> locks;
+    private final ConcurrentMap<String, NamedLockHolder> locks;
 
     public NamedLockFactorySupport()
     {
@@ -51,7 +50,7 @@ public abstract class NamedLockFactorySupport<I> implements NamedLockFactory
         {
             if ( v == null )
             {
-                v = createLock( k );
+                v = new NamedLockHolder( createLock( k ) );
             }
             v.incRef();
             return v;
@@ -70,7 +69,7 @@ public abstract class NamedLockFactorySupport<I> implements NamedLockFactory
         {
             if ( v != null && v.decRef() == 0 )
             {
-                destroyLock( k, v );
+                destroyLock( k );
                 return null;
             }
             return v;
@@ -99,41 +98,30 @@ public abstract class NamedLockFactorySupport<I> implements NamedLockFactory
      * Implementation should create and return {@link NamedLockSupport} for given {@code name}, this method should never
      * return {@code null}.
      */
-    protected abstract NamedLockHolder<I> createLock( final String name );
+    protected abstract NamedLockSupport createLock( final String name );
 
     /**
      * Implementation may override this (empty) method to perform some sort of implementation specific clean-up for
-     * given name and holder. Invoked when reference count for holder returned by {@link #createLock(String)} drops to
-     * zero.
+     * given name. Invoked when reference count for given name drops to zero.
      */
-    protected void destroyLock( final String name, final NamedLockHolder<I> holder )
+    protected void destroyLock( final String name )
     {
         // override if needed
     }
 
     /**
      * This class is a "holder" for backing implementation (if needed), named lock and reference count.
-     *
-     * @param <I>
      */
-    protected static final class NamedLockHolder<I>
+    private static final class NamedLockHolder
     {
-        private final I implementation;
-
         private final NamedLockSupport namedLock;
 
         private final AtomicInteger referenceCount;
 
-        public NamedLockHolder( final I implementation, final NamedLockSupport namedLock )
+        private NamedLockHolder( final NamedLockSupport namedLock )
         {
-            this.implementation = implementation;
             this.namedLock = Objects.requireNonNull( namedLock );
             this.referenceCount = new AtomicInteger( 0 );
-        }
-
-        public I getImplementation()
-        {
-            return implementation;
         }
 
         private int incRef()
