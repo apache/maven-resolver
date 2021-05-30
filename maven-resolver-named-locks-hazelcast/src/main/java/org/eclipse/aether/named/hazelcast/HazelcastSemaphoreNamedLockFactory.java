@@ -24,7 +24,6 @@ import com.hazelcast.cp.ISemaphore;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock.AdaptedSemaphore;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
-import org.eclipse.aether.named.support.NamedLockSupport;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -85,9 +84,8 @@ public class HazelcastSemaphoreNamedLockFactory
     }
 
     @Override
-    protected void destroyLock( final NamedLockSupport lock )
+    protected void destroyLock( final String name )
     {
-        String name = lock.name();
         ISemaphore semaphore = semaphores.remove( name );
         if ( destroySemaphore )
         {
