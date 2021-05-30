@@ -20,6 +20,7 @@ package org.eclipse.aether.named.redisson;
  */
 
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
+import org.eclipse.aether.named.support.NamedLockSupport;
 import org.redisson.api.RSemaphore;
 
 import javax.inject.Named;
@@ -57,8 +58,9 @@ public class RedissonSemaphoreNamedLockFactory
     }
 
     @Override
-    protected void destroyLock( String name )
+    protected void destroyLock( final NamedLockSupport lock )
     {
+        String name = lock.name();
         RSemaphore semaphore = semaphores.get( name );
         if ( semaphore == null )
         {

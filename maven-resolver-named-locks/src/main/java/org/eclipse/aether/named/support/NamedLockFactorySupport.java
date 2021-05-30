@@ -69,7 +69,7 @@ public abstract class NamedLockFactorySupport
         {
             if ( v != null && v.decRef() == 0 )
             {
-                destroyLock( k );
+                destroyLock( v.namedLock );
                 return null;
             }
             return v;
@@ -102,16 +102,13 @@ public abstract class NamedLockFactorySupport
 
     /**
      * Implementation may override this (empty) method to perform some sort of implementation specific clean-up for
-     * given name. Invoked when reference count for given name drops to zero.
+     * given lock. Invoked when reference count for given name drops to zero.
      */
-    protected void destroyLock( final String name )
+    protected void destroyLock( final NamedLockSupport lock )
     {
         // override if needed
     }
 
-    /**
-     * This class is a "holder" for backing implementation (if needed), named lock and reference count.
-     */
     private static final class NamedLockHolder
     {
         private final NamedLockSupport namedLock;
