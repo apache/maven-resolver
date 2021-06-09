@@ -25,6 +25,8 @@ import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * An artifact descriptor reader that gets data from a simple text file on the classpath. The data file for an artifact
  * with the coordinates {@code gid:aid:ext:ver} is expected to be named {@code gid_aid_ver.ini} and can optionally have
@@ -93,6 +95,8 @@ public class IniArtifactDescriptorReader
                                                             ArtifactDescriptorRequest request )
         throws ArtifactDescriptorException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
         for ( Artifact artifact = request.getArtifact();; )
         {

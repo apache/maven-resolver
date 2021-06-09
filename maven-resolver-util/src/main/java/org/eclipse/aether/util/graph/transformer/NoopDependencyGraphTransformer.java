@@ -24,6 +24,8 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency graph transformer that does not perform any changes on its input.
  */
@@ -47,6 +49,8 @@ public final class NoopDependencyGraphTransformer
     public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
         throws RepositoryException
     {
+        requireNonNull( node, "node cannot be null" );
+        requireNonNull( context, "context cannot be null" );
         return node;
     }
 

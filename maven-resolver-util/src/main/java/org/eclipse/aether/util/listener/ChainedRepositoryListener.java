@@ -28,6 +28,8 @@ import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A repository listener that delegates to zero or more other listeners (multicast). The list of target listeners is
  * thread-safe, i.e. target listeners can be added or removed by any thread at any time.
@@ -134,6 +136,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactDeployed( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -150,6 +153,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactDeploying( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -166,6 +170,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactDescriptorInvalid( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -182,6 +187,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactDescriptorMissing( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -198,6 +204,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactDownloaded( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -214,6 +221,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactDownloading( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -230,6 +238,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactInstalled( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -246,6 +255,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactInstalling( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -262,6 +272,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactResolved( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -278,6 +289,7 @@ public final class ChainedRepositoryListener
     @Override
     public void artifactResolving( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -294,6 +306,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataDeployed( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -310,6 +323,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataDeploying( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -326,6 +340,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataDownloaded( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -342,6 +357,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataDownloading( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -358,6 +374,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataInstalled( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -374,6 +391,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataInstalling( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -390,6 +408,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataInvalid( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -406,6 +425,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataResolved( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try
@@ -422,6 +442,7 @@ public final class ChainedRepositoryListener
     @Override
     public void metadataResolving( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( RepositoryListener listener : listeners )
         {
             try

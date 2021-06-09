@@ -47,6 +47,7 @@ public final class ConservativeProxySelector
 
     public Proxy getProxy( RemoteRepository repository )
     {
+        requireNonNull( repository, "repository cannot be null" );
         Proxy proxy = repository.getProxy();
         if ( proxy != null )
         {

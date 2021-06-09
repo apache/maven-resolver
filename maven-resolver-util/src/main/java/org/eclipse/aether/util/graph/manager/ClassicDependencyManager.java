@@ -34,6 +34,8 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency manager that mimics the way Maven 2.x works.
  */
@@ -80,6 +82,7 @@ public final class ClassicDependencyManager
 
     public DependencyManager deriveChildManager( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         if ( depth >= 2 )
         {
             return this;
@@ -164,6 +167,7 @@ public final class ClassicDependencyManager
 
     public DependencyManagement manageDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         DependencyManagement management = null;
 
         Object key = getKey( dependency.getArtifact() );

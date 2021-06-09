@@ -23,6 +23,8 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency traverser which always or never traverses children.
  */
@@ -44,11 +46,13 @@ public final class StaticDependencyTraverser
 
     public boolean traverseDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         return traverse;
     }
 
     public DependencyTraverser deriveChildTraverser( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         return this;
     }
 

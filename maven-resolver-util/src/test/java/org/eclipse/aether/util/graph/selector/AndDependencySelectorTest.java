@@ -19,13 +19,18 @@ package org.eclipse.aether.util.graph.selector;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.Test;
+
+import java.util.Collections;
 
 public class AndDependencySelectorTest
 {
@@ -57,11 +62,13 @@ public class AndDependencySelectorTest
 
         public boolean selectDependency( Dependency dependency )
         {
+            requireNonNull( dependency, "dependency cannot be null" );
             return select;
         }
 
         public DependencySelector deriveChildSelector( DependencyCollectionContext context )
         {
+            requireNonNull( context, "context cannot be null" );
             return child;
         }
 
@@ -109,7 +116,11 @@ public class AndDependencySelectorTest
         DependencySelector other1 = new DummyDependencySelector( true );
         DependencySelector other2 = new DummyDependencySelector( false );
         DependencySelector selector = new AndDependencySelector( other1, other2 );
-        assertSame( selector, selector.deriveChildSelector( null ) );
+        RepositorySystemSession session = TestUtils.newSession();
+        DependencyCollectionContext context = TestUtils.newCollectionContext( session,
+                null,
+                Collections.emptyList() );
+        assertSame( selector, selector.deriveChildSelector( context ) );
     }
 
     @Test
@@ -118,7 +129,11 @@ public class AndDependencySelectorTest
         DependencySelector other1 = new DummyDependencySelector( true );
         DependencySelector other2 = new DummyDependencySelector( false, null );
         DependencySelector selector = new AndDependencySelector( other1, other2 );
-        assertSame( other1, selector.deriveChildSelector( null ) );
+        RepositorySystemSession session = TestUtils.newSession();
+        DependencyCollectionContext context = TestUtils.newCollectionContext( session,
+                null,
+                Collections.emptyList() );
+        assertSame( other1, selector.deriveChildSelector( context ) );
     }
 
     @Test
@@ -127,7 +142,11 @@ public class AndDependencySelectorTest
         DependencySelector other1 = new DummyDependencySelector( true, null );
         DependencySelector other2 = new DummyDependencySelector( false, null );
         DependencySelector selector = new AndDependencySelector( other1, other2 );
-        assertNull( selector.deriveChildSelector( null ) );
+        RepositorySystemSession session = TestUtils.newSession();
+        DependencyCollectionContext context = TestUtils.newCollectionContext( session,
+                null,
+                Collections.emptyList() );
+        assertNull( selector.deriveChildSelector( context ) );
     }
 
     @Test

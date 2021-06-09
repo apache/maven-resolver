@@ -33,6 +33,8 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Default {@link SyncContextFactory} implementation that uses named locks.
  */
@@ -78,6 +80,7 @@ public final class DefaultSyncContextFactory
     @Override
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
+        requireNonNull( session, "session cannot be null" );
         return namedLockFactoryAdapter.newInstance( session, shared );
     }
 

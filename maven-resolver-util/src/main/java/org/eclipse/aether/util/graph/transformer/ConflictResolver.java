@@ -117,6 +117,8 @@ public final class ConflictResolver
     public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
         throws RepositoryException
     {
+        requireNonNull( node, "node cannot be null" );
+        requireNonNull( context, "context cannot be null" );
         List<?> sortedConflictIds = (List<?>) context.get( TransformationContextKeys.SORTED_CONFLICT_IDS );
         if ( sortedConflictIds == null )
         {

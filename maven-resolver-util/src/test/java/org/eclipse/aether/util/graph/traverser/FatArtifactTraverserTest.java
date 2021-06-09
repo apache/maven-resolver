@@ -24,14 +24,41 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Map;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class FatArtifactTraverserTest
 {
+
+    private RepositorySystemSession session;
+    private DependencyCollectionContext context;
+
+    @Before
+    public void setup()
+    {
+        session = TestUtils.newSession();
+        context = TestUtils.newCollectionContext( session, null, Collections.emptyList() );
+    }
+
+    @After
+    public void teardown() throws Exception
+    {
+        if ( session.getLocalRepository() != null )
+        {
+            TestFileUtils.deleteFile( session.getLocalRepository().getBasedir() );
+        }
+        session = null;
+        context = null;
+    }
 
     @Test
     public void testTraverseDependency()
@@ -51,7 +78,7 @@ public class FatArtifactTraverserTest
     public void testDeriveChildTraverser()
     {
         DependencyTraverser traverser = new FatArtifactTraverser();
-        assertSame( traverser, traverser.deriveChildTraverser( null ) );
+        assertSame( traverser, traverser.deriveChildTraverser( context ) );
     }
 
     @Test

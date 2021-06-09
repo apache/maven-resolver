@@ -24,6 +24,8 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency traverser that excludes the dependencies of fat artifacts from the traversal. Fat artifacts are
  * artifacts that have the property {@link org.eclipse.aether.artifact.ArtifactProperties#INCLUDES_DEPENDENCIES} set to
@@ -44,12 +46,14 @@ public final class FatArtifactTraverser
 
     public boolean traverseDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         String prop = dependency.getArtifact().getProperty( ArtifactProperties.INCLUDES_DEPENDENCIES, "" );
         return !Boolean.parseBoolean( prop );
     }
 
     public DependencyTraverser deriveChildTraverser( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         return this;
     }
 

@@ -38,6 +38,8 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Provides a Maven-2 repository layout for repositories with content type {@code "default"}.
  */
@@ -74,6 +76,8 @@ public final class Maven2RepositoryLayoutFactory
     public RepositoryLayout newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryLayoutException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
         if ( !"default".equals( repository.getContentType() ) )
         {
             throw new NoRepositoryLayoutException( repository );

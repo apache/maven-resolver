@@ -26,6 +26,8 @@ import java.util.List;
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.RemoteRepository;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A simple mirror selector that selects mirrors based on repository identifiers.
  */
@@ -75,6 +77,7 @@ public final class DefaultMirrorSelector
 
     public RemoteRepository getMirror( RemoteRepository repository )
     {
+        requireNonNull( repository, "repository cannot be null" );
         MirrorDef mirror = findMirror( repository );
 
         if ( mirror == null )

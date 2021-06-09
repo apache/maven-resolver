@@ -30,6 +30,8 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency selector that filters transitive dependencies based on their scope. Direct dependencies are always
  * included regardless of their scope. <em>Note:</em> This filter does not assume any relationships between the scopes.
@@ -99,6 +101,7 @@ public final class ScopeDependencySelector
 
     public boolean selectDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         if ( !transitive )
         {
             return true;
@@ -111,6 +114,7 @@ public final class ScopeDependencySelector
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         if ( this.transitive || context.getDependency() == null )
         {
             return this;

@@ -30,6 +30,8 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency selector that applies exclusions based on artifact coordinates.
  * 
@@ -78,6 +80,7 @@ public final class ExclusionDependencySelector
 
     public boolean selectDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         Artifact artifact = dependency.getArtifact();
         for ( Exclusion exclusion : exclusions )
         {
@@ -117,6 +120,7 @@ public final class ExclusionDependencySelector
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         Dependency dependency = context.getDependency();
         Collection<Exclusion> exclusions = ( dependency != null ) ? dependency.getExclusions() : null;
         if ( exclusions == null || exclusions.isEmpty() )

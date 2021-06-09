@@ -28,6 +28,8 @@ import java.util.Set;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency filter that combines zero or more other filters using a logical {@code AND}. The resulting filter
  * accepts a given dependency node if and only if all constituent filters accept it.
@@ -87,6 +89,8 @@ public final class AndDependencyFilter
 
     public boolean accept( DependencyNode node, List<DependencyNode> parents )
     {
+        requireNonNull( node, "node cannot be null" );
+        requireNonNull( parents, "parents cannot be null" );
         for ( DependencyFilter filter : filters )
         {
             if ( !filter.accept( node, parents ) )

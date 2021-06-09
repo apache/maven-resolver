@@ -28,6 +28,8 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A simple filter to exclude artifacts based on either artifact id or group id and artifact id.
  */
@@ -53,6 +55,8 @@ public final class ExclusionsDependencyFilter
 
     public boolean accept( DependencyNode node, List<DependencyNode> parents )
     {
+        requireNonNull( node, "node cannot be null" );
+        requireNonNull( parents, "parents cannot be null" );
         Dependency dependency = node.getDependency();
 
         if ( dependency == null )

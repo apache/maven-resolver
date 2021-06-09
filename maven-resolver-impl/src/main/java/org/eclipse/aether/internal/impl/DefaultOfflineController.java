@@ -30,6 +30,8 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * 
  */
@@ -53,6 +55,8 @@ public class DefaultOfflineController
     public void checkOffline( RepositorySystemSession session, RemoteRepository repository )
         throws RepositoryOfflineException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
         if ( isOfflineProtocol( session, repository ) || isOfflineHost( session, repository ) )
         {
             return;

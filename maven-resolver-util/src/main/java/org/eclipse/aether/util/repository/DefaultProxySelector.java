@@ -59,6 +59,7 @@ public final class DefaultProxySelector
 
     public Proxy getProxy( RemoteRepository repository )
     {
+        requireNonNull( repository, "repository cannot be null" );
         Map<String, ProxyDef> candidates = new HashMap<>();
 
         String host = repository.getHost();

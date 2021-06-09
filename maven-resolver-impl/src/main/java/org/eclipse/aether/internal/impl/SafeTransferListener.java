@@ -27,6 +27,8 @@ import org.eclipse.aether.transfer.TransferListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
+
 class SafeTransferListener
     extends AbstractTransferListener
 {
@@ -65,6 +67,7 @@ class SafeTransferListener
     public void transferInitiated( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         if ( listener != null )
         {
             try
@@ -82,6 +85,7 @@ class SafeTransferListener
     public void transferStarted( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         if ( listener != null )
         {
             try
@@ -99,6 +103,7 @@ class SafeTransferListener
     public void transferProgressed( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         if ( listener != null )
         {
             try
@@ -116,6 +121,7 @@ class SafeTransferListener
     public void transferCorrupted( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         if ( listener != null )
         {
             try
@@ -132,6 +138,7 @@ class SafeTransferListener
     @Override
     public void transferSucceeded( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         if ( listener != null )
         {
             try
@@ -148,6 +155,7 @@ class SafeTransferListener
     @Override
     public void transferFailed( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         if ( listener != null )
         {
             try

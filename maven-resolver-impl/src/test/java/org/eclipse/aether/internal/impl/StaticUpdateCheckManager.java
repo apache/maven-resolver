@@ -29,6 +29,8 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 
+import static java.util.Objects.requireNonNull;
+
 class StaticUpdateCheckManager
     implements UpdateCheckManager
 {
@@ -50,14 +52,20 @@ class StaticUpdateCheckManager
 
     public void touchMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
     }
 
     public void touchArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
     }
 
     public void checkMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
         check.setRequired( checkRequired );
 
         if ( check.getLocalLastUpdated() != 0L && localUpToDate )
@@ -72,6 +80,8 @@ class StaticUpdateCheckManager
 
     public void checkArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
         check.setRequired( checkRequired );
 
         if ( check.getLocalLastUpdated() != 0L && localUpToDate )

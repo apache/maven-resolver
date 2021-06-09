@@ -142,7 +142,8 @@ public class DefaultInstaller
     public InstallResult install( RepositorySystemSession session, InstallRequest request )
         throws InstallationException
     {
-
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             return install( syncContext, session, request );

@@ -37,6 +37,8 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A simplistic local repository manager that uses a temporary base directory.
  */
@@ -71,6 +73,8 @@ public class TestLocalRepositoryManager
 
     public String getPathForLocalArtifact( Artifact artifact )
     {
+        requireNonNull( artifact, "artifact cannot be null" );
+
         String artifactId = artifact.getArtifactId();
         String groupId = artifact.getGroupId();
         String extension = artifact.getExtension();
@@ -83,11 +87,16 @@ public class TestLocalRepositoryManager
 
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
     {
+        requireNonNull( artifact, "artifact cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
+
         return getPathForLocalArtifact( artifact );
     }
 
     public String getPathForLocalMetadata( Metadata metadata )
     {
+        requireNonNull( metadata, "metadata cannot be null" );
+
         String artifactId = metadata.getArtifactId();
         String groupId = metadata.getGroupId();
         String version = metadata.getVersion();
@@ -96,11 +105,17 @@ public class TestLocalRepositoryManager
 
     public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
     {
+        requireNonNull( metadata, "metadata cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
+
         return getPathForLocalMetadata( metadata );
     }
 
     public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
+
         Artifact artifact = request.getArtifact();
 
         LocalArtifactResult result = new LocalArtifactResult( request );
@@ -113,11 +128,17 @@ public class TestLocalRepositoryManager
 
     public void add( RepositorySystemSession session, LocalArtifactRegistration request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
+
         artifactRegistrations.add( request.getArtifact() );
     }
 
     public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
+
         Metadata metadata = request.getMetadata();
 
         LocalMetadataResult result = new LocalMetadataResult( request );
@@ -129,6 +150,9 @@ public class TestLocalRepositoryManager
 
     public void add( RepositorySystemSession session, LocalMetadataRegistration request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
+
         metadataRegistrations.add( request.getMetadata() );
     }
 

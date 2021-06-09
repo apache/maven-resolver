@@ -23,6 +23,8 @@ import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  */
 public class StubRepositoryEventDispatcher
@@ -31,6 +33,7 @@ public class StubRepositoryEventDispatcher
 
     public void dispatch( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         RepositoryListener listener = event.getSession().getRepositoryListener();
         if ( listener == null )
         {

@@ -110,6 +110,7 @@ final class SecretAuthentication
 
     public void fill( AuthenticationContext context, String key, Map<String, String> data )
     {
+        requireNonNull( context, "context cannot be null" );
         char[] secret = copy( value );
         xor( secret );
         context.put( this.key, secret );

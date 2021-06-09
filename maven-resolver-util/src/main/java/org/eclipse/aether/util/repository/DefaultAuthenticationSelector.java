@@ -26,6 +26,8 @@ import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.RemoteRepository;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A simple authentication selector that selects authentication based on repository identifiers.
  */
@@ -58,6 +60,7 @@ public final class DefaultAuthenticationSelector
 
     public Authentication getAuthentication( RemoteRepository repository )
     {
+        requireNonNull( repository, "repository cannot be null" );
         return repos.get( repository.getId() );
     }
 

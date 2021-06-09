@@ -28,6 +28,8 @@ import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionRange;
 import org.eclipse.aether.version.VersionScheme;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A version scheme using a generic version syntax.
  */
@@ -37,18 +39,21 @@ final class TestVersionScheme
 
     public Version parseVersion( final String version )
     {
+        requireNonNull( version, "version cannot be null" );
         return new TestVersion( version );
     }
 
     public VersionRange parseVersionRange( final String range )
         throws InvalidVersionSpecificationException
     {
+        requireNonNull( range, "range cannot be null" );
         return new TestVersionRange( range );
     }
 
     public VersionConstraint parseVersionConstraint( final String constraint )
         throws InvalidVersionSpecificationException
     {
+        requireNonNull( constraint, "constraint cannot be null" );
         Collection<VersionRange> ranges = new ArrayList<>();
 
         String process = constraint;

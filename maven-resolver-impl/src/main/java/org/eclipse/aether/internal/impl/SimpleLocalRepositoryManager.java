@@ -102,21 +102,27 @@ class SimpleLocalRepositoryManager
 
     public String getPathForLocalArtifact( Artifact artifact )
     {
+        requireNonNull( artifact, "artifact cannot be null" );
         return getPathForArtifact( artifact, true );
     }
 
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
     {
+        requireNonNull( artifact, "artifact cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
         return getPathForArtifact( artifact, false );
     }
 
     public String getPathForLocalMetadata( Metadata metadata )
     {
+        requireNonNull( metadata, "metadata cannot be null" );
         return getPath( metadata, "local" );
     }
 
     public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
     {
+        requireNonNull( metadata, "metadata cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
         return getPath( metadata, getRepositoryKey( repository, context ) );
     }
 
@@ -201,6 +207,8 @@ class SimpleLocalRepositoryManager
 
     public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         String path = getPathForArtifact( request.getArtifact(), false );
         File file = new File( getRepository().getBasedir(), path );
 
@@ -216,6 +224,8 @@ class SimpleLocalRepositoryManager
 
     public void add( RepositorySystemSession session, LocalArtifactRegistration request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         // noop
     }
 
@@ -227,6 +237,8 @@ class SimpleLocalRepositoryManager
 
     public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         LocalMetadataResult result = new LocalMetadataResult( request );
 
         String path;
@@ -255,6 +267,8 @@ class SimpleLocalRepositoryManager
 
     public void add( RepositorySystemSession session, LocalMetadataRegistration request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         // noop
     }
 

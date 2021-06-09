@@ -30,6 +30,8 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.repository.WorkspaceRepository;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A workspace reader that delegates to a chain of other readers, effectively aggregating their contents.
  */
@@ -90,6 +92,7 @@ public final class ChainedWorkspaceReader
 
     public File findArtifact( Artifact artifact )
     {
+        requireNonNull( artifact, "artifact cannot be null" );
         File file = null;
 
         for ( WorkspaceReader reader : readers )
@@ -106,6 +109,7 @@ public final class ChainedWorkspaceReader
 
     public List<String> findVersions( Artifact artifact )
     {
+        requireNonNull( artifact, "artifact cannot be null" );
         Collection<String> versions = new LinkedHashSet<>();
 
         for ( WorkspaceReader reader : readers )

@@ -24,6 +24,8 @@ import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 
+import static java.util.Objects.requireNonNull;
+
 public class StubVersionResolver
     implements VersionResolver
 {
@@ -31,6 +33,8 @@ public class StubVersionResolver
     public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
         throws VersionResolutionException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         return new VersionResult( request );
     }
 

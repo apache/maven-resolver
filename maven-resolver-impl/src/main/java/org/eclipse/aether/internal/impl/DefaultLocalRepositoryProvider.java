@@ -92,6 +92,8 @@ public class DefaultLocalRepositoryProvider
                                                              LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
         PrioritizedComponents<LocalRepositoryManagerFactory> factories = new PrioritizedComponents<>( session );
         for ( LocalRepositoryManagerFactory factory : this.managerFactories )
         {

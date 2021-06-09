@@ -27,6 +27,8 @@ import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 
+import static java.util.Objects.requireNonNull;
+
 public class StubRemoteRepositoryManager
     implements RemoteRepositoryManager
 {
@@ -40,12 +42,17 @@ public class StubRemoteRepositoryManager
                                                          List<RemoteRepository> recessiveRepositories,
                                                          boolean recessiveIsRaw )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( dominantRepositories, "dominantRepositories cannot be null" );
+        requireNonNull( recessiveRepositories, "recessiveRepositories cannot be null" );
         return dominantRepositories;
     }
 
     public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
                                        boolean snapshots )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
         RepositoryPolicy policy = repository.getPolicy( snapshots );
 
         String checksums = session.getChecksumPolicy();

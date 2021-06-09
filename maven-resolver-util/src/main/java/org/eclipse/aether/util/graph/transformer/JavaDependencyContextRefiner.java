@@ -26,6 +26,8 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency graph transformer that refines the request context for nodes that belong to the "project" context by
  * appending the classpath type to which the node belongs. For instance, a compile-time project dependency will be
@@ -40,6 +42,8 @@ public final class JavaDependencyContextRefiner
     public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
         throws RepositoryException
     {
+        requireNonNull( node, "node cannot be null" );
+        requireNonNull( context, "context cannot be null" );
         String ctx = node.getRequestContext();
 
         if ( "project".equals( ctx ) )
