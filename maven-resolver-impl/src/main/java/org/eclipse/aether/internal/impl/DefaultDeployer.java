@@ -202,6 +202,8 @@ public class DefaultDeployer
     public DeployResult deploy( RepositorySystemSession session, DeployRequest request )
         throws DeploymentException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         try
         {
             Utils.checkOffline( session, offlineController, request.getRepository() );
@@ -576,6 +578,7 @@ public class DefaultDeployer
             throws TransferCancelledException
         {
             super.transferInitiated( event );
+            requireNonNull( event, "event cannot be null" );
             catapult.artifactDeploying( transfer.getArtifact(), transfer.getFile() );
         }
 
@@ -583,6 +586,7 @@ public class DefaultDeployer
         public void transferFailed( TransferEvent event )
         {
             super.transferFailed( event );
+            requireNonNull( event, "event cannot be null" );
             catapult.artifactDeployed( transfer.getArtifact(), transfer.getFile(), transfer.getException() );
         }
 
@@ -590,6 +594,7 @@ public class DefaultDeployer
         public void transferSucceeded( TransferEvent event )
         {
             super.transferSucceeded( event );
+            requireNonNull( event, "event cannot be null" );
             catapult.artifactDeployed( transfer.getArtifact(), transfer.getFile(), null );
         }
 
@@ -615,6 +620,7 @@ public class DefaultDeployer
             throws TransferCancelledException
         {
             super.transferInitiated( event );
+            requireNonNull( event, "event cannot be null" );
             catapult.metadataDeploying( transfer.getMetadata(), transfer.getFile() );
         }
 
@@ -622,6 +628,7 @@ public class DefaultDeployer
         public void transferFailed( TransferEvent event )
         {
             super.transferFailed( event );
+            requireNonNull( event, "event cannot be null" );
             catapult.metadataDeployed( transfer.getMetadata(), transfer.getFile(), transfer.getException() );
         }
 
@@ -629,6 +636,7 @@ public class DefaultDeployer
         public void transferSucceeded( TransferEvent event )
         {
             super.transferSucceeded( event );
+            requireNonNull( event, "event cannot be null" );
             catapult.metadataDeployed( transfer.getMetadata(), transfer.getFile(), null );
         }
 

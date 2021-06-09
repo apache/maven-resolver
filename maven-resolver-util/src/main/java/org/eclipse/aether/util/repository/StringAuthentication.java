@@ -51,11 +51,13 @@ final class StringAuthentication
 
     public void fill( AuthenticationContext context, String key, Map<String, String> data )
     {
+        requireNonNull( context, "context cannot be null" );
         context.put( this.key, value );
     }
 
     public void digest( AuthenticationDigest digest )
     {
+        requireNonNull( digest, "digest cannot be null" );
         digest.update( key, value );
     }
 

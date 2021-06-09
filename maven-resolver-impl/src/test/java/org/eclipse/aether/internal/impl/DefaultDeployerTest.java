@@ -19,6 +19,7 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -322,6 +323,8 @@ public class DefaultDeployerTest
             public void merge( File current, File result )
                 throws RepositoryException
             {
+                requireNonNull( current, "current cannot be null" );
+                requireNonNull( result, "result cannot be null" );
                 Properties props = new Properties();
 
                 try

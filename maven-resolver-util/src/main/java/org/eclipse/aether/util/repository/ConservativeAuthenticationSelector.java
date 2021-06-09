@@ -48,6 +48,7 @@ public final class ConservativeAuthenticationSelector
 
     public Authentication getAuthentication( RemoteRepository repository )
     {
+        requireNonNull( repository, "repository cannot be null" );
         Authentication auth = repository.getAuthentication();
         if ( auth != null )
         {

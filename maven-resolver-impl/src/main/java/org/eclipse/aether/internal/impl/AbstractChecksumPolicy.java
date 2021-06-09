@@ -25,6 +25,8 @@ import org.eclipse.aether.transfer.TransferResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
+
 abstract class AbstractChecksumPolicy
     implements ChecksumPolicy
 {
@@ -40,12 +42,15 @@ abstract class AbstractChecksumPolicy
 
     public boolean onChecksumMatch( String algorithm, int kind )
     {
+        requireNonNull( algorithm, "algorithm cannot be null" );
         return true;
     }
 
     public void onChecksumMismatch( String algorithm, int kind, ChecksumFailureException exception )
         throws ChecksumFailureException
     {
+        requireNonNull( algorithm, "algorithm cannot be null" );
+        requireNonNull( exception, "exception cannot be null" );
         if ( ( kind & KIND_UNOFFICIAL ) == 0 )
         {
             throw exception;
@@ -55,6 +60,8 @@ abstract class AbstractChecksumPolicy
     public void onChecksumError( String algorithm, int kind, ChecksumFailureException exception )
         throws ChecksumFailureException
     {
+        requireNonNull( algorithm, "algorithm cannot be null" );
+        requireNonNull( exception, "exception cannot be null" );
         logger.debug( "Could not validate {} checksum for {}", algorithm, resource.getResourceName(), exception );
     }
 

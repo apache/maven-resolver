@@ -8,9 +8,9 @@ package org.eclipse.aether.transport.file;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,6 +20,8 @@ package org.eclipse.aether.transport.file;
  */
 
 import javax.inject.Named;
+
+import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -54,7 +56,7 @@ public final class FileTransporterFactory
 
     /**
      * Sets the priority of this component.
-     * 
+     *
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */
@@ -67,6 +69,9 @@ public final class FileTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
+        Objects.requireNonNull( "session", "session cannot be null" );
+        Objects.requireNonNull( "repository", "repository cannot be null" );
+
         return new FileTransporter( repository );
     }
 

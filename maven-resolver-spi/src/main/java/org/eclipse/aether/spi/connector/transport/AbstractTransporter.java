@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -48,6 +49,8 @@ public abstract class AbstractTransporter
     public void peek( PeekTask task )
         throws Exception
     {
+        Objects.requireNonNull( "task", "task cannot be null" );
+
         failIfClosed( task );
         implPeek( task );
     }
@@ -64,6 +67,8 @@ public abstract class AbstractTransporter
     public void get( GetTask task )
         throws Exception
     {
+        Objects.requireNonNull( "task", "task cannot be null" );
+
         failIfClosed( task );
         implGet( task );
     }
@@ -144,6 +149,8 @@ public abstract class AbstractTransporter
     public void put( PutTask task )
         throws Exception
     {
+        Objects.requireNonNull( "task", "task cannot be null" );
+
         failIfClosed( task );
         implPut( task );
     }

@@ -24,6 +24,8 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency manager that does not do any dependency management.
  */
@@ -46,11 +48,13 @@ public final class NoopDependencyManager
 
     public DependencyManager deriveChildManager( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         return this;
     }
 
     public DependencyManagement manageDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         return null;
     }
 

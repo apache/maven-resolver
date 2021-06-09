@@ -35,6 +35,8 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionRange;
 import org.eclipse.aether.version.VersionScheme;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  */
 class AbstractPatternDependencyFilter
@@ -95,6 +97,8 @@ class AbstractPatternDependencyFilter
 
     public boolean accept( final DependencyNode node, List<DependencyNode> parents )
     {
+        requireNonNull( node, "node cannot be null" );
+        requireNonNull( parents, "parents cannot be null" );
         final Dependency dependency = node.getDependency();
         if ( dependency == null )
         {

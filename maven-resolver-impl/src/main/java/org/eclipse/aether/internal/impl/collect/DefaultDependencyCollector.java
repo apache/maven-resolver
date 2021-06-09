@@ -143,6 +143,8 @@ public class DefaultDependencyCollector
     public CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
         throws DependencyCollectionException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         session = optimizeSession( session );
 
         RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );

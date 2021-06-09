@@ -815,6 +815,7 @@ public final class DefaultRepositorySystemSession
 
         public Proxy getProxy( RemoteRepository repository )
         {
+            requireNonNull( repository, "repository cannot be null" );
             return repository.getProxy();
         }
 
@@ -828,6 +829,7 @@ public final class DefaultRepositorySystemSession
 
         public RemoteRepository getMirror( RemoteRepository repository )
         {
+            requireNonNull( repository, "repository cannot be null" );
             return null;
         }
 
@@ -841,6 +843,7 @@ public final class DefaultRepositorySystemSession
 
         public Authentication getAuthentication( RemoteRepository repository )
         {
+            requireNonNull( repository, "repository cannot be null" );
             return repository.getAuthentication();
         }
 

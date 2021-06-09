@@ -25,6 +25,8 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A resolution error policy that allows to control caching for artifacts and metadata at a global level.
  */
@@ -71,11 +73,15 @@ public final class SimpleResolutionErrorPolicy
 
     public int getArtifactPolicy( RepositorySystemSession session, ResolutionErrorPolicyRequest<Artifact> request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         return artifactPolicy;
     }
 
     public int getMetadataPolicy( RepositorySystemSession session, ResolutionErrorPolicyRequest<Metadata> request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         return metadataPolicy;
     }
 

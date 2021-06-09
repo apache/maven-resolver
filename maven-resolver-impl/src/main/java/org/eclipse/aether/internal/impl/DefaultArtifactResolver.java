@@ -206,6 +206,9 @@ public class DefaultArtifactResolver
     public ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
         throws ArtifactResolutionException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( session, "session cannot be null" );
+
         return resolveArtifacts( session, Collections.singleton( request ) ).get( 0 );
     }
 
@@ -213,7 +216,8 @@ public class DefaultArtifactResolver
                                                   Collection<? extends ArtifactRequest> requests )
         throws ArtifactResolutionException
     {
-
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( session, "session cannot be null" );
         try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             Collection<Artifact> artifacts = new ArrayList<>( requests.size() );

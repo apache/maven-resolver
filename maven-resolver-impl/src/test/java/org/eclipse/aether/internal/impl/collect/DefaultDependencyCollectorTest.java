@@ -18,6 +18,7 @@ package org.eclipse.aether.internal.impl.collect;
  * specific language governing permissions and limitations
  * under the License.
  */
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -615,9 +616,10 @@ public class DefaultDependencyCollectorTest
             this.exclusions.put( id, exclusions != null ? Arrays.asList( exclusions ) : null );
         }
 
-        public DependencyManagement manageDependency( Dependency d )
+        public DependencyManagement manageDependency( Dependency dependency )
         {
-            String id = toKey( d );
+            requireNonNull( dependency, "dependency cannot be null" );
+            String id = toKey( dependency );
             DependencyManagement mgmt = new DependencyManagement();
             mgmt.setVersion( versions.get( id ) );
             mgmt.setScope( scopes.get( id ) );
@@ -638,6 +640,7 @@ public class DefaultDependencyCollectorTest
 
         public DependencyManager deriveChildManager( DependencyCollectionContext context )
         {
+            requireNonNull( context, "context cannot be null" );
             return this;
         }
 

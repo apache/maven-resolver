@@ -29,6 +29,8 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency traverser that combines zero or more other traversers using a logical {@code AND}. The resulting
  * traverser enables processing of child dependencies if and only if all constituent traversers request traversal.
@@ -111,6 +113,7 @@ public final class AndDependencyTraverser
 
     public boolean traverseDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         for ( DependencyTraverser traverser : traversers )
         {
             if ( !traverser.traverseDependency( dependency ) )
@@ -123,6 +126,7 @@ public final class AndDependencyTraverser
 
     public DependencyTraverser deriveChildTraverser( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         int seen = 0;
         Set<DependencyTraverser> childTraversers = null;
 

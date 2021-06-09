@@ -85,6 +85,7 @@ public class DefaultRepositoryEventDispatcher
 
     public void dispatch( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         if ( !listeners.isEmpty() )
         {
             for ( RepositoryListener listener : listeners )

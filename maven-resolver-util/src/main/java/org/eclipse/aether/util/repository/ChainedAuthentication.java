@@ -27,6 +27,8 @@ import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.AuthenticationDigest;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Authentication that aggregates other authentication blocks. When multiple input authentication blocks provide the
  * same authentication key, the last written value wins.
@@ -63,6 +65,7 @@ final class ChainedAuthentication
 
     public void fill( AuthenticationContext context, String key, Map<String, String> data )
     {
+        requireNonNull( context, "context cannot be null" );
         for ( Authentication authentication : authentications )
         {
             authentication.fill( context, key, data );
@@ -71,6 +74,7 @@ final class ChainedAuthentication
 
     public void digest( AuthenticationDigest digest )
     {
+        requireNonNull( digest, "digest cannot be null" );
         for ( Authentication authentication : authentications )
         {
             authentication.digest( digest );

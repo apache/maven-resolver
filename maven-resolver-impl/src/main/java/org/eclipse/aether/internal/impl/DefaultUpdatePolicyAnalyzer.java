@@ -30,6 +30,8 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  */
 @Singleton
@@ -47,6 +49,7 @@ public class DefaultUpdatePolicyAnalyzer
 
     public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )
     {
+        requireNonNull( session, "session cannot be null" );
         return ordinalOfUpdatePolicy( policy1 ) < ordinalOfUpdatePolicy( policy2 ) ? policy1 : policy2;
     }
 
@@ -74,6 +77,7 @@ public class DefaultUpdatePolicyAnalyzer
 
     public boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
     {
+        requireNonNull( session, "session cannot be null" );
         boolean checkForUpdates;
 
         if ( policy == null )

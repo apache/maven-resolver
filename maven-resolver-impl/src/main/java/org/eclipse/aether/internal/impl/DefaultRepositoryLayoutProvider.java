@@ -90,6 +90,7 @@ public final class DefaultRepositoryLayoutProvider
     public RepositoryLayout newRepositoryLayout( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryLayoutException
     {
+        requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "remote repository cannot be null" );
 
         PrioritizedComponents<RepositoryLayoutFactory> factories = new PrioritizedComponents<>( session );

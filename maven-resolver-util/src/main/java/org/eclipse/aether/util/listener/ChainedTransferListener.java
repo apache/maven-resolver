@@ -29,6 +29,8 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A transfer listener that delegates to zero or more other listeners (multicast). The list of target listeners is
  * thread-safe, i.e. target listeners can be added or removed by any thread at any time.
@@ -136,6 +138,7 @@ public final class ChainedTransferListener
     public void transferInitiated( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         for ( TransferListener listener : listeners )
         {
             try
@@ -153,6 +156,7 @@ public final class ChainedTransferListener
     public void transferStarted( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         for ( TransferListener listener : listeners )
         {
             try
@@ -170,6 +174,7 @@ public final class ChainedTransferListener
     public void transferProgressed( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         for ( TransferListener listener : listeners )
         {
             try
@@ -187,6 +192,7 @@ public final class ChainedTransferListener
     public void transferCorrupted( TransferEvent event )
         throws TransferCancelledException
     {
+        requireNonNull( event, "event cannot be null" );
         for ( TransferListener listener : listeners )
         {
             try
@@ -203,6 +209,7 @@ public final class ChainedTransferListener
     @Override
     public void transferSucceeded( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( TransferListener listener : listeners )
         {
             try
@@ -219,6 +226,7 @@ public final class ChainedTransferListener
     @Override
     public void transferFailed( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         for ( TransferListener listener : listeners )
         {
             try

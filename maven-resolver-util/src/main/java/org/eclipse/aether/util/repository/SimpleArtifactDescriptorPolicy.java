@@ -23,6 +23,8 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicyRequest;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * An artifact descriptor error policy that allows to control error handling at a global level.
  */
@@ -55,6 +57,8 @@ public final class SimpleArtifactDescriptorPolicy
 
     public int getPolicy( RepositorySystemSession session, ArtifactDescriptorPolicyRequest request )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         return policy;
     }
 

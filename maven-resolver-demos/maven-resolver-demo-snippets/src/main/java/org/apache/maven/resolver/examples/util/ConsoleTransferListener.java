@@ -31,6 +31,8 @@ import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A simplistic transfer listener that logs uploads/downloads to the console.
  */
@@ -57,6 +59,7 @@ public class ConsoleTransferListener
     @Override
     public void transferInitiated( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         String message = event.getRequestType() == TransferEvent.RequestType.PUT ? "Uploading" : "Downloading";
 
         out.println( message + ": " + event.getResource().getRepositoryUrl() + event.getResource().getResourceName() );
@@ -65,6 +68,7 @@ public class ConsoleTransferListener
     @Override
     public void transferProgressed( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         TransferResource resource = event.getResource();
         downloads.put( resource, event.getTransferredBytes() );
 
@@ -120,6 +124,7 @@ public class ConsoleTransferListener
     @Override
     public void transferSucceeded( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         transferCompleted( event );
 
         TransferResource resource = event.getResource();
@@ -147,6 +152,7 @@ public class ConsoleTransferListener
     @Override
     public void transferFailed( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         transferCompleted( event );
 
         if ( !( event.getException() instanceof MetadataNotFoundException ) )
@@ -157,6 +163,7 @@ public class ConsoleTransferListener
 
     private void transferCompleted( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         downloads.remove( event.getResource() );
 
         StringBuilder buffer = new StringBuilder( 64 );
@@ -167,6 +174,7 @@ public class ConsoleTransferListener
 
     public void transferCorrupted( TransferEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         event.getException().printStackTrace( out );
     }
 

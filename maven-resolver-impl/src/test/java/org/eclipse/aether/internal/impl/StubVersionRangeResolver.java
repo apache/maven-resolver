@@ -30,6 +30,8 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionScheme;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  */
 public class StubVersionRangeResolver
@@ -41,6 +43,8 @@ public class StubVersionRangeResolver
     public VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
         throws VersionRangeResolutionException
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( request, "request cannot be null" );
         VersionRangeResult result = new VersionRangeResult( request );
         try
         {

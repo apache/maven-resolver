@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -69,6 +69,9 @@ public class EnhancedLocalRepositoryManagerFactory
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
+        Objects.requireNonNull( "session", "session cannot be null" );
+        Objects.requireNonNull( "repository", "repository cannot be null" );
+
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
             return new EnhancedLocalRepositoryManager( repository.getBasedir(), session, trackingFileManager );
@@ -86,7 +89,7 @@ public class EnhancedLocalRepositoryManagerFactory
 
     /**
      * Sets the priority of this component.
-     * 
+     *
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */

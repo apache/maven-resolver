@@ -36,6 +36,8 @@ import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A version selector for use with {@link ConflictResolver} that resolves version conflicts using a nearest-wins
  * strategy. If there is no single node that satisfies all encountered version ranges, the selector will fail.
@@ -151,6 +153,8 @@ public final class NearestVersionSelector
         {
             public boolean accept( DependencyNode node, List<DependencyNode> parents )
             {
+                requireNonNull( node, "node cannot be null" );
+                requireNonNull( parents, "parents cannot be null" );
                 return context.isIncluded( node );
             }
         };

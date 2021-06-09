@@ -19,6 +19,7 @@ package org.eclipse.aether.util.graph.visitor;
  * under the License.
  */
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.*;
 
 import java.util.List;
@@ -103,6 +104,8 @@ public class PathRecordingDependencyVisitorTest
         {
             public boolean accept( DependencyNode node, List<DependencyNode> parents )
             {
+                requireNonNull( node, "node cannot be null" );
+                requireNonNull( parents, "parents cannot be null" );
                 for ( DependencyNode parent : parents )
                 {
                     buffer.append( parent.getDependency().getArtifact().getArtifactId() );

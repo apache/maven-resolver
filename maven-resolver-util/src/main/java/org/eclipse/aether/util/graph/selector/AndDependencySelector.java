@@ -30,6 +30,8 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A dependency selector that combines zero or more other selectors using a logical {@code AND}. The resulting selector
  * selects a given dependency if and only if all constituent selectors do so.
@@ -111,6 +113,7 @@ public final class AndDependencySelector
 
     public boolean selectDependency( Dependency dependency )
     {
+        requireNonNull( dependency, "dependency cannot be null" );
         for ( DependencySelector selector : selectors )
         {
             if ( !selector.selectDependency( dependency ) )
@@ -123,6 +126,7 @@ public final class AndDependencySelector
 
     public DependencySelector deriveChildSelector( DependencyCollectionContext context )
     {
+        requireNonNull( context, "context cannot be null" );
         int seen = 0;
         Set<DependencySelector> childSelectors = null;
 

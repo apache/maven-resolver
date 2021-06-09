@@ -36,6 +36,8 @@ import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A proxy selector that uses the {@link java.net.ProxySelector#getDefault() JRE's global proxy selector}. In
  * combination with the system property {@code java.net.useSystemProxies}, this proxy selector can be employed to pick
@@ -57,6 +59,7 @@ public final class JreProxySelector
 
     public Proxy getProxy( RemoteRepository repository )
     {
+        requireNonNull( repository, "repository cannot be null" );
         List<java.net.Proxy> proxies = null;
         try
         {
@@ -116,6 +119,7 @@ public final class JreProxySelector
 
         public void fill( AuthenticationContext context, String key, Map<String, String> data )
         {
+            requireNonNull( context, "digest cannot be null" );
             Proxy proxy = context.getProxy();
             if ( proxy == null )
             {
@@ -161,6 +165,7 @@ public final class JreProxySelector
 
         public void digest( AuthenticationDigest digest )
         {
+            requireNonNull( digest, "digest cannot be null" );
             // we don't know anything about the JRE's current authenticator, assume the worst (i.e. interactive)
             digest.update( UUID.randomUUID().toString() );
         }

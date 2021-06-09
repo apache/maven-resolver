@@ -26,6 +26,8 @@ import java.util.List;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Collects observed repository events for later inspection.
  */
@@ -47,96 +49,115 @@ class RecordingRepositoryListener
 
     public void artifactDescriptorInvalid( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactDescriptorMissing( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataInvalid( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactResolving( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactResolved( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactDownloading( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactDownloaded( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataDownloaded( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataDownloading( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataResolving( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataResolved( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactInstalling( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactInstalled( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataInstalling( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataInstalled( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactDeploying( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void artifactDeployed( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataDeploying( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 
     public void metadataDeployed( RepositoryEvent event )
     {
+        requireNonNull( event, "event cannot be null" );
         events.add( event );
     }
 

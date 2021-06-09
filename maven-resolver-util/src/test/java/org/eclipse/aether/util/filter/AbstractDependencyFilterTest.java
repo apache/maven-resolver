@@ -24,6 +24,8 @@ import java.util.List;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 
+import static java.util.Objects.requireNonNull;
+
 public abstract class AbstractDependencyFilterTest
 {
 
@@ -34,6 +36,8 @@ public abstract class AbstractDependencyFilterTest
 
             public boolean accept( DependencyNode node, List<DependencyNode> parents )
             {
+                requireNonNull( node, "node cannot be null" );
+                requireNonNull( parents, "parents cannot be null" );
                 return true;
             }
 

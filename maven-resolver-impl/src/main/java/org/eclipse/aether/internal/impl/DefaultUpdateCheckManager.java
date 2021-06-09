@@ -116,6 +116,8 @@ public class DefaultUpdateCheckManager
 
     public void checkArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
         if ( check.getLocalLastUpdated() != 0
             && !isUpdatedRequired( session, check.getLocalLastUpdated(), check.getPolicy() ) )
         {
@@ -241,6 +243,8 @@ public class DefaultUpdateCheckManager
 
     public void checkMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
         if ( check.getLocalLastUpdated() != 0
             && !isUpdatedRequired( session, check.getLocalLastUpdated(), check.getPolicy() ) )
         {
@@ -525,6 +529,8 @@ public class DefaultUpdateCheckManager
 
     public void touchArtifact( RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
         File artifactFile = check.getFile();
         File touchFile = getArtifactTouchFile( artifactFile );
 
@@ -555,6 +561,8 @@ public class DefaultUpdateCheckManager
 
     public void touchMetadata( RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( check, "check cannot be null" );
         File metadataFile = check.getFile();
         File touchFile = getMetadataTouchFile( metadataFile );
 

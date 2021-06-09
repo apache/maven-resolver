@@ -169,7 +169,8 @@ public class DefaultMetadataResolver
     public List<MetadataResult> resolveMetadata( RepositorySystemSession session,
                                                  Collection<? extends MetadataRequest> requests )
     {
-
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( requests, "requests cannot be null" );
         try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
         {
             Collection<Metadata> metadata = new ArrayList<>( requests.size() );

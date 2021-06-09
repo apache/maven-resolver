@@ -131,6 +131,9 @@ public class DefaultRemoteRepositoryManager
                                                          List<RemoteRepository> recessiveRepositories,
                                                          boolean recessiveIsRaw )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( dominantRepositories, "dominantRepositories cannot be null" );
+        requireNonNull( recessiveRepositories, "recessiveRepositories cannot be null" );
         if ( recessiveRepositories.isEmpty() )
         {
             return dominantRepositories;
@@ -275,6 +278,8 @@ public class DefaultRemoteRepositoryManager
     public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
                                        boolean snapshots )
     {
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
         RepositoryPolicy policy1 = releases ? repository.getPolicy( false ) : null;
         RepositoryPolicy policy2 = snapshots ? repository.getPolicy( true ) : null;
         return merge( session, policy1, policy2, true );

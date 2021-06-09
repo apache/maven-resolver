@@ -31,6 +31,8 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Deprecated {@link org.eclipse.aether.impl.SyncContextFactory} implementation that delegates to proper
  * {@link SyncContextFactory} implementation. Used in Guice/SISU where we cannot bind same instance to two keys,
@@ -66,6 +68,7 @@ public final class DefaultSyncContextFactory
     @Override
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
+        requireNonNull( session, "session cannot be null" );
         return delegate.newInstance( session, shared );
     }
 }
