@@ -51,15 +51,15 @@ ${esc.hash}${esc.hash} Installation/Testing
   ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.12.1/jackson-dataformat-yaml-2.12.1.jar">jackson-dataformat-yaml-2.12.1.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling/2.0.11.Final/jboss-marshalling-2.0.11.Final.jar">jboss-marshalling-2.0.11.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling-river/2.0.11.Final/jboss-marshalling-river-2.0.11.Final.jar">jboss-marshalling-river-2.0.11.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.60.Final/netty-buffer-4.1.60.Final.jar">netty-buffer-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.60.Final/netty-codec-4.1.60.Final.jar">netty-codec-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.60.Final/netty-codec-dns-4.1.60.Final.jar">netty-codec-dns-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-common/4.1.60.Final/netty-common-4.1.60.Final.jar">netty-common-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-handler/4.1.60.Final/netty-handler-4.1.60.Final.jar">netty-handler-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.60.Final/netty-resolver-4.1.60.Final.jar">netty-resolver-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.60.Final/netty-resolver-dns-4.1.60.Final.jar">netty-resolver-dns-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.60.Final/netty-transport-4.1.60.Final.jar">netty-transport-4.1.60.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/3.15.3/redisson-3.15.3.jar">redisson-3.15.3.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.65.Final/netty-buffer-4.1.65.Final.jar">netty-buffer-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.65.Final/netty-codec-4.1.65.Final.jar">netty-codec-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.65.Final/netty-codec-dns-4.1.65.Final.jar">netty-codec-dns-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-common/4.1.65.Final/netty-common-4.1.65.Final.jar">netty-common-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-handler/4.1.65.Final/netty-handler-4.1.65.Final.jar">netty-handler-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.65.Final/netty-resolver-4.1.65.Final.jar">netty-resolver-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.65.Final/netty-resolver-dns-4.1.65.Final.jar">netty-resolver-dns-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.65.Final/netty-transport-4.1.65.Final.jar">netty-transport-4.1.65.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/3.15.6/redisson-3.15.6.jar">redisson-3.15.6.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.27/snakeyaml-1.27.jar">snakeyaml-1.27.jar</a></pre>
 - Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
 - Now start a multithreaded Maven build on your project.
