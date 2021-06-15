@@ -1,0 +1,83 @@
+${esc.hash} About SyncContextFactory
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+This module among others, implements `SyncContextFactory`. The `SyncContextFactory` component is
+responsible to synchronize (coordinate) access to shared resources in Maven Resolver internals. Some examples:
+- single threaded (ST) build on a single host: given resolution by default happens in multi threaded (MT) way, files
+  in a local repository must be protected from simultaneous access. In this case, it is enough for coordination to
+  happen "locally", at single JVM process level.
+- multi threaded (MT) build on a single host: same issues as above, but multiplied by MT build threads. As above,
+  in this case, it is enough for coordination to happen "locally", at JVM process level.
+- multi process (MP) build on a single host: in case multiple processes "share" (access, are set to use) the same local
+  repository, coordination must exist between processes as well. Here the coordination must span across multiple
+  JVM processes sharing same resource.
+- multi process (MP) build on multiple hosts using same (for example NFS mounted) local repository. Here again, the
+  shared resource (the NFS mounted local repository) should be protected from simultaneous access. Here the coordination
+  must span all the processes across all the hosts involved.
+
+As can be seen, the ST and MT cases can be solved by "local" locking at JVM level only. In MP single host case
+a cross process, and in MP multi-host case a cross process and cross host coordination is required.
+
+The defaults in Maven Resolver cover ST and MT cases out of the box (by default).
+
+This module implementation for the interface `org.eclipse.aether.spi.synccontext.SyncContextFactory`
+uses resolver named locks.
+
+${esc.hash}${esc.hash} Configuration Options for "named" `SyncContextFactory`
+
+You can control and configure several aspects of `NamedSyncContextFactory`:
+
+- `aether.syncContext.named.factory` (optional, default is `rwlock-local`): the named lock factory to be used.
+- `aether.syncContext.named.nameMapper` (optional, default is `gav`): creates lock names out of artifact coordinates.
+- `aether.syncContext.named.time` (optional, default is 30): the time value for being blocked by trying to acquire a lock.
+- `aether.syncContext.named.time.unit` (optional, default is `java.util.concurrent.TimeUnit.SECONDS`): the time unit
+  of time value.
+
+For the `aether.syncContext.named.factory` property following values are allowed:
+
+- `rwlock-local` (default), uses JVM `ReentrantReadWriteLock` per lock name, usable for MT builds.
+- `semaphore-local`, uses JVM `Semaphore` per lock name, usable for MT builds.
+- `noop`, implement no-op locking (no locking). For experimenting only. Has same functionality as old "nolock"
+  SyncContextFactory implementation.
+
+For the `aether.syncContext.named.nameMapper` property following values are allowed:
+
+- `discriminating` (default), uses hostname + local repo + GAV to create unique lock names for artifacts.
+- `gav` uses GAV to create unique lock names for artifacts and metadata. Is not unique if multiple local repositories are involved.
+- `static` uses static (same) string as lock name for any input. Effectively providing functionality same as old
+  "global" locking SyncContextFactory.
+
+Extra values for factory (these need extra setup and will work with Sisu DI only):
+
+- `semaphore-hazelcast`, distributed, usable with MT and MP builds, **extra setup needed**.
+- `semaphore-hazelcast-client`, distributed, usable with MT and MP builds, **extra setup needed**.
+- `rwlock-redisson`, distributed, usable with MT and MP builds, **extra setup needed**.
+- `semaphore-redisson`, distributed, usable with MT and MP builds, **extra setup needed**.
+
+Other configuration keys:
+
+- `aether.syncContext.named.static.name`, the value to use as static lock name, if `static` name mapper is used.
+  If not set, defaults to "static".
+- `aether.syncContext.named.discriminating.discriminator`, when `discriminating` name mapper is used, sets the a
+  discriminator uniquely identifying a host and local repository pair. If not set, discriminator is calculated by
+  applying `sha1(hostname + ":" + localRepoPath)` + GAV name mapper.
+- `aether.syncContext.named.discriminating.hostname`, the hostname to be used to calculate discriminator value,
+  if above value not set. If not set, the hostname is detected using Java API.

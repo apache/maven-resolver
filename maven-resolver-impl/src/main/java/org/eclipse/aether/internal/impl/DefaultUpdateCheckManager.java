@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SessionData;
@@ -55,12 +56,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultUpdateCheckManager
     implements UpdateCheckManager, Service
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
+
+    private TrackingFileManager trackingFileManager;
 
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
@@ -82,18 +86,26 @@ public class DefaultUpdateCheckManager
 
     public DefaultUpdateCheckManager()
     {
-        // enables default constructor
+        // default ctor for ServiceLocator
     }
 
     @Inject
-    DefaultUpdateCheckManager( UpdatePolicyAnalyzer updatePolicyAnalyzer )
+    DefaultUpdateCheckManager( TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer )
     {
+        setTrackingFileManager( trackingFileManager );
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
     }
 
     public void initService( ServiceLocator locator )
     {
+        setTrackingFileManager( locator.getService( TrackingFileManager.class ) );
         setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
+    }
+
+    public DefaultUpdateCheckManager setTrackingFileManager( TrackingFileManager trackingFileManager )
+    {
+        this.trackingFileManager = requireNonNull( trackingFileManager );
+        return this;
     }
 
     public DefaultUpdateCheckManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
@@ -332,7 +344,7 @@ public class DefaultUpdateCheckManager
         }
         else
         {
-            return new MetadataTransferException( metadata, repository, metadata + "failed to transfer from "
+            return new MetadataTransferException( metadata, repository, metadata + " failed to transfer from "
                 + repository.getUrl() + " during a previous attempt."
                 + " This failure was cached in the local repository and"
                 + " resolution will not be reattempted until the update interval of " + repository.getId()
@@ -507,7 +519,7 @@ public class DefaultUpdateCheckManager
 
     private Properties read( File touchFile )
     {
-        Properties props = new TrackingFileManager().read( touchFile );
+        Properties props = trackingFileManager.read( touchFile );
         return ( props != null ) ? props : new Properties();
     }
 
@@ -584,7 +596,7 @@ public class DefaultUpdateCheckManager
             updates.put( transferKey + UPDATED_KEY_SUFFIX, timestamp );
         }
 
-        return new TrackingFileManager().update( touchFile, updates );
+        return trackingFileManager.update( touchFile, updates );
     }
 
 }

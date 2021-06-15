@@ -32,7 +32,10 @@ import java.util.List;
  * 
  * to acquire the repository system. Components that implement {@link Service} will be given an opportunity to acquire
  * further components from the locator, thereby allowing to create the complete object graph of the repository system.
+ *
+ * @deprecated Use some out-of-the-box DI implementation instead.
  */
+@Deprecated
 public interface ServiceLocator
 {
 

@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -47,7 +48,7 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.impl.SyncContextFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.metadata.Metadata;
@@ -75,6 +76,7 @@ import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultMetadataResolver
     implements MetadataResolver, Service
@@ -321,6 +323,9 @@ public class DefaultMetadataResolver
                         session.getLocalRepositoryManager().getPathForRemoteMetadata(
                                 metadata, request.getRepository(), request.getRequestContext() ) );
 
+                metadataDownloading(
+                        session, trace, result.getRequest().getMetadata(), result.getRequest().getRepository() );
+
                 ResolveTask task =
                     new ResolveTask( session, trace, result, installFile, checks, policy.getChecksumPolicy() );
                 tasks.add( task );
@@ -354,6 +359,19 @@ public class DefaultMetadataResolver
 
                 for ( ResolveTask task : tasks )
                 {
+                    /*
+                     * NOTE: Touch after registration with local repo to ensure concurrent resolution is not
+                     * rejected with "already updated" via session data when actual update to local repo is
+                     * still pending.
+                     */
+                    for ( UpdateCheck<Metadata, MetadataTransferException> check : task.checks )
+                    {
+                        updateCheckManager.touchMetadata( task.session, check.setException( task.exception ) );
+                    }
+
+                    metadataDownloaded( session, task.trace, task.request.getMetadata(), task.request.getRepository(),
+                            task.metadataFile, task.exception );
+
                     task.result.setException( task.exception );
                 }
             }
@@ -513,7 +531,6 @@ public class DefaultMetadataResolver
     class ResolveTask
         implements Runnable
     {
-
         final RepositorySystemSession session;
 
         final RequestTrace trace;
@@ -547,8 +564,6 @@ public class DefaultMetadataResolver
         {
             Metadata metadata = request.getMetadata();
             RemoteRepository requestRepository = request.getRepository();
-
-            metadataDownloading( session, trace, metadata, requestRepository );
 
             try
             {
@@ -593,19 +608,6 @@ public class DefaultMetadataResolver
             {
                 exception = new MetadataTransferException( metadata, requestRepository, e );
             }
-
-            /*
-             * NOTE: Touch after registration with local repo to ensure concurrent resolution is not rejected with
-             * "already updated" via session data when actual update to local repo is still pending.
-             */
-            for ( UpdateCheck<Metadata, MetadataTransferException> check : checks )
-            {
-                updateCheckManager.touchMetadata( session, check.setException( exception ) );
-            }
-
-            metadataDownloaded( session, trace, metadata, requestRepository, metadataFile, exception );
         }
-
     }
-
 }

@@ -33,6 +33,8 @@ import static java.util.Objects.requireNonNull;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider;
+import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
 import org.eclipse.aether.internal.impl.DefaultDeployer;
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
@@ -45,7 +47,6 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
-import org.eclipse.aether.internal.impl.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.DefaultTransporterProvider;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
@@ -53,6 +54,8 @@ import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
+import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
@@ -62,6 +65,7 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.log.LoggerFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 /**
  * A simple service locator that is already setup with all components from this library. To acquire a complete
@@ -75,7 +79,10 @@ import org.eclipse.aether.spi.log.LoggerFactory;
  * 
  * <em>Note:</em> This class is not thread-safe. Clients are expected to create the service locator and the repository
  * system on a single thread.
+ *
+ * @deprecated Use some out-of-the-box DI implementation instead.
  */
+@Deprecated
 public final class DefaultServiceLocator
     implements ServiceLocator
 {
@@ -205,6 +212,8 @@ public final class DefaultServiceLocator
         addService( UpdateCheckManager.class, DefaultUpdateCheckManager.class );
         addService( UpdatePolicyAnalyzer.class, DefaultUpdatePolicyAnalyzer.class );
         addService( FileProcessor.class, DefaultFileProcessor.class );
+        addService( org.eclipse.aether.impl.SyncContextFactory.class,
+            org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class );
         addService( SyncContextFactory.class, DefaultSyncContextFactory.class );
         addService( RepositoryEventDispatcher.class, DefaultRepositoryEventDispatcher.class );
         addService( OfflineController.class, DefaultOfflineController.class );
@@ -212,6 +221,8 @@ public final class DefaultServiceLocator
         addService( LocalRepositoryManagerFactory.class, SimpleLocalRepositoryManagerFactory.class );
         addService( LocalRepositoryManagerFactory.class, EnhancedLocalRepositoryManagerFactory.class );
         addService( LoggerFactory.class, Slf4jLoggerFactory.class );
+        addService( TrackingFileManager.class, DefaultTrackingFileManager.class );
+        addService( NamedLockFactorySelector.class, NamedLockFactorySelector.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )

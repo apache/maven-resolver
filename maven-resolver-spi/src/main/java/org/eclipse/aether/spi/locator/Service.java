@@ -23,7 +23,10 @@ package org.eclipse.aether.spi.locator;
  * A stateless component of the repository system. The primary purpose of this interface is to provide a convenient
  * means to programmatically wire the several components of the repository system together when it is used outside of an
  * IoC container.
+ *
+ * @deprecated Use some out-of-the-box DI implementation instead.
  */
+@Deprecated
 public interface Service
 {
 

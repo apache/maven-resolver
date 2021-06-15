@@ -8,9 +8,9 @@ package org.eclipse.aether.spi.log;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,7 +21,10 @@ package org.eclipse.aether.spi.log;
 
 /**
  * A logger factory that disables any logging.
+ *
+ * @deprecated Use SLF4J instead
  */
+@Deprecated
 public final class NullLoggerFactory
     implements LoggerFactory
 {
@@ -49,7 +52,7 @@ public final class NullLoggerFactory
     /**
      * Gets a logger from the specified factory for the given class, falling back to a logger from this factory if the
      * specified factory is {@code null} or fails to provide a logger.
-     * 
+     *
      * @param loggerFactory The logger factory from which to get the logger, may be {@code null}.
      * @param type The class for which to get the logger, must not be {@code null}.
      * @return The requested logger, never {@code null}.

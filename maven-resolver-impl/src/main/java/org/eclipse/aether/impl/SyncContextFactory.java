@@ -19,28 +19,12 @@ package org.eclipse.aether.impl;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SyncContext;
-
 /**
- * A factory to create synchronization contexts. A synchronization context is used to coordinate concurrent access to
- * artifacts or metadata.
- * 
- * @provisional This type is provisional and can be changed, moved or removed without prior notice.
+ * This class is here for binary compatibility only.
+ *
+ * @deprecated For backward compatibility reasons only, do not use this interface.
  */
-public interface SyncContextFactory
+@Deprecated
+public interface SyncContextFactory extends org.eclipse.aether.spi.synccontext.SyncContextFactory
 {
-
-    /**
-     * Creates a new synchronization context.
-     * 
-     * @param session The repository session during which the context will be used, must not be {@code null}.
-     * @param shared A flag indicating whether access to the artifacts/metadata associated with the new context can be
-     *            shared among concurrent readers or whether access needs to be exclusive to the calling thread.
-     * @return The synchronization context, never {@code null}.
-     * @see RepositorySystem#newSyncContext(RepositorySystemSession, boolean)
-     */
-    SyncContext newInstance( RepositorySystemSession session, boolean shared );
-
 }

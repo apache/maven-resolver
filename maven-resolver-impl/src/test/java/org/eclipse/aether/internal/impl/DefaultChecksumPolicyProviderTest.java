@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,7 +19,10 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -27,6 +30,8 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.transfer.TransferResource;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,7 +93,7 @@ public class DefaultChecksumPolicyProviderTest
         assertNull( policy );
     }
 
-    @Test
+    @Test( expected = IllegalArgumentException.class )
     public void testNewChecksumPolicy_Unknown()
     {
         ChecksumPolicy policy = provider.newChecksumPolicy( session, repository, resource, CHECKSUM_POLICY_UNKNOWN );
@@ -101,7 +106,7 @@ public class DefaultChecksumPolicyProviderTest
     {
         String[] policies =
             { RepositoryPolicy.CHECKSUM_POLICY_FAIL, RepositoryPolicy.CHECKSUM_POLICY_WARN,
-                RepositoryPolicy.CHECKSUM_POLICY_IGNORE, CHECKSUM_POLICY_UNKNOWN };
+                RepositoryPolicy.CHECKSUM_POLICY_IGNORE };
         for ( String policy : policies )
         {
             assertEquals( policy, policy, provider.getEffectiveChecksumPolicy( session, policy, policy ) );
@@ -133,10 +138,12 @@ public class DefaultChecksumPolicyProviderTest
                 { RepositoryPolicy.CHECKSUM_POLICY_IGNORE, RepositoryPolicy.CHECKSUM_POLICY_IGNORE } };
         for ( String[] testCase : testCases )
         {
-            assertEquals( "unknown vs " + testCase[1], testCase[0],
-                          provider.getEffectiveChecksumPolicy( session, CHECKSUM_POLICY_UNKNOWN, testCase[1] ) );
-            assertEquals( "unknown vs " + testCase[1], testCase[0],
-                          provider.getEffectiveChecksumPolicy( session, testCase[1], CHECKSUM_POLICY_UNKNOWN ) );
+            IllegalArgumentException e = assertThrows( IllegalArgumentException.class,
+                    () -> provider.getEffectiveChecksumPolicy( session, CHECKSUM_POLICY_UNKNOWN, testCase[1] ) );
+            assertThat( e.getMessage(), is("Unsupported policy: unknown") );
+            e = assertThrows( IllegalArgumentException.class,
+                    () -> provider.getEffectiveChecksumPolicy( session, testCase[1], CHECKSUM_POLICY_UNKNOWN ) );
+            assertThat( e.getMessage(), is("Unsupported policy: unknown") );
         }
     }
 

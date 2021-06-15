@@ -37,6 +37,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
+/**
+ * Guice module for Demo Resolver snippets.
+ */
 class DemoResolverModule
     extends AbstractModule
 {
@@ -44,6 +47,10 @@ class DemoResolverModule
     @Override
     protected void configure()
     {
+        // NOTE: see org.eclipse.aether.impl.guice.AetherModule Javadoc:
+        // AetherModule alone is "ready-made" but incomplete. To have a complete resolver, we
+        // actually need org.apache.maven.repository.internal.MavenResolverModule that installs
+        // AetherModule and binds the missing components making module complete.
         install( new MavenResolverModule() );
         // alternatively, use the Guice Multibindings extensions
         bind( RepositoryConnectorFactory.class ).annotatedWith( Names.named( "basic" ) )

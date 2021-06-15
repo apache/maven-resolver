@@ -25,7 +25,9 @@
  * dependencies. While not the most popular approach to component wiring, this service locator enables applications
  * that do not wish to pull in more sophisticated solutions like dependency injection containers to have a small
  * footprint. Therefore, all components should implement {@link org.eclipse.aether.spi.locator.Service} to support this
- * goal. 
+ * goal.
+ *
+ * @deprecated Use some out-of-the-box DI implementation instead.
  */
 package org.eclipse.aether.spi.locator;
 

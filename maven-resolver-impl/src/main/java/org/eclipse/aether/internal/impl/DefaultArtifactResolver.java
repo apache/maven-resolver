@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -44,7 +45,7 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.impl.SyncContextFactory;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
@@ -79,6 +80,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
+@Singleton
 @Named
 public class DefaultArtifactResolver
     implements ArtifactResolver, Service
@@ -353,6 +355,7 @@ public class DefaultArtifactResolver
                 LOGGER.debug( "Verifying availability of {} from {}", local.getFile(), repos );
             }
 
+            LOGGER.debug( "Resolving artifact {} from {}", artifact, repos );
             AtomicBoolean resolved = new AtomicBoolean( false );
             Iterator<ResolutionGroup> groupIt = groups.iterator();
             for ( RemoteRepository repo : repos )
@@ -493,6 +496,20 @@ public class DefaultArtifactResolver
 
         try
         {
+            RemoteRepository repo = group.repository;
+            if ( repo.isBlocked() )
+            {
+                if ( repo.getMirroredRepositories().isEmpty() )
+                {
+                    throw new NoRepositoryConnectorException( repo, "Blocked repository: " + repo );
+                }
+                else
+                {
+                    throw new NoRepositoryConnectorException( repo, "Blocked mirror for repositories: "
+                        + repo.getMirroredRepositories() );
+                }
+            }
+
             try ( RepositoryConnector connector =
                           repositoryConnectorProvider.newRepositoryConnector( session, group.repository ) )
             {

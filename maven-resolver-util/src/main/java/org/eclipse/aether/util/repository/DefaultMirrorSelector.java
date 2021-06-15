@@ -37,7 +37,16 @@ public final class DefaultMirrorSelector
 
     private static final String EXTERNAL_WILDCARD = "external:*";
 
+    private static final String EXTERNAL_HTTP_WILDCARD = "external:http:*";
+
     private final List<MirrorDef> mirrors = new ArrayList<>();
+
+    @Deprecated
+    public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
+                                      String mirrorOfIds, String mirrorOfTypes )
+    {
+        return add( id, url, type, repositoryManager, false, mirrorOfIds, mirrorOfTypes );
+    }
 
     /**
      * Adds the specified mirror to this selector.
@@ -46,19 +55,20 @@ public final class DefaultMirrorSelector
      * @param url The URL of the mirror, must not be {@code null}.
      * @param type The content type of the mirror, must not be {@code null}.
      * @param repositoryManager A flag whether the mirror is a repository manager or a simple server.
+     * @param blocked A flag whether the mirror is blocked from performing any download requests.
      * @param mirrorOfIds The identifier(s) of remote repositories to mirror, must not be {@code null}. Multiple
-     *            identifiers can be separated by comma and additionally the wildcards "*" and "external:*" can be used
-     *            to match all (external) repositories, prefixing a repo id with an exclamation mark allows to express
-     *            an exclusion. For example "external:*,!central".
+     *            identifiers can be separated by comma and additionally the wildcards "*", "external:http:*" and
+     *            "external:*" can be used to match all (external) repositories, prefixing a repo id with an
+     *            exclamation mark allows to express an exclusion. For example "external:*,!central".
      * @param mirrorOfTypes The content type(s) of remote repositories to mirror, may be {@code null} or empty to match
      *            any content type. Similar to the repo id specification, multiple types can be comma-separated, the
      *            wildcard "*" and the "!" negation syntax are supported. For example "*,!p2".
      * @return This selector for chaining, never {@code null}.
      */
-    public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager,
+    public DefaultMirrorSelector add( String id, String url, String type, boolean repositoryManager, boolean blocked,
                                       String mirrorOfIds, String mirrorOfTypes )
     {
-        mirrors.add( new MirrorDef( id, url, type, repositoryManager, mirrorOfIds, mirrorOfTypes ) );
+        mirrors.add( new MirrorDef( id, url, type, repositoryManager, blocked, mirrorOfIds, mirrorOfTypes ) );
 
         return this;
     }
@@ -76,6 +86,8 @@ public final class DefaultMirrorSelector
             new RemoteRepository.Builder( mirror.id, repository.getContentType(), mirror.url );
 
         builder.setRepositoryManager( mirror.repositoryManager );
+
+        builder.setBlocked( mirror.blocked );
 
         if ( mirror.type != null && mirror.type.length() > 0 )
         {
@@ -119,11 +131,17 @@ public final class DefaultMirrorSelector
     }
 
     /**
-     * This method checks if the pattern matches the originalRepository. Valid patterns: * = everything external:* =
-     * everything not on the localhost and not file based. repo,repo1 = repo or repo1 *,!repo1 = everything except repo1
+     * This method checks if the pattern matches the originalRepository. Valid patterns:
+     * <ul>
+     * <li>{@code *} = everything,</li>
+     * <li>{@code external:*} = everything not on the localhost and not file based,</li>
+     * <li>{@code external:http:*} = any repository not on the localhost using HTTP,</li>
+     * <li>{@code repo,repo1} = {@code repo} or {@code repo1},</li>
+     * <li>{@code *,!repo1} = everything except {@code repo1}.</li>
+     * </ul>
      * 
      * @param repository to compare for a match.
-     * @param pattern used for match. Currently only '*' is supported.
+     * @param pattern used for match.
      * @return true if the repository is a match to this pattern.
      */
     static boolean matchPattern( RemoteRepository repository, String pattern )
@@ -164,6 +182,12 @@ public final class DefaultMirrorSelector
                     result = true;
                     // don't stop processing in case a future segment explicitly excludes this repo
                 }
+                // check for external:http:*
+                else if ( EXTERNAL_HTTP_WILDCARD.equals( repo ) && isExternalHttpRepo( repository ) )
+                {
+                    result = true;
+                    // don't stop processing in case a future segment explicitly excludes this repo
+                }
                 else if ( WILDCARD.equals( repo ) )
                 {
                     result = true;
@@ -182,10 +206,28 @@ public final class DefaultMirrorSelector
      */
     static boolean isExternalRepo( RemoteRepository repository )
     {
-        boolean local =
-            "localhost".equals( repository.getHost() ) || "127.0.0.1".equals( repository.getHost() )
-                || "file".equalsIgnoreCase( repository.getProtocol() );
+        boolean local = isLocal( repository.getHost() ) || "file".equalsIgnoreCase( repository.getProtocol() );
         return !local;
+    }
+
+    private static boolean isLocal( String host )
+    {
+        return "localhost".equals( host ) || "127.0.0.1".equals( host );
+    }
+
+    /**
+     * Checks the URL to see if this repository refers to a non-localhost repository using HTTP.
+     * 
+     * @param repository The repository to check, must not be {@code null}.
+     * @return {@code true} if external, {@code false} otherwise.
+     */
+    static boolean isExternalHttpRepo( RemoteRepository repository )
+    {
+        return ( "http".equalsIgnoreCase( repository.getProtocol() )
+            || "dav".equalsIgnoreCase( repository.getProtocol() )
+            || "dav:http".equalsIgnoreCase( repository.getProtocol() )
+            || "dav+http".equalsIgnoreCase( repository.getProtocol() ) )
+            && !isLocal( repository.getHost() );
     }
 
     /**
@@ -253,17 +295,20 @@ public final class DefaultMirrorSelector
 
         final boolean repositoryManager;
 
+        final boolean blocked;
+
         final String mirrorOfIds;
 
         final String mirrorOfTypes;
 
-        MirrorDef( String id, String url, String type, boolean repositoryManager, String mirrorOfIds,
-                          String mirrorOfTypes )
+        MirrorDef( String id, String url, String type, boolean repositoryManager, boolean blocked, String mirrorOfIds,
+                   String mirrorOfTypes )
         {
             this.id = id;
             this.url = url;
             this.type = type;
             this.repositoryManager = repositoryManager;
+            this.blocked = blocked;
             this.mirrorOfIds = mirrorOfIds;
             this.mirrorOfTypes = mirrorOfTypes;
         }

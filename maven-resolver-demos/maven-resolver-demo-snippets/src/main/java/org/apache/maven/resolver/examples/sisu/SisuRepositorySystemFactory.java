@@ -23,10 +23,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.sisu.launch.Main;
+import org.eclipse.sisu.space.BeanScanning;
 
 /**
  * A factory for repository system instances that employs Eclipse Sisu to wire up the system's components.
@@ -40,7 +44,12 @@ public class SisuRepositorySystemFactory
 
     public static RepositorySystem newRepositorySystem()
     {
-        return Main.boot( SisuRepositorySystemFactory.class ).repositorySystem;
+        final Module app = Main.wire(
+            BeanScanning.INDEX,
+            new SisuRepositorySystemDemoModule()
+        );
+        final Injector injector = Guice.createInjector( app );
+        return injector.getInstance( SisuRepositorySystemFactory.class ).repositorySystem;
     }
 
     @Named

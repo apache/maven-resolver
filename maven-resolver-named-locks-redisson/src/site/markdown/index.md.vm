@@ -1,0 +1,65 @@
+${esc.hash} Named Locks using Redisson
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+This module implement named locks using Redisson. It provides two implementations, that are distributed and rely on
+Redisson distributed objects feature.
+
+Out of the box "redisson" (distributed) named lock implementations are following:
+
+- `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`
+  that uses Redisson backed `org.redisson.api.RReadWriteLock`.
+- `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`
+  that uses Redisson backed `org.redisson.api.RSemaphore`.
+
+${esc.hash}${esc.hash} Open Issues/Notes
+
+- It only works when Sisu DI is used and not the bundled `AetherModule` or
+  `ServiceLocator` (Maven uses Sisu dependency injection).
+- Usage from plugins has not been tested yet.
+- The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
+  of dependency injection.
+
+${esc.hash}${esc.hash} Installation/Testing
+
+- Create the directory `${maven.home}/lib/ext/redisson/`.
+- Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/redisson/*.jar`
+  right after the `${maven.conf}/logging` line.
+- Copy the following dependencies from Maven Central to `${maven.home}/lib/ext/redisson/`:
+  <pre class="source">
+  ├── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.12.1/jackson-annotations-2.12.1.jar">jackson-annotations-2.12.1.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.12.1/jackson-core-2.12.1.jar">jackson-core-2.12.1.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.12.1/jackson-databind-2.12.1.jar">jackson-databind-2.12.1.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.12.1/jackson-dataformat-yaml-2.12.1.jar">jackson-dataformat-yaml-2.12.1.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling/2.0.11.Final/jboss-marshalling-2.0.11.Final.jar">jboss-marshalling-2.0.11.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling-river/2.0.11.Final/jboss-marshalling-river-2.0.11.Final.jar">jboss-marshalling-river-2.0.11.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.60.Final/netty-buffer-4.1.60.Final.jar">netty-buffer-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.60.Final/netty-codec-4.1.60.Final.jar">netty-codec-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.60.Final/netty-codec-dns-4.1.60.Final.jar">netty-codec-dns-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-common/4.1.60.Final/netty-common-4.1.60.Final.jar">netty-common-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-handler/4.1.60.Final/netty-handler-4.1.60.Final.jar">netty-handler-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.60.Final/netty-resolver-4.1.60.Final.jar">netty-resolver-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.60.Final/netty-resolver-dns-4.1.60.Final.jar">netty-resolver-dns-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.60.Final/netty-transport-4.1.60.Final.jar">netty-transport-4.1.60.Final.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/3.15.3/redisson-3.15.3.jar">redisson-3.15.3.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.27/snakeyaml-1.27.jar">snakeyaml-1.27.jar</a></pre>
+- Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
+- Now start a multithreaded Maven build on your project.

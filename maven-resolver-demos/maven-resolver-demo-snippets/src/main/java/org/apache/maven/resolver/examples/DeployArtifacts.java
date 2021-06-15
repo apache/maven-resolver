@@ -47,7 +47,7 @@ public class DeployArtifacts
         System.out.println( "------------------------------------------------------------" );
         System.out.println( DeployArtifacts.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem();
+        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
         RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
