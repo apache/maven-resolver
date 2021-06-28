@@ -90,6 +90,7 @@
     <module>maven-resolver-named-locks-hazelcast</module>
     <module>maven-resolver-named-locks-redisson</module>
     <module>maven-resolver-impl</module>
+    <module>maven-resolver-synccontext-ipc</module>
     <module>maven-resolver-test-util</module>
     <module>maven-resolver-connector-basic</module>
     <module>maven-resolver-transport-classpath</module>
@@ -188,6 +189,11 @@
         <artifactId>javax.inject</artifactId>
         <version>1</version>
         <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.annotation</groupId>
+        <artifactId>javax.annotation-api</artifactId>
+        <version>1.3.2</version>
       </dependency>
 
       <dependency>
