@@ -67,6 +67,16 @@ public class ConfigUtilsTest
     }
 
     @Test
+    public void testGetMap_StringConversion()
+    {
+        Map<String, String> val = new HashMap<>();
+        val.put("key1", "value1");
+        val.put("key:=2", "value2");
+        config.put( "some-map", "#comment\nkey1=value1\nkey\\:\\=2=value2");
+        assertEquals( val, ConfigUtils.getMap( config, null, "no-object", "some-map" ) );
+    }
+
+    @Test
     public void testGetList_Default()
     {
         List<?> val = new ArrayList<Object>();

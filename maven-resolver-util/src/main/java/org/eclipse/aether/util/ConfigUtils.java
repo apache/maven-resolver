@@ -19,11 +19,14 @@ package org.eclipse.aether.util;
  * under the License.
  */
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -368,6 +371,19 @@ public final class ConfigUtils
             if ( value instanceof Map )
             {
                 return (Map<?, ?>) value;
+            }
+            else if ( value instanceof String )
+            {
+                Properties props = new Properties( );
+                try 
+                {
+                    props.load( new StringReader( (String) value ) );
+                    return props;
+                } 
+                catch ( IOException e ) 
+                {
+                    // try next key
+                }
             }
         }
 

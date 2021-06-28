@@ -67,8 +67,11 @@ From | To | With
 `String` | `int` | [`Integer.parseInt(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#parseInt(java.lang.String))
 `String` | `long` | [`Long.parseLong(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Long.html#parseLong(java.lang.String))
 `String` | `float` | [`Float.parseFloat(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Float.html#parseFloat(java.lang.String))
+`String` | `Map` | [`Properties.load(...)`](https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html#load(java.io.Reader))
 
 ## Set Configuration from Apache Maven
 
 To set one of the configuration options from above just use system variables. As system variables only support String values the type conversion mentioned above needs to be leveraged.
 Sometimes Maven uses different default values than the Maven Resolver itself or tries to extract certain values from the `server.xml`. For details refer to <https://github.com/apache/maven/blob/master/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java>.
+
+Maven does only ship with the Wagon Transporter (not the Http Transporter), therefore some properties might not be applicable.
