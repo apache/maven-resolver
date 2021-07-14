@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
-import java.util.Objects;
 import java.util.Properties;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -79,7 +78,7 @@ class EnhancedLocalRepositoryManager
             filename = "_remote.repositories";
         }
         this.trackingFilename = filename;
-        this.trackingFileManager = Objects.requireNonNull( trackingFileManager );
+        this.trackingFileManager = requireNonNull( trackingFileManager );
     }
 
     @Override

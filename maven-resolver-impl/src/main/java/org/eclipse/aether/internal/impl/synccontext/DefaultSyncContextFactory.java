@@ -19,8 +19,6 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import java.util.Objects;
-
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -67,7 +65,7 @@ public final class DefaultSyncContextFactory
     @Override
     public void initService( final ServiceLocator locator )
     {
-        NamedLockFactorySelector selector = Objects.requireNonNull(
+        NamedLockFactorySelector selector = requireNonNull(
             locator.getService( NamedLockFactorySelector.class ) );
         this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
             selector.getSelectedNameMapper(),

@@ -35,10 +35,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.requireNonNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -66,7 +66,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     private RepositorySystemSession session;
 
     public static void createAdapter() {
-        Objects.requireNonNull(namedLockFactory, "NamedLockFactory not set");
+        requireNonNull(namedLockFactory, "NamedLockFactory not set");
         adapter = new NamedLockFactoryAdapter(nameMapper, namedLockFactory, ADAPTER_TIME, ADAPTER_TIME_UNIT);
     }
 

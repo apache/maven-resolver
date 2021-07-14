@@ -23,14 +23,10 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.junit.Test;
 

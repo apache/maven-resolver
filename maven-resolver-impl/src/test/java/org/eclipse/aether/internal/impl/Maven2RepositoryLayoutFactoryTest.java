@@ -22,7 +22,6 @@ package org.eclipse.aether.internal.impl;
 import static org.junit.Assert.*;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 

@@ -29,7 +29,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.UUID;
@@ -60,6 +59,8 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter using Maven Wagon.
@@ -416,7 +417,7 @@ final class WagonTransporter
     private void execute( TransportTask task, TaskRunner runner )
         throws Exception
     {
-        Objects.requireNonNull( "task", "task cannot be null" );
+        requireNonNull( task, "task cannot be null" );
 
         if ( closed.get() )
         {

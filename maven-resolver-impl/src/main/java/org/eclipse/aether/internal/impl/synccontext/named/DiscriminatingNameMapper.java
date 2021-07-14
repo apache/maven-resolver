@@ -37,8 +37,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -79,7 +79,7 @@ public class DiscriminatingNameMapper implements NameMapper
     @Inject
     public DiscriminatingNameMapper( @Named( GAVNameMapper.NAME ) final NameMapper nameMapper )
     {
-        this.nameMapper = Objects.requireNonNull( nameMapper );
+        this.nameMapper = requireNonNull( nameMapper );
         this.hostname = getHostname();
     }
 
