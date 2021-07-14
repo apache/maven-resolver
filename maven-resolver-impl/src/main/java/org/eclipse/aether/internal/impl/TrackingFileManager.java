@@ -53,7 +53,17 @@ class TrackingFileManager
             stream = new FileInputStream( file );
 
             Properties props = new Properties();
-            props.load( stream );
+            
+            if (System.getProperty("spot_file_with_malformed_encoding").equals("true")) {
+                try {
+                    props.load(stream);
+                } catch (Throwable t) {
+                    System.out.println("\nfile: " + file + "\n");
+                    System.exit(1);
+                }
+            } else {
+                props.load(stream);
+            }
 
             return props;
         }
