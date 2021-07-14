@@ -21,13 +21,13 @@ package org.eclipse.aether.transport.file;
 
 import javax.inject.Named;
 
-import java.util.Objects;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter factory for repositories using the {@code file:} protocol.
@@ -69,8 +69,8 @@ public final class FileTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        Objects.requireNonNull( "session", "session cannot be null" );
-        Objects.requireNonNull( "repository", "repository cannot be null" );
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
 
         return new FileTransporter( repository );
     }

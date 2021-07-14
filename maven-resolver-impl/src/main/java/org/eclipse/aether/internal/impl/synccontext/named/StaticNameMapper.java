@@ -29,7 +29,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context.
@@ -61,7 +62,7 @@ public class StaticNameMapper implements NameMapper
      */
     public StaticNameMapper( final String name )
     {
-        this.name = Objects.requireNonNull( name );
+        this.name = requireNonNull( name );
     }
 
     @Override

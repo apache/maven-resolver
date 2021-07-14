@@ -31,8 +31,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Adapter to adapt {@link NamedLockFactory} and {@link NamedLock} to {@link SyncContext}.
@@ -50,14 +51,14 @@ public final class NamedLockFactoryAdapter
     public NamedLockFactoryAdapter( final NameMapper nameMapper, final NamedLockFactory namedLockFactory,
                                     final long time, final TimeUnit timeUnit )
     {
-        this.nameMapper = Objects.requireNonNull( nameMapper );
-        this.namedLockFactory = Objects.requireNonNull( namedLockFactory );
+        this.nameMapper = requireNonNull( nameMapper );
+        this.namedLockFactory = requireNonNull( namedLockFactory );
         if ( time < 0L )
         {
             throw new IllegalArgumentException( "time cannot be negative" );
         }
         this.time = time;
-        this.timeUnit = Objects.requireNonNull( timeUnit );
+        this.timeUnit = requireNonNull( timeUnit );
     }
 
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )

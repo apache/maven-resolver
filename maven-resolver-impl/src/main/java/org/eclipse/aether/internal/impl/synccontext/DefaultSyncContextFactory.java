@@ -67,7 +67,7 @@ public final class DefaultSyncContextFactory
     @Override
     public void initService( final ServiceLocator locator )
     {
-        NamedLockFactorySelector selector = Objects.requireNonNull(
+        NamedLockFactorySelector selector = requireNonNull(
             locator.getService( NamedLockFactorySelector.class ) );
         this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
             selector.getSelectedNameMapper(),

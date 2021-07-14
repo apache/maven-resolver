@@ -22,13 +22,13 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.Objects;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Creates local repository managers for repository type {@code "simple"}.
@@ -48,8 +48,8 @@ public class SimpleLocalRepositoryManagerFactory
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
-        Objects.requireNonNull( "session", "session cannot be null" );
-        Objects.requireNonNull( "repository", "repository cannot be null" );
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
 
         if ( "".equals( repository.getContentType() ) || "simple".equals( repository.getContentType() ) )
         {

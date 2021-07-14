@@ -19,8 +19,6 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import java.util.Objects;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -32,6 +30,8 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}. Enhanced
@@ -57,20 +57,20 @@ public class EnhancedLocalRepositoryManagerFactory
     @Inject
     public EnhancedLocalRepositoryManagerFactory( final TrackingFileManager trackingFileManager )
     {
-        this.trackingFileManager = Objects.requireNonNull( trackingFileManager );
+        this.trackingFileManager = requireNonNull( trackingFileManager );
     }
 
     @Override
     public void initService( final ServiceLocator locator )
     {
-        this.trackingFileManager = Objects.requireNonNull( locator.getService( TrackingFileManager.class ) );
+        this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
     }
 
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
-        Objects.requireNonNull( "session", "session cannot be null" );
-        Objects.requireNonNull( "repository", "repository cannot be null" );
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
 
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {

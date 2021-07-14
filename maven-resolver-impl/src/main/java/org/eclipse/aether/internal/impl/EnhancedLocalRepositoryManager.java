@@ -79,7 +79,7 @@ class EnhancedLocalRepositoryManager
             filename = "_remote.repositories";
         }
         this.trackingFilename = filename;
-        this.trackingFileManager = Objects.requireNonNull( trackingFileManager );
+        this.trackingFileManager = requireNonNull( trackingFileManager );
     }
 
     @Override

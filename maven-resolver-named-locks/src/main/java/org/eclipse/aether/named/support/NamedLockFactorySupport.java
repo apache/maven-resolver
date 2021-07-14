@@ -23,10 +23,11 @@ import org.eclipse.aether.named.NamedLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Support class for {@link NamedLockFactory} implementations providing reference counting.
@@ -117,7 +118,7 @@ public abstract class NamedLockFactorySupport
 
         private NamedLockHolder( final NamedLockSupport namedLock )
         {
-            this.namedLock = Objects.requireNonNull( namedLock );
+            this.namedLock = requireNonNull( namedLock );
             this.referenceCount = new AtomicInteger( 0 );
         }
 

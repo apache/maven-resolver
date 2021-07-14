@@ -152,8 +152,8 @@ public final class BasicRepositoryConnectorFactory
     public RepositoryConnector newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {
-        requireNonNull( "session", "session cannot be null" );
-        requireNonNull( "repository", "repository cannot be null" );
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
 
         return new BasicRepositoryConnector( session, repository, transporterProvider, layoutProvider,
                                              checksumPolicyProvider, fileProcessor );

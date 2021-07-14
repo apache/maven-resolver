@@ -56,13 +56,13 @@ public final class DefaultSyncContextFactory
     @Inject
     public DefaultSyncContextFactory( final SyncContextFactory delegate )
     {
-        this.delegate = Objects.requireNonNull( delegate );
+        this.delegate = requireNonNull( delegate );
     }
 
     @Override
     public void initService( final ServiceLocator locator )
     {
-        this.delegate = Objects.requireNonNull( locator.getService( SyncContextFactory.class ) );
+        this.delegate = requireNonNull( locator.getService( SyncContextFactory.class ) );
     }
 
     @Override
