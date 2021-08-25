@@ -26,6 +26,7 @@ under the License.
   <body>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
+      <item name="Analyzing Lock Issues" href="analyzing-lock-issues.html"/>
       <item name="Javadoc" href="apidocs/index.html"/>
       <item name="Source Xref" href="xref/index.html"/>
       <!--item name="FAQ" href="faq.html"/-->
