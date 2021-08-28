@@ -65,7 +65,9 @@ public class RedissonSemaphoreNamedLockFactory
         {
             throw new IllegalStateException( "Semaphore expected but does not exist: " + name );
         }
-        semaphore.delete();
+        /* Threre is no reasonable way to destroy the semaphore in Redis because we cannot know
+         * when the last process has stopped using it.
+         */
     }
 
     private static final class RedissonSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore
