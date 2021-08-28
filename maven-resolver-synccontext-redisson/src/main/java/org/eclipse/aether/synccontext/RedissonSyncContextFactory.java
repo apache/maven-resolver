@@ -61,7 +61,8 @@ import org.slf4j.LoggerFactory;
  * A singleton factory to create synchronization contexts using Redisson's {@link RReadWriteLock}.
  * It locks fine-grained with groupId, artifactId and version if required.
  * <p>
- * <strong>Note: This component is still considered to be experimental, use with caution!</strong>
+ * <strong>Note: This component has been deprecated and superseded in 1.7.0 with the named lock
+ * factories {@code rwlock-redisson} and {@code semaphore-redisson}.</strong>
  * <h2>Configuration</h2>
  * You can configure various aspects of this factory.
  *
@@ -104,6 +105,7 @@ import org.slf4j.LoggerFactory;
 @Named
 @Priority( Integer.MAX_VALUE )
 @Singleton
+@Deprecated
 public class RedissonSyncContextFactory
     implements SyncContextFactory
 {
