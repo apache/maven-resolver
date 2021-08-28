@@ -39,11 +39,13 @@ import org.slf4j.LoggerFactory;
  * A singleton factory to create synchronization contexts using a global lock based on
  * {@link ReentrantReadWriteLock}. Explicit artifacts and metadata passed are ignored.
  * <p>
- * <strong>Note: This component is still considered to be experimental, use with caution!</strong>
+ * <strong>Note: This component has been deprecated and superseded in 1.7.0 with the
+ * name mapper {@code static}.</strong>
  */
 @Named
 @Priority( Integer.MAX_VALUE )
 @Singleton
+@Deprecated
 public class GlobalSyncContextFactory
     implements SyncContextFactory
 {

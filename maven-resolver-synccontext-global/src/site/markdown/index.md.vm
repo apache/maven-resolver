@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<span style="color: red; font-size: 16pt">***Note***: *This component is still considered to be experimental, use with caution!*</span>
+<span style="color: red; font-size: 16pt">***Note***: *This component has been deprecated and superseded in 1.7.0 with the name mapper `static`.*</span>
 
 The Global Sync Context Factory is Java global lock factory for Maven Resolver to provide a
 concurrent-safe access from a single Maven instance to the same local Maven repository.
