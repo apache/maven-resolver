@@ -35,10 +35,12 @@ public class RedissonReadWriteLockNamedLockFactory
 {
     public static final String NAME = "rwlock-redisson";
 
+    private static final String TYPED_NAME_PREFIX = NAME_PREFIX + NAME + ":";
+
     @Override
     protected ReadWriteLockNamedLock createLock( final String name )
     {
-        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock( NAME_PREFIX + name );
+        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock( TYPED_NAME_PREFIX + name );
         return new ReadWriteLockNamedLock( name, this, readWriteLock );
     }
 }

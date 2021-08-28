@@ -38,6 +38,8 @@ public class RedissonSemaphoreNamedLockFactory
 {
     public static final String NAME = "semaphore-redisson";
 
+    private static final String TYPED_NAME_PREFIX = NAME_PREFIX + NAME + ":";
+
     private final ConcurrentMap<String, RSemaphore> semaphores;
 
     public RedissonSemaphoreNamedLockFactory()
@@ -50,7 +52,7 @@ public class RedissonSemaphoreNamedLockFactory
     {
         RSemaphore semaphore = semaphores.computeIfAbsent( name, k ->
         {
-            RSemaphore result = redissonClient.getSemaphore( NAME_PREFIX + k );
+            RSemaphore result = redissonClient.getSemaphore( TYPED_NAME_PREFIX + k );
             result.trySetPermits( Integer.MAX_VALUE );
             return result;
         } );
