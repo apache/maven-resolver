@@ -204,7 +204,7 @@ public class ChecksumUtilTest
     @Test
     public void testToHexString()
     {
-        assertEquals( null, ChecksumUtils.toHexString( null ) );
+        assertNull( ChecksumUtils.toHexString( null ) );
         assertEquals( "", ChecksumUtils.toHexString( new byte[] {} ) );
         assertEquals( "00", ChecksumUtils.toHexString( new byte[] { 0 } ) );
         assertEquals( "ff", ChecksumUtils.toHexString( new byte[] { -1 } ) );

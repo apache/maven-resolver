@@ -65,9 +65,9 @@ public class ContextualSnapshotVersionFilterTest
     public void testEquals()
     {
         ContextualSnapshotVersionFilter filter = new ContextualSnapshotVersionFilter();
-        assertFalse( filter.equals( null ) );
-        assertTrue( filter.equals( filter ) );
-        assertTrue( filter.equals( new ContextualSnapshotVersionFilter() ) );
+        assertNotEquals( null, filter );
+        assertEquals( filter, filter );
+        assertEquals( filter, new ContextualSnapshotVersionFilter() );
     }
 
 }

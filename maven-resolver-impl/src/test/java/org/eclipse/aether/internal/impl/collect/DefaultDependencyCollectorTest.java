@@ -20,7 +20,7 @@ package org.eclipse.aether.internal.impl.collect;
  */
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -296,7 +296,7 @@ public class DefaultDependencyCollectorTest
         assertEquals( "1", a1.getArtifact().getVersion() );
         for ( DependencyNode child : a1.getChildren() )
         {
-            assertFalse( "1".equals( child.getArtifact().getVersion() ) );
+            assertNotEquals( "1", child.getArtifact().getVersion() );
         }
 
         assertEquals( 1, result.getCycles().size() );

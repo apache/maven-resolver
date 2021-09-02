@@ -51,10 +51,10 @@ public class SimpleOptionalitySelectorTest
         assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
-        assertEquals( true, root.getChildren().get( 0 ).getDependency().isOptional() );
-        assertEquals( true, root.getChildren().get( 0 ).getChildren().get( 0 ).getDependency().isOptional() );
-        assertEquals( false, root.getChildren().get( 1 ).getDependency().isOptional() );
-        assertEquals( false, root.getChildren().get( 1 ).getChildren().get( 0 ).getDependency().isOptional() );
+        assertTrue( root.getChildren().get( 0 ).getDependency().isOptional() );
+        assertTrue( root.getChildren().get( 0 ).getChildren().get( 0 ).getDependency().isOptional() );
+        assertFalse( root.getChildren().get( 1 ).getDependency().isOptional() );
+        assertFalse( root.getChildren().get( 1 ).getChildren().get( 0 ).getDependency().isOptional() );
     }
 
     @Test
@@ -65,8 +65,8 @@ public class SimpleOptionalitySelectorTest
         assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
-        assertEquals( true, root.getChildren().get( 0 ).getDependency().isOptional() );
-        assertEquals( false, root.getChildren().get( 0 ).getChildren().get( 0 ).getDependency().isOptional() );
+        assertTrue( root.getChildren().get( 0 ).getDependency().isOptional() );
+        assertFalse( root.getChildren().get( 0 ).getChildren().get( 0 ).getDependency().isOptional() );
     }
 
     @Test
@@ -77,7 +77,7 @@ public class SimpleOptionalitySelectorTest
         assertSame( root, transform( root ) );
 
         assertEquals( 2, root.getChildren().size() );
-        assertEquals( true, root.getChildren().get( 1 ).getDependency().isOptional() );
+        assertTrue( root.getChildren().get( 1 ).getDependency().isOptional() );
     }
 
 }

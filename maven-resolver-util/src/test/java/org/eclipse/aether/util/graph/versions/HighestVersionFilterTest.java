@@ -50,9 +50,9 @@ public class HighestVersionFilterTest
     public void testEquals()
     {
         HighestVersionFilter filter = new HighestVersionFilter();
-        assertFalse( filter.equals( null ) );
-        assertTrue( filter.equals( filter ) );
-        assertTrue( filter.equals( new HighestVersionFilter() ) );
+        assertNotEquals( null, filter );
+        assertEquals( filter, filter );
+        assertEquals( filter, new HighestVersionFilter() );
     }
 
 }

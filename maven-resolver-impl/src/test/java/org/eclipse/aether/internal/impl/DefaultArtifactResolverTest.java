@@ -317,8 +317,8 @@ public class DefaultArtifactResolverTest
             for ( ArtifactResult result : e.getResults() )
             {
                 Throwable t = result.getExceptions().get( 0 );
-                assertEquals( t.toString(), true, t instanceof ArtifactNotFoundException );
-                assertEquals( t.toString(), true, t.getMessage().contains( "cached" ) );
+                assertTrue( t.toString(), t instanceof ArtifactNotFoundException );
+                assertTrue( t.toString(), t.getMessage().contains( "cached" ) );
             }
         }
     }

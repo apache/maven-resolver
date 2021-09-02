@@ -178,7 +178,7 @@ public class IniArtifactDataReaderTest
 
         Dependency dep = deps.get( 0 );
         assertEquals( "scope", dep.getScope() );
-        assertEquals( false, dep.isOptional() );
+        assertFalse( dep.isOptional() );
         assertEquals( 2, dep.getExclusions().size() );
         Iterator<Exclusion> it = dep.getExclusions().iterator();
         Exclusion excl = it.next();
@@ -196,7 +196,7 @@ public class IniArtifactDataReaderTest
 
         dep = deps.get( 1 );
         assertEquals( "scope", dep.getScope() );
-        assertEquals( true, dep.isOptional() );
+        assertTrue( dep.isOptional() );
         assertEquals( 0, dep.getExclusions().size() );
 
         art = dep.getArtifact();
@@ -207,7 +207,7 @@ public class IniArtifactDataReaderTest
 
         dep = deps.get( 2 );
         assertEquals( "scope", dep.getScope() );
-        assertEquals( true, dep.isOptional() );
+        assertTrue( dep.isOptional() );
         assertEquals( 0, dep.getExclusions().size() );
 
         art = dep.getArtifact();
@@ -218,7 +218,7 @@ public class IniArtifactDataReaderTest
 
         dep = deps.get( 3 );
         assertEquals( "scope5", dep.getScope() );
-        assertEquals( true, dep.isOptional() );
+        assertTrue( dep.isOptional() );
         assertEquals( 0, dep.getExclusions().size() );
 
         art = dep.getArtifact();

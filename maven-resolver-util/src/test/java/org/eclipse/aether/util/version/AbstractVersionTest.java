@@ -20,6 +20,8 @@ package org.eclipse.aether.util.version;
  */
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.eclipse.aether.version.Version;
 
@@ -45,22 +47,22 @@ abstract class AbstractVersionTest
         {
             assertEquals( "expected " + v1 + " > " + v2, 1, Integer.signum( v1.compareTo( v2 ) ) );
             assertEquals( "expected " + v2 + " < " + v1, -1, Integer.signum( v2.compareTo( v1 ) ) );
-            assertEquals( "expected " + v1 + " != " + v2, false, v1.equals( v2 ) );
-            assertEquals( "expected " + v2 + " != " + v1, false, v2.equals( v1 ) );
+            assertFalse( "expected " + v1 + " != " + v2, v1.equals( v2 ) );
+            assertFalse( "expected " + v2 + " != " + v1, v2.equals( v1 ) );
         }
         else if ( expected < 0 )
         {
             assertEquals( "expected " + v1 + " < " + v2, -1, Integer.signum( v1.compareTo( v2 ) ) );
             assertEquals( "expected " + v2 + " > " + v1, 1, Integer.signum( v2.compareTo( v1 ) ) );
-            assertEquals( "expected " + v1 + " != " + v2, false, v1.equals( v2 ) );
-            assertEquals( "expected " + v2 + " != " + v1, false, v2.equals( v1 ) );
+            assertFalse( "expected " + v1 + " != " + v2, v1.equals( v2 ) );
+            assertFalse( "expected " + v2 + " != " + v1, v2.equals( v1 ) );
         }
         else
         {
             assertEquals( "expected " + v1 + " == " + v2, 0, v1.compareTo( v2 ) );
             assertEquals( "expected " + v2 + " == " + v1, 0, v2.compareTo( v1 ) );
-            assertEquals( "expected " + v1 + " == " + v2, true, v1.equals( v2 ) );
-            assertEquals( "expected " + v2 + " == " + v1, true, v2.equals( v1 ) );
+            assertTrue( "expected " + v1 + " == " + v2, v1.equals( v2 ) );
+            assertTrue( "expected " + v2 + " == " + v1, v2.equals( v1 ) );
             assertEquals( "expected #(" + v1 + ") == #(" + v1 + ")", v1.hashCode(), v2.hashCode() );
         }
     }

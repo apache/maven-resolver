@@ -62,7 +62,7 @@ public class ComponentAuthenticationTest
         Component comp = new Component();
         Authentication auth = new ComponentAuthentication( "key", comp );
         AuthenticationContext context = newContext( auth );
-        assertEquals( null, context.get( "another-key" ) );
+        assertNull( context.get( "another-key" ) );
         assertSame( comp, context.get( "key", Component.class ) );
     }
 
@@ -77,11 +77,11 @@ public class ComponentAuthenticationTest
 
         Authentication auth3 = new ComponentAuthentication( "key", new Object() );
         String digest3 = newDigest( auth3 );
-        assertFalse( digest3.equals( digest1 ) );
+        assertNotEquals( digest3, digest1 );
 
         Authentication auth4 = new ComponentAuthentication( "Key", new Component() );
         String digest4 = newDigest( auth4 );
-        assertFalse( digest4.equals( digest1 ) );
+        assertNotEquals( digest4, digest1 );
     }
 
     @Test
@@ -91,8 +91,8 @@ public class ComponentAuthenticationTest
         Authentication auth2 = new ComponentAuthentication( "key", new Component() );
         Authentication auth3 = new ComponentAuthentication( "key", new Object() );
         assertEquals( auth1, auth2 );
-        assertFalse( auth1.equals( auth3 ) );
-        assertFalse( auth1.equals( null ) );
+        assertNotEquals( auth1, auth3 );
+        assertNotEquals( null, auth1 );
     }
 
     @Test

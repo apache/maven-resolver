@@ -63,7 +63,7 @@ public class ConflictMarkerTest
         assertNotNull( ids.get( root.getChildren().get( 0 ) ) );
         assertNotNull( ids.get( root.getChildren().get( 1 ) ) );
         assertNotSame( ids.get( root.getChildren().get( 0 ) ), ids.get( root.getChildren().get( 1 ) ) );
-        assertFalse( ids.get( root.getChildren().get( 0 ) ).equals( ids.get( root.getChildren().get( 1 ) ) ) );
+        assertNotEquals( ids.get( root.getChildren().get( 0 ) ), ids.get( root.getChildren().get( 1 ) ) );
     }
 
     @Test

@@ -94,34 +94,34 @@ public class ArtifactIdUtilsTest
     {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
 
         artifact1 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gidX", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aidX", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "extX", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-24" );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( true, ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
-        assertEquals( true, ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsId( artifact1, artifact2 ) );
+        assertTrue( ArtifactIdUtils.equalsId( artifact2, artifact1 ) );
 
-        assertEquals( true, ArtifactIdUtils.equalsId( artifact1, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsId( artifact1, artifact1 ) );
     }
 
     @Test
@@ -129,38 +129,38 @@ public class ArtifactIdUtilsTest
     {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         artifact1 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gidX", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aidX", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "extX", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "ext", "X.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-24" );
-        assertEquals( true, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( true, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertTrue( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( true, ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
-        assertEquals( true, ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsBaseId( artifact1, artifact2 ) );
+        assertTrue( ArtifactIdUtils.equalsBaseId( artifact2, artifact1 ) );
 
-        assertEquals( true, ArtifactIdUtils.equalsBaseId( artifact1, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsBaseId( artifact1, artifact1 ) );
     }
 
     @Test
@@ -168,34 +168,34 @@ public class ArtifactIdUtilsTest
     {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
 
         artifact1 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gidX", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aidX", "ext", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "extX", "1.0-20110205.132618-23" );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
-        assertEquals( false, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertFalse( ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-24" );
-        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
-        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertTrue( ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
 
         artifact2 = new DefaultArtifact( "gid", "aid", "ext", "1.0-20110205.132618-23" );
-        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
-        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact2 ) );
+        assertTrue( ArtifactIdUtils.equalsVersionlessId( artifact2, artifact1 ) );
 
-        assertEquals( true, ArtifactIdUtils.equalsVersionlessId( artifact1, artifact1 ) );
+        assertTrue( ArtifactIdUtils.equalsVersionlessId( artifact1, artifact1 ) );
     }
 
 }

@@ -35,7 +35,7 @@ public class NodeDefinitionTest
     {
         Pattern pattern = Pattern.compile( regex );
         Matcher matcher = pattern.matcher( text );
-        assertEquals( true, matcher.matches() );
+        assertTrue( matcher.matches() );
         assertTrue( groups.length + " vs " + matcher.groupCount(), groups.length <= matcher.groupCount() );
         for ( int i = 1; i <= groups.length; i++ )
         {
@@ -47,7 +47,7 @@ public class NodeDefinitionTest
     {
         Pattern pattern = Pattern.compile( regex );
         Matcher matcher = pattern.matcher( text );
-        assertEquals( false, matcher.matches() );
+        assertFalse( matcher.matches() );
     }
 
     @Test
@@ -103,45 +103,45 @@ public class NodeDefinitionTest
     public void testParsing_Node()
     {
         NodeDefinition desc = new NodeDefinition( "g:a:1" );
-        assertEquals( null, desc.reference );
+        assertNull( desc.reference );
         assertEquals( "g:a:1", desc.coords );
-        assertEquals( null, desc.range );
-        assertEquals( null, desc.premanagedVersion );
-        assertEquals( null, desc.scope );
-        assertEquals( null, desc.premanagedScope );
+        assertNull( desc.range );
+        assertNull( desc.premanagedVersion );
+        assertNull( desc.scope );
+        assertNull( desc.premanagedScope );
         assertEquals( false, desc.optional );
-        assertEquals( null, desc.properties );
-        assertEquals( null, desc.relocations );
-        assertEquals( null, desc.id );
+        assertNull( desc.properties );
+        assertNull( desc.relocations );
+        assertNull( desc.id );
 
         desc = new NodeDefinition( "gid1:aid1:ext1:ver1 scope1 !optional" );
-        assertEquals( null, desc.reference );
+        assertNull( desc.reference );
         assertEquals( "gid1:aid1:ext1:ver1", desc.coords );
-        assertEquals( null, desc.range );
-        assertEquals( null, desc.premanagedVersion );
+        assertNull( desc.range );
+        assertNull( desc.premanagedVersion );
         assertEquals( "scope1", desc.scope );
-        assertEquals( null, desc.premanagedScope );
+        assertNull( desc.premanagedScope );
         assertEquals( false, desc.optional );
-        assertEquals( null, desc.properties );
-        assertEquals( null, desc.relocations );
-        assertEquals( null, desc.id );
+        assertNull( desc.properties );
+        assertNull( desc.relocations );
+        assertNull( desc.id );
 
         desc = new NodeDefinition( "g:a:1 optional" );
-        assertEquals( null, desc.reference );
+        assertNull( desc.reference );
         assertEquals( "g:a:1", desc.coords );
-        assertEquals( null, desc.range );
-        assertEquals( null, desc.premanagedVersion );
-        assertEquals( null, desc.scope );
-        assertEquals( null, desc.premanagedScope );
+        assertNull( desc.range );
+        assertNull( desc.premanagedVersion );
+        assertNull( desc.scope );
+        assertNull( desc.premanagedScope );
         assertEquals( true, desc.optional );
-        assertEquals( null, desc.properties );
-        assertEquals( null, desc.relocations );
-        assertEquals( null, desc.id );
+        assertNull( desc.properties );
+        assertNull( desc.relocations );
+        assertNull( desc.id );
 
         desc =
             new NodeDefinition( "gid:aid:1(, 2)<[1, 3]" + " props = k:v" + " scope=c<r" + " optional"
                 + " relocations = g:a:v , g:a:1" + " (id)" );
-        assertEquals( null, desc.reference );
+        assertNull( desc.reference );
         assertEquals( "gid:aid:1", desc.coords );
         assertEquals( "(, 2)", desc.range );
         assertEquals( "[1, 3]", desc.premanagedVersion );

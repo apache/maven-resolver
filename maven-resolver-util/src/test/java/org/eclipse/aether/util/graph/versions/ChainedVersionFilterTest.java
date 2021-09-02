@@ -78,9 +78,9 @@ public class ChainedVersionFilterTest
     public void testEquals()
     {
         VersionFilter filter = ChainedVersionFilter.newInstance( new HighestVersionFilter() );
-        assertFalse( filter.equals( null ) );
-        assertTrue( filter.equals( filter ) );
-        assertTrue( filter.equals( ChainedVersionFilter.newInstance( new HighestVersionFilter() ) ) );
+        assertNotEquals( null, filter );
+        assertEquals( filter, filter );
+        assertEquals( filter, ChainedVersionFilter.newInstance( new HighestVersionFilter() ) );
     }
 
 }
