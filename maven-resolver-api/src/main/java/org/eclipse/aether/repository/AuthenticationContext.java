@@ -281,7 +281,7 @@ public final class AuthenticationContext
                 }
                 if ( value == null )
                 {
-                    authData.put( key, value );
+                    authData.put( key, null );
                 }
             }
         }

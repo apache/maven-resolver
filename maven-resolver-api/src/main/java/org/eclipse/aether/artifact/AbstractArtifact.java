@@ -59,7 +59,7 @@ public abstract class AbstractArtifact
 
         if ( version == null )
         {
-            baseVersion = version;
+            baseVersion = null;
         }
         else if ( version.startsWith( "[" ) || version.startsWith( "(" ) )
         {

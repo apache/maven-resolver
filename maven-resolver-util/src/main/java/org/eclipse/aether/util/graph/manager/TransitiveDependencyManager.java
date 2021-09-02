@@ -292,7 +292,7 @@ public final class TransitiveDependencyManager
                            && Objects.equals( artifact.getClassifier(), that.artifact.getClassifier() );
             }
 
-            return equal;
+            return false;
         }
 
         @Override

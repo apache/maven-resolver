@@ -153,12 +153,8 @@ final class ChecksumCalculator
                 int read = in.read( array );
                 if ( read < 0 )
                 {
-                    if ( total < dataOffset )
-                    {
-                        throw new IOException( targetFile + " contains only " + total
-                                                   + " bytes, cannot resume download from offset " + dataOffset );
-                    }
-                    break;
+                    throw new IOException( targetFile + " contains only " + total
+                                               + " bytes, cannot resume download from offset " + dataOffset );
                 }
                 total += read;
                 if ( total > dataOffset )
