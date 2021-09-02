@@ -506,13 +506,7 @@ public class DefaultMetadataResolver
     {
         if ( threads <= 1 )
         {
-            return new Executor()
-            {
-                public void execute( Runnable command )
-                {
-                    command.run();
-                }
-            };
+            return command -> command.run();
         }
         else
         {

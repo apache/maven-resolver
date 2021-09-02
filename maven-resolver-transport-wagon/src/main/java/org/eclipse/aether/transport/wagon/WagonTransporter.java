@@ -264,14 +264,7 @@ final class WagonTransporter
             prox.setHost( p.getHost() );
             prox.setPort( p.getPort() );
 
-            proxy = new ProxyInfoProvider()
-            {
-                @Override
-                public ProxyInfo getProxyInfo( String protocol )
-                {
-                    return prox;
-                }
-            };
+            proxy = protocol -> prox;
         }
 
         return proxy;

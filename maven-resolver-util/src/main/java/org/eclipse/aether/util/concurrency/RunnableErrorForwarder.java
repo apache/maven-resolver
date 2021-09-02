@@ -66,24 +66,21 @@ public final class RunnableErrorForwarder
 
         counter.incrementAndGet();
 
-        return new Runnable()
+        return () ->
         {
-            public void run()
+            try
             {
-                try
-                {
-                    runnable.run();
-                }
-                catch ( RuntimeException | Error e )
-                {
-                    error.compareAndSet( null, e );
-                    throw e;
-                }
-                finally
-                {
-                    counter.decrementAndGet();
-                    LockSupport.unpark( thread );
-                }
+                runnable.run();
+            }
+            catch ( RuntimeException | Error e )
+            {
+                error.compareAndSet( null, e );
+                throw e;
+            }
+            finally
+            {
+                counter.decrementAndGet();
+                LockSupport.unpark( thread );
             }
         };
     }
