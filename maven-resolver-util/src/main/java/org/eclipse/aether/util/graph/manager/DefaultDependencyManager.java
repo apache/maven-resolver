@@ -148,12 +148,7 @@ public final class DefaultDependencyManager
                 {
                     exclusions = new HashMap<>( this.managedExclusions );
                 }
-                Collection<Exclusion> managed = exclusions.get( key );
-                if ( managed == null )
-                {
-                    managed = new LinkedHashSet<>();
-                    exclusions.put( key, managed );
-                }
+                Collection<Exclusion> managed = exclusions.computeIfAbsent( key, k -> new LinkedHashSet<>() );
                 managed.addAll( managedDependency.getExclusions() );
             }
         }

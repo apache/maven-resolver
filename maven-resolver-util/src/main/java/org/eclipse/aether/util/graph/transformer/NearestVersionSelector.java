@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
@@ -149,14 +148,11 @@ public final class NearestVersionSelector
 
     private UnsolvableVersionConflictException newFailure( final ConflictContext context )
     {
-        DependencyFilter filter = new DependencyFilter()
+        DependencyFilter filter = ( node, parents ) ->
         {
-            public boolean accept( DependencyNode node, List<DependencyNode> parents )
-            {
-                requireNonNull( node, "node cannot be null" );
-                requireNonNull( parents, "parents cannot be null" );
-                return context.isIncluded( node );
-            }
+            requireNonNull( node, "node cannot be null" );
+            requireNonNull( parents, "parents cannot be null" );
+            return context.isIncluded( node );
         };
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor( filter );
         context.getRoot().accept( visitor );

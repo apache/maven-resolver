@@ -151,12 +151,8 @@ public final class ConflictResolver
         {
             for ( Object conflictId : cycle )
             {
-                Collection<Object> predecessors = cyclicPredecessors.get( conflictId );
-                if ( predecessors == null )
-                {
-                    predecessors = new HashSet<>();
-                    cyclicPredecessors.put( conflictId, predecessors );
-                }
+                Collection<Object> predecessors = cyclicPredecessors.
+                        computeIfAbsent( conflictId, k -> new HashSet<>() );
                 predecessors.addAll( cycle );
             }
         }

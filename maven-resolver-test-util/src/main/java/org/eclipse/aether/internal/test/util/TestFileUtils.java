@@ -43,21 +43,17 @@ public class TestFileUtils
 
     static
     {
-        Runtime.getRuntime().addShutdownHook( new Thread()
+        Runtime.getRuntime().addShutdownHook( new Thread( () ->
         {
-            @Override
-            public void run()
+            try
             {
-                try
-                {
-                    deleteFile( TMP );
-                }
-                catch ( IOException e )
-                {
-                    e.printStackTrace();
-                }
+                deleteFile( TMP );
             }
-        } );
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+        } ) );
     }
 
     private TestFileUtils()
