@@ -117,7 +117,7 @@ final class WagonTransporter
         wagonRepo.setPermissions( getPermissions( repository.getId(), session ) );
 
         wagonHint = wagonRepo.getProtocol().toLowerCase( Locale.ENGLISH );
-        if ( wagonHint == null || wagonHint.isEmpty() )
+        if ( wagonHint.isEmpty() )
         {
             throw new NoTransporterException( repository );
         }

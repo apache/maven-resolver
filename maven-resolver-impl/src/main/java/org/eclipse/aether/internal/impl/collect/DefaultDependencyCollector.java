@@ -362,9 +362,8 @@ public class DefaultDependencyCollector
     {
 
         List<Artifact> relocations = Collections.emptyList();
-        boolean disableVersionManagement = false;
         processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter, dependency,
-                           relocations, disableVersionManagement );
+                           relocations, false );
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )

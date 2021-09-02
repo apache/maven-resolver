@@ -172,10 +172,7 @@ public final class ClassicDependencyManager
             String version = managedVersions.get( key );
             if ( version != null )
             {
-                if ( management == null )
-                {
-                    management = new DependencyManagement();
-                }
+                management = new DependencyManagement();
                 management.setVersion( version );
             }
 

@@ -166,10 +166,7 @@ public final class DefaultDependencyManager
         String version = managedVersions.get( key );
         if ( version != null )
         {
-            if ( management == null )
-            {
-                management = new DependencyManagement();
-            }
+            management = new DependencyManagement();
             management.setVersion( version );
         }
 
@@ -298,7 +295,7 @@ public final class DefaultDependencyManager
 
             }
 
-            return equal;
+            return false;
         }
 
         @Override
