@@ -57,46 +57,36 @@ public class PatternExclusionsDependencyFilterTest
         DependencyNode node = builder.build();
 
         // full match
-        assertEquals( "com.example.test:testArtifact:jar:1.0.3", true,
-                      dontAccept( node, "com.example.test:testArtifact:jar:1.0.3" ) );
+        assertTrue( "com.example.test:testArtifact:jar:1.0.3", dontAccept( node, "com.example.test:testArtifact:jar:1.0.3" ) );
 
         // single wildcard
-        assertEquals( "*:testArtifact:jar:1.0.3", true, dontAccept( node, "*:testArtifact:jar:1.0.3" ) );
-        assertEquals( "com.example.test:*:jar:1.0.3", true, dontAccept( node, "com.example.test:*:jar:1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact:*:1.0.3", true,
-                      dontAccept( node, "com.example.test:testArtifact:*:1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact:*:1.0.3", true,
-                      dontAccept( node, "com.example.test:testArtifact:*:1.0.3" ) );
+        assertTrue( "*:testArtifact:jar:1.0.3", dontAccept( node, "*:testArtifact:jar:1.0.3" ) );
+        assertTrue( "com.example.test:*:jar:1.0.3", dontAccept( node, "com.example.test:*:jar:1.0.3" ) );
+        assertTrue( "com.example.test:testArtifact:*:1.0.3", dontAccept( node, "com.example.test:testArtifact:*:1.0.3" ) );
+        assertTrue( "com.example.test:testArtifact:*:1.0.3", dontAccept( node, "com.example.test:testArtifact:*:1.0.3" ) );
 
         // implicit wildcard
-        assertEquals( ":testArtifact:jar:1.0.3", true, dontAccept( node, ":testArtifact:jar:1.0.3" ) );
-        assertEquals( "com.example.test::jar:1.0.3", true, dontAccept( node, "com.example.test::jar:1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact::1.0.3", true,
-                      dontAccept( node, "com.example.test:testArtifact::1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact:jar:", true,
-                      dontAccept( node, "com.example.test:testArtifact:jar:" ) );
+        assertTrue( ":testArtifact:jar:1.0.3", dontAccept( node, ":testArtifact:jar:1.0.3" ) );
+        assertTrue( "com.example.test::jar:1.0.3", dontAccept( node, "com.example.test::jar:1.0.3" ) );
+        assertTrue( "com.example.test:testArtifact::1.0.3", dontAccept( node, "com.example.test:testArtifact::1.0.3" ) );
+        assertTrue( "com.example.test:testArtifact:jar:", dontAccept( node, "com.example.test:testArtifact:jar:" ) );
 
         // multi wildcards
-        assertEquals( "*:*:jar:1.0.3", true, dontAccept( node, "*:*:jar:1.0.3" ) );
-        assertEquals( "com.example.test:*:*:1.0.3", true, dontAccept( node, "com.example.test:*:*:1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact:*:*", true, dontAccept( node, "com.example.test:testArtifact:*:*" ) );
-        assertEquals( "*:testArtifact:jar:*", true, dontAccept( node, "*:testArtifact:jar:*" ) );
-        assertEquals( "*:*:jar:*", true, dontAccept( node, "*:*:jar:*" ) );
-        assertEquals( ":*:jar:", true, dontAccept( node, ":*:jar:" ) );
+        assertTrue( "*:*:jar:1.0.3", dontAccept( node, "*:*:jar:1.0.3" ) );
+        assertTrue( "com.example.test:*:*:1.0.3", dontAccept( node, "com.example.test:*:*:1.0.3" ) );
+        assertTrue( "com.example.test:testArtifact:*:*", dontAccept( node, "com.example.test:testArtifact:*:*" ) );
+        assertTrue( "*:testArtifact:jar:*", dontAccept( node, "*:testArtifact:jar:*" ) );
+        assertTrue( "*:*:jar:*", dontAccept( node, "*:*:jar:*" ) );
+        assertTrue( ":*:jar:", dontAccept( node, ":*:jar:" ) );
 
         // partial wildcards
-        assertEquals( "*.example.test:testArtifact:jar:1.0.3", true,
-                      dontAccept( node, "*.example.test:testArtifact:jar:1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact:*ar:1.0.*", true,
-                      dontAccept( node, "com.example.test:testArtifact:*ar:1.0.*" ) );
-        assertEquals( "com.example.test:testArtifact:jar:1.0.*", true,
-                      dontAccept( node, "com.example.test:testArtifact:jar:1.0.*" ) );
-        assertEquals( "*.example.*:testArtifact:jar:1.0.3", true,
-                      dontAccept( node, "*.example.*:testArtifact:jar:1.0.3" ) );
+        assertTrue( "*.example.test:testArtifact:jar:1.0.3", dontAccept( node, "*.example.test:testArtifact:jar:1.0.3" ) );
+        assertTrue( "com.example.test:testArtifact:*ar:1.0.*", dontAccept( node, "com.example.test:testArtifact:*ar:1.0.*" ) );
+        assertTrue( "com.example.test:testArtifact:jar:1.0.*", dontAccept( node, "com.example.test:testArtifact:jar:1.0.*" ) );
+        assertTrue( "*.example.*:testArtifact:jar:1.0.3", dontAccept( node, "*.example.*:testArtifact:jar:1.0.3" ) );
 
         // wildcard as empty string
-        assertEquals( "com.example.test*:testArtifact:jar:1.0.3", true,
-                      dontAccept( node, "com.example.test*:testArtifact:jar:1.0.3" ) );
+        assertTrue( "com.example.test*:testArtifact:jar:1.0.3", dontAccept( node, "com.example.test*:testArtifact:jar:1.0.3" ) );
     }
 
     @Test
@@ -106,11 +96,11 @@ public class PatternExclusionsDependencyFilterTest
         builder.groupId( "com.example.test" ).artifactId( "testArtifact" ).ext( "jar" ).version( "1.0.3" );
         DependencyNode node = builder.build();
 
-        assertEquals( "com.example.test:testArtifact:jar", true, dontAccept( node, "com.example.test:testArtifact:jar" ) );
-        assertEquals( "com.example.test:testArtifact", true, dontAccept( node, "com.example.test:testArtifact" ) );
-        assertEquals( "com.example.test", true, dontAccept( node, "com.example.test" ) );
+        assertTrue( "com.example.test:testArtifact:jar", dontAccept( node, "com.example.test:testArtifact:jar" ) );
+        assertTrue( "com.example.test:testArtifact", dontAccept( node, "com.example.test:testArtifact" ) );
+        assertTrue( "com.example.test", dontAccept( node, "com.example.test" ) );
 
-        assertEquals( "com.example.foo", false, dontAccept( node, "com.example.foo" ) );
+        assertFalse( "com.example.foo", dontAccept( node, "com.example.foo" ) );
     }
 
     @Test
@@ -120,19 +110,14 @@ public class PatternExclusionsDependencyFilterTest
         builder.groupId( "com.example.test" ).artifactId( "testArtifact" ).ext( "jar" ).version( "1.0.3" );
         DependencyNode node = builder.build();
 
-        assertEquals( "OTHER.GROUP.ID:testArtifact:jar:1.0.3", false,
-                      dontAccept( node, "OTHER.GROUP.ID:testArtifact:jar:1.0.3" ) );
-        assertEquals( "com.example.test:OTHER_ARTIFACT:jar:1.0.3", false,
-                      dontAccept( node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3" ) );
-        assertEquals( "com.example.test:OTHER_ARTIFACT:jar:1.0.3", false,
-                      dontAccept( node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact:WAR:1.0.3", false,
-                      dontAccept( node, "com.example.test:testArtifact:WAR:1.0.3" ) );
-        assertEquals( "com.example.test:testArtifact:jar:SNAPSHOT", false,
-                      dontAccept( node, "com.example.test:testArtifact:jar:SNAPSHOT" ) );
+        assertFalse( "OTHER.GROUP.ID:testArtifact:jar:1.0.3", dontAccept( node, "OTHER.GROUP.ID:testArtifact:jar:1.0.3" ) );
+        assertFalse( "com.example.test:OTHER_ARTIFACT:jar:1.0.3", dontAccept( node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3" ) );
+        assertFalse( "com.example.test:OTHER_ARTIFACT:jar:1.0.3", dontAccept( node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3" ) );
+        assertFalse( "com.example.test:testArtifact:WAR:1.0.3", dontAccept( node, "com.example.test:testArtifact:WAR:1.0.3" ) );
+        assertFalse( "com.example.test:testArtifact:jar:SNAPSHOT", dontAccept( node, "com.example.test:testArtifact:jar:SNAPSHOT" ) );
 
-        assertEquals( "*:*:war:*", false, dontAccept( node, "*:*:war:*" ) );
-        assertEquals( "OTHER.GROUP.ID", false, dontAccept( node, "OTHER.GROUP.ID" ) );
+        assertFalse( "*:*:war:*", dontAccept( node, "*:*:war:*" ) );
+        assertFalse( "OTHER.GROUP.ID", dontAccept( node, "OTHER.GROUP.ID" ) );
     }
 
     @Test
@@ -142,8 +127,7 @@ public class PatternExclusionsDependencyFilterTest
         builder.groupId( "com.example.test" ).artifactId( "testArtifact" ).ext( "jar" ).version( "1.0.3" );
 
         DependencyNode node = builder.build();
-        assertEquals( "com.example.test:testArtifact:jar:1.0.3:foo", false,
-                      dontAccept( node, "com.example.test:testArtifact:jar:1.0.3:foo" ) );
+        assertFalse( "com.example.test:testArtifact:jar:1.0.3:foo", dontAccept( node, "com.example.test:testArtifact:jar:1.0.3:foo" ) );
     }
 
     @Test

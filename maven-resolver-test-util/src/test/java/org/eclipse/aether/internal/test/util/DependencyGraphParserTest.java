@@ -293,7 +293,7 @@ public class DependencyGraphParserTest
         Dependency dependency = node.getDependency();
         assertNotNull( dependency );
         assertEquals( "compile", dependency.getScope() );
-        assertEquals( true, dependency.isOptional() );
+        assertTrue( dependency.isOptional() );
     }
 
 }

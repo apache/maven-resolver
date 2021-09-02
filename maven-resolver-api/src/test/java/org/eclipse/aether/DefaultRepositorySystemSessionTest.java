@@ -19,6 +19,7 @@ package org.eclipse.aether;
  * under the License.
  */
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
@@ -86,9 +87,9 @@ public class DefaultRepositorySystemSessionTest
         session2.setSystemProperty( "key", "test" );
         session2.setConfigProperty( "key", "test" );
 
-        assertEquals( null, session1.getUserProperties().get( "key" ) );
-        assertEquals( null, session1.getSystemProperties().get( "key" ) );
-        assertEquals( null, session1.getConfigProperties().get( "key" ) );
+        assertNull( session1.getUserProperties().get( "key" ) );
+        assertNull( session1.getSystemProperties().get( "key" ) );
+        assertNull( session1.getConfigProperties().get( "key" ) );
     }
 
     @Test

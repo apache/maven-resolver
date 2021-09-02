@@ -50,9 +50,9 @@ public class SnapshotVersionFilterTest
     public void testEquals()
     {
         SnapshotVersionFilter filter = new SnapshotVersionFilter();
-        assertFalse( filter.equals( null ) );
-        assertTrue( filter.equals( filter ) );
-        assertTrue( filter.equals( new SnapshotVersionFilter() ) );
+        assertNotEquals( null, filter );
+        assertEquals( filter, filter );
+        assertEquals( filter, new SnapshotVersionFilter() );
     }
 
 }

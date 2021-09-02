@@ -182,7 +182,7 @@ public class DefaultMetadataResolverTest
         MetadataResult result = results.get( 0 );
 
         assertNotNull( result.getException() );
-        assertEquals( false, file.exists() );
+        assertFalse( file.exists() );
     }
 
     @Test

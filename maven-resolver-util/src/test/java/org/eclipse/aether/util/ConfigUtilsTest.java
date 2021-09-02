@@ -109,10 +109,10 @@ public class ConfigUtilsTest
     public void testGetBoolean_Default()
     {
         config.put( "no-boolean", new Object() );
-        assertEquals( true, ConfigUtils.getBoolean( config, true, "no-value" ) );
-        assertEquals( false, ConfigUtils.getBoolean( config, false, "no-value" ) );
-        assertEquals( true, ConfigUtils.getBoolean( config, true, "no-boolean" ) );
-        assertEquals( false, ConfigUtils.getBoolean( config, false, "no-boolean" ) );
+        assertTrue( ConfigUtils.getBoolean( config, true, "no-value" ) );
+        assertFalse( ConfigUtils.getBoolean( config, false, "no-value" ) );
+        assertTrue( ConfigUtils.getBoolean( config, true, "no-boolean" ) );
+        assertFalse( ConfigUtils.getBoolean( config, false, "no-boolean" ) );
     }
 
     @Test
@@ -120,18 +120,18 @@ public class ConfigUtilsTest
     {
         config.put( "no-boolean", new Object() );
         config.put( "some-boolean", true );
-        assertEquals( true, ConfigUtils.getBoolean( config, false, "no-boolean", "some-boolean" ) );
+        assertTrue( ConfigUtils.getBoolean( config, false, "no-boolean", "some-boolean" ) );
         config.put( "some-boolean", false );
-        assertEquals( false, ConfigUtils.getBoolean( config, true, "no-boolean", "some-boolean" ) );
+        assertFalse( ConfigUtils.getBoolean( config, true, "no-boolean", "some-boolean" ) );
     }
 
     @Test
     public void testGetBoolean_StringConversion()
     {
         config.put( "some-boolean", "true" );
-        assertEquals( true, ConfigUtils.getBoolean( config, false, "some-boolean" ) );
+        assertTrue( ConfigUtils.getBoolean( config, false, "some-boolean" ) );
         config.put( "some-boolean", "false" );
-        assertEquals( false, ConfigUtils.getBoolean( config, true, "some-boolean" ) );
+        assertFalse( ConfigUtils.getBoolean( config, true, "some-boolean" ) );
     }
 
     @Test
@@ -216,7 +216,7 @@ public class ConfigUtilsTest
         config.put( "some-float", "-12.3" );
         assertEquals( -12.3f, ConfigUtils.getFloat( config, 0, "some-float" ), 0.01f );
         config.put( "some-float", "NaN" );
-        assertEquals( true, Float.isNaN( ConfigUtils.getFloat( config, 0, "some-float" ) ) );
+        assertTrue( Float.isNaN( ConfigUtils.getFloat( config, 0, "some-float" ) ) );
     }
 
     @Test

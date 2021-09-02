@@ -367,7 +367,7 @@ public class ChecksumValidatorTest
     {
         policy.tolerateFailure = true;
         ChecksumValidator validator = newValidator( SHA1 );
-        assertEquals( true, validator.handle( new ChecksumFailureException( "accept" ) ) );
+        assertTrue( validator.handle( new ChecksumFailureException( "accept" ) ) );
         policy.assertCallbacks( "fail(accept)" );
     }
 
@@ -376,7 +376,7 @@ public class ChecksumValidatorTest
     {
         policy.tolerateFailure = false;
         ChecksumValidator validator = newValidator( SHA1 );
-        assertEquals( false, validator.handle( new ChecksumFailureException( "reject" ) ) );
+        assertFalse( validator.handle( new ChecksumFailureException( "reject" ) ) );
         policy.assertCallbacks( "fail(reject)" );
     }
 

@@ -193,7 +193,7 @@ public class EnhancedLocalRepositoryManagerTest
         LocalArtifactRequest request = new LocalArtifactRequest( artifact, null, null );
         LocalArtifactResult result = manager.find( session, request );
         assertTrue( result.isAvailable() );
-        assertEquals( null, result.getRepository() );
+        assertNull( result.getRepository() );
 
         snapshot = snapshot.setVersion( snapshot.getBaseVersion() );
         addLocalArtifact( snapshot );
@@ -201,7 +201,7 @@ public class EnhancedLocalRepositoryManagerTest
         request = new LocalArtifactRequest( snapshot, null, null );
         result = manager.find( session, request );
         assertTrue( result.isAvailable() );
-        assertEquals( null, result.getRepository() );
+        assertNull( result.getRepository() );
     }
 
     @Test

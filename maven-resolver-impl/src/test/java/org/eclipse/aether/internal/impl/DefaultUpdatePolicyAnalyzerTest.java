@@ -55,22 +55,22 @@ public class DefaultUpdatePolicyAnalyzerTest
     public void testIsUpdateRequired_PolicyNever()
     {
         String policy = RepositoryPolicy.UPDATE_POLICY_NEVER;
-        assertEquals( false, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, 0, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, 1, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, now() - 604800000, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, 0, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, 1, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, now() - 604800000, policy ) );
     }
 
     @Test
     public void testIsUpdateRequired_PolicyAlways()
     {
         String policy = RepositoryPolicy.UPDATE_POLICY_ALWAYS;
-        assertEquals( true, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( true, analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( true, analyzer.isUpdatedRequired( session, 0, policy ) );
-        assertEquals( true, analyzer.isUpdatedRequired( session, 1, policy ) );
-        assertEquals( true, analyzer.isUpdatedRequired( session, now() - 1000, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, 0, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, 1, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, now() - 1000, policy ) );
     }
 
     @Test
@@ -84,26 +84,26 @@ public class DefaultUpdatePolicyAnalyzerTest
         long localMidnight = cal.getTimeInMillis();
 
         String policy = RepositoryPolicy.UPDATE_POLICY_DAILY;
-        assertEquals( true, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, localMidnight + 1, policy ) );
-        assertEquals( true, analyzer.isUpdatedRequired( session, localMidnight - 1, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, localMidnight, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, localMidnight + 1, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, localMidnight - 1, policy ) );
     }
 
     @Test
     public void testIsUpdateRequired_PolicyInterval()
     {
         String policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":5";
-        assertEquals( true, analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, now(), policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, now() - 5 - 1, policy ) );
-        assertEquals( false, analyzer.isUpdatedRequired( session, now() - 1000 * 5 - 1, policy ) );
-        assertEquals( true, analyzer.isUpdatedRequired( session, now() - 1000 * 60 * 5 - 1, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, Long.MIN_VALUE, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, Long.MAX_VALUE, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, now(), policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, now() - 5 - 1, policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, now() - 1000 * 5 - 1, policy ) );
+        assertTrue( analyzer.isUpdatedRequired( session, now() - 1000 * 60 * 5 - 1, policy ) );
 
         policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":invalid";
-        assertEquals( false, analyzer.isUpdatedRequired( session, now(), policy ) );
+        assertFalse( analyzer.isUpdatedRequired( session, now(), policy ) );
     }
 
     @Test

@@ -102,7 +102,7 @@ public class DefaultRemoteRepositoryManagerTest
         .setSnapshotPolicy( snapshotPolicy ).setReleasePolicy( releasePolicy ).build();
 
         RepositoryPolicy effectivePolicy = manager.getPolicy( session, repo, true, true );
-        assertEquals( true, effectivePolicy.isEnabled() );
+        assertTrue( effectivePolicy.isEnabled() );
         assertEquals( RepositoryPolicy.CHECKSUM_POLICY_IGNORE, effectivePolicy.getChecksumPolicy() );
         assertEquals( RepositoryPolicy.UPDATE_POLICY_ALWAYS, effectivePolicy.getUpdatePolicy() );
     }
