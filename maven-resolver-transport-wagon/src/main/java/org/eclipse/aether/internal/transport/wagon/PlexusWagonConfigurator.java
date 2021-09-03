@@ -46,7 +46,7 @@ import javax.inject.Singleton;
 public class PlexusWagonConfigurator
     implements WagonConfigurator
 {
-    private PlexusContainer container;
+    private final PlexusContainer container;
 
     /**
      * Creates a wagon configurator using the specified Plexus container.

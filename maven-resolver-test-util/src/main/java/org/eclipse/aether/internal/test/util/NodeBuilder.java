@@ -50,7 +50,7 @@ public class NodeBuilder
 
     private String ext = "jar";
 
-    private String classifier = "";
+    private final String classifier = "";
 
     private String scope = "compile";
 
@@ -58,9 +58,9 @@ public class NodeBuilder
 
     private String context;
 
-    private List<Artifact> relocations = new ArrayList<>();
+    private final List<Artifact> relocations = new ArrayList<>();
 
-    private VersionScheme versionScheme = new TestVersionScheme();
+    private final VersionScheme versionScheme = new TestVersionScheme();
 
     private Map<String, String> properties = new HashMap<>( 0 );
 

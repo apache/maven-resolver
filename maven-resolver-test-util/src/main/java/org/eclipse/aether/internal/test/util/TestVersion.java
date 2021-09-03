@@ -28,7 +28,7 @@ public final class TestVersion
     implements Version
 {
 
-    private String version;
+    private final String version;
 
     public TestVersion( String version )
     {

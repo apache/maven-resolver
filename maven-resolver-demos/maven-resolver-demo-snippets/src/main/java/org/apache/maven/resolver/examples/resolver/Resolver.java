@@ -48,11 +48,11 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
  */
 public class Resolver
 {
-    private String remoteRepository;
+    private final String remoteRepository;
 
-    private RepositorySystem repositorySystem;
+    private final RepositorySystem repositorySystem;
 
-    private LocalRepository localRepository;
+    private final LocalRepository localRepository;
 
     public Resolver( String factory, String remoteRepository, String localRepository )
     {

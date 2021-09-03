@@ -35,7 +35,7 @@ class ArtifactRequestBuilder
 
     private final RequestTrace trace;
 
-    private List<ArtifactRequest> requests;
+    private final List<ArtifactRequest> requests;
 
     ArtifactRequestBuilder( RequestTrace trace )
     {

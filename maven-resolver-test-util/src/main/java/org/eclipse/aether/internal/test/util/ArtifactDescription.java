@@ -30,13 +30,13 @@ import org.eclipse.aether.repository.RemoteRepository;
 class ArtifactDescription
 {
 
-    private List<RemoteRepository> repositories;
+    private final List<RemoteRepository> repositories;
 
-    private List<Dependency> managedDependencies;
+    private final List<Dependency> managedDependencies;
 
-    private List<Dependency> dependencies;
+    private final List<Dependency> dependencies;
 
-    private Artifact relocation;
+    private final Artifact relocation;
 
     ArtifactDescription( Artifact relocation, List<Dependency> dependencies, List<Dependency> managedDependencies,
                          List<RemoteRepository> repositories )
