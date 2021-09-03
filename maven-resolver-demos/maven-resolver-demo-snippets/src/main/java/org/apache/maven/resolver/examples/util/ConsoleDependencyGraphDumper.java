@@ -39,9 +39,9 @@ public class ConsoleDependencyGraphDumper
     implements DependencyVisitor
 {
 
-    private PrintStream out;
+    private final PrintStream out;
 
-    private List<ChildInfo> childInfos = new ArrayList<>();
+    private final List<ChildInfo> childInfos = new ArrayList<>();
 
     public ConsoleDependencyGraphDumper()
     {

@@ -226,9 +226,9 @@ public final class TransferEvent
 
         RequestType requestType;
 
-        RepositorySystemSession session;
+        final RepositorySystemSession session;
 
-        TransferResource resource;
+        final TransferResource resource;
 
         ByteBuffer dataBuffer;
 

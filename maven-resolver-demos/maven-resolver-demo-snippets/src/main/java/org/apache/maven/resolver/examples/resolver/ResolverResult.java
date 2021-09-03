@@ -28,9 +28,9 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public class ResolverResult
 {
-    private DependencyNode root;
-    private List<File> resolvedFiles;
-    private String resolvedClassPath;
+    private final DependencyNode root;
+    private final List<File> resolvedFiles;
+    private final String resolvedClassPath;
     
     public ResolverResult( DependencyNode root, List<File> resolvedFiles, String resolvedClassPath )
     {

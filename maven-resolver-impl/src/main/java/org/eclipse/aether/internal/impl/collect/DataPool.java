@@ -67,9 +67,9 @@ final class DataPool
 
     private Map<Object, Descriptor> descriptors;
 
-    private Map<Object, Constraint> constraints = new HashMap<>();
+    private final Map<Object, Constraint> constraints = new HashMap<>();
 
-    private Map<Object, List<DependencyNode>> nodes = new HashMap<>( 256 );
+    private final Map<Object, List<DependencyNode>> nodes = new HashMap<>( 256 );
 
     @SuppressWarnings( "unchecked" )
     DataPool( RepositorySystemSession session )

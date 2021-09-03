@@ -40,9 +40,9 @@ public class ConsoleTransferListener
     extends AbstractTransferListener
 {
 
-    private PrintStream out;
+    private final PrintStream out;
 
-    private Map<TransferResource, Long> downloads = new ConcurrentHashMap<>();
+    private final Map<TransferResource, Long> downloads = new ConcurrentHashMap<>();
 
     private int lastLength;
 

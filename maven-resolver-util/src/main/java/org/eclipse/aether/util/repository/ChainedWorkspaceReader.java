@@ -39,7 +39,7 @@ public final class ChainedWorkspaceReader
     implements WorkspaceReader
 {
 
-    private List<WorkspaceReader> readers = new ArrayList<>();
+    private final List<WorkspaceReader> readers = new ArrayList<>();
 
     private WorkspaceRepository repository;
 

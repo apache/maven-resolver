@@ -48,11 +48,11 @@ public class TestLocalRepositoryManager
 
     private LocalRepository localRepository;
 
-    private Set<Artifact> unavailableArtifacts = new HashSet<>();
+    private final Set<Artifact> unavailableArtifacts = new HashSet<>();
 
-    private Set<Artifact> artifactRegistrations = new HashSet<>();
+    private final Set<Artifact> artifactRegistrations = new HashSet<>();
 
-    private Set<Metadata> metadataRegistrations = new HashSet<>();
+    private final Set<Metadata> metadataRegistrations = new HashSet<>();
 
     public TestLocalRepositoryManager()
     {

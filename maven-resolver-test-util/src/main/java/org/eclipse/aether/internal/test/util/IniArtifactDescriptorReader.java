@@ -77,7 +77,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class IniArtifactDescriptorReader
 {
-    private IniArtifactDataReader reader;
+    private final IniArtifactDataReader reader;
 
     /**
      * Use the given prefix to load the artifact descriptions from the classpath.

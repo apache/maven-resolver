@@ -293,9 +293,9 @@ public final class RepositoryEvent
     public static final class Builder
     {
 
-        EventType type;
+        final EventType type;
 
-        RepositorySystemSession session;
+        final RepositorySystemSession session;
 
         Artifact artifact;
 

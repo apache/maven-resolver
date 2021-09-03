@@ -39,7 +39,7 @@ public final class DefaultProxySelector
     implements ProxySelector
 {
 
-    private List<ProxyDef> proxies = new ArrayList<>();
+    private final List<ProxyDef> proxies = new ArrayList<>();
 
     /**
      * Adds the specified proxy definition to the selector. Proxy definitions are ordered, the first matching proxy for
