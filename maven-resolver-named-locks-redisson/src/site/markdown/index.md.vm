@@ -22,7 +22,7 @@ under the License.
 This module implement named locks using Redisson. It provides two implementations, that are distributed and rely on
 Redisson distributed objects feature.
 
-Out of the box "redisson" (distributed) named lock implementations are following:
+Out of the box "redisson" (distributed) named lock implementations are are following:
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`
   that uses Redisson backed `org.redisson.api.RReadWriteLock`.
@@ -60,6 +60,6 @@ ${esc.hash}${esc.hash} Installation/Testing
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.65.Final/netty-resolver-dns-4.1.65.Final.jar">netty-resolver-dns-4.1.65.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.65.Final/netty-transport-4.1.65.Final.jar">netty-transport-4.1.65.Final.jar</a>
   ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/3.15.6/redisson-3.15.6.jar">redisson-3.15.6.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.27/snakeyaml-1.27.jar">snakeyaml-1.27.jar</a></pre>
+  └── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.27/snakeyaml-1.27.jar">snakeyaml-1.27.jar</a></pre>
 - Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
 - Now start a multithreaded Maven build on your project.
