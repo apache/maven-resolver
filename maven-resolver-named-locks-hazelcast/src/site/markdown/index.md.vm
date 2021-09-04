@@ -22,7 +22,7 @@ under the License.
 This module implement named locks using Hazelcast. It provides two implementations, that are distributed and rely on
 Hazelcast 4.x ISemaphores.
 
-Out of the box "hazelcast" (distributed) named lock implementations are following:
+Out of the box "hazelcast" (distributed) named lock implementations are the following:
 
 - `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory` that uses
   Hazelcast backed `com.hazelcast.cp.ISemaphore`. Full Hazelcast member is used here.
@@ -45,7 +45,7 @@ ${esc.hash}${esc.hash} Installation/Testing
   right after the `${maven.conf}/logging` line.
 - Copy the following dependency from Maven Central to `${maven.home}/lib/ext/hazelcast/`:
       <pre class="source">
-      ├── <a href="https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/4.1.1/hazelcast-4.1.1.jar">hazelcast-4.1.1.jar</a></pre>
+      └── <a href="https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/4.1.1/hazelcast-4.1.1.jar">hazelcast-4.1.1.jar</a></pre>
 - Optionally configure Hazelcast instance with `${maven.conf}/hazelcast.xml` or `${maven.conf}/hazelcast-client.xml`
   (see Hazelcast documentation for possibilities, or, see test resources of this project as starter).
 - Now start a multithreaded Maven build on your project and make sure `NamedSyncContextFactory` is being used.

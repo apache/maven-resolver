@@ -20,14 +20,34 @@ under the License.
 -->
 
 Named locks are essentially locks that are assigned to some given (opaque) ID. If you work with multiple
-resources that each can have unique ID assigned (file w/ file an absolute path, some entities with unique ID),
+resources that each can have unique ID assigned (i.e., file with an absolute path, some entities with unique ID),
 then you can use named locks to make sure they are being protected from concurrent read and write actions.
 
-Named locks provide support classes for implementations, and provide out of the box two named lock implementation.
+Named locks provide support classes for implementations, and provide out of the box seven named lock implementations and three name mappers.
 
-Out of the box "local" (local to JVM) named lock implementations are following:
+Out of the box, "local" (local to JVM) named lock implementations are the following:
 
 - `rwlock-local` implemented in `org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory` that uses
   JVM `java.util.concurrent.locks.ReentrantReadWriteLock`.
 - `semaphore-local` implemented in `org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory` that uses
   JVM `java.util.concurrent.Semaphore`.
+- `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
+
+Out of the box, "distributed" named lock implementations are the following (separate modules which require additional dependencies):
+
+- `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`.
+- `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`.
+- `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`.
+- `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
+
+Local named locks are only suited within one JVM with a multithreaded build.
+Sharing a local repository between multiple Maven processes (i.e., on a busy CI server) requires a distributed named lock!
+
+
+The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
+
+Out of the box, name mapper implementations are the following:
+
+- `static` implemented in `org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper`.
+- `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
+- `discriminating` implemented in `org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper`.
