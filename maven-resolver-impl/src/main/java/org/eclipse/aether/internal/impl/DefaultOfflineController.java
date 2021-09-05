@@ -108,7 +108,7 @@ public class DefaultOfflineController
     private String[] getConfig( RepositorySystemSession session, String key )
     {
         String value = ConfigUtils.getString( session, "", key ).trim();
-        if ( value.length() <= 0 )
+        if ( value.isEmpty() )
         {
             return null;
         }

@@ -60,7 +60,7 @@ public class RepositoryException
         if ( cause != null )
         {
             msg = cause.getMessage();
-            if ( msg == null || msg.length() <= 0 )
+            if ( msg == null || msg.isEmpty() )
             {
                 msg = cause.getClass().getSimpleName();
             }

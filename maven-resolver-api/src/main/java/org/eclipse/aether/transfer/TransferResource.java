@@ -81,7 +81,7 @@ public final class TransferResource
     public TransferResource( String repositoryId, String repositoryUrl, String resourceName,
         File file, RequestTrace trace )
     {
-        if ( repositoryId == null || repositoryId.length() <= 0 )
+        if ( repositoryId == null || repositoryId.isEmpty() )
         {
             this.repositoryId = "";
         }
@@ -90,7 +90,7 @@ public final class TransferResource
             this.repositoryId = repositoryId;
         }
 
-        if ( repositoryUrl == null || repositoryUrl.length() <= 0 )
+        if ( repositoryUrl == null || repositoryUrl.isEmpty() )
         {
             this.repositoryUrl = "";
         }
@@ -103,7 +103,7 @@ public final class TransferResource
             this.repositoryUrl = repositoryUrl + '/';
         }
 
-        if ( resourceName == null || resourceName.length() <= 0 )
+        if ( resourceName == null || resourceName.isEmpty() )
         {
             this.resourceName = "";
         }
