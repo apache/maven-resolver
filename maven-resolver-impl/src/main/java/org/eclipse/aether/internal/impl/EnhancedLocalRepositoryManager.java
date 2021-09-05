@@ -73,7 +73,7 @@ class EnhancedLocalRepositoryManager
     {
         super( basedir, "enhanced" );
         String filename = ConfigUtils.getString( session, "", "aether.enhancedLocalRepository.trackingFilename" );
-        if ( filename.length() <= 0 || filename.contains( "/" ) || filename.contains( "\\" )
+        if ( filename.isEmpty() || filename.contains( "/" ) || filename.contains( "\\" )
             || filename.contains( ".." ) )
         {
             filename = "_remote.repositories";

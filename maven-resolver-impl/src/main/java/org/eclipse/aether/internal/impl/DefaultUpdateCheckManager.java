@@ -157,7 +157,7 @@ public class DefaultUpdateCheckManager
                 lastUpdated = 0L;
             }
         }
-        else if ( error.length() <= 0 )
+        else if ( error.isEmpty() )
         {
             // artifact did not exist
             lastUpdated = getLastUpdated( props, dataKey );
@@ -211,7 +211,7 @@ public class DefaultUpdateCheckManager
 
     private static int getCacheFlag( String error )
     {
-        if ( error == null || error.length() <= 0 )
+        if ( error == null || error.isEmpty() )
         {
             return ResolutionErrorPolicy.CACHE_NOT_FOUND;
         }
@@ -223,7 +223,7 @@ public class DefaultUpdateCheckManager
 
     private ArtifactTransferException newException( String error, Artifact artifact, RemoteRepository repository )
     {
-        if ( error == null || error.length() <= 0 )
+        if ( error == null || error.isEmpty() )
         {
             return new ArtifactNotFoundException( artifact, repository, artifact
                 + " was not found in " + repository.getUrl() + " during a previous attempt. This failure was"
@@ -284,7 +284,7 @@ public class DefaultUpdateCheckManager
                 lastUpdated = 0L;
             }
         }
-        else if ( error.length() <= 0 )
+        else if ( error.isEmpty() )
         {
             // metadata did not exist
             lastUpdated = getLastUpdated( props, dataKey );
@@ -338,7 +338,7 @@ public class DefaultUpdateCheckManager
 
     private MetadataTransferException newException( String error, Metadata metadata, RemoteRepository repository )
     {
-        if ( error == null || error.length() <= 0 )
+        if ( error == null || error.isEmpty() )
         {
             return new MetadataNotFoundException( metadata, repository, metadata + " was not found in "
                 + repository.getUrl() + " during a previous attempt."
@@ -595,7 +595,7 @@ public class DefaultUpdateCheckManager
         else
         {
             String msg = error.getMessage();
-            if ( msg == null || msg.length() <= 0 )
+            if ( msg == null || msg.isEmpty() )
             {
                 msg = error.getClass().getSimpleName();
             }

@@ -102,7 +102,7 @@ public final class JreProxySelector
             {
                 return false;
             }
-            if ( addr.getHostName() == null || addr.getHostName().length() <= 0 )
+            if ( addr.getHostName() == null || addr.getHostName().isEmpty() )
             {
                 return false;
             }

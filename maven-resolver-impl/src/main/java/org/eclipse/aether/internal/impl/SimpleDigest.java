@@ -58,7 +58,7 @@ class SimpleDigest
 
     public void update( String data )
     {
-        if ( data == null || data.length() <= 0 )
+        if ( data == null || data.isEmpty() )
         {
             return;
         }

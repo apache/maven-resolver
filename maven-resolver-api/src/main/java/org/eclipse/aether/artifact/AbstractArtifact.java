@@ -106,7 +106,7 @@ public abstract class AbstractArtifact
     public Artifact setVersion( String version )
     {
         String current = getVersion();
-        if ( current.equals( version ) || ( version == null && current.length() <= 0 ) )
+        if ( current.equals( version ) || ( version == null && current.isEmpty() ) )
         {
             return this;
         }

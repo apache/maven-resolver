@@ -196,7 +196,7 @@ public final class SubArtifact
         {
             result = pattern.replace( "*", replacement );
 
-            if ( replacement.length() <= 0 )
+            if ( replacement.isEmpty() )
             {
                 if ( pattern.startsWith( "*" ) )
                 {

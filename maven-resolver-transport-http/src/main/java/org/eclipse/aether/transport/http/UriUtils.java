@@ -73,7 +73,7 @@ final class UriUtils
         if ( base != null )
         {
             URI rel = base.relativize( uri );
-            if ( rel.getRawPath() == null || rel.getRawPath().length() <= 0 || rel.equals( uri ) )
+            if ( rel.getRawPath() == null || rel.getRawPath().isEmpty() || rel.equals( uri ) )
             {
                 return true;
             }

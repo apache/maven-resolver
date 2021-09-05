@@ -135,7 +135,7 @@ public final class Dependency
      */
     public Dependency setScope( String scope )
     {
-        if ( this.scope.equals( scope ) || ( scope == null && this.scope.length() <= 0 ) )
+        if ( this.scope.equals( scope ) || ( scope == null && this.scope.isEmpty() ) )
         {
             return this;
         }

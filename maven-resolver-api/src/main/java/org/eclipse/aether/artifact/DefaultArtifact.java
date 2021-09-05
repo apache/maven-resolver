@@ -95,7 +95,7 @@ public final class DefaultArtifact
 
     private static String get( String value, String defaultValue )
     {
-        return ( value == null || value.length() <= 0 ) ? defaultValue : value;
+        return ( value == null || value.isEmpty() ) ? defaultValue : value;
     }
 
     /**

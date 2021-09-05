@@ -246,7 +246,7 @@ public final class DefaultMirrorSelector
         boolean result = false;
 
         // simple checks first to short circuit processing below.
-        if ( mirrorType == null || mirrorType.length() <= 0 || WILDCARD.equals( mirrorType ) )
+        if ( mirrorType == null || mirrorType.isEmpty() || WILDCARD.equals( mirrorType ) )
         {
             result = true;
         }

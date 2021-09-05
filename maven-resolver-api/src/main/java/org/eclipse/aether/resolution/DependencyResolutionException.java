@@ -62,7 +62,7 @@ public class DependencyResolutionException
         {
             msg = cause.getMessage();
         }
-        if ( msg == null || msg.length() <= 0 )
+        if ( msg == null || msg.isEmpty() )
         {
             msg = "Could not resolve transitive dependencies";
         }

@@ -53,7 +53,7 @@ public final class JavaScopeDeriver
         {
             derivedScope = childScope;
         }
-        else if ( parentScope == null || parentScope.length() <= 0 || JavaScopes.COMPILE.equals( parentScope ) )
+        else if ( parentScope == null || parentScope.isEmpty() || JavaScopes.COMPILE.equals( parentScope ) )
         {
             derivedScope = childScope;
         }
