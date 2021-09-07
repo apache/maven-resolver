@@ -20,7 +20,7 @@ under the License.
 -->
 
 Named locks are essentially locks that are assigned to some given (opaque) ID. If you work with multiple
-resources that each can have unique ID assigned (e.e., file with an absolute path, some entities with unique ID),
+resources that each can have unique ID assigned (i.e., file with an absolute path, some entities with unique ID),
 then you can use named locks to make sure they are being protected from concurrent read and write actions.
 
 Named locks provide support classes for implementations, and provide out of the box seven named lock implementations and three name mappers.
