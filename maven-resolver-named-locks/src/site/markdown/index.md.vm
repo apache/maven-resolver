@@ -33,7 +33,7 @@ Out of the box, "local" (local to JVM) named lock implementations are the follow
   JVM `java.util.concurrent.Semaphore`.
 - `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
 
-Out of the box "global" (global to network) named lock implementations are the following (separate modules which require additional dependencies):
+Out of the box, "distributed" named lock implementations are the following (separate modules which require additional dependencies):
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`.
 - `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`.
