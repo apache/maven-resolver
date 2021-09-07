@@ -25,7 +25,7 @@ then you can use named locks to make sure they are being protected from concurre
 
 Named locks provide support classes for implementations, and provide out of the box seven named lock implementations and three name mappers.
 
-Out of the box "local" (local to JVM) named lock implementations are the following:
+Out of the box, "local" (local to JVM) named lock implementations are the following:
 
 - `rwlock-local` implemented in `org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory` that uses
   JVM `java.util.concurrent.locks.ReentrantReadWriteLock`.
