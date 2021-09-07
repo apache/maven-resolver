@@ -46,7 +46,7 @@ Sharing one local repository between multiple Maven processes(i.e., on a busy CI
 
 The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
 
-Out of the box name mapper implementations are the following:
+Out of the box, name mapper implementations are the following:
 
 - `static` implemented in `org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper`.
 - `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
