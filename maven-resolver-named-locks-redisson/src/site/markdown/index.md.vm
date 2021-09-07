@@ -22,7 +22,7 @@ under the License.
 This module implement named locks using Redisson. It provides two implementations, that are distributed and rely on
 Redisson distributed objects feature.
 
-Out of the box "redisson" (distributed) named lock implementations are are following:
+Out of the box "redisson" (distributed) named lock implementations are the following:
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`
   that uses Redisson backed `org.redisson.api.RReadWriteLock`.
