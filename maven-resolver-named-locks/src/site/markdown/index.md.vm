@@ -41,7 +41,7 @@ Out of the box "global" (global to network) named lock implementations are the f
 - `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
 
 Local named locks are only suited within one JVM with a multithreaded build.
-Sharing one local repository between multiple Maven processes requires a global named lock!
+Sharing one local repository between multiple Maven processes(i.e., on a busy CI server) requires a global named lock!
 
 
 The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
