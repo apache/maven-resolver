@@ -275,7 +275,7 @@ public final class Dependency
             {
                 exclusions = new LinkedHashSet<>( exclusions );
             }
-            this.exclusions = exclusions.toArray( new Exclusion[exclusions.size()] );
+            this.exclusions = exclusions.toArray( new Exclusion[0] );
         }
 
         @Override

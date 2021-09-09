@@ -93,7 +93,7 @@ public final class ChainedVersionFilter
             }
             return filters.iterator().next();
         }
-        return new ChainedVersionFilter( filters.toArray( new VersionFilter[filters.size()] ) );
+        return new ChainedVersionFilter( filters.toArray( new VersionFilter[0] ) );
     }
 
     private ChainedVersionFilter( VersionFilter[] filters )

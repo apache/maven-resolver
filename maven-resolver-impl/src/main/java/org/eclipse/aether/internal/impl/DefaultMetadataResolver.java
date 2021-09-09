@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -580,7 +579,7 @@ public class DefaultMetadataResolver
                 try ( RepositoryConnector connector =
                               repositoryConnectorProvider.newRepositoryConnector( session, requestRepository ) )
                 {
-                    connector.get( null, Arrays.asList( download ) );
+                    connector.get( null, Collections.singletonList( download ) );
                 }
 
                 exception = download.getException();

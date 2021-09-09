@@ -117,7 +117,7 @@ public final class DefaultProxySelector
                     patterns.add( Pattern.compile( pattern, Pattern.CASE_INSENSITIVE ) );
                 }
             }
-            this.patterns = patterns.toArray( new Pattern[patterns.size()] );
+            this.patterns = patterns.toArray( new Pattern[0] );
         }
 
         boolean isNonProxyHost( String host )
