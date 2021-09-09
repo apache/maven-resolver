@@ -55,7 +55,7 @@ final class ChainedAuthentication
     {
         if ( authentications != null && !authentications.isEmpty() )
         {
-            this.authentications = authentications.toArray( new Authentication[authentications.size()] );
+            this.authentications = authentications.toArray( new Authentication[0] );
         }
         else
         {

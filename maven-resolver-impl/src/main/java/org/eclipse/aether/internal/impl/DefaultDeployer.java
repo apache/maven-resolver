@@ -22,8 +22,8 @@ package org.eclipse.aether.internal.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import static java.util.Objects.requireNonNull;
@@ -402,7 +402,7 @@ public class DefaultDeployer
                 download.setChecksumPolicy( policy.getChecksumPolicy() );
                 download.setListener( SafeTransferListener.wrap( session ) );
                 download.setTrace( catapult.getTrace() );
-                connector.get( null, Arrays.asList( download ) );
+                connector.get( null, Collections.singletonList( download ) );
 
                 Exception error = download.getException();
 

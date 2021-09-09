@@ -119,7 +119,7 @@ public final class RemoteRepository
         {
             return Collections.emptyList();
         }
-        return Collections.unmodifiableList( Arrays.asList( repos.toArray( new RemoteRepository[repos.size()] ) ) );
+        return Collections.unmodifiableList( Arrays.asList( repos.toArray( new RemoteRepository[0] ) ) );
     }
 
     public String getId()

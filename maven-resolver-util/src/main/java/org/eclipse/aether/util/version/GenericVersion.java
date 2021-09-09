@@ -67,7 +67,7 @@ final class GenericVersion
 
         trimPadding( items );
 
-        return items.toArray( new Item[items.size()] );
+        return items.toArray( new Item[0] );
     }
 
     private static void trimPadding( List<Item> items )

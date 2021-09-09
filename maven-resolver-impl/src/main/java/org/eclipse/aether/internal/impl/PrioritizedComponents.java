@@ -113,7 +113,7 @@ final class PrioritizedComponents<T>
             keys.add(
               ConfigurationProperties.PREFIX_PRIORITY + sn.substring( 0, sn.length() - FACTORY_SUFFIX.length() ) );
         }
-        return keys.toArray( new String[keys.size()] );
+        return keys.toArray( new String[0] );
     }
 
     public boolean isEmpty()
