@@ -74,7 +74,14 @@ public class DefaultUpdateCheckManager
 
     private static final String NOT_FOUND = "";
 
-    private static final String SESSION_CHECKS = "updateCheckManager.checks";
+    static final Object SESSION_CHECKS = new Object()
+    {
+        @Override
+        public String toString()
+        {
+            return "updateCheckManager.checks";
+        }
+    };
 
     static final String CONFIG_PROP_SESSION_STATE = "aether.updateCheckManager.sessionState";
 
@@ -502,17 +509,7 @@ public class DefaultUpdateCheckManager
             return;
         }
         SessionData data = session.getData();
-        Object checkedFiles = data.get( SESSION_CHECKS );
-        while ( !( checkedFiles instanceof Map ) )
-        {
-            Object old = checkedFiles;
-            checkedFiles = new ConcurrentHashMap<>( 256 );
-            if ( data.set( SESSION_CHECKS, old, checkedFiles ) )
-            {
-                break;
-            }
-            checkedFiles = data.get( SESSION_CHECKS );
-        }
+        Object checkedFiles = data.computeIfAbsent( SESSION_CHECKS, k -> new ConcurrentHashMap<>( 256 ) );
         ( (Map<Object, Boolean>) checkedFiles ).put( updateKey, Boolean.TRUE );
     }
 
