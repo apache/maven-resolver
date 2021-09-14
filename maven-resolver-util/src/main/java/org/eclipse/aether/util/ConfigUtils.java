@@ -139,7 +139,8 @@ public final class ConfigUtils
             {
                 return ( (Number) value ).intValue();
             }
-            else if ( value instanceof String ) {
+            else if ( value instanceof String )
+            {
                 try
                 {
                     return Integer.parseInt( (String) value );
@@ -188,7 +189,8 @@ public final class ConfigUtils
             {
                 return ( (Number) value ).longValue();
             }
-            else if ( value instanceof String ) {
+            else if ( value instanceof String )
+            {
                 try
                 {
                     return Long.parseLong( (String) value );
@@ -237,7 +239,8 @@ public final class ConfigUtils
             {
                 return ( (Number) value ).floatValue();
             }
-            else if ( value instanceof String ) {
+            else if ( value instanceof String )
+            {
                 try
                 {
                     return Float.parseFloat( (String) value );
