@@ -139,14 +139,15 @@ public final class ConfigUtils
             {
                 return ( (Number) value ).intValue();
             }
-
-            try
-            {
-                return Integer.parseInt( (String) value );
-            }
-            catch ( Exception e )
-            {
-                // try next key
+            else if ( value instanceof String ) {
+                try
+                {
+                    return Integer.parseInt( (String) value );
+                }
+                catch ( NumberFormatException e )
+                {
+                    // try next key
+                }
             }
         }
 
@@ -187,14 +188,15 @@ public final class ConfigUtils
             {
                 return ( (Number) value ).longValue();
             }
-
-            try
-            {
-                return Long.parseLong( (String) value );
-            }
-            catch ( Exception e )
-            {
-                // try next key
+            else if ( value instanceof String ) {
+                try
+                {
+                    return Long.parseLong( (String) value );
+                }
+                catch ( NumberFormatException e )
+                {
+                    // try next key
+                }
             }
         }
 
@@ -235,14 +237,15 @@ public final class ConfigUtils
             {
                 return ( (Number) value ).floatValue();
             }
-
-            try
-            {
-                return Float.parseFloat( (String) value );
-            }
-            catch ( Exception e )
-            {
-                // try next key
+            else if ( value instanceof String ) {
+                try
+                {
+                    return Float.parseFloat( (String) value );
+                }
+                catch ( NumberFormatException e )
+                {
+                    // try next key
+                }
             }
         }
 
