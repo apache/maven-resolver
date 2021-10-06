@@ -73,11 +73,11 @@
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
-    <sisuVersion>0.3.4</sisuVersion>
+    <sisuVersion>0.3.5</sisuVersion>
     <guiceVersion>4.2.3</guiceVersion>
     <guavaVersion>30.1-jre</guavaVersion>
     <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
-    <slf4jVersion>1.7.30</slf4jVersion>
+    <slf4jVersion>1.7.32</slf4jVersion>
     <project.build.outputTimestamp>2021-09-08T20:02:55Z</project.build.outputTimestamp>
   </properties>
 
@@ -287,6 +287,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.3.1</version>
           <configuration>
             <detectOfflineLinks>false</detectOfflineLinks>
             <linksource>true</linksource>
@@ -368,7 +369,13 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jxr-plugin</artifactId>
+          <version>3.1.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
+          <version>3.0.0-M4</version>
           <configuration>
             <autoVersionSubmodules>true</autoVersionSubmodules>
           </configuration>
@@ -376,6 +383,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0-M5</version>
           <configuration>
             <argLine>-Xmx128m</argLine>
             <redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</redirectTestOutputToFile>
@@ -387,6 +395,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
+          <version>3.0.0-M5</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
             <argLine>-Xmx128m</argLine>
@@ -433,7 +442,7 @@
         <plugin>
           <groupId>biz.aQute.bnd</groupId>
           <artifactId>bnd-maven-plugin</artifactId>
-          <version>5.1.2</version>
+          <version>6.0.0</version>
           <executions>
             <execution>
               <id>bnd-process</id>
@@ -455,6 +464,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
+          <version>3.2.0</version>
           <configuration>
             <archive>
               <manifestEntries>
@@ -463,18 +473,25 @@
             </archive>
           </configuration>
         </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.0.0-M3</version>
-        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>extra-enforcer-rules</artifactId>
+            <version>1.4</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.19</version>
+        <version>1.20</version>
         <configuration>
           <signature>
             <groupId>org.codehaus.mojo.signature</groupId>
@@ -516,6 +533,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jxr-plugin</artifactId>
+            <version>3.1.1</version>
             <reportSets>
               <reportSet>
                 <id>aggregate</id>
