@@ -34,6 +34,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Named lock that uses {@link FileLock}.
+ *
+ * @since TBD
  */
 public final class FileLockNamedLock
     extends NamedLockSupport

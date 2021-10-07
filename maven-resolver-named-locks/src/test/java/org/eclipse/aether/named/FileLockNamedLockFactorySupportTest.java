@@ -24,10 +24,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
+import org.eclipse.aether.named.support.FileLockNamedLockFactorySupport;
 import org.junit.BeforeClass;
 
-public class FileLockNamedLockFactoryTest
+public class FileLockNamedLockFactorySupportTest
     extends NamedLockFactoryTestSupport {
 
     @BeforeClass
@@ -36,7 +36,7 @@ public class FileLockNamedLockFactoryTest
         Files.createDirectories(Paths.get(path) ); // hack for surefire: sets the property but directory does not exist
 
         Path baseDir = Files.createTempDirectory( null );
-        namedLockFactory = new FileLockNamedLockFactory() {
+        namedLockFactory = new FileLockNamedLockFactorySupport() {
             @Override
             protected Path resolveName(final String name) {
                 return baseDir.resolve( name );
