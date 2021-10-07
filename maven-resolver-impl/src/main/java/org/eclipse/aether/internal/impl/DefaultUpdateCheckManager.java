@@ -509,7 +509,7 @@ public class DefaultUpdateCheckManager
             return;
         }
         SessionData data = session.getData();
-        Object checkedFiles = data.computeIfAbsent( SESSION_CHECKS, k -> new ConcurrentHashMap<>( 256 ) );
+        Object checkedFiles = data.computeIfAbsent( SESSION_CHECKS, () -> new ConcurrentHashMap<>( 256 ) );
         ( (Map<Object, Boolean>) checkedFiles ).put( updateKey, Boolean.TRUE );
     }
 

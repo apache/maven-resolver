@@ -19,7 +19,7 @@ package org.eclipse.aether;
  * under the License.
  */
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A container for data that is specific to a repository system session. Both components within the repository system
@@ -69,9 +69,9 @@ public interface SessionData
      * Retrieve of compute the data associated with the specified key.
      *
      * @param key The key for which to retrieve the session data, must not be {@code null}.
-     * @param mappingFunction The supplier will compute the new value given they key.
+     * @param supplier The supplier will compute the new value.
      * @return The session data associated with the key.
      */
-    Object computeIfAbsent( Object key, Function<Object, Object> mappingFunction );
+    Object computeIfAbsent( Object key, Supplier<Object> supplier );
 
 }
