@@ -23,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 /**
  * A simple session data storage backed by a thread-safe map.
@@ -81,4 +82,8 @@ public final class DefaultSessionData
         return data.get( key );
     }
 
+    public Object computeIfAbsent( Object key, Supplier<Object> supplier )
+    {
+        return data.computeIfAbsent( key, k -> supplier.get() );
+    }
 }

@@ -23,6 +23,8 @@ import static org.junit.Assert.*;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.junit.Test;
 
@@ -44,6 +46,11 @@ public class DefaultSessionDataTest
     private boolean set( Object key, Object oldValue, Object newValue )
     {
         return data.set( key, oldValue, newValue );
+    }
+
+    private Object computeIfAbsent( Object key, Supplier<Object> supplier )
+    {
+        return data.computeIfAbsent( key, supplier );
     }
 
     @Test( expected = RuntimeException.class )
@@ -92,6 +99,15 @@ public class DefaultSessionDataTest
         assertNull( get( key ) );
         assertTrue( set( key, null, null ) );
         assertNull( get( key ) );
+    }
+
+    @Test
+    public void testComputeIfAbsent()
+    {
+        Object key = "key";
+        assertNull( get( key ) );
+        assertEquals( "value", computeIfAbsent( key, () -> "value" ) );
+        assertEquals( "value", computeIfAbsent( key, () -> "changed" ) );
     }
 
     @Test( timeout = 10000L )
