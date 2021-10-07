@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl.synccontext;
  */
 
 import org.eclipse.aether.internal.impl.synccontext.named.FileLockNamedLockFactory;
+import org.eclipse.aether.internal.impl.synccontext.named.TakariNameMapper;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.junit.BeforeClass;
 
@@ -28,6 +29,7 @@ public class FileLockAdapterTest
 {
     @BeforeClass
     public static void createNamedLockFactory() {
+        nameMapper = new TakariNameMapper();
         namedLockFactory = new FileLockNamedLockFactory();
         createAdapter();
     }
