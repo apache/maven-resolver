@@ -32,6 +32,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheck;
+import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -102,7 +103,7 @@ public class DefaultUpdateCheckManagerTest
 
     static void resetSessionData( RepositorySystemSession session )
     {
-        session.getData().set( "updateCheckManager.checks", null );
+        session.getData().set( DefaultUpdateCheckManager.SESSION_CHECKS, null );
     }
 
     private UpdateCheck<Metadata, MetadataTransferException> newMetadataCheck()
