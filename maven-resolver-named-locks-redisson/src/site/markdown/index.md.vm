@@ -31,11 +31,18 @@ Out of the box "redisson" (distributed) named lock implementations are the follo
 
 ${esc.hash}${esc.hash} Open Issues/Notes
 
-- It only works when Sisu DI is used and not the bundled `AetherModule` or
-  `ServiceLocator` (Maven uses Sisu dependency injection).
 - Usage from plugins has not been tested yet.
 - The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
   of dependency injection.
+
+${esc.hash}${esc.hash} Open Issues/Notes for Maven Resolver integrators
+
+To use this implementation within your project, depending on how you integrate, you have following options:
+- If you use Sisu DI, then all you need is to provide this module (and its dependencies) on classpath and you are done.
+- If you use Guice, you need to add this module (and its dependencies) upfront, and bind them explicitly.
+- If you use ServiceLocator, be aware it is deprecated, and you should move away from it. In this case, simplest is
+  to roll your own "bootstrap" class that does pretty much same thing as ServiceLocator was, and extend it to
+  instantiate these components as well.
 
 ${esc.hash}${esc.hash} Installation/Testing
 
