@@ -39,6 +39,10 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -46,7 +50,7 @@ import static org.mockito.Mockito.when;
  * UT support for {@link SyncContextFactory}.
  */
 public abstract class NamedLockFactoryAdapterTestSupport {
-    private static final long ADAPTER_TIME = 100L;
+    private static final long ADAPTER_TIME = 1000L;
 
     private static final TimeUnit ADAPTER_TIME_UNIT = TimeUnit.MILLISECONDS;
 
@@ -200,6 +204,26 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         t1.join();
         winners.await();
         losers.await();
+    }
+
+    @Test
+    public void fullyConsumeLockTime() throws InterruptedException {
+        long start = System.nanoTime();
+        CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
+        CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
+        Thread t1 = new Thread(new Access(false, winners, losers, adapter, session, null));
+        Thread t2 = new Thread(new Access(false, winners, losers, adapter, session, null));
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        winners.await();
+        losers.await();
+        long end = System.nanoTime();
+        long duration = end - start;
+        long expectedDuration = ADAPTER_TIME_UNIT.toNanos(ADAPTER_TIME);
+        long diff = Math.abs( duration - expectedDuration );
+        assertThat(diff, lessThan(TimeUnit.MILLISECONDS.toNanos(10L)));
     }
 
     private static class Access implements Runnable {

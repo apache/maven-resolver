@@ -32,6 +32,8 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.eclipse.aether.named.support.Retry.retry;
+
 /**
  * Named lock that uses {@link FileLock}.
  *
@@ -61,7 +63,18 @@ public final class FileLockNamedLock
     }
 
     @Override
-    public boolean lockShared( final long time, final TimeUnit unit )
+    public boolean lockShared( final long time, final TimeUnit unit ) throws InterruptedException
+    {
+        return retry( time, unit, () -> doLockShared( time, unit ), false );
+    }
+
+    @Override
+    public boolean lockExclusively( final long time, final TimeUnit unit ) throws InterruptedException
+    {
+        return retry( time, unit, () -> doLockExclusively( time, unit ), false );
+    }
+
+    private Boolean doLockShared( final long time, final TimeUnit unit )
     {
         fairLock.lock();
         try
@@ -82,10 +95,15 @@ public final class FileLockNamedLock
                 if ( noOtherThreadExclusive )
                 {
                     steps.push( dummyLock( true ) );
+                    return true;
                 }
-                return noOtherThreadExclusive;
+                else
+                {
+                    return null; // not finished, let's wait so no answer yet
+                }
             }
 
+            // past this point, we ALWAYS return finite answer (non-nulls)
             logger.trace( "{} steps empty: getting real shared lock", name() );
             FileLock fileLock = realLock( true, unit.toNanos( time ) );
             if ( fileLock != null )
@@ -101,8 +119,7 @@ public final class FileLockNamedLock
         }
     }
 
-    @Override
-    public boolean lockExclusively( final long time, final TimeUnit unit )
+    private Boolean doLockExclusively( final long time, final TimeUnit unit )
     {
         fairLock.lock();
         try
@@ -125,9 +142,10 @@ public final class FileLockNamedLock
             if ( threadSteps.size() > 1 )
             { // some other thread already posses lock, we want exclusive -> fail
                 logger.trace( "{} other threads hold it: cannot lock exclusively", name() );
-                return false;
+                return null; // not finished, let's wait so no answer yet
             }
 
+            // past this point, we ALWAYS return finite answer (non-nulls)
             logger.trace( "{} steps empty: getting real exclusive lock", name() );
             FileLock fileLock = realLock( false, unit.toNanos( time ) );
             if ( fileLock != null )
