@@ -40,6 +40,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,7 +49,8 @@ import static org.mockito.Mockito.when;
 /**
  * UT support for {@link SyncContextFactory}.
  */
-public abstract class NamedLockFactoryAdapterTestSupport {
+public abstract class NamedLockFactoryAdapterTestSupport
+{
     private static final long ADAPTER_TIME = 1000L;
 
     private static final TimeUnit ADAPTER_TIME_UNIT = TimeUnit.MILLISECONDS;
@@ -220,8 +223,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         long end = System.nanoTime();
         long duration = end - start;
         long expectedDuration = ADAPTER_TIME_UNIT.toNanos(ADAPTER_TIME);
-        long diff = Math.abs( duration - expectedDuration );
-        assertThat(diff, lessThan(TimeUnit.MILLISECONDS.toNanos(100L)));
+        assertThat(duration, greaterThanOrEqualTo(expectedDuration)); // equal in ideal case
     }
 
     private static class Access implements Runnable {
