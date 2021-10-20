@@ -40,8 +40,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -223,7 +221,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         long duration = end - start;
         long expectedDuration = ADAPTER_TIME_UNIT.toNanos(ADAPTER_TIME);
         long diff = Math.abs( duration - expectedDuration );
-        assertThat(diff, lessThan(TimeUnit.MILLISECONDS.toNanos(10L)));
+        assertThat(diff, lessThan(TimeUnit.MILLISECONDS.toNanos(100L)));
     }
 
     private static class Access implements Runnable {
