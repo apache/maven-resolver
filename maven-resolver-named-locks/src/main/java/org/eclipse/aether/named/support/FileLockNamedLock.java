@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -86,7 +87,7 @@ public final class FileLockNamedLock
                 steps.push( dummyLock( true ) );
                 return true;
             }
-            if ( threadSteps.size() > 1 )
+            if ( anyOtherThreadHasLock() )
             { // we may succeed (w/o locking file as JVM already hold lock) if any other thread does not have exclusive
                 boolean noOtherThreadExclusive = threadSteps.values().stream()
                                                             .flatMap( Collection::stream )
@@ -139,7 +140,7 @@ public final class FileLockNamedLock
                     return false; // Lock upgrade not supported
                 }
             }
-            if ( threadSteps.size() > 1 )
+            if ( anyOtherThreadHasLock() )
             { // some other thread already posses lock, we want exclusive -> fail
                 logger.trace( "{} other threads hold it: cannot lock exclusively", name() );
                 return null; // not finished, let's wait so no answer yet
@@ -159,6 +160,14 @@ public final class FileLockNamedLock
         {
             fairLock.unlock();
         }
+    }
+
+    private boolean anyOtherThreadHasLock()
+    {
+        return threadSteps.entrySet().stream()
+                .filter( e -> !Thread.currentThread().equals( e.getKey() ) )
+                .map( Map.Entry::getValue )
+                .anyMatch( d -> !d.isEmpty() );
     }
 
     @Override

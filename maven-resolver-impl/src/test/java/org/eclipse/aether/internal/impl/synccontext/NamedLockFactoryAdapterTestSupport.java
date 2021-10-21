@@ -226,6 +226,18 @@ public abstract class NamedLockFactoryAdapterTestSupport
         assertThat(duration, greaterThanOrEqualTo(expectedDuration)); // equal in ideal case
     }
 
+    @Test
+    public void releasedExclusiveAllowAccess() throws InterruptedException {
+        CountDownLatch winners = new CountDownLatch(2); // we expect 1 winner
+        CountDownLatch losers = new CountDownLatch(0); // we expect 1 loser
+        Thread t1 = new Thread(new Access(false, winners, losers, adapter, session, null));
+        new Access(false, winners, losers, adapter, session, null).run();
+        t1.start();
+        t1.join();
+        winners.await();
+        losers.await();
+    }
+
     private static class Access implements Runnable {
         final boolean shared;
         final CountDownLatch winner;
