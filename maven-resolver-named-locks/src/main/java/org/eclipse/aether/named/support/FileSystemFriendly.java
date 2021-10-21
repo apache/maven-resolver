@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
+package org.eclipse.aether.named.support;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,22 +19,12 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.named.NamedLock;
-import org.eclipse.aether.named.NamedLockFactory;
-
 /**
- * A {@link NamedLockFactory} that wants to make use of {@link RepositorySystemSession}.
+ * A marker interface that mark component "file system friendly". In case of lock factory, it would mean that
+ * passed in lock names MUST ADHERE to file path naming convention (and not use some special, non FS friendly
+ * characters in it). Essentially, component marked with this interface expects (or uses) that "name" is an absolute
+ * and valid file path.
  */
-public interface SessionAwareNamedLockFactory extends NamedLockFactory
+public interface FileSystemFriendly
 {
-    /**
-     * Creates or reuses existing {@link NamedLock}. Returns instance MUST BE treated as "resource", best in
-     * try-with-resource block.
-     *
-     * @param session the repository system session, must not be {@code null}
-     * @param name    the lock name, must not be {@code null}
-     * @return named  the lock instance, never {@code null}
-     */
-    NamedLock getLock( RepositorySystemSession session, String name );
 }

@@ -1,4 +1,4 @@
-package org.eclipse.aether.named.support;
+package org.eclipse.aether.named.providers;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,35 +24,43 @@ import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import org.eclipse.aether.named.support.FileLockNamedLock;
+import org.eclipse.aether.named.support.FileSystemFriendly;
+import org.eclipse.aether.named.support.NamedLockFactorySupport;
+import org.eclipse.aether.named.support.NamedLockSupport;
+
 /**
- * Named locks factory of {@link FileLockNamedLock}s. This is a bit special implementation, as it is abstract. This
- * class does not "know" how to resolve lock names to FS paths.
+ * Named locks factory of {@link FileLockNamedLock}s. This is a bit special implementation, as it expects locks names
+ * to be fully qualified absolute file system paths.
  *
  * @since TBD
  */
-public abstract class FileLockNamedLockFactorySupport
+@Singleton
+@Named( FileLockNamedLockFactory.NAME )
+public class FileLockNamedLockFactory
     extends NamedLockFactorySupport
+    implements FileSystemFriendly
 {
+    public static final String NAME = "file-lock";
+
     private final ConcurrentHashMap<String, FileChannel> channels;
 
-    public FileLockNamedLockFactorySupport()
+    public FileLockNamedLockFactory()
     {
         this.channels = new ConcurrentHashMap<>();
     }
 
-    /**
-     * Implementations should be able to "resolve" lock name to {@link Path}, this method must <strong>never return
-     * {@code null}!</strong>
-     */
-    protected abstract Path resolveName( final String name );
-
     @Override
     protected NamedLockSupport createLock( final String name )
     {
-        Path path = resolveName( name );
+        Path path = Paths.get( name );
         FileChannel fileChannel = channels.computeIfAbsent( name, k ->
         {
             try

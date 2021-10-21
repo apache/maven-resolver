@@ -28,15 +28,16 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileLockNamedLockFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.TakariNameMapper;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.named.support.FileSystemFriendly;
 
 /**
  * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
@@ -75,6 +76,16 @@ public final class NamedLockFactorySelector
     {
         this.namedLockFactory = selectNamedLockFactory( factories );
         this.nameMapper = selectNameMapper( nameMappers );
+
+        if ( namedLockFactory instanceof FileSystemFriendly )
+        {
+            if ( !( nameMapper instanceof FileSystemFriendly ) )
+            {
+                throw new IllegalArgumentException(
+                    "Misconfiguration: FS friendly lock factory requires FS friendly name mapper"
+                );
+            }
+        }
     }
 
     /**

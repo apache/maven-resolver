@@ -22,14 +22,21 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.support.FileSystemFriendly;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A {@link NameMapper} that creates same name mapping as Takari Local Repository does, without baseDir (local repo).
+ * A {@link NameMapper} that creates same name mapping as Takari Local Repository does, with baseDir (local repo).
  * Part of code blatantly copies parts of the Takari {@code LockingSyncContext}.
  *
  * @see <a href="https://github.com/takari/takari-local-repository/blob/master/src/main/java/io/takari/aether/concurrency/LockingSyncContext.java">Takari
@@ -37,42 +44,68 @@ import java.util.TreeSet;
  */
 @Singleton
 @Named( TakariNameMapper.NAME )
-public class TakariNameMapper implements NameMapper
+public class TakariNameMapper
+    implements NameMapper, FileSystemFriendly
 {
     public static final String NAME = "takari";
 
     private static final char SEPARATOR = '~';
+
+    private final ConcurrentHashMap<String, Path> baseDirs;
+
+    public TakariNameMapper()
+    {
+        this.baseDirs = new ConcurrentHashMap<>();
+    }
 
     @Override
     public TreeSet<String> nameLocks( final RepositorySystemSession session,
                                       final Collection<? extends Artifact> artifacts,
                                       final Collection<? extends Metadata> metadatas )
     {
+        File localRepositoryBasedir = session.getLocalRepository().getBasedir();
+        Path baseDir = baseDirs.computeIfAbsent(
+            localRepositoryBasedir.getPath(), k ->
+            {
+                try
+                {
+                    return new File( localRepositoryBasedir, ".locks" ).getCanonicalFile().toPath();
+                }
+                catch ( IOException e )
+                {
+                    throw new UncheckedIOException( e );
+                }
+            }
+        );
+
         TreeSet<String> paths = new TreeSet<>();
         if ( artifacts != null )
         {
             for ( Artifact artifact : artifacts )
             {
-                paths.add( getPath( artifact ) + ".aetherlock" );
+                paths.add( getPath( baseDir, artifact ) + ".aetherlock" );
             }
         }
         if ( metadatas != null )
         {
             for ( Metadata metadata : metadatas )
             {
-                paths.add( getPath( metadata ) + ".aetherlock" );
+                paths.add( getPath( baseDir, metadata ) + ".aetherlock" );
             }
         }
         return paths;
     }
 
-    private String getPath( final Artifact artifact )
+    private String getPath( final Path baseDir, final Artifact artifact )
     {
         // NOTE: Don't use LRM.getPath*() as those paths could be different across processes, e.g. due to staging LRMs.
-        return artifact.getGroupId() + SEPARATOR + artifact.getArtifactId() + SEPARATOR + artifact.getBaseVersion();
+        String path = artifact.getGroupId()
+            + SEPARATOR + artifact.getArtifactId()
+            + SEPARATOR + artifact.getBaseVersion();
+        return baseDir.resolve( path ).toAbsolutePath().toString();
     }
 
-    private String getPath( final Metadata metadata )
+    private String getPath( final Path baseDir, final Metadata metadata )
     {
         // NOTE: Don't use LRM.getPath*() as those paths could be different across processes, e.g. due to staging.
         String path = "";
@@ -88,6 +121,6 @@ public class TakariNameMapper implements NameMapper
                 }
             }
         }
-        return path;
+        return baseDir.resolve( path ).toAbsolutePath().toString();
     }
 }

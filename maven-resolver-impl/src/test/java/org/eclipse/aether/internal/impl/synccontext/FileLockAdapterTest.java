@@ -19,9 +19,8 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.internal.impl.synccontext.named.FileLockNamedLockFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.TakariNameMapper;
-import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.junit.BeforeClass;
 
 public class FileLockAdapterTest
