@@ -63,7 +63,7 @@ For the `aether.syncContext.named.nameMapper` property following values are allo
 
 - `discriminating` (default), uses hostname + local repo + GAV to create unique lock names for artifacts.
 - `gav` uses GAV to create unique lock names for artifacts and metadata. Is not unique if multiple local repositories are involved.
-- `takari` uses GAV to create valid file paths (to be used with `file-lock` factory)
+- `takari` uses GAV and session to create absolute file paths (to be used with `file-lock` factory)
 - `static` uses static (same) string as lock name for any input. Effectively providing functionality same as old
   "global" locking SyncContextFactory.
 
