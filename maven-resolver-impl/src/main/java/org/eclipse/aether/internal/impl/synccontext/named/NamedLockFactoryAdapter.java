@@ -25,6 +25,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.support.FileSystemFriendly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,13 @@ public final class NamedLockFactoryAdapter
     {
         this.nameMapper = Objects.requireNonNull( nameMapper );
         this.namedLockFactory = Objects.requireNonNull( namedLockFactory );
+        if ( this.namedLockFactory instanceof FileSystemFriendly
+                && !( this.nameMapper instanceof FileSystemFriendly ) )
+        {
+            throw new IllegalArgumentException(
+                    "Misconfiguration: FS friendly lock factory requires FS friendly name mapper"
+            );
+        }
         if ( time < 0L )
         {
             throw new IllegalArgumentException( "time cannot be negative" );

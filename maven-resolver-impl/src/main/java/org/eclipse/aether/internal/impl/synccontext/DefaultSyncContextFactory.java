@@ -29,6 +29,7 @@ import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
@@ -54,8 +55,8 @@ public final class DefaultSyncContextFactory
         this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
             selector.getSelectedNameMapper(),
             selector.getSelectedNamedLockFactory(),
-            NamedLockFactorySelector.TIME,
-            NamedLockFactorySelector.TIME_UNIT
+            selector.waitTime(),
+            selector.waitTimeUnit()
         );
     }
 
@@ -72,8 +73,8 @@ public final class DefaultSyncContextFactory
         this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
             selector.getSelectedNameMapper(),
             selector.getSelectedNamedLockFactory(),
-            NamedLockFactorySelector.TIME,
-            NamedLockFactorySelector.TIME_UNIT
+            selector.waitTime(),
+            selector.waitTimeUnit()
         );
     }
 

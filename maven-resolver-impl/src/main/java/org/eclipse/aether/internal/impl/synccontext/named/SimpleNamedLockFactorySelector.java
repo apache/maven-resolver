@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext;
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,39 +19,32 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.TakariNameMapper;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
-import org.eclipse.aether.named.support.FileSystemFriendly;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
- * all the named locks configuration is here.
+ * Simple selector implementation that uses Java system properties and sane default values.
  */
 @Singleton
 @Named
-public final class NamedLockFactorySelector
+public final class SimpleNamedLockFactorySelector
+    implements NamedLockFactorySelector
 {
-    public static final long TIME = Long.getLong(
+    private static final long TIME = Long.getLong(
         "aether.syncContext.named.time", 30L
     );
 
-    public static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
+    private static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
         "aether.syncContext.named.time.unit", TimeUnit.SECONDS.name()
     ) );
 
@@ -71,27 +64,17 @@ public final class NamedLockFactorySelector
      * Constructor used with DI, where factories are injected and selected based on key.
      */
     @Inject
-    public NamedLockFactorySelector( final Map<String, NamedLockFactory> factories,
-                                     final Map<String, NameMapper> nameMappers )
+    public SimpleNamedLockFactorySelector( final Map<String, NamedLockFactory> factories,
+                                           final Map<String, NameMapper> nameMappers )
     {
         this.namedLockFactory = selectNamedLockFactory( factories );
         this.nameMapper = selectNameMapper( nameMappers );
-
-        if ( namedLockFactory instanceof FileSystemFriendly )
-        {
-            if ( !( nameMapper instanceof FileSystemFriendly ) )
-            {
-                throw new IllegalArgumentException(
-                    "Misconfiguration: FS friendly lock factory requires FS friendly name mapper"
-                );
-            }
-        }
     }
 
     /**
      * Default constructor for ServiceLocator.
      */
-    public NamedLockFactorySelector()
+    public SimpleNamedLockFactorySelector()
     {
         Map<String, NamedLockFactory> factories = new HashMap<>();
         factories.put( NoopNamedLockFactory.NAME, new NoopNamedLockFactory() );
@@ -108,9 +91,22 @@ public final class NamedLockFactorySelector
         this.nameMapper = selectNameMapper( nameMappers );
     }
 
+    @Override
+    public long waitTime()
+    {
+        return TIME;
+    }
+
+    @Override
+    public TimeUnit waitTimeUnit()
+    {
+        return TIME_UNIT;
+    }
+
     /**
      * Returns the selected {@link NamedLockFactory}, never null.
      */
+    @Override
     public NamedLockFactory getSelectedNamedLockFactory()
     {
         return namedLockFactory;
@@ -119,6 +115,7 @@ public final class NamedLockFactorySelector
     /**
      * Returns the selected {@link NameMapper}, never null.
      */
+    @Override
     public NameMapper getSelectedNameMapper()
     {
         return nameMapper;

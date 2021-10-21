@@ -55,7 +55,8 @@ import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.NamedLockFactorySelector;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
+import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
@@ -222,7 +223,7 @@ public final class DefaultServiceLocator
         addService( LocalRepositoryManagerFactory.class, EnhancedLocalRepositoryManagerFactory.class );
         addService( LoggerFactory.class, Slf4jLoggerFactory.class );
         addService( TrackingFileManager.class, DefaultTrackingFileManager.class );
-        addService( NamedLockFactorySelector.class, NamedLockFactorySelector.class );
+        addService( NamedLockFactorySelector.class, SimpleNamedLockFactorySelector.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )
