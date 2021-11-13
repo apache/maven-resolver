@@ -49,11 +49,11 @@ public final class SimpleNamedLockFactorySelector
     ) );
 
     private static final String FACTORY_NAME = System.getProperty(
-        "aether.syncContext.named.factory", FileLockNamedLockFactory.NAME
+        "aether.syncContext.named.factory", LocalReadWriteLockNamedLockFactory.NAME
     );
 
     private static final String NAME_MAPPER_NAME = System.getProperty(
-        "aether.syncContext.named.nameMapper", TakariNameMapper.NAME
+        "aether.syncContext.named.nameMapper", GAVNameMapper.NAME
     );
 
     private final NamedLockFactory namedLockFactory;
