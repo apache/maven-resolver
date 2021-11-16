@@ -54,9 +54,7 @@ public final class DefaultSyncContextFactory
     {
         this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
             selector.getSelectedNameMapper(),
-            selector.getSelectedNamedLockFactory(),
-            selector.waitTime(),
-            selector.waitTimeUnit()
+            selector.getSelectedNamedLockFactory()
         );
     }
 
@@ -72,9 +70,7 @@ public final class DefaultSyncContextFactory
             locator.getService( NamedLockFactorySelector.class ) );
         this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
             selector.getSelectedNameMapper(),
-            selector.getSelectedNamedLockFactory(),
-            selector.waitTime(),
-            selector.waitTimeUnit()
+            selector.getSelectedNamedLockFactory()
         );
     }
 

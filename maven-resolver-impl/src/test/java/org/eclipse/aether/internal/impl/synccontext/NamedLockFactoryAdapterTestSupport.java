@@ -35,14 +35,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -72,7 +71,7 @@ public abstract class NamedLockFactoryAdapterTestSupport
 
     public static void createAdapter() {
         Objects.requireNonNull(namedLockFactory, "NamedLockFactory not set");
-        adapter = new NamedLockFactoryAdapter(nameMapper, namedLockFactory, ADAPTER_TIME, ADAPTER_TIME_UNIT);
+        adapter = new NamedLockFactoryAdapter(nameMapper, namedLockFactory);
     }
 
     @AfterClass
@@ -88,6 +87,10 @@ public abstract class NamedLockFactoryAdapterTestSupport
         LocalRepository localRepository = new LocalRepository(Files.createTempDirectory("test").toFile());
         session = mock(RepositorySystemSession.class);
         when(session.getLocalRepository()).thenReturn(localRepository);
+        HashMap<String, Object> config = new HashMap<>();
+        config.put(NamedLockFactoryAdapter.TIME_KEY, String.valueOf(ADAPTER_TIME));
+        config.put(NamedLockFactoryAdapter.TIME_UNIT_KEY, ADAPTER_TIME_UNIT.name());
+        when(session.getConfigProperties()).thenReturn(config);
     }
 
     @Test
