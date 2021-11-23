@@ -19,22 +19,33 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
- * A {@link NamedLockFactory} that wants to make use of {@link RepositorySystemSession}.
+ * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
+ * all the named locks configuration is here. Implementations may use different strategies to perform selection.
  */
-public interface SessionAwareNamedLockFactory extends NamedLockFactory
+public interface NamedLockFactorySelector
 {
     /**
-     * Creates or reuses existing {@link NamedLock}. Returns instance MUST BE treated as "resource", best in
-     * try-with-resource block.
-     *
-     * @param session the repository system session, must not be {@code null}
-     * @param name    the lock name, must not be {@code null}
-     * @return named  the lock instance, never {@code null}
+     * Returns the value of wait time, how much a lock blocks, must be greater than 0.
      */
-    NamedLock getLock( RepositorySystemSession session, String name );
+    long waitTime();
+
+    /**
+     * Returns the time unit of {@link #waitTime()} value, never null.
+     */
+    TimeUnit waitTimeUnit();
+
+    /**
+     * Returns the selected {@link NamedLockFactory}, never null.
+     */
+    NamedLockFactory getSelectedNamedLockFactory();
+
+    /**
+     * Returns the selected {@link NameMapper}, never null.
+     */
+    NameMapper getSelectedNameMapper();
 }

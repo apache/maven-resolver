@@ -80,8 +80,6 @@ public final class NamedLockFactoryAdapter
 
         private final NameMapper lockNaming;
 
-        private final SessionAwareNamedLockFactory sessionAwareNamedLockFactory;
-
         private final NamedLockFactory namedLockFactory;
 
         private final long time;
@@ -97,8 +95,6 @@ public final class NamedLockFactoryAdapter
             this.session = session;
             this.shared = shared;
             this.lockNaming = lockNaming;
-            this.sessionAwareNamedLockFactory = namedLockFactory instanceof SessionAwareNamedLockFactory
-                    ? (SessionAwareNamedLockFactory) namedLockFactory : null;
             this.namedLockFactory = namedLockFactory;
             this.time = time;
             this.timeUnit = timeUnit;
@@ -118,8 +114,7 @@ public final class NamedLockFactoryAdapter
             int acquiredLockCount = 0;
             for ( String key : keys )
             {
-                NamedLock namedLock = sessionAwareNamedLockFactory != null ? sessionAwareNamedLockFactory
-                        .getLock( session, key ) : namedLockFactory.getLock( key );
+                NamedLock namedLock = namedLockFactory.getLock( key );
                 try
                 {
                      LOGGER.trace( "Acquiring {} lock for '{}'",
