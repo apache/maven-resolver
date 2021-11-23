@@ -28,9 +28,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.Matchers.*;
 
 /**
  * UT support for {@link NamedLockFactory}.
@@ -158,6 +156,51 @@ public abstract class NamedLockFactoryTestSupport {
         losers.await();
     }
 
+    @Test(timeout = 5000)
+    public void fullyConsumeLockTime() throws InterruptedException {
+        long start = System.nanoTime();
+        final String name = lockName();
+        CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
+        CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
+        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        winners.await();
+        losers.await();
+        long end = System.nanoTime();
+        long duration = end - start;
+        long expectedDuration = TimeUnit.MILLISECONDS.toNanos( ACCESS_WAIT_MILLIS );
+        assertThat(duration, greaterThanOrEqualTo(expectedDuration)); // equal in ideal case
+    }
+
+    @Test(timeout = 5000)
+    public void releasedExclusiveAllowAccess() throws InterruptedException {
+        final String name = lockName();
+        CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
+        CountDownLatch losers = new CountDownLatch(0); // we expect 0 loser
+        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
+        try (NamedLock namedLock = namedLockFactory.getLock(name))
+        {
+            assertThat( namedLock.lockExclusively( 50L, TimeUnit.MILLISECONDS ), is( true ));
+            try {
+                t1.start();
+                Thread.sleep(50L );
+            }
+            finally
+            {
+                namedLock.unlock();
+            }
+        }
+        t1.join();
+        winners.await();
+        losers.await();
+    }
+
+    private static final long ACCESS_WAIT_MILLIS = 1000L;
+
     private static class Access implements Runnable {
         final NamedLockFactory namedLockFactory;
         final String name;
@@ -180,7 +223,7 @@ public abstract class NamedLockFactoryTestSupport {
         @Override
         public void run() {
             try (NamedLock lock = namedLockFactory.getLock(name)) {
-                if (shared ? lock.lockShared(100L, TimeUnit.MILLISECONDS) : lock.lockExclusively(100L, TimeUnit.MILLISECONDS)) {
+                if (shared ? lock.lockShared(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS) : lock.lockExclusively(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS)) {
                     try {
                         winner.countDown();
                         loser.await();

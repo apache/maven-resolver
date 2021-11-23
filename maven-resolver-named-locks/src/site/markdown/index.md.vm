@@ -31,6 +31,8 @@ Out of the box, "local" (local to JVM) named lock implementations are the follow
   JVM `java.util.concurrent.locks.ReentrantReadWriteLock`.
 - `semaphore-local` implemented in `org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory` that uses
   JVM `java.util.concurrent.Semaphore`.
+- `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
+  JVM `java.nio.channels.FileLock`.
 - `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
 
 Out of the box, "distributed" named lock implementations are the following (separate modules which require additional dependencies):
@@ -51,3 +53,4 @@ Out of the box, name mapper implementations are the following:
 - `static` implemented in `org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper`.
 - `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
 - `discriminating` implemented in `org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper`.
+- `file-gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper`.
