@@ -25,6 +25,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,30 +40,27 @@ import java.util.concurrent.TimeUnit;
  */
 public final class NamedLockFactoryAdapter
 {
+    public static final String TIME_KEY = "aether.syncContext.named.time";
+
+    public static final long DEFAULT_TIME = 30L;
+
+    public static final String TIME_UNIT_KEY = "aether.syncContext.named.time.unit";
+
+    public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.SECONDS;
+
     private final NameMapper nameMapper;
 
     private final NamedLockFactory namedLockFactory;
 
-    private final long time;
-
-    private final TimeUnit timeUnit;
-
-    public NamedLockFactoryAdapter( final NameMapper nameMapper, final NamedLockFactory namedLockFactory,
-                                    final long time, final TimeUnit timeUnit )
+    public NamedLockFactoryAdapter( final NameMapper nameMapper, final NamedLockFactory namedLockFactory )
     {
         this.nameMapper = Objects.requireNonNull( nameMapper );
         this.namedLockFactory = Objects.requireNonNull( namedLockFactory );
-        if ( time < 0L )
-        {
-            throw new IllegalArgumentException( "time cannot be negative" );
-        }
-        this.time = time;
-        this.timeUnit = Objects.requireNonNull( timeUnit );
     }
 
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
-        return new AdaptedLockSyncContext( session, shared, nameMapper, namedLockFactory, time, timeUnit );
+        return new AdaptedLockSyncContext( session, shared, nameMapper, namedLockFactory );
     }
 
     public void shutdown()
@@ -89,16 +87,32 @@ public final class NamedLockFactoryAdapter
         private final Deque<NamedLock> locks;
 
         private AdaptedLockSyncContext( final RepositorySystemSession session, final boolean shared,
-                                        final NameMapper lockNaming, final NamedLockFactory namedLockFactory,
-                                        final long time, final TimeUnit timeUnit )
+                                        final NameMapper lockNaming, final NamedLockFactory namedLockFactory )
         {
             this.session = session;
             this.shared = shared;
             this.lockNaming = lockNaming;
             this.namedLockFactory = namedLockFactory;
-            this.time = time;
-            this.timeUnit = timeUnit;
+            this.time = getTime( session );
+            this.timeUnit = getTimeUnit( session );
             this.locks = new ArrayDeque<>();
+
+            if ( time < 0L )
+            {
+                throw new IllegalArgumentException( "time cannot be negative" );
+            }
+        }
+
+        private long getTime( final RepositorySystemSession session )
+        {
+            return ConfigUtils.getLong( session, DEFAULT_TIME, TIME_KEY );
+        }
+
+        private TimeUnit getTimeUnit( final RepositorySystemSession session )
+        {
+            return TimeUnit.valueOf( ConfigUtils.getString(
+                session, DEFAULT_TIME_UNIT.name(), TIME_UNIT_KEY
+            ) );
         }
 
         @Override

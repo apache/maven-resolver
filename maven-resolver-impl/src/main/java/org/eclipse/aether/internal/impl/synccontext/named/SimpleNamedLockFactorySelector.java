@@ -29,7 +29,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Simple selector implementation that uses Java system properties and sane default values.
@@ -39,21 +38,9 @@ import java.util.concurrent.TimeUnit;
 public final class SimpleNamedLockFactorySelector
     implements NamedLockFactorySelector
 {
-    private static final long TIME = Long.getLong(
-        "aether.syncContext.named.time", 30L
-    );
+    public static final String FACTORY_KEY = "aether.syncContext.named.factory";
 
-    private static final TimeUnit TIME_UNIT = TimeUnit.valueOf( System.getProperty(
-        "aether.syncContext.named.time.unit", TimeUnit.SECONDS.name()
-    ) );
-
-    private static final String FACTORY_NAME = System.getProperty(
-        "aether.syncContext.named.factory", LocalReadWriteLockNamedLockFactory.NAME
-    );
-
-    private static final String NAME_MAPPER_NAME = System.getProperty(
-        "aether.syncContext.named.nameMapper", GAVNameMapper.NAME
-    );
+    public static final String NAME_MAPPER_KEY = "aether.syncContext.named.nameMapper";
 
     private final NamedLockFactory namedLockFactory;
 
@@ -66,8 +53,26 @@ public final class SimpleNamedLockFactorySelector
     public SimpleNamedLockFactorySelector( final Map<String, NamedLockFactory> factories,
                                            final Map<String, NameMapper> nameMappers )
     {
-        this.namedLockFactory = selectNamedLockFactory( factories );
-        this.nameMapper = selectNameMapper( nameMappers );
+        this.namedLockFactory = selectNamedLockFactory( factories, getFactoryName() );
+        this.nameMapper = selectNameMapper( nameMappers, getNameMapperName() );
+    }
+
+    /**
+     * Returns selected factory name (or sane default) using System property value of {@link #FACTORY_KEY} and defaults
+     * to {@link LocalReadWriteLockNamedLockFactory#NAME}.
+     */
+    private String getFactoryName()
+    {
+        return System.getProperty( FACTORY_KEY, LocalReadWriteLockNamedLockFactory.NAME );
+    }
+
+    /**
+     * Returns selected name mapper name (or sane default) using System property value of {@link #NAME_MAPPER_KEY} and
+     * defaults to {@link GAVNameMapper#NAME}.
+     */
+    private String getNameMapperName()
+    {
+        return System.getProperty( NAME_MAPPER_KEY, GAVNameMapper.NAME );
     }
 
     /**
@@ -79,25 +84,13 @@ public final class SimpleNamedLockFactorySelector
         factories.put( NoopNamedLockFactory.NAME, new NoopNamedLockFactory() );
         factories.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
         factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
-        this.namedLockFactory = selectNamedLockFactory( factories );
+        this.namedLockFactory = selectNamedLockFactory( factories, getFactoryName() );
 
         Map<String, NameMapper> nameMappers = new HashMap<>();
         nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
         nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
         nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        this.nameMapper = selectNameMapper( nameMappers );
-    }
-
-    @Override
-    public long waitTime()
-    {
-        return TIME;
-    }
-
-    @Override
-    public TimeUnit waitTimeUnit()
-    {
-        return TIME_UNIT;
+        this.nameMapper = selectNameMapper( nameMappers, getNameMapperName() );
     }
 
     /**
@@ -118,23 +111,25 @@ public final class SimpleNamedLockFactorySelector
         return nameMapper;
     }
 
-    private static NamedLockFactory selectNamedLockFactory( final Map<String, NamedLockFactory> factories )
+    private NamedLockFactory selectNamedLockFactory( final Map<String, NamedLockFactory> factories,
+                                                     final String factoryName )
     {
-        NamedLockFactory factory = factories.get( FACTORY_NAME );
+        NamedLockFactory factory = factories.get( factoryName );
         if ( factory == null )
         {
-            throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + FACTORY_NAME
+            throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + factoryName
                 + ", known ones: " + factories.keySet() );
         }
         return factory;
     }
 
-    private static NameMapper selectNameMapper( final Map<String, NameMapper> nameMappers )
+    private NameMapper selectNameMapper( final Map<String, NameMapper> nameMappers,
+                                         final String mapperName )
     {
-        NameMapper nameMapper = nameMappers.get( NAME_MAPPER_NAME );
+        NameMapper nameMapper = nameMappers.get( mapperName );
         if ( nameMapper == null )
         {
-            throw new IllegalArgumentException( "Unknown NameMapper name: " + NAME_MAPPER_NAME
+            throw new IllegalArgumentException( "Unknown NameMapper name: " + mapperName
                 + ", known ones: " + nameMappers.keySet() );
         }
         return nameMapper;

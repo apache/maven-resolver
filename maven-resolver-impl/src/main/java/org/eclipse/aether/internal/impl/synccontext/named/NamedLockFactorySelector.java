@@ -21,24 +21,12 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 
 import org.eclipse.aether.named.NamedLockFactory;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
  * all the named locks configuration is here. Implementations may use different strategies to perform selection.
  */
 public interface NamedLockFactorySelector
 {
-    /**
-     * Returns the value of wait time, how much a lock blocks, must be greater than 0.
-     */
-    long waitTime();
-
-    /**
-     * Returns the time unit of {@link #waitTime()} value, never null.
-     */
-    TimeUnit waitTimeUnit();
-
     /**
      * Returns the selected {@link NamedLockFactory}, never null.
      */
