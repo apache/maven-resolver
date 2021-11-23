@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  */
 
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
@@ -84,12 +85,14 @@ public final class SimpleNamedLockFactorySelector
         factories.put( NoopNamedLockFactory.NAME, new NoopNamedLockFactory() );
         factories.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
         factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
+        factories.put( FileLockNamedLockFactory.NAME, new FileLockNamedLockFactory() );
         this.namedLockFactory = selectNamedLockFactory( factories, getFactoryName() );
 
         Map<String, NameMapper> nameMappers = new HashMap<>();
         nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
         nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
         nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
+        nameMappers.put( TakariNameMapper.NAME, new TakariNameMapper() );
         this.nameMapper = selectNameMapper( nameMappers, getNameMapperName() );
     }
 

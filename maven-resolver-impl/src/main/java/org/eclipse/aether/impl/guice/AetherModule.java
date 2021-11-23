@@ -49,7 +49,9 @@ import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.TakariNameMapper;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.impl.UpdateCheckManager;
@@ -171,6 +173,8 @@ public class AetherModule
             .to( GAVNameMapper.class ).in( Singleton.class );
         bind( NameMapper.class ).annotatedWith( Names.named( DiscriminatingNameMapper.NAME ) )
             .to( DiscriminatingNameMapper.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( TakariNameMapper.NAME ) )
+            .to( TakariNameMapper.class ).in( Singleton.class );
 
         bind( NamedLockFactory.class ).annotatedWith( Names.named( NoopNamedLockFactory.NAME ) )
             .to( NoopNamedLockFactory.class ).in( Singleton.class );
@@ -178,6 +182,8 @@ public class AetherModule
             .to( LocalReadWriteLockNamedLockFactory.class ).in( Singleton.class );
         bind( NamedLockFactory.class ).annotatedWith( Names.named( LocalSemaphoreNamedLockFactory.NAME ) )
             .to( LocalSemaphoreNamedLockFactory.class ).in( Singleton.class );
+        bind( NamedLockFactory.class ).annotatedWith( Names.named( FileLockNamedLockFactory.NAME ) )
+            .to( FileLockNamedLockFactory.class ).in( Singleton.class );
 
         install( new Slf4jModule() );
 
@@ -188,12 +194,14 @@ public class AetherModule
     Map<String, NameMapper> provideNameMappers(
         @Named( StaticNameMapper.NAME ) NameMapper staticNameMapper,
         @Named( GAVNameMapper.NAME ) NameMapper gavNameMapper,
-        @Named( DiscriminatingNameMapper.NAME ) NameMapper discriminatingNameMapper )
+        @Named( DiscriminatingNameMapper.NAME ) NameMapper discriminatingNameMapper,
+        @Named( TakariNameMapper.NAME ) NameMapper takariNameMapper )
     {
         Map<String, NameMapper> nameMappers = new HashMap<>();
         nameMappers.put( StaticNameMapper.NAME, staticNameMapper );
         nameMappers.put( GAVNameMapper.NAME, gavNameMapper );
         nameMappers.put( DiscriminatingNameMapper.NAME, discriminatingNameMapper );
+        nameMappers.put( TakariNameMapper.NAME, takariNameMapper );
         return Collections.unmodifiableMap( nameMappers );
     }
 
@@ -201,11 +209,13 @@ public class AetherModule
     @Singleton
     Map<String, NamedLockFactory> provideNamedLockFactories(
             @Named( LocalReadWriteLockNamedLockFactory.NAME ) NamedLockFactory localRwLock,
-            @Named( LocalSemaphoreNamedLockFactory.NAME ) NamedLockFactory localSemaphore )
+            @Named( LocalSemaphoreNamedLockFactory.NAME ) NamedLockFactory localSemaphore,
+            @Named( FileLockNamedLockFactory.NAME ) NamedLockFactory fileLockFactory )
     {
         Map<String, NamedLockFactory> factories = new HashMap<>();
         factories.put( LocalReadWriteLockNamedLockFactory.NAME, localRwLock );
         factories.put( LocalSemaphoreNamedLockFactory.NAME, localSemaphore );
+        factories.put( FileLockNamedLockFactory.NAME, fileLockFactory );
         return Collections.unmodifiableMap( factories );
     }
 
