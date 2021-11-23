@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -62,7 +63,7 @@ public abstract class NamedLockFactoryAdapterTestSupport
 
   protected static void setNamedLockFactory(final NamedLockFactory namedLockFactory) {
     adapter = new NamedLockFactoryAdapter(
-            new DiscriminatingNameMapper(new GAVNameMapper()), namedLockFactory, ADAPTER_TIME, ADAPTER_TIME_UNIT
+            new DiscriminatingNameMapper(new GAVNameMapper()), namedLockFactory
     );
   }
 
@@ -79,6 +80,10 @@ public abstract class NamedLockFactoryAdapterTestSupport
     LocalRepository localRepository = new LocalRepository(Files.createTempDirectory("test").toFile());
     session = mock(RepositorySystemSession.class);
     when(session.getLocalRepository()).thenReturn(localRepository);
+    HashMap<String, Object> config = new HashMap<>();
+    config.put(NamedLockFactoryAdapter.TIME_KEY, String.valueOf(ADAPTER_TIME));
+    config.put(NamedLockFactoryAdapter.TIME_UNIT_KEY, ADAPTER_TIME_UNIT.name());
+    when(session.getConfigProperties()).thenReturn(config);
   }
 
   @Test
