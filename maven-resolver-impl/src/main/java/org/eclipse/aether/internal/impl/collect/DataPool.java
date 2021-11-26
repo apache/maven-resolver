@@ -362,17 +362,17 @@ final class DataPool
 
     static final class GraphKey
     {
-        private final Artifact artifact;
+        final Artifact artifact;
 
-        private final List<RemoteRepository> repositories;
+        final List<RemoteRepository> repositories;
 
-        private final DependencySelector selector;
+        final DependencySelector selector;
 
-        private final DependencyManager manager;
+        final DependencyManager manager;
 
-        private final DependencyTraverser traverser;
+        final DependencyTraverser traverser;
 
-        private final VersionFilter filter;
+        final VersionFilter filter;
 
         private final int hashCode;
 
