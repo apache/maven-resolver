@@ -83,14 +83,17 @@ public class DefaultDependencyCollector
     /**
      * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip & reconcile mode.
+     *
+     * @since 1.7.3
      */
-    public static final String CONFIG_PROP_RESOLVER_MODE = "resolver.mode";
+    public static final String CONFIG_PROP_USE_SKIP_RECONCILE = "aether.dependencyCollector.useSkipReconcile";
 
     /**
-     * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
-     * configuration properties} used to store a {@link Boolean} flag controlling the resolver's verbose mode.
+     * The default value for {@link #CONFIG_PROP_USE_SKIP_RECONCILE}, {@code true}.
+     *
+     * @since 1.7.3
      */
-    public static final String CONFIG_PROP_RESOLVER_VERBOSE_MODE = "resolver.verbose";
+    public static final boolean CONFIG_PROP_USE_SKIP_RECONCILE_DEFAULT = true;
 
     private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
 
@@ -107,17 +110,6 @@ public class DefaultDependencyCollector
     private ArtifactDescriptorReader descriptorReader;
 
     private VersionRangeResolver versionRangeResolver;
-
-    /**
-     * control the log related with DependencyResolveSkipper
-     */
-    private boolean verbose;
-
-    /**
-     * control the resolve mode that whether enable skip & reconcile
-     */
-    private boolean skipMode;
-
 
     public DefaultDependencyCollector()
     {
@@ -169,8 +161,13 @@ public class DefaultDependencyCollector
         requireNonNull( request, "request cannot be null" );
         session = optimizeSession( session );
 
-        verbose = ConfigUtils.getBoolean( session, false, CONFIG_PROP_RESOLVER_VERBOSE_MODE );
-        skipMode = ConfigUtils.getBoolean( session, true, CONFIG_PROP_RESOLVER_MODE );
+        boolean useSkipReconcile = ConfigUtils.getBoolean(
+                session, CONFIG_PROP_USE_SKIP_RECONCILE_DEFAULT, CONFIG_PROP_USE_SKIP_RECONCILE
+        );
+        if ( useSkipReconcile )
+        {
+            LOGGER.debug( "Collector skip & reconcile enabled." );
+        }
 
         RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
@@ -277,7 +274,9 @@ public class DefaultDependencyCollector
 
             DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
 
-            Args args = new Args( session, trace, pool, nodes, new DependencyResolveReconciler( skipMode, verbose ),
+            DependencyResolveReconciler dependencyResolveReconciler =
+                    useSkipReconcile ? new DependencyResolveReconciler() : null;
+            Args args = new Args( session, trace, pool, nodes, dependencyResolveReconciler,
                     context, versionContext, request );
             Results results = new Results( result, session );
 
@@ -287,23 +286,26 @@ public class DefaultDependencyCollector
                      depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null,
                      verFilter != null ? verFilter.deriveChildFilter( context ) : null );
 
-            //reconcile the skipped nodes
-            Collection<DependencyResolveReconciler.DependencyResolveSkip> reconcileNodes =
-                    args.reconciler.getNodesToReconcile( session, result );
-            for ( DependencyResolveReconciler.DependencyResolveSkip skip : reconcileNodes )
+            if ( args.reconciler != null )
             {
-                Args newArgs =
-                        new Args( session, trace, pool, new NodeStack(), args.reconciler, context, versionContext,
-                                request );
-                DataPool.GraphKey key = skip.graphKey;
-                List<DependencyNode> parents = skip.parentPathsOfCurrentNode;
-                for ( DependencyNode parent : parents )
+                //reconcile the skipped nodes
+                Collection<DependencyResolveReconciler.DependencyResolveSkip> reconcileNodes =
+                        args.reconciler.getNodesToReconcile( session, result );
+                for ( DependencyResolveReconciler.DependencyResolveSkip skip : reconcileNodes )
                 {
-                    newArgs.nodes.push( parent );
+                    Args newArgs =
+                            new Args( session, trace, pool, new NodeStack(), args.reconciler, context, versionContext,
+                                    request );
+                    DataPool.GraphKey key = skip.graphKey;
+                    List<DependencyNode> parents = skip.parentPathsOfCurrentNode;
+                    for ( DependencyNode parent : parents )
+                    {
+                        newArgs.nodes.push( parent );
+                    }
+                    newArgs.nodes.push( skip.node );
+                    process( newArgs, results, skip.dependencies, key.repositories, key.selector, key.manager,
+                            key.traverser, key.filter );
                 }
-                newArgs.nodes.push( skip.node );
-                process( newArgs, results, skip.dependencies, key.repositories, key.selector, key.manager,
-                        key.traverser, key.filter );
             }
 
             errorPath = results.errorPath;
@@ -536,47 +538,70 @@ public class DefaultDependencyCollector
         VersionFilter childFilter = verFilter != null ? verFilter.deriveChildFilter( context ) : null;
 
         final List<RemoteRepository> childRepos =
-            args.ignoreRepos
-                ? repositories
-                : remoteRepositoryManager.aggregateRepositories( args.session, repositories,
-                                                                 descriptorResult.getRepositories(), true );
+                args.ignoreRepos
+                        ? repositories
+                        : remoteRepositoryManager.aggregateRepositories( args.session, repositories,
+                        descriptorResult.getRepositories(), true );
 
-        Object key =
-            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter );
+        Object key = args.pool.toKey(
+                d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter
+        );
 
-        List<DependencyNode> parents = args.nodes.getParentNodes();
-        int depth = parents.size() + 1; //the depth if pushed the child to stack
-        List<DependencyNode> cachedChildren = args.pool.getChildren( key );
-        DependencyResolveReconciler.CacheResult result = args.reconciler.findCache( child, cachedChildren, depth );
-        if ( result != null )
+        if ( args.reconciler == null )
         {
-            if ( result.candidateWithSameKey )
+            List<DependencyNode> children = args.pool.getChildren( key );
+            if ( children == null )
             {
-                child.setChildren( result.dependencyNodes );
+                args.pool.putChildren( key, child.getChildren() );
+
+                args.nodes.push( child );
+
+                process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+                        childTraverser, childFilter );
+
+                args.nodes.pop();
             }
-            else if ( result.candidateWithLowerDepth )
+            else
             {
-                //No need to set the children as the result can be ignored (won't be picked up)
-                args.reconciler.addSkip( child, key, descriptorResult.getDependencies(), parents,
-                        result.parentPathsOfCandidateLowerDepth );
-                if ( verbose )
-                {
-                    LOGGER.info( "Skipped resolving artifact {} of depth {}", child.getArtifact(), depth );
-                }
+                child.setChildren( children );
             }
         }
         else
         {
-            args.nodes.push( child );
-            if ( verbose )
+            List<DependencyNode> parents = args.nodes.getParentNodes();
+            int depth = parents.size() + 1; //the depth if pushed the child to stack
+            List<DependencyNode> cachedChildren = args.pool.getChildren( key );
+            DependencyResolveReconciler.CacheResult result = args.reconciler.findCache( child, cachedChildren, depth );
+            if ( result != null )
             {
-                LOGGER.info( "Resolving artifact {} of depth {}", child.getArtifact(), depth );
+                if ( result.candidateWithSameKey )
+                {
+                    child.setChildren( result.dependencyNodes );
+                }
+                else if ( result.candidateWithLowerDepth )
+                {
+                    //No need to set the children as the result can be ignored (won't be picked up)
+                    args.reconciler.addSkip( child, key, descriptorResult.getDependencies(), parents,
+                            result.parentPathsOfCandidateLowerDepth );
+                    if ( LOGGER.isDebugEnabled() )
+                    {
+                        LOGGER.debug( "Skipped resolving artifact {} of depth {}", child.getArtifact(), depth );
+                    }
+                }
             }
-            process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
-                    childTraverser, childFilter );
-            args.pool.putChildren( key, child.getChildren() );
-            args.reconciler.cacheChildrenWithDepth( child, parents );
-            args.nodes.pop();
+            else
+            {
+                args.nodes.push( child );
+                if ( LOGGER.isDebugEnabled() )
+                {
+                    LOGGER.debug( "Resolving artifact {} of depth {}", child.getArtifact(), depth );
+                }
+                process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+                        childTraverser, childFilter );
+                args.pool.putChildren( key, child.getChildren() );
+                args.reconciler.cacheChildrenWithDepth( child, parents );
+                args.nodes.pop();
+            }
         }
     }
 
@@ -769,6 +794,9 @@ public class DefaultDependencyCollector
 
         final CollectRequest request;
 
+        /**
+         * Nullable: is {@code null} if {@link #CONFIG_PROP_USE_SKIP_RECONCILE} evaluates to {@code false}.
+         */
         final DependencyResolveReconciler reconciler;
 
         @SuppressWarnings( "checkstyle:parameternumber" )

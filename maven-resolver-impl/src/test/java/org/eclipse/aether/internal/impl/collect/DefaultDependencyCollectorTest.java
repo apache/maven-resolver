@@ -110,7 +110,7 @@ public class DefaultDependencyCollectorTest
     public void setupCollector(boolean skipAndReconcile)
     {
         session = TestUtils.newSession();
-        session.setConfigProperty(DefaultDependencyCollector.CONFIG_PROP_RESOLVER_MODE, skipAndReconcile);
+        session.setConfigProperty(DefaultDependencyCollector.CONFIG_PROP_USE_SKIP_RECONCILE, skipAndReconcile);
 
         collector = new DefaultDependencyCollector();
         collector.setArtifactDescriptorReader( newReader( "" ) );

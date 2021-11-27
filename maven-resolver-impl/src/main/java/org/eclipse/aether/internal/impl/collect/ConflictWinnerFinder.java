@@ -19,8 +19,6 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
@@ -36,7 +34,9 @@ import org.eclipse.aether.util.graph.visitor.CloningDependencyVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
@@ -49,14 +49,7 @@ import static org.eclipse.aether.internal.impl.collect.DependencyResolveReconcil
 public class ConflictWinnerFinder
 {
 
-    private boolean verbose;
-
     private static final Logger LOGGER = LoggerFactory.getLogger( ConflictWinnerFinder.class );
-
-    public ConflictWinnerFinder( boolean verbose )
-    {
-        this.verbose = verbose;
-    }
 
     /**
      * Find artifacts that conflicts with the winner. Only artifacts resolved before winner are considered as
@@ -64,11 +57,11 @@ public class ConflictWinnerFinder
      *
      * @return
      */
-    public Collection<Conflict> getVersionConflicts( RepositorySystemSession session, CollectResult res )
+    Collection<Conflict> getVersionConflicts( RepositorySystemSession session, CollectResult result )
             throws DependencyCollectionException
     {
         LinkedHashSet<Conflict> conflicts = new LinkedHashSet<>();
-        Multimap<String, Conflict> conflictMap = resolveConflictWinners( session, res );
+        HashMap<String, ArrayList<Conflict>> conflictMap = resolveConflictWinners( session, result );
         if ( conflictMap == null )
         {
             return conflicts;
@@ -77,7 +70,7 @@ public class ConflictWinnerFinder
         for ( String key : conflictMap.keySet() )
         {
             Collection<Conflict> col = conflictMap.get( key );
-            if ( col != null && col.size() > 1 )
+            if ( col != null && col.size() > 1 ) // more than ONE
             {
                 Conflict[] array = col.toArray( new Conflict[0] );
 
@@ -100,9 +93,9 @@ public class ConflictWinnerFinder
                 {
                     if ( i < index )
                     {
-                        if ( verbose )
+                        if ( LOGGER.isDebugEnabled() )
                         {
-                            LOGGER.info( "Found dependency: {} that conflicts with: {} ", array[i], winner );
+                            LOGGER.debug( "Found dependency: {} that conflicts with: {} ", array[i], winner );
                         }
                         conflicts.add( array[i] );
                     }
@@ -117,11 +110,12 @@ public class ConflictWinnerFinder
      * Use the ConflictResolver to find out all conflict winners based on a cloned dependency graph
      *
      * @param session
-     * @param res
+     * @param result
      * @return
      * @throws DependencyCollectionException
      */
-    private Multimap<String, Conflict> resolveConflictWinners( RepositorySystemSession session, CollectResult res )
+    private HashMap<String, ArrayList<Conflict>> resolveConflictWinners( RepositorySystemSession session,
+                                                                         CollectResult result )
             throws DependencyCollectionException
     {
         long start = System.nanoTime();
@@ -137,7 +131,7 @@ public class ConflictWinnerFinder
 
         //clone graph
         CloningDependencyVisitor vis = new CloningDependencyVisitor();
-        DependencyNode root = res.getRoot();
+        DependencyNode root = result.getRoot();
         root.accept( vis );
         root = vis.getRootNode();
 
@@ -150,20 +144,20 @@ public class ConflictWinnerFinder
         }
         catch ( RepositoryException e )
         {
-            res.addException( e );
+            result.addException( e );
         }
 
-        if ( !res.getExceptions().isEmpty() )
+        if ( !result.getExceptions().isEmpty() )
         {
-            throw new DependencyCollectionException( res );
+            throw new DependencyCollectionException( result );
         }
 
         DependencyConflictWinnersVisitor conflicts = new DependencyConflictWinnersVisitor();
         root.accept( conflicts );
 
-        if ( verbose )
+        if ( LOGGER.isDebugEnabled() )
         {
-            LOGGER.info( "Finished to resolve conflict winners in : {} ", ( System.nanoTime() - start ) );
+            LOGGER.debug( "Finished to resolve conflict winners in : {} ", ( System.nanoTime() - start ) );
         }
         return conflicts.conflictMap;
     }
@@ -177,13 +171,13 @@ public class ConflictWinnerFinder
          * The version conflicts of dependencies, conflicts were put to the map following the resolve sequence. ga ->
          * conflict
          */
-        Multimap<String, Conflict> conflictMap = LinkedHashMultimap.create();
+        final HashMap<String, ArrayList<Conflict>> conflictMap = new HashMap<>();
 
         public boolean visitEnter( DependencyNode node )
         {
             Artifact a = node.getArtifact();
             Conflict conflict = new Conflict( a );
-            conflictMap.put( ga( a ), conflict );
+            conflictMap.computeIfAbsent( ga( a ), k -> new ArrayList<>() ).add( conflict );
             DependencyNode winner = (DependencyNode) node.getData().get( ConflictResolver.NODE_DATA_WINNER );
             if ( winner != null )
             {

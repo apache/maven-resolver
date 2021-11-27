@@ -131,7 +131,7 @@ public class DependencyResolveReconcilerTest
         result.setRoot( aNode );
 
         //follow the resolve sequence
-        DependencyResolveReconciler reconciler = new DependencyResolveReconciler( true, true );
+        DependencyResolveReconciler reconciler = new DependencyResolveReconciler();
         reconciler.cacheChildrenWithDepth( aNode, new ArrayList<>() );
         reconciler.cacheChildrenWithDepth( bNode, mutableList( aNode ) );
         reconciler.cacheChildrenWithDepth( c3Node, mutableList( aNode, bNode ) );

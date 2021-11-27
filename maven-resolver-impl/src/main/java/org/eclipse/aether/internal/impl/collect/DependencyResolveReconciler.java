@@ -19,8 +19,6 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectResult;
@@ -38,7 +36,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -47,37 +44,27 @@ import java.util.Set;
  */
 public class DependencyResolveReconciler
 {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( DependencyResolveReconciler.class );
+
     /**
      * Cache maven dependency resolve result by depth gav -> result
      */
-    private Map<String, DependencyResolveResult> nodesWithDepth = new HashMap<>( 256 );
+    private final HashMap<String, DependencyResolveResult> nodesWithDepth;
+
     /**
      * Track the nodes that have been skipped to resolve for later reconciling
      */
-    private LinkedHashSet<DependencyResolveSkip> skippedNodes = new LinkedHashSet<>();
+    private final LinkedHashSet<DependencyResolveSkip> skippedNodes;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( DependencyResolveReconciler.class );
-    private boolean skipMode;
-    private boolean verbose;
-
-    public DependencyResolveReconciler( boolean skip, boolean verbose )
+    public DependencyResolveReconciler()
     {
-        this.skipMode = skip;
-        this.verbose = verbose;
-
-        if ( this.verbose )
-        {
-            LOGGER.info( "Skip & reconcile mode is {} ", this.skipMode ? "on" : "off" );
-        }
+        this.nodesWithDepth = new HashMap<>( 256 );
+        this.skippedNodes = new LinkedHashSet<>();
     }
 
     public void cacheChildrenWithDepth( DependencyNode node, List<DependencyNode> parents )
     {
-        if ( !this.skipMode )
-        {
-            return;
-        }
-
         int depth = parents.size() + 1;
         Artifact artifact = node.getArtifact();
         List<DependencyNode> children = node.getChildren();
@@ -87,21 +74,12 @@ public class DependencyResolveReconciler
 
     public CacheResult findCache( DependencyNode current, List<DependencyNode> cacheByGraphKey, int depth )
     {
-        CacheResult cache = new CacheResult();
-        //non skip mode
-        if ( !skipMode && cacheByGraphKey != null )
-        {
-            cache.dependencyNodes = cacheByGraphKey;
-            cache.candidateWithSameKey = true;
-            return cache;
-        }
-
-        //skip mode
         DependencyResolveResult result = nodesWithDepth.get( gav( current.getArtifact() ) );
         if ( result != null )
         {
             if ( result.depth <= depth )
             {
+                CacheResult cache = new CacheResult();
                 cache.dependencyNodes = result.children;
                 cache.candidateWithLowerDepth = true;
                 cache.parentPathsOfCandidateLowerDepth = result.parentPaths;
@@ -124,7 +102,7 @@ public class DependencyResolveReconciler
     public void addSkip( DependencyNode current, Object key, List<Dependency> dependencies,
                          List<DependencyNode> parents, List<DependencyNode> skippedBy )
     {
-        if ( skipMode && dependencies != null && dependencies.size() > 0 )
+        if ( dependencies != null && dependencies.size() > 0 )
         {
             DependencyResolveSkip skip =
                     new DependencyResolveSkip( current, (DataPool.GraphKey) key, dependencies, parents, skippedBy,
@@ -142,12 +120,7 @@ public class DependencyResolveReconciler
                                                                   CollectResult result )
             throws DependencyCollectionException
     {
-        if ( !this.skipMode )
-        {
-            return Collections.emptyList();
-        }
-
-        ConflictWinnerFinder winnerFinder = new ConflictWinnerFinder( verbose );
+        ConflictWinnerFinder winnerFinder = new ConflictWinnerFinder();
         Collection<ConflictWinnerFinder.Conflict> conflicts = winnerFinder.getVersionConflicts( session, result );
         if ( conflicts == null || conflicts.isEmpty() )
         {
@@ -155,8 +128,7 @@ public class DependencyResolveReconciler
         }
 
         //find all nodes that contain conflict nodes.
-        Set<String> conflictedNodes = new HashSet<>();
-        conflictedNodes.addAll( findNodeHasConflictsInParentPaths( conflicts ) );
+        HashSet<String> conflictedNodes = new HashSet<>( findNodeHasConflictsInParentPaths( conflicts ) );
 
         //Evict node from cache if the cached node is based on parent paths contains conflicting nodes
         for ( String gav : conflictedNodes )
@@ -171,9 +143,9 @@ public class DependencyResolveReconciler
             return Collections.emptyList();
         }
 
-        if ( verbose )
+        if ( LOGGER.isDebugEnabled() )
         {
-            LOGGER.info( "Skipped resolving {} nodes, and reconciled {} nodes to solve {} dependency conflicts.",
+            LOGGER.debug( "Skipped resolving {} nodes, and reconciled {} nodes to solve {} dependency conflicts.",
                     skippedNodes.size(), filteredSkips.size(), conflicts.size() );
         }
         return filteredSkips;
@@ -211,10 +183,10 @@ public class DependencyResolveReconciler
         }
 
         //group nodes by artifact
-        Multimap<Artifact, DependencyResolveSkip> reconcileNodes = LinkedHashMultimap.create();
+        HashMap<Artifact, ArrayList<DependencyResolveSkip>> reconcileNodes = new HashMap<>();
         for ( DependencyResolveSkip skip : skips )
         {
-            reconcileNodes.put( skip.node.getArtifact(), skip );
+            reconcileNodes.computeIfAbsent( skip.node.getArtifact(), k -> new ArrayList<>() ).add( skip );
         }
 
         //only reconcile the node with lowest depth
@@ -222,20 +194,11 @@ public class DependencyResolveReconciler
         for ( Artifact key : reconcileNodes.keySet() )
         {
             Collection<DependencyResolveSkip> col = reconcileNodes.get( key );
-            List<DependencyResolveSkip> list = new ArrayList<>();
-            list.addAll( col );
-            Collections.sort( list, new Comparator<DependencyResolveSkip>()
+            List<DependencyResolveSkip> list = new ArrayList<>( col );
+            list.sort( Comparator.comparingInt( o -> o.depth ) );
+            if ( LOGGER.isDebugEnabled() )
             {
-                @Override
-                public int compare( DependencyResolveSkip o1, DependencyResolveSkip o2 )
-                {
-                    return o1.depth - o2.depth;
-                }
-            } );
-
-            if ( verbose )
-            {
-                LOGGER.info( "Reconcile: {}", list.get( 0 ) );
+                LOGGER.debug( "Reconcile: {}", list.get( 0 ) );
             }
             filteredSkips.add( list.get( 0 ) );
         }
