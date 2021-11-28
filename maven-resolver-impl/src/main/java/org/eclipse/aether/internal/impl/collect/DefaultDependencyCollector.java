@@ -583,19 +583,13 @@ public class DefaultDependencyCollector
                     //No need to set the children as the result can be ignored (won't be picked up)
                     args.reconciler.addSkip( child, key, descriptorResult.getDependencies(), parents,
                             result.parentPathsOfCandidateLowerDepth );
-                    if ( LOGGER.isDebugEnabled() )
-                    {
-                        LOGGER.debug( "Skipped resolving artifact {} of depth {}", child.getArtifact(), depth );
-                    }
+                    LOGGER.debug( "Skipped resolving artifact {} of depth {}", child.getArtifact(), depth );
                 }
             }
             else
             {
                 args.nodes.push( child );
-                if ( LOGGER.isDebugEnabled() )
-                {
-                    LOGGER.debug( "Resolving artifact {} of depth {}", child.getArtifact(), depth );
-                }
+                LOGGER.debug( "Resolving artifact {} of depth {}", child.getArtifact(), depth );
                 process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
                         childTraverser, childFilter );
                 args.pool.putChildren( key, child.getChildren() );

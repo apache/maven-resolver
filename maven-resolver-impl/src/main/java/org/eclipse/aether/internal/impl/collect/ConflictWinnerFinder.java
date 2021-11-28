@@ -93,10 +93,7 @@ public class ConflictWinnerFinder
                 {
                     if ( i < index )
                     {
-                        if ( LOGGER.isDebugEnabled() )
-                        {
-                            LOGGER.debug( "Found dependency: {} that conflicts with: {} ", array[i], winner );
-                        }
+                        LOGGER.debug( "Found dependency: {} that conflicts with: {} ", array[i], winner );
                         conflicts.add( array[i] );
                     }
                 }
@@ -155,10 +152,7 @@ public class ConflictWinnerFinder
         DependencyConflictWinnersVisitor conflicts = new DependencyConflictWinnersVisitor();
         root.accept( conflicts );
 
-        if ( LOGGER.isDebugEnabled() )
-        {
-            LOGGER.debug( "Finished to resolve conflict winners in : {} ", ( System.nanoTime() - start ) );
-        }
+        LOGGER.debug( "Finished to resolve conflict winners in : {} ", ( System.nanoTime() - start ) );
         return conflicts.conflictMap;
     }
 

@@ -143,11 +143,8 @@ public class DependencyResolveReconciler
             return Collections.emptyList();
         }
 
-        if ( LOGGER.isDebugEnabled() )
-        {
-            LOGGER.debug( "Skipped resolving {} nodes, and reconciled {} nodes to solve {} dependency conflicts.",
-                    skippedNodes.size(), filteredSkips.size(), conflicts.size() );
-        }
+        LOGGER.debug( "Skipped resolving {} nodes, and reconciled {} nodes to solve {} dependency conflicts.",
+                skippedNodes.size(), filteredSkips.size(), conflicts.size() );
         return filteredSkips;
     }
 
@@ -196,10 +193,7 @@ public class DependencyResolveReconciler
             Collection<DependencyResolveSkip> col = reconcileNodes.get( key );
             List<DependencyResolveSkip> list = new ArrayList<>( col );
             list.sort( Comparator.comparingInt( o -> o.depth ) );
-            if ( LOGGER.isDebugEnabled() )
-            {
-                LOGGER.debug( "Reconcile: {}", list.get( 0 ) );
-            }
+            LOGGER.debug( "Reconcile: {}", list.get( 0 ) );
             filteredSkips.add( list.get( 0 ) );
         }
         return filteredSkips;
