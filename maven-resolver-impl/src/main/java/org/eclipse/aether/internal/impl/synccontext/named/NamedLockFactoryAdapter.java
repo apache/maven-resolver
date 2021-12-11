@@ -58,6 +58,7 @@ public final class NamedLockFactoryAdapter
     {
         this.nameMapper = Objects.requireNonNull( nameMapper );
         this.namedLockFactory = Objects.requireNonNull( namedLockFactory );
+        // TODO: this is ad-hoc "validation", experimental and likely to change
         if ( this.namedLockFactory instanceof FileSystemFriendly
                 && !( this.nameMapper instanceof FileSystemFriendly ) )
         {
