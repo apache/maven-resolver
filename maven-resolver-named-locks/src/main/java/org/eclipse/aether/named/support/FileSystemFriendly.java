@@ -25,8 +25,8 @@ package org.eclipse.aether.named.support;
  * characters in it). Essentially, component marked with this interface expects (or uses) that "name" is an absolute
  * and valid file path.
  *
- * @apiNote Experimental interface, is not meant to be used outside of Maven Resolver codebase. May change or be
- * removed completely without any further notice.
+ * <strong>Important note:</strong> Experimental interface, is not meant to be used outside of Maven Resolver codebase.
+ * May change or be removed completely without any further notice.
  */
 public interface FileSystemFriendly
 {
