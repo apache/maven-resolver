@@ -53,4 +53,4 @@ Out of the box, name mapper implementations are the following:
 - `static` implemented in `org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper`.
 - `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
 - `discriminating` implemented in `org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper`.
-- `takari` implemented in `org.eclipse.aether.internal.impl.synccontext.named.TakariNameMapper`.
+- `file-gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper`.

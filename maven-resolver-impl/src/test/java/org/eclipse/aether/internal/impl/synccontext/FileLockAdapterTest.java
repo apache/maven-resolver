@@ -19,7 +19,7 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.internal.impl.synccontext.named.TakariNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.junit.BeforeClass;
 
@@ -29,7 +29,7 @@ public class FileLockAdapterTest
     @BeforeClass
     public static void createNamedLockFactory()
     {
-        nameMapper = new TakariNameMapper();
+        nameMapper = new FileGAVNameMapper();
         namedLockFactory = new FileLockNamedLockFactory();
         createAdapter();
     }

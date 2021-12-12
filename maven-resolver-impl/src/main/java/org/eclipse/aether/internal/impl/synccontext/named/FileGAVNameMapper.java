@@ -45,11 +45,11 @@ import java.util.concurrent.ConcurrentMap;
  * LockingSyncContext.java</a>
  */
 @Singleton
-@Named( TakariNameMapper.NAME )
-public class TakariNameMapper
+@Named( FileGAVNameMapper.NAME )
+public class FileGAVNameMapper
     implements NameMapper, FileSystemFriendly
 {
-    public static final String NAME = "takari";
+    public static final String NAME = "file-gav";
 
     private static final String LOCK_SUFFIX = ".resolverlock";
 
@@ -57,7 +57,7 @@ public class TakariNameMapper
 
     private final ConcurrentMap<String, Path> baseDirs;
 
-    public TakariNameMapper()
+    public FileGAVNameMapper()
     {
         this.baseDirs = new ConcurrentHashMap<>();
     }

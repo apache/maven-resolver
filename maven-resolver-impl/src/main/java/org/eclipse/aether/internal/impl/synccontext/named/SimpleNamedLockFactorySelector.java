@@ -92,7 +92,7 @@ public final class SimpleNamedLockFactorySelector
         nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
         nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
         nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        nameMappers.put( TakariNameMapper.NAME, new TakariNameMapper() );
+        nameMappers.put( FileGAVNameMapper.NAME, new FileGAVNameMapper() );
         this.nameMapper = selectNameMapper( nameMappers, getNameMapperName() );
     }
 
