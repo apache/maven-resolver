@@ -65,7 +65,7 @@ public class RedissonSemaphoreNamedLockFactory
         RSemaphore semaphore = semaphores.remove( name );
         if ( semaphore == null )
         {
-            throw new IllegalStateException( "Semaphore expected but does not exist: " + name );
+            throw new IllegalStateException( "Semaphore expected, but does not exist: " + name );
         }
         /* Threre is no reasonable way to destroy the semaphore in Redis because we cannot know
          * when the last process has stopped using it.
