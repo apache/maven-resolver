@@ -30,45 +30,39 @@ import org.eclipse.aether.graph.DependencyNode;
 final class NodeStack
 {
 
-    @SuppressWarnings( {"unchecked", "checkstyle:magicnumber" } )
-    // CHECKSTYLE_OFF: MagicNumber
-    private DependencyNode[] nodes = new DependencyNode[96];
-    // CHECKSTYLE_ON: MagicNumber
+    private final DependencyNode[] nodes;
 
-    private int size;
+    NodeStack( DependencyNode node )
+    {
+        this( new DependencyNode[1] );
+        nodes[0] = node;
+    }
+
+    private NodeStack( DependencyNode[] nodes )
+    {
+        this.nodes = nodes;
+    }
 
     public DependencyNode top()
     {
-        if ( size <= 0 )
+        if ( nodes.length == 0 )
         {
             throw new IllegalStateException( "stack empty" );
         }
-        return nodes[size - 1];
+        return nodes[nodes.length - 1];
     }
 
-    public void push( DependencyNode node )
+    public NodeStack push( DependencyNode node )
     {
-        if ( size >= nodes.length )
-        {
-            DependencyNode[] tmp = new DependencyNode[size + 64];
-            System.arraycopy( nodes, 0, tmp, 0, nodes.length );
-            nodes = tmp;
-        }
-        nodes[size++] = node;
-    }
-
-    public void pop()
-    {
-        if ( size <= 0 )
-        {
-            throw new IllegalStateException( "stack empty" );
-        }
-        size--;
+        DependencyNode[] copyNodes = new DependencyNode[nodes.length + 1];
+        System.arraycopy( nodes, 0, copyNodes, 0, nodes.length );
+        copyNodes[copyNodes.length - 1] = node;
+        return new NodeStack( copyNodes );
     }
 
     public int find( Artifact artifact )
     {
-        for ( int i = size - 1; i >= 0; i-- )
+        for ( int i = nodes.length - 1; i >= 0; i-- )
         {
             DependencyNode node = nodes[i];
 
@@ -110,7 +104,7 @@ final class NodeStack
 
     public int size()
     {
-        return size;
+        return nodes.length;
     }
 
     public DependencyNode get( int index )

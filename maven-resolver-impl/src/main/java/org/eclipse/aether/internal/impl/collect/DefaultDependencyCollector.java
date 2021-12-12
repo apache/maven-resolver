@@ -244,13 +244,10 @@ public class DefaultDependencyCollector
         {
             DataPool pool = new DataPool( session );
 
-            NodeStack nodes = new NodeStack();
-            nodes.push( node );
-
             DefaultDependencyCollectionContext context =
                 new DefaultDependencyCollectionContext( session, request.getRootArtifact(), root, managedDependencies );
 
-            Args args = new Args( session, trace, pool, nodes, request );
+            Args args = new Args( session, trace, pool, new NodeStack( node ), request );
             Results results = new Results( result, session );
 
             process( args, results, dependencies, repositories,
@@ -502,13 +499,9 @@ public class DefaultDependencyCollector
         if ( children == null )
         {
             args.pool.putChildren( key, child.getChildren() );
-
-            args.nodes.push( child );
-
-            process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+            Args childArgs = new Args( args.session, args.trace, args.pool, args.nodes.push( child ), args.request );
+            process( childArgs, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
                      childTraverser, childFilter );
-
-            args.nodes.pop();
         }
         else
         {
