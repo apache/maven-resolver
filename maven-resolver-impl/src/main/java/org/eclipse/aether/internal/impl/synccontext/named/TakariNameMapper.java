@@ -37,8 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * A {@link NameMapper} that creates same name mapping as Takari Local Repository does, with baseDir (local repo).
- * Part of code blatantly copies parts of the Takari {@code LockingSyncContext}.
+ * A {@link NameMapper} that creates same name mapping as Takari Local Repository does, with
+ * {@code baseDir} (local repo). Part of code blatantly copies parts of the Takari
+ * {@code LockingSyncContext}.
  *
  * @see <a href="https://github.com/takari/takari-local-repository/blob/24133e50a0478dccb5620ac2f2255187608f165b/src/main/java/io/takari/aether/concurrency/LockingSyncContext.java">Takari
  * LockingSyncContext.java</a>

@@ -27,11 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Retry helper: retries given {@code Callable} as long it returns {@code null} (interpreted as "no answer yet") or
- * given time passes. This helper implements similar semantics regarding caller thread as
- * {@link java.util.concurrent.locks.Lock#tryLock(long, TimeUnit)} method does: blocks the caller thread until operation
- * return non-{@code null} value within the given waiting time and the current thread has not been
- * {@linkplain Thread#interrupt interrupted}.
+ * Retry helper: retries given {@code Callable} as long as it returns {@code null} (interpreted
+ * as "no answer yet") or given time passes. This helper implements similar semantics regarding
+ * caller threads as {@link java.util.concurrent.locks.Lock#tryLock(long, TimeUnit)} method does:
+ * blocks the caller thread until operation return non-{@code null} value within the given waiting
+ * time and the current thread has not been {@linkplain Thread#interrupt interrupted}.
  *
  * @since TBD
  */
@@ -45,10 +45,11 @@ public final class Retry
     }
 
     /**
-     * Retries for given amount of time (time, unit) the passed in operation, sleeping given sleepMills between
-     * retries. In case operation returns null, it is assumed "is not done yet" state, so retry will happen (if time
-     * barrier allows). If time barrier passes, and still {@code null} ("is not done yet") is returned from operation,
-     * the defaultResult is returned.
+     * Retries for given amount of time (time, unit) the passed in operation, sleeping given
+     * {@code sleepMills} between retries. In case operation returns {@code null}, it is assumed
+     * "is not done yet" state, so retry will happen (if time barrier allows). If time barrier
+     * passes, and still {@code null} ("is not done yet") is returned from operation, the
+     * {@code defaultResult} is returned.
      */
     public static  <R> R retry( final long time,
                                 final TimeUnit unit,

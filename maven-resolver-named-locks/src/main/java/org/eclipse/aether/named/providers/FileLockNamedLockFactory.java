@@ -38,8 +38,8 @@ import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 
 /**
- * Named locks factory of {@link FileLockNamedLock}s. This is a bit special implementation, as it expects locks names
- * to be fully qualified absolute file system paths.
+ * Named locks factory of {@link FileLockNamedLock}s. This is a bit special implementation, as it
+ * expects locks names to be fully qualified absolute file system paths.
  *
  * @since TBD
  */
