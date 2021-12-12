@@ -27,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Retry helper: retries {@code Callable} for given time. Assumes {@code null} result as "no yet answer". It retries
- * as long as it gets non-null result from callable, or the given time passes.
+ * Retry helper: retries given {@code Callable} as long it returns {@code null} (interpreted as "no answer yet") or
+ * given time passes.
  *
  * @since TBD
  */
@@ -44,7 +44,7 @@ public final class Retry
     /**
      * Retries for given amount of time (time, unit) the passed in operation, sleeping given sleepMills between
      * retries. In case operation returns null, it is assumed "is not done yet" state, so retry will happen (if time
-     * barrier allows). If time barrier passed, and still "is not done yet" (null) results arrive from operation,
+     * barrier allows). If time barrier passes, and still {@code null} ("is not done yet") is returned from operation,
      * the defaultResult is returned.
      */
     public static  <R> R retry( final long time,
