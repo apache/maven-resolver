@@ -27,6 +27,13 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.locks.LockSupport;
+
 import static java.util.Objects.requireNonNull;
 
 import javax.inject.Inject;
@@ -247,14 +254,21 @@ public class DefaultDependencyCollector
             DefaultDependencyCollectionContext context =
                 new DefaultDependencyCollectionContext( session, request.getRootArtifact(), root, managedDependencies );
 
-            Args args = new Args( session, trace, pool, new NodeStack( node ), request );
+            Args args = new Args( session, trace, pool, new NodeStack( node ), request, getExecutorService( session ) );
             Results results = new Results( result, session );
-
-            process( args, results, dependencies, repositories,
-                     depSelector != null ? depSelector.deriveChildSelector( context ) : null,
-                     depManager != null ? depManager.deriveChildManager( context ) : null,
-                     depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null,
-                     verFilter != null ? verFilter.deriveChildFilter( context ) : null );
+            try
+            {
+                process( args, results, dependencies, repositories,
+                        depSelector != null ? depSelector.deriveChildSelector( context ) : null,
+                        depManager != null ? depManager.deriveChildManager( context ) : null,
+                        depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null,
+                        verFilter != null ? verFilter.deriveChildFilter( context ) : null );
+                waitUntilComplete( results.collectionTasks );
+            }
+            finally
+            {
+                args.executorService.shutdown();
+            }
 
             errorPath = results.errorPath;
         }
@@ -338,27 +352,52 @@ public class DefaultDependencyCollector
         return a.getGroupId() + ':' + a.getArtifactId() + ':' + a.getClassifier() + ':' + a.getExtension();
     }
 
-    @SuppressWarnings( "checkstyle:parameternumber" )
-    private void process( final Args args, Results results, List<Dependency> dependencies,
-                          List<RemoteRepository> repositories, DependencySelector depSelector,
-                          DependencyManager depManager, DependencyTraverser depTraverser, VersionFilter verFilter )
+    private ExecutorService getExecutorService( RepositorySystemSession session )
     {
-        for ( Dependency dependency : dependencies )
+        int nThreads = ConfigUtils.getInteger( session, 5, "maven.descriptor.threads", "maven.artifact.threads" );
+        return Executors.newFixedThreadPool( nThreads );
+    }
+
+    private void waitUntilComplete( Iterable<Future<?>> tasks )
+    {
+        while ( anyIncomplete( tasks ) )
         {
-            processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter,
-                               dependency );
+            // CHECKSTYLE_OFF: MagicNumber
+            LockSupport.parkNanos( 50 );
+            // CHECKSTYLE_ON: MagicNumber
         }
     }
 
-    @SuppressWarnings( "checkstyle:parameternumber" )
-    private void processDependency( Args args, Results results, List<RemoteRepository> repositories,
-                                    DependencySelector depSelector, DependencyManager depManager,
-                                    DependencyTraverser depTraverser, VersionFilter verFilter, Dependency dependency )
+    private boolean anyIncomplete( Iterable<Future<?>> tasks )
     {
+        for ( Future<?> task : tasks )
+        {
+            if ( !task.isDone() )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        List<Artifact> relocations = Collections.emptyList();
-        processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter, dependency,
-                           relocations, false );
+    @SuppressWarnings( "checkstyle:parameternumber" )
+    private void process( final Args args, final Results results, final List<Dependency> dependencies,
+                          final List<RemoteRepository> repositories, final DependencySelector depSelector,
+                          final DependencyManager depManager, final DependencyTraverser depTraverser,
+                          final VersionFilter verFilter )
+    {
+        for ( final Dependency dependency : dependencies )
+        {
+            results.collectionTasks.add( args.executorService.submit( new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter,
+                            dependency, Collections.emptyList(), false );
+                }
+            } ) );
+        }
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
@@ -499,7 +538,8 @@ public class DefaultDependencyCollector
         if ( children == null )
         {
             args.pool.putChildren( key, child.getChildren() );
-            Args childArgs = new Args( args.session, args.trace, args.pool, args.nodes.push( child ), args.request );
+            Args childArgs = new Args( args.session, args.trace, args.pool, args.nodes.push( child ), args.request,
+                    args.executorService );
             process( childArgs, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
                      childTraverser, childFilter );
         }
@@ -694,8 +734,10 @@ public class DefaultDependencyCollector
 
         final CollectRequest request;
 
+        final ExecutorService executorService;
+
         Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
-              CollectRequest request )
+              CollectRequest request, ExecutorService executorService )
         {
             this.session = session;
             this.request = request;
@@ -704,6 +746,7 @@ public class DefaultDependencyCollector
             this.trace = trace;
             this.pool = pool;
             this.nodes = nodes;
+            this.executorService = executorService;
         }
 
     }
@@ -718,6 +761,8 @@ public class DefaultDependencyCollector
         final int maxCycles;
 
         String errorPath;
+
+        final Queue<Future<?>> collectionTasks = new ConcurrentLinkedQueue<>();
 
         Results( CollectResult result, RepositorySystemSession session )
         {
