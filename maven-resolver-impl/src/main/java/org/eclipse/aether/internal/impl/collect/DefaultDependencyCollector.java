@@ -250,7 +250,7 @@ public class DefaultDependencyCollector
             DefaultDependencyCollectionContext context =
                 new DefaultDependencyCollectionContext( session, request.getRootArtifact(), root, managedDependencies );
 
-            Args args = new Args( session, trace, pool, nodes, context, request );
+            Args args = new Args( session, trace, pool, nodes, request );
             Results results = new Results( result, session );
 
             process( args, results, dependencies, repositories,
@@ -480,8 +480,9 @@ public class DefaultDependencyCollector
                             DependencyTraverser depTraverser, VersionFilter verFilter, Dependency d,
                             ArtifactDescriptorResult descriptorResult, DefaultDependencyNode child )
     {
-        DefaultDependencyCollectionContext context = args.collectionContext;
-        context.set( d, descriptorResult.getManagedDependencies() );
+        DefaultDependencyCollectionContext context =
+                new DefaultDependencyCollectionContext( args.session, d.getArtifact(), d,
+                        descriptorResult.getManagedDependencies() );
 
         DependencySelector childSelector = depSelector != null ? depSelector.deriveChildSelector( context ) : null;
         DependencyManager childManager = depManager != null ? depManager.deriveChildManager( context ) : null;
@@ -698,12 +699,10 @@ public class DefaultDependencyCollector
 
         final NodeStack nodes;
 
-        final DefaultDependencyCollectionContext collectionContext;
-
         final CollectRequest request;
 
         Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
-                     DefaultDependencyCollectionContext collectionContext, CollectRequest request )
+              CollectRequest request )
         {
             this.session = session;
             this.request = request;
@@ -712,7 +711,6 @@ public class DefaultDependencyCollector
             this.trace = trace;
             this.pool = pool;
             this.nodes = nodes;
-            this.collectionContext = collectionContext;
         }
 
     }

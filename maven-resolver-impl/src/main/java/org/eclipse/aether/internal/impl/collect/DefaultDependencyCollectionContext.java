@@ -19,6 +19,7 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -35,11 +36,11 @@ final class DefaultDependencyCollectionContext
 
     private final RepositorySystemSession session;
 
-    private Artifact artifact;
+    private final Artifact artifact;
 
-    private Dependency dependency;
+    private final Dependency dependency;
 
-    private List<Dependency> managedDependencies;
+    private final List<Dependency> managedDependencies;
 
     DefaultDependencyCollectionContext( RepositorySystemSession session, Artifact artifact,
                                                Dependency dependency, List<Dependency> managedDependencies )
@@ -47,7 +48,7 @@ final class DefaultDependencyCollectionContext
         this.session = session;
         this.artifact = ( dependency != null ) ? dependency.getArtifact() : artifact;
         this.dependency = dependency;
-        this.managedDependencies = managedDependencies;
+        this.managedDependencies = Collections.unmodifiableList( managedDependencies );
     }
 
     public RepositorySystemSession getSession()
@@ -68,13 +69,6 @@ final class DefaultDependencyCollectionContext
     public List<Dependency> getManagedDependencies()
     {
         return managedDependencies;
-    }
-
-    public void set( Dependency dependency, List<Dependency> managedDependencies )
-    {
-        artifact = dependency.getArtifact();
-        this.dependency = dependency;
-        this.managedDependencies = managedDependencies;
     }
 
     @Override
