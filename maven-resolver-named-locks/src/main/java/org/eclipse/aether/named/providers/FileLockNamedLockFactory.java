@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -50,18 +51,18 @@ public class FileLockNamedLockFactory
 {
     public static final String NAME = "file-lock";
 
-    private final ConcurrentHashMap<String, FileChannel> channels;
+    private final ConcurrentMap<String, FileChannel> fileChannels;
 
     public FileLockNamedLockFactory()
     {
-        this.channels = new ConcurrentHashMap<>();
+        this.fileChannels = new ConcurrentHashMap<>();
     }
 
     @Override
     protected NamedLockSupport createLock( final String name )
     {
         Path path = Paths.get( name );
-        FileChannel fileChannel = channels.computeIfAbsent( name, k ->
+        FileChannel fileChannel = fileChannels.computeIfAbsent( name, k ->
         {
             try
             {
@@ -84,7 +85,7 @@ public class FileLockNamedLockFactory
     @Override
     protected void destroyLock( final String name )
     {
-        FileChannel fileChannel = channels.remove( name );
+        FileChannel fileChannel = fileChannels.remove( name );
         if ( fileChannel == null )
         {
             throw new IllegalStateException( "File channel expected, but does not exist: " + name );

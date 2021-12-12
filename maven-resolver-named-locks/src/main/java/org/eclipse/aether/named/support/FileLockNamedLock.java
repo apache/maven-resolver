@@ -38,11 +38,11 @@ import static org.eclipse.aether.named.support.Retry.retry;
  * Named lock that uses {@link FileLock}. An instance of this class is about ONE LOCK (one file) and is possibly used
  * by multiple threads. Each thread (if properly coded re boxing) will try to obtain either shared or exclusive lock.
  * As file locks are JVM-scoped (so one JVM can obtain same file lock only once), the threads share file lock and
- * synchronize according to it. Still, as file lock obtain operation does not block (or in other word, the method
+ * synchronize according to it. Still, as file lock obtain operation does not block (or in other words, the method
  * that does block cannot be controlled for how long it blocks), we are "simulating" thread blocking using
  * {@link Retry} utility.
- * This implementation performs coordination on thread (JVM-local) level but also on process level, as long as other
- * parties are using this same "advisory" locking mechanism.
+ * This implementation performs coordination not only on thread (JVM-local) level, but also on process level,
+ * as long as other parties are using this same "advisory" locking mechanism.
  *
  * @since TBD
  */
@@ -58,7 +58,7 @@ public final class FileLockNamedLock
     /**
      * Thread -> steps stack (true = shared, false = exclusive)
      */
-    private final HashMap<Thread, Deque<Boolean>> threadSteps;
+    private final Map<Thread, Deque<Boolean>> threadSteps;
 
     /**
      * The {@link FileChannel} this instance is about.

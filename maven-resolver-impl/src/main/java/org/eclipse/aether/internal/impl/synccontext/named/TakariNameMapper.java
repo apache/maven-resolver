@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * A {@link NameMapper} that creates same name mapping as Takari Local Repository does, with baseDir (local repo).
@@ -53,7 +54,7 @@ public class TakariNameMapper
 
     private static final char SEPARATOR = '~';
 
-    private final ConcurrentHashMap<String, Path> baseDirs;
+    private final ConcurrentMap<String, Path> baseDirs;
 
     public TakariNameMapper()
     {
