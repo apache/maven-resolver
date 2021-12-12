@@ -266,13 +266,13 @@ public final class FileLockNamedLock
         }
         catch ( OverlappingFileLockException e )
         {
-            logger.trace( "Overlap on {}: {}", name(), e );
+            logger.trace( "File lock overlap on '{}'", name(), e );
             return null;
         }
         catch ( IOException e )
         {
-            logger.trace( "Failure on {}", name(), e );
-            throw new UncheckedIOException( e );
+            logger.trace( "Failure on acquire of file lock for '{}'", name(), e );
+            throw new UncheckedIOException( "Failed to acquire lock file channel for '" + name() + "'", e );
         }
         return result;
     }
