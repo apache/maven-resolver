@@ -74,7 +74,8 @@ public class FileLockNamedLockFactory
             }
             catch ( IOException e )
             {
-                throw new UncheckedIOException( path.toString(), e );
+                throw new UncheckedIOException( "Failed to open file channel for '"
+                    + name + "'", e );
             }
         } );
         return new FileLockNamedLock( name, fileChannel, this );
@@ -83,28 +84,20 @@ public class FileLockNamedLockFactory
     @Override
     protected void destroyLock( final String name )
     {
+        FileChannel fileChannel = channels.remove( name );
+        if ( fileChannel == null )
+        {
+            throw new IllegalStateException( "File channel expected, but does not exist: " + name );
+        }
+
         try
         {
-            FileChannel fileChannel = channels.remove( name );
-            if ( fileChannel != null )
-            {
-                try
-                {
-                    fileChannel.close();
-                }
-                catch ( IOException e )
-                {
-                    throw new UncheckedIOException( e );
-                }
-            }
-            else
-            {
-                logger.warn( "No FileChannel for lock '{}'", name );
-            }
+            fileChannel.close();
         }
-        finally
+        catch ( IOException e )
         {
-            super.destroyLock( name );
+            throw new UncheckedIOException( "Failed to close file channel for '"
+                    + name + "'", e );
         }
     }
 }
