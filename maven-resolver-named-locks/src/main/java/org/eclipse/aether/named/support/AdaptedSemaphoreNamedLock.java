@@ -118,7 +118,7 @@ public class AdaptedSemaphoreNamedLock
         Deque<Integer> steps = threadPerms.get();
         if ( steps.isEmpty() )
         {
-            throw new IllegalStateException( "Wrong API usage: unlock w/o lock" );
+            throw new IllegalStateException( "Wrong API usage: unlock without lock" );
         }
         int step = steps.pop();
         if ( step > NONE )

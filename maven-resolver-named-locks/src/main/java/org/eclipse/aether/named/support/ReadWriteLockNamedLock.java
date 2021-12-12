@@ -95,7 +95,7 @@ public class ReadWriteLockNamedLock
         Deque<Step> steps = threadSteps.get();
         if ( steps.isEmpty() )
         {
-            throw new IllegalStateException( "Wrong API usage: unlock w/o lock" );
+            throw new IllegalStateException( "Wrong API usage: unlock without lock" );
         }
         Step step = steps.pop();
         if ( Step.SHARED == step )
