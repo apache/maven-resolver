@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.collect;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -31,7 +32,8 @@ import java.util.WeakHashMap;
 class ObjectPool<T>
 {
 
-    private final Map<Object, Reference<T>> objects = new WeakHashMap<>( 256 );
+    private final Map<Object, Reference<T>> objects =
+            Collections.synchronizedMap( new WeakHashMap<Object, Reference<T>>( 256 ) );
 
     public synchronized T intern( T object )
     {

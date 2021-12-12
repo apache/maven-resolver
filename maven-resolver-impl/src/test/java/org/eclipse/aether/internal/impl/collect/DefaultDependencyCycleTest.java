@@ -35,8 +35,7 @@ public class DefaultDependencyCycleTest
     @Test
     public void testToString()
     {
-        NodeStack nodeStack = new NodeStack();
-        nodeStack.push( new DefaultDependencyNode( FOO_DEPENDENCY ) );
+        NodeStack nodeStack = new NodeStack(new DefaultDependencyNode( FOO_DEPENDENCY ));
         DependencyCycle cycle = new DefaultDependencyCycle( nodeStack, 1, BAR_DEPENDENCY );
 
         assertEquals( "group-id:foo:jar -> group-id:bar:jar", cycle.toString() );

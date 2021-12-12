@@ -70,7 +70,7 @@ public final class DefaultDependencyNode
     {
         this.dependency = dependency;
         artifact = ( dependency != null ) ? dependency.getArtifact() : null;
-        children = new ArrayList<>( 0 );
+        children = Collections.synchronizedList( new ArrayList<DependencyNode>( 0 ) );
         aliases = Collections.emptyList();
         relocations = Collections.emptyList();
         repositories = Collections.emptyList();
@@ -88,7 +88,7 @@ public final class DefaultDependencyNode
     public DefaultDependencyNode( Artifact artifact )
     {
         this.artifact = artifact;
-        children = new ArrayList<>( 0 );
+        children = Collections.synchronizedList( new ArrayList<DependencyNode>( 0 ) );
         aliases = Collections.emptyList();
         relocations = Collections.emptyList();
         repositories = Collections.emptyList();
@@ -106,7 +106,7 @@ public final class DefaultDependencyNode
     {
         dependency = node.getDependency();
         artifact = node.getArtifact();
-        children = new ArrayList<>( 0 );
+        children = Collections.synchronizedList( new ArrayList<DependencyNode>( 0 ) );
         setAliases( node.getAliases() );
         setRequestContext( node.getRequestContext() );
         setManagedBits( node.getManagedBits() );
@@ -127,7 +127,7 @@ public final class DefaultDependencyNode
     {
         if ( children == null )
         {
-            this.children = new ArrayList<>( 0 );
+            this.children = Collections.synchronizedList( new ArrayList<DependencyNode>( 0 ) );
         }
         else
         {

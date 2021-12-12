@@ -21,12 +21,12 @@ package org.eclipse.aether.internal.impl.collect;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
@@ -67,9 +67,9 @@ final class DataPool
 
     private Map<Object, Descriptor> descriptors;
 
-    private final Map<Object, Constraint> constraints = new HashMap<>();
+    private final Map<Object, Constraint> constraints = new ConcurrentHashMap<>();
 
-    private final Map<Object, List<DependencyNode>> nodes = new HashMap<>( 256 );
+    private final Map<Object, List<DependencyNode>> nodes = new ConcurrentHashMap<>( 256 );
 
     @SuppressWarnings( "unchecked" )
     DataPool( RepositorySystemSession session )
