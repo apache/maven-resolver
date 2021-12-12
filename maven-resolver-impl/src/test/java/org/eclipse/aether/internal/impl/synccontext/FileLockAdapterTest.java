@@ -27,7 +27,8 @@ public class FileLockAdapterTest
     extends NamedLockFactoryAdapterTestSupport
 {
     @BeforeClass
-    public static void createNamedLockFactory() {
+    public static void createNamedLockFactory()
+    {
         nameMapper = new TakariNameMapper();
         namedLockFactory = new FileLockNamedLockFactory();
         createAdapter();

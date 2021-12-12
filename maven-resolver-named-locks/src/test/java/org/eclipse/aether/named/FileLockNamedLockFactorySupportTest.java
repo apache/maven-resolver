@@ -28,25 +28,27 @@ import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.junit.BeforeClass;
 
 public class FileLockNamedLockFactorySupportTest
-    extends NamedLockFactoryTestSupport {
+    extends NamedLockFactoryTestSupport
+    {
 
     private final Path baseDir;
 
     public FileLockNamedLockFactorySupportTest() throws IOException
     {
         String path = System.getProperty( "java.io.tmpdir" );
-        Files.createDirectories(Paths.get(path) ); // hack for surefire: sets the property but directory does not exist
+        Files.createDirectories( Paths.get (path) ); // hack for surefire: sets the property but directory does not exist
         this.baseDir = Files.createTempDirectory( null );
     }
 
     @Override
     protected String lockName()
     {
-        return baseDir.resolve(testName.getMethodName()).toAbsolutePath().toString();
+        return baseDir.resolve( testName.getMethodName() ).toAbsolutePath().toString();
     }
 
     @BeforeClass
-    public static void createNamedLockFactory() throws IOException {
+    public static void createNamedLockFactory() throws IOException
+    {
         namedLockFactory = new FileLockNamedLockFactory();
     }
 }

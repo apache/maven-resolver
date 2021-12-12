@@ -42,26 +42,29 @@ public class RetryTest
     public TestName testName = new TestName();
 
     @Test
-    public void happy() throws InterruptedException {
+    public void happy() throws InterruptedException
+    {
         LongAdder retries = new LongAdder();
-        String result = retry(1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return "happy"; }, null, "notHappy");
-        assertThat(result, equalTo("happy"));
-        assertThat(retries.sum(), equalTo(1L));
+        String result = retry( 1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return "happy"; }, null, "notHappy" );
+        assertThat( result, equalTo( "happy" ) );
+        assertThat( retries.sum(), equalTo( 1L ) );
     }
 
     @Test
-    public void notHappy() throws InterruptedException {
+    public void notHappy() throws InterruptedException
+    {
         LongAdder retries = new LongAdder();
-        String result = retry(1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return null; }, null, "notHappy");
-        assertThat(result, equalTo("notHappy"));
-        assertThat(retries.sum(), greaterThan(1L));
+        String result = retry( 1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return null; }, null, "notHappy" );
+        assertThat( result, equalTo( "notHappy" ) );
+        assertThat( retries.sum(), greaterThan( 1L ) );
     }
 
     @Test
-    public void happyOnSomeAttempt() throws InterruptedException {
+    public void happyOnSomeAttempt() throws InterruptedException
+    {
         LongAdder retries = new LongAdder();
-        String result = retry(1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return retries.sum() == 2 ? "got it" : null; }, null, "notHappy");
-        assertThat(result, equalTo("got it"));
-        assertThat(retries.sum(), equalTo(2L));
+        String result = retry( 1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return retries.sum() == 2 ? "got it" : null; }, null, "notHappy" );
+        assertThat( result, equalTo( "got it" ) );
+        assertThat( retries.sum(), equalTo( 2L ) );
     }
 }
