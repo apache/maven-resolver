@@ -32,48 +32,33 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Simple selector implementation that uses Java system properties and sane default values.
+ * Simple selector implementation that uses {@link LocalReadWriteLockNamedLockFactory} and {@link GAVNameMapper} as
+ * default name lock factory and name mapper.
+ *
+ * @since TBD
  */
 @Singleton
 @Named
 public final class SimpleNamedLockFactorySelector
-    implements NamedLockFactorySelector
+    extends NamedLockFactorySelectorSupport
 {
-    public static final String FACTORY_KEY = "aether.syncContext.named.factory";
+    private static final Map<String, NamedLockFactory> FACTORIES;
 
-    public static final String NAME_MAPPER_KEY = "aether.syncContext.named.nameMapper";
+    private static final Map<String, NameMapper> NAME_MAPPERS;
 
-    private final NamedLockFactory namedLockFactory;
-
-    private final NameMapper nameMapper;
-
-    /**
-     * Constructor used with DI, where factories are injected and selected based on key.
-     */
-    @Inject
-    public SimpleNamedLockFactorySelector( final Map<String, NamedLockFactory> factories,
-                                           final Map<String, NameMapper> nameMappers )
+    static
     {
-        this.namedLockFactory = selectNamedLockFactory( factories, getFactoryName() );
-        this.nameMapper = selectNameMapper( nameMappers, getNameMapperName() );
-    }
+        FACTORIES = new HashMap<>();
+        FACTORIES.put( NoopNamedLockFactory.NAME, new NoopNamedLockFactory() );
+        FACTORIES.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
+        FACTORIES.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
+        FACTORIES.put( FileLockNamedLockFactory.NAME, new FileLockNamedLockFactory() );
 
-    /**
-     * Returns selected factory name (or sane default) using System property value of {@link #FACTORY_KEY} and defaults
-     * to {@link LocalReadWriteLockNamedLockFactory#NAME}.
-     */
-    private String getFactoryName()
-    {
-        return System.getProperty( FACTORY_KEY, LocalReadWriteLockNamedLockFactory.NAME );
-    }
-
-    /**
-     * Returns selected name mapper name (or sane default) using System property value of {@link #NAME_MAPPER_KEY} and
-     * defaults to {@link GAVNameMapper#NAME}.
-     */
-    private String getNameMapperName()
-    {
-        return System.getProperty( NAME_MAPPER_KEY, GAVNameMapper.NAME );
+        NAME_MAPPERS = new HashMap<>();
+        NAME_MAPPERS.put( StaticNameMapper.NAME, new StaticNameMapper() );
+        NAME_MAPPERS.put( GAVNameMapper.NAME, new GAVNameMapper() );
+        NAME_MAPPERS.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
+        NAME_MAPPERS.put( FileGAVNameMapper.NAME, new FileGAVNameMapper() );
     }
 
     /**
@@ -81,60 +66,18 @@ public final class SimpleNamedLockFactorySelector
      */
     public SimpleNamedLockFactorySelector()
     {
-        Map<String, NamedLockFactory> factories = new HashMap<>();
-        factories.put( NoopNamedLockFactory.NAME, new NoopNamedLockFactory() );
-        factories.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
-        factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
-        factories.put( FileLockNamedLockFactory.NAME, new FileLockNamedLockFactory() );
-        this.namedLockFactory = selectNamedLockFactory( factories, getFactoryName() );
-
-        Map<String, NameMapper> nameMappers = new HashMap<>();
-        nameMappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
-        nameMappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
-        nameMappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        nameMappers.put( FileGAVNameMapper.NAME, new FileGAVNameMapper() );
-        this.nameMapper = selectNameMapper( nameMappers, getNameMapperName() );
+        this( FACTORIES, NAME_MAPPERS );
     }
 
-    /**
-     * Returns the selected {@link NamedLockFactory}, never null.
-     */
-    @Override
-    public NamedLockFactory getSelectedNamedLockFactory()
+    @Inject
+    public SimpleNamedLockFactorySelector( final Map<String, NamedLockFactory> factories,
+                                           final Map<String, NameMapper> nameMappers )
     {
-        return namedLockFactory;
-    }
-
-    /**
-     * Returns the selected {@link NameMapper}, never null.
-     */
-    @Override
-    public NameMapper getSelectedNameMapper()
-    {
-        return nameMapper;
-    }
-
-    private NamedLockFactory selectNamedLockFactory( final Map<String, NamedLockFactory> factories,
-                                                     final String factoryName )
-    {
-        NamedLockFactory factory = factories.get( factoryName );
-        if ( factory == null )
-        {
-            throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + factoryName
-                + ", known ones: " + factories.keySet() );
-        }
-        return factory;
-    }
-
-    private NameMapper selectNameMapper( final Map<String, NameMapper> nameMappers,
-                                         final String mapperName )
-    {
-        NameMapper nameMapper = nameMappers.get( mapperName );
-        if ( nameMapper == null )
-        {
-            throw new IllegalArgumentException( "Unknown NameMapper name: " + mapperName
-                + ", known ones: " + nameMappers.keySet() );
-        }
-        return nameMapper;
+        super(
+            factories,
+            LocalReadWriteLockNamedLockFactory.NAME,
+            nameMappers,
+            GAVNameMapper.NAME
+        );
     }
 }
