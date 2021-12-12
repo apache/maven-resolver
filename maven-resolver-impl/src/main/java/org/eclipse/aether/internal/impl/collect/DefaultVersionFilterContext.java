@@ -41,19 +41,15 @@ final class DefaultVersionFilterContext
 {
     private final RepositorySystemSession session;
 
-    private Dependency dependency;
+    private final Dependency dependency;
 
-    VersionRangeResult result;
+    private final VersionRangeResult result;
 
-    private List<Version> versions;
+    private final List<Version> versions;
 
-    DefaultVersionFilterContext( RepositorySystemSession session )
+    DefaultVersionFilterContext( RepositorySystemSession session, Dependency dependency, VersionRangeResult result )
     {
         this.session = session;
-    }
-
-    public void set( Dependency dependency, VersionRangeResult result )
-    {
         this.dependency = dependency;
         this.result = result;
         this.versions = new ArrayList<>( result.getVersions() );

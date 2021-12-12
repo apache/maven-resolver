@@ -176,7 +176,7 @@ public class DefaultDependencyCollector
                                              request.getRequestContext() );
                 rangeRequest.setTrace( trace );
                 rangeResult = versionRangeResolver.resolveVersionRange( session, rangeRequest );
-                versions = filterVersions( root, rangeResult, verFilter, new DefaultVersionFilterContext( session ) );
+                versions = filterVersions( root, rangeResult, verFilter, session );
             }
             catch ( VersionRangeResolutionException e )
             {
@@ -250,9 +250,7 @@ public class DefaultDependencyCollector
             DefaultDependencyCollectionContext context =
                 new DefaultDependencyCollectionContext( session, request.getRootArtifact(), root, managedDependencies );
 
-            DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
-
-            Args args = new Args( session, trace, pool, nodes, context, versionContext, request );
+            Args args = new Args( session, trace, pool, nodes, context, request );
             Results results = new Results( result, session );
 
             process( args, results, dependencies, repositories,
@@ -394,7 +392,7 @@ public class DefaultDependencyCollector
 
             rangeResult = cachedResolveRangeResult( rangeRequest, args.pool, args.session );
 
-            versions = filterVersions( dependency, rangeResult, verFilter, args.versionContext );
+            versions = filterVersions( dependency, rangeResult, verFilter, args.session );
         }
         catch ( VersionRangeResolutionException e )
         {
@@ -645,8 +643,7 @@ public class DefaultDependencyCollector
     }
 
     private static List<? extends Version> filterVersions( Dependency dependency, VersionRangeResult rangeResult,
-                                                           VersionFilter verFilter,
-                                                           DefaultVersionFilterContext verContext )
+                                                           VersionFilter verFilter, RepositorySystemSession session )
         throws VersionRangeResolutionException
     {
         if ( rangeResult.getVersions().isEmpty() )
@@ -659,7 +656,8 @@ public class DefaultDependencyCollector
         List<? extends Version> versions;
         if ( verFilter != null && rangeResult.getVersionConstraint().getRange() != null )
         {
-            verContext.set( dependency, rangeResult );
+            DefaultVersionFilterContext verContext =
+                    new DefaultVersionFilterContext( session, dependency, rangeResult );
             try
             {
                 verFilter.filterVersions( verContext );
@@ -702,13 +700,10 @@ public class DefaultDependencyCollector
 
         final DefaultDependencyCollectionContext collectionContext;
 
-        final DefaultVersionFilterContext versionContext;
-
         final CollectRequest request;
 
         Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
-                     DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
-                     CollectRequest request )
+                     DefaultDependencyCollectionContext collectionContext, CollectRequest request )
         {
             this.session = session;
             this.request = request;
@@ -718,7 +713,6 @@ public class DefaultDependencyCollector
             this.pool = pool;
             this.nodes = nodes;
             this.collectionContext = collectionContext;
-            this.versionContext = versionContext;
         }
 
     }
