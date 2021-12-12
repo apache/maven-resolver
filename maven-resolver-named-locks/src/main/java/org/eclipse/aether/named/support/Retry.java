@@ -68,7 +68,7 @@ public final class Retry
             result = operation.call();
             if ( result == null )
             {
-              LOGGER.trace( "Attempt {}: no result", attempt );
+              LOGGER.trace( "Retry attempt {}: no result", attempt );
               Thread.sleep( sleepMillis );
             }
           }
@@ -78,7 +78,7 @@ public final class Retry
           }
           catch ( Exception e )
           {
-            LOGGER.trace( "Attempt {}: operation failure", attempt, e );
+            LOGGER.trace( "Retry attempt {}: operation failure", attempt, e );
             if ( retryPredicate != null && !retryPredicate.test( e ) )
             {
                 throw new IllegalStateException( e );
