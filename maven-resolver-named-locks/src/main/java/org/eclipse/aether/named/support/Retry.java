@@ -28,7 +28,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Retry helper: retries given {@code Callable} as long it returns {@code null} (interpreted as "no answer yet") or
- * given time passes.
+ * given time passes. This helper implements similar semantics regarding caller thread as
+ * {@link java.util.concurrent.locks.Lock#tryLock(long, TimeUnit)} method does: blocks the caller thread until operation
+ * return non-{@code null} value within the given waiting time and the current thread has not been
+ * {@linkplain Thread#interrupt interrupted}.
  *
  * @since TBD
  */
