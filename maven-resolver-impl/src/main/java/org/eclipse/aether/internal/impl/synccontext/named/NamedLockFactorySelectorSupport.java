@@ -20,7 +20,6 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  */
 
 import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 
 import java.util.Map;
 
