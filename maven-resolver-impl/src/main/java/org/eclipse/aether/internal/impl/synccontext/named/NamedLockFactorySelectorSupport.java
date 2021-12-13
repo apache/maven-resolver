@@ -69,8 +69,7 @@ public abstract class NamedLockFactorySelectorSupport
     }
 
     /**
-     * Returns selected factory name (or sane default) using System property value of {@link #FACTORY_KEY} and defaults
-     * to {@link LocalReadWriteLockNamedLockFactory#NAME}.
+     * Returns selected factory name (or passed in default) using System property value of {@link #FACTORY_KEY}.
      */
     protected String getFactoryName( final String defaultFactoryName )
     {
@@ -78,8 +77,7 @@ public abstract class NamedLockFactorySelectorSupport
     }
 
     /**
-     * Returns selected name mapper name (or sane default) using System property value of {@link #NAME_MAPPER_KEY} and
-     * defaults to {@link GAVNameMapper#NAME}.
+     * Returns selected name mapper name (or passed in default) using System property value of {@link #NAME_MAPPER_KEY}.
      */
     protected String getNameMapperName( final String defaultNameMapperName )
     {
