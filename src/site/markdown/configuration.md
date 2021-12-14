@@ -22,7 +22,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 --- | --- | --- | --- | ---
 `aether.artifactResolver.snapshotNormalization` | boolean | It replaces the timestamped snapshot file name with a filename containing the `SNAPSHOT` qualifier only. This only affects resolving/retrieving artifacts but not uploading those. | `true` | no
 `aether.checksums.forSignature` | boolean | Flag indicating if signature artifacts (`.asc`) should have checksums. | `false` | no
-`aether.checksums.algorithms` | String | List of [algorithms](https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#MessageDigest) passed to [`MessageDigest`](https://docs.oracle.com/javase/7/docs/api/java/security/MessageDigest.html) with which checksums are validated (downloaded) and generated (uploaded). | `"SHA-1,MD5"` | no
+`aether.checksums.algorithms` | String | Comma separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
 `aether.connector.basic.threads` or `maven.artifact.threads` | int | Number of threads to use for uploading/downloading. | `5` | no
 `aether.connector.classpath.loader` | ClassLoader | `ClassLoader` from which resources should be retrieved which start with the `classpath:` protocol. | `Thread.currentThread().getContextClassLoader()` | no

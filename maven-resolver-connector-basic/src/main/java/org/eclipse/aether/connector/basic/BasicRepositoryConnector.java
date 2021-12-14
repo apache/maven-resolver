@@ -26,12 +26,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,6 +46,8 @@ import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
@@ -64,7 +65,6 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.transform.FileTransformer;
-import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
@@ -72,9 +72,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
  */
 final class BasicRepositoryConnector
-    implements RepositoryConnector
+        implements RepositoryConnector
 {
 
     private static final String CONFIG_PROP_THREADS = "aether.connector.basic.threads";
@@ -111,10 +112,13 @@ final class BasicRepositoryConnector
 
     private boolean closed;
 
-    BasicRepositoryConnector( RepositorySystemSession session, RemoteRepository repository,
-                                     TransporterProvider transporterProvider, RepositoryLayoutProvider layoutProvider,
-                                     ChecksumPolicyProvider checksumPolicyProvider, FileProcessor fileProcessor )
-        throws NoRepositoryConnectorException
+    BasicRepositoryConnector( RepositorySystemSession session,
+                              RemoteRepository repository,
+                              TransporterProvider transporterProvider,
+                              RepositoryLayoutProvider layoutProvider,
+                              ChecksumPolicyProvider checksumPolicyProvider,
+                              FileProcessor fileProcessor )
+            throws NoRepositoryConnectorException
     {
         try
         {
@@ -141,18 +145,19 @@ final class BasicRepositoryConnector
         maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
         persistedChecksums =
-            ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
-                                    ConfigurationProperties.PERSISTED_CHECKSUMS );
+                ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
+                        ConfigurationProperties.PERSISTED_CHECKSUMS );
 
         boolean resumeDownloads =
-            ConfigUtils.getBoolean( session, true, CONFIG_PROP_RESUME + '.' + repository.getId(), CONFIG_PROP_RESUME );
+                ConfigUtils.getBoolean( session, true, CONFIG_PROP_RESUME + '.' + repository.getId(),
+                        CONFIG_PROP_RESUME );
         long resumeThreshold =
-            ConfigUtils.getLong( session, 64 * 1024, CONFIG_PROP_RESUME_THRESHOLD + '.' + repository.getId(),
-                                 CONFIG_PROP_RESUME_THRESHOLD );
+                ConfigUtils.getLong( session, 64 * 1024, CONFIG_PROP_RESUME_THRESHOLD + '.' + repository.getId(),
+                        CONFIG_PROP_RESUME_THRESHOLD );
         int requestTimeout =
-            ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                                    ConfigurationProperties.REQUEST_TIMEOUT + '.' + repository.getId(),
-                                    ConfigurationProperties.REQUEST_TIMEOUT );
+                ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
+                        ConfigurationProperties.REQUEST_TIMEOUT + '.' + repository.getId(),
+                        ConfigurationProperties.REQUEST_TIMEOUT );
         partialFileFactory = new PartialFile.Factory( resumeDownloads, resumeThreshold, requestTimeout );
     }
 
@@ -170,17 +175,17 @@ final class BasicRepositoryConnector
         if ( executor == null )
         {
             executor =
-                new ThreadPoolExecutor( maxThreads, maxThreads, 3L, TimeUnit.SECONDS,
-                                        new LinkedBlockingQueue<Runnable>(),
-                                        new WorkerThreadFactory( getClass().getSimpleName() + '-'
-                                            + repository.getHost() + '-' ) );
+                    new ThreadPoolExecutor( maxThreads, maxThreads, 3L, TimeUnit.SECONDS,
+                            new LinkedBlockingQueue<>(),
+                            new WorkerThreadFactory( getClass().getSimpleName() + '-'
+                                    + repository.getHost() + '-' ) );
         }
         return executor;
     }
 
     @Override
     protected void finalize()
-        throws Throwable
+            throws Throwable
     {
         try
         {
@@ -192,6 +197,7 @@ final class BasicRepositoryConnector
         }
     }
 
+    @Override
     public void close()
     {
         if ( !closed )
@@ -205,6 +211,7 @@ final class BasicRepositoryConnector
         }
     }
 
+    @Override
     public void get( Collection<? extends ArtifactDownload> artifactDownloads,
                      Collection<? extends MetadataDownload> metadataDownloads )
     {
@@ -225,13 +232,14 @@ final class BasicRepositoryConnector
             MetadataTransportListener listener = new MetadataTransportListener( transfer, repository, builder );
 
             ChecksumPolicy checksumPolicy = newChecksumPolicy( transfer.getChecksumPolicy(), resource );
-            List<RepositoryLayout.Checksum> checksums = null;
+            List<RepositoryLayout.ChecksumLocation> checksumLocations = null;
             if ( checksumPolicy != null )
             {
-                checksums = layout.getChecksums( transfer.getMetadata(), false, location );
+                checksumLocations = layout.getChecksumLocations( transfer.getMetadata(), false, location );
             }
 
-            Runnable task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy, checksums, listener );
+            Runnable task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
+                    checksumLocations, listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -251,13 +259,13 @@ final class BasicRepositoryConnector
             else
             {
                 ChecksumPolicy checksumPolicy = newChecksumPolicy( transfer.getChecksumPolicy(), resource );
-                List<RepositoryLayout.Checksum> checksums = null;
+                List<RepositoryLayout.ChecksumLocation> checksumLocations = null;
                 if ( checksumPolicy != null )
                 {
-                    checksums = layout.getChecksums( transfer.getArtifact(), false, location );
+                    checksumLocations = layout.getChecksumLocations( transfer.getArtifact(), false, location );
                 }
 
-                task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy, checksums, listener );
+                task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy, checksumLocations, listener );
             }
             executor.execute( errorForwarder.wrap( task ) );
         }
@@ -265,6 +273,7 @@ final class BasicRepositoryConnector
         errorForwarder.await();
     }
 
+    @Override
     public void put( Collection<? extends ArtifactUpload> artifactUploads,
                      Collection<? extends MetadataUpload> metadataUploads )
     {
@@ -281,10 +290,11 @@ final class BasicRepositoryConnector
             TransferEvent.Builder builder = newEventBuilder( resource, true, false );
             ArtifactTransportListener listener = new ArtifactTransportListener( transfer, repository, builder );
 
-            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getArtifact(), true, location );
+            List<RepositoryLayout.ChecksumLocation> checksumLocations =
+                    layout.getChecksumLocations( transfer.getArtifact(), true, location );
 
-            Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(), checksums,
-                    listener );
+            Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(),
+                    checksumLocations, listener );
             task.run();
         }
 
@@ -296,16 +306,17 @@ final class BasicRepositoryConnector
             TransferEvent.Builder builder = newEventBuilder( resource, true, false );
             MetadataTransportListener listener = new MetadataTransportListener( transfer, repository, builder );
 
-            List<RepositoryLayout.Checksum> checksums = layout.getChecksums( transfer.getMetadata(), true, location );
+            List<RepositoryLayout.ChecksumLocation> checksumLocations =
+                    layout.getChecksumLocations( transfer.getMetadata(), true, location );
 
-            Runnable task = new PutTaskRunner( location, transfer.getFile(), checksums, listener );
+            Runnable task = new PutTaskRunner( location, transfer.getFile(), checksumLocations, listener );
             task.run();
         }
     }
 
     private static <T> Collection<T> safe( Collection<T> items )
     {
-        return ( items != null ) ? items : Collections.<T>emptyList();
+        return ( items != null ) ? items : Collections.emptyList();
     }
 
     private TransferResource newTransferResource( URI path, File file, RequestTrace trace )
@@ -343,7 +354,7 @@ final class BasicRepositoryConnector
     }
 
     abstract class TaskRunner
-        implements Runnable
+            implements Runnable
     {
 
         protected final URI path;
@@ -356,6 +367,7 @@ final class BasicRepositoryConnector
             this.listener = listener;
         }
 
+        @Override
         public void run()
         {
             try
@@ -371,12 +383,12 @@ final class BasicRepositoryConnector
         }
 
         protected abstract void runTask()
-            throws Exception;
+                throws Exception;
 
     }
 
     class PeekTaskRunner
-        extends TaskRunner
+            extends TaskRunner
     {
 
         PeekTaskRunner( URI path, TransferTransportListener<?> listener )
@@ -384,8 +396,9 @@ final class BasicRepositoryConnector
             super( path, listener );
         }
 
+        @Override
         protected void runTask()
-            throws Exception
+                throws Exception
         {
             transporter.peek( new PeekTask( path ) );
         }
@@ -393,8 +406,8 @@ final class BasicRepositoryConnector
     }
 
     class GetTaskRunner
-        extends TaskRunner
-        implements PartialFile.RemoteAccessChecker, ChecksumValidator.ChecksumFetcher
+            extends TaskRunner
+            implements PartialFile.RemoteAccessChecker, ChecksumValidator.ChecksumFetcher
     {
 
         private final File file;
@@ -402,22 +415,25 @@ final class BasicRepositoryConnector
         private final ChecksumValidator checksumValidator;
 
         GetTaskRunner( URI path, File file, ChecksumPolicy checksumPolicy,
-                              List<RepositoryLayout.Checksum> checksums, TransferTransportListener<?> listener )
+                       List<RepositoryLayout.ChecksumLocation> checksumLocations,
+                       TransferTransportListener<?> listener )
         {
             super( path, listener );
             this.file = requireNonNull( file, "destination file cannot be null" );
-            checksumValidator =
-                new ChecksumValidator( file, fileProcessor, this, checksumPolicy, safe( checksums ) );
+            checksumValidator = new ChecksumValidator( file, fileProcessor, this,
+                    checksumPolicy, safe( checksumLocations ) );
         }
 
+        @Override
         public void checkRemoteAccess()
-            throws Exception
+                throws Exception
         {
             transporter.peek( new PeekTask( path ) );
         }
 
+        @Override
         public boolean fetchChecksum( URI remote, File local )
-            throws Exception
+                throws Exception
         {
             try
             {
@@ -434,8 +450,9 @@ final class BasicRepositoryConnector
             return true;
         }
 
+        @Override
         protected void runTask()
-            throws Exception
+                throws Exception
         {
             fileProcessor.mkdirs( file.getParentFile() );
 
@@ -450,7 +467,7 @@ final class BasicRepositoryConnector
             {
                 File tmp = partFile.getFile();
                 listener.setChecksumCalculator( checksumValidator.newChecksumCalculator( tmp ) );
-                for ( int firstTrial = 0, lastTrial = 1, trial = firstTrial;; trial++ )
+                for ( int firstTrial = 0, lastTrial = 1, trial = firstTrial; ; trial++ )
                 {
                     boolean resume = partFile.isResume() && trial <= firstTrial;
                     GetTask task = new GetTask( path ).setDataFile( tmp, resume ).setListener( listener );
@@ -458,7 +475,7 @@ final class BasicRepositoryConnector
                     try
                     {
                         checksumValidator.validate( listener.getChecksums(), smartChecksums ? task.getChecksums()
-                                        : null );
+                                : null );
                         break;
                     }
                     catch ( ChecksumFailureException e )
@@ -495,19 +512,19 @@ final class BasicRepositoryConnector
     }
 
     class PutTaskRunner
-        extends TaskRunner
+            extends TaskRunner
     {
 
         private final File file;
 
         private final FileTransformer fileTransformer;
 
-        private final Collection<RepositoryLayout.Checksum> checksums;
+        private final Collection<RepositoryLayout.ChecksumLocation> checksumLocations;
 
-        PutTaskRunner( URI path, File file, List<RepositoryLayout.Checksum> checksums,
+        PutTaskRunner( URI path, File file, List<RepositoryLayout.ChecksumLocation> checksumLocations,
                        TransferTransportListener<?> listener )
         {
-            this( path, file, null, checksums, listener );
+            this( path, file, null, checksumLocations, listener );
         }
 
         /**
@@ -517,21 +534,23 @@ final class BasicRepositoryConnector
          * @param path
          * @param file
          * @param fileTransformer
-         * @param checksums
+         * @param checksumLocations
          * @param listener
          */
-        PutTaskRunner( URI path, File file, FileTransformer fileTransformer, List<RepositoryLayout.Checksum> checksums,
-                              TransferTransportListener<?> listener )
+        PutTaskRunner( URI path, File file, FileTransformer fileTransformer,
+                       List<RepositoryLayout.ChecksumLocation> checksumLocations,
+                       TransferTransportListener<?> listener )
         {
             super( path, listener );
             this.file = requireNonNull( file, "source file cannot be null" );
             this.fileTransformer = fileTransformer;
-            this.checksums = safe( checksums );
+            this.checksumLocations = safe( checksumLocations );
         }
 
         @SuppressWarnings( "checkstyle:innerassignment" )
+        @Override
         protected void runTask()
-            throws Exception
+                throws Exception
         {
             if ( fileTransformer != null )
             {
@@ -559,37 +578,37 @@ final class BasicRepositoryConnector
         }
 
         /**
-         *
-         * @param file source
+         * @param file  source
          * @param bytes transformed data from file or {@code null}
          */
         private void uploadChecksums( File file, byte[] bytes )
         {
-            if ( checksums.isEmpty() )
+            if ( checksumLocations.isEmpty() )
             {
                 return;
             }
             try
             {
-                Set<String> algos = new HashSet<>();
-                for ( RepositoryLayout.Checksum checksum : checksums )
+                ArrayList<ChecksumAlgorithmFactory> algorithms = new ArrayList<>();
+                for ( RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations )
                 {
-                    algos.add( checksum.getAlgorithm() );
+                    algorithms.add( checksumLocation.getChecksumAlgorithmFactory() );
                 }
 
-                Map<String, Object> sumsByAlgo;
+                Map<String, String> sumsByAlgo;
                 if ( bytes != null )
                 {
-                    sumsByAlgo = ChecksumUtils.calc( bytes, algos );
+                    sumsByAlgo = ChecksumAlgorithmHelper.calculate( bytes, algorithms );
                 }
                 else
                 {
-                    sumsByAlgo = ChecksumUtils.calc( file, algos );
+                    sumsByAlgo = ChecksumAlgorithmHelper.calculate( file, algorithms );
                 }
 
-                for ( RepositoryLayout.Checksum checksum : checksums )
+                for ( RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations )
                 {
-                    uploadChecksum( checksum.getLocation(), sumsByAlgo.get( checksum.getAlgorithm() ) );
+                    uploadChecksum( checksumLocation.getLocation(),
+                            sumsByAlgo.get( checksumLocation.getChecksumAlgorithmFactory().getName() ) );
                 }
             }
             catch ( IOException e )
@@ -617,16 +636,16 @@ final class BasicRepositoryConnector
     }
 
     private static class DirectExecutor
-        implements Executor
+            implements Executor
     {
 
         static final Executor INSTANCE = new DirectExecutor();
 
+        @Override
         public void execute( Runnable command )
         {
             command.run();
         }
 
     }
-
 }

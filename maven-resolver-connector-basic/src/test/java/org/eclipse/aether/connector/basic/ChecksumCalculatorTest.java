@@ -19,6 +19,10 @@ package org.eclipse.aether.connector.basic;
  * under the License.
  */
 
+import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
+import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
+import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA256;
+import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA512;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -26,7 +30,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,24 +42,18 @@ import org.junit.Test;
 public class ChecksumCalculatorTest
 {
 
-    private static final String SHA512 = "SHA-512";
-
-    private static final String SHA256 = "SHA-256";
-
-    private static final String SHA1 = "SHA-1";
-
-    private static final String MD5 = "MD5";
-
     private File file;
+
+    private final TestChecksumAlgorithmSelector selector = new TestChecksumAlgorithmSelector();
 
     private ChecksumCalculator newCalculator( String... algos )
     {
-        List<RepositoryLayout.Checksum> checksums = new ArrayList<>();
+        List<RepositoryLayout.ChecksumLocation> checksumLocations = new ArrayList<>();
         for ( String algo : algos )
         {
-            checksums.add( new RepositoryLayout.Checksum( algo, URI.create( "irrelevant" ) ) );
+            checksumLocations.add( new RepositoryLayout.ChecksumLocation( URI.create( "irrelevant" ), selector.select( algo ) ) );
         }
-        return ChecksumCalculator.newInstance( file, checksums );
+        return ChecksumCalculator.newInstance( file, checksumLocations );
     }
 
     private ByteBuffer toBuffer( String data )
@@ -116,17 +113,11 @@ public class ChecksumCalculatorTest
         assertEquals( 4, digests.size() );
     }
 
-    @Test
+    @Test( expected = IllegalArgumentException.class )
     public void testUnknownAlgorithm()
     {
-        ChecksumCalculator calculator = newCalculator( "unknown", SHA1 );
-        calculator.init( 0 );
-        calculator.update( toBuffer( "Hello World!" ) );
-        Map<String, Object> digests = calculator.get();
-        assertNotNull( digests );
-        assertEquals( "2ef7bde608ce5404e97d5f042f95f89f1c232871", digests.get( SHA1 ) );
-        assertTrue( digests.get( "unknown" ) instanceof NoSuchAlgorithmException );
-        assertEquals( 2, digests.size() );
+        // resolver now does not tolerate unknown checksums: as they may be set by user only, it is user misconfiguration
+        newCalculator( "unknown", SHA1 );
     }
 
     @Test

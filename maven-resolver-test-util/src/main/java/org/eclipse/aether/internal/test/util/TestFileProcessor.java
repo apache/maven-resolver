@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import org.eclipse.aether.spi.io.FileProcessor;
 
@@ -248,4 +249,15 @@ public class TestFileProcessor
         }
     }
 
+    @Override
+    public String readChecksum( final File checksumFile ) throws IOException
+    {
+        return new String( Files.readAllBytes( checksumFile.toPath() ), StandardCharsets.UTF_8 );
+    }
+
+    @Override
+    public void writeChecksum( final File checksumFile, final String checksum ) throws IOException
+    {
+        write( checksumFile, checksum );
+    }
 }
