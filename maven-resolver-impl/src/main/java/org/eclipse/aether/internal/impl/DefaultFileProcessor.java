@@ -25,7 +25,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -33,6 +32,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.util.ChecksumUtils;
 
 /**
  * A utility class helping with file-based operations.
@@ -212,19 +212,16 @@ public class DefaultFileProcessor
         throws IOException
     {
         long total = 0L;
-
-        ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
-        byte[] array = buffer.array();
-
+        byte[] buffer = new byte[ 1024 * 32 ];
         while ( true )
         {
-            int bytes = is.read( array );
+            int bytes = is.read( buffer );
             if ( bytes < 0 )
             {
                 break;
             }
 
-            os.write( array, 0, bytes );
+            os.write( buffer, 0, bytes );
 
             total += bytes;
 
@@ -232,9 +229,7 @@ public class DefaultFileProcessor
             {
                 try
                 {
-                    ( (Buffer) buffer ).rewind();
-                    ( (Buffer) buffer ).limit( bytes );
-                    listener.progressed( buffer );
+                    listener.progressed( ByteBuffer.wrap( buffer, 0, bytes ) );
                 }
                 catch ( Exception e )
                 {
@@ -259,4 +254,17 @@ public class DefaultFileProcessor
         }
     }
 
+    @Override
+    public String readChecksum( final File checksumFile ) throws IOException
+    {
+        // for now do exactly same as happened before, but FileProcessor is a component and can be replaced
+        return ChecksumUtils.read( checksumFile );
+    }
+
+    @Override
+    public void writeChecksum( final File checksumFile, final String checksum ) throws IOException
+    {
+        // for now do exactly same as happened before, but FileProcessor is a component and can be replaced
+        write( checksumFile, checksum );
+    }
 }

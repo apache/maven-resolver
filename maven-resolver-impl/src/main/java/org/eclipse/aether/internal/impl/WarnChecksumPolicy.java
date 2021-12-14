@@ -34,6 +34,7 @@ final class WarnChecksumPolicy
         super( resource );
     }
 
+    @Override
     public boolean onTransferChecksumFailure( ChecksumFailureException exception )
     {
         logger.warn( "Could not validate integrity of download from {}{}", resource.getRepositoryUrl(),

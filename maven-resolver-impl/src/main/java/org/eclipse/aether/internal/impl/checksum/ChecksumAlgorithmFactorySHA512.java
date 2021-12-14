@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl;
+package org.eclipse.aether.internal.impl.checksum;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,25 +19,25 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import org.eclipse.aether.transfer.ChecksumFailureException;
-import org.eclipse.aether.transfer.TransferResource;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
- * Implements {@link org.eclipse.aether.repository.RepositoryPolicy#CHECKSUM_POLICY_FAIL}.
+ * The SHA-512 checksum type.
+ *
+ * @since TBD
  */
-final class FailChecksumPolicy
-    extends AbstractChecksumPolicy
+@Singleton
+@Named( ChecksumAlgorithmFactorySHA512.NAME )
+public class ChecksumAlgorithmFactorySHA512
+        extends MessageDigestChecksumAlgorithmFactorySupport
 {
+    public static final String NAME = "SHA-512";
 
-    FailChecksumPolicy( TransferResource resource )
+    @Inject
+    public ChecksumAlgorithmFactorySHA512()
     {
-        super( resource );
+        super( NAME, "sha512" );
     }
-
-    @Override
-    public boolean onTransferChecksumFailure( ChecksumFailureException error )
-    {
-        return false;
-    }
-
 }

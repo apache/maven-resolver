@@ -112,4 +112,20 @@ public interface FileProcessor
 
     }
 
+    /**
+     * Reads checksum from specified file.
+     *
+     * @throws IOException in case of any IO error.
+     * @since TBD
+     */
+    String readChecksum( File checksumFile ) throws IOException;
+
+    /**
+     * Writes checksum to specified file.
+     *
+     * @throws IOException in case of any IO error.
+     * @since TBD
+     */
+    void writeChecksum( File checksumFile, String checksum ) throws IOException;
+
 }

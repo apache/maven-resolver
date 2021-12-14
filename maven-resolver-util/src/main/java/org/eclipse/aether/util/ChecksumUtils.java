@@ -50,7 +50,9 @@ public final class ChecksumUtils
      * @param checksumFile The path to the checksum file, must not be {@code null}.
      * @return The checksum stored in the file, never {@code null}.
      * @throws IOException If the checksum does not exist or could not be read for other reasons.
+     * @deprecated Use SPI FileProcessor to read and write checksum files.
      */
+    @Deprecated
     public static String read( File checksumFile )
         throws IOException
     {
@@ -101,21 +103,25 @@ public final class ChecksumUtils
      * @return The calculated checksums, indexed by algorithm name, or the exception that occurred while trying to
      *         calculate it, never {@code null}.
      * @throws IOException If the data file could not be read.
+     * @deprecated Use SPI checksum selector instead.
      */
+    @Deprecated
     public static Map<String, Object> calc( File dataFile, Collection<String> algos )
                     throws IOException
     {
        return calc( new FileInputStream( dataFile ), algos );
     }
 
-    
+    /**
+     * @deprecated Use SPI checksum selector instead.
+     */
+    @Deprecated
     public static Map<String, Object> calc( byte[] dataBytes, Collection<String> algos )
                     throws IOException
     {
         return calc( new ByteArrayInputStream( dataBytes ), algos );
     }
 
-    
     private static Map<String, Object> calc( InputStream data, Collection<String> algos )
         throws IOException
     {

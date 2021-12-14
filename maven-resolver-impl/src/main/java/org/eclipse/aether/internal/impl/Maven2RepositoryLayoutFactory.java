@@ -21,18 +21,24 @@ package org.eclipse.aether.internal.impl;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
@@ -46,7 +52,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named( "maven2" )
 public final class Maven2RepositoryLayoutFactory
-    implements RepositoryLayoutFactory
+        implements RepositoryLayoutFactory
 {
 
     static final String CONFIG_PROP_SIGNATURE_CHECKSUMS = "aether.checksums.forSignature";
@@ -56,9 +62,26 @@ public final class Maven2RepositoryLayoutFactory
 
     private float priority;
 
+    private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
+
     public float getPriority()
     {
         return priority;
+    }
+
+    /**
+     * Service locator ctor.
+     */
+    @Deprecated
+    public Maven2RepositoryLayoutFactory()
+    {
+        this( new DefaultChecksumAlgorithmFactorySelector() );
+    }
+
+    @Inject
+    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector )
+    {
+        this.checksumAlgorithmFactorySelector = requireNonNull( checksumAlgorithmFactorySelector );
     }
 
     /**
@@ -74,7 +97,7 @@ public final class Maven2RepositoryLayoutFactory
     }
 
     public RepositoryLayout newInstance( RepositorySystemSession session, RemoteRepository repository )
-        throws NoRepositoryLayoutException
+            throws NoRepositoryLayoutException
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
@@ -83,8 +106,18 @@ public final class Maven2RepositoryLayoutFactory
             throw new NoRepositoryLayoutException( repository );
         }
         boolean forSignature = ConfigUtils.getBoolean( session, false, CONFIG_PROP_SIGNATURE_CHECKSUMS );
-        List<String> checksumsAlgorithms = Arrays.asList( ConfigUtils.getString( session,
-                DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS ).split( "," ) );
+        // ensure order of (potentially user set) algorithm list is kept and is unique
+        LinkedHashSet<String> checksumsAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
+                ConfigUtils.getString(
+                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS
+                ).split( "," ) )
+        );
+
+        List<ChecksumAlgorithmFactory> checksumsAlgorithms = new ArrayList<>( checksumsAlgorithmNames.size() );
+        for ( String checksumsAlgorithmName : checksumsAlgorithmNames )
+        {
+            checksumsAlgorithms.add( checksumAlgorithmFactorySelector.select( checksumsAlgorithmName ) );
+        }
 
         return forSignature
                 ? new Maven2RepositoryLayout( checksumsAlgorithms )
@@ -92,14 +125,14 @@ public final class Maven2RepositoryLayoutFactory
     }
 
     private static class Maven2RepositoryLayout
-        implements RepositoryLayout
+            implements RepositoryLayout
     {
 
-        private final List<String> checksumsAlgorithms;
+        private final List<ChecksumAlgorithmFactory> checksumAlgorithms;
 
-        protected Maven2RepositoryLayout( List<String> checksumsAlgorithms )
+        protected Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms )
         {
-            this.checksumsAlgorithms = checksumsAlgorithms;
+            this.checksumAlgorithms = Collections.unmodifiableList( checksumAlgorithms );
         }
 
         private URI toUri( String path )
@@ -114,6 +147,13 @@ public final class Maven2RepositoryLayoutFactory
             }
         }
 
+        @Override
+        public List<String> getChecksumAlgorithmNames()
+        {
+            return checksumAlgorithms.stream().map( ChecksumAlgorithmFactory::getName ).collect( Collectors.toList() );
+        }
+
+        @Override
         public URI getLocation( Artifact artifact, boolean upload )
         {
             StringBuilder path = new StringBuilder( 128 );
@@ -139,6 +179,7 @@ public final class Maven2RepositoryLayoutFactory
             return toUri( path.toString() );
         }
 
+        @Override
         public URI getLocation( Metadata metadata, boolean upload )
         {
             StringBuilder path = new StringBuilder( 128 );
@@ -163,45 +204,47 @@ public final class Maven2RepositoryLayoutFactory
             return toUri( path.toString() );
         }
 
-        public List<Checksum> getChecksums( Artifact artifact, boolean upload, URI location )
+        @Override
+        public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
             return getChecksums( location );
         }
 
-        public List<Checksum> getChecksums( Metadata metadata, boolean upload, URI location )
+        @Override
+        public List<ChecksumLocation> getChecksumLocations( Metadata metadata, boolean upload, URI location )
         {
             return getChecksums( location );
         }
 
-        private List<Checksum> getChecksums( URI location )
+        private List<ChecksumLocation> getChecksums( URI location )
         {
-            List<Checksum> checksums = new ArrayList<>( checksumsAlgorithms.size() );
-            for ( String algorithm : checksumsAlgorithms )
+            List<ChecksumLocation> checksumLocations = new ArrayList<>( checksumAlgorithms.size() );
+            for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithms )
             {
-                checksums.add( Checksum.forLocation( location, algorithm ) );
+                checksumLocations.add( ChecksumLocation.forLocation( location, checksumAlgorithmFactory ) );
             }
-            return checksums;
+            return checksumLocations;
         }
 
     }
 
     private static class Maven2RepositoryLayoutEx
-        extends Maven2RepositoryLayout
+            extends Maven2RepositoryLayout
     {
 
-        protected Maven2RepositoryLayoutEx( List<String> checksumsAlgorithms )
+        protected Maven2RepositoryLayoutEx( List<ChecksumAlgorithmFactory> checksumAlgorithms )
         {
-            super( checksumsAlgorithms );
+            super( checksumAlgorithms );
         }
 
         @Override
-        public List<Checksum> getChecksums( Artifact artifact, boolean upload, URI location )
+        public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
             if ( isSignature( artifact.getExtension() ) )
             {
                 return Collections.emptyList();
             }
-            return super.getChecksums( artifact, upload, location );
+            return super.getChecksumLocations( artifact, upload, location );
         }
 
         private boolean isSignature( String extension )

@@ -19,6 +19,8 @@ package org.eclipse.aether.connector.basic;
  * under the License.
  */
 
+import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
+import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -50,10 +52,11 @@ public class ChecksumValidatorTest
 
         boolean tolerateFailure;
 
-        private List<String> callbacks = new ArrayList<>();
+        private final ArrayList<String> callbacks = new ArrayList<>();
 
         private Object conclusion;
 
+        @Override
         public boolean onChecksumMatch( String algorithm, int kind )
         {
             callbacks.add( String.format( "match(%s, %04x)", algorithm, kind ) );
@@ -68,6 +71,7 @@ public class ChecksumValidatorTest
             return true;
         }
 
+        @Override
         public void onChecksumMismatch( String algorithm, int kind, ChecksumFailureException exception )
             throws ChecksumFailureException
         {
@@ -80,11 +84,13 @@ public class ChecksumValidatorTest
             throw exception;
         }
 
+        @Override
         public void onChecksumError( String algorithm, int kind, ChecksumFailureException exception )
         {
             callbacks.add( String.format( "error(%s, %04x, %s)", algorithm, kind, exception.getCause().getMessage() ) );
         }
 
+        @Override
         public void onNoMoreChecksums()
             throws ChecksumFailureException
         {
@@ -99,11 +105,13 @@ public class ChecksumValidatorTest
             }
         }
 
+        @Override
         public void onTransferRetry()
         {
             callbacks.add( String.format( "retry()" ) );
         }
 
+        @Override
         public boolean onTransferChecksumFailure( ChecksumFailureException exception )
         {
             callbacks.add( String.format( "fail(%s)", exception.getMessage() ) );
@@ -121,12 +129,13 @@ public class ChecksumValidatorTest
         implements ChecksumValidator.ChecksumFetcher
     {
 
-        Map<URI, Object> checksums = new HashMap<>();
+        HashMap<URI, Object> checksums = new HashMap<>();
 
-        List<File> checksumFiles = new ArrayList<>();
+        ArrayList<File> checksumFiles = new ArrayList<>();
 
-        private List<URI> fetchedFiles = new ArrayList<>();
+        private final ArrayList<URI> fetchedFiles = new ArrayList<>();
 
+        @Override
         public boolean fetchChecksum( URI remote, File local )
             throws Exception
         {
@@ -167,34 +176,32 @@ public class ChecksumValidatorTest
 
     }
 
-    private static final String SHA1 = "SHA-1";
-
-    private static final String MD5 = "MD5";
-
     private StubChecksumPolicy policy;
 
     private StubChecksumFetcher fetcher;
 
     private File dataFile;
 
-    private static RepositoryLayout.Checksum newChecksum( String algo )
+    private static final TestChecksumAlgorithmSelector selector = new TestChecksumAlgorithmSelector();
+
+    private static RepositoryLayout.ChecksumLocation newChecksum( String factory )
     {
-        return RepositoryLayout.Checksum.forLocation( URI.create( "file" ), algo );
+        return RepositoryLayout.ChecksumLocation.forLocation( URI.create( "file" ), selector.select( factory ) );
     }
 
-    private List<RepositoryLayout.Checksum> newChecksums( String... algos )
+    private List<RepositoryLayout.ChecksumLocation> newChecksums( String... factories )
     {
-        List<RepositoryLayout.Checksum> checksums = new ArrayList<>();
-        for ( String algo : algos )
+        List<RepositoryLayout.ChecksumLocation> checksums = new ArrayList<>();
+        for ( String factory : factories )
         {
-            checksums.add( newChecksum( algo ) );
+            checksums.add( newChecksum( factory ) );
         }
         return checksums;
     }
 
-    private ChecksumValidator newValidator( String... algos )
+    private ChecksumValidator newValidator( String... factories )
     {
-        return new ChecksumValidator( dataFile, new TestFileProcessor(), fetcher, policy, newChecksums( algos ) );
+        return new ChecksumValidator( dataFile, new TestFileProcessor(), fetcher, policy, newChecksums( factories ) );
     }
 
     private Map<String, ?> checksums( String... algoDigestPairs )

@@ -22,7 +22,6 @@ package org.eclipse.aether.spi.connector.transport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -254,14 +253,11 @@ public abstract class AbstractTransporter
     private static void copy( OutputStream os, InputStream is, TransportListener listener )
         throws IOException, TransferCancelledException
     {
-        ByteBuffer buffer = ByteBuffer.allocate( 1024 * 32 );
-        byte[] array = buffer.array();
-        for ( int read = is.read( array ); read >= 0; read = is.read( array ) )
+        byte[] buffer = new byte[ 1024 * 32 ];
+        for ( int read = is.read( buffer ); read >= 0; read = is.read( buffer ) )
         {
-            os.write( array, 0, read );
-            ( (Buffer) buffer ).rewind();
-            ( (Buffer) buffer ).limit( read );
-            listener.transportProgressed( buffer );
+            os.write( buffer, 0, read );
+            listener.transportProgressed( ByteBuffer.wrap( buffer, 0, read ) );
         }
     }
 
