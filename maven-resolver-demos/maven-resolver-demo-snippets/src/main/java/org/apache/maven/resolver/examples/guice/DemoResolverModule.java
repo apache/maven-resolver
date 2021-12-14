@@ -21,6 +21,7 @@ package org.apache.maven.resolver.examples.guice;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Named;
@@ -42,6 +43,7 @@ import org.eclipse.aether.impl.guice.AetherModule;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.http.ChecksumExtractor;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
 import com.google.inject.AbstractModule;
@@ -80,6 +82,16 @@ class DemoResolverModule
                 .to( BasicRepositoryConnectorFactory.class );
         bind( TransporterFactory.class ).annotatedWith( Names.named( "file" ) ).to( FileTransporterFactory.class );
         bind( TransporterFactory.class ).annotatedWith( Names.named( "http" ) ).to( HttpTransporterFactory.class );
+    }
+
+    /**
+     * Checksum extractors (none).
+     */
+    @Provides
+    @Singleton
+    Map<String, ChecksumExtractor> provideChecksumExtractors()
+    {
+        return Collections.emptyMap();
     }
 
     /**

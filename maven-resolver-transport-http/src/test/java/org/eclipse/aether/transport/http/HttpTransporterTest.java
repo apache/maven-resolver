@@ -507,6 +507,17 @@ public class HttpTransporterTest
     }
 
     @Test
+    public void testGet_Checksums_XChecksum()
+            throws Exception
+    {
+        httpServer.setChecksumHeader( HttpServer.ChecksumHeader.XCHECKSUM );
+        GetTask task = new GetTask( URI.create( "repo/file.txt" ) );
+        transporter.get( task );
+        assertEquals( "test", task.getDataString() );
+        assertEquals( "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", task.getChecksums().get( "SHA-1" ) );
+    }
+
+    @Test
     public void testGet_FileHandleLeak()
         throws Exception
     {

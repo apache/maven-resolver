@@ -83,6 +83,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A transporter for HTTP/HTTPS.
  */
@@ -94,6 +96,8 @@ final class HttpTransporter
         Pattern.compile( "\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*" );
 
     private static final Logger LOGGER = LoggerFactory.getLogger( HttpTransporter.class );
+
+    private final Map<String, ChecksumExtractor> checksumExtractors;
 
     private final AuthenticationContext repoAuthContext;
 
@@ -111,7 +115,9 @@ final class HttpTransporter
 
     private final LocalState state;
 
-    HttpTransporter( RemoteRepository repository, RepositorySystemSession session )
+    HttpTransporter( Map<String, ChecksumExtractor> checksumExtractors,
+                     RemoteRepository repository,
+                     RepositorySystemSession session )
         throws NoTransporterException
     {
         if ( !"http".equalsIgnoreCase( repository.getProtocol() )
@@ -119,6 +125,7 @@ final class HttpTransporter
         {
             throw new NoTransporterException( repository );
         }
+        this.checksumExtractors = requireNonNull( checksumExtractors, "checksum extractors must not be null" );
         try
         {
             this.baseUri = new URI( repository.getUrl() ).parseServerAuthority();
@@ -264,22 +271,58 @@ final class HttpTransporter
     protected void implGet( GetTask task )
         throws Exception
     {
+        boolean resume = true;
+        boolean applyChecksumExtractors = true;
+
         EntityGetter getter = new EntityGetter( task );
         HttpGet request = commonHeaders( new HttpGet( resolve( task ) ) );
-        resume( request, task );
-        try
+        while ( true )
         {
-            execute( request, getter );
-        }
-        catch ( HttpResponseException e )
-        {
-            if ( e.getStatusCode() == HttpStatus.SC_PRECONDITION_FAILED && request.containsHeader( HttpHeaders.RANGE ) )
+            try
             {
-                request = commonHeaders( new HttpGet( request.getURI() ) );
+                if ( resume )
+                {
+                    resume( request, task );
+                }
+                if ( applyChecksumExtractors )
+                {
+                    for ( ChecksumExtractor checksumExtractor : checksumExtractors.values() )
+                    {
+                        checksumExtractor.prepareRequest( request );
+                    }
+                }
                 execute( request, getter );
-                return;
+                break;
             }
-            throw e;
+            catch ( HttpResponseException e )
+            {
+                if ( resume && e.getStatusCode() == HttpStatus.SC_PRECONDITION_FAILED
+                        && request.containsHeader( HttpHeaders.RANGE ) )
+                {
+                    request = commonHeaders( new HttpGet( resolve( task ) ) );
+                    resume = false;
+                    continue;
+                }
+                if ( applyChecksumExtractors )
+                {
+                    boolean retryWithoutExtractors = false;
+                    for ( ChecksumExtractor checksumExtractor : checksumExtractors.values() )
+                    {
+                        if ( checksumExtractor.retryWithoutExtractor( e ) )
+                        {
+                            retryWithoutExtractors = true;
+                            break;
+                        }
+                    }
+                    if ( retryWithoutExtractors )
+                    {
+                        request = commonHeaders( new HttpGet( resolve( task ) ) );
+                        applyChecksumExtractors = false;
+                        continue;
+                    }
+                }
+                throw e;
+            }
         }
     }
 
@@ -535,7 +578,8 @@ final class HttpTransporter
             }
 
             long offset = 0L, length = entity.getContentLength();
-            String range = getHeader( response, HttpHeaders.CONTENT_RANGE );
+            Header rangeHeader = response.getFirstHeader( HttpHeaders.CONTENT_RANGE );
+            String range = rangeHeader != null ? rangeHeader.getValue() : null;
             if ( range != null )
             {
                 Matcher m = CONTENT_RANGE_PATTERN.matcher( range );
@@ -559,24 +603,16 @@ final class HttpTransporter
 
         private void extractChecksums( HttpResponse response )
         {
-            // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
-            String etag = getHeader( response, HttpHeaders.ETAG );
-            if ( etag != null )
+            for ( Map.Entry<String, ChecksumExtractor> extractorEntry : checksumExtractors.entrySet() )
             {
-                int start = etag.indexOf( "SHA1{" ), end = etag.indexOf( "}", start + 5 );
-                if ( start >= 0 && end > start )
+                Map<String, String> checksums = extractorEntry.getValue().extractChecksums( response );
+                if ( checksums != null )
                 {
-                    task.setChecksum( "SHA-1", etag.substring( start + 5, end ) );
+                    checksums.forEach( task::setChecksum );
+                    return;
                 }
             }
         }
-
-        private String getHeader( HttpResponse response, String name )
-        {
-            Header header = response.getFirstHeader( name );
-            return ( header != null ) ? header.getValue() : null;
-        }
-
     }
 
     private class PutTaskEntity
