@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * blocks the caller thread until operation return non-{@code null} value within the given waiting
  * time and the current thread has not been {@linkplain Thread#interrupt interrupted}.
  *
- * @since TBD
+ * @since 1.7.3
  */
 public final class Retry
 {

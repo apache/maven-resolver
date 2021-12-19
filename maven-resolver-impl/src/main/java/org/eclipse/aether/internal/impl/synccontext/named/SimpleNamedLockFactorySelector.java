@@ -35,7 +35,7 @@ import java.util.Map;
  * Simple selector implementation that uses {@link LocalReadWriteLockNamedLockFactory} and {@link GAVNameMapper} as
  * default name lock factory and name mapper.
  *
- * @since TBD
+ * @since 1.7.3
  */
 @Singleton
 @Named

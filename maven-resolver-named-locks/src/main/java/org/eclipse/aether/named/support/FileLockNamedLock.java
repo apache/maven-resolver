@@ -45,7 +45,7 @@ import static org.eclipse.aether.named.support.Retry.retry;
  * This implementation performs coordination not only on thread (JVM-local) level, but also on
  * process level, as long as other parties are using this same "advisory" locking mechanism.
  *
- * @since TBD
+ * @since 1.7.3
  */
 public final class FileLockNamedLock
     extends NamedLockSupport

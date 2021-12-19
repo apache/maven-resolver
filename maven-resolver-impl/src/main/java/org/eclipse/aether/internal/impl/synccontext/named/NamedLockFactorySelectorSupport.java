@@ -27,7 +27,7 @@ import java.util.Map;
  * Selector implementation support class: by extending this class one may override defaults, or provide completely
  * alternative way of configuration. This implementation uses Java System properties to select factory and name mapper.
  *
- * @since TBD
+ * @since 1.7.3
  */
 public abstract class NamedLockFactorySelectorSupport
     implements NamedLockFactorySelector
