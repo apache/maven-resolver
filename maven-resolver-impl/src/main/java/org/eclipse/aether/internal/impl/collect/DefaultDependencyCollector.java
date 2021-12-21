@@ -80,6 +80,20 @@ import org.slf4j.LoggerFactory;
 public class DefaultDependencyCollector
     implements DependencyCollector, Service
 {
+    /**
+     * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
+     * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip & reconcile mode.
+     *
+     * @since 1.7.3
+     */
+    public static final String CONFIG_PROP_USE_SKIP_RECONCILE = "aether.dependencyCollector.useSkipReconcile";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_USE_SKIP_RECONCILE}, {@code true}.
+     *
+     * @since 1.7.3
+     */
+    public static final boolean CONFIG_PROP_USE_SKIP_RECONCILE_DEFAULT = true;
 
     private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
 
@@ -146,6 +160,14 @@ public class DefaultDependencyCollector
         requireNonNull( session, "session cannot be null" );
         requireNonNull( request, "request cannot be null" );
         session = optimizeSession( session );
+
+        boolean useSkipReconcile = ConfigUtils.getBoolean(
+                session, CONFIG_PROP_USE_SKIP_RECONCILE_DEFAULT, CONFIG_PROP_USE_SKIP_RECONCILE
+        );
+        if ( useSkipReconcile )
+        {
+            LOGGER.debug( "Collector skip & reconcile enabled" );
+        }
 
         RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
@@ -252,7 +274,10 @@ public class DefaultDependencyCollector
 
             DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
 
-            Args args = new Args( session, trace, pool, nodes, context, versionContext, request );
+            DependencyResolveReconciler dependencyResolveReconciler =
+                    useSkipReconcile ? new DependencyResolveReconciler() : null;
+            Args args = new Args( session, trace, pool, nodes, dependencyResolveReconciler,
+                    context, versionContext, request );
             Results results = new Results( result, session );
 
             process( args, results, dependencies, repositories,
@@ -260,6 +285,29 @@ public class DefaultDependencyCollector
                      depManager != null ? depManager.deriveChildManager( context ) : null,
                      depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null,
                      verFilter != null ? verFilter.deriveChildFilter( context ) : null );
+
+            if ( args.reconciler != null )
+            {
+                //reconcile the skipped nodes
+                Collection<DependencyResolveReconciler.DependencyResolveSkip> reconcileNodes =
+                        args.reconciler.getNodesToReconcile( session, result );
+                for ( DependencyResolveReconciler.DependencyResolveSkip skip : reconcileNodes )
+                {
+                    LOGGER.debug( "Reconcile: {} ", skip );
+                    Args newArgs =
+                            new Args( session, trace, pool, new NodeStack(), args.reconciler, context, versionContext,
+                                    request );
+                    DataPool.GraphKey key = skip.graphKey;
+                    List<DependencyNode> parents = skip.parentPathsOfCurrentNode;
+                    for ( DependencyNode parent : parents )
+                    {
+                        newArgs.nodes.push( parent );
+                    }
+                    newArgs.nodes.push( skip.node );
+                    process( newArgs, results, skip.dependencies, key.repositories, key.selector, key.manager,
+                            key.traverser, key.filter );
+                }
+            }
 
             errorPath = results.errorPath;
         }
@@ -491,29 +539,57 @@ public class DefaultDependencyCollector
         VersionFilter childFilter = verFilter != null ? verFilter.deriveChildFilter( context ) : null;
 
         final List<RemoteRepository> childRepos =
-            args.ignoreRepos
-                ? repositories
-                : remoteRepositoryManager.aggregateRepositories( args.session, repositories,
-                                                                 descriptorResult.getRepositories(), true );
+                args.ignoreRepos
+                        ? repositories
+                        : remoteRepositoryManager.aggregateRepositories( args.session, repositories,
+                        descriptorResult.getRepositories(), true );
 
-        Object key =
-            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter );
+        Object key = args.pool.toKey(
+                d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter
+        );
 
-        List<DependencyNode> children = args.pool.getChildren( key );
-        if ( children == null )
+        if ( args.reconciler == null )
         {
-            args.pool.putChildren( key, child.getChildren() );
+            List<DependencyNode> children = args.pool.getChildren( key );
+            if ( children == null )
+            {
+                args.pool.putChildren( key, child.getChildren() );
 
-            args.nodes.push( child );
+                args.nodes.push( child );
 
-            process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
-                     childTraverser, childFilter );
+                process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+                        childTraverser, childFilter );
 
-            args.nodes.pop();
+                args.nodes.pop();
+            }
+            else
+            {
+                child.setChildren( children );
+            }
         }
         else
         {
-            child.setChildren( children );
+            List<DependencyNode> parents = args.nodes.getParentNodes();
+            int depth = parents.size() + 1; //the depth if pushed the child to stack
+            DependencyResolveReconciler.CacheResult result =
+                    args.reconciler.findCandidateWithLowerDepth( child, depth );
+            if ( result != null )
+            {
+                //Do not set the children as the result can be most likely ignored(won't be picked up)
+                args.reconciler.addSkip( child, key, descriptorResult.getDependencies(), parents,
+                        result.parentPathsOfCandidateLowerDepth );
+                LOGGER.trace( "Skipped resolving artifact {} of depth {}", child.getArtifact(), depth );
+            }
+            else
+            {
+                args.nodes.push( child );
+                LOGGER.trace( "Resolving artifact {} of depth {}", child.getArtifact(), depth );
+                process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+                        childTraverser, childFilter );
+                args.pool.putChildren( key, child.getChildren() );
+                args.reconciler.cacheChildrenWithDepth( child, parents );
+                args.nodes.pop();
+            }
         }
     }
 
@@ -706,9 +782,16 @@ public class DefaultDependencyCollector
 
         final CollectRequest request;
 
+        /**
+         * Nullable: is {@code null} if {@link #CONFIG_PROP_USE_SKIP_RECONCILE} evaluates to {@code false}.
+         */
+        final DependencyResolveReconciler reconciler;
+
+        @SuppressWarnings( "checkstyle:parameternumber" )
         Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
-                     DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
-                     CollectRequest request )
+              DependencyResolveReconciler reconciler,
+              DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
+              CollectRequest request )
         {
             this.session = session;
             this.request = request;
@@ -717,6 +800,7 @@ public class DefaultDependencyCollector
             this.trace = trace;
             this.pool = pool;
             this.nodes = nodes;
+            this.reconciler = reconciler;
             this.collectionContext = collectionContext;
             this.versionContext = versionContext;
         }

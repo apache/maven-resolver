@@ -62,6 +62,16 @@ public class CloningDependencyVisitor
     }
 
     /**
+     * Get the cloned node map
+     *
+     * @return The cloned node map
+     */
+    public final Map<DependencyNode, DependencyNode> getClonedNodes()
+    {
+        return clones;
+    }
+
+    /**
      * Creates a clone of the specified node.
      * 
      * @param node The node to clone, must not be {@code null}.

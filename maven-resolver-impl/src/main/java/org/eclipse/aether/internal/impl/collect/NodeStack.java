@@ -19,7 +19,9 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
@@ -64,6 +66,16 @@ final class NodeStack
             throw new IllegalStateException( "stack empty" );
         }
         size--;
+    }
+
+    public List<DependencyNode> getParentNodes()
+    {
+        List<DependencyNode> parents = new ArrayList<>();
+        for ( int i = size - 1; i >= 0; i-- )
+        {
+            parents.add( nodes[i] );
+        }
+        return parents;
     }
 
     public int find( Artifact artifact )

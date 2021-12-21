@@ -78,25 +78,25 @@ import org.junit.Test;
 public class DefaultDependencyCollectorTest
 {
 
-    private DefaultDependencyCollector collector;
+    protected DefaultDependencyCollector collector;
 
-    private DefaultRepositorySystemSession session;
+    protected DefaultRepositorySystemSession session;
 
-    private DependencyGraphParser parser;
+    protected DependencyGraphParser parser;
 
-    private RemoteRepository repository;
+    protected RemoteRepository repository;
 
-    private IniArtifactDescriptorReader newReader( String prefix )
+    protected IniArtifactDescriptorReader newReader( String prefix )
     {
         return new IniArtifactDescriptorReader( "artifact-descriptions/" + prefix );
     }
 
-    private Dependency newDep( String coords )
+    protected Dependency newDep( String coords )
     {
         return newDep( coords, "" );
     }
 
-    private Dependency newDep( String coords, String scope )
+    protected Dependency newDep( String coords, String scope )
     {
         return new Dependency( new DefaultArtifact( coords ), scope );
     }
@@ -104,7 +104,13 @@ public class DefaultDependencyCollectorTest
     @Before
     public void setup()
     {
+        setupCollector(false);
+    }
+
+    public void setupCollector(boolean skipAndReconcile)
+    {
         session = TestUtils.newSession();
+        session.setConfigProperty(DefaultDependencyCollector.CONFIG_PROP_USE_SKIP_RECONCILE, skipAndReconcile);
 
         collector = new DefaultDependencyCollector();
         collector.setArtifactDescriptorReader( newReader( "" ) );
@@ -154,12 +160,12 @@ public class DefaultDependencyCollectorTest
         parents.removeLast();
     }
 
-    private Dependency dep( DependencyNode root, int... coords )
+    protected Dependency dep( DependencyNode root, int... coords )
     {
         return path( root, coords ).getDependency();
     }
 
-    private DependencyNode path( DependencyNode root, int... coords )
+    protected DependencyNode path( DependencyNode root, int... coords )
     {
         try
         {
