@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl.collect;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -74,6 +75,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
@@ -386,9 +388,10 @@ public class DefaultDependencyCollector
                           final DependencyManager depManager, final DependencyTraverser depTraverser,
                           final VersionFilter verFilter )
     {
+        final List<Future<?>> childrenTasks = new ArrayList<>();
         for ( final Dependency dependency : dependencies )
         {
-            results.collectionTasks.add( args.executorService.submit( new Runnable()
+            Future<?> task = args.executorService.submit( new Runnable()
             {
                 @Override
                 public void run()
@@ -396,7 +399,52 @@ public class DefaultDependencyCollector
                     processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter,
                             dependency, Collections.emptyList(), false );
                 }
-            } ) );
+            } );
+            results.collectionTasks.add( task );
+            childrenTasks.add( task );
+        }
+        Future<?> sortingTask = args.executorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                waitUntilComplete( childrenTasks );
+                Collections.sort( args.nodes.top().getChildren(), new ChildrenComparator( dependencies ) );
+            }
+        } );
+        results.collectionTasks.add( sortingTask );
+    }
+
+    private static class ChildrenComparator implements Comparator<DependencyNode>
+    {
+
+        private final Map<String, Integer> order;
+
+        private ChildrenComparator( List<Dependency> dependencies )
+        {
+            this.order = new HashMap<>();
+            for ( int i = 0; i < dependencies.size(); i++ )
+            {
+                order.put( ArtifactIdUtils.toVersionlessId( dependencies.get( i ).getArtifact() ), i );
+            }
+        }
+
+        @Override
+        public int compare( DependencyNode o1, DependencyNode o2 )
+        {
+            int result = getOrder( o1 ) - getOrder( o2 );
+            if ( result != 0 )
+            {
+                return result < 0 ? -1 : 1;
+            }
+            return 0;
+        }
+
+        private Integer getOrder( DependencyNode node )
+        {
+            String id = ArtifactIdUtils.toVersionlessId( node.getArtifact() );
+            Integer result = order.get( id );
+            return result == null ? 0 : result;
         }
     }
 
