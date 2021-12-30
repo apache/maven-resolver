@@ -8,9 +8,9 @@ package org.eclipse.aether.util.artifact;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,7 +21,6 @@ package org.eclipse.aether.util.artifact;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -51,7 +50,7 @@ public final class SubArtifact
      * character "*" to refer to the corresponding property of the main artifact. For instance, the classifier
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
-     * 
+     *
      * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
      * @param classifier The classifier for this artifact, may be {@code null} if none.
      * @param extension The extension for this artifact, may be {@code null} if none.
@@ -66,7 +65,7 @@ public final class SubArtifact
      * character "*" to refer to the corresponding property of the main artifact. For instance, the classifier
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
-     * 
+     *
      * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
      * @param classifier The classifier for this artifact, may be {@code null} if none.
      * @param extension The extension for this artifact, may be {@code null} if none.
@@ -82,7 +81,7 @@ public final class SubArtifact
      * character "*" to refer to the corresponding property of the main artifact. For instance, the classifier
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
-     * 
+     *
      * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
      * @param classifier The classifier for this artifact, may be {@code null} if none.
      * @param extension The extension for this artifact, may be {@code null} if none.
@@ -98,7 +97,7 @@ public final class SubArtifact
      * character "*" to refer to the corresponding property of the main artifact. For instance, the classifier
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
-     * 
+     *
      * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
      * @param classifier The classifier for this artifact, may be {@code null} if none.
      * @param extension The extension for this artifact, may be {@code null} if none.
@@ -124,6 +123,12 @@ public final class SubArtifact
         this.extension = extension;
         this.file = file;
         this.properties = properties;
+    }
+
+    @Override
+    protected Artifact newInstance( String version, Map<String, String> properties, File file )
+    {
+        return new SubArtifact( mainArtifact.setVersion( version ), classifier, extension, file, properties );
     }
 
     public String getGroupId()
@@ -166,27 +171,9 @@ public final class SubArtifact
         return file;
     }
 
-    public Artifact setFile( File file )
-    {
-        if ( Objects.equals( this.file, file ) )
-        {
-            return this;
-        }
-        return new SubArtifact( mainArtifact, classifier, extension, file, properties );
-    }
-
     public Map<String, String> getProperties()
     {
         return properties;
-    }
-
-    public Artifact setProperties( Map<String, String> properties )
-    {
-        if ( this.properties.equals( properties ) || ( properties == null && this.properties.isEmpty() ) )
-        {
-            return this;
-        }
-        return new SubArtifact( mainArtifact, classifier, extension, properties, file );
     }
 
     private static String expand( String pattern, String replacement )

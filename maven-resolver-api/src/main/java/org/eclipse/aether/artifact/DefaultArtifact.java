@@ -8,9 +8,9 @@ package org.eclipse.aether.artifact;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -53,7 +53,7 @@ public final class DefaultArtifact
     /**
      * Creates a new artifact with the specified coordinates. If not specified in the artifact coordinates, the
      * artifact's extension defaults to {@code jar} and classifier to an empty string.
-     * 
+     *
      * @param coords The artifact coordinates in the format
      *            {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}, must not be {@code null}.
      *
@@ -68,7 +68,7 @@ public final class DefaultArtifact
     /**
      * Creates a new artifact with the specified coordinates and properties. If not specified in the artifact
      * coordinates, the artifact's extension defaults to {@code jar} and classifier to an empty string.
-     * 
+     *
      * @param coords The artifact coordinates in the format
      *            {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}, must not be {@code null}.
      * @param properties The artifact properties, may be {@code null}.
@@ -101,7 +101,7 @@ public final class DefaultArtifact
     /**
      * Creates a new artifact with the specified coordinates and no classifier. Passing {@code null} for any of the
      * coordinates is equivalent to specifying an empty string.
-     * 
+     *
      * @param groupId The group identifier of the artifact, may be {@code null}.
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param extension The file extension of the artifact, may be {@code null}.
@@ -115,7 +115,7 @@ public final class DefaultArtifact
     /**
      * Creates a new artifact with the specified coordinates. Passing {@code null} for any of the coordinates is
      * equivalent to specifying an empty string.
-     * 
+     *
      * @param groupId The group identifier of the artifact, may be {@code null}.
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param classifier The classifier of the artifact, may be {@code null}.
@@ -132,7 +132,7 @@ public final class DefaultArtifact
      * equivalent to specifying an empty string. The optional artifact type provided to this constructor will be used to
      * determine the artifact's classifier and file extension if the corresponding arguments for this constructor are
      * {@code null}.
-     * 
+     *
      * @param groupId The group identifier of the artifact, may be {@code null}.
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param classifier The classifier of the artifact, may be {@code null}.
@@ -152,7 +152,7 @@ public final class DefaultArtifact
      * will be used to determine the artifact's classifier and file extension if the corresponding arguments for this
      * constructor are {@code null}. If the artifact type specifies properties, those will get merged with the
      * properties passed directly into the constructor, with the latter properties taking precedence.
-     * 
+     *
      * @param groupId The group identifier of the artifact, may be {@code null}.
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param classifier The classifier of the artifact, may be {@code null}.
@@ -215,7 +215,7 @@ public final class DefaultArtifact
     /**
      * Creates a new artifact with the specified coordinates, properties and file. Passing {@code null} for any of the
      * coordinates is equivalent to specifying an empty string.
-     * 
+     *
      * @param groupId The group identifier of the artifact, may be {@code null}.
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param classifier The classifier of the artifact, may be {@code null}.
@@ -247,6 +247,13 @@ public final class DefaultArtifact
         this.version = emptify( version );
         this.file = file;
         this.properties = properties;
+    }
+
+    @Override
+    protected Artifact newInstance( String version, Map<String, String> properties, File file )
+    {
+        return new DefaultArtifact( getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, file,
+                                    properties );
     }
 
     private static String emptify( String str )

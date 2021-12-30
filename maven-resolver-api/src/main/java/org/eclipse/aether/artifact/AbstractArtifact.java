@@ -8,9 +8,9 @@ package org.eclipse.aether.artifact;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -90,18 +90,14 @@ public abstract class AbstractArtifact
 
     /**
      * Creates a new artifact with the specified coordinates, properties and file.
-     * 
+     *
      * @param version The version of the artifact, may be {@code null}.
      * @param properties The properties of the artifact, may be {@code null} if none. The method may assume immutability
      *            of the supplied map, i.e. need not copy it.
      * @param file The resolved file of the artifact, may be {@code null}.
      * @return The new artifact instance, never {@code null}.
      */
-    private Artifact newInstance( String version, Map<String, String> properties, File file )
-    {
-        return new DefaultArtifact( getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, file,
-                                    properties );
-    }
+    protected abstract Artifact newInstance( String version, Map<String, String> properties, File file );
 
     public Artifact setVersion( String version )
     {
@@ -142,7 +138,7 @@ public abstract class AbstractArtifact
     /**
      * Copies the specified artifact properties. This utility method should be used when creating new artifact instances
      * with caller-supplied properties.
-     * 
+     *
      * @param properties The properties to copy, may be {@code null}.
      * @return The copied and read-only properties, never {@code null}.
      */
@@ -175,7 +171,7 @@ public abstract class AbstractArtifact
 
     /**
      * Compares this artifact with the specified object.
-     * 
+     *
      * @param obj The object to compare this artifact against, may be {@code null}.
      * @return {@code true} if and only if the specified object is another {@link Artifact} with equal coordinates,
      *         properties and file, {@code false} otherwise.
@@ -205,7 +201,7 @@ public abstract class AbstractArtifact
 
     /**
      * Returns a hash code for this artifact.
-     * 
+     *
      * @return A hash code for the artifact.
      */
     @Override
