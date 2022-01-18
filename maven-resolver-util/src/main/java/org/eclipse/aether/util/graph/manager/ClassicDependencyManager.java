@@ -83,15 +83,6 @@ public final class ClassicDependencyManager
     public DependencyManager deriveChildManager( DependencyCollectionContext context )
     {
         requireNonNull( context, "context cannot be null" );
-        if ( depth >= 2 )
-        {
-            return this;
-        }
-        else if ( depth == 1 )
-        {
-            return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedOptionals,
-                                                 managedLocalPaths, managedExclusions );
-        }
 
         Map<Object, String> managedVersions = this.managedVersions;
         Map<Object, String> managedScopes = this.managedScopes;
