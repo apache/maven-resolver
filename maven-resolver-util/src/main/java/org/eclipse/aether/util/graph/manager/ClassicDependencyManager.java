@@ -80,6 +80,12 @@ public final class ClassicDependencyManager
 
     public DependencyManager deriveChildManager( DependencyCollectionContext context )
     {
+        if ( depth == 1 )
+        {
+            return new ClassicDependencyManager( depth + 1, managedVersions, managedScopes, managedOptionals,
+                                                 managedLocalPaths, managedExclusions );
+        }
+
         Map<Object, String> managedVersions = this.managedVersions;
         Map<Object, String> managedScopes = this.managedScopes;
         Map<Object, Boolean> managedOptionals = this.managedOptionals;
