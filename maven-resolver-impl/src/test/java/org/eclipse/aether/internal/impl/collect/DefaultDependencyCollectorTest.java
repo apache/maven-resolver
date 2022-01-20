@@ -643,4 +643,32 @@ public class DefaultDependencyCollectorTest
 
     }
 
+    @Test
+    public void testMng7003()
+            throws Exception
+    {
+        session.setDependencyManager(new ClassicDependencyManager());
+        {
+            CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:module:1"));
+            CollectResult result = collector.collectDependencies(session, request);
+            DependencyNode root = result.getRoot();
+            DependencyNode api = path(root, 0, 0);
+            assertEquals("1.7", api.getArtifact().getBaseVersion());
+        }
+        {
+            CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:usage:1"));
+            CollectResult result = collector.collectDependencies(session, request);
+            DependencyNode root = result.getRoot();
+            DependencyNode api = path(root, 0, 0, 0);
+            assertEquals("1.7", api.getArtifact().getBaseVersion());
+        }
+        {
+            CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:usage:2"));
+            CollectResult result = collector.collectDependencies(session, request);
+            DependencyNode root = result.getRoot();
+            DependencyNode api = path(root, 0, 0, 0);
+            assertEquals("1.9", api.getArtifact().getBaseVersion());
+        }
+    }
+
 }
