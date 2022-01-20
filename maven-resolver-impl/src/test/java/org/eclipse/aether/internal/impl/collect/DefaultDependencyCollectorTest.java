@@ -36,6 +36,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
@@ -48,6 +50,7 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
@@ -68,6 +71,10 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -644,31 +651,78 @@ public class DefaultDependencyCollectorTest
     }
 
     @Test
-    public void testMng7003()
+    public void testMng4720()
             throws Exception
     {
+        session.setDependencySelector(
+                new AndDependencySelector( new ScopeDependencySelector( "test", "provided" ),
+                        new OptionalDependencySelector(), new ExclusionDependencySelector() ) );
         session.setDependencyManager(new ClassicDependencyManager());
-        {
-            CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:module:1"));
-            CollectResult result = collector.collectDependencies(session, request);
-            DependencyNode root = result.getRoot();
-            DependencyNode api = path(root, 0, 0);
-            assertEquals("1.7", api.getArtifact().getBaseVersion());
+
+        CollectRequest request = new CollectRequest().setRoot(newDep("mng4720:test:0.1"));
+        CollectResult result = collector.collectDependencies(session, request);
+
+        assertArtifacts(Arrays.asList(
+                "mng4720:test:jar:0.1",
+                "mng4720:a:ext:0.1",
+                "mng4720:c:ext:0.1",
+                "mng4720:d:ext:0.1"
+        ), result.getRoot());
+    }
+
+    private void assertArtifacts(Collection<String> expected, DependencyNode node) {
+        Set<String> artifacts = artifacts(node, new TreeSet<String>());
+        assertEquals(new TreeSet<>(expected), artifacts);
+    }
+
+    private Set<String> artifacts(DependencyNode root, Set<String> artifacts) {
+        if (artifacts.add(root.getArtifact().toString())) {
+            for (DependencyNode c : root.getChildren()) {
+                artifacts(c, artifacts);
+            }
         }
-        {
-            CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:usage:1"));
-            CollectResult result = collector.collectDependencies(session, request);
-            DependencyNode root = result.getRoot();
-            DependencyNode api = path(root, 0, 0, 0);
-            assertEquals("1.7", api.getArtifact().getBaseVersion());
-        }
-        {
-            CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:usage:2"));
-            CollectResult result = collector.collectDependencies(session, request);
-            DependencyNode root = result.getRoot();
-            DependencyNode api = path(root, 0, 0, 0);
-            assertEquals("1.9", api.getArtifact().getBaseVersion());
-        }
+        return artifacts;
+    }
+
+    @Test
+    public void testMng7003Module1() throws Exception
+    {
+        session.setDependencyManager(new ClassicDependencyManager());
+        CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:module:1"));
+        CollectResult result = collector.collectDependencies(session, request);
+        assertArtifacts(Arrays.asList(
+                "mng7003:module:jar:1",
+                "mng7003:impl:jar:1",
+                "mng7003:api:jar:1.7"
+        ), result.getRoot());
+    }
+
+    @Test
+    public void testMng7003Usage1() throws Exception
+    {
+        session.setDependencyManager(new ClassicDependencyManager());
+        CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:usage:1"));
+        CollectResult result = collector.collectDependencies(session, request);
+        assertArtifacts(Arrays.asList(
+                "mng7003:usage:jar:1",
+                "mng7003:module:jar:1",
+                "mng7003:impl:jar:1",
+                "mng7003:api:jar:1.7"
+        ), result.getRoot());
+    }
+
+    @Test
+    public void testMng7003Usage2() throws Exception
+    {
+        session.setDependencyManager(new ClassicDependencyManager());
+        CollectRequest request = new CollectRequest().setRoot(newDep("mng7003:usage:2"));
+        CollectResult result = collector.collectDependencies(session, request);
+        assertArtifacts(Arrays.asList(
+                "mng7003:usage:jar:2",
+                "mng7003:module:jar:1",
+                "mng7003:impl:jar:1",
+                "mng7003:api:jar:1.9"
+        ), result.getRoot());
     }
 
 }
