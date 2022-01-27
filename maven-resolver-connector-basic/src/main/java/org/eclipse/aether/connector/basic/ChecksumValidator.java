@@ -252,7 +252,7 @@ final class ChecksumValidator
             {
                 if ( tmp instanceof File )
                 {
-                    fileProcessor.move( ( File ) tmp, checksumFile );
+                    fileProcessor.move( (File) tmp, checksumFile );
                     tempFiles.remove( tmp );
                 }
                 else

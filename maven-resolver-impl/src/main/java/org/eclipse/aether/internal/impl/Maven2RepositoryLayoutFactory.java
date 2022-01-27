@@ -207,16 +207,16 @@ public final class Maven2RepositoryLayoutFactory
         @Override
         public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
-            return getChecksums( location );
+            return getChecksumLocations( location );
         }
 
         @Override
         public List<ChecksumLocation> getChecksumLocations( Metadata metadata, boolean upload, URI location )
         {
-            return getChecksums( location );
+            return getChecksumLocations( location );
         }
 
-        private List<ChecksumLocation> getChecksums( URI location )
+        private List<ChecksumLocation> getChecksumLocations( URI location )
         {
             List<ChecksumLocation> checksumLocations = new ArrayList<>( checksumAlgorithms.size() );
             for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithms )

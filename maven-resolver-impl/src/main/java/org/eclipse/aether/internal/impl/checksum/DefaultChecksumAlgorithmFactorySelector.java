@@ -52,10 +52,10 @@ public class DefaultChecksumAlgorithmFactorySelector
     public DefaultChecksumAlgorithmFactorySelector()
     {
         this.factories = new HashMap<>();
-        this.factories.put( ChecksumAlgorithmFactorySHA512.NAME, new ChecksumAlgorithmFactorySHA512() );
-        this.factories.put( ChecksumAlgorithmFactorySHA256.NAME, new ChecksumAlgorithmFactorySHA256() );
-        this.factories.put( ChecksumAlgorithmFactorySHA1.NAME, new ChecksumAlgorithmFactorySHA1() );
-        this.factories.put( ChecksumAlgorithmFactoryMD5.NAME, new ChecksumAlgorithmFactoryMD5() );
+        this.factories.put( Sha512ChecksumAlgorithmFactory.NAME, new Sha512ChecksumAlgorithmFactory() );
+        this.factories.put( Sha256ChecksumAlgorithmFactory.NAME, new Sha256ChecksumAlgorithmFactory() );
+        this.factories.put( Sha1ChecksumAlgorithmFactory.NAME, new Sha1ChecksumAlgorithmFactory() );
+        this.factories.put( Md5ChecksumAlgorithmFactory.NAME, new Md5ChecksumAlgorithmFactory() );
     }
 
     @Inject

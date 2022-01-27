@@ -27,7 +27,7 @@ under the License.
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
       <item name="Configuration" href="configuration.html"/>
-      <item name="About checksums" href="about-checksums.html"/>
+      <item name="About Checksums" href="about-checksums.html"/>
       <item name="Maven 3.8.x" href="maven-3.8.x.html"/>
       <item name="JavaDocs" href="apidocs/index.html"/>
       <item name="Source Xref" href="xref/index.html"/>

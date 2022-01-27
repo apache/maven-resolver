@@ -42,10 +42,10 @@ import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
-import org.eclipse.aether.internal.impl.checksum.ChecksumAlgorithmFactoryMD5;
-import org.eclipse.aether.internal.impl.checksum.ChecksumAlgorithmFactorySHA1;
-import org.eclipse.aether.internal.impl.checksum.ChecksumAlgorithmFactorySHA256;
-import org.eclipse.aether.internal.impl.checksum.ChecksumAlgorithmFactorySHA512;
+import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
+import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
+import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
+import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
@@ -168,14 +168,14 @@ public class AetherModule
                 .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
-        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( ChecksumAlgorithmFactoryMD5.NAME ) )
-                .to( ChecksumAlgorithmFactoryMD5.class );
-        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( ChecksumAlgorithmFactorySHA1.NAME ) )
-                .to( ChecksumAlgorithmFactorySHA1.class );
-        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( ChecksumAlgorithmFactorySHA256.NAME ) )
-                .to( ChecksumAlgorithmFactorySHA256.class );
-        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( ChecksumAlgorithmFactorySHA512.NAME ) )
-                .to( ChecksumAlgorithmFactorySHA512.class );
+        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
+                .to( Md5ChecksumAlgorithmFactory.class );
+        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Sha1ChecksumAlgorithmFactory.NAME ) )
+                .to( Sha1ChecksumAlgorithmFactory.class );
+        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Sha256ChecksumAlgorithmFactory.NAME ) )
+                .to( Sha256ChecksumAlgorithmFactory.class );
+        bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Sha512ChecksumAlgorithmFactory.NAME ) )
+                .to( Sha512ChecksumAlgorithmFactory.class );
         bind( ChecksumAlgorithmFactorySelector.class )
                 .to( DefaultChecksumAlgorithmFactorySelector.class ).in ( Singleton.class );
 
@@ -210,16 +210,16 @@ public class AetherModule
     @Provides
     @Singleton
     Map<String, ChecksumAlgorithmFactory> provideChecksumTypes(
-            @Named( ChecksumAlgorithmFactorySHA512.NAME ) ChecksumAlgorithmFactory sha512,
-            @Named( ChecksumAlgorithmFactorySHA256.NAME ) ChecksumAlgorithmFactory sha256,
-            @Named( ChecksumAlgorithmFactorySHA1.NAME ) ChecksumAlgorithmFactory sha1,
-            @Named( ChecksumAlgorithmFactoryMD5.NAME ) ChecksumAlgorithmFactory md5 )
+            @Named( Sha512ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory sha512,
+            @Named( Sha256ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory sha256,
+            @Named( Sha1ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory sha1,
+            @Named( Md5ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory md5 )
     {
         Map<String, ChecksumAlgorithmFactory> checksumTypes = new HashMap<>();
-        checksumTypes.put( ChecksumAlgorithmFactorySHA512.NAME, sha512 );
-        checksumTypes.put( ChecksumAlgorithmFactorySHA256.NAME, sha256 );
-        checksumTypes.put( ChecksumAlgorithmFactorySHA1.NAME, sha1 );
-        checksumTypes.put( ChecksumAlgorithmFactoryMD5.NAME, md5 );
+        checksumTypes.put( Sha512ChecksumAlgorithmFactory.NAME, sha512 );
+        checksumTypes.put( Sha256ChecksumAlgorithmFactory.NAME, sha256 );
+        checksumTypes.put( Sha1ChecksumAlgorithmFactory.NAME, sha1 );
+        checksumTypes.put( Md5ChecksumAlgorithmFactory.NAME, md5 );
         return Collections.unmodifiableMap( checksumTypes );
     }
 

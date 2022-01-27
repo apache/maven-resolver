@@ -1,4 +1,4 @@
-# About checksums
+# About Checksums
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -39,7 +39,7 @@ of Maven Resolver: there is nothing "secure" being involved with checksums. More
 algorithm, but even for its "elder brother" MD5. Both algorithms are still widely used today as "transport integrity
 validation" or "error detection" (aka "bit-rot detection").
 
-## Checksum changes
+## Checksum Changes
 
 From technical perspective, the above written facts infer following consequences: as checksum algorithms are exposed 
 for user, so one can set them via configuration, users are not prevented to ask for SHA-256 or even SHA-512, even if

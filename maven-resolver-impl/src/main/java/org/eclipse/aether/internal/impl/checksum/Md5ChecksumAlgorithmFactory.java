@@ -24,20 +24,20 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
- * The SHA-512 checksum type.
+ * The MD5 checksum type.
  *
  * @since TBD
  */
 @Singleton
-@Named( ChecksumAlgorithmFactorySHA512.NAME )
-public class ChecksumAlgorithmFactorySHA512
+@Named( Md5ChecksumAlgorithmFactory.NAME )
+public class Md5ChecksumAlgorithmFactory
         extends MessageDigestChecksumAlgorithmFactorySupport
 {
-    public static final String NAME = "SHA-512";
+    public static final String NAME = "MD5";
 
     @Inject
-    public ChecksumAlgorithmFactorySHA512()
+    public Md5ChecksumAlgorithmFactory()
     {
-        super( NAME, "sha512" );
+        super( NAME, "md5" );
     }
 }

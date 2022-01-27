@@ -29,14 +29,14 @@ import javax.inject.Singleton;
  * @since TBD
  */
 @Singleton
-@Named( ChecksumAlgorithmFactorySHA1.NAME )
-public class ChecksumAlgorithmFactorySHA1
+@Named( Sha1ChecksumAlgorithmFactory.NAME )
+public class Sha1ChecksumAlgorithmFactory
         extends MessageDigestChecksumAlgorithmFactorySupport
 {
     public static final String NAME = "SHA-1";
 
     @Inject
-    public ChecksumAlgorithmFactorySHA1()
+    public Sha1ChecksumAlgorithmFactory()
     {
         super( NAME, "sha1" );
     }
