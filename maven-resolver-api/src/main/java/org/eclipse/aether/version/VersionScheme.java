@@ -53,7 +53,7 @@ public interface VersionScheme
      * @throws InvalidVersionSpecificationException If the constraint specification violates the syntax rules of this
      *             scheme.
      */
-    VersionConstraint parseVersionConstraint( final String constraint )
+    VersionConstraint parseVersionConstraint( String constraint )
         throws InvalidVersionSpecificationException;
 
 }
