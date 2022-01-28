@@ -41,6 +41,7 @@ import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -83,6 +84,7 @@ import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -168,6 +170,9 @@ public class AetherModule
                 .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
+        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( FileProvidedChecksumsSource.NAME ) ) //
+            .to( FileProvidedChecksumsSource.class ).in( Singleton.class );
+
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Sha1ChecksumAlgorithmFactory.NAME ) )
@@ -205,6 +210,17 @@ public class AetherModule
 
         install( new Slf4jModule() );
 
+    }
+
+    @Provides
+    @Singleton
+    Map<String, ProvidedChecksumsSource> provideChecksumSources(
+        @Named( FileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource fileProvidedChecksumSource
+    )
+    {
+        Map<String, ProvidedChecksumsSource> providedChecksumsSource = new HashMap<>();
+        providedChecksumsSource.put( FileProvidedChecksumsSource.NAME, fileProvidedChecksumSource );
+        return providedChecksumsSource;
     }
 
     @Provides

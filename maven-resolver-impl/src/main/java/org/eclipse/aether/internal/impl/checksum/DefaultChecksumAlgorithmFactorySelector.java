@@ -23,15 +23,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Default implementation.
@@ -73,15 +74,19 @@ public class DefaultChecksumAlgorithmFactorySelector
         {
             throw new IllegalArgumentException(
                     String.format( "Unsupported checksum algorithm %s, supported ones are %s",
-                            algorithmName, getChecksumAlgorithmNames() )
+                            algorithmName,
+                            getChecksumAlgorithmFactories().stream()
+                                                           .map( ChecksumAlgorithmFactory::getName )
+                                                           .collect( toList() )
+                    )
             );
         }
         return factory;
     }
 
     @Override
-    public Set<String> getChecksumAlgorithmNames()
+    public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
     {
-        return new HashSet<>( factories.keySet() );
+        return new ArrayList<>( factories.values() );
     }
 }

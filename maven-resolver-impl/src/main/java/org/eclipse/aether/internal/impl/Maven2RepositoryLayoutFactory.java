@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -148,9 +147,9 @@ public final class Maven2RepositoryLayoutFactory
         }
 
         @Override
-        public List<String> getChecksumAlgorithmNames()
+        public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
         {
-            return checksumAlgorithms.stream().map( ChecksumAlgorithmFactory::getName ).collect( Collectors.toList() );
+            return checksumAlgorithms;
         }
 
         @Override

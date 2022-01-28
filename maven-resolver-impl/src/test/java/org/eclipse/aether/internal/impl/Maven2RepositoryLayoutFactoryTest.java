@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -121,7 +122,11 @@ public class Maven2RepositoryLayoutFactoryTest
     @Test
     public void testChecksumAlgorithmNames()
     {
-        assertEquals( Arrays.asList( "SHA-1", "MD5" ), layout.getChecksumAlgorithmNames() );
+        assertEquals( Arrays.asList( "SHA-1", "MD5" ),
+                layout.getChecksumAlgorithmFactories().stream()
+                      .map( ChecksumAlgorithmFactory::getName )
+                      .collect( Collectors.toList() )
+        );
     }
 
     @Test

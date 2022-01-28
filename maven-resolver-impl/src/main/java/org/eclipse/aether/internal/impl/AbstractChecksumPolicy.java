@@ -41,26 +41,26 @@ abstract class AbstractChecksumPolicy
     }
 
     @Override
-    public boolean onChecksumMatch( String algorithm, int kind )
+    public boolean onChecksumMatch( String algorithm, ChecksumKind kind )
     {
         requireNonNull( algorithm, "algorithm cannot be null" );
         return true;
     }
 
     @Override
-    public void onChecksumMismatch( String algorithm, int kind, ChecksumFailureException exception )
+    public void onChecksumMismatch( String algorithm, ChecksumKind kind, ChecksumFailureException exception )
             throws ChecksumFailureException
     {
         requireNonNull( algorithm, "algorithm cannot be null" );
         requireNonNull( exception, "exception cannot be null" );
-        if ( ( kind & KIND_UNOFFICIAL ) == 0 )
+        if ( !kind.isIgnoreOnMismatch() )
         {
             throw exception;
         }
     }
 
     @Override
-    public void onChecksumError( String algorithm, int kind, ChecksumFailureException exception )
+    public void onChecksumError( String algorithm, ChecksumKind kind, ChecksumFailureException exception )
             throws ChecksumFailureException
     {
         requireNonNull( algorithm, "algorithm cannot be null" );

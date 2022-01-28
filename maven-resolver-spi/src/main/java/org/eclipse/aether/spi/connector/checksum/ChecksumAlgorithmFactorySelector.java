@@ -19,7 +19,7 @@ package org.eclipse.aether.spi.connector.checksum;
  * under the License.
  */
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Component performing selection of {@link ChecksumAlgorithmFactory} based on known factory names.
@@ -36,9 +36,10 @@ public interface ChecksumAlgorithmFactorySelector
     ChecksumAlgorithmFactory select( String algorithmName );
 
     /**
-     * Returns a set of supported algorithm names. This set represents ALL the algorithms supported by Resolver, and is
-     * NOT in any relation to given repository layout used checksums, returned by method {@link
-     * org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmNames()} (is super set of it).
+     * Returns a collection of supported algorithm names. This set represents ALL the algorithms supported by Resolver,
+     * and is NOT in any relation to given repository layout used checksums, returned by method {@link
+     * org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()} (in fact, is super set
+     * of it).
      */
-    Set<String> getChecksumAlgorithmNames();
+    Collection<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
 }
