@@ -63,7 +63,7 @@ public class ChecksumFailureException
     {
         super( "Checksum validation failed, expected '"
             + expected + "'" + ( expectedKind == null ? "" : " (" + expectedKind + ")" )
-            + " but is '" + actual + "' (actual)" );
+            + " but is actually '" + actual + "'" );
         this.expected = expected;
         this.expectedKind = expectedKind;
         this.actual = actual;
