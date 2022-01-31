@@ -74,35 +74,24 @@ public interface ChecksumPolicy
         /**
          * Remote external kind of checksum are retrieved from remote doing extra transport round-trip (usually by
          * getting "file.jar.sha1" for corresponding "file.jar" file). This kind of checksum is part of layout, and
-         * was from beginning the "official" (and one and only) checksum used by resolver.
+         * was from beginning the "official" (and one and only) checksum used by resolver. If no external checksum
+         * present, {@link #onNoMoreChecksums()} method is invoked that (by default) fails retrieval.
          */
-        REMOTE_EXTERNAL( false ),
+        REMOTE_EXTERNAL,
 
         /**
          * Included checksums may be received from remote repository during the retrieval of the main file, for example
          * from response headers in case of HTTP transport. They may be set with
-         * {@link org.eclipse.aether.spi.connector.transport.GetTask#setChecksum(String, String)}. Included checksums
-         * on mismatch are ignored, so {@link #REMOTE_EXTERNAL} will be trialed on mismatch.
+         * {@link org.eclipse.aether.spi.connector.transport.GetTask#setChecksum(String, String)}. If no included
+         * checksum present, {@link #REMOTE_EXTERNAL} is tried for.
          */
-        REMOTE_INCLUDED( true ),
+        REMOTE_INCLUDED,
 
         /**
          * Provided checksums may be provided by {@link ProvidedChecksumsSource} components, ahead of artifact
-         * retrieval.
+         * retrieval. If no provided checksum present, {@link #REMOTE_INCLUDED} is tried for.
          */
-        PROVIDED( false );
-
-        private final boolean ignoreOnMismatch;
-
-        ChecksumKind( boolean ignoreOnMismatch )
-        {
-            this.ignoreOnMismatch = ignoreOnMismatch;
-        }
-
-        public boolean isIgnoreOnMismatch()
-        {
-            return ignoreOnMismatch;
-        }
+        PROVIDED
     }
 
     /**

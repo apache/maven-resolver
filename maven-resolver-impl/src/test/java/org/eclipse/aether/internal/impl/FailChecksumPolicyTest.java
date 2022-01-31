@@ -68,10 +68,19 @@ public class FailChecksumPolicyTest
         {
             assertSame( exception, e );
         }
-        policy.onChecksumMismatch( "SHA-1", ChecksumKind.REMOTE_INCLUDED, exception );
+        try
+        {
+            policy.onChecksumMismatch( "SHA-1", ChecksumKind.REMOTE_INCLUDED, exception );
+            fail( "No exception" );
+        }
+        catch ( ChecksumFailureException e )
+        {
+            assertSame( exception, e );
+        }
         try
         {
             policy.onChecksumMismatch("SHA-1", ChecksumKind.PROVIDED, exception);
+            fail( "No exception" );
         }
         catch ( ChecksumFailureException e)
         {

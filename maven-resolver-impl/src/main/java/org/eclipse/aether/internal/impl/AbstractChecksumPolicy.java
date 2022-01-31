@@ -53,10 +53,7 @@ abstract class AbstractChecksumPolicy
     {
         requireNonNull( algorithm, "algorithm cannot be null" );
         requireNonNull( exception, "exception cannot be null" );
-        if ( !kind.isIgnoreOnMismatch() )
-        {
-            throw exception;
-        }
+        throw exception;
     }
 
     @Override

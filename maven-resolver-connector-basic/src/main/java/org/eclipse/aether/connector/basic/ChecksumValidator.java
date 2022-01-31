@@ -151,7 +151,8 @@ final class ChecksumValidator
             if ( !isEqualChecksum( expected, actual ) )
             {
                 checksumPolicy.onChecksumMismatch( factory.getName(), kind,
-                                                   new ChecksumFailureException( expected, actual ) );
+                    new ChecksumFailureException( expected, kind.name(), actual )
+                );
             }
             else if ( checksumPolicy.onChecksumMatch( factory.getName(), kind ) )
             {
@@ -205,7 +206,7 @@ final class ChecksumValidator
                 {
                     checksumPolicy.onChecksumMismatch(
                         factory.getName(), ChecksumKind.REMOTE_EXTERNAL,
-                            new ChecksumFailureException( expected, actual )
+                          new ChecksumFailureException( expected, ChecksumKind.REMOTE_EXTERNAL.name(), actual )
                     );
                 }
                 else if ( checksumPolicy.onChecksumMatch( factory.getName(), ChecksumKind.REMOTE_EXTERNAL ) )
