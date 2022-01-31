@@ -39,7 +39,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.resumeDownloads` | boolean | Whether to resume partially downloaded files if the download has been interrupted. | `true` | yes
 `aether.connector.resumeThreshold` | long | The size in bytes which a partial download needs to have at least to be resumed. Requires `aether.connector.resumeDownloads` to be `true` to be effective. | `64 * 1024` | yes
 `aether.connector.requestTimeout` | long | Request timeout in milliseconds. | `1800000` | yes
-`aether.connector.smartChecksums` | boolean | Flag indicating that instead of comparing the explicit checksum from the remote repo with the calculated one it will try to extract the reference checksum from the actual artifact requests's response header named `ETag` in format `{SHA1{<checksum>}}`. This only works for HTTP(S) requests and certain transport extensions. In addition it only supports SHA-1. | `true` | no
+`aether.connector.smartChecksums` | boolean | Flag indicating that instead of comparing the external checksum fetched from the remote repo with the calculated one, it should try to extract the reference checksum from the actual artifact requests's response headers (several (strategies supported)[included-checksum-strategies.html]). This only works for transport-http transport. | `true` | no
 `aether.connector.userAgent` | String | The user agent that repository connectors should report to servers. |  `"Aether"` | no
 `aether.connector.wagon.config` | Object | The configuration to use for the Wagon provider. | - | yes (must be used)
 `aether.dependencyCollector.maxCycles` | int | Only up to the given amount cyclic dependencies are emitted. | `10` | no

@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.eclipse.aether.util.ChecksumUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -209,6 +208,16 @@ public class ChecksumUtilTest
         assertEquals( "00", ChecksumUtils.toHexString( new byte[] { 0 } ) );
         assertEquals( "ff", ChecksumUtils.toHexString( new byte[] { -1 } ) );
         assertEquals( "00017f", ChecksumUtils.toHexString( new byte[] { 0, 1, 127 } ) );
+    }
+
+    @Test
+    public void testFromHexString()
+    {
+        assertNull( ChecksumUtils.toHexString( null ) );
+        assertArrayEquals( new byte[] {}, ChecksumUtils.fromHexString( "" ) );
+        assertArrayEquals( new byte[] { 0 }, ChecksumUtils.fromHexString( "00" ) );
+        assertArrayEquals( new byte[] { -1 } , ChecksumUtils.fromHexString( "ff" ) );
+        assertArrayEquals( new byte[] { 0, 1, 127 }, ChecksumUtils.fromHexString( "00017f" ) );
     }
 
     @Test

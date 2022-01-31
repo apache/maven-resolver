@@ -19,15 +19,20 @@ package org.eclipse.aether.transport.http;
  * under the License.
  */
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
-import java.util.Objects;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter factory for repositories using the {@code http:} or {@code https:} protocol. The provided transporters
@@ -37,17 +42,38 @@ import org.eclipse.aether.transfer.NoTransporterException;
 public final class HttpTransporterFactory
     implements TransporterFactory
 {
+    private static final Map<String, ChecksumExtractor> EXTRACTORS;
+
+    static
+    {
+        HashMap<String, ChecksumExtractor> map = new HashMap<>();
+        map.put( Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor() );
+        map.put( XChecksumChecksumExtractor.NAME, new XChecksumChecksumExtractor() );
+        EXTRACTORS = Collections.unmodifiableMap( map );
+    }
 
     private float priority = 5.0f;
+
+    private final Map<String, ChecksumExtractor> extractors;
+
+    /**
+     * Ctor for ServiceLocator.
+     */
+    @Deprecated
+    public HttpTransporterFactory()
+    {
+        this( EXTRACTORS );
+    }
 
     /**
      * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
      * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
      * will occur.
      */
-    public HttpTransporterFactory()
+    @Inject
+    public HttpTransporterFactory( Map<String, ChecksumExtractor> extractors )
     {
-        // enables default constructor
+        this.extractors = requireNonNull( extractors );
     }
 
     @Override
@@ -72,10 +98,10 @@ public final class HttpTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        Objects.requireNonNull( "session", "session cannot be null" );
-        Objects.requireNonNull( "repository", "repository cannot be null" );
+        requireNonNull( "session", "session cannot be null" );
+        requireNonNull( "repository", "repository cannot be null" );
 
-        return new HttpTransporter( repository, session );
+        return new HttpTransporter( extractors, repository, session );
     }
 
 }

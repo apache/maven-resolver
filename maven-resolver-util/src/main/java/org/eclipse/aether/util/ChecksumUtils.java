@@ -197,4 +197,37 @@ public final class ChecksumUtils
         return buffer.toString();
     }
 
+    /**
+     * Creates a byte array out of hexadecimal representation of the specified bytes. If input string is {@code null},
+     * {@code null} is returned. Input value must have even length (due hex encoding = 2 chars one byte).
+     *
+     * @param hexString The hexString to convert to byte array, may be {@code null}.
+     * @return The byte array of the input or {@code null} if the input was {@code null}.
+     * @since 1.8.0
+     */
+    @SuppressWarnings( "checkstyle:magicnumber" )
+    public static byte[] fromHexString( String hexString )
+    {
+        if ( hexString == null )
+        {
+            return null;
+        }
+        if ( hexString.isEmpty() )
+        {
+            return new byte[] {};
+        }
+        int len = hexString.length();
+        if ( len % 2 != 0 )
+        {
+            throw new IllegalArgumentException( "hexString length not even" );
+        }
+        byte[] data = new byte[ len / 2 ];
+        for ( int i = 0; i < len; i += 2 )
+        {
+            data[ i / 2 ] = (byte) ( ( Character.digit( hexString.charAt( i ), 16 ) << 4 )
+                + Character.digit( hexString.charAt( i + 1 ), 16 ) );
+        }
+        return data;
+    }
+
 }

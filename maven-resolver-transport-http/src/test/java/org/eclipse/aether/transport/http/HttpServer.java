@@ -85,7 +85,7 @@ public class HttpServer
 
     public enum ChecksumHeader
     {
-        NEXUS
+        NEXUS, XCHECKSUM
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger( HttpServer.class );
@@ -351,6 +351,10 @@ public class HttpServer
                     if ( checksumHeader == ChecksumHeader.NEXUS )
                     {
                         response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
+                    }
+                    else if ( checksumHeader == ChecksumHeader.XCHECKSUM )
+                    {
+                        response.setHeader( "x-checksum-sha1", checksums.get( "SHA-1" ).toString() );
                     }
                 }
                 if ( HttpMethod.HEAD.is( req.getMethod() ) )
