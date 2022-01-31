@@ -51,7 +51,7 @@ public class TestChecksumAlgorithmSelector
     public static final String TEST_CHECKSUM_VALUE = "01020304";
 
     @Override
-    public Set<String> getChecksumAlgorithmNames()
+    public Set<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
     {
         return Collections.emptySet(); // irrelevant
     }

@@ -50,6 +50,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
+import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.GetTask;
@@ -88,6 +89,8 @@ final class BasicRepositoryConnector
 
     private static final Logger LOGGER = LoggerFactory.getLogger( BasicRepositoryConnector.class );
 
+    private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
+
     private final FileProcessor fileProcessor;
 
     private final RemoteRepository repository;
@@ -117,7 +120,8 @@ final class BasicRepositoryConnector
                               TransporterProvider transporterProvider,
                               RepositoryLayoutProvider layoutProvider,
                               ChecksumPolicyProvider checksumPolicyProvider,
-                              FileProcessor fileProcessor )
+                              FileProcessor fileProcessor,
+                              Map<String, ProvidedChecksumsSource> providedChecksumsSources )
             throws NoRepositoryConnectorException
     {
         try
@@ -141,6 +145,7 @@ final class BasicRepositoryConnector
         this.session = session;
         this.repository = repository;
         this.fileProcessor = fileProcessor;
+        this.providedChecksumsSources = providedChecksumsSources;
 
         maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
@@ -239,12 +244,25 @@ final class BasicRepositoryConnector
             }
 
             Runnable task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
-                    checksumLocations, listener );
+                    checksumLocations, null, listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
         for ( ArtifactDownload transfer : safe( artifactDownloads ) )
         {
+            Map<String, String> providedChecksums = Collections.emptyMap();
+            for ( ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources.values() )
+            {
+                Map<String, String> provided = providedChecksumsSource.getProvidedArtifactChecksums(
+                    session, transfer, layout.getChecksumAlgorithmFactories() );
+
+                if ( provided != null )
+                {
+                    providedChecksums = provided;
+                    break;
+                }
+            }
+
             URI location = layout.getLocation( transfer.getArtifact(), false );
 
             TransferResource resource = newTransferResource( location, transfer.getFile(), transfer.getTrace() );
@@ -265,7 +283,8 @@ final class BasicRepositoryConnector
                     checksumLocations = layout.getChecksumLocations( transfer.getArtifact(), false, location );
                 }
 
-                task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy, checksumLocations, listener );
+                task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
+                    checksumLocations, providedChecksums, listener );
             }
             executor.execute( errorForwarder.wrap( task ) );
         }
@@ -416,12 +435,13 @@ final class BasicRepositoryConnector
 
         GetTaskRunner( URI path, File file, ChecksumPolicy checksumPolicy,
                        List<RepositoryLayout.ChecksumLocation> checksumLocations,
+                       Map<String, String> providedChecksums,
                        TransferTransportListener<?> listener )
         {
             super( path, listener );
             this.file = requireNonNull( file, "destination file cannot be null" );
             checksumValidator = new ChecksumValidator( file, fileProcessor, this,
-                    checksumPolicy, safe( checksumLocations ) );
+                    checksumPolicy, providedChecksums, safe( checksumLocations ) );
         }
 
         @Override

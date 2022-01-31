@@ -126,12 +126,12 @@ public interface RepositoryLayout
     }
 
     /**
-     * Returns the list of checksum names this instance of layout uses, never {@code null}. The checksum order
-     * represents the order how checksums are validated (hence retrieved).
+     * Returns immutable list of {@link ChecksumAlgorithmFactory} this instance of layout uses, never {@code null}.
+     * The order represents the order how checksums are validated (hence retrieved).
      *
      * @since 1.8.0
      */
-    List<String> getChecksumAlgorithmNames();
+    List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
 
     /**
      * Gets the location within a remote repository where the specified artifact resides. The URI is relative to the

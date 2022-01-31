@@ -21,7 +21,7 @@ package org.eclipse.aether.internal.impl;
 
 import static org.junit.Assert.*;
 
-import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
 import org.junit.Before;
@@ -50,8 +50,8 @@ public class WarnChecksumPolicyTest
     @Test
     public void testOnChecksumMatch()
     {
-        assertTrue( policy.onChecksumMatch( "SHA-1", 0 ) );
-        assertTrue( policy.onChecksumMatch( "SHA-1", ChecksumPolicy.KIND_UNOFFICIAL ) );
+        assertTrue( policy.onChecksumMatch( "SHA-1", ChecksumKind.REMOTE_EXTERNAL ) );
+        assertTrue( policy.onChecksumMatch( "SHA-1", ChecksumKind.REMOTE_INCLUDED ) );
     }
 
     @Test
@@ -60,21 +60,21 @@ public class WarnChecksumPolicyTest
     {
         try
         {
-            policy.onChecksumMismatch( "SHA-1", 0, exception );
+            policy.onChecksumMismatch( "SHA-1", ChecksumKind.REMOTE_EXTERNAL, exception );
             fail( "No exception" );
         }
         catch ( ChecksumFailureException e )
         {
             assertSame( exception, e );
         }
-        policy.onChecksumMismatch( "SHA-1", ChecksumPolicy.KIND_UNOFFICIAL, exception );
+        policy.onChecksumMismatch( "SHA-1", ChecksumKind.REMOTE_INCLUDED, exception );
     }
 
     @Test
     public void testOnChecksumError()
         throws Exception
     {
-        policy.onChecksumError( "SHA-1", 0, exception );
+        policy.onChecksumError( "SHA-1", ChecksumKind.REMOTE_EXTERNAL, exception );
     }
 
     @Test

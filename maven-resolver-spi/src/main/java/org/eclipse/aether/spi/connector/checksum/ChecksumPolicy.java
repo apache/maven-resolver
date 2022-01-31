@@ -64,23 +64,57 @@ import org.eclipse.aether.transfer.ChecksumFailureException;
  */
 public interface ChecksumPolicy
 {
-
     /**
-     * Bit flag indicating a checksum which is not part of the official repository layout/structure.
+     * Enum denoting origin of checksum.
+     *
+     * @since 1.8.0
      */
-    int KIND_UNOFFICIAL = 0x01;
+    enum ChecksumKind
+    {
+        /**
+         * Remote external kind of checksum are retrieved from remote doing extra transport round-trip (usually by
+         * getting "file.jar.sha1" for corresponding "file.jar" file). This kind of checksum is part of layout, and
+         * was from beginning the "official" (and one and only) checksum used by resolver.
+         */
+        REMOTE_EXTERNAL( false ),
+
+        /**
+         * Included checksums may be received from remote repository during the retrieval of the main file, for example
+         * from response headers in case of HTTP transport. They may be set with
+         * {@link org.eclipse.aether.spi.connector.transport.GetTask#setChecksum(String, String)}. Included checksums
+         * on mismatch are ignored, so {@link #REMOTE_EXTERNAL} will be trialed on mismatch.
+         */
+        REMOTE_INCLUDED( true ),
+
+        /**
+         * Provided checksums may be provided by {@link ProvidedChecksumsSource} components, ahead of artifact
+         * retrieval.
+         */
+        PROVIDED( false );
+
+        private final boolean ignoreOnMismatch;
+
+        ChecksumKind( boolean ignoreOnMismatch )
+        {
+            this.ignoreOnMismatch = ignoreOnMismatch;
+        }
+
+        public boolean isIgnoreOnMismatch()
+        {
+            return ignoreOnMismatch;
+        }
+    }
 
     /**
      * Signals a match between the locally computed checksum value and the checksum value declared by the remote
      * repository.
      *
      * @param algorithm The name of the checksum algorithm being used, must not be {@code null}.
-     * @param kind      A bit field providing further details about the checksum. See the {@code KIND_*} constants in
-     *                  this interface for possible bit flags.
+     * @param kind      A field providing further details about the checksum.
      * @return {@code true} to accept the download as valid and stop further validation, {@code false} to continue
      * validation with the next checksum.
      */
-    boolean onChecksumMatch( String algorithm, int kind );
+    boolean onChecksumMatch( String algorithm, ChecksumKind kind );
 
     /**
      * Signals a mismatch between the locally computed checksum value and the checksum value declared by the remote
@@ -88,14 +122,12 @@ public interface ChecksumPolicy
      * their internal state and defer a conclusion until all available checksums have been processed.
      *
      * @param algorithm The name of the checksum algorithm being used, must not be {@code null}.
-     * @param kind      A bit field providing further details about the checksum. See the {@code KIND_*} constants in
-     *                  this
-     *                  interface for possible bit flags.
+     * @param kind      A field providing further details about the checksum.
      * @param exception The exception describing the checksum mismatch, must not be {@code null}.
      * @throws ChecksumFailureException If the checksum validation is to be failed. If the method returns normally,
      *                                  validation continues with the next checksum.
      */
-    void onChecksumMismatch( String algorithm, int kind, ChecksumFailureException exception )
+    void onChecksumMismatch( String algorithm, ChecksumKind kind, ChecksumFailureException exception )
             throws ChecksumFailureException;
 
     /**
@@ -103,14 +135,12 @@ public interface ChecksumPolicy
      * repository.
      *
      * @param algorithm The name of the checksum algorithm being used, must not be {@code null}.
-     * @param kind      A bit field providing further details about the checksum. See the {@code KIND_*} constants in
-     *                  this
-     *                  interface for possible bit flags.
+     * @param kind      A field providing further details about the checksum.
      * @param exception The exception describing the checksum error, must not be {@code null}.
      * @throws ChecksumFailureException If the checksum validation is to be failed. If the method returns normally,
      *                                  validation continues with the next checksum.
      */
-    void onChecksumError( String algorithm, int kind, ChecksumFailureException exception )
+    void onChecksumError( String algorithm, ChecksumKind kind, ChecksumFailureException exception )
             throws ChecksumFailureException;
 
     /**
@@ -134,8 +164,8 @@ public interface ChecksumPolicy
      * issue or insist on rejecting the downloaded file as unusable.
      *
      * @param exception The exception that was thrown from a prior call to
-     *                  {@link #onChecksumMismatch(String, int, ChecksumFailureException)},
-     *                  {@link #onChecksumError(String, int, ChecksumFailureException)} or {@link
+     *                  {@link #onChecksumMismatch(String, ChecksumKind, ChecksumFailureException)},
+     *                  {@link #onChecksumError(String, ChecksumKind, ChecksumFailureException)} or {@link
      *                  #onNoMoreChecksums()}.
      * @return {@code true} to accept the download nevertheless and let artifact resolution succeed, {@code false} to
      * reject the transferred file as unusable.

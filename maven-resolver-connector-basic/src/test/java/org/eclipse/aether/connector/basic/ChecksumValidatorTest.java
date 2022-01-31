@@ -57,9 +57,9 @@ public class ChecksumValidatorTest
         private Object conclusion;
 
         @Override
-        public boolean onChecksumMatch( String algorithm, int kind )
+        public boolean onChecksumMatch( String algorithm, ChecksumKind kind )
         {
-            callbacks.add( String.format( "match(%s, %04x)", algorithm, kind ) );
+            callbacks.add( String.format( "match(%s, %s)", algorithm, kind ) );
             if ( inspectAll )
             {
                 if ( conclusion == null )
@@ -72,10 +72,10 @@ public class ChecksumValidatorTest
         }
 
         @Override
-        public void onChecksumMismatch( String algorithm, int kind, ChecksumFailureException exception )
+        public void onChecksumMismatch( String algorithm, ChecksumKind kind, ChecksumFailureException exception )
             throws ChecksumFailureException
         {
-            callbacks.add( String.format( "mismatch(%s, %04x)", algorithm, kind ) );
+            callbacks.add( String.format( "mismatch(%s, %s)", algorithm, kind ) );
             if ( inspectAll )
             {
                 conclusion = exception;
@@ -85,9 +85,9 @@ public class ChecksumValidatorTest
         }
 
         @Override
-        public void onChecksumError( String algorithm, int kind, ChecksumFailureException exception )
+        public void onChecksumError( String algorithm, ChecksumKind kind, ChecksumFailureException exception )
         {
-            callbacks.add( String.format( "error(%s, %04x, %s)", algorithm, kind, exception.getCause().getMessage() ) );
+            callbacks.add( String.format( "error(%s, %s, %s)", algorithm, kind, exception.getCause().getMessage() ) );
         }
 
         @Override
@@ -201,7 +201,12 @@ public class ChecksumValidatorTest
 
     private ChecksumValidator newValidator( String... factories )
     {
-        return new ChecksumValidator( dataFile, new TestFileProcessor(), fetcher, policy, newChecksums( factories ) );
+        return newValidator( null, factories );
+    }
+
+    private ChecksumValidator newValidator( Map<String, String> providedChecksums, String... factories )
+    {
+        return new ChecksumValidator( dataFile, new TestFileProcessor(), fetcher, policy, providedChecksums, newChecksums( factories ) );
     }
 
     private Map<String, ?> checksums( String... algoDigestPairs )
@@ -251,7 +256,7 @@ public class ChecksumValidatorTest
         fetcher.mock( SHA1, "foo" );
         validator.validate( checksums( SHA1, "foo" ), null );
         fetcher.assertFetchedFiles( SHA1 );
-        policy.assertCallbacks( "match(SHA-1, 0000)" );
+        policy.assertCallbacks( "match(SHA-1, REMOTE_EXTERNAL)" );
     }
 
     @Test
@@ -271,7 +276,7 @@ public class ChecksumValidatorTest
             assertTrue( e.isRetryWorthy() );
         }
         fetcher.assertFetchedFiles( SHA1 );
-        policy.assertCallbacks( "mismatch(SHA-1, 0000)" );
+        policy.assertCallbacks( "mismatch(SHA-1, REMOTE_EXTERNAL)" );
     }
 
     @Test
@@ -284,7 +289,7 @@ public class ChecksumValidatorTest
         fetcher.mock( MD5, "bar" );
         validator.validate( checksums( SHA1, "foo", MD5, "bar" ), null );
         fetcher.assertFetchedFiles( SHA1, MD5 );
-        policy.assertCallbacks( "match(SHA-1, 0000)", "match(MD5, 0000)", "noMore()" );
+        policy.assertCallbacks( "match(SHA-1, REMOTE_EXTERNAL)", "match(MD5, REMOTE_EXTERNAL)", "noMore()" );
     }
 
     @Test
@@ -306,21 +311,23 @@ public class ChecksumValidatorTest
             assertTrue( e.isRetryWorthy() );
         }
         fetcher.assertFetchedFiles( SHA1, MD5 );
-        policy.assertCallbacks( "mismatch(SHA-1, 0000)", "match(MD5, 0000)", "noMore()" );
+        policy.assertCallbacks( "mismatch(SHA-1, REMOTE_EXTERNAL)", "match(MD5, REMOTE_EXTERNAL)", "noMore()" );
     }
 
     @Test
-    public void testValidate_InlinedBeforeExternal()
+    public void testValidate_IncludedBeforeExternal()
         throws Exception
     {
         policy.inspectAll = true;
-        ChecksumValidator validator = newValidator( SHA1, MD5 );
+        HashMap<String, String> provided = new HashMap<>();
+        provided.put( SHA1, "foo" );
+        ChecksumValidator validator = newValidator( provided, SHA1, MD5 );
         fetcher.mock( SHA1, "foo" );
         fetcher.mock( MD5, "bar" );
         validator.validate( checksums( SHA1, "foo", MD5, "bar" ), checksums( SHA1, "foo", MD5, "bar" ) );
         fetcher.assertFetchedFiles( SHA1, MD5 );
-        policy.assertCallbacks( "match(SHA-1, 0001)", "match(MD5, 0001)", "match(SHA-1, 0000)", "match(MD5, 0000)",
-                                "noMore()" );
+        policy.assertCallbacks( "match(SHA-1, PROVIDED)", "match(SHA-1, REMOTE_INCLUDED)", "match(MD5, REMOTE_INCLUDED)",
+            "match(SHA-1, REMOTE_EXTERNAL)", "match(MD5, REMOTE_EXTERNAL)", "noMore()" );
     }
 
     @Test
@@ -331,7 +338,7 @@ public class ChecksumValidatorTest
         ChecksumValidator validator = newValidator( SHA1 );
         fetcher.mock( SHA1, "FOO" );
         validator.validate( checksums( SHA1, "foo" ), checksums( SHA1, "foo" ) );
-        policy.assertCallbacks( "match(SHA-1, 0001)", "match(SHA-1, 0000)", "noMore()" );
+        policy.assertCallbacks( "match(SHA-1, REMOTE_INCLUDED)", "match(SHA-1, REMOTE_EXTERNAL)", "noMore()" );
     }
 
     @Test
@@ -342,7 +349,7 @@ public class ChecksumValidatorTest
         fetcher.mock( MD5, "bar" );
         validator.validate( checksums( MD5, "bar" ), null );
         fetcher.assertFetchedFiles( SHA1, MD5 );
-        policy.assertCallbacks( "match(MD5, 0000)" );
+        policy.assertCallbacks( "match(MD5, REMOTE_EXTERNAL)" );
     }
 
     @Test
@@ -354,7 +361,7 @@ public class ChecksumValidatorTest
         fetcher.mock( MD5, "bar" );
         validator.validate( checksums( MD5, "bar" ), null );
         fetcher.assertFetchedFiles( SHA1, MD5 );
-        policy.assertCallbacks( "error(SHA-1, 0000, inaccessible)", "match(MD5, 0000)" );
+        policy.assertCallbacks( "error(SHA-1, REMOTE_EXTERNAL, inaccessible)", "match(MD5, REMOTE_EXTERNAL)" );
     }
 
     @Test
@@ -366,7 +373,7 @@ public class ChecksumValidatorTest
         fetcher.mock( MD5, "bar" );
         validator.validate( checksums( SHA1, null, MD5, "bar" ), null );
         fetcher.assertFetchedFiles( MD5 );
-        policy.assertCallbacks( "error(SHA-1, 0000, error)", "match(MD5, 0000)" );
+        policy.assertCallbacks( "error(SHA-1, REMOTE_EXTERNAL, error)", "match(MD5, REMOTE_EXTERNAL)" );
     }
 
     @Test

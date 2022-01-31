@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.transfer.ChecksumFailureException;
@@ -45,6 +46,10 @@ final class ChecksumValidator
     interface ChecksumFetcher
     {
 
+        /**
+         * Fetches the checksums from remote location into provided local file. The checksums fetched in this way
+         * are of kind {@link ChecksumKind#REMOTE_EXTERNAL}.
+         */
         boolean fetchChecksum( URI remote, File local )
             throws Exception;
 
@@ -62,6 +67,8 @@ final class ChecksumValidator
 
     private final ChecksumPolicy checksumPolicy;
 
+    private final Map<String, String> providedChecksums;
+
     private final Collection<ChecksumLocation> checksumLocations;
 
     private final Map<File, Object> checksumFiles;
@@ -70,6 +77,7 @@ final class ChecksumValidator
                        FileProcessor fileProcessor,
                        ChecksumFetcher checksumFetcher,
                        ChecksumPolicy checksumPolicy,
+                       Map<String, String> providedChecksums,
                        Collection<ChecksumLocation> checksumLocations )
     {
         this.dataFile = dataFile;
@@ -77,6 +85,7 @@ final class ChecksumValidator
         this.fileProcessor = fileProcessor;
         this.checksumFetcher = checksumFetcher;
         this.checksumPolicy = checksumPolicy;
+        this.providedChecksums = providedChecksums;
         this.checksumLocations = checksumLocations;
         this.checksumFiles = new HashMap<>();
     }
@@ -90,14 +99,20 @@ final class ChecksumValidator
         return null;
     }
 
-    public void validate( Map<String, ?> actualChecksums, Map<String, ?> inlinedChecksums )
+    public void validate( Map<String, ?> actualChecksums, Map<String, ?> includedChecksums )
         throws ChecksumFailureException
     {
         if ( checksumPolicy == null )
         {
             return;
         }
-        if ( inlinedChecksums != null && validateInlinedChecksums( actualChecksums, inlinedChecksums ) )
+        if ( providedChecksums != null
+               && validateChecksums( actualChecksums, ChecksumKind.PROVIDED, providedChecksums ) )
+        {
+            return;
+        }
+        if ( includedChecksums != null
+               && validateChecksums( actualChecksums, ChecksumKind.REMOTE_INCLUDED, includedChecksums ) )
         {
             return;
         }
@@ -108,10 +123,10 @@ final class ChecksumValidator
         checksumPolicy.onNoMoreChecksums();
     }
 
-    private boolean validateInlinedChecksums( Map<String, ?> actualChecksums, Map<String, ?> inlinedChecksums )
+    private boolean validateChecksums( Map<String, ?> actualChecksums, ChecksumKind kind, Map<String, ?> checksums )
         throws ChecksumFailureException
     {
-        for ( Map.Entry<String, ?> entry : inlinedChecksums.entrySet() )
+        for ( Map.Entry<String, ?> entry : checksums.entrySet() )
         {
             String algo = entry.getKey();
             Object calculated = actualChecksums.get( algo );
@@ -135,10 +150,10 @@ final class ChecksumValidator
 
             if ( !isEqualChecksum( expected, actual ) )
             {
-                checksumPolicy.onChecksumMismatch( factory.getName(), ChecksumPolicy.KIND_UNOFFICIAL,
+                checksumPolicy.onChecksumMismatch( factory.getName(), kind,
                                                    new ChecksumFailureException( expected, actual ) );
             }
-            else if ( checksumPolicy.onChecksumMatch( factory.getName(), ChecksumPolicy.KIND_UNOFFICIAL ) )
+            else if ( checksumPolicy.onChecksumMatch( factory.getName(), kind ) )
             {
                 return true;
             }
@@ -156,7 +171,9 @@ final class ChecksumValidator
             if ( calculated instanceof Exception )
             {
                 checksumPolicy.onChecksumError(
-                        factory.getName(), 0, new ChecksumFailureException( (Exception) calculated ) );
+                        factory.getName(), ChecksumKind.REMOTE_EXTERNAL,
+                        new ChecksumFailureException( (Exception) calculated )
+                );
                 continue;
             }
             try
@@ -165,14 +182,18 @@ final class ChecksumValidator
                 File tmp = createTempFile( checksumFile );
                 try
                 {
-                    if ( !checksumFetcher.fetchChecksum( checksumLocation.getLocation(), tmp ) )
+                    if ( !checksumFetcher.fetchChecksum(
+                        checksumLocation.getLocation(), tmp
+                    ) )
                     {
                         continue;
                     }
                 }
                 catch ( Exception e )
                 {
-                    checksumPolicy.onChecksumError( factory.getName(), 0, new ChecksumFailureException( e ) );
+                    checksumPolicy.onChecksumError(
+                        factory.getName(), ChecksumKind.REMOTE_EXTERNAL, new ChecksumFailureException( e )
+                    );
                     continue;
                 }
 
@@ -183,16 +204,20 @@ final class ChecksumValidator
                 if ( !isEqualChecksum( expected, actual ) )
                 {
                     checksumPolicy.onChecksumMismatch(
-                            factory.getName(), 0, new ChecksumFailureException( expected, actual ) );
+                        factory.getName(), ChecksumKind.REMOTE_EXTERNAL,
+                            new ChecksumFailureException( expected, actual )
+                    );
                 }
-                else if ( checksumPolicy.onChecksumMatch( factory.getName(), 0 ) )
+                else if ( checksumPolicy.onChecksumMatch( factory.getName(), ChecksumKind.REMOTE_EXTERNAL ) )
                 {
                     return true;
                 }
             }
             catch ( IOException e )
             {
-                checksumPolicy.onChecksumError( factory.getName(), 0, new ChecksumFailureException( e ) );
+                checksumPolicy.onChecksumError(
+                    factory.getName(), ChecksumKind.REMOTE_EXTERNAL, new ChecksumFailureException( e )
+                );
             }
         }
         return false;

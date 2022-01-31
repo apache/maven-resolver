@@ -209,9 +209,10 @@ public final class GetTask
 
     /**
      * Gets the checksums which the remote repository advertises for the resource. The map is keyed by algorithm name
-     * (cf. {@link java.security.MessageDigest#getInstance(String)}) and the values are hexadecimal representations of
-     * the corresponding value. <em>Note:</em> This is optional data that a transporter may return if the underlying
-     * transport protocol provides metadata (e.g. HTTP headers) along with the actual resource data.
+     * and the values are hexadecimal representations of the corresponding value. <em>Note:</em> This is optional
+     * data that a transporter may return if the underlying transport protocol provides metadata (e.g. HTTP headers)
+     * along with the actual resource data. Checksums returned by this method have kind of
+     * {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#REMOTE_INCLUDED}.
      * 
      * @return The (read-only) checksums advertised for the downloaded resource, possibly empty but never {@code null}.
      */
@@ -225,8 +226,7 @@ public final class GetTask
      * use this method to record checksum information which is readily available while performing the actual download,
      * they should not perform additional transfers to gather this data.
      * 
-     * @param algorithm The name of the checksum algorithm (e.g. {@code "SHA-1"}, cf.
-     *            {@link java.security.MessageDigest#getInstance(String)} ), may be {@code null}.
+     * @param algorithm The name of the checksum algorithm (e.g. {@code "SHA-1"}, may be {@code null}.
      * @param value The hexadecimal representation of the checksum, may be {@code null}.
      * @return This task for chaining, never {@code null}.
      */
