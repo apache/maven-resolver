@@ -36,6 +36,7 @@ import java.util.Map;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.junit.Before;
@@ -272,6 +273,7 @@ public class ChecksumValidatorTest
         catch ( ChecksumFailureException e )
         {
             assertEquals( "foo", e.getExpected() );
+            assertEquals( ChecksumKind.REMOTE_EXTERNAL.name(), e.getExpectedKind() );
             assertEquals( "not-foo", e.getActual() );
             assertTrue( e.isRetryWorthy() );
         }
@@ -307,6 +309,7 @@ public class ChecksumValidatorTest
         catch ( ChecksumFailureException e )
         {
             assertEquals( "foo", e.getExpected() );
+            assertEquals( ChecksumKind.REMOTE_EXTERNAL.name(), e.getExpectedKind() );
             assertEquals( "not-foo", e.getActual() );
             assertTrue( e.isRetryWorthy() );
         }

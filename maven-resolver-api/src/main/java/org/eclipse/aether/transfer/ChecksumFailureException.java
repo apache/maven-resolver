@@ -30,6 +30,8 @@ public class ChecksumFailureException
 
     private final String expected;
 
+    private final String expectedKind;
+
     private final String actual;
 
     private final boolean retryWorthy;
@@ -40,13 +42,32 @@ public class ChecksumFailureException
      * 
      * @param expected The expected checksum as declared by the hosting repository, may be {@code null}.
      * @param actual The actual checksum as computed from the local bytes, may be {@code null}.
+     * @deprecated Does not reveal expected checksum kind, use other constructor that provide that information as well.
      */
+    @Deprecated
     public ChecksumFailureException( String expected, String actual )
     {
-        super( "Checksum validation failed, expected " + expected + " but is " + actual );
+        this( expected, null, actual );
+    }
+
+    /**
+     * Creates a new exception with the specified expected, expected kind and actual checksum. The resulting exception
+     * is {@link #isRetryWorthy() retry-worthy}.
+     *
+     * @param expected The expected checksum as declared by the hosting repository, may be {@code null}.
+     * @param expectedKind The expected checksum kind, may be {@code null}.
+     * @param actual The actual checksum as computed from the local bytes, may be {@code null}.
+     * @since 1.8.0
+     */
+    public ChecksumFailureException( String expected, String expectedKind, String actual )
+    {
+        super( "Checksum validation failed, expected '"
+            + expected + "'" + ( expectedKind == null ? "" : " (" + expectedKind + ")" )
+            + " but is actually '" + actual + "'" );
         this.expected = expected;
+        this.expectedKind = expectedKind;
         this.actual = actual;
-        retryWorthy = true;
+        this.retryWorthy = true;
     }
 
     /**
@@ -93,8 +114,9 @@ public class ChecksumFailureException
     public ChecksumFailureException( boolean retryWorthy, String message, Throwable cause )
     {
         super( message, cause );
-        expected = "";
-        actual = "";
+        this.expected = "";
+        this.expectedKind = "";
+        this.actual = "";
         this.retryWorthy = retryWorthy;
     }
 
@@ -106,6 +128,17 @@ public class ChecksumFailureException
     public String getExpected()
     {
         return expected;
+    }
+
+    /**
+     * Gets the expected checksum kind for the downloaded artifact/metadata.
+     *
+     * @return The expected checksum kind or {@code null} if unknown.
+     * @since 1.8.0
+     */
+    public String getExpectedKind()
+    {
+        return expectedKind;
     }
 
     /**
