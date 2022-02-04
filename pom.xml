@@ -281,6 +281,15 @@
     </dependencies>
   </dependencyManagement>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.sisu</groupId>
+      <artifactId>org.eclipse.sisu.inject</artifactId>
+      <version>0.3.5</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+
   <build>
     <pluginManagement>
       <plugins>
@@ -414,20 +423,6 @@
           </executions>
         </plugin>
         <plugin>
-          <groupId>org.eclipse.sisu</groupId>
-          <artifactId>sisu-maven-plugin</artifactId>
-          <version>${sisuVersion}</version>
-          <executions>
-            <execution>
-              <id>generate-index</id>
-              <phase>process-classes</phase>
-              <goals>
-                <goal>main-index</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
@@ -442,10 +437,11 @@
         <plugin>
           <groupId>biz.aQute.bnd</groupId>
           <artifactId>bnd-maven-plugin</artifactId>
-          <version>5.1.2</version>
+          <version>6.1.0</version>
           <executions>
             <execution>
               <id>bnd-process</id>
+              <phase>process-classes</phase>
               <goals>
                 <goal>bnd-process</goal>
               </goals>
@@ -457,6 +453,105 @@
                   # Reproducible build
                   -noextraheaders: true
                 </bnd>
+                <manifestPath>${project.build.directory}/bnd/META-INF/MANIFEST.MF</manifestPath>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.2.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.shared</groupId>
+              <artifactId>maven-shared-utils</artifactId>
+              <version>3.3.4</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>copy-manifest</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                <resources>
+                  <resource>
+                    <!-- use filtering to make sure the content is checked before being overwritten -->
+                    <filtering>true</filtering>
+                    <directory>${project.build.directory}/bnd</directory>
+                  </resource>
+                </resources>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.2.0</version>
+          <configuration>
+            <archive>
+              <manifestEntries>
+                <Automatic-Module-Name>${Automatic-Module-Name}</Automatic-Module-Name>
+              </manifestEntries>
+            </archive>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>biz.aQute.bnd</groupId>
+          <artifactId>bnd-maven-plugin</artifactId>
+          <version>6.1.0</version>
+          <executions>
+            <execution>
+              <id>bnd-process</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>bnd-process</goal>
+              </goals>
+              <configuration>
+                <bnd>
+                  Bundle-SymbolicName: ${Bundle-SymbolicName}
+                  # Export packages not containing the substring 'internal'
+                  -exportcontents: ${removeall;${packages};${packages;NAMED;*internal*}}
+                  # Reproducible build
+                  -noextraheaders: true
+                </bnd>
+                <manifestPath>${project.build.directory}/bnd/META-INF/MANIFEST.MF</manifestPath>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.2.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.shared</groupId>
+              <artifactId>maven-shared-utils</artifactId>
+              <version>3.3.4</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>copy-manifest</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                <resources>
+                  <resource>
+                    <!-- use filtering to make sure the content is checked before being overwritten -->
+                    <filtering>true</filtering>
+                    <directory>${project.build.directory}/bnd</directory>
+                  </resource>
+                </resources>
               </configuration>
             </execution>
           </executions>
@@ -508,6 +603,15 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/package-info.java</exclude>
+          </excludes>
+        </configuration>
       </plugin>
     </plugins>
   </build>
