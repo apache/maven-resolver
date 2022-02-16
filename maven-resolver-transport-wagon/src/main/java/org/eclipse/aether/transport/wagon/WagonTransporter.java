@@ -409,7 +409,7 @@ final class WagonTransporter
     private void execute( TransportTask task, TaskRunner runner )
         throws Exception
     {
-        Objects.requireNonNull( "task", "task cannot be null" );
+        Objects.requireNonNull( task, "task cannot be null" );
 
         if ( closed.get() )
         {
