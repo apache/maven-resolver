@@ -36,6 +36,10 @@
     Maven Artifact Resolver demos, showing concrete code to use Maven Artifact Resolver with Maven repositories.
   </description>
 
+  <properties>
+    <mavenVersion>3.8.4</mavenVersion>
+  </properties>
+
   <modules>
     <module>maven-resolver-demo-snippets</module>
     <module>maven-resolver-demo-maven-plugin</module>

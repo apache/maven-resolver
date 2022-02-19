@@ -37,12 +37,8 @@
   </description>
 
   <prerequisites>
-    <maven>3.5.0</maven>
+    <maven>${mavenVersion}</maven>
   </prerequisites>
-
-  <properties>
-    <mavenVersion>3.5.0</mavenVersion>
-  </properties>
 
   <dependencies>
     <dependency>
