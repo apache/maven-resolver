@@ -38,7 +38,6 @@
 
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.demo.snippets</Automatic-Module-Name>
-    <mavenVersion>3.8.3</mavenVersion>
   </properties>
 
   <dependencyManagement>
