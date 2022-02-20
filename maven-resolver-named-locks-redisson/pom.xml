@@ -127,7 +127,7 @@
 
   <profiles>
     <profile>
-      <id>it</id>
+      <id>run-its</id>
       <build>
         <plugins>
           <plugin>
