@@ -742,13 +742,13 @@ public class DefaultDependencyCollector
                 if ( errorPath == null )
                 {
                     StringBuilder buffer = new StringBuilder( 256 );
-                    for ( int i = 0; i < nodes.size(); i++ )
+                    for ( DependencyNode node : nodes )
                     {
                         if ( buffer.length() > 0 )
                         {
                             buffer.append( " -> " );
                         }
-                        Dependency dep = nodes.get( i ).getDependency();
+                        Dependency dep = node.getDependency();
                         if ( dep != null )
                         {
                             buffer.append( dep.getArtifact() );
