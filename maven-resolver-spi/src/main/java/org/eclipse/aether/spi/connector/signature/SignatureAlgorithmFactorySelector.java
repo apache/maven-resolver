@@ -36,7 +36,7 @@ public interface SignatureAlgorithmFactorySelector
     SignatureAlgorithmFactory select( String algorithmName );
 
     /**
-     * Returns a collection of supported algorithm names. This set represents ALL the algorithms supported by Resolver,
+     * Returns a collection of supported algorithms. This set represents ALL the algorithms supported by Resolver,
      * and is NOT in any relation to given repository layout used signatures, returned by method {@link
      * org.eclipse.aether.spi.connector.layout.RepositoryLayout#getSignatureAlgorithmFactories()} (in fact, is super set
      * of it).
