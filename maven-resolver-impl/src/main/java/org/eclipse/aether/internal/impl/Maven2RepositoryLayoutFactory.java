@@ -134,7 +134,7 @@ public final class Maven2RepositoryLayoutFactory
         LinkedHashSet<String> signatureAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
                 ConfigUtils.getString(
                         session, DEFAULT_SIGNATURE_ALGORITHMS, CONFIG_PROP_SIGNATURE_ALGORITHMS
-                ).split( "," )
+                ).split( "," ) )
         );
 
         List<SignatureAlgorithmFactory> signatureAlgorithms = new ArrayList<>( signatureAlgorithmNames.size() );
