@@ -227,6 +227,7 @@ final class BasicRepositoryConnector
 
         Executor executor = getExecutor( artifactDownloads, metadataDownloads );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
+        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
         for ( MetadataDownload transfer : safe( metadataDownloads ) )
         {
@@ -244,7 +245,7 @@ final class BasicRepositoryConnector
             }
 
             Runnable task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
-                    checksumLocations, null, listener );
+                    checksumAlgorithmFactories, checksumLocations, null, listener );
             executor.execute( errorForwarder.wrap( task ) );
         }
 
@@ -254,7 +255,7 @@ final class BasicRepositoryConnector
             for ( ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources.values() )
             {
                 Map<String, String> provided = providedChecksumsSource.getProvidedArtifactChecksums(
-                    session, transfer, layout.getChecksumAlgorithmFactories() );
+                    session, transfer, checksumAlgorithmFactories );
 
                 if ( provided != null )
                 {
@@ -284,7 +285,7 @@ final class BasicRepositoryConnector
                 }
 
                 task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
-                    checksumLocations, providedChecksums, listener );
+                        checksumAlgorithmFactories, checksumLocations, providedChecksums, listener );
             }
             executor.execute( errorForwarder.wrap( task ) );
         }
@@ -434,13 +435,14 @@ final class BasicRepositoryConnector
         private final ChecksumValidator checksumValidator;
 
         GetTaskRunner( URI path, File file, ChecksumPolicy checksumPolicy,
+                       List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
                        List<RepositoryLayout.ChecksumLocation> checksumLocations,
                        Map<String, String> providedChecksums,
                        TransferTransportListener<?> listener )
         {
             super( path, listener );
             this.file = requireNonNull( file, "destination file cannot be null" );
-            checksumValidator = new ChecksumValidator( file, fileProcessor, this,
+            checksumValidator = new ChecksumValidator( file, checksumAlgorithmFactories, fileProcessor, this,
                     checksumPolicy, providedChecksums, safe( checksumLocations ) );
         }
 
