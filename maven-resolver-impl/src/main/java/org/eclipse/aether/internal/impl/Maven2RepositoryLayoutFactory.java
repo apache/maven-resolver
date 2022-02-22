@@ -117,7 +117,7 @@ public final class Maven2RepositoryLayoutFactory
             throw new NoRepositoryLayoutException( repository );
         }
         boolean forSignature = ConfigUtils.getBoolean( session, false, CONFIG_PROP_SIGNATURE_CHECKSUMS );
-        // ensure order of (potentially user set) algorithm list is kept and is unique
+        // ensure order and uniqueness of (potentially user set) algorithm list
         LinkedHashSet<String> checksumsAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
                 ConfigUtils.getString(
                         session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS
@@ -130,8 +130,8 @@ public final class Maven2RepositoryLayoutFactory
             checksumsAlgorithms.add( checksumAlgorithmFactorySelector.select( checksumsAlgorithmName ) );
         }
 
-        // no need for order here
-        List<String> signatureAlgorithmNames = Arrays.asList(
+        // ensure order and uniqueness of (potentially user set) algorithm list
+        LinkedHashSet<String> signatureAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
                 ConfigUtils.getString(
                         session, DEFAULT_SIGNATURE_ALGORITHMS, CONFIG_PROP_SIGNATURE_ALGORITHMS
                 ).split( "," )
