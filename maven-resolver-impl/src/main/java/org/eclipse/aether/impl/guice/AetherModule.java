@@ -48,6 +48,8 @@ import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.signature.DefaultSignatureAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.signature.GpgSignatureAlgorithmFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
@@ -90,6 +92,8 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
+import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactory;
+import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
@@ -184,6 +188,11 @@ public class AetherModule
         bind( ChecksumAlgorithmFactorySelector.class )
                 .to( DefaultChecksumAlgorithmFactorySelector.class ).in ( Singleton.class );
 
+        bind( SignatureAlgorithmFactory.class ).annotatedWith( Names.named( GpgSignatureAlgorithmFactory.NAME ) )
+                .to( GpgSignatureAlgorithmFactory.class );
+        bind( SignatureAlgorithmFactorySelector.class )
+                .to( DefaultSignatureAlgorithmFactorySelector.class ).in ( Singleton.class );
+
         bind( NamedLockFactorySelector.class ).to( SimpleNamedLockFactorySelector.class ).in( Singleton.class );
         bind( SyncContextFactory.class ).to( DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( org.eclipse.aether.impl.SyncContextFactory.class )
@@ -236,6 +245,16 @@ public class AetherModule
         checksumTypes.put( Sha256ChecksumAlgorithmFactory.NAME, sha256 );
         checksumTypes.put( Sha1ChecksumAlgorithmFactory.NAME, sha1 );
         checksumTypes.put( Md5ChecksumAlgorithmFactory.NAME, md5 );
+        return Collections.unmodifiableMap( checksumTypes );
+    }
+
+    @Provides
+    @Singleton
+    Map<String, SignatureAlgorithmFactory> provideSignatureTypes(
+            @Named( GpgSignatureAlgorithmFactory.NAME ) SignatureAlgorithmFactory gpg )
+    {
+        Map<String, SignatureAlgorithmFactory> checksumTypes = new HashMap<>();
+        checksumTypes.put( GpgSignatureAlgorithmFactory.NAME, gpg );
         return Collections.unmodifiableMap( checksumTypes );
     }
 

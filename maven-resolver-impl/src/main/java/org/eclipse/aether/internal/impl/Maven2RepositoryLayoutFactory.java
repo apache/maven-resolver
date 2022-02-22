@@ -34,12 +34,15 @@ import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.signature.DefaultSignatureAlgorithmFactorySelector;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
+import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactory;
+import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactorySelector;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -55,13 +58,20 @@ public final class Maven2RepositoryLayoutFactory
 {
 
     static final String CONFIG_PROP_SIGNATURE_CHECKSUMS = "aether.checksums.forSignature";
+
     static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
 
     static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
+    static final String CONFIG_PROP_SIGNATURE_ALGORITHMS = "aether.signatures.algorithms";
+
+    static final String DEFAULT_SIGNATURE_ALGORITHMS = "GPG";
+
     private float priority;
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
+
+    private final SignatureAlgorithmFactorySelector signatureAlgorithmFactorySelector;
 
     public float getPriority()
     {
@@ -74,13 +84,15 @@ public final class Maven2RepositoryLayoutFactory
     @Deprecated
     public Maven2RepositoryLayoutFactory()
     {
-        this( new DefaultChecksumAlgorithmFactorySelector() );
+        this( new DefaultChecksumAlgorithmFactorySelector(), new DefaultSignatureAlgorithmFactorySelector() );
     }
 
     @Inject
-    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector )
+    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
+                                          SignatureAlgorithmFactorySelector signatureAlgorithmFactorySelector )
     {
         this.checksumAlgorithmFactorySelector = requireNonNull( checksumAlgorithmFactorySelector );
+        this.signatureAlgorithmFactorySelector = requireNonNull( signatureAlgorithmFactorySelector );
     }
 
     /**
@@ -118,20 +130,37 @@ public final class Maven2RepositoryLayoutFactory
             checksumsAlgorithms.add( checksumAlgorithmFactorySelector.select( checksumsAlgorithmName ) );
         }
 
+        // no need for order here
+        List<String> signatureAlgorithmNames = Arrays.asList(
+                ConfigUtils.getString(
+                        session, DEFAULT_SIGNATURE_ALGORITHMS, CONFIG_PROP_SIGNATURE_ALGORITHMS
+                ).split( "," )
+        );
+
+        List<SignatureAlgorithmFactory> signatureAlgorithms = new ArrayList<>( signatureAlgorithmNames.size() );
+        for ( String signatureAlgorithmName : signatureAlgorithmNames )
+        {
+            signatureAlgorithms.add( signatureAlgorithmFactorySelector.select( signatureAlgorithmName ) );
+        }
+
         return forSignature
-                ? new Maven2RepositoryLayout( checksumsAlgorithms )
-                : new Maven2RepositoryLayoutEx( checksumsAlgorithms );
+                ? new Maven2RepositoryLayout( checksumsAlgorithms, signatureAlgorithms )
+                : new Maven2RepositoryLayoutEx( checksumsAlgorithms, signatureAlgorithms );
     }
 
     private static class Maven2RepositoryLayout
             implements RepositoryLayout
     {
 
-        private final List<ChecksumAlgorithmFactory> checksumAlgorithms;
+        protected final List<ChecksumAlgorithmFactory> checksumAlgorithms;
 
-        protected Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms )
+        protected final List<SignatureAlgorithmFactory> signatureAlgorithms;
+
+        protected Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms,
+                                          List<SignatureAlgorithmFactory> signatureAlgorithms )
         {
             this.checksumAlgorithms = Collections.unmodifiableList( checksumAlgorithms );
+            this.signatureAlgorithms = Collections.unmodifiableList( signatureAlgorithms );
         }
 
         private URI toUri( String path )
@@ -150,6 +179,12 @@ public final class Maven2RepositoryLayoutFactory
         public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
         {
             return checksumAlgorithms;
+        }
+
+        @Override
+        public List<SignatureAlgorithmFactory> getSignatureAlgorithmFactories()
+        {
+            return signatureAlgorithms;
         }
 
         @Override
@@ -206,6 +241,10 @@ public final class Maven2RepositoryLayoutFactory
         @Override
         public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
+            if ( isChecksum( artifact.getExtension() ) )
+            {
+                return Collections.emptyList();
+            }
             return getChecksumLocations( location );
         }
 
@@ -225,15 +264,20 @@ public final class Maven2RepositoryLayoutFactory
             return checksumLocations;
         }
 
+        private boolean isChecksum( String extension )
+        {
+            return checksumAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
+        }
     }
 
     private static class Maven2RepositoryLayoutEx
             extends Maven2RepositoryLayout
     {
 
-        protected Maven2RepositoryLayoutEx( List<ChecksumAlgorithmFactory> checksumAlgorithms )
+        protected Maven2RepositoryLayoutEx( List<ChecksumAlgorithmFactory> checksumAlgorithms,
+                                            List<SignatureAlgorithmFactory> signatureAlgorithms )
         {
-            super( checksumAlgorithms );
+            super( checksumAlgorithms, signatureAlgorithms );
         }
 
         @Override
@@ -248,7 +292,7 @@ public final class Maven2RepositoryLayoutFactory
 
         private boolean isSignature( String extension )
         {
-            return extension.endsWith( ".asc" );
+            return signatureAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
         }
 
     }

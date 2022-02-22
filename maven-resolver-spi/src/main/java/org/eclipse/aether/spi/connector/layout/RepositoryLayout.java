@@ -27,6 +27,7 @@ import static java.util.Objects.requireNonNull;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactory;
 
 /**
  * The layout for a remote repository whose artifacts/metadata can be addressed via URIs.
@@ -134,6 +135,13 @@ public interface RepositoryLayout
     List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
 
     /**
+     * Returns immutable list of {@link SignatureAlgorithmFactory} this instance of layout uses, never {@code null}.
+     *
+     * @since 1.8.0
+     */
+    List<SignatureAlgorithmFactory> getSignatureAlgorithmFactories();
+
+    /**
      * Gets the location within a remote repository where the specified artifact resides. The URI is relative to the
      * root directory of the repository.
      *
@@ -164,7 +172,8 @@ public interface RepositoryLayout
      *                 being uploaded/created.
      * @param location The relative URI to the artifact within the repository as previously obtained from
      *                 {@link #getLocation(Artifact, boolean)}, must not be {@code null}.
-     * @return The checksum files for the given artifact, possibly empty but never {@code null}.
+     * @return The checksum files for the given artifact, possibly empty but never {@code null}. If empty, that means
+     * that this layout does not provide checksums for given artifact.
      */
     List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location );
 
@@ -177,7 +186,8 @@ public interface RepositoryLayout
      *                 being uploaded/created.
      * @param location The relative URI to the metadata within the repository as previously obtained from
      *                 {@link #getLocation(Metadata, boolean)}, must not be {@code null}.
-     * @return The checksum files for the given metadata, possibly empty but never {@code null}.
+     * @return The checksum files for the given metadata, possibly empty but never {@code null}. If empty, that means
+     * that this layout does not provide checksums for given artifact.
      */
     List<ChecksumLocation> getChecksumLocations( Metadata metadata, boolean upload, URI location );
 

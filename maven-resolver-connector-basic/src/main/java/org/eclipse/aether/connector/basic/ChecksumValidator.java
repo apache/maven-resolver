@@ -120,11 +120,14 @@ final class ChecksumValidator
         {
             return;
         }
-        if ( validateExternalChecksums( actualChecksums ) )
+        if ( !checksumLocations.isEmpty() )
         {
-            return;
+            if ( validateExternalChecksums( actualChecksums ) )
+            {
+                return;
+            }
+            checksumPolicy.onNoMoreChecksums();
         }
-        checksumPolicy.onNoMoreChecksums();
     }
 
     private boolean validateChecksums( Map<String, ?> actualChecksums, ChecksumKind kind, Map<String, ?> checksums )
