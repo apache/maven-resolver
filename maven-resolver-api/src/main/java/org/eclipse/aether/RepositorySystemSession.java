@@ -37,7 +37,7 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transform.FileTransformerManager;
+import org.eclipse.aether.transform.ArtifactTransformerManager;
 
 /**
  * Defines settings and components that control the repository system. Once initialized, the session object itself is
@@ -266,6 +266,6 @@ public interface RepositorySystemSession
      * 
      * @return the manager, never {@code null}
      */
-    FileTransformerManager getFileTransformerManager();
+    ArtifactTransformerManager getFileTransformerManager();
 
 }

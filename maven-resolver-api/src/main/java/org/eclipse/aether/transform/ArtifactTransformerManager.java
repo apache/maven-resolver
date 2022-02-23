@@ -19,36 +19,27 @@ package org.eclipse.aether.transform;
  * under the License.
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Collection;
 
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Can transform a file while installing/deploying
+ * Manager the FileTransformers 
  * 
  * @author Robert Scholte
  * @since 1.3.0
  */
-public interface FileTransformer
+public interface ArtifactTransformerManager
 {
     /**
-     * Transform the target location  
-     * 
-     * @param artifact the original artifact
-     * @return the transformed artifact
+     * <p>
+     * All transformers for this specific artifact. Be aware that if you want to create additional files, but also want
+     * to the original to be deployed, you must add an explicit transformer for that file too (one that doesn't
+     * transform the artifact and data).
+     * </p>
+     *
+     * @param artifact the artifact
+     * @return a collection of FileTransformers to apply on the artifact, never {@code null}
      */
-    Artifact transformArtifact( Artifact artifact );
-    
-    /**
-     * Transform the data
-     * 
-     * @param file the file with the original data
-     * @return the transformed data
-     * @throws IOException If an I/O error occurred
-     * @throws TransformException If the file could not be transformed
-     */
-    InputStream transformData( File file )
-        throws IOException, TransformException;
+    Collection<ArtifactTransformer> getTransformersForArtifact( Artifact artifact );
 }

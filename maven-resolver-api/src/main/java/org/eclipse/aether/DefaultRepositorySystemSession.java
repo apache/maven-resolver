@@ -47,8 +47,8 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transform.FileTransformer;
-import org.eclipse.aether.transform.FileTransformerManager;
+import org.eclipse.aether.transform.ArtifactTransformer;
+import org.eclipse.aether.transform.ArtifactTransformerManager;
 
 /**
  * A simple repository system session.
@@ -78,7 +78,7 @@ public final class DefaultRepositorySystemSession
 
     private LocalRepositoryManager localRepositoryManager;
 
-    private FileTransformerManager fileTransformerManager;
+    private ArtifactTransformerManager fileTransformerManager;
 
     private WorkspaceReader workspaceReader;
 
@@ -329,12 +329,12 @@ public final class DefaultRepositorySystemSession
     }
 
     @Override
-    public FileTransformerManager getFileTransformerManager()
+    public ArtifactTransformerManager getFileTransformerManager()
     {
         return fileTransformerManager;
     }
 
-    public DefaultRepositorySystemSession setFileTransformerManager( FileTransformerManager fileTransformerManager )
+    public DefaultRepositorySystemSession setFileTransformerManager( ArtifactTransformerManager fileTransformerManager )
     {
         failIfReadOnly();
         this.fileTransformerManager = fileTransformerManager;
@@ -862,12 +862,12 @@ public final class DefaultRepositorySystemSession
 
     }
 
-    static final class NullFileTransformerManager implements FileTransformerManager
+    static final class NullFileTransformerManager implements ArtifactTransformerManager
     {
-        public static final FileTransformerManager INSTANCE = new NullFileTransformerManager();
+        public static final ArtifactTransformerManager INSTANCE = new NullFileTransformerManager();
 
         @Override
-        public Collection<FileTransformer> getTransformersForArtifact( Artifact artifact )
+        public Collection<ArtifactTransformer> getTransformersForArtifact( Artifact artifact )
         {
             return Collections.emptyList();
         }

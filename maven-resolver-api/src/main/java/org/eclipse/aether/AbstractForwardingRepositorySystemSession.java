@@ -36,7 +36,7 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transform.FileTransformerManager;
+import org.eclipse.aether.transform.ArtifactTransformerManager;
 
 /**
  * A special repository system session to enable decorating or proxying another session. To do so, clients have to
@@ -213,7 +213,7 @@ public abstract class AbstractForwardingRepositorySystemSession
     }
     
     @Override
-    public FileTransformerManager getFileTransformerManager()
+    public ArtifactTransformerManager getFileTransformerManager()
     {
         return getSession().getFileTransformerManager();
     }

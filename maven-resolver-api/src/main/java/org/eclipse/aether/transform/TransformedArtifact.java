@@ -19,31 +19,20 @@ package org.eclipse.aether.transform;
  * under the License.
  */
 
-import java.util.Collection;
+import java.io.Closeable;
 
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Manager the FileTransformers 
+ * The transformed artifact. This instance is handled by resolver as a resource, {@link #close()} is called immediately
+ * after install/deploy happened, allowing this instance to perform any kind of cleanup.
  * 
- * @author Robert Scholte
- * @since 1.3.0
+ * @since TBD
  */
-public interface FileTransformerManager
+public interface TransformedArtifact extends Closeable
 {
     /**
-     * <p>
-     * All transformers for this specific artifact. Be aware that if you want to create additional files, but also want
-     * to the original to be deployed, you must add an explicit transformer for that file too (one that doesn't
-     * transform the artifact and data).
-     * </p>
-     * 
-     * <p><strong>IMPORTANT</strong> When using a fileTransformer, the content of the file is stored in memory to ensure
-     * that file content and checksums stay in sync!
-     * </p>
-     * 
-     * @param artifact the artifact
-     * @return a collection of FileTransformers to apply on the artifact, never {@code null}
+     * Returns the transformed artifact, never {@code null}.
      */
-    Collection<FileTransformer> getTransformersForArtifact( Artifact artifact );
+    Artifact getArtifact();
 }

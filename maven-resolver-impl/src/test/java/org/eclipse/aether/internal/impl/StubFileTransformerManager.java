@@ -25,24 +25,24 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.transform.FileTransformer;
-import org.eclipse.aether.transform.FileTransformerManager;
+import org.eclipse.aether.transform.ArtifactTransformer;
+import org.eclipse.aether.transform.ArtifactTransformerManager;
 
-public class StubFileTransformerManager implements FileTransformerManager
+public class StubFileTransformerManager implements ArtifactTransformerManager
 {
-    private Map<String, Collection<FileTransformer>> fileTransformers = new HashMap<>();
+    private Map<String, Collection<ArtifactTransformer>> fileTransformers = new HashMap<>();
     
     @Override
-    public Collection<FileTransformer> getTransformersForArtifact( Artifact artifact )
+    public Collection<ArtifactTransformer> getTransformersForArtifact( Artifact artifact )
     {
         return fileTransformers.get( artifact.getExtension() );
     }
     
-    public void addFileTransformer( String extension, FileTransformer fileTransformer )
+    public void addFileTransformer( String extension, ArtifactTransformer fileTransformer )
     {
         if ( !fileTransformers.containsKey( extension ) )
         {
-            fileTransformers.put( extension, new HashSet<FileTransformer>() );
+            fileTransformers.put( extension, new HashSet<ArtifactTransformer>() );
         }
         fileTransformers.get( extension ).add( fileTransformer );
     }

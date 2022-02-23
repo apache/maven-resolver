@@ -21,10 +21,8 @@ package org.eclipse.aether.connector.basic;
 
 import static java.util.Objects.requireNonNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,7 +63,6 @@ import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
-import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
@@ -312,8 +309,7 @@ final class BasicRepositoryConnector
             List<RepositoryLayout.ChecksumLocation> checksumLocations =
                     layout.getChecksumLocations( transfer.getArtifact(), true, location );
 
-            Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(),
-                    checksumLocations, listener );
+            Runnable task = new PutTaskRunner( location, transfer.getFile(), checksumLocations, listener );
             task.run();
         }
 
@@ -537,33 +533,13 @@ final class BasicRepositoryConnector
 
         private final File file;
 
-        private final FileTransformer fileTransformer;
-
         private final Collection<RepositoryLayout.ChecksumLocation> checksumLocations;
 
         PutTaskRunner( URI path, File file, List<RepositoryLayout.ChecksumLocation> checksumLocations,
                        TransferTransportListener<?> listener )
         {
-            this( path, file, null, checksumLocations, listener );
-        }
-
-        /**
-         * <strong>IMPORTANT</strong> When using a fileTransformer, the content of the file is stored in memory to
-         * ensure that file content and checksums stay in sync!
-         *
-         * @param path
-         * @param file
-         * @param fileTransformer
-         * @param checksumLocations
-         * @param listener
-         */
-        PutTaskRunner( URI path, File file, FileTransformer fileTransformer,
-                       List<RepositoryLayout.ChecksumLocation> checksumLocations,
-                       TransferTransportListener<?> listener )
-        {
             super( path, listener );
             this.file = requireNonNull( file, "source file cannot be null" );
-            this.fileTransformer = fileTransformer;
             this.checksumLocations = safe( checksumLocations );
         }
 
@@ -572,29 +548,8 @@ final class BasicRepositoryConnector
         protected void runTask()
                 throws Exception
         {
-            if ( fileTransformer != null )
-            {
-                // transform data once to byte array, ensure constant data for checksum
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] buffer = new byte[1024];
-
-                try ( InputStream transformData = fileTransformer.transformData( file ) )
-                {
-                    for ( int read; ( read = transformData.read( buffer, 0, buffer.length ) ) != -1; )
-                    {
-                        baos.write( buffer, 0, read );
-                    }
-                }
-
-                byte[] bytes = baos.toByteArray();
-                transporter.put( new PutTask( path ).setDataBytes( bytes ).setListener( listener ) );
-                uploadChecksums( file, bytes );
-            }
-            else
-            {
-                transporter.put( new PutTask( path ).setDataFile( file ).setListener( listener ) );
-                uploadChecksums( file, null );
-            }
+            transporter.put( new PutTask( path ).setDataFile( file ).setListener( listener ) );
+            uploadChecksums( file, null );
         }
 
         /**
