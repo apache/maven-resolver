@@ -28,7 +28,10 @@ import org.eclipse.aether.artifact.Artifact;
  * 
  * @author Robert Scholte
  * @since 1.3.0
+ * @deprecated Without any direct replacement for now. This API is OOM-prone, and also lacks a lot of context about
+ * transforming.
  */
+@Deprecated
 public interface FileTransformerManager
 {
     /**
