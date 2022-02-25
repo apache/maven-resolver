@@ -19,17 +19,25 @@ package org.eclipse.aether.named.hazelcast;
  * under the License.
  */
 
-import org.junit.BeforeClass;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.cp.ISemaphore;
 
-public class HazelcastCPSemaphoreAdapterIT
-        extends NamedLockFactoryAdapterTestSupport
+/**
+ * Direct provider of {@link ISemaphore} instances: it simply uses the passed in lock name to create semaphore name out
+ * of it. This implies, that as many lock names are requested from it, this class will create as many semaphores in
+ * Hazelcast.
+ */
+public class DirectHazelcastSemaphoreProvider extends HazelcastSemaphoreProvider
 {
-
-    @BeforeClass
-    public static void createNamedLockFactory()
+    @Override
+    public ISemaphore acquireSemaphore( HazelcastInstance hazelcastInstance, String name )
     {
-        String clusterName = utils.clusterName( HazelcastCPSemaphoreAdapterIT.class );
-        setNamedLockFactory(
-                new HazelcastCPSemaphoreNamedLockFactory( utils.createMember( clusterName ), true ) );
+        return hazelcastInstance.getCPSubsystem().getSemaphore( NAME_PREFIX + name );
+    }
+
+    @Override
+    public void releaseSemaphore( HazelcastInstance hazelcastInstance, String name, ISemaphore semaphore )
+    {
+        // nothing
     }
 }
