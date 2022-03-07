@@ -69,6 +69,7 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,6 +100,12 @@ public class DefaultDependencyCollectorTest
     private Dependency newDep( String coords, String scope )
     {
         return new Dependency( new DefaultArtifact( coords ), scope );
+    }
+
+    private Dependency newDep( String coords, String scope, Collection<Exclusion> exclusions )
+    {
+        Dependency d = new Dependency( new DefaultArtifact( coords ), scope );
+        return d.setExclusions( exclusions );
     }
 
     @Before
@@ -220,6 +227,38 @@ public class DefaultDependencyCollectorTest
 
             assertEquals( request.getRoot(), result.getRoot().getDependency() );
         }
+    }
+
+    @Test
+    public void testSkipperWithDifferentExclusion() throws DependencyCollectionException
+    {
+        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
+        parser = new DependencyGraphParser( "artifact-descriptions/managed/" );
+        session.setDependencyManager( new TransitiveDependencyManager() );
+
+        ExclusionDependencySelector exclSel1 = new ExclusionDependencySelector();
+        session.setDependencySelector( exclSel1 );
+
+        Dependency root1 = newDep( "gid:root:ext:ver", "compile",
+                Collections.singleton( new Exclusion( "gid", "transitive-1", "", "ext" ) ) );
+        Dependency root2 = newDep( "gid:root:ext:ver", "compile",
+                Collections.singleton( new Exclusion( "gid", "transitive-2", "", "ext" ) ) );
+        List<Dependency> dependencies = Arrays.asList( root1, root2 );
+
+        CollectRequest request = new CollectRequest( dependencies, null, Arrays.asList( repository ) );
+        request.addManagedDependency( newDep( "gid:direct:ext:managed-by-dominant-request" ) );
+        request.addManagedDependency( newDep( "gid:transitive-1:ext:managed-by-root" ) );
+
+        CollectResult result = collector.collectDependencies( session, request );
+        assertEquals( 0, result.getExceptions().size() );
+        assertEquals( 2, result.getRoot().getChildren().size() );
+        assertEquals( root1, dep( result.getRoot(), 0 ) );
+        assertEquals( root2, dep( result.getRoot(), 1 ) );
+        //the winner has transitive-1 excluded
+        assertEquals( 1, path( result.getRoot(), 0 ).getChildren().size() );
+        assertEquals( 0, path( result.getRoot(), 0, 0 ).getChildren().size() );
+        //skipped
+        assertEquals( 0, path( result.getRoot(), 1 ).getChildren().size() );
     }
 
     @Test

@@ -253,7 +253,9 @@ public class DefaultDependencyCollector
 
             DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
 
-            Args args = new Args( session, trace, pool, context, versionContext, request );
+            Args args =
+                    new Args( session, trace, pool, context, versionContext, request,
+                            new DependencyResolutionSkipper() );
             Results results = new Results( result, session );
 
             DependencySelector rootDepSelector =
@@ -277,6 +279,7 @@ public class DefaultDependencyCollector
                         false );
             }
 
+            args.skipper.report();
             errorPath = results.errorPath;
         }
 
@@ -396,6 +399,8 @@ public class DefaultDependencyCollector
             return;
         }
 
+        //Resolve newer version first to maximize benefits of skipper
+        Collections.reverse( versions );
         for ( Version version : versions )
         {
             Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
@@ -500,15 +505,19 @@ public class DefaultDependencyCollector
         List<DependencyNode> children = args.pool.getChildren( key );
         if ( children == null )
         {
-            args.pool.putChildren( key, child.getChildren() );
-
             List<DependencyNode> parents = new ArrayList<>( parentContext.parents );
-            parents.add( child );
-            for ( Dependency dependency : descriptorResult.getDependencies() )
+            boolean skipResolution = args.skipper.skipResolution( child, parents );
+            if ( !skipResolution )
             {
-                args.dependencyProcessingQueue.add(
-                        new DependencyProcessingContext( childSelector, childManager, childTraverser, childFilter,
-                                childRepos, descriptorResult.getManagedDependencies(), parents, dependency ) );
+                parents.add( child );
+                for ( Dependency dependency : descriptorResult.getDependencies() )
+                {
+                    args.dependencyProcessingQueue.add(
+                            new DependencyProcessingContext( childSelector, childManager, childTraverser, childFilter,
+                                    childRepos, descriptorResult.getManagedDependencies(), parents, dependency ) );
+                }
+                args.pool.putChildren( key, child.getChildren() );
+                args.skipper.cache( child, parents );
             }
         }
         else
@@ -697,9 +706,11 @@ public class DefaultDependencyCollector
 
         final CollectRequest request;
 
+        final DependencyResolutionSkipper skipper;
+
         Args( RepositorySystemSession session, RequestTrace trace, DataPool pool,
                      DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
-                     CollectRequest request )
+                     CollectRequest request, DependencyResolutionSkipper skipper )
         {
             this.session = session;
             this.request = request;
@@ -709,6 +720,7 @@ public class DefaultDependencyCollector
             this.pool = pool;
             this.collectionContext = collectionContext;
             this.versionContext = versionContext;
+            this.skipper = skipper;
         }
 
     }
