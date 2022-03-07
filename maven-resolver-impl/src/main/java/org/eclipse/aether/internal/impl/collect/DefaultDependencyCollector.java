@@ -58,6 +58,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.impl.DependencyResolutionSkipper;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -84,6 +85,21 @@ import org.slf4j.LoggerFactory;
 public class DefaultDependencyCollector
     implements DependencyCollector, Service
 {
+
+    /**
+     * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
+     * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip mode.
+     *
+     * @since 1.8.0
+     */
+    public static final String CONFIG_PROP_USE_SKIP = "aether.dependencyCollector.useSkip";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_USE_SKIP}, {@code true}.
+     *
+     * @since 1.8.0
+     */
+    public static final boolean CONFIG_PROP_USE_SKIP_DEFAULT = true;
 
     private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
 
@@ -150,6 +166,14 @@ public class DefaultDependencyCollector
         requireNonNull( session, "session cannot be null" );
         requireNonNull( request, "request cannot be null" );
         session = optimizeSession( session );
+
+        boolean useSkip = ConfigUtils.getBoolean(
+                session, CONFIG_PROP_USE_SKIP_DEFAULT, CONFIG_PROP_USE_SKIP
+        );
+        if ( useSkip )
+        {
+            LOGGER.debug( "Collector skip mode enabled" );
+        }
 
         RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
@@ -253,7 +277,10 @@ public class DefaultDependencyCollector
 
             DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext( session );
 
-            Args args = new Args( session, trace, pool, context, versionContext, request );
+            Args args =
+                    new Args( session, trace, pool, context, versionContext, request,
+                            useSkip ? new DefaultDependencyResolutionSkipper()
+                                    : NeverDependencyResolutionSkipper.INSTANCE );
             Results results = new Results( result, session );
 
             DependencySelector rootDepSelector =
@@ -263,11 +290,12 @@ public class DefaultDependencyCollector
                     depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null;
             VersionFilter rootVerFilter = verFilter != null ? verFilter.deriveChildFilter( context ) : null;
 
+            List<DependencyNode> parents = Collections.singletonList( node );
             for ( Dependency dependency : dependencies )
             {
                 args.dependencyProcessingQueue.add(
                         new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
-                                rootVerFilter, repositories, managedDependencies, Collections.singletonList( node ),
+                                rootVerFilter, repositories, managedDependencies, parents,
                                 dependency ) );
             }
 
@@ -277,6 +305,7 @@ public class DefaultDependencyCollector
                         false );
             }
 
+            args.skipper.report();
             errorPath = results.errorPath;
         }
 
@@ -396,6 +425,8 @@ public class DefaultDependencyCollector
             return;
         }
 
+        //Resolve newer version first to maximize benefits of skipper
+        Collections.reverse( versions );
         for ( Version version : versions )
         {
             Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
@@ -500,15 +531,20 @@ public class DefaultDependencyCollector
         List<DependencyNode> children = args.pool.getChildren( key );
         if ( children == null )
         {
-            args.pool.putChildren( key, child.getChildren() );
-
-            List<DependencyNode> parents = new ArrayList<>( parentContext.parents );
-            parents.add( child );
-            for ( Dependency dependency : descriptorResult.getDependencies() )
+            boolean skipResolution = args.skipper.skipResolution( child, parentContext.parents );
+            if ( !skipResolution )
             {
-                args.dependencyProcessingQueue.add(
-                        new DependencyProcessingContext( childSelector, childManager, childTraverser, childFilter,
-                                childRepos, descriptorResult.getManagedDependencies(), parents, dependency ) );
+                List<DependencyNode> parents = new ArrayList<>( parentContext.parents.size() + 1 );
+                parents.addAll( parentContext.parents );
+                parents.add( child );
+                for ( Dependency dependency : descriptorResult.getDependencies() )
+                {
+                    args.dependencyProcessingQueue.add(
+                            new DependencyProcessingContext( childSelector, childManager, childTraverser, childFilter,
+                                    childRepos, descriptorResult.getManagedDependencies(), parents, dependency ) );
+                }
+                args.pool.putChildren( key, child.getChildren() );
+                args.skipper.cache( child, parents );
             }
         }
         else
@@ -689,7 +725,7 @@ public class DefaultDependencyCollector
 
         final DataPool pool;
 
-        final Queue<DependencyProcessingContext> dependencyProcessingQueue = new ArrayDeque<>();
+        final Queue<DependencyProcessingContext> dependencyProcessingQueue = new ArrayDeque<>( 128 );
 
         final DefaultDependencyCollectionContext collectionContext;
 
@@ -697,9 +733,11 @@ public class DefaultDependencyCollector
 
         final CollectRequest request;
 
+        final DependencyResolutionSkipper skipper;
+
         Args( RepositorySystemSession session, RequestTrace trace, DataPool pool,
                      DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
-                     CollectRequest request )
+                     CollectRequest request, DependencyResolutionSkipper skipper )
         {
             this.session = session;
             this.request = request;
@@ -709,6 +747,7 @@ public class DefaultDependencyCollector
             this.pool = pool;
             this.collectionContext = collectionContext;
             this.versionContext = versionContext;
+            this.skipper = skipper;
         }
 
     }

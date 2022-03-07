@@ -42,6 +42,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.smartChecksums` | boolean | Flag indicating that instead of comparing the external checksum fetched from the remote repo with the calculated one, it should try to extract the reference checksum from the actual artifact requests's response headers (several (strategies supported)[included-checksum-strategies.html]). This only works for transport-http transport. | `true` | no
 `aether.connector.userAgent` | String | The user agent that repository connectors should report to servers. |  `"Aether"` | no
 `aether.connector.wagon.config` | Object | The configuration to use for the Wagon provider. | - | yes (must be used)
+`aether.dependencyCollector.useSkip` | boolean | Flag controlling whether to skip resolving duplicate/conflicting nodes during the dependency collection process. | `true` | no
 `aether.dependencyCollector.maxCycles` | int | Only up to the given amount cyclic dependencies are emitted. | `10` | no
 `aether.dependencyCollector.maxExceptions` | int | Only exceptions up to the number given in this configuration property are emitted. Exceptions which exceed that number are swallowed. | `50` | no
 `aether.dependencyManager.verbose` | boolean | Flag controlling the verbose mode for dependency management. If enabled, the original attributes of a dependency before its update due to dependency managemnent will be recorded in the node's `DependencyNode#getData()` when building a dependency graph. | `false` | no
