@@ -30,7 +30,7 @@ public abstract class HazelcastSemaphoreProvider
     /**
      * Name prefix recommended using for simpler configuration of Hazelcast.
      */
-    protected static final String NAME_PREFIX = "mvn:resolver:";
+    protected static final String NAME_PREFIX = "maven:resolver:";
 
     /**
      * Invoked when new instance of semaphore needed for given name. must not return {@code null}.

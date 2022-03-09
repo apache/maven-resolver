@@ -29,10 +29,10 @@ Out of the box "hazelcast" (distributed) named lock implementations are the foll
 - `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`
   This implementation uses Hazelcast Client, so existing Hazelcast cluster to connect to is a requirement.
 
-The semaphore name prefix is `mvn:resolver:` and pre-configuring semaphores in Hazelcast is a must. The Hazelcast
+The semaphore name prefix is `maven:resolver:` and pre-configuring semaphores in Hazelcast is a must. The Hazelcast
 configuration must have the following entry:
 
-- Name prefix: `mvn:resolver:` (use pattern matching configuration)
+- Name prefix: `maven:resolver:` (use pattern matching configuration)
 - JDK compatible: true
 - Permit count: `Integer.MAX_VALUE` (value `2147483647`)
 
@@ -42,7 +42,7 @@ Example Hazelcast XML relevant snippet:
     <cp-subsystem>
         <semaphores>
             <semaphore>
-                <name>mvn:resolver:*</name>
+                <name>maven:resolver:*</name>
                 <jdk-compatible>true</jdk-compatible>
                 <initial-permits>2147483647</initial-permits>
             </semaphore>

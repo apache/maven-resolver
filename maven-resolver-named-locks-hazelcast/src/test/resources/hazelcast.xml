@@ -42,7 +42,7 @@
         <semaphores>
             <!-- Config for resolver semaphores -->
             <semaphore>
-                <name>mvn:resolver:*</name>
+                <name>maven:resolver:*</name>
                 <jdk-compatible>true</jdk-compatible>
                 <!-- Integer.MAX_VALUE -->
                 <initial-permits>2147483647</initial-permits>
