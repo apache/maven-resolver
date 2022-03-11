@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,16 +35,15 @@ import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.checksum.ArtifactExtensionChecksumFilter;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
-import org.eclipse.aether.internal.impl.signature.DefaultSignatureAlgorithmFactorySelector;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.checksum.ArtifactChecksumFilter;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
-import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactory;
-import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactorySelector;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -57,21 +58,17 @@ public final class Maven2RepositoryLayoutFactory
         implements RepositoryLayoutFactory
 {
 
-    static final String CONFIG_PROP_SIGNATURE_CHECKSUMS = "aether.checksums.forSignature";
-
     static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
 
     static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
-    static final String CONFIG_PROP_SIGNATURE_ALGORITHMS = "aether.signatures.algorithms";
+    static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS = "aether.checksums.omitChecksumsForExtensions";
 
-    static final String DEFAULT_SIGNATURE_ALGORITHMS = "GPG";
+    static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc";
 
     private float priority;
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
-
-    private final SignatureAlgorithmFactorySelector signatureAlgorithmFactorySelector;
 
     public float getPriority()
     {
@@ -84,15 +81,13 @@ public final class Maven2RepositoryLayoutFactory
     @Deprecated
     public Maven2RepositoryLayoutFactory()
     {
-        this( new DefaultChecksumAlgorithmFactorySelector(), new DefaultSignatureAlgorithmFactorySelector() );
+        this( new DefaultChecksumAlgorithmFactorySelector() );
     }
 
     @Inject
-    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
-                                          SignatureAlgorithmFactorySelector signatureAlgorithmFactorySelector )
+    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector )
     {
         this.checksumAlgorithmFactorySelector = requireNonNull( checksumAlgorithmFactorySelector );
-        this.signatureAlgorithmFactorySelector = requireNonNull( signatureAlgorithmFactorySelector );
     }
 
     /**
@@ -116,7 +111,6 @@ public final class Maven2RepositoryLayoutFactory
         {
             throw new NoRepositoryLayoutException( repository );
         }
-        boolean forSignature = ConfigUtils.getBoolean( session, false, CONFIG_PROP_SIGNATURE_CHECKSUMS );
         // ensure order and uniqueness of (potentially user set) algorithm list
         LinkedHashSet<String> checksumsAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
                 ConfigUtils.getString(
@@ -130,22 +124,17 @@ public final class Maven2RepositoryLayoutFactory
             checksumsAlgorithms.add( checksumAlgorithmFactorySelector.select( checksumsAlgorithmName ) );
         }
 
-        // ensure order and uniqueness of (potentially user set) algorithm list
-        LinkedHashSet<String> signatureAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
+        // ensure uniqueness of (potentially user set) extension list
+        Set<String> omitChecksumsForExtensions = Arrays.stream(
                 ConfigUtils.getString(
-                        session, DEFAULT_SIGNATURE_ALGORITHMS, CONFIG_PROP_SIGNATURE_ALGORITHMS
-                ).split( "," ) )
-        );
+                        session, DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS, CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS )
+                        .split( "," ) )
+                .filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toSet() );
 
-        List<SignatureAlgorithmFactory> signatureAlgorithms = new ArrayList<>( signatureAlgorithmNames.size() );
-        for ( String signatureAlgorithmName : signatureAlgorithmNames )
-        {
-            signatureAlgorithms.add( signatureAlgorithmFactorySelector.select( signatureAlgorithmName ) );
-        }
+        ArtifactExtensionChecksumFilter artifactChecksumFilter =
+                new ArtifactExtensionChecksumFilter( omitChecksumsForExtensions );
 
-        return forSignature
-                ? new Maven2RepositoryLayout( checksumsAlgorithms, signatureAlgorithms )
-                : new Maven2RepositoryLayoutEx( checksumsAlgorithms, signatureAlgorithms );
+        return new Maven2RepositoryLayout( checksumsAlgorithms, artifactChecksumFilter );
     }
 
     private static class Maven2RepositoryLayout
@@ -154,13 +143,13 @@ public final class Maven2RepositoryLayoutFactory
 
         protected final List<ChecksumAlgorithmFactory> checksumAlgorithms;
 
-        protected final List<SignatureAlgorithmFactory> signatureAlgorithms;
+        protected final ArtifactChecksumFilter artifactChecksumFilter;
 
         protected Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms,
-                                          List<SignatureAlgorithmFactory> signatureAlgorithms )
+                                          ArtifactChecksumFilter artifactChecksumFilter )
         {
             this.checksumAlgorithms = Collections.unmodifiableList( checksumAlgorithms );
-            this.signatureAlgorithms = Collections.unmodifiableList( signatureAlgorithms );
+            this.artifactChecksumFilter = artifactChecksumFilter;
         }
 
         private URI toUri( String path )
@@ -179,12 +168,6 @@ public final class Maven2RepositoryLayoutFactory
         public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
         {
             return checksumAlgorithms;
-        }
-
-        @Override
-        public List<SignatureAlgorithmFactory> getSignatureAlgorithmFactories()
-        {
-            return signatureAlgorithms;
         }
 
         @Override
@@ -241,7 +224,7 @@ public final class Maven2RepositoryLayoutFactory
         @Override
         public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
-            if ( isChecksum( artifact.getExtension() ) )
+            if ( artifactChecksumFilter.omitChecksumsFor( artifact ) || isChecksum( artifact.getExtension() ) )
             {
                 return Collections.emptyList();
             }
@@ -269,32 +252,4 @@ public final class Maven2RepositoryLayoutFactory
             return checksumAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
         }
     }
-
-    private static class Maven2RepositoryLayoutEx
-            extends Maven2RepositoryLayout
-    {
-
-        protected Maven2RepositoryLayoutEx( List<ChecksumAlgorithmFactory> checksumAlgorithms,
-                                            List<SignatureAlgorithmFactory> signatureAlgorithms )
-        {
-            super( checksumAlgorithms, signatureAlgorithms );
-        }
-
-        @Override
-        public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
-        {
-            if ( isSignature( artifact.getExtension() ) )
-            {
-                return Collections.emptyList();
-            }
-            return super.getChecksumLocations( artifact, upload, location );
-        }
-
-        private boolean isSignature( String extension )
-        {
-            return signatureAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
-        }
-
-    }
-
 }

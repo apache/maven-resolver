@@ -311,12 +311,24 @@ public class Maven2RepositoryLayoutFactoryTest
     public void testSignatureChecksums_Force()
         throws Exception
     {
-        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_SIGNATURE_CHECKSUMS, "true" );
+        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, "" );
         layout = factory.newInstance( session, newRepo( "default" ) );
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
         URI uri = layout.getLocation( artifact, true );
         List<ChecksumLocation> checksums = layout.getChecksumLocations( artifact, true, uri );
         assertChecksums( checksums, "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.jar.asc", SHA1, MD5 );
+    }
+
+    @Test
+    public void testCustomChecksumsIgnored()
+            throws Exception
+    {
+        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,.foo" );
+        layout = factory.newInstance( session, newRepo( "default" ) );
+        DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.foo", "1.0" );
+        URI uri = layout.getLocation( artifact, true );
+        List<ChecksumLocation> checksums = layout.getChecksumLocations( artifact, true, uri );
+        assertEquals( 0, checksums.size() );
     }
 
 }

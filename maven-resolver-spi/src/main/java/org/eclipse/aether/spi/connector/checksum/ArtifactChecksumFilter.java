@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.signature;
+package org.eclipse.aether.spi.connector.checksum;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,34 +19,20 @@ package org.eclipse.aether.internal.impl.signature;
  * under the License.
  */
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.eclipse.aether.spi.connector.signature.SignatureAlgorithm;
-import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactorySupport;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
- * The GPG signature type.
+ * Filter that is able to tell does artifact should have expected checksums or not. Most notably, artifacts like
+ * different kind of signatures will not have checksums.
  *
  * @since 1.8.0
  */
-@Singleton
-@Named( GpgSignatureAlgorithmFactory.NAME )
-public class GpgSignatureAlgorithmFactory
-        extends SignatureAlgorithmFactorySupport
+public interface ArtifactChecksumFilter
 {
-    public static final String NAME = "GPG";
-
-    @Inject
-    public GpgSignatureAlgorithmFactory()
-    {
-        super( NAME, "asc" );
-    }
-
-    @Override
-    public SignatureAlgorithm getAlgorithm()
-    {
-        throw new IllegalStateException( "not implemented" );
-    }
+    /**
+     * Returns {@code true} if the given artifact does not have expected checksums. Hence, the artifact checksums will
+     * not be validated during transport. If {@code false} returned, the artifact will have its checksums fetched and
+     * validated.
+     */
+    boolean omitChecksumsFor( Artifact artifact );
 }

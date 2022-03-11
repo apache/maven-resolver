@@ -27,7 +27,6 @@ import static java.util.Objects.requireNonNull;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.signature.SignatureAlgorithmFactory;
 
 /**
  * The layout for a remote repository whose artifacts/metadata can be addressed via URIs.
@@ -133,13 +132,6 @@ public interface RepositoryLayout
      * @since 1.8.0
      */
     List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
-
-    /**
-     * Returns immutable list of {@link SignatureAlgorithmFactory} this instance of layout uses, never {@code null}.
-     *
-     * @since 1.8.0
-     */
-    List<SignatureAlgorithmFactory> getSignatureAlgorithmFactories();
 
     /**
      * Gets the location within a remote repository where the specified artifact resides. The URI is relative to the
