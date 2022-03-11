@@ -21,7 +21,7 @@ under the License.
 Option | Type | Description | Default Value | Supports Repo ID Suffix
 --- | --- | --- | --- | ---
 `aether.artifactResolver.snapshotNormalization` | boolean | It replaces the timestamped snapshot file name with a filename containing the `SNAPSHOT` qualifier only. This only affects resolving/retrieving artifacts but not uploading those. | `true` | no
-`aether.checksums.omitChecksumsForExtensions` | String | Comma separated list of extensions (`.asc`) that should have checksums omitted. | `.asc` | no
+`aether.checksums.omitChecksumsForExtensions` | String | Comma separated list of extensions (`.asc`) that should have checksums omitted. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc` | no
 `aether.checksums.algorithms` | String | Comma separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
 `aether.connector.basic.threads` or `maven.artifact.threads` | int | Number of threads to use for uploading/downloading. | `5` | no

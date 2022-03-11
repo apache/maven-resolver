@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.internal.impl.checksum.DefaultArtifactChecksumFilterFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -311,7 +312,7 @@ public class Maven2RepositoryLayoutFactoryTest
     public void testSignatureChecksums_Force()
         throws Exception
     {
-        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, "" );
+        session.setConfigProperty( DefaultArtifactChecksumFilterFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, "" );
         layout = factory.newInstance( session, newRepo( "default" ) );
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.asc", "1.0" );
         URI uri = layout.getLocation( artifact, true );
@@ -323,7 +324,7 @@ public class Maven2RepositoryLayoutFactoryTest
     public void testCustomChecksumsIgnored()
             throws Exception
     {
-        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,.foo" );
+        session.setConfigProperty( DefaultArtifactChecksumFilterFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,.foo" );
         layout = factory.newInstance( session, newRepo( "default" ) );
         DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.foo", "1.0" );
         URI uri = layout.getLocation( artifact, true );
