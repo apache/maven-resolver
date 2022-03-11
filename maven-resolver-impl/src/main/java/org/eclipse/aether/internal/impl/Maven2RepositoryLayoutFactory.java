@@ -141,11 +141,11 @@ public final class Maven2RepositoryLayoutFactory
             implements RepositoryLayout
     {
 
-        protected final List<ChecksumAlgorithmFactory> checksumAlgorithms;
+        private final List<ChecksumAlgorithmFactory> checksumAlgorithms;
 
-        protected final ArtifactChecksumFilter artifactChecksumFilter;
+        private final ArtifactChecksumFilter artifactChecksumFilter;
 
-        protected Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms,
+        private Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms,
                                           ArtifactChecksumFilter artifactChecksumFilter )
         {
             this.checksumAlgorithms = Collections.unmodifiableList( checksumAlgorithms );
