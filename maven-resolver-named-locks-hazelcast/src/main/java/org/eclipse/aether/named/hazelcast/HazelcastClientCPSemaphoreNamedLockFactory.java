@@ -19,32 +19,38 @@ package org.eclipse.aether.named.hazelcast;
  * under the License.
  */
 
-import com.hazelcast.client.HazelcastClient;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.core.HazelcastInstance;
+
 /**
- * Provider of {@link HazelcastSemaphoreNamedLockFactory} using Hazelcast Client and {@link
- * com.hazelcast.core.HazelcastInstance#getCPSubsystem()} method to get CP semaphore. For this to work, the Hazelcast
- * cluster the client is connecting to must be CP enabled cluster.
+ * {@link HazelcastSemaphoreNamedLockFactory} using {@link DirectHazelcastSemaphoreProvider} and Hazelcast client. The
+ * client must be configured to connect to some existing cluster (w/ proper configuration applied).
  */
 @Singleton
 @Named( HazelcastClientCPSemaphoreNamedLockFactory.NAME )
-public class HazelcastClientCPSemaphoreNamedLockFactory
-    extends HazelcastSemaphoreNamedLockFactory
+public class HazelcastClientCPSemaphoreNamedLockFactory extends HazelcastSemaphoreNamedLockFactory
 {
-  public static final String NAME = "semaphore-hazelcast-client";
+    public static final String NAME = "semaphore-hazelcast-client";
 
-  @Inject
-  public HazelcastClientCPSemaphoreNamedLockFactory()
-  {
-    super(
-        HazelcastClient.newHazelcastClient(),
-        ( hazelcastInstance, name ) -> hazelcastInstance.getCPSubsystem().getSemaphore( NAME_PREFIX + name ),
-        false,
-        true
-    );
-  }
+    /**
+     * The default constructor: creates own instance of Hazelcast using standard Hazelcast configuration discovery.
+     */
+    @Inject
+    public HazelcastClientCPSemaphoreNamedLockFactory()
+    {
+        this( HazelcastClient.newHazelcastClient(), true );
+    }
+
+    /**
+     * Constructor for customization.
+     */
+    public HazelcastClientCPSemaphoreNamedLockFactory( HazelcastInstance hazelcastInstance,
+                                                       boolean manageHazelcast )
+    {
+        super( hazelcastInstance, manageHazelcast, new DirectHazelcastSemaphoreProvider() );
+    }
 }

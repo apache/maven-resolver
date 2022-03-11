@@ -19,32 +19,37 @@ package org.eclipse.aether.named.hazelcast;
  * under the License.
  */
 
-import com.hazelcast.core.Hazelcast;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+
 /**
- * {@link HazelcastSemaphoreNamedLockFactory} using Hazelcast and {@link
- * com.hazelcast.core.HazelcastInstance#getCPSubsystem()} method to get CP semaphore. For this to work, the Hazelcast
- * cluster the client is connecting to must be CP enabled cluster.
+ * {@link HazelcastSemaphoreNamedLockFactory} using {@link DirectHazelcastSemaphoreProvider} full Hazelcast member.
  */
 @Singleton
 @Named( HazelcastCPSemaphoreNamedLockFactory.NAME )
-public class HazelcastCPSemaphoreNamedLockFactory
-    extends HazelcastSemaphoreNamedLockFactory
+public class HazelcastCPSemaphoreNamedLockFactory extends HazelcastSemaphoreNamedLockFactory
 {
-  public static final String NAME = "semaphore-hazelcast";
+    public static final String NAME = "semaphore-hazelcast";
 
-  @Inject
-  public HazelcastCPSemaphoreNamedLockFactory()
-  {
-    super(
-        Hazelcast.newHazelcastInstance(),
-        ( hazelcastInstance, name ) -> hazelcastInstance.getCPSubsystem().getSemaphore( NAME_PREFIX + name ),
-        false,
-        true
-    );
-  }
+    /**
+     * The default constructor: creates own instance of Hazelcast using standard Hazelcast configuration discovery.
+     */
+    @Inject
+    public HazelcastCPSemaphoreNamedLockFactory()
+    {
+        this( Hazelcast.newHazelcastInstance(), true );
+    }
+
+    /**
+     * Constructor for customization.
+     */
+    public HazelcastCPSemaphoreNamedLockFactory( HazelcastInstance hazelcastInstance,
+                                                 boolean manageHazelcast )
+    {
+        super( hazelcastInstance, manageHazelcast, new DirectHazelcastSemaphoreProvider() );
+    }
 }

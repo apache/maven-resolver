@@ -19,27 +19,17 @@ package org.eclipse.aether.named.hazelcast;
  * under the License.
  */
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 public class HazelcastClientCPSemaphoreNamedLockFactoryIT
-    extends NamedLockFactoryTestSupport {
-
-    private static HazelcastClientUtils utils;
-
+        extends NamedLockFactoryTestSupport
+{
     @BeforeClass
-    public static void createNamedLockFactory() {
-        utils = new HazelcastClientUtils().createCpCluster();
-        namedLockFactory = new HazelcastClientCPSemaphoreNamedLockFactory();
-    }
-
-    @AfterClass
-    public static void cleanup() {
-        if (namedLockFactory != null) {
-            namedLockFactory.shutdown();
-        }
-        if (utils != null) {
-            utils.cleanup();
-        }
+    public static void createNamedLockFactory()
+    {
+        String clusterName = utils.clusterName( HazelcastClientCPSemaphoreNamedLockFactoryIT.class );
+        utils.createMember( clusterName );
+        namedLockFactory =
+                new HazelcastClientCPSemaphoreNamedLockFactory( utils.createClient( clusterName ), true );
     }
 }

@@ -19,60 +19,58 @@ package org.eclipse.aether.named.hazelcast;
  * under the License.
  */
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.ISemaphore;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock.AdaptedSemaphore;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
+import static java.util.Objects.requireNonNull;
 
 /**
- * Factory of {@link AdaptedSemaphoreNamedLock} instances using adapted Hazelcast {@link ISemaphore}. This class may
- * use {@link HazelcastInstance} backed by Hazelcast Server or Hazelcast Client.
+ * Factory of {@link AdaptedSemaphoreNamedLock} instances, using adapted Hazelcast {@link ISemaphore}. It delegates
+ * most the work to {@link HazelcastSemaphoreProvider} and this class just adapts the returned semaphore to named lock
+ * and caches {@link ISemaphore} instances, as recommended by Hazelcast.
  */
 public class HazelcastSemaphoreNamedLockFactory
-    extends NamedLockFactorySupport
+        extends NamedLockFactorySupport
 {
-    protected static final String NAME_PREFIX = "maven:resolver:";
+    protected final HazelcastInstance hazelcastInstance;
 
-    private final HazelcastInstance hazelcastInstance;
+    protected final boolean manageHazelcast;
 
-    private final BiFunction<HazelcastInstance, String, ISemaphore> semaphoreFunction;
-
-    private final boolean destroySemaphore;
-
-    private final boolean manageHazelcast;
+    private final HazelcastSemaphoreProvider hazelcastSemaphoreProvider;
 
     private final ConcurrentMap<String, ISemaphore> semaphores;
 
     public HazelcastSemaphoreNamedLockFactory(
-        final HazelcastInstance hazelcastInstance,
-        final BiFunction<HazelcastInstance, String, ISemaphore> semaphoreFunction,
-        final boolean destroySemaphore,
-        final boolean manageHazelcast
+            final HazelcastInstance hazelcastInstance,
+            final boolean manageHazelcast,
+            final HazelcastSemaphoreProvider hazelcastSemaphoreProvider
     )
     {
-        this.hazelcastInstance = hazelcastInstance;
-        this.semaphoreFunction = semaphoreFunction;
-        this.destroySemaphore = destroySemaphore;
+        this.hazelcastInstance = requireNonNull( hazelcastInstance );
         this.manageHazelcast = manageHazelcast;
+        this.hazelcastSemaphoreProvider = requireNonNull( hazelcastSemaphoreProvider );
         this.semaphores = new ConcurrentHashMap<>();
     }
 
     @Override
     protected AdaptedSemaphoreNamedLock createLock( final String name )
     {
-        ISemaphore semaphore = semaphores.computeIfAbsent( name, k ->
-        {
-            ISemaphore result = semaphoreFunction.apply( hazelcastInstance, k );
-            result.init( Integer.MAX_VALUE );
-            return result;
-        } );
+        ISemaphore semaphore = semaphores.computeIfAbsent( name,
+                k -> hazelcastSemaphoreProvider.acquireSemaphore( hazelcastInstance, name ) );
         return new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) );
+    }
+
+    @Override
+    protected void destroyLock( final String name )
+    {
+        hazelcastSemaphoreProvider.releaseSemaphore( hazelcastInstance, name, semaphores.remove( name ) );
     }
 
     @Override
@@ -81,20 +79,6 @@ public class HazelcastSemaphoreNamedLockFactory
         if ( manageHazelcast )
         {
             hazelcastInstance.shutdown();
-        }
-    }
-
-    @Override
-    protected void destroyLock( final String name )
-    {
-        ISemaphore semaphore = semaphores.remove( name );
-        if ( destroySemaphore )
-        {
-            if ( semaphore == null )
-            {
-                throw new IllegalStateException( "Semaphore expected but does not exist: " + name );
-            }
-            semaphore.destroy();
         }
     }
 
@@ -109,7 +93,7 @@ public class HazelcastSemaphoreNamedLockFactory
 
         @Override
         public boolean tryAcquire( final int perms, final long time, final TimeUnit unit )
-            throws InterruptedException
+                throws InterruptedException
         {
             return semaphore.tryAcquire( perms, time, unit );
         }

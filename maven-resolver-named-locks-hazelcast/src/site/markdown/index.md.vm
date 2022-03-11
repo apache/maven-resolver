@@ -19,40 +19,60 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-This module implement named locks using Hazelcast. It provides two implementations, that are distributed and rely on
-Hazelcast 4.x ISemaphores.
+This module implement named locks using Hazelcast. It provides two implementations, using members or clients and
+rely on Hazelcast ISemaphore instances.
 
 Out of the box "hazelcast" (distributed) named lock implementations are the following:
 
-- `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory` that uses
-  Hazelcast backed `com.hazelcast.cp.ISemaphore`. Full Hazelcast member is used here.
+- `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
+  Full Hazelcast member is used here.
 - `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`
-  that uses Hazelcast Client backed `com.hazelcast.cp.ISemaphore`. This implementation uses Hazelcast Client, so
-  connection to some existing Hazelcast cluster, and its existence is a requirement.
+  This implementation uses Hazelcast Client, so existing Hazelcast cluster to connect to is a requirement.
+
+The semaphore name prefix is `maven:resolver:` and pre-configuring semaphores in Hazelcast is a must. The Hazelcast
+configuration must have the following entry:
+
+- Name prefix: `maven:resolver:` (use pattern matching configuration)
+- JDK compatible: true
+- Permit count: `Integer.MAX_VALUE` (value `2147483647`)
+
+Example Hazelcast XML relevant snippet:
+
+```xml
+    <cp-subsystem>
+        <semaphores>
+            <semaphore>
+                <name>maven:resolver:*</name>
+                <jdk-compatible>true</jdk-compatible>
+                <initial-permits>2147483647</initial-permits>
+            </semaphore>
+        </semaphores>
+    </cp-subsystem>
+```
+
+Without this configuration present, this library will not work.
 
 ${esc.hash}${esc.hash} Open Issues/Notes
 
-- Usage from plugins has not been tested yet.
 - The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
   of dependency injection.
 
 ${esc.hash}${esc.hash} Open Issues/Notes for Maven Resolver integrators
 
-To use this implementation within your project, depending on how you integrate, you have following options:
-- If you use Sisu DI, then all you need is to provide this module (and its dependencies) on classpath and you are done.
-- If you use Guice, you need to add this module (and its dependencies) upfront, and bind them explicitly.
+To use this implementation within your project, depending on how you integrate, you have the following options:
+
+- If you use Sisu DI, then all you need is to provide this module (and Hazelcast JAR) on classpath, and you are done.
+- If you use Guice, you need to add this module (and its dependencies) upfront to classpath, and bind them explicitly.
 - If you use ServiceLocator, be aware it is deprecated, and you should move away from it. In this case, simplest is
   to roll your own "bootstrap" class that does pretty much same thing as ServiceLocator was, and extend it to
   instantiate these components as well.
 
 ${esc.hash}${esc.hash} Installation/Testing
 
-- Create the directory `${maven.home}/lib/ext/hazelcast/`.
-- Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/hazelcast/*.jar`
-  right after the `${maven.conf}/logging` line.
-- Copy the following dependency from Maven Central to `${maven.home}/lib/ext/hazelcast/`:
+- Copy the following JARs from Maven Central to `${maven.home}/lib/ext/`:
       <pre class="source">
-      └── <a href="https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/4.1.1/hazelcast-4.1.1.jar">hazelcast-4.1.1.jar</a></pre>
-- Optionally configure Hazelcast instance with `${maven.conf}/hazelcast.xml` or `${maven.conf}/hazelcast-client.xml`
-  (see Hazelcast documentation for possibilities, or, see test resources of this project as starter).
+      ├── <a href="https://repo.maven.apache.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
+      └── <a href="https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/5.0.2/hazelcast-5.0.2.jar">hazelcast-5.0.2.jar</a></pre>
+- Configure Hazelcast instance with `${maven.conf}/hazelcast.xml` or `${maven.conf}/hazelcast-client.xml` (if client used).
+  See Hazelcast documentation, default Hazelcast configuration discovery is being used.
 - Now start a multithreaded Maven build on your project and make sure `NamedSyncContextFactory` is being used.
