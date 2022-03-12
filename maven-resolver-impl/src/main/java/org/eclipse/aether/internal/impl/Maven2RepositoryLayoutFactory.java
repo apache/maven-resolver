@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,12 +35,9 @@ import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.internal.impl.checksum.DefaultArtifactChecksumFilterFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.checksum.ArtifactChecksumFilter;
-import org.eclipse.aether.spi.connector.checksum.ArtifactChecksumFilterFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
@@ -59,13 +58,16 @@ public final class Maven2RepositoryLayoutFactory
 
     public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
 
-    static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+    private static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+
+    public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
+            "aether.checksums.omitChecksumsForExtensions";
+
+    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc";
 
     private float priority;
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
-
-    private final ArtifactChecksumFilterFactory artifactChecksumFilterFactory;
 
     public float getPriority()
     {
@@ -78,15 +80,13 @@ public final class Maven2RepositoryLayoutFactory
     @Deprecated
     public Maven2RepositoryLayoutFactory()
     {
-        this( new DefaultChecksumAlgorithmFactorySelector(), new DefaultArtifactChecksumFilterFactory() );
+        this( new DefaultChecksumAlgorithmFactorySelector() );
     }
 
     @Inject
-    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
-                                          ArtifactChecksumFilterFactory artifactChecksumFilterFactory )
+    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector )
     {
         this.checksumAlgorithmFactorySelector = requireNonNull( checksumAlgorithmFactorySelector );
-        this.artifactChecksumFilterFactory = requireNonNull( artifactChecksumFilterFactory );
     }
 
     /**
@@ -123,9 +123,15 @@ public final class Maven2RepositoryLayoutFactory
             checksumsAlgorithms.add( checksumAlgorithmFactorySelector.select( checksumsAlgorithmName ) );
         }
 
+        // ensure uniqueness of (potentially user set) extension list
+        Set<String> omitChecksumsForExtensions = Arrays.stream( ConfigUtils.getString(
+                        session, DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS, CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS )
+                .split( "," )
+        ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toSet() );
+
         return new Maven2RepositoryLayout(
                 checksumsAlgorithms,
-                artifactChecksumFilterFactory.newInstance( session, repository )
+                omitChecksumsForExtensions
         );
     }
 
@@ -135,13 +141,13 @@ public final class Maven2RepositoryLayoutFactory
 
         private final List<ChecksumAlgorithmFactory> checksumAlgorithms;
 
-        private final ArtifactChecksumFilter artifactChecksumFilter;
+        private final Set<String> extensionsWithoutChecksums;
 
         private Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms,
-                                          ArtifactChecksumFilter artifactChecksumFilter )
+                                        Set<String> extensionsWithoutChecksums )
         {
             this.checksumAlgorithms = Collections.unmodifiableList( checksumAlgorithms );
-            this.artifactChecksumFilter = artifactChecksumFilter;
+            this.extensionsWithoutChecksums = requireNonNull( extensionsWithoutChecksums );
         }
 
         private URI toUri( String path )
@@ -160,6 +166,20 @@ public final class Maven2RepositoryLayoutFactory
         public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
         {
             return checksumAlgorithms;
+        }
+
+        @Override
+        public boolean hasChecksums( Artifact artifact )
+        {
+            String artifactExtension = artifact.getExtension(); // ie. pom.asc
+            for ( String extensionWithoutChecksums : extensionsWithoutChecksums )
+            {
+                if ( artifactExtension.endsWith( extensionWithoutChecksums ) )
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Override
@@ -216,7 +236,7 @@ public final class Maven2RepositoryLayoutFactory
         @Override
         public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
-            if ( artifactChecksumFilter.omitChecksumsFor( artifact ) || isChecksum( artifact.getExtension() ) )
+            if ( !hasChecksums( artifact ) || isChecksum( artifact.getExtension() ) )
             {
                 return Collections.emptyList();
             }

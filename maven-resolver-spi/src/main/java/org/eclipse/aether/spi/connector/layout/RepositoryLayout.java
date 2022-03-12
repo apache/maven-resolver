@@ -134,6 +134,24 @@ public interface RepositoryLayout
     List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
 
     /**
+     * Tells whether given artifact have remote external checksums according to current layout or not. If it returns
+     * {@code true}, then layout configured checksums will be expected: on upload they will be calculated and deployed
+     * along artifact, on download they will be retrieved and validated.
+     *
+     * If it returns {@code false} the given artifacts will have checksums omitted: on upload they will not be
+     * calculated and deployed, and on download they will be not retrieved nor validated.
+     *
+     * The result affects only layout provided checksums. See
+     * {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#REMOTE_EXTERNAL}.
+     * On download, the {@link org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()}
+     * layout required checksums are calculated, and non layout-provided checksums are still utilized.
+     *
+     * Typical case to return {@code true} (to omit checksums) is for artifact signatures, that are already a
+     * "sub-artifact" of some main artifact (for example a JAR), and they can be validated by some other means.
+     */
+    boolean hasChecksums( Artifact artifact );
+
+    /**
      * Gets the location within a remote repository where the specified artifact resides. The URI is relative to the
      * root directory of the repository.
      *
