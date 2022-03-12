@@ -146,7 +146,7 @@ public interface RepositoryLayout
      * On download, the {@link org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()}
      * layout required checksums are calculated, and non layout-provided checksums are still utilized.
      *
-     * Typical case to return {@code true} (to omit checksums) is for artifact signatures, that are already a
+     * Typical case to return {@code false} (to omit checksums) is for artifact signatures, that are already a
      * "sub-artifact" of some main artifact (for example a JAR), and they can be validated by some other means.
      *
      * @since 1.8.0
