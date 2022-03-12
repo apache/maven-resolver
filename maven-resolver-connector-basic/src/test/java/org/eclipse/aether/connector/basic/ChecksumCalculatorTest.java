@@ -47,12 +47,12 @@ public class ChecksumCalculatorTest
 
     private ChecksumCalculator newCalculator( String... algos )
     {
-        List<ChecksumAlgorithmFactory> checksumLocations = new ArrayList<>();
+        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = new ArrayList<>();
         for ( String algo : algos )
         {
-            checksumLocations.add( selector.select( algo ) );
+            checksumAlgorithmFactories.add( selector.select( algo ) );
         }
-        return ChecksumCalculator.newInstance( file, checksumLocations );
+        return ChecksumCalculator.newInstance( file, checksumAlgorithmFactories );
     }
 
     private ByteBuffer toBuffer( String data )
