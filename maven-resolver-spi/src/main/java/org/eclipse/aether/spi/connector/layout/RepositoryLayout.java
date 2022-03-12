@@ -148,6 +148,8 @@ public interface RepositoryLayout
      *
      * Typical case to return {@code true} (to omit checksums) is for artifact signatures, that are already a
      * "sub-artifact" of some main artifact (for example a JAR), and they can be validated by some other means.
+     *
+     * @since 1.8.0
      */
     boolean hasChecksums( Artifact artifact );
 
