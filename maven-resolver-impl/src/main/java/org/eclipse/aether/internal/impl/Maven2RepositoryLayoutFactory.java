@@ -111,11 +111,10 @@ public final class Maven2RepositoryLayoutFactory
             throw new NoRepositoryLayoutException( repository );
         }
         // ensure order and uniqueness of (potentially user set) algorithm list
-        LinkedHashSet<String> checksumsAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
-                ConfigUtils.getString(
-                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS
-                ).split( "," ) )
-        );
+        LinkedHashSet<String> checksumsAlgorithmNames = Arrays.stream( ConfigUtils.getString(
+                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS )
+                .split( "," )
+        ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toCollection( LinkedHashSet::new ) );
 
         List<ChecksumAlgorithmFactory> checksumsAlgorithms = new ArrayList<>( checksumsAlgorithmNames.size() );
         for ( String checksumsAlgorithmName : checksumsAlgorithmNames )
