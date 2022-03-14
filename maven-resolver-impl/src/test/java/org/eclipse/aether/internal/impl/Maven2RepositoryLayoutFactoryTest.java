@@ -331,4 +331,21 @@ public class Maven2RepositoryLayoutFactoryTest
         assertEquals( 0, checksums.size() );
     }
 
+    @Test
+    public void testCustomChecksumsIgnored_IllegalInout()
+            throws Exception
+    {
+        session.setConfigProperty( Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,foo" );
+        try
+        {
+            layout = factory.newInstance( session, newRepo( "default" ) );
+            fail( "Should not get here" );
+        }
+        catch ( IllegalArgumentException e )
+        {
+            String message = e.getMessage();
+            assertTrue( message, message.contains( Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS ) );
+        }
+    }
+
 }
