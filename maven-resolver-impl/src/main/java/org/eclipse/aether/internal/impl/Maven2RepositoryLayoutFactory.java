@@ -116,6 +116,7 @@ public final class Maven2RepositoryLayoutFactory
                 .split( "," )
         ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toCollection( LinkedHashSet::new ) );
 
+        // validation: this loop implicitly validates the list above: selector will throw on unknown algorithm
         List<ChecksumAlgorithmFactory> checksumsAlgorithms = new ArrayList<>( checksumsAlgorithmNames.size() );
         for ( String checksumsAlgorithmName : checksumsAlgorithmNames )
         {
@@ -127,6 +128,18 @@ public final class Maven2RepositoryLayoutFactory
                         session, DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS, CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS )
                 .split( "," )
         ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toSet() );
+
+        // validation: enforce that all strings in this set are having leading dot
+        if ( omitChecksumsForExtensions.stream().anyMatch( s -> !s.startsWith( "." ) ) )
+        {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "The configuration %s contains illegal values: %s (all entries must start with '.' (dot)",
+                            CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS,
+                            omitChecksumsForExtensions
+                    )
+            );
+        }
 
         return new Maven2RepositoryLayout(
                 checksumsAlgorithms,
