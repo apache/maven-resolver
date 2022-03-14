@@ -58,6 +58,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.impl.DependencyResolutionSkipper;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -84,6 +85,21 @@ import org.slf4j.LoggerFactory;
 public class DefaultDependencyCollector
     implements DependencyCollector, Service
 {
+
+    /**
+     * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
+     * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip mode.
+     *
+     * @since 1.7.3
+     */
+    public static final String CONFIG_PROP_USE_SKIP = "aether.dependencyCollector.useSkip";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_USE_SKIP}, {@code true}.
+     *
+     * @since 1.7.3
+     */
+    public static final boolean CONFIG_PROP_USE_SKIP_DEFAULT = true;
 
     private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
 
@@ -150,6 +166,14 @@ public class DefaultDependencyCollector
         requireNonNull( session, "session cannot be null" );
         requireNonNull( request, "request cannot be null" );
         session = optimizeSession( session );
+
+        boolean useSkip = ConfigUtils.getBoolean(
+                session, CONFIG_PROP_USE_SKIP_DEFAULT, CONFIG_PROP_USE_SKIP
+        );
+        if ( useSkip )
+        {
+            LOGGER.debug( "Collector skip mode enabled" );
+        }
 
         RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
 
@@ -255,7 +279,8 @@ public class DefaultDependencyCollector
 
             Args args =
                     new Args( session, trace, pool, context, versionContext, request,
-                            new DependencyResolutionSkipper() );
+                            useSkip ? new DefaultDependencyResolutionSkipper()
+                                    : NeverDependencyResolutionSkipper.INSTANCE );
             Results results = new Results( result, session );
 
             DependencySelector rootDepSelector =

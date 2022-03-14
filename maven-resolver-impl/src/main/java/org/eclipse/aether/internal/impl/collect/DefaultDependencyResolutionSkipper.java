@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.collect;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.impl.DependencyResolutionSkipper;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,40 +32,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class DependencyResolutionSkipper
+final class DefaultDependencyResolutionSkipper implements DependencyResolutionSkipper
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger( DependencyResolutionSkipper.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultDependencyResolutionSkipper.class );
 
     private Map<DependencyNode, DependencyResolutionResult> results = new LinkedHashMap<>( 256 );
     private CacheManager cacheManager = new CacheManager();
     private CoordinateManager coordinateManager = new CoordinateManager();
 
-    DependencyResolutionSkipper()
+    DefaultDependencyResolutionSkipper()
     {
         // enables default constructor
     }
 
-    void report()
-    {
-        if ( LOGGER.isTraceEnabled() )
-        {
-            LOGGER.trace( "Skipped {} nodes as duplicate",
-                    results.entrySet().stream().filter( n -> n.getValue().skippedAsDuplicate ).count() );
-            LOGGER.trace( "Skipped {} nodes as having version conflict",
-                    results.entrySet().stream().filter( n -> n.getValue().skippedAsVersionConflict ).count() );
-            LOGGER.trace( "Resolved {} nodes",
-                    results.entrySet().stream().filter( n -> n.getValue().resolve ).count() );
-            LOGGER.trace( "Forced resolving {} nodes for scope selection",
-                    results.entrySet().stream().filter( n -> n.getValue().forceResolution ).count() );
-        }
-    }
-
-    public Map<DependencyNode, DependencyResolutionResult> getResults()
-    {
-        return results;
-    }
-
-    boolean skipResolution( DependencyNode node, List<DependencyNode> parents )
+    @Override
+    public boolean skipResolution( DependencyNode node, List<DependencyNode> parents )
     {
         DependencyResolutionResult result = new DependencyResolutionResult( node );
         results.put( node, result );
@@ -132,7 +114,8 @@ final class DependencyResolutionSkipper
         return true;
     }
 
-    void cache( DependencyNode node, List<DependencyNode> parents )
+    @Override
+    public void cache( DependencyNode node, List<DependencyNode> parents )
     {
         boolean parentForceResolution = parents.stream()
                 .anyMatch( n -> results.containsKey( n ) && results.get( n ).forceResolution );
@@ -151,6 +134,26 @@ final class DependencyResolutionSkipper
         }
     }
 
+    @Override
+    public void report()
+    {
+        if ( LOGGER.isTraceEnabled() )
+        {
+            LOGGER.trace( "Skipped {} nodes as duplicate",
+                    results.entrySet().stream().filter( n -> n.getValue().skippedAsDuplicate ).count() );
+            LOGGER.trace( "Skipped {} nodes as having version conflict",
+                    results.entrySet().stream().filter( n -> n.getValue().skippedAsVersionConflict ).count() );
+            LOGGER.trace( "Resolved {} nodes",
+                    results.entrySet().stream().filter( n -> n.getValue().resolve ).count() );
+            LOGGER.trace( "Forced resolving {} nodes for scope selection",
+                    results.entrySet().stream().filter( n -> n.getValue().forceResolution ).count() );
+        }
+    }
+
+    public Map<DependencyNode, DependencyResolutionResult> getResults()
+    {
+        return results;
+    }
 
     static final class DependencyResolutionResult
     {

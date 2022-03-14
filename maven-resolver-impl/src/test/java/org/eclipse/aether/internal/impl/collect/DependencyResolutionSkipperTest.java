@@ -84,7 +84,7 @@ public class DependencyResolutionSkipperTest
         c2Node.setChildren( mutableList( hNode ) );
 
         //follow the BFS resolve sequence
-        DependencyResolutionSkipper skipper = new DependencyResolutionSkipper();
+        DefaultDependencyResolutionSkipper skipper = new DefaultDependencyResolutionSkipper();
         assertFalse( skipper.skipResolution( aNode, new ArrayList<>() ) );
         skipper.cache( aNode, new ArrayList<>() );
         assertFalse( skipper.skipResolution( bNode, mutableList( aNode ) ) );
@@ -99,10 +99,10 @@ public class DependencyResolutionSkipperTest
         assertFalse( skipper.skipResolution( gNode, mutableList( aNode, eNode, fNode ) ) );
         skipper.cache( gNode, mutableList( aNode, eNode, fNode ) );
 
-        Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
+        Map<DependencyNode, DefaultDependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
         assertEquals( results.size(), 7 );
 
-        List<DependencyResolutionSkipper.DependencyResolutionResult> skipped =
+        List<DefaultDependencyResolutionSkipper.DependencyResolutionResult> skipped =
                 results.entrySet().stream().filter( n -> n.getValue().skippedAsVersionConflict )
                         .map( s -> s.getValue() ).collect(
                                 Collectors.toList() );
@@ -129,7 +129,7 @@ public class DependencyResolutionSkipperTest
         dNode.setChildren( mutableList( c1Node ) );
 
         //follow the BFS resolve sequence
-        DependencyResolutionSkipper skipper = new DependencyResolutionSkipper();
+        DefaultDependencyResolutionSkipper skipper = new DefaultDependencyResolutionSkipper();
         assertFalse( skipper.skipResolution( aNode, new ArrayList<>() ) );
         skipper.cache( aNode, new ArrayList<>() );
         assertFalse( skipper.skipResolution( bNode, mutableList( aNode ) ) );
@@ -145,10 +145,10 @@ public class DependencyResolutionSkipperTest
         assertTrue( skipper.skipResolution( c1Node, mutableList( aNode, dNode ) ) );
         skipper.cache( c1Node, mutableList( aNode, dNode ) );
 
-        Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
+        Map<DependencyNode, DefaultDependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
         assertEquals( results.size(), 6 );
 
-        List<DependencyResolutionSkipper.DependencyResolutionResult> skipped =
+        List<DefaultDependencyResolutionSkipper.DependencyResolutionResult> skipped =
                 results.entrySet().stream().filter( n -> n.getValue().skippedAsDuplicate )
                         .map( s -> s.getValue() ).collect(
                                 Collectors.toList() );
@@ -179,7 +179,7 @@ public class DependencyResolutionSkipperTest
         dNode.setChildren( new ArrayList<>() );
 
         //follow the BFS resolve sequence
-        DependencyResolutionSkipper skipper = new DependencyResolutionSkipper();
+        DefaultDependencyResolutionSkipper skipper = new DefaultDependencyResolutionSkipper();
         assertFalse( skipper.skipResolution( aNode, new ArrayList<>() ) );
         skipper.cache( aNode, new ArrayList<>() );
         assertFalse( skipper.skipResolution( bNode, mutableList( aNode ) ) );
@@ -198,10 +198,10 @@ public class DependencyResolutionSkipperTest
         assertFalse( skipper.skipResolution( d2Node, mutableList( aNode, bNode, c1Node ) ) );
         skipper.cache( d2Node, mutableList( aNode, bNode, c1Node ) );
 
-        Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
+        Map<DependencyNode, DefaultDependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
         assertEquals( results.size(), 7 );
 
-        List<DependencyResolutionSkipper.DependencyResolutionResult> forceResolved =
+        List<DefaultDependencyResolutionSkipper.DependencyResolutionResult> forceResolved =
                 results.entrySet().stream().filter( n -> n.getValue().forceResolution )
                         .map( s -> s.getValue() ).collect(
                                 Collectors.toList() );

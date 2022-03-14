@@ -69,7 +69,6 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
-import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,39 +78,39 @@ import org.junit.Test;
 public class DefaultDependencyCollectorTest
 {
 
-    private DefaultDependencyCollector collector;
+    protected DefaultDependencyCollector collector;
 
-    private DefaultRepositorySystemSession session;
+    protected DefaultRepositorySystemSession session;
 
-    private DependencyGraphParser parser;
+    protected DependencyGraphParser parser;
 
-    private RemoteRepository repository;
+    protected RemoteRepository repository;
 
-    private IniArtifactDescriptorReader newReader( String prefix )
+    protected IniArtifactDescriptorReader newReader( String prefix )
     {
         return new IniArtifactDescriptorReader( "artifact-descriptions/" + prefix );
     }
 
-    private Dependency newDep( String coords )
+    protected Dependency newDep( String coords )
     {
         return newDep( coords, "" );
     }
 
-    private Dependency newDep( String coords, String scope )
+    protected Dependency newDep( String coords, String scope )
     {
         return new Dependency( new DefaultArtifact( coords ), scope );
-    }
-
-    private Dependency newDep( String coords, String scope, Collection<Exclusion> exclusions )
-    {
-        Dependency d = new Dependency( new DefaultArtifact( coords ), scope );
-        return d.setExclusions( exclusions );
     }
 
     @Before
     public void setup()
     {
+        setupCollector(false);
+    }
+
+    public void setupCollector(boolean useSkip)
+    {
         session = TestUtils.newSession();
+        session.setConfigProperty(DefaultDependencyCollector.CONFIG_PROP_USE_SKIP, useSkip);
 
         collector = new DefaultDependencyCollector();
         collector.setArtifactDescriptorReader( newReader( "" ) );
@@ -161,12 +160,12 @@ public class DefaultDependencyCollectorTest
         parents.removeLast();
     }
 
-    private Dependency dep( DependencyNode root, int... coords )
+    protected Dependency dep( DependencyNode root, int... coords )
     {
         return path( root, coords ).getDependency();
     }
 
-    private DependencyNode path( DependencyNode root, int... coords )
+    protected DependencyNode path( DependencyNode root, int... coords )
     {
         try
         {
@@ -227,38 +226,6 @@ public class DefaultDependencyCollectorTest
 
             assertEquals( request.getRoot(), result.getRoot().getDependency() );
         }
-    }
-
-    @Test
-    public void testSkipperWithDifferentExclusion() throws DependencyCollectionException
-    {
-        collector.setArtifactDescriptorReader( newReader( "managed/" ) );
-        parser = new DependencyGraphParser( "artifact-descriptions/managed/" );
-        session.setDependencyManager( new TransitiveDependencyManager() );
-
-        ExclusionDependencySelector exclSel1 = new ExclusionDependencySelector();
-        session.setDependencySelector( exclSel1 );
-
-        Dependency root1 = newDep( "gid:root:ext:ver", "compile",
-                Collections.singleton( new Exclusion( "gid", "transitive-1", "", "ext" ) ) );
-        Dependency root2 = newDep( "gid:root:ext:ver", "compile",
-                Collections.singleton( new Exclusion( "gid", "transitive-2", "", "ext" ) ) );
-        List<Dependency> dependencies = Arrays.asList( root1, root2 );
-
-        CollectRequest request = new CollectRequest( dependencies, null, Arrays.asList( repository ) );
-        request.addManagedDependency( newDep( "gid:direct:ext:managed-by-dominant-request" ) );
-        request.addManagedDependency( newDep( "gid:transitive-1:ext:managed-by-root" ) );
-
-        CollectResult result = collector.collectDependencies( session, request );
-        assertEquals( 0, result.getExceptions().size() );
-        assertEquals( 2, result.getRoot().getChildren().size() );
-        assertEquals( root1, dep( result.getRoot(), 0 ) );
-        assertEquals( root2, dep( result.getRoot(), 1 ) );
-        //the winner has transitive-1 excluded
-        assertEquals( 1, path( result.getRoot(), 0 ).getChildren().size() );
-        assertEquals( 0, path( result.getRoot(), 0, 0 ).getChildren().size() );
-        //skipped
-        assertEquals( 0, path( result.getRoot(), 1 ).getChildren().size() );
     }
 
     @Test
