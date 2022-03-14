@@ -29,6 +29,7 @@ import java.util.List;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  * @provisional This type is provisional and can be changed, moved or removed without prior notice.
+ * @since 1.8.0
  */
 public interface DependencyResolutionSkipper
 {
@@ -37,7 +38,8 @@ public interface DependencyResolutionSkipper
      *
      * @param node    Current node
      * @param parents All parent nodes of current node
-     * @return
+     *                
+     * @return {@code true} if the node can be skipped for resolution, {@code false} if resolution required.
      */
     boolean skipResolution( DependencyNode node, List<DependencyNode> parents );
 

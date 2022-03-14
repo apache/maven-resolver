@@ -90,14 +90,14 @@ public class DefaultDependencyCollector
      * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip mode.
      *
-     * @since 1.7.3
+     * @since 1.8.0
      */
     public static final String CONFIG_PROP_USE_SKIP = "aether.dependencyCollector.useSkip";
 
     /**
      * The default value for {@link #CONFIG_PROP_USE_SKIP}, {@code true}.
      *
-     * @since 1.7.3
+     * @since 1.8.0
      */
     public static final boolean CONFIG_PROP_USE_SKIP_DEFAULT = true;
 
