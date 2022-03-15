@@ -36,7 +36,6 @@ import java.util.Set;
 
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 
 import static java.util.Objects.requireNonNull;
 
@@ -92,25 +91,25 @@ final class ChecksumCalculator
     private final File targetFile;
 
     public static ChecksumCalculator newInstance( File targetFile,
-                                                  Collection<RepositoryLayout.ChecksumLocation> checksumLocations )
+                                                  Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        if ( checksumLocations == null || checksumLocations.isEmpty() )
+        if ( checksumAlgorithmFactories == null || checksumAlgorithmFactories.isEmpty() )
         {
             return null;
         }
-        return new ChecksumCalculator( targetFile, checksumLocations );
+        return new ChecksumCalculator( targetFile, checksumAlgorithmFactories );
     }
 
     private ChecksumCalculator( File targetFile,
-                                Collection<RepositoryLayout.ChecksumLocation> checksumLocations )
+                                Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         this.checksums = new ArrayList<>();
         Set<String> algos = new HashSet<>();
-        for ( RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations )
+        for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
-            if ( algos.add( checksumLocation.getChecksumAlgorithmFactory().getName() ) )
+            if ( algos.add( checksumAlgorithmFactory.getName() ) )
             {
-                this.checksums.add( new Checksum( checksumLocation.getChecksumAlgorithmFactory() ) );
+                this.checksums.add( new Checksum( checksumAlgorithmFactory ) );
             }
         }
         this.targetFile = targetFile;

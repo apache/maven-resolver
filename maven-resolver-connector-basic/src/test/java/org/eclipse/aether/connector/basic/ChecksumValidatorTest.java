@@ -35,6 +35,7 @@ import java.util.Map;
 
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
@@ -185,17 +186,27 @@ public class ChecksumValidatorTest
 
     private static final TestChecksumAlgorithmSelector selector = new TestChecksumAlgorithmSelector();
 
+    private List<ChecksumAlgorithmFactory> newChecksumAlgorithmFactories( String... factories )
+    {
+        List<ChecksumAlgorithmFactory> checksums = new ArrayList<>();
+        for ( String factory : factories )
+        {
+            checksums.add( selector.select( factory ) );
+        }
+        return checksums;
+    }
+
     private static RepositoryLayout.ChecksumLocation newChecksum( String factory )
     {
         return RepositoryLayout.ChecksumLocation.forLocation( URI.create( "file" ), selector.select( factory ) );
     }
 
-    private List<RepositoryLayout.ChecksumLocation> newChecksums( String... factories )
+    private List<RepositoryLayout.ChecksumLocation> newChecksums( List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         List<RepositoryLayout.ChecksumLocation> checksums = new ArrayList<>();
-        for ( String factory : factories )
+        for ( ChecksumAlgorithmFactory factory : checksumAlgorithmFactories )
         {
-            checksums.add( newChecksum( factory ) );
+            checksums.add( RepositoryLayout.ChecksumLocation.forLocation( URI.create( "file" ), factory ) );
         }
         return checksums;
     }
@@ -207,7 +218,8 @@ public class ChecksumValidatorTest
 
     private ChecksumValidator newValidator( Map<String, String> providedChecksums, String... factories )
     {
-        return new ChecksumValidator( dataFile, new TestFileProcessor(), fetcher, policy, providedChecksums, newChecksums( factories ) );
+        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = newChecksumAlgorithmFactories( factories );
+        return new ChecksumValidator( dataFile, checksumAlgorithmFactories, new TestFileProcessor(), fetcher, policy, providedChecksums, newChecksums( checksumAlgorithmFactories ) );
     }
 
     private Map<String, ?> checksums( String... algoDigestPairs )

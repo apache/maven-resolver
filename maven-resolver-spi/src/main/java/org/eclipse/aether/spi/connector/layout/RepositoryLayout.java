@@ -127,11 +127,34 @@ public interface RepositoryLayout
 
     /**
      * Returns immutable list of {@link ChecksumAlgorithmFactory} this instance of layout uses, never {@code null}.
-     * The order represents the order how checksums are validated (hence retrieved).
+     * The order also represents the order how remote external checksums are retrieved and validated.
      *
+     * @see org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind
      * @since 1.8.0
      */
     List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
+
+    /**
+     * Tells whether given artifact have remote external checksums according to current layout or not. If it returns
+     * {@code true}, then layout configured checksums will be expected: on upload they will be calculated and deployed
+     * along artifact, on download they will be retrieved and validated.
+     *
+     * If it returns {@code false} the given artifacts will have checksums omitted: on upload they will not be
+     * calculated and deployed, and on download they will be not retrieved nor validated.
+     *
+     * The result affects only layout provided checksums. See
+     * {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#REMOTE_EXTERNAL}.
+     * On download, the {@link org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()}
+     * layout required checksums are calculated, and non layout-provided checksums are still utilized.
+     *
+     * Typical case to return {@code false} (to omit checksums) is for artifact signatures, that are already a
+     * "sub-artifact" of some main artifact (for example a JAR), and they can be validated by some other means.
+     *
+     * @see org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind
+     * @see #getChecksumAlgorithmFactories()
+     * @since 1.8.0
+     */
+    boolean hasChecksums( Artifact artifact );
 
     /**
      * Gets the location within a remote repository where the specified artifact resides. The URI is relative to the
@@ -164,7 +187,8 @@ public interface RepositoryLayout
      *                 being uploaded/created.
      * @param location The relative URI to the artifact within the repository as previously obtained from
      *                 {@link #getLocation(Artifact, boolean)}, must not be {@code null}.
-     * @return The checksum files for the given artifact, possibly empty but never {@code null}.
+     * @return The checksum files for the given artifact, possibly empty but never {@code null}. If empty, that means
+     * that this layout does not provide checksums for given artifact.
      */
     List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location );
 
@@ -177,7 +201,8 @@ public interface RepositoryLayout
      *                 being uploaded/created.
      * @param location The relative URI to the metadata within the repository as previously obtained from
      *                 {@link #getLocation(Metadata, boolean)}, must not be {@code null}.
-     * @return The checksum files for the given metadata, possibly empty but never {@code null}.
+     * @return The checksum files for the given metadata, possibly empty but never {@code null}. If empty, that means
+     * that this layout does not provide checksums for given artifact.
      */
     List<ChecksumLocation> getChecksumLocations( Metadata metadata, boolean upload, URI location );
 

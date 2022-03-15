@@ -59,6 +59,8 @@ final class ChecksumValidator
 
     private final File dataFile;
 
+    private final Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
+
     private final Collection<File> tempFiles;
 
     private final FileProcessor fileProcessor;
@@ -74,6 +76,7 @@ final class ChecksumValidator
     private final Map<File, Object> checksumFiles;
 
     ChecksumValidator( File dataFile,
+                       Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
                        FileProcessor fileProcessor,
                        ChecksumFetcher checksumFetcher,
                        ChecksumPolicy checksumPolicy,
@@ -81,6 +84,7 @@ final class ChecksumValidator
                        Collection<ChecksumLocation> checksumLocations )
     {
         this.dataFile = dataFile;
+        this.checksumAlgorithmFactories = checksumAlgorithmFactories;
         this.tempFiles = new HashSet<>();
         this.fileProcessor = fileProcessor;
         this.checksumFetcher = checksumFetcher;
@@ -94,7 +98,7 @@ final class ChecksumValidator
     {
         if ( checksumPolicy != null )
         {
-            return ChecksumCalculator.newInstance( targetFile, checksumLocations );
+            return ChecksumCalculator.newInstance( targetFile, checksumAlgorithmFactories );
         }
         return null;
     }
@@ -116,11 +120,14 @@ final class ChecksumValidator
         {
             return;
         }
-        if ( validateExternalChecksums( actualChecksums ) )
+        if ( !checksumLocations.isEmpty() )
         {
-            return;
+            if ( validateExternalChecksums( actualChecksums ) )
+            {
+                return;
+            }
+            checksumPolicy.onNoMoreChecksums();
         }
-        checksumPolicy.onNoMoreChecksums();
     }
 
     private boolean validateChecksums( Map<String, ?> actualChecksums, ChecksumKind kind, Map<String, ?> checksums )
@@ -134,27 +141,26 @@ final class ChecksumValidator
             {
                 continue;
             }
-            ChecksumLocation checksumLocation = checksumLocations.stream()
-                    .filter( a -> a.getChecksumAlgorithmFactory().getName().equals( algo ) )
+            ChecksumAlgorithmFactory checksumAlgorithmFactory = checksumAlgorithmFactories.stream()
+                    .filter( a -> a.getName().equals( algo ) )
                     .findFirst()
                     .orElse( null );
-            if ( checksumLocation == null )
+            if ( checksumAlgorithmFactory == null )
             {
                 continue;
             }
 
             String actual = String.valueOf( calculated );
             String expected = entry.getValue().toString();
-            ChecksumAlgorithmFactory factory = checksumLocation.getChecksumAlgorithmFactory();
-            checksumFiles.put( getChecksumFile( factory ), expected );
+            checksumFiles.put( getChecksumFile( checksumAlgorithmFactory ), expected );
 
             if ( !isEqualChecksum( expected, actual ) )
             {
-                checksumPolicy.onChecksumMismatch( factory.getName(), kind,
+                checksumPolicy.onChecksumMismatch( checksumAlgorithmFactory.getName(), kind,
                     new ChecksumFailureException( expected, kind.name(), actual )
                 );
             }
-            else if ( checksumPolicy.onChecksumMatch( factory.getName(), kind ) )
+            else if ( checksumPolicy.onChecksumMatch( checksumAlgorithmFactory.getName(), kind ) )
             {
                 return true;
             }
