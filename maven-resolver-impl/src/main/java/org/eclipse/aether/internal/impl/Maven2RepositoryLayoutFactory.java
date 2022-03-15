@@ -134,7 +134,7 @@ public final class Maven2RepositoryLayoutFactory
         {
             throw new IllegalArgumentException(
                     String.format(
-                            "The configuration %s contains illegal values: %s (all entries must start with '.' (dot)",
+                            "The configuration %s contains illegal values: %s (all entries must start with '.' (dot))",
                             CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS,
                             omitChecksumsForExtensions
                     )
