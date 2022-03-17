@@ -48,8 +48,9 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
 /**
+ * DataPool.
  */
-final class DataPool
+public final class DataPool
 {
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
@@ -58,7 +59,7 @@ final class DataPool
 
     private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
 
-    static final ArtifactDescriptorResult NO_DESCRIPTOR =
+    public static final ArtifactDescriptorResult NO_DESCRIPTOR =
         new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
 
     private ObjectPool<Artifact> artifacts;
@@ -72,7 +73,7 @@ final class DataPool
     private final Map<Object, List<DependencyNode>> nodes = new HashMap<>( 256 );
 
     @SuppressWarnings( "unchecked" )
-    DataPool( RepositorySystemSession session )
+    public DataPool( RepositorySystemSession session )
     {
         RepositoryCache cache = session.getCache();
 
@@ -121,12 +122,12 @@ final class DataPool
         return dependencies.intern( dependency );
     }
 
-    Object toKey( ArtifactDescriptorRequest request )
+    public Object toKey( ArtifactDescriptorRequest request )
     {
         return request.getArtifact();
     }
 
-    ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
+    public ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
     {
         Descriptor descriptor = descriptors.get( key );
         if ( descriptor != null )
@@ -136,22 +137,22 @@ final class DataPool
         return null;
     }
 
-    void putDescriptor( Object key, ArtifactDescriptorResult result )
+    public void putDescriptor( Object key, ArtifactDescriptorResult result )
     {
         descriptors.put( key, new GoodDescriptor( result ) );
     }
 
-    void putDescriptor( Object key, ArtifactDescriptorException e )
+    public void putDescriptor( Object key, ArtifactDescriptorException e )
     {
         descriptors.put( key, BadDescriptor.INSTANCE );
     }
 
-    Object toKey( VersionRangeRequest request )
+    public Object toKey( VersionRangeRequest request )
     {
         return new ConstraintKey( request );
     }
 
-    VersionRangeResult getConstraint( Object key, VersionRangeRequest request )
+    public VersionRangeResult getConstraint( Object key, VersionRangeRequest request )
     {
         Constraint constraint = constraints.get( key );
         if ( constraint != null )
@@ -161,7 +162,7 @@ final class DataPool
         return null;
     }
 
-    void putConstraint( Object key, VersionRangeResult result )
+    public void putConstraint( Object key, VersionRangeResult result )
     {
         constraints.put( key, new Constraint( result ) );
     }
@@ -182,14 +183,20 @@ final class DataPool
         nodes.put( key, children );
     }
 
-    abstract static class Descriptor
+    /**
+     * Descriptor
+     */
+    public abstract static class Descriptor
     {
 
         public abstract ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request );
 
     }
 
-    static final class GoodDescriptor
+    /**
+     * GoodDescriptor
+     */
+    public static final class GoodDescriptor
         extends Descriptor
     {
 
@@ -205,7 +212,7 @@ final class DataPool
 
         final List<Dependency> managedDependencies;
 
-        GoodDescriptor( ArtifactDescriptorResult result )
+        public GoodDescriptor( ArtifactDescriptorResult result )
         {
             artifact = result.getArtifact();
             relocations = result.getRelocations();
@@ -229,7 +236,10 @@ final class DataPool
 
     }
 
-    static final class BadDescriptor
+    /**
+     * BadDescriptor
+     */
+    public static final class BadDescriptor
         extends Descriptor
     {
 
@@ -285,7 +295,10 @@ final class DataPool
         }
     }
 
-    static final class ConstraintKey
+    /**
+     * ConstraintKey
+     */
+    public static final class ConstraintKey
     {
         private final Artifact artifact;
 
@@ -293,7 +306,7 @@ final class DataPool
 
         private final int hashCode;
 
-        ConstraintKey( VersionRangeRequest request )
+        public ConstraintKey( VersionRangeRequest request )
         {
             artifact = request.getArtifact();
             repositories = request.getRepositories();
@@ -360,7 +373,10 @@ final class DataPool
         }
     }
 
-    static final class GraphKey
+    /**
+     * GraphKey
+     */
+    public static final class GraphKey
     {
         private final Artifact artifact;
 
@@ -376,7 +392,7 @@ final class DataPool
 
         private final int hashCode;
 
-        GraphKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
+        public GraphKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
                   DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
         {
             this.artifact = artifact;

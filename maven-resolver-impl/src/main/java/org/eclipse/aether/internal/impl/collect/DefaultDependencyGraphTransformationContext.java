@@ -28,7 +28,7 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 
 /**
  */
-class DefaultDependencyGraphTransformationContext
+public class DefaultDependencyGraphTransformationContext
     implements DependencyGraphTransformationContext
 {
 
@@ -36,7 +36,7 @@ class DefaultDependencyGraphTransformationContext
 
     private final Map<Object, Object> map;
 
-    DefaultDependencyGraphTransformationContext( RepositorySystemSession session )
+    public DefaultDependencyGraphTransformationContext( RepositorySystemSession session )
     {
         this.session = session;
         this.map = new HashMap<>();

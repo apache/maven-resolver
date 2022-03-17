@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.bf;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -29,7 +29,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
 
-final class DependencyProcessingContext
+final class BfProcessingContext
 {
     final DependencySelector depSelector;
     final DependencyManager depManager;
@@ -45,7 +45,7 @@ final class DependencyProcessingContext
     final Dependency dependency;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    DependencyProcessingContext( DependencySelector depSelector,
+    BfProcessingContext( DependencySelector depSelector,
                                  DependencyManager depManager,
                                  DependencyTraverser depTraverser,
                                  VersionFilter verFilter,
@@ -64,9 +64,9 @@ final class DependencyProcessingContext
         this.parents = parents;
     }
 
-    DependencyProcessingContext withDependency( Dependency dependency )
+    BfProcessingContext withDependency( Dependency dependency )
     {
-        return new DependencyProcessingContext( depSelector, depManager, depTraverser, verFilter, repositories,
+        return new BfProcessingContext( depSelector, depManager, depTraverser, verFilter, repositories,
                 managedDependencies, parents, dependency );
     }
 

@@ -36,7 +36,7 @@ import org.eclipse.aether.version.VersionConstraint;
 /**
  * @see DefaultDependencyCollector
  */
-final class DefaultVersionFilterContext
+public final class DefaultVersionFilterContext
     implements VersionFilter.VersionFilterContext
 {
     private final RepositorySystemSession session;
@@ -47,7 +47,7 @@ final class DefaultVersionFilterContext
 
     private List<Version> versions;
 
-    DefaultVersionFilterContext( RepositorySystemSession session )
+    public DefaultVersionFilterContext( RepositorySystemSession session )
     {
         this.session = session;
     }

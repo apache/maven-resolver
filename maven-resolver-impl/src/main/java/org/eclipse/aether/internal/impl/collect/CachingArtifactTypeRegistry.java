@@ -29,7 +29,7 @@ import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 /**
  * A short-lived artifact type registry that caches results from a presumedly slower type registry.
  */
-class CachingArtifactTypeRegistry
+public class CachingArtifactTypeRegistry
     implements ArtifactTypeRegistry
 {
 
