@@ -290,11 +290,12 @@ public class DefaultDependencyCollector
                     depTraverser != null ? depTraverser.deriveChildTraverser( context ) : null;
             VersionFilter rootVerFilter = verFilter != null ? verFilter.deriveChildFilter( context ) : null;
 
+            List<DependencyNode> parents = Collections.singletonList( node );
             for ( Dependency dependency : dependencies )
             {
                 args.dependencyProcessingQueue.add(
                         new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
-                                rootVerFilter, repositories, managedDependencies, Collections.singletonList( node ),
+                                rootVerFilter, repositories, managedDependencies, parents,
                                 dependency ) );
             }
 
@@ -530,10 +531,11 @@ public class DefaultDependencyCollector
         List<DependencyNode> children = args.pool.getChildren( key );
         if ( children == null )
         {
-            List<DependencyNode> parents = new ArrayList<>( parentContext.parents );
-            boolean skipResolution = args.skipper.skipResolution( child, parents );
+            boolean skipResolution = args.skipper.skipResolution( child,  parentContext.parents  );
             if ( !skipResolution )
             {
+                List<DependencyNode> parents = new ArrayList<>( parentContext.parents.size() + 1 );
+                parents.addAll( parentContext.parents );
                 parents.add( child );
                 for ( Dependency dependency : descriptorResult.getDependencies() )
                 {
@@ -723,7 +725,7 @@ public class DefaultDependencyCollector
 
         final DataPool pool;
 
-        final Queue<DependencyProcessingContext> dependencyProcessingQueue = new ArrayDeque<>();
+        final Queue<DependencyProcessingContext> dependencyProcessingQueue = new ArrayDeque<>( 128 );
 
         final DefaultDependencyCollectionContext collectionContext;
 

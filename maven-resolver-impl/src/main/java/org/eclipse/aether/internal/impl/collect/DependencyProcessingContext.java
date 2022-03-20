@@ -42,7 +42,7 @@ final class DependencyProcessingContext
      * All parents of the dependency in the top > down order.
      */
     final List<DependencyNode> parents;
-    final Dependency dependency;
+    Dependency dependency;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     DependencyProcessingContext( DependencySelector depSelector,
@@ -66,8 +66,8 @@ final class DependencyProcessingContext
 
     DependencyProcessingContext withDependency( Dependency dependency )
     {
-        return new DependencyProcessingContext( depSelector, depManager, depTraverser, verFilter, repositories,
-                managedDependencies, parents, dependency );
+        this.dependency = dependency;
+        return this;
     }
 
     DependencyNode getParent()
