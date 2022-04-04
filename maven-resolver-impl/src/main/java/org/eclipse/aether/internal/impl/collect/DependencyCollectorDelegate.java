@@ -19,13 +19,78 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The delegate to the actual implementation.
  *
  * @since 1.8.0
  */
-public interface DependencyCollectorDelegate extends DependencyCollector
+public abstract class DependencyCollectorDelegate implements DependencyCollector
 {
+    protected static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
+
+    protected static final int CONFIG_PROP_MAX_EXCEPTIONS_DEFAULT = 50;
+
+    protected static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
+
+    protected static final int CONFIG_PROP_MAX_CYCLES_DEFAULT = 10;
+
+    protected final Logger logger = LoggerFactory.getLogger( getClass() );
+
+    protected RemoteRepositoryManager remoteRepositoryManager;
+
+    protected ArtifactDescriptorReader descriptorReader;
+
+    protected VersionRangeResolver versionRangeResolver;
+
+    public DependencyCollectorDelegate()
+    {
+        // enables default constructor
+    }
+
+    protected DependencyCollectorDelegate( RemoteRepositoryManager remoteRepositoryManager,
+                           ArtifactDescriptorReader artifactDescriptorReader,
+                           VersionRangeResolver versionRangeResolver )
+    {
+        setRemoteRepositoryManager( remoteRepositoryManager );
+        setArtifactDescriptorReader( artifactDescriptorReader );
+        setVersionRangeResolver( versionRangeResolver );
+    }
+
+    public void initService( ServiceLocator locator )
+    {
+        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
+        setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
+        setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
+    }
+
+    public DependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
+    {
+        this.remoteRepositoryManager =
+                requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+        return this;
+    }
+
+    public DependencyCollector setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
+    {
+        descriptorReader = requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
+        return this;
+    }
+
+    public DependencyCollector setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
+    {
+        this.versionRangeResolver =
+                requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
+        return this;
+    }
+
 }

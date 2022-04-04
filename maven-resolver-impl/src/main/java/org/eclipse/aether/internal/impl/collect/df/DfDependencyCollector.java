@@ -71,13 +71,10 @@ import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Depth-first {@link org.eclipse.aether.impl.DependencyCollector} (the "original" default).
@@ -87,25 +84,9 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named( DfDependencyCollector.NAME )
 public class DfDependencyCollector
-        implements DependencyCollectorDelegate, Service
+        extends DependencyCollectorDelegate implements Service
 {
     public static final String NAME = "df";
-
-    private static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
-
-    private static final int CONFIG_PROP_MAX_EXCEPTIONS_DEFAULT = 50;
-
-    private static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
-
-    private static final int CONFIG_PROP_MAX_CYCLES_DEFAULT = 10;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger( DfDependencyCollector.class );
-
-    private RemoteRepositoryManager remoteRepositoryManager;
-
-    private ArtifactDescriptorReader descriptorReader;
-
-    private VersionRangeResolver versionRangeResolver;
 
     public DfDependencyCollector()
     {
@@ -117,36 +98,7 @@ public class DfDependencyCollector
                            ArtifactDescriptorReader artifactDescriptorReader,
                            VersionRangeResolver versionRangeResolver )
     {
-        setRemoteRepositoryManager( remoteRepositoryManager );
-        setArtifactDescriptorReader( artifactDescriptorReader );
-        setVersionRangeResolver( versionRangeResolver );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
-        setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
-    }
-
-    public DfDependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
-    {
-        this.remoteRepositoryManager =
-                requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
-        return this;
-    }
-
-    public DfDependencyCollector setArtifactDescriptorReader( ArtifactDescriptorReader artifactDescriptorReader )
-    {
-        descriptorReader = requireNonNull( artifactDescriptorReader, "artifact descriptor reader cannot be null" );
-        return this;
-    }
-
-    public DfDependencyCollector setVersionRangeResolver( VersionRangeResolver versionRangeResolver )
-    {
-        this.versionRangeResolver =
-                requireNonNull( versionRangeResolver, "version range resolver cannot be null" );
-        return this;
+        super( remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver );
     }
 
     @SuppressWarnings( "checkstyle:methodlength" )
@@ -295,7 +247,7 @@ public class DfDependencyCollector
         long time3 = System.nanoTime();
         stats.put( "DefaultDependencyCollector.collectTime", time2 - time1 );
         stats.put( "DefaultDependencyCollector.transformTime", time3 - time2 );
-        LOGGER.debug( "Dependency collection stats {}", stats );
+        logger.debug( "Dependency collection stats {}", stats );
 
         if ( errorPath != null )
         {
