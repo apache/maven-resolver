@@ -288,8 +288,8 @@ public class BfDependencyCollector
 
             Args args =
                     new Args( session, trace, pool, context, versionContext, request,
-                            useSkip ? new DefaultDependencyResolutionSkipper()
-                                    : NeverDependencyResolutionSkipper.INSTANCE );
+                            useSkip ? DependencyResolutionSkipper.defaultSkipper()
+                                    : DependencyResolutionSkipper.neverSkipper() );
             Results results = new Results( result, session );
 
             DependencySelector rootDepSelector =
