@@ -19,7 +19,7 @@ package org.eclipse.aether.internal.impl.collect.df;
  * under the License.
  */
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
@@ -32,45 +32,37 @@ final class NodeStack
 
     @SuppressWarnings( {"unchecked", "checkstyle:magicnumber" } )
     // CHECKSTYLE_OFF: MagicNumber
-    private DependencyNode[] nodes = new DependencyNode[96];
+    ArrayList<DependencyNode> nodes = new ArrayList<>( 96 );
     // CHECKSTYLE_ON: MagicNumber
-
-    private int size;
 
     public DependencyNode top()
     {
-        if ( size <= 0 )
+        if ( nodes.isEmpty() )
         {
             throw new IllegalStateException( "stack empty" );
         }
-        return nodes[size - 1];
+        return nodes.get( nodes.size() - 1 );
     }
 
     public void push( DependencyNode node )
     {
-        if ( size >= nodes.length )
-        {
-            DependencyNode[] tmp = new DependencyNode[size + 64];
-            System.arraycopy( nodes, 0, tmp, 0, nodes.length );
-            nodes = tmp;
-        }
-        nodes[size++] = node;
+        nodes.add( node );
     }
 
     public void pop()
     {
-        if ( size <= 0 )
+        if ( nodes.isEmpty() )
         {
             throw new IllegalStateException( "stack empty" );
         }
-        size--;
+        nodes.remove( nodes.size() - 1 );
     }
 
     public int find( Artifact artifact )
     {
-        for ( int i = size - 1; i >= 0; i-- )
+        for ( int i = nodes.size() - 1; i >= 0; i-- )
         {
-            DependencyNode node = nodes[i];
+            DependencyNode node = nodes.get( i );
 
             Artifact a = node.getArtifact();
             if ( a == null )
@@ -110,18 +102,18 @@ final class NodeStack
 
     public int size()
     {
-        return size;
+        return nodes.size();
     }
 
     public DependencyNode get( int index )
     {
-        return nodes[index];
+        return nodes.get( index );
     }
 
     @Override
     public String toString()
     {
-        return Arrays.toString( nodes );
+        return nodes.toString();
     }
 
 }

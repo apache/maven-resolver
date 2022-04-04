@@ -20,7 +20,6 @@ package org.eclipse.aether.internal.impl.collect.bf;
  */
 
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.impl.DependencyResolutionSkipper;
 
 import java.util.List;
 

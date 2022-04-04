@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect.bf;
+package org.eclipse.aether.internal.impl.collect;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class BfDependencyCycleTest
+public class DefaultDependencyCycleTest
 {
     private static final Dependency FOO_DEPENDENCY = new Dependency( new DefaultArtifact( "group-id:foo:1.0" ), "test" );
     private static final Dependency BAR_DEPENDENCY = new Dependency( new DefaultArtifact( "group-id:bar:1.0" ), "test" );
@@ -41,7 +41,7 @@ public class BfDependencyCycleTest
     {
         List<DependencyNode> nodes = new ArrayList<>();
         nodes.add( new DefaultDependencyNode( FOO_DEPENDENCY ) );
-        DependencyCycle cycle = new BfDependencyCycle( nodes, 1, BAR_DEPENDENCY );
+        DependencyCycle cycle = new DefaultDependencyCycle( nodes, 1, BAR_DEPENDENCY );
 
         assertEquals( "group-id:foo:jar -> group-id:bar:jar", cycle.toString() );
     }

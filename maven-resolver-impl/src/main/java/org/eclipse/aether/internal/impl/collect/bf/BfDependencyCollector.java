@@ -54,12 +54,12 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
-import org.eclipse.aether.impl.DependencyResolutionSkipper;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.internal.impl.collect.CachingArtifactTypeRegistry;
 import org.eclipse.aether.internal.impl.collect.DataPool;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollectionContext;
+import org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyGraphTransformationContext;
 import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
@@ -81,7 +81,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
-import static org.eclipse.aether.internal.impl.collect.bf.BfDependencyCycle.find;
+import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.find;
 
 /**
  * Breadth-first {@link org.eclipse.aether.impl.DependencyCollector}
@@ -816,7 +816,7 @@ public class BfDependencyCollector
         {
             if ( maxCycles < 0 || result.getCycles().size() < maxCycles )
             {
-                result.addCycle( new BfDependencyCycle( nodes, cycleEntry, dependency ) );
+                result.addCycle( new DefaultDependencyCycle( nodes, cycleEntry, dependency ) );
             }
         }
 

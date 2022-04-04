@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.impl.collect.bf;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.impl.DependencyResolutionSkipper;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

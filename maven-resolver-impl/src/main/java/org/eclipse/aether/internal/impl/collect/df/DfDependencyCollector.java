@@ -58,6 +58,7 @@ import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.internal.impl.collect.CachingArtifactTypeRegistry;
 import org.eclipse.aether.internal.impl.collect.DataPool;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollectionContext;
+import org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyGraphTransformationContext;
 import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
@@ -787,7 +788,7 @@ public class DfDependencyCollector
         {
             if ( maxCycles < 0 || result.getCycles().size() < maxCycles )
             {
-                result.addCycle( new DfDependencyCycle( nodes, cycleEntry, dependency ) );
+                result.addCycle( new DefaultDependencyCycle( nodes.nodes, cycleEntry, dependency ) );
             }
         }
 
