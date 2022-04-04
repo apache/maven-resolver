@@ -32,6 +32,7 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
+import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
@@ -48,7 +49,7 @@ public class DefaultDependencyCollector
 {
     private static final String CONFIG_PROP_COLLECTOR_IMPL = "aether.collector.impl";
 
-    private static final String DEFAULT_COLLECTOR_IMPL = BfDependencyCollector.NAME;
+    private static final String DEFAULT_COLLECTOR_IMPL = DfDependencyCollector.NAME;
 
     private final Map<String, DependencyCollectorDelegate> delegates;
 
@@ -74,7 +75,10 @@ public class DefaultDependencyCollector
     {
         BfDependencyCollector bf = new BfDependencyCollector();
         bf.initService( locator );
+        DfDependencyCollector df = new DfDependencyCollector();
+        df.initService( locator );
         this.delegates.put( BfDependencyCollector.NAME, bf );
+        this.delegates.put( DfDependencyCollector.NAME, df );
     }
 
     @Override

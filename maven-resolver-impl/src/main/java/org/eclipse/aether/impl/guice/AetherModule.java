@@ -50,6 +50,7 @@ import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
+import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
@@ -139,6 +140,8 @@ public class AetherModule
                 .to( DefaultDependencyCollector.class ).in( Singleton.class );
         bind( DependencyCollectorDelegate.class ).annotatedWith( Names.named( BfDependencyCollector.NAME ) )
                 .to( BfDependencyCollector.class ).in( Singleton.class );
+        bind( DependencyCollectorDelegate.class ).annotatedWith( Names.named( DfDependencyCollector.NAME ) )
+                .to( DfDependencyCollector.class ).in( Singleton.class );
 
         bind( Deployer.class ) //
                 .to( DefaultDeployer.class ).in( Singleton.class );
@@ -220,23 +223,25 @@ public class AetherModule
 
     @Provides
     @Singleton
+    Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates(
+            @Named( BfDependencyCollector.NAME ) DependencyCollectorDelegate bf,
+            @Named( DfDependencyCollector.NAME ) DependencyCollectorDelegate df
+    )
+    {
+        Map<String, DependencyCollectorDelegate> providedChecksumsSource = new HashMap<>();
+        providedChecksumsSource.put( BfDependencyCollector.NAME, bf );
+        providedChecksumsSource.put( DfDependencyCollector.NAME, df );
+        return providedChecksumsSource;
+    }
+
+    @Provides
+    @Singleton
     Map<String, ProvidedChecksumsSource> provideChecksumSources(
         @Named( FileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource fileProvidedChecksumSource
     )
     {
         Map<String, ProvidedChecksumsSource> providedChecksumsSource = new HashMap<>();
         providedChecksumsSource.put( FileProvidedChecksumsSource.NAME, fileProvidedChecksumSource );
-        return providedChecksumsSource;
-    }
-
-    @Provides
-    @Singleton
-    Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates(
-            @Named( BfDependencyCollector.NAME ) DependencyCollectorDelegate bf
-    )
-    {
-        Map<String, DependencyCollectorDelegate> providedChecksumsSource = new HashMap<>();
-        providedChecksumsSource.put( BfDependencyCollector.NAME, bf );
         return providedChecksumsSource;
     }
 
