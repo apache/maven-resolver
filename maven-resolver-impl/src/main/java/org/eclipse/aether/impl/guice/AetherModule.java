@@ -48,6 +48,8 @@ import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
+import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
@@ -132,8 +134,12 @@ public class AetherModule
                 .to( DefaultRepositorySystem.class ).in( Singleton.class );
         bind( ArtifactResolver.class ) //
                 .to( DefaultArtifactResolver.class ).in( Singleton.class );
+
         bind( DependencyCollector.class ) //
                 .to( DefaultDependencyCollector.class ).in( Singleton.class );
+        bind( DependencyCollectorDelegate.class ).annotatedWith( Names.named( BfDependencyCollector.NAME ) )
+                .to( BfDependencyCollector.class ).in( Singleton.class );
+
         bind( Deployer.class ) //
                 .to( DefaultDeployer.class ).in( Singleton.class );
         bind( Installer.class ) //
@@ -220,6 +226,17 @@ public class AetherModule
     {
         Map<String, ProvidedChecksumsSource> providedChecksumsSource = new HashMap<>();
         providedChecksumsSource.put( FileProvidedChecksumsSource.NAME, fileProvidedChecksumSource );
+        return providedChecksumsSource;
+    }
+
+    @Provides
+    @Singleton
+    Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates(
+            @Named( BfDependencyCollector.NAME ) DependencyCollectorDelegate bf
+    )
+    {
+        Map<String, DependencyCollectorDelegate> providedChecksumsSource = new HashMap<>();
+        providedChecksumsSource.put( BfDependencyCollector.NAME, bf );
         return providedChecksumsSource;
     }
 

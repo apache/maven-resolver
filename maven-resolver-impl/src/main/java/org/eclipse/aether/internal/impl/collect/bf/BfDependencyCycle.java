@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.bf;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,12 +27,13 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 /**
  * @see DefaultDependencyCollector
  */
-final class DefaultDependencyCycle
+final class BfDependencyCycle
     implements DependencyCycle
 {
 
@@ -40,7 +41,7 @@ final class DefaultDependencyCycle
 
     private final int cycleEntry;
 
-    DefaultDependencyCycle( List<DependencyNode> nodes, int cycleEntry, Dependency dependency )
+    BfDependencyCycle( List<DependencyNode> nodes, int cycleEntry, Dependency dependency )
     {
         // skip root node unless it actually has a dependency or is considered the cycle entry (due to its label)
         int offset = ( cycleEntry > 0 && nodes.get( 0 ).getDependency() == null ) ? 1 : 0;

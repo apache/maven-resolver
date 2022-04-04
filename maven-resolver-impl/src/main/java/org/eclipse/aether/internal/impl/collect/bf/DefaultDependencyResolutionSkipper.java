@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.bf;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -32,18 +32,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class DefaultDependencyResolutionSkipper implements DependencyResolutionSkipper
+/**
+ * Skipper for Skip-and-reconcile approach.
+ *
+ * @see BfDependencyCollector
+ */
+public final class DefaultDependencyResolutionSkipper implements DependencyResolutionSkipper
 {
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultDependencyResolutionSkipper.class );
 
-    private Map<DependencyNode, DependencyResolutionResult> results = new LinkedHashMap<>( 256 );
-    private CacheManager cacheManager = new CacheManager();
-    private CoordinateManager coordinateManager = new CoordinateManager();
-
-    DefaultDependencyResolutionSkipper()
-    {
-        // enables default constructor
-    }
+    private final Map<DependencyNode, DependencyResolutionResult> results = new LinkedHashMap<>( 256 );
+    private final CacheManager cacheManager = new CacheManager();
+    private final CoordinateManager coordinateManager = new CoordinateManager();
 
     @Override
     public boolean skipResolution( DependencyNode node, List<DependencyNode> parents )

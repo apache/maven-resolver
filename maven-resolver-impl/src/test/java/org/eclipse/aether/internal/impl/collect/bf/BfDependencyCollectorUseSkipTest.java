@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.bf;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +18,11 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
@@ -29,14 +34,9 @@ import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 
-public class DefaultDependencyCollectorUseSkipTest extends DefaultDependencyCollectorTest
+public class BfDependencyCollectorUseSkipTest extends BfDependencyCollectorTest
 {
 
     private Dependency newDep( String coords, String scope, Collection<Exclusion> exclusions )

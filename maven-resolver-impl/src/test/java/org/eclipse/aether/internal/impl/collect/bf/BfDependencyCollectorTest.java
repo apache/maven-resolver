@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.bf;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,14 +18,6 @@ package org.eclipse.aether.internal.impl.collect;
  * specific language governing permissions and limitations
  * under the License.
  */
-import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -73,12 +65,21 @@ import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
 
+import static java.util.Objects.requireNonNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  */
-public class DefaultDependencyCollectorTest
+public class BfDependencyCollectorTest
 {
 
-    protected DefaultDependencyCollector collector;
+    protected BfDependencyCollector collector;
 
     protected DefaultRepositorySystemSession session;
 
@@ -110,9 +111,9 @@ public class DefaultDependencyCollectorTest
     public void setupCollector( boolean useSkip )
     {
         session = TestUtils.newSession();
-        session.setConfigProperty( DefaultDependencyCollector.CONFIG_PROP_USE_SKIP, useSkip );
+        session.setConfigProperty( BfDependencyCollector.CONFIG_PROP_USE_SKIP, useSkip );
 
-        collector = new DefaultDependencyCollector();
+        collector = new BfDependencyCollector();
         collector.setArtifactDescriptorReader( newReader( "" ) );
         collector.setVersionRangeResolver( new StubVersionRangeResolver() );
         collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );

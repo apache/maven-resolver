@@ -19,33 +19,13 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
-import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.impl.DependencyResolutionSkipper;
-
-import java.util.List;
+import org.eclipse.aether.impl.DependencyCollector;
 
 /**
- * Skipper for Non-skip approach.
+ * The delegate to the actual implementation.
+ *
+ * @since 1.8.0
  */
-final class NeverDependencyResolutionSkipper implements DependencyResolutionSkipper
+public interface DependencyCollectorDelegate extends DependencyCollector
 {
-    static final DependencyResolutionSkipper INSTANCE = new NeverDependencyResolutionSkipper();
-
-    @Override
-    public boolean skipResolution( DependencyNode node, List<DependencyNode> parents )
-    {
-        return false;
-    }
-
-    @Override
-    public void cache( DependencyNode node, List<DependencyNode> parents )
-    {
-
-    }
-
-    @Override
-    public void report()
-    {
-
-    }
 }
