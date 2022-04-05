@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import static java.util.Objects.requireNonNull;
 
 /**
- * The delegate to the actual implementation.
+ * Helper class for delegate implementations, they should subclass this class.
  *
  * @since 1.8.0
  */
@@ -76,7 +76,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     public DependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
     {
         this.remoteRepositoryManager =
-                requireNonNull( remoteRepositoryManager, "remote repository provider cannot be null" );
+                requireNonNull( remoteRepositoryManager, "remote repository manager cannot be null" );
         return this;
     }
 

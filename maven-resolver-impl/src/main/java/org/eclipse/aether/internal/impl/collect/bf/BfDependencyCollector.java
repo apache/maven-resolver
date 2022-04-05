@@ -255,7 +255,7 @@ public class BfDependencyCollector
             for ( Dependency dependency : dependencies )
             {
                 args.dependencyProcessingQueue.add(
-                        new BfProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
+                        new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
                                 rootVerFilter, repositories, managedDependencies, parents,
                                 dependency ) );
             }
@@ -350,7 +350,7 @@ public class BfDependencyCollector
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    private void processDependency( Args args, Results results, BfProcessingContext context,
+    private void processDependency( Args args, Results results, DependencyProcessingContext context,
                                     List<Artifact> relocations, boolean disableVersionManagement )
     {
 
@@ -464,7 +464,7 @@ public class BfDependencyCollector
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    private void doRecurse( Args args, BfProcessingContext parentContext,
+    private void doRecurse( Args args, DependencyProcessingContext parentContext,
                             ArtifactDescriptorResult descriptorResult, DefaultDependencyNode child )
     {
         DefaultDependencyCollectionContext context = args.collectionContext;
@@ -501,7 +501,7 @@ public class BfDependencyCollector
                 for ( Dependency dependency : descriptorResult.getDependencies() )
                 {
                     args.dependencyProcessingQueue.add(
-                            new BfProcessingContext( childSelector, childManager, childTraverser, childFilter,
+                            new DependencyProcessingContext( childSelector, childManager, childTraverser, childFilter,
                                     childRepos, descriptorResult.getManagedDependencies(), parents, dependency ) );
                 }
                 args.pool.putChildren( key, child.getChildren() );
@@ -517,7 +517,7 @@ public class BfDependencyCollector
     private ArtifactDescriptorResult resolveCachedArtifactDescriptor( DataPool pool,
                                                                       ArtifactDescriptorRequest descriptorRequest,
                                                                       RepositorySystemSession session,
-                                                                      BfProcessingContext context,
+                                                                      DependencyProcessingContext context,
                                                                       Results results )
     {
         Object key = pool.toKey( descriptorRequest );
@@ -686,7 +686,7 @@ public class BfDependencyCollector
 
         final DataPool pool;
 
-        final Queue<BfProcessingContext> dependencyProcessingQueue = new ArrayDeque<>( 128 );
+        final Queue<DependencyProcessingContext> dependencyProcessingQueue = new ArrayDeque<>( 128 );
 
         final DefaultDependencyCollectionContext collectionContext;
 

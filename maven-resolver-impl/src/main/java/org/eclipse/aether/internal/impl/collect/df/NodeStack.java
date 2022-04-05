@@ -21,16 +21,18 @@ package org.eclipse.aether.internal.impl.collect.df;
 
 import java.util.ArrayList;
 
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * @see DfDependencyCollector
+ * Internal helper for {@link DfDependencyCollector}. Originally (pre-1.8.0) this same class was located a
+ * package higher.
+ *
+ * @since 1.8.0
  */
 final class NodeStack
 {
 
-    @SuppressWarnings( {"unchecked", "checkstyle:magicnumber" } )
+    @SuppressWarnings( {"checkstyle:magicnumber" } )
     // CHECKSTYLE_OFF: MagicNumber
     ArrayList<DependencyNode> nodes = new ArrayList<>( 96 );
     // CHECKSTYLE_ON: MagicNumber
@@ -56,48 +58,6 @@ final class NodeStack
             throw new IllegalStateException( "stack empty" );
         }
         nodes.remove( nodes.size() - 1 );
-    }
-
-    public int find( Artifact artifact )
-    {
-        for ( int i = nodes.size() - 1; i >= 0; i-- )
-        {
-            DependencyNode node = nodes.get( i );
-
-            Artifact a = node.getArtifact();
-            if ( a == null )
-            {
-                break;
-            }
-
-            if ( !a.getArtifactId().equals( artifact.getArtifactId() ) )
-            {
-                continue;
-            }
-            if ( !a.getGroupId().equals( artifact.getGroupId() ) )
-            {
-                continue;
-            }
-            if ( !a.getExtension().equals( artifact.getExtension() ) )
-            {
-                continue;
-            }
-            if ( !a.getClassifier().equals( artifact.getClassifier() ) )
-            {
-                continue;
-            }
-            /*
-             * NOTE: While a:1 and a:2 are technically different artifacts, we want to consider the path a:2 -> b:2 ->
-             * a:1 a cycle in the current context. The artifacts themselves might not form a cycle but their producing
-             * projects surely do. Furthermore, conflict resolution will always have to consider a:1 a loser (otherwise
-             * its ancestor a:2 would get pruned and so would a:1) so there is no point in building the sub graph of
-             * a:1.
-             */
-
-            return i;
-        }
-
-        return -1;
     }
 
     public int size()

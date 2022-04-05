@@ -31,6 +31,7 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 /**
  * Default implementation of {@link DependencyCycle}.
+ * Internal helper class for collector implementations.
  */
 public final class DefaultDependencyCycle
     implements DependencyCycle
@@ -59,11 +60,13 @@ public final class DefaultDependencyCycle
         this.cycleEntry = cycleEntry;
     }
 
+    @Override
     public List<Dependency> getPrecedingDependencies()
     {
         return dependencies.subList( 0, cycleEntry );
     }
 
+    @Override
     public List<Dependency> getCyclicDependencies()
     {
         return dependencies.subList( cycleEntry, dependencies.size() );

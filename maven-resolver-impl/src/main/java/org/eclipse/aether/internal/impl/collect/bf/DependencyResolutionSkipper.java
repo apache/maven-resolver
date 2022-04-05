@@ -33,10 +33,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A skipper that determines whether to skip resolving given node during the dependency collection.
+ * Internal helper for {@link BfDependencyCollector}.
  *
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @provisional This type is provisional and can be changed, moved or removed without prior notice.
  * @since 1.8.0
  */
 abstract class DependencyResolutionSkipper

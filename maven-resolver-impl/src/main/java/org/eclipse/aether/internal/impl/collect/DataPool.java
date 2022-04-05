@@ -48,6 +48,7 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
 /**
+ * Internal helper class for collector implementations.
  */
 public final class DataPool
 {
@@ -103,7 +104,7 @@ public final class DataPool
 
         if ( descriptors == null )
         {
-            descriptors = Collections.synchronizedMap( new WeakHashMap<Object, Descriptor>( 256 ) );
+            descriptors = Collections.synchronizedMap( new WeakHashMap<>( 256 ) );
             if ( cache != null )
             {
                 cache.put( session, DESCRIPTORS, descriptors );

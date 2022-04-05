@@ -29,7 +29,12 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
 
-final class BfProcessingContext
+/**
+ * Internal helper for {@link BfDependencyCollector}.
+ *
+ * @since 1.8.0
+ */
+final class DependencyProcessingContext
 {
     final DependencySelector depSelector;
     final DependencyManager depManager;
@@ -45,14 +50,14 @@ final class BfProcessingContext
     Dependency dependency;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    BfProcessingContext( DependencySelector depSelector,
-                         DependencyManager depManager,
-                         DependencyTraverser depTraverser,
-                         VersionFilter verFilter,
-                         List<RemoteRepository> repositories,
-                         List<Dependency> managedDependencies,
-                         List<DependencyNode> parents,
-                         Dependency dependency )
+    DependencyProcessingContext( DependencySelector depSelector,
+                                 DependencyManager depManager,
+                                 DependencyTraverser depTraverser,
+                                 VersionFilter verFilter,
+                                 List<RemoteRepository> repositories,
+                                 List<Dependency> managedDependencies,
+                                 List<DependencyNode> parents,
+                                 Dependency dependency )
     {
         this.depSelector = depSelector;
         this.depManager = depManager;
@@ -64,7 +69,7 @@ final class BfProcessingContext
         this.parents = parents;
     }
 
-    BfProcessingContext withDependency( Dependency dependency )
+    DependencyProcessingContext withDependency( Dependency dependency )
     {
         this.dependency = dependency;
         return this;

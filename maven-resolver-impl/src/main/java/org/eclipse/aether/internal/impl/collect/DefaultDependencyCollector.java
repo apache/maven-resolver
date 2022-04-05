@@ -40,7 +40,7 @@ import org.eclipse.aether.util.ConfigUtils;
 import static java.util.Objects.requireNonNull;
 
 /**
- *
+ * Default implementation of {@link DependencyCollector} that merely indirect to selected delegate.
  */
 @Singleton
 @Named

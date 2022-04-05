@@ -27,6 +27,7 @@ import java.util.WeakHashMap;
 /**
  * Pool of immutable object instances, used to avoid excessive memory consumption of (dirty) dependency graph which
  * tends to have many duplicate artifacts/dependencies.
+ * Internal helper class for collector implementations.
  */
 class ObjectPool<T>
 {

@@ -27,7 +27,8 @@ import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 
 /**
- * A short-lived artifact type registry that caches results from a presumedly slower type registry.
+ * A short-lived artifact type registry that caches results from a presumably slower type registry.
+ * Internal helper class for collector implementations.
  */
 public class CachingArtifactTypeRegistry
     implements ArtifactTypeRegistry

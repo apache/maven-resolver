@@ -27,7 +27,7 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * @see DefaultDependencyCollector
+ * Internal helper class for collector implementations.
  */
 public final class DefaultDependencyCollectionContext
     implements DependencyCollectionContext

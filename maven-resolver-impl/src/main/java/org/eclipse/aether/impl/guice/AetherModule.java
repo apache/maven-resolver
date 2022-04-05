@@ -228,10 +228,10 @@ public class AetherModule
             @Named( DfDependencyCollector.NAME ) DependencyCollectorDelegate df
     )
     {
-        Map<String, DependencyCollectorDelegate> providedChecksumsSource = new HashMap<>();
-        providedChecksumsSource.put( BfDependencyCollector.NAME, bf );
-        providedChecksumsSource.put( DfDependencyCollector.NAME, df );
-        return providedChecksumsSource;
+        Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates = new HashMap<>();
+        dependencyCollectorDelegates.put( BfDependencyCollector.NAME, bf );
+        dependencyCollectorDelegates.put( DfDependencyCollector.NAME, df );
+        return dependencyCollectorDelegates;
     }
 
     @Provides

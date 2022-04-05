@@ -77,7 +77,8 @@ import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
 
 /**
- * Depth-first {@link org.eclipse.aether.impl.DependencyCollector} (the "original" default).
+ * Depth-first {@link org.eclipse.aether.impl.DependencyCollector} (the "original" default). Originally
+ * this class was located a package higher (as "default" implementation).
  *
  * @since 1.8.0
  */
@@ -379,7 +380,7 @@ public class DfDependencyCollector
 
                 DependencyNode node = args.nodes.top();
 
-                int cycleEntry = args.nodes.find( d.getArtifact() );
+                int cycleEntry = DefaultDependencyCycle.find( args.nodes.nodes, d.getArtifact() );
                 if ( cycleEntry >= 0 )
                 {
                     results.addCycle( args.nodes, cycleEntry, d );

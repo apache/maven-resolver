@@ -27,6 +27,8 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 
 /**
+ * Default implementation of {@link DependencyGraphTransformationContext}.
+ * Internal helper class for collector implementations.
  */
 public class DefaultDependencyGraphTransformationContext
     implements DependencyGraphTransformationContext
@@ -42,16 +44,19 @@ public class DefaultDependencyGraphTransformationContext
         this.map = new HashMap<>();
     }
 
+    @Override
     public RepositorySystemSession getSession()
     {
         return session;
     }
 
+    @Override
     public Object get( Object key )
     {
         return map.get( requireNonNull( key, "key cannot be null" ) );
     }
 
+    @Override
     public Object put( Object key, Object value )
     {
         requireNonNull( key, "key cannot be null" );
