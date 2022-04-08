@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Helper class for delegate implementations, they should subclass this class.
+ * Helper class for delegate implementations, they MUST subclass this class.
  *
  * @since 1.8.0
  */

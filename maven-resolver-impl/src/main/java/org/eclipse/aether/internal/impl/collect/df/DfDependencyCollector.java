@@ -246,9 +246,12 @@ public class DfDependencyCollector
         }
 
         long time3 = System.nanoTime();
-        stats.put( "DefaultDependencyCollector.collectTime", time2 - time1 );
-        stats.put( "DefaultDependencyCollector.transformTime", time3 - time2 );
-        logger.debug( "Dependency collection stats {}", stats );
+        if ( logger.isDebugEnabled() )
+        {
+            stats.put( "BfDependencyCollector.collectTime", time2 - time1 );
+            stats.put( "BfDependencyCollector.transformTime", time3 - time2 );
+            logger.debug( "Dependency collection stats {}", stats );
+        }
 
         if ( errorPath != null )
         {
@@ -630,15 +633,13 @@ public class DfDependencyCollector
             catch ( RepositoryException e )
             {
                 throw new VersionRangeResolutionException( rangeResult,
-                                                           "Failed to filter versions for " + dependency.getArtifact()
-                                                               + ": " + e.getMessage(), e );
+                        "Failed to filter versions for " + dependency.getArtifact(), e );
             }
             versions = verContext.get();
             if ( versions.isEmpty() )
             {
                 throw new VersionRangeResolutionException( rangeResult,
-                                                           "No acceptable versions for " + dependency.getArtifact()
-                                                               + ": " + rangeResult.getVersions() );
+                        "No acceptable versions for " + dependency.getArtifact() + ": " + rangeResult.getVersions() );
             }
         }
         else

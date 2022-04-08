@@ -50,7 +50,7 @@ abstract class DependencyResolutionSkipper
     abstract boolean skipResolution( DependencyNode node, List<DependencyNode> parents );
 
     /**
-     * Cache the resolution result when a node is resolved by @See DependencyCollector after resolution.
+     * Cache the resolution result when a node is resolved by {@link BfDependencyCollector) after resolution.
      *
      * @param node    Current node
      * @param parents All parent nodes of current node

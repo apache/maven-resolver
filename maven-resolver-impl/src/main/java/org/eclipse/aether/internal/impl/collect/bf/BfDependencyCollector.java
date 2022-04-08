@@ -98,14 +98,14 @@ public class BfDependencyCollector
      *
      * @since 1.8.0
      */
-    public static final String CONFIG_PROP_USE_SKIP = "aether.dependencyCollector.bf.useSkip";
+    public static final String CONFIG_PROP_SKIPPER = "aether.dependencyCollector.bf.skipper";
 
     /**
-     * The default value for {@link #CONFIG_PROP_USE_SKIP}, {@code true}.
+     * The default value for {@link #CONFIG_PROP_SKIPPER}, {@code true}.
      *
      * @since 1.8.0
      */
-    public static final boolean CONFIG_PROP_USE_SKIP_DEFAULT = true;
+    public static final boolean CONFIG_PROP_SKIPPER_DEFAULT = true;
 
     public BfDependencyCollector()
     {
@@ -129,7 +129,7 @@ public class BfDependencyCollector
         session = optimizeSession( session );
 
         boolean useSkip = ConfigUtils.getBoolean(
-                session, CONFIG_PROP_USE_SKIP_DEFAULT, CONFIG_PROP_USE_SKIP
+                session, CONFIG_PROP_SKIPPER_DEFAULT, CONFIG_PROP_SKIPPER
         );
         if ( useSkip )
         {
@@ -289,9 +289,12 @@ public class BfDependencyCollector
         }
 
         long time3 = System.nanoTime();
-        stats.put( "DefaultDependencyCollector.collectTime", time2 - time1 );
-        stats.put( "DefaultDependencyCollector.transformTime", time3 - time2 );
-        logger.debug( "Dependency collection stats {}", stats );
+        if ( logger.isDebugEnabled() )
+        {
+            stats.put( "BfDependencyCollector.collectTime", time2 - time1 );
+            stats.put( "BfDependencyCollector.transformTime", time3 - time2 );
+            logger.debug( "Dependency collection stats {}", stats );
+        }
 
         if ( errorPath != null )
         {
@@ -655,15 +658,13 @@ public class BfDependencyCollector
             catch ( RepositoryException e )
             {
                 throw new VersionRangeResolutionException( rangeResult,
-                                                           "Failed to filter versions for " + dependency.getArtifact()
-                                                               + ": " + e.getMessage(), e );
+                        "Failed to filter versions for " + dependency.getArtifact(), e );
             }
             versions = verContext.get();
             if ( versions.isEmpty() )
             {
                 throw new VersionRangeResolutionException( rangeResult,
-                                                           "No acceptable versions for " + dependency.getArtifact()
-                                                               + ": " + rangeResult.getVersions() );
+                        "No acceptable versions for " + dependency.getArtifact() + ": " + rangeResult.getVersions() );
             }
         }
         else
