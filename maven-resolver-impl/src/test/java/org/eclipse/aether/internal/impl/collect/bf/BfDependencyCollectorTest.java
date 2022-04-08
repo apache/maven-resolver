@@ -108,10 +108,10 @@ public class BfDependencyCollectorTest
         setupCollector( false );
     }
 
-    public void setupCollector( boolean useSkip )
+    public void setupCollector( boolean useSkipper )
     {
         session = TestUtils.newSession();
-        session.setConfigProperty( BfDependencyCollector.CONFIG_PROP_SKIPPER, useSkip );
+        session.setConfigProperty( BfDependencyCollector.CONFIG_PROP_SKIPPER, useSkipper );
 
         collector = new BfDependencyCollector();
         collector.setArtifactDescriptorReader( newReader( "" ) );
