@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.df;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -75,28 +75,28 @@ import org.junit.Test;
 
 /**
  */
-public class DefaultDependencyCollectorTest
+public class DfDependencyCollectorTest
 {
 
-    protected DefaultDependencyCollector collector;
+    private DfDependencyCollector collector;
 
-    protected DefaultRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
-    protected DependencyGraphParser parser;
+    private DependencyGraphParser parser;
 
-    protected RemoteRepository repository;
+    private RemoteRepository repository;
 
-    protected IniArtifactDescriptorReader newReader( String prefix )
+    private IniArtifactDescriptorReader newReader( String prefix )
     {
         return new IniArtifactDescriptorReader( "artifact-descriptions/" + prefix );
     }
 
-    protected Dependency newDep( String coords )
+    private Dependency newDep( String coords )
     {
         return newDep( coords, "" );
     }
 
-    protected Dependency newDep( String coords, String scope )
+    private Dependency newDep( String coords, String scope )
     {
         return new Dependency( new DefaultArtifact( coords ), scope );
     }
@@ -104,15 +104,9 @@ public class DefaultDependencyCollectorTest
     @Before
     public void setup()
     {
-        setupCollector( false );
-    }
-
-    public void setupCollector( boolean useSkip )
-    {
         session = TestUtils.newSession();
-        session.setConfigProperty( DefaultDependencyCollector.CONFIG_PROP_USE_SKIP, useSkip );
 
-        collector = new DefaultDependencyCollector();
+        collector = new DfDependencyCollector();
         collector.setArtifactDescriptorReader( newReader( "" ) );
         collector.setVersionRangeResolver( new StubVersionRangeResolver() );
         collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
@@ -160,12 +154,12 @@ public class DefaultDependencyCollectorTest
         parents.removeLast();
     }
 
-    protected Dependency dep( DependencyNode root, int... coords )
+    private Dependency dep( DependencyNode root, int... coords )
     {
         return path( root, coords ).getDependency();
     }
 
-    protected DependencyNode path( DependencyNode root, int... coords )
+    private DependencyNode path( DependencyNode root, int... coords )
     {
         try
         {

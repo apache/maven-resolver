@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.bf;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -29,6 +29,11 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
 
+/**
+ * Internal helper for {@link BfDependencyCollector}.
+ *
+ * @since 1.8.0
+ */
 final class DependencyProcessingContext
 {
     final DependencySelector depSelector;

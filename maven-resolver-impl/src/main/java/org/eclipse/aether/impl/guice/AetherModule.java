@@ -48,6 +48,9 @@ import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
+import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
+import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
@@ -132,8 +135,14 @@ public class AetherModule
                 .to( DefaultRepositorySystem.class ).in( Singleton.class );
         bind( ArtifactResolver.class ) //
                 .to( DefaultArtifactResolver.class ).in( Singleton.class );
+
         bind( DependencyCollector.class ) //
                 .to( DefaultDependencyCollector.class ).in( Singleton.class );
+        bind( DependencyCollectorDelegate.class ).annotatedWith( Names.named( BfDependencyCollector.NAME ) )
+                .to( BfDependencyCollector.class ).in( Singleton.class );
+        bind( DependencyCollectorDelegate.class ).annotatedWith( Names.named( DfDependencyCollector.NAME ) )
+                .to( DfDependencyCollector.class ).in( Singleton.class );
+
         bind( Deployer.class ) //
                 .to( DefaultDeployer.class ).in( Singleton.class );
         bind( Installer.class ) //
@@ -210,6 +219,19 @@ public class AetherModule
 
         install( new Slf4jModule() );
 
+    }
+
+    @Provides
+    @Singleton
+    Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates(
+            @Named( BfDependencyCollector.NAME ) DependencyCollectorDelegate bf,
+            @Named( DfDependencyCollector.NAME ) DependencyCollectorDelegate df
+    )
+    {
+        Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates = new HashMap<>();
+        dependencyCollectorDelegates.put( BfDependencyCollector.NAME, bf );
+        dependencyCollectorDelegates.put( DfDependencyCollector.NAME, df );
+        return dependencyCollectorDelegates;
     }
 
     @Provides

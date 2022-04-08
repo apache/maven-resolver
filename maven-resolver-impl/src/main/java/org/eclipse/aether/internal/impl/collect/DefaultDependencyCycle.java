@@ -30,17 +30,17 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 /**
- * @see DefaultDependencyCollector
+ * Default implementation of {@link DependencyCycle}.
+ * Internal helper class for collector implementations.
  */
-final class DefaultDependencyCycle
+public final class DefaultDependencyCycle
     implements DependencyCycle
 {
-
     private final List<Dependency> dependencies;
 
     private final int cycleEntry;
 
-    DefaultDependencyCycle( List<DependencyNode> nodes, int cycleEntry, Dependency dependency )
+    public DefaultDependencyCycle( List<DependencyNode> nodes, int cycleEntry, Dependency dependency )
     {
         // skip root node unless it actually has a dependency or is considered the cycle entry (due to its label)
         int offset = ( cycleEntry > 0 && nodes.get( 0 ).getDependency() == null ) ? 1 : 0;
@@ -60,11 +60,13 @@ final class DefaultDependencyCycle
         this.cycleEntry = cycleEntry;
     }
 
+    @Override
     public List<Dependency> getPrecedingDependencies()
     {
         return dependencies.subList( 0, cycleEntry );
     }
 
+    @Override
     public List<Dependency> getCyclicDependencies()
     {
         return dependencies.subList( cycleEntry, dependencies.size() );

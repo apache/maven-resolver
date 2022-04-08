@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.bf;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,7 +18,12 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
-import org.eclipse.aether.RepositoryException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
@@ -26,12 +31,6 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -61,7 +60,7 @@ public class DependencyResolutionSkipperTest
     }
 
     @Test
-    public void testSkipVersionConflict() throws RepositoryException
+    public void testSkipVersionConflict()
     {
         // A -> B -> C 3.0 -> D   => C3.0 SHOULD BE SKIPPED
         // | -> E -> F -> G
@@ -84,7 +83,7 @@ public class DependencyResolutionSkipperTest
         c2Node.setChildren( mutableList( hNode ) );
 
         //follow the BFS resolve sequence
-        DefaultDependencyResolutionSkipper skipper = new DefaultDependencyResolutionSkipper();
+        DependencyResolutionSkipper.DefaultDependencyResolutionSkipper skipper = DependencyResolutionSkipper.defaultSkipper();
         assertFalse( skipper.skipResolution( aNode, new ArrayList<>() ) );
         skipper.cache( aNode, new ArrayList<>() );
         assertFalse( skipper.skipResolution( bNode, mutableList( aNode ) ) );
@@ -99,19 +98,19 @@ public class DependencyResolutionSkipperTest
         assertFalse( skipper.skipResolution( gNode, mutableList( aNode, eNode, fNode ) ) );
         skipper.cache( gNode, mutableList( aNode, eNode, fNode ) );
 
-        Map<DependencyNode, DefaultDependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
+        Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
         assertEquals( results.size(), 7 );
 
-        List<DefaultDependencyResolutionSkipper.DependencyResolutionResult> skipped =
-                results.entrySet().stream().filter( n -> n.getValue().skippedAsVersionConflict )
-                        .map( s -> s.getValue() ).collect(
-                                Collectors.toList() );
+        List<DependencyResolutionSkipper.DependencyResolutionResult> skipped =
+                results.values().stream()
+                        .filter( dependencyResolutionResult -> dependencyResolutionResult.skippedAsVersionConflict )
+                        .collect( Collectors.toList() );
         assertEquals( skipped.size(), 1 );
         assertTrue( skipped.get( 0 ).current == c3Node );
     }
 
     @Test
-    public void testSkipDeeperDuplicateNode() throws RepositoryException
+    public void testSkipDeeperDuplicateNode()
     {
         // A -> B
         // |--> C -> B  => B here will be skipped
@@ -129,7 +128,7 @@ public class DependencyResolutionSkipperTest
         dNode.setChildren( mutableList( c1Node ) );
 
         //follow the BFS resolve sequence
-        DefaultDependencyResolutionSkipper skipper = new DefaultDependencyResolutionSkipper();
+        DependencyResolutionSkipper.DefaultDependencyResolutionSkipper skipper = DependencyResolutionSkipper.defaultSkipper();
         assertFalse( skipper.skipResolution( aNode, new ArrayList<>() ) );
         skipper.cache( aNode, new ArrayList<>() );
         assertFalse( skipper.skipResolution( bNode, mutableList( aNode ) ) );
@@ -145,13 +144,13 @@ public class DependencyResolutionSkipperTest
         assertTrue( skipper.skipResolution( c1Node, mutableList( aNode, dNode ) ) );
         skipper.cache( c1Node, mutableList( aNode, dNode ) );
 
-        Map<DependencyNode, DefaultDependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
+        Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
         assertEquals( results.size(), 6 );
 
-        List<DefaultDependencyResolutionSkipper.DependencyResolutionResult> skipped =
-                results.entrySet().stream().filter( n -> n.getValue().skippedAsDuplicate )
-                        .map( s -> s.getValue() ).collect(
-                                Collectors.toList() );
+        List<DependencyResolutionSkipper.DefaultDependencyResolutionSkipper.DependencyResolutionResult> skipped =
+                results.values().stream()
+                        .filter( dependencyResolutionResult -> dependencyResolutionResult.skippedAsDuplicate )
+                        .collect( Collectors.toList() );
         assertEquals( skipped.size(), 2 );
         assertTrue( skipped.get( 0 ).current == b1Node );
         assertTrue( skipped.get( 1 ).current == c1Node );
@@ -159,7 +158,7 @@ public class DependencyResolutionSkipperTest
 
 
     @Test
-    public void testForceResolution() throws RepositoryException
+    public void testForceResolution()
     {
         // A -> B -> C -> D => 3rd D here will be force-resolved
         // |--> C -> D => 2nd D will be force-resolved
@@ -179,7 +178,7 @@ public class DependencyResolutionSkipperTest
         dNode.setChildren( new ArrayList<>() );
 
         //follow the BFS resolve sequence
-        DefaultDependencyResolutionSkipper skipper = new DefaultDependencyResolutionSkipper();
+        DependencyResolutionSkipper.DefaultDependencyResolutionSkipper skipper = DependencyResolutionSkipper.defaultSkipper();
         assertFalse( skipper.skipResolution( aNode, new ArrayList<>() ) );
         skipper.cache( aNode, new ArrayList<>() );
         assertFalse( skipper.skipResolution( bNode, mutableList( aNode ) ) );
@@ -198,13 +197,13 @@ public class DependencyResolutionSkipperTest
         assertFalse( skipper.skipResolution( d2Node, mutableList( aNode, bNode, c1Node ) ) );
         skipper.cache( d2Node, mutableList( aNode, bNode, c1Node ) );
 
-        Map<DependencyNode, DefaultDependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
+        Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
         assertEquals( results.size(), 7 );
 
-        List<DefaultDependencyResolutionSkipper.DependencyResolutionResult> forceResolved =
-                results.entrySet().stream().filter( n -> n.getValue().forceResolution )
-                        .map( s -> s.getValue() ).collect(
-                                Collectors.toList() );
+        List<DependencyResolutionSkipper.DefaultDependencyResolutionSkipper.DependencyResolutionResult> forceResolved =
+                results.values().stream()
+                        .filter( dependencyResolutionResult -> dependencyResolutionResult.forceResolution )
+                        .collect( Collectors.toList() );
         assertEquals( forceResolved.size(), 3 );
         assertTrue( forceResolved.get( 0 ).current == c1Node );
         assertTrue( forceResolved.get( 1 ).current == d1Node );

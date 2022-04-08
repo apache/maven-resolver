@@ -27,9 +27,9 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * @see DefaultDependencyCollector
+ * Internal helper class for collector implementations.
  */
-final class DefaultDependencyCollectionContext
+public final class DefaultDependencyCollectionContext
     implements DependencyCollectionContext
 {
 
@@ -41,7 +41,7 @@ final class DefaultDependencyCollectionContext
 
     private List<Dependency> managedDependencies;
 
-    DefaultDependencyCollectionContext( RepositorySystemSession session, Artifact artifact,
+    public DefaultDependencyCollectionContext( RepositorySystemSession session, Artifact artifact,
                                                Dependency dependency, List<Dependency> managedDependencies )
     {
         this.session = session;
