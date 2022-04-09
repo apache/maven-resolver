@@ -74,6 +74,7 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.transform.DeployRequestTransformer;
 import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.transform.FileTransformerManager;
 
@@ -220,9 +221,17 @@ public class DefaultDeployer
         }
     }
 
-    private DeployResult deploy( SyncContext syncContext, RepositorySystemSession session, DeployRequest request )
+    private DeployResult deploy( SyncContext syncContext, RepositorySystemSession session, DeployRequest origRequest )
         throws DeploymentException
     {
+        DeployRequest request = origRequest;
+        DeployRequestTransformer transformer =
+                (DeployRequestTransformer) session.getData().get( DeployRequestTransformer.KEY );
+        if ( transformer != null )
+        {
+            request = requireNonNull( transformer.transformDeployRequest( session, request ) );
+        }
+
         DeployResult result = new DeployResult( request );
 
         RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );

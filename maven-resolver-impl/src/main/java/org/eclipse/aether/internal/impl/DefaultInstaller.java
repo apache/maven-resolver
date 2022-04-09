@@ -57,6 +57,7 @@ import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transform.FileTransformer;
+import org.eclipse.aether.transform.InstallRequestTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,9 +151,18 @@ public class DefaultInstaller
         }
     }
 
-    private InstallResult install( SyncContext syncContext, RepositorySystemSession session, InstallRequest request )
+    private InstallResult install( SyncContext syncContext, RepositorySystemSession session,
+                                   InstallRequest origRequest )
         throws InstallationException
     {
+        InstallRequest request = origRequest;
+        InstallRequestTransformer transformer =
+                (InstallRequestTransformer) session.getData().get( InstallRequestTransformer.KEY );
+        if ( transformer != null )
+        {
+            request = requireNonNull( transformer.transformInstallRequest( session, request ) );
+        }
+
         InstallResult result = new InstallResult( request );
 
         RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
