@@ -452,6 +452,7 @@ public class BfDependencyCollector
                     {
                         doRecurse( args, context.withDependency( d ), descriptorResult, child );
                     }
+                    break;
                 }
             }
             else

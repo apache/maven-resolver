@@ -368,6 +368,7 @@ public class DfDependencyCollector
             return;
         }
 
+        Collections.reverse( versions );
         for ( Version version : versions )
         {
             Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
@@ -427,6 +428,7 @@ public class DfDependencyCollector
                         doRecurse( args, results, repositories, depSelector, depManager, depTraverser, verFilter, d,
                                    descriptorResult, child );
                     }
+                    break;
                 }
             }
             else
