@@ -265,7 +265,10 @@ public interface RepositorySystemSession
      * Get the file transformer manager
      * 
      * @return the manager, never {@code null}
+     * @deprecated Without any direct replacement for now. This API is OOM-prone, and also lacks a lot of context about
+     * transforming.
      */
+    @Deprecated
     FileTransformerManager getFileTransformerManager();
 
 }
