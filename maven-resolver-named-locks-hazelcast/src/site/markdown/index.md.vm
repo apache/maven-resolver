@@ -72,7 +72,7 @@ ${esc.hash}${esc.hash} Installation/Testing
 - Copy the following JARs from Maven Central to `${maven.home}/lib/ext/`:
       <pre class="source">
       ├── <a href="https://repo.maven.apache.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
-      └── <a href="https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/5.0.2/hazelcast-5.0.2.jar">hazelcast-5.0.2.jar</a></pre>
+      └── <a href="https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/5.1.1/hazelcast-5.1.1.jar">hazelcast-5.1.1.jar</a></pre>
 - Configure Hazelcast instance with `${maven.conf}/hazelcast.xml` or `${maven.conf}/hazelcast-client.xml` (if client used).
   See Hazelcast documentation, default Hazelcast configuration discovery is being used.
 - Now start a multithreaded Maven build on your project and make sure `NamedSyncContextFactory` is being used.

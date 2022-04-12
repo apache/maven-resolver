@@ -22,7 +22,7 @@
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           https://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd">
+           https://www.hazelcast.com/schema/config/hazelcast-config-5.1.xsd">
 
     <cluster-name>maven-resolver-named</cluster-name>
     <instance-name>server</instance-name>
