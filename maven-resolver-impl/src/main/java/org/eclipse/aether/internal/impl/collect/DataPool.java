@@ -19,6 +19,7 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,7 +67,7 @@ public final class DataPool
 
     private ObjectPool<Dependency> dependencies;
 
-    private Map<Object, Descriptor> descriptors;
+    private Map<Object, WeakReference<Descriptor>> descriptors;
 
     private final Map<Object, Constraint> constraints = new HashMap<>();
 
@@ -81,7 +82,7 @@ public final class DataPool
         {
             artifacts = (ObjectPool<Artifact>) cache.get( session, ARTIFACT_POOL );
             dependencies = (ObjectPool<Dependency>) cache.get( session, DEPENDENCY_POOL );
-            descriptors = (Map<Object, Descriptor>) cache.get( session, DESCRIPTORS );
+            descriptors = (Map<Object, WeakReference<Descriptor>>) cache.get( session, DESCRIPTORS );
         }
 
         if ( artifacts == null )
@@ -129,7 +130,8 @@ public final class DataPool
 
     public ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
     {
-        Descriptor descriptor = descriptors.get( key );
+        WeakReference<Descriptor> descriptorRef = descriptors.get( key );
+        Descriptor descriptor = descriptorRef != null ? descriptorRef.get() : null;
         if ( descriptor != null )
         {
             return descriptor.toResult( request );
@@ -139,12 +141,12 @@ public final class DataPool
 
     public void putDescriptor( Object key, ArtifactDescriptorResult result )
     {
-        descriptors.put( key, new GoodDescriptor( result ) );
+        descriptors.put( key, new WeakReference<>( new GoodDescriptor( result ) ) );
     }
 
     public void putDescriptor( Object key, ArtifactDescriptorException e )
     {
-        descriptors.put( key, BadDescriptor.INSTANCE );
+        descriptors.put( key, new WeakReference<>( BadDescriptor.INSTANCE ) );
     }
 
     public Object toKey( VersionRangeRequest request )
