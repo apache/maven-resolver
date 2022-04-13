@@ -248,8 +248,8 @@ public class DfDependencyCollector
         long time3 = System.nanoTime();
         if ( logger.isDebugEnabled() )
         {
-            stats.put( "BfDependencyCollector.collectTime", time2 - time1 );
-            stats.put( "BfDependencyCollector.transformTime", time3 - time2 );
+            stats.put( "DfDependencyCollector.collectTime", time2 - time1 );
+            stats.put( "DfDependencyCollector.transformTime", time3 - time2 );
             logger.debug( "Dependency collection stats {}", stats );
         }
 
