@@ -20,14 +20,10 @@ package org.eclipse.aether.internal.impl;
  */
 
 import java.io.File;
-import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.LocalArtifactRegistration;
-import org.eclipse.aether.repository.LocalArtifactRequest;
-import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
 
 import static java.util.Objects.requireNonNull;
@@ -96,57 +92,5 @@ class DynamicLocalRepositoryManager
                 dynamicPrefixComposer.getPrefixForRemoteMetadata( metadata, repository, context ),
                 super.getPathForRemoteMetadata( metadata, repository, context )
         );
-    }
-
-    @Override
-    public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
-    {
-        if ( !dynamicPrefixComposer.isRemoteSplitByOrigin() )
-        {
-            return super.find( session, request );
-        }
-        else
-        {
-            // we have split storage, so not "tracking" needed (to emulate split)
-            // try local first, and then try remotes as in request
-            Artifact artifact = request.getArtifact();
-            LocalArtifactResult result = new LocalArtifactResult( request );
-            String path = getPathForLocalArtifact( artifact );
-            File file = new File( getRepository().getBasedir(), path );
-
-            if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) && file.isFile() )
-            {
-                result.setFile( file );
-                result.setAvailable( true );
-            }
-
-            if ( !result.isAvailable() )
-            {
-                for ( RemoteRepository repository : request.getRepositories() )
-                {
-                    path = getPathForRemoteArtifact( artifact, repository, request.getContext() );
-                    file = new File( getRepository().getBasedir(), path );
-                    if ( file.isFile() )
-                    {
-                        result.setFile( file );
-                        result.setAvailable( true );
-                        result.setRepository( repository );
-                        break;
-                    }
-                }
-            }
-            return result;
-        }
-    }
-
-    @Override
-    public void add( RepositorySystemSession session, LocalArtifactRegistration request )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( request, "request cannot be null" );
-        if ( !dynamicPrefixComposer.isRemoteSplitByOrigin() )
-        {
-            super.add( session, request );
-        }
     }
 }

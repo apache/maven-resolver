@@ -170,11 +170,11 @@ public class DynamicLocalRepositoryManagerTest
     {
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact( artifact ) );
+        assertEquals( "local/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact( artifact ) );
 
         artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-20110329.221805-4" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact( artifact ) );
+        assertEquals( "local/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact( artifact ) );
     }
 
     @Test
@@ -184,12 +184,12 @@ public class DynamicLocalRepositoryManagerTest
 
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar",
+        assertEquals( "remote/snapshot/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar",
                       manager.getPathForRemoteArtifact( artifact, remoteRepo, "" ) );
 
         artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-20110329.221805-4" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-20110329.221805-4.jar",
+        assertEquals( "remote/snapshot/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-20110329.221805-4.jar",
                       manager.getPathForRemoteArtifact( artifact, remoteRepo, "" ) );
     }
 

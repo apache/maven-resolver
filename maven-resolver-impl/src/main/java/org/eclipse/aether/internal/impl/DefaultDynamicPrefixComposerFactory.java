@@ -37,31 +37,40 @@ import org.eclipse.aether.util.ConfigUtils;
 @Named
 public final class DefaultDynamicPrefixComposerFactory implements DynamicPrefixComposerFactory
 {
+    private static final String SPLIT_COMPOSER = "split";
+
+    private static final String SPLIT_REPOSITORY_COMPOSER = "split-repository";
+
     private static final String CONFIG_PROP_COMPOSER = "aether.dynamicLocalRepository.composer";
 
-    private static final String DEFAULT_COMPOSER = "split";
+    private static final String DEFAULT_COMPOSER = SPLIT_REPOSITORY_COMPOSER;
 
     @Override
     public DynamicPrefixComposer createComposer( RepositorySystemSession session )
     {
         String composer = ConfigUtils.getString( session, DEFAULT_COMPOSER, CONFIG_PROP_COMPOSER );
 
-        String localPrefix = ConfigUtils.getString(
-                session, "local", "aether.dynamicLocalRepository.localPrefix" );
-        String remotePrefix = ConfigUtils.getString(
-                session, "remote", "aether.dynamicLocalRepository.remotePrefix" );
-        String releasePrefix = ConfigUtils.getString(
-                session, "release", "aether.dynamicLocalRepository.releasePrefix" );
-        String snapshotPrefix = ConfigUtils.getString(
-                session, "snapshot", "aether.dynamicLocalRepository.snapshotPrefix" );
+        if ( SPLIT_COMPOSER.equals( composer ) || SPLIT_REPOSITORY_COMPOSER.equals( composer ) )
+        {
+            String localPrefix = ConfigUtils.getString(
+                    session, "local", "aether.dynamicLocalRepository.localPrefix" );
+            String remotePrefix = ConfigUtils.getString(
+                    session, "remote", "aether.dynamicLocalRepository.remotePrefix" );
+            String releasePrefix = ConfigUtils.getString(
+                    session, "release", "aether.dynamicLocalRepository.releasePrefix" );
+            String snapshotPrefix = ConfigUtils.getString(
+                    session, "snapshot", "aether.dynamicLocalRepository.snapshotPrefix" );
 
-        if ( "split".equals( composer ) )
-        {
-            return new SplitDynamicPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
-        }
-        else if ( "split-repository".equals( composer ) )
-        {
-            return new SplitRepositoryDynamicPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+            if ( SPLIT_COMPOSER.equals( composer ) )
+            {
+                return new SplitDynamicPrefixComposer(
+                        localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+            }
+            else
+            {
+                return new SplitRepositoryDynamicPrefixComposer(
+                        localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+            }
         }
         // TODO: make composer pluggable
         throw new IllegalArgumentException( "Unknown " + CONFIG_PROP_COMPOSER + " value=" + composer );
@@ -69,7 +78,7 @@ public final class DefaultDynamicPrefixComposerFactory implements DynamicPrefixC
 
     private static final class SplitDynamicPrefixComposer extends DynamicPrefixComposerSupport
     {
-        public SplitDynamicPrefixComposer( String localPrefix,
+        private SplitDynamicPrefixComposer( String localPrefix,
                                            String remotePrefix,
                                            String releasePrefix,
                                            String snapshotPrefix )
@@ -112,7 +121,7 @@ public final class DefaultDynamicPrefixComposerFactory implements DynamicPrefixC
 
     private static final class SplitRepositoryDynamicPrefixComposer extends  DynamicPrefixComposerSupport
     {
-        public SplitRepositoryDynamicPrefixComposer( String localPrefix,
+        private SplitRepositoryDynamicPrefixComposer( String localPrefix,
                                                      String remotePrefix,
                                                      String releasePrefix,
                                                      String snapshotPrefix )
@@ -155,7 +164,7 @@ public final class DefaultDynamicPrefixComposerFactory implements DynamicPrefixC
         }
     }
 
-    private static abstract class DynamicPrefixComposerSupport implements DynamicPrefixComposer
+    private abstract static class DynamicPrefixComposerSupport implements DynamicPrefixComposer
     {
         protected final String localPrefix;
 
@@ -165,7 +174,7 @@ public final class DefaultDynamicPrefixComposerFactory implements DynamicPrefixC
 
         protected final String snapshotPrefix;
 
-        public DynamicPrefixComposerSupport( String localPrefix,
+        private DynamicPrefixComposerSupport( String localPrefix,
                                              String remotePrefix,
                                              String releasePrefix,
                                              String snapshotPrefix )
