@@ -28,7 +28,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * No-op composer (makes dynamic LRM behave exactly same as enhanced).
+ * No-op composer (makes enhanced LRM behave exactly same as before).
  *
  * @since TBD
  */

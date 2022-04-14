@@ -28,7 +28,8 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Split composer.
+ * Split composer: splits to localPrefix (locally built and installed) and remotePrefix (cache). Cache is further
+ * split by release or snapshots.
  *
  * @since TBD
  */

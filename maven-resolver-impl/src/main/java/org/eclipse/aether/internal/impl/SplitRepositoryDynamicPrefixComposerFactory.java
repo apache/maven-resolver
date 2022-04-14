@@ -28,7 +28,8 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Split repository composer.
+ * Split repository composer. Similar to "split", but factors in {@link RemoteRepository#getId()} for remotePrefix
+ * as well, effectively splitting cache per origin of artifact.
  *
  * @since TBD
  */

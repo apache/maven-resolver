@@ -49,9 +49,9 @@ import static java.util.Objects.requireNonNull;
 public class EnhancedLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
-    private static final String CONFIG_PROP_COMPOSER = "aether.dynamicLocalRepository.composer";
+    private static final String CONFIG_PROP_PREFIX_COMPOSER = "aether.enhancedLocalRepository.prefixComposer";
 
-    private static final String DEFAULT_COMPOSER = NoopDynamicPrefixComposerFactory.NAME;
+    private static final String DEFAULT_PREFIX_COMPOSER = NoopDynamicPrefixComposerFactory.NAME;
 
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
@@ -111,14 +111,16 @@ public class EnhancedLocalRepositoryManagerFactory
         if ( trackingFilename.isEmpty() || trackingFilename.contains( "/" ) || trackingFilename.contains( "\\" )
                 || trackingFilename.contains( ".." ) )
         {
-            trackingFilename = "_remote.repositories";
+            trackingFilename = DEFAULT_TRACKING_FILENAME;
         }
 
-        String composerName = ConfigUtils.getString( session, DEFAULT_COMPOSER, CONFIG_PROP_COMPOSER );
-        DynamicPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( composerName );
+        String prefixComposerName = ConfigUtils.getString(
+                session, DEFAULT_PREFIX_COMPOSER, CONFIG_PROP_PREFIX_COMPOSER );
+        DynamicPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( prefixComposerName );
         if ( composerFactory == null )
         {
-            throw new IllegalArgumentException( "Unknown composer " + composerName );
+            throw new IllegalArgumentException( "Unknown prefix composer '" + prefixComposerName
+                    + "'. Supported prefix composers are: " + dynamicPrefixComposerFactories.keySet() );
         }
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
