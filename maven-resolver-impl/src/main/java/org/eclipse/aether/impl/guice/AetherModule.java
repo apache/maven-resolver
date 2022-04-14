@@ -45,6 +45,7 @@ import org.eclipse.aether.internal.impl.DefaultArtifactPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.DynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
+import org.eclipse.aether.internal.impl.NoopDynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.SplitDynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.SplitRepositoryDynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
@@ -180,6 +181,9 @@ public class AetherModule
         bind( ArtifactPathComposer.class ) //
                 .to( DefaultArtifactPathComposer.class ).in( Singleton.class );
         bind( DynamicPrefixComposerFactory.class )
+                .annotatedWith( Names.named( NoopDynamicPrefixComposerFactory.NAME ) )
+                .to( NoopDynamicPrefixComposerFactory.class ).in( Singleton.class );
+        bind( DynamicPrefixComposerFactory.class )
                 .annotatedWith( Names.named( SplitDynamicPrefixComposerFactory.NAME ) )
                 .to( SplitDynamicPrefixComposerFactory.class ).in( Singleton.class );
         bind( DynamicPrefixComposerFactory.class )
@@ -238,11 +242,13 @@ public class AetherModule
     @Provides
     @Singleton
     Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories(
+            @Named( NoopDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory noop,
             @Named( SplitDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory split,
             @Named( SplitRepositoryDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory splitRepository
     )
     {
         Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories = new HashMap<>();
+        dynamicPrefixComposerFactories.put( NoopDynamicPrefixComposerFactory.NAME, noop );
         dynamicPrefixComposerFactories.put( SplitDynamicPrefixComposerFactory.NAME, split );
         dynamicPrefixComposerFactories.put( SplitRepositoryDynamicPrefixComposerFactory.NAME, splitRepository );
         return dynamicPrefixComposerFactories;

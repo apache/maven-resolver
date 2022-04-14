@@ -88,6 +88,10 @@ public class DynamicLocalRepositoryManagerFactory
         this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
         this.dynamicPrefixComposerFactories = new HashMap<>();
         this.dynamicPrefixComposerFactories.put(
+                NoopDynamicPrefixComposerFactory.NAME,
+                new NoopDynamicPrefixComposerFactory()
+        );
+        this.dynamicPrefixComposerFactories.put(
                 SplitDynamicPrefixComposerFactory.NAME,
                 new SplitDynamicPrefixComposerFactory()
         );

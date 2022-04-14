@@ -28,59 +28,46 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Split repository composer.
+ * No-op composer (makes dynamic LRM behave exactly same as enhanced).
  *
  * @since TBD
  */
 @Singleton
-@Named( SplitRepositoryDynamicPrefixComposerFactory.NAME )
-public final class SplitRepositoryDynamicPrefixComposerFactory extends DynamicPrefixComposerFactorySupport
+@Named( NoopDynamicPrefixComposerFactory.NAME )
+public final class NoopDynamicPrefixComposerFactory implements DynamicPrefixComposerFactory
 {
-    public static final String NAME = "split-repository";
+    public static final String NAME = "noop";
 
     @Override
-    protected DynamicPrefixComposer dpCreateComposer( RepositorySystemSession session, String localPrefix,
-                                                      String remotePrefix, String releasePrefix, String snapshotPrefix )
+    public DynamicPrefixComposer createComposer( RepositorySystemSession session )
     {
-        return new SplitRepositoryDynamicPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+        return new NoopDynamicPrefixComposer();
     }
 
-    private static final class SplitRepositoryDynamicPrefixComposer extends DynamicPrefixComposerSupport
+    private static final class NoopDynamicPrefixComposer implements DynamicPrefixComposer
     {
-        private SplitRepositoryDynamicPrefixComposer( String localPrefix,
-                                                      String remotePrefix,
-                                                      String releasePrefix,
-                                                      String snapshotPrefix )
-        {
-            super( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
-        }
-
         @Override
         public String getPrefixForLocalArtifact( Artifact artifact )
         {
-            return localPrefix;
+            return null;
         }
 
         @Override
         public String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
         {
-            return remotePrefix + "/"
-                    + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix ) + '/'
-                    + repository.getId();
+            return null;
         }
 
         @Override
         public String getPrefixForLocalMetadata( Metadata metadata )
         {
-            return localPrefix;
+            return null;
         }
 
         @Override
         public String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
         {
-            return remotePrefix + "/"
-                    + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix ) + '/'
-                    + repository.getId();
+            return null;
         }
     }
 }

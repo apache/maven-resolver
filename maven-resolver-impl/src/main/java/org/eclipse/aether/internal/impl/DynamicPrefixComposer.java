@@ -31,16 +31,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 public interface DynamicPrefixComposer
 {
     /**
-     * Returns {@code true} if methods
-     * {@link #getPrefixForRemoteArtifact(Artifact, RemoteRepository, String)} and
-     * {@link #getPrefixForRemoteMetadata(Metadata, RemoteRepository, String)} factor in into
-     * returned prefix the origin, thus physically separating the cache storage for origin.
-     *
-     * @return {@code true} if remote caches are physically separated by origin.
-     */
-    boolean isRemoteSplitByOrigin();
-
-    /**
      * Gets the path prefix for a locally installed artifact.
      *
      * @param artifact The artifact for which to determine the prefix, must not be {@code null}.

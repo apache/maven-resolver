@@ -28,7 +28,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Split composer..
+ * Split composer.
  *
  * @since TBD
  */
@@ -53,12 +53,6 @@ public final class SplitDynamicPrefixComposerFactory extends DynamicPrefixCompos
                                             String snapshotPrefix )
         {
             super( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
-        }
-
-        @Override
-        public boolean isRemoteSplitByOrigin()
-        {
-            return false;
         }
 
         @Override
