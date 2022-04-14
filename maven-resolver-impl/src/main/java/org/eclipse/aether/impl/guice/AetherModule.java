@@ -42,10 +42,11 @@ import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.ArtifactPathComposer;
 import org.eclipse.aether.internal.impl.DefaultArtifactPathComposer;
-import org.eclipse.aether.internal.impl.DefaultDynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.DynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
+import org.eclipse.aether.internal.impl.SplitDynamicPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.SplitRepositoryDynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -178,8 +179,12 @@ public class AetherModule
 
         bind( ArtifactPathComposer.class ) //
                 .to( DefaultArtifactPathComposer.class ).in( Singleton.class );
-        bind( DynamicPrefixComposerFactory.class ) //
-                .to( DefaultDynamicPrefixComposerFactory.class ).in( Singleton.class );
+        bind( DynamicPrefixComposerFactory.class )
+                .annotatedWith( Names.named( SplitDynamicPrefixComposerFactory.NAME ) )
+                .to( SplitDynamicPrefixComposerFactory.class ).in( Singleton.class );
+        bind( DynamicPrefixComposerFactory.class )
+                .annotatedWith( Names.named( SplitRepositoryDynamicPrefixComposerFactory.NAME ) )
+                .to( SplitRepositoryDynamicPrefixComposerFactory.class ).in( Singleton.class );
         bind( LocalRepositoryProvider.class ) //
                 .to( DefaultLocalRepositoryProvider.class ).in( Singleton.class );
         bind( LocalRepositoryManagerFactory.class ).annotatedWith( Names.named( "simple" ) ) //
@@ -228,6 +233,19 @@ public class AetherModule
 
         install( new Slf4jModule() );
 
+    }
+
+    @Provides
+    @Singleton
+    Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories(
+            @Named( SplitDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory split,
+            @Named( SplitRepositoryDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory splitRepository
+    )
+    {
+        Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories = new HashMap<>();
+        dynamicPrefixComposerFactories.put( SplitDynamicPrefixComposerFactory.NAME, split );
+        dynamicPrefixComposerFactories.put( SplitRepositoryDynamicPrefixComposerFactory.NAME, splitRepository );
+        return dynamicPrefixComposerFactories;
     }
 
     @Provides

@@ -23,6 +23,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -30,6 +33,7 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -48,13 +52,17 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named( "dynamic" )
 public class DynamicLocalRepositoryManagerFactory
-    implements LocalRepositoryManagerFactory, Service
+        implements LocalRepositoryManagerFactory, Service
 {
+    private static final String CONFIG_PROP_COMPOSER = "aether.dynamicLocalRepository.composer";
+
+    private static final String DEFAULT_COMPOSER = SplitDynamicPrefixComposerFactory.NAME;
+
     private float priority = 11.0f;
 
     private ArtifactPathComposer artifactPathComposer;
 
-    private DynamicPrefixComposerFactory dynamicPrefixComposerFactory;
+    private Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories;
 
     private TrackingFileManager trackingFileManager;
 
@@ -65,12 +73,12 @@ public class DynamicLocalRepositoryManagerFactory
 
     @Inject
     public DynamicLocalRepositoryManagerFactory( final ArtifactPathComposer artifactPathComposer,
-                                                 final TrackingFileManager trackingFileManager,
-                                                 final DynamicPrefixComposerFactory dynamicPrefixComposerFactory )
+             final TrackingFileManager trackingFileManager,
+             final Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories )
     {
         this.artifactPathComposer = requireNonNull( artifactPathComposer );
         this.trackingFileManager = requireNonNull( trackingFileManager );
-        this.dynamicPrefixComposerFactory = requireNonNull( dynamicPrefixComposerFactory );
+        this.dynamicPrefixComposerFactories = requireNonNull( dynamicPrefixComposerFactories );
     }
 
     @Override
@@ -78,16 +86,30 @@ public class DynamicLocalRepositoryManagerFactory
     {
         this.artifactPathComposer = requireNonNull( locator.getService( ArtifactPathComposer.class ) );
         this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
-        this.dynamicPrefixComposerFactory = requireNonNull( locator.getService( DynamicPrefixComposerFactory.class ) );
+        this.dynamicPrefixComposerFactories = new HashMap<>();
+        this.dynamicPrefixComposerFactories.put(
+                SplitDynamicPrefixComposerFactory.NAME,
+                new SplitDynamicPrefixComposerFactory()
+        );
+        this.dynamicPrefixComposerFactories.put(
+                SplitRepositoryDynamicPrefixComposerFactory.NAME,
+                new SplitRepositoryDynamicPrefixComposerFactory()
+        );
     }
 
     @Override
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
-        throws NoLocalRepositoryManagerException
+            throws NoLocalRepositoryManagerException
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
 
+        String composerName = ConfigUtils.getString( session, DEFAULT_COMPOSER, CONFIG_PROP_COMPOSER );
+        DynamicPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( composerName );
+        if ( composerFactory == null )
+        {
+            throw new IllegalArgumentException( "Unknown composer " + composerName );
+        }
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
             return new DynamicLocalRepositoryManager(
@@ -95,7 +117,7 @@ public class DynamicLocalRepositoryManagerFactory
                     artifactPathComposer,
                     session,
                     trackingFileManager,
-                    dynamicPrefixComposerFactory.createComposer( session )
+                    composerFactory.createComposer( session )
             );
         }
         else

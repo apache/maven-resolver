@@ -107,7 +107,7 @@ public class DynamicLocalRepositoryManagerTest
                 new DefaultArtifactPathComposer(),
                 session,
                 trackingFileManager,
-                new DefaultDynamicPrefixComposerFactory().createComposer( session )
+                new SplitRepositoryDynamicPrefixComposerFactory().createComposer( session )
         );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
