@@ -34,9 +34,9 @@ public abstract class DynamicPrefixComposerFactorySupport implements DynamicPref
     public DynamicPrefixComposer createComposer( RepositorySystemSession session )
     {
         String localPrefix = ConfigUtils.getString(
-                session, "local", "aether.enhancedLocalRepository.localPrefix" );
+                session, "installed", "aether.enhancedLocalRepository.localPrefix" );
         String remotePrefix = ConfigUtils.getString(
-                session, "remote", "aether.enhancedLocalRepository.remotePrefix" );
+                session, "cached", "aether.enhancedLocalRepository.remotePrefix" );
         String releasePrefix = ConfigUtils.getString(
                 session, "release", "aether.enhancedLocalRepository.releasePrefix" );
         String snapshotPrefix = ConfigUtils.getString(
