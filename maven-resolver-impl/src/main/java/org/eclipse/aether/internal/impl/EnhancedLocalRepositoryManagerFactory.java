@@ -19,8 +19,6 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import java.util.Objects;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -32,6 +30,8 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}. Enhanced
@@ -47,6 +47,8 @@ public class EnhancedLocalRepositoryManagerFactory
 {
     private float priority = 10.0f;
 
+    private ArtifactPathComposer artifactPathComposer;
+
     private TrackingFileManager trackingFileManager;
 
     public EnhancedLocalRepositoryManagerFactory()
@@ -55,26 +57,32 @@ public class EnhancedLocalRepositoryManagerFactory
     }
 
     @Inject
-    public EnhancedLocalRepositoryManagerFactory( final TrackingFileManager trackingFileManager )
+    public EnhancedLocalRepositoryManagerFactory( final ArtifactPathComposer artifactPathComposer,
+                                                  final TrackingFileManager trackingFileManager )
     {
-        this.trackingFileManager = Objects.requireNonNull( trackingFileManager );
+        this.artifactPathComposer = requireNonNull( artifactPathComposer );
+        this.trackingFileManager = requireNonNull( trackingFileManager );
     }
 
     @Override
     public void initService( final ServiceLocator locator )
     {
-        this.trackingFileManager = Objects.requireNonNull( locator.getService( TrackingFileManager.class ) );
+        this.artifactPathComposer = requireNonNull( locator.getService( ArtifactPathComposer.class ) );
+        this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
     }
 
+    @Override
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
-        Objects.requireNonNull( session, "session cannot be null" );
-        Objects.requireNonNull( repository, "repository cannot be null" );
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
 
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
-            return new EnhancedLocalRepositoryManager( repository.getBasedir(), session, trackingFileManager );
+            return new EnhancedLocalRepositoryManager(
+                    repository.getBasedir(), artifactPathComposer, session, trackingFileManager
+            );
         }
         else
         {
@@ -82,6 +90,7 @@ public class EnhancedLocalRepositoryManagerFactory
         }
     }
 
+    @Override
     public float getPriority()
     {
         return priority;

@@ -99,7 +99,7 @@ public class EnhancedLocalRepositoryManagerTest
         basedir = TestFileUtils.createTempDir( "enhanced-repo" );
         session = TestUtils.newSession();
         trackingFileManager = new DefaultTrackingFileManager();
-        manager = new EnhancedLocalRepositoryManager( basedir, session, trackingFileManager );
+        manager = new EnhancedLocalRepositoryManager( basedir, new DefaultArtifactPathComposer(), session, trackingFileManager );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
     }

@@ -31,6 +31,8 @@ import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.internal.impl.ArtifactPathComposer;
+import org.eclipse.aether.internal.impl.DefaultArtifactPathComposer;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
@@ -227,6 +229,7 @@ public final class DefaultServiceLocator
         addService( TrackingFileManager.class, DefaultTrackingFileManager.class );
         addService( NamedLockFactorySelector.class, SimpleNamedLockFactorySelector.class );
         addService( ChecksumAlgorithmFactorySelector.class, DefaultChecksumAlgorithmFactorySelector.class );
+        addService( ArtifactPathComposer.class, DefaultArtifactPathComposer.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )

@@ -57,7 +57,7 @@ public class FileProvidedChecksumsSourceTest
     RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://irrelevant.com").build();
     session = TestUtils.newSession();
     repositoryLayout = new Maven2RepositoryLayoutFactory().newInstance(session, repository);
-    subject = new FileProvidedChecksumsSource(new TestFileProcessor() );
+    subject = new FileProvidedChecksumsSource(new TestFileProcessor(), new DefaultArtifactPathComposer() );
 
     // populate local repository
     Path baseDir = session.getLocalRepository().getBasedir().toPath().resolve( FileProvidedChecksumsSource.LOCAL_REPO_PREFIX);

@@ -27,7 +27,6 @@ import java.io.IOException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.LocalArtifactRequest;
@@ -53,7 +52,7 @@ public class SimpleLocalRepositoryManagerTest
         throws IOException
     {
         basedir = TestFileUtils.createTempDir( "simple-repo" );
-        manager = new SimpleLocalRepositoryManager( basedir );
+        manager = new SimpleLocalRepositoryManager( basedir, "simple", new DefaultArtifactPathComposer() );
         session = TestUtils.newSession();
     }
 

@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -68,14 +67,13 @@ public final class FileProvidedChecksumsSource
 
     private final FileProcessor fileProcessor;
 
-    private final SimpleLocalRepositoryManager simpleLocalRepositoryManager;
+    private final ArtifactPathComposer artifactPathComposer;
 
     @Inject
-    public FileProvidedChecksumsSource( FileProcessor fileProcessor )
+    public FileProvidedChecksumsSource( FileProcessor fileProcessor, ArtifactPathComposer artifactPathComposer )
     {
         this.fileProcessor = requireNonNull( fileProcessor );
-        // we really needs just "local layout" from it (relative paths), so baseDir here is irrelevant
-        this.simpleLocalRepositoryManager = new SimpleLocalRepositoryManager( new File( "" ) );
+        this.artifactPathComposer = requireNonNull( artifactPathComposer );
     }
 
     @Override
@@ -92,7 +90,7 @@ public final class FileProvidedChecksumsSource
         for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
             checksumFilePaths.add( new ChecksumFilePath(
-                    simpleLocalRepositoryManager.getPathForArtifact( transfer.getArtifact(), false ) + '.'
+                    artifactPathComposer.getPathForArtifact( transfer.getArtifact(), false ) + '.'
                     + checksumAlgorithmFactory.getFileExtension(), checksumAlgorithmFactory ) );
         }
         return getProvidedChecksums( baseDir, checksumFilePaths, ArtifactIdUtils.toId( transfer.getArtifact() ) );

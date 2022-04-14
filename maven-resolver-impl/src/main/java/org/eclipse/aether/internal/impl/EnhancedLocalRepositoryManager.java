@@ -68,10 +68,11 @@ class EnhancedLocalRepositoryManager
     private final TrackingFileManager trackingFileManager;
 
     EnhancedLocalRepositoryManager( File basedir,
+                                    ArtifactPathComposer artifactPathComposer,
                                     RepositorySystemSession session,
                                     TrackingFileManager trackingFileManager )
     {
-        super( basedir, "enhanced" );
+        super( basedir, "enhanced", artifactPathComposer );
         String filename = ConfigUtils.getString( session, "", "aether.enhancedLocalRepository.trackingFilename" );
         if ( filename.isEmpty() || filename.contains( "/" ) || filename.contains( "\\" )
             || filename.contains( ".." ) )

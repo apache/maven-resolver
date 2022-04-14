@@ -46,66 +46,34 @@ class SimpleLocalRepositoryManager
 
     private final LocalRepository repository;
 
-    SimpleLocalRepositoryManager( File basedir )
-    {
-        this( basedir, "simple" );
-    }
+    private final ArtifactPathComposer artifactPathComposer;
 
-    SimpleLocalRepositoryManager( String basedir )
-    {
-        this( ( basedir != null ) ? new File( basedir ) : null, "simple" );
-    }
-
-    SimpleLocalRepositoryManager( File basedir, String type )
+    SimpleLocalRepositoryManager( File basedir, String type, ArtifactPathComposer artifactPathComposer )
     {
         requireNonNull( basedir, "base directory cannot be null" );
         repository = new LocalRepository( basedir.getAbsoluteFile(), type );
+        this.artifactPathComposer = requireNonNull( artifactPathComposer );
     }
 
+    @Override
     public LocalRepository getRepository()
     {
         return repository;
     }
 
-    String getPathForArtifact( Artifact artifact, boolean local )
+    protected String getPathForArtifact( Artifact artifact, boolean local )
     {
-        StringBuilder path = new StringBuilder( 128 );
-
-        path.append( artifact.getGroupId().replace( '.', '/' ) ).append( '/' );
-
-        path.append( artifact.getArtifactId() ).append( '/' );
-
-        path.append( artifact.getBaseVersion() ).append( '/' );
-
-        path.append( artifact.getArtifactId() ).append( '-' );
-        if ( local )
-        {
-            path.append( artifact.getBaseVersion() );
-        }
-        else
-        {
-            path.append( artifact.getVersion() );
-        }
-
-        if ( artifact.getClassifier().length() > 0 )
-        {
-            path.append( '-' ).append( artifact.getClassifier() );
-        }
-
-        if ( artifact.getExtension().length() > 0 )
-        {
-            path.append( '.' ).append( artifact.getExtension() );
-        }
-
-        return path.toString();
+        return artifactPathComposer.getPathForArtifact( artifact, local );
     }
 
+    @Override
     public String getPathForLocalArtifact( Artifact artifact )
     {
         requireNonNull( artifact, "artifact cannot be null" );
         return getPathForArtifact( artifact, true );
     }
 
+    @Override
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
     {
         requireNonNull( artifact, "artifact cannot be null" );
@@ -113,20 +81,22 @@ class SimpleLocalRepositoryManager
         return getPathForArtifact( artifact, false );
     }
 
+    @Override
     public String getPathForLocalMetadata( Metadata metadata )
     {
         requireNonNull( metadata, "metadata cannot be null" );
-        return getPath( metadata, "local" );
+        return artifactPathComposer.getPathForMetadata( metadata, "local" );
     }
 
+    @Override
     public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
     {
         requireNonNull( metadata, "metadata cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
-        return getPath( metadata, getRepositoryKey( repository, context ) );
+        return artifactPathComposer.getPathForMetadata( metadata, getRepositoryKey( repository, context ) );
     }
 
-    String getRepositoryKey( RemoteRepository repository, String context )
+    protected String getRepositoryKey( RemoteRepository repository, String context )
     {
         String key;
 
@@ -166,45 +136,7 @@ class SimpleLocalRepositoryManager
         return key;
     }
 
-    private String getPath( Metadata metadata, String repositoryKey )
-    {
-        StringBuilder path = new StringBuilder( 128 );
-
-        if ( metadata.getGroupId().length() > 0 )
-        {
-            path.append( metadata.getGroupId().replace( '.', '/' ) ).append( '/' );
-
-            if ( metadata.getArtifactId().length() > 0 )
-            {
-                path.append( metadata.getArtifactId() ).append( '/' );
-
-                if ( metadata.getVersion().length() > 0 )
-                {
-                    path.append( metadata.getVersion() ).append( '/' );
-                }
-            }
-        }
-
-        path.append( insertRepositoryKey( metadata.getType(), repositoryKey ) );
-
-        return path.toString();
-    }
-
-    private String insertRepositoryKey( String filename, String repositoryKey )
-    {
-        String result;
-        int idx = filename.indexOf( '.' );
-        if ( idx < 0 )
-        {
-            result = filename + '-' + repositoryKey;
-        }
-        else
-        {
-            result = filename.substring( 0, idx ) + '-' + repositoryKey + filename.substring( idx );
-        }
-        return result;
-    }
-
+    @Override
     public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
     {
         requireNonNull( session, "session cannot be null" );
@@ -222,6 +154,7 @@ class SimpleLocalRepositoryManager
         return result;
     }
 
+    @Override
     public void add( RepositorySystemSession session, LocalArtifactRegistration request )
     {
         requireNonNull( session, "session cannot be null" );
@@ -230,11 +163,6 @@ class SimpleLocalRepositoryManager
     }
 
     @Override
-    public String toString()
-    {
-        return String.valueOf( getRepository() );
-    }
-
     public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
     {
         requireNonNull( session, "session cannot be null" );
@@ -265,6 +193,7 @@ class SimpleLocalRepositoryManager
         return result;
     }
 
+    @Override
     public void add( RepositorySystemSession session, LocalMetadataRegistration request )
     {
         requireNonNull( session, "session cannot be null" );
@@ -272,4 +201,9 @@ class SimpleLocalRepositoryManager
         // noop
     }
 
+    @Override
+    public String toString()
+    {
+        return String.valueOf( getRepository() );
+    }
 }
