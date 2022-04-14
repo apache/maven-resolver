@@ -23,6 +23,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -30,6 +33,7 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -45,11 +49,21 @@ import static java.util.Objects.requireNonNull;
 public class EnhancedLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
+    private static final String CONFIG_PROP_COMPOSER = "aether.dynamicLocalRepository.composer";
+
+    private static final String DEFAULT_COMPOSER = NoopDynamicPrefixComposerFactory.NAME;
+
+    private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
+
+    private static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
+
     private float priority = 10.0f;
 
     private ArtifactPathComposer artifactPathComposer;
 
     private TrackingFileManager trackingFileManager;
+
+    private Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories;
 
     public EnhancedLocalRepositoryManagerFactory()
     {
@@ -58,10 +72,12 @@ public class EnhancedLocalRepositoryManagerFactory
 
     @Inject
     public EnhancedLocalRepositoryManagerFactory( final ArtifactPathComposer artifactPathComposer,
-                                                  final TrackingFileManager trackingFileManager )
+                   final TrackingFileManager trackingFileManager,
+                   final Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories )
     {
         this.artifactPathComposer = requireNonNull( artifactPathComposer );
         this.trackingFileManager = requireNonNull( trackingFileManager );
+        this.dynamicPrefixComposerFactories = requireNonNull( dynamicPrefixComposerFactories );
     }
 
     @Override
@@ -69,6 +85,19 @@ public class EnhancedLocalRepositoryManagerFactory
     {
         this.artifactPathComposer = requireNonNull( locator.getService( ArtifactPathComposer.class ) );
         this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
+        this.dynamicPrefixComposerFactories = new HashMap<>();
+        this.dynamicPrefixComposerFactories.put(
+                NoopDynamicPrefixComposerFactory.NAME,
+                new NoopDynamicPrefixComposerFactory()
+        );
+        this.dynamicPrefixComposerFactories.put(
+                SplitDynamicPrefixComposerFactory.NAME,
+                new SplitDynamicPrefixComposerFactory()
+        );
+        this.dynamicPrefixComposerFactories.put(
+                SplitRepositoryDynamicPrefixComposerFactory.NAME,
+                new SplitRepositoryDynamicPrefixComposerFactory()
+        );
     }
 
     @Override
@@ -78,10 +107,27 @@ public class EnhancedLocalRepositoryManagerFactory
         requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
 
+        String trackingFilename = ConfigUtils.getString( session, "", CONFIG_PROP_TRACKING_FILENAME );
+        if ( trackingFilename.isEmpty() || trackingFilename.contains( "/" ) || trackingFilename.contains( "\\" )
+                || trackingFilename.contains( ".." ) )
+        {
+            trackingFilename = "_remote.repositories";
+        }
+
+        String composerName = ConfigUtils.getString( session, DEFAULT_COMPOSER, CONFIG_PROP_COMPOSER );
+        DynamicPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( composerName );
+        if ( composerFactory == null )
+        {
+            throw new IllegalArgumentException( "Unknown composer " + composerName );
+        }
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
             return new EnhancedLocalRepositoryManager(
-                    repository.getBasedir(), artifactPathComposer, session, trackingFileManager
+                    repository.getBasedir(),
+                    artifactPathComposer,
+                    trackingFilename,
+                    trackingFileManager,
+                    composerFactory.createComposer( session )
             );
         }
         else

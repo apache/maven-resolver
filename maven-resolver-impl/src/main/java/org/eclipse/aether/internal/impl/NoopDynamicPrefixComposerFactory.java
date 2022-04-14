@@ -38,10 +38,12 @@ public final class NoopDynamicPrefixComposerFactory implements DynamicPrefixComp
 {
     public static final String NAME = "noop";
 
+    public static final DynamicPrefixComposer INSTANCE = new NoopDynamicPrefixComposer();
+
     @Override
     public DynamicPrefixComposer createComposer( RepositorySystemSession session )
     {
-        return new NoopDynamicPrefixComposer();
+        return INSTANCE;
     }
 
     private static final class NoopDynamicPrefixComposer implements DynamicPrefixComposer

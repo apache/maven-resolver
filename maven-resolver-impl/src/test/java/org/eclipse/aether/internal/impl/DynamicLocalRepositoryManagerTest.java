@@ -59,7 +59,7 @@ public class DynamicLocalRepositoryManagerTest
 
     private File basedir;
 
-    private DynamicLocalRepositoryManager manager;
+    private EnhancedLocalRepositoryManager manager;
 
     private File artifactFile;
 
@@ -102,10 +102,10 @@ public class DynamicLocalRepositoryManagerTest
         basedir = TestFileUtils.createTempDir( "enhanced-repo" );
         session = TestUtils.newSession();
         trackingFileManager = new DefaultTrackingFileManager();
-        manager = new DynamicLocalRepositoryManager(
+        manager = new EnhancedLocalRepositoryManager(
                 basedir,
                 new DefaultArtifactPathComposer(),
-                session,
+                "_remote.repositories",
                 trackingFileManager,
                 new SplitRepositoryDynamicPrefixComposerFactory().createComposer( session )
         );

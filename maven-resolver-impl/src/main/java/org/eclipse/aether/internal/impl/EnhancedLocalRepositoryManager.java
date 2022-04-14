@@ -33,11 +33,11 @@ import java.util.Properties;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * These are implementation details for enhanced local repository manager, subject to change without prior notice.
@@ -68,20 +68,63 @@ class EnhancedLocalRepositoryManager
 
     private final TrackingFileManager trackingFileManager;
 
+    private final DynamicPrefixComposer dynamicPrefixComposer;
+
     EnhancedLocalRepositoryManager( File basedir,
                                     ArtifactPathComposer artifactPathComposer,
-                                    RepositorySystemSession session,
-                                    TrackingFileManager trackingFileManager )
+                                    String trackingFilename,
+                                    TrackingFileManager trackingFileManager,
+                                    DynamicPrefixComposer dynamicPrefixComposer )
     {
         super( basedir, "enhanced", artifactPathComposer );
-        String filename = ConfigUtils.getString( session, "", "aether.enhancedLocalRepository.trackingFilename" );
-        if ( filename.isEmpty() || filename.contains( "/" ) || filename.contains( "\\" )
-                || filename.contains( ".." ) )
-        {
-            filename = "_remote.repositories";
-        }
-        this.trackingFilename = filename;
+        this.trackingFilename = requireNonNull( trackingFilename );
         this.trackingFileManager = requireNonNull( trackingFileManager );
+        this.dynamicPrefixComposer = requireNonNull( dynamicPrefixComposer );
+    }
+
+    private String concatPaths( String prefix, String artifactPath )
+    {
+        if ( prefix == null || prefix.isEmpty() )
+        {
+            return artifactPath;
+        }
+        return prefix + '/' + artifactPath;
+    }
+
+    @Override
+    public String getPathForLocalArtifact( Artifact artifact )
+    {
+        return concatPaths(
+                dynamicPrefixComposer.getPrefixForLocalArtifact( artifact ),
+                super.getPathForLocalArtifact( artifact )
+        );
+    }
+
+    @Override
+    public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+    {
+        return concatPaths(
+                dynamicPrefixComposer.getPrefixForRemoteArtifact( artifact, repository, context ),
+                super.getPathForRemoteArtifact( artifact, repository, context )
+        );
+    }
+
+    @Override
+    public String getPathForLocalMetadata( Metadata metadata )
+    {
+        return concatPaths(
+                dynamicPrefixComposer.getPrefixForLocalMetadata( metadata ),
+                super.getPathForLocalMetadata( metadata )
+        );
+    }
+
+    @Override
+    public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+    {
+        return concatPaths(
+                dynamicPrefixComposer.getPrefixForRemoteMetadata( metadata, repository, context ),
+                super.getPathForRemoteMetadata( metadata, repository, context )
+        );
     }
 
     @Override
