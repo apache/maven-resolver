@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
 import static java.util.Objects.requireNonNull;
 
 import java.util.Objects;
@@ -44,7 +45,7 @@ import org.eclipse.aether.util.ConfigUtils;
  * <code>_remote.repositories</code>, with content key as filename&gt;repo_id and value as empty string. If a file has
  * been installed in the repository, but not downloaded from a remote repository, it is tracked as empty repository id
  * and always resolved. For example:
- * 
+ *
  * <pre>
  * artifact-1.0.pom>=
  * artifact-1.0.jar>=
@@ -54,11 +55,11 @@ import org.eclipse.aether.util.ConfigUtils;
  * artifact-1.0-classifier.zip>central=
  * artifact-1.0.pom>my_repo_id=
  * </pre>
- * 
+ *
  * @see EnhancedLocalRepositoryManagerFactory
  */
 class EnhancedLocalRepositoryManager
-    extends SimpleLocalRepositoryManager
+        extends SimpleLocalRepositoryManager
 {
 
     private static final String LOCAL_REPO_ID = "";
@@ -75,22 +76,50 @@ class EnhancedLocalRepositoryManager
         super( basedir, "enhanced", artifactPathComposer );
         String filename = ConfigUtils.getString( session, "", "aether.enhancedLocalRepository.trackingFilename" );
         if ( filename.isEmpty() || filename.contains( "/" ) || filename.contains( "\\" )
-            || filename.contains( ".." ) )
+                || filename.contains( ".." ) )
         {
             filename = "_remote.repositories";
         }
         this.trackingFilename = filename;
-        this.trackingFileManager = Objects.requireNonNull( trackingFileManager );
+        this.trackingFileManager = requireNonNull( trackingFileManager );
     }
 
     @Override
     public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
     {
-        String path = getPathForArtifact( request.getArtifact(), false );
+        Artifact artifact = request.getArtifact();
+        String path = getPathForLocalArtifact( artifact );
         File file = new File( getRepository().getBasedir(), path );
 
         LocalArtifactResult result = new LocalArtifactResult( request );
 
+        // request may ask for specific timestamped snapshot, while getPathForLocalArtifact turns it into -SNAPSHOT
+        if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) )
+        {
+            checkFind( file, result );
+        }
+
+        if ( !result.isAvailable() )
+        {
+            for ( RemoteRepository repository : request.getRepositories() )
+            {
+                path = getPathForRemoteArtifact( artifact, repository, request.getContext() );
+                file = new File( getRepository().getBasedir(), path );
+
+                checkFind( file, result );
+
+                if ( result.isAvailable() )
+                {
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private void checkFind( File file, LocalArtifactResult result )
+    {
         if ( file.isFile() )
         {
             result.setFile( file );
@@ -104,8 +133,8 @@ class EnhancedLocalRepositoryManager
             }
             else
             {
-                String context = request.getContext();
-                for ( RemoteRepository repository : request.getRepositories() )
+                String context = result.getRequest().getContext();
+                for ( RemoteRepository repository : result.getRequest().getRepositories() )
                 {
                     if ( props.get( getKey( file, getRepositoryKey( repository, context ) ) ) != null )
                     {
@@ -126,8 +155,6 @@ class EnhancedLocalRepositoryManager
                 }
             }
         }
-
-        return result;
     }
 
     @Override
@@ -142,7 +169,17 @@ class EnhancedLocalRepositoryManager
         {
             repositories = getRepositoryKeys( request.getRepository(), request.getContexts() );
         }
-        addArtifact( request.getArtifact(), repositories, request.getRepository() == null );
+        if ( request.getRepository() == null )
+        {
+            addArtifact( request.getArtifact(), repositories, null, null );
+        }
+        else
+        {
+            for ( String context : request.getContexts() )
+            {
+                addArtifact( request.getArtifact(), repositories, request.getRepository(), context );
+            }
+        }
     }
 
     private Collection<String> getRepositoryKeys( RemoteRepository repository, Collection<String> contexts )
@@ -160,9 +197,12 @@ class EnhancedLocalRepositoryManager
         return keys;
     }
 
-    private void addArtifact( Artifact artifact, Collection<String> repositories, boolean local )
+    private void addArtifact( Artifact artifact, Collection<String> repositories, RemoteRepository repository,
+                              String context )
     {
-        String path = getPathForArtifact( requireNonNull( artifact, "artifact cannot be null" ), local );
+        requireNonNull( artifact, "artifact cannot be null" );
+        String path = repository == null ? getPathForLocalArtifact( artifact )
+                : getPathForRemoteArtifact( artifact, repository, context );
         File file = new File( getRepository().getBasedir(), path );
         addRepo( file, repositories );
     }

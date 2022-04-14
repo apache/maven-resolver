@@ -21,6 +21,8 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import static java.util.Objects.requireNonNull;
+
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -61,16 +63,11 @@ class SimpleLocalRepositoryManager
         return repository;
     }
 
-    protected String getPathForArtifact( Artifact artifact, boolean local )
-    {
-        return artifactPathComposer.getPathForArtifact( artifact, local );
-    }
-
     @Override
     public String getPathForLocalArtifact( Artifact artifact )
     {
         requireNonNull( artifact, "artifact cannot be null" );
-        return getPathForArtifact( artifact, true );
+        return artifactPathComposer.getPathForArtifact( artifact, true );
     }
 
     @Override
@@ -78,7 +75,7 @@ class SimpleLocalRepositoryManager
     {
         requireNonNull( artifact, "artifact cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
-        return getPathForArtifact( artifact, false );
+        return artifactPathComposer.getPathForArtifact( artifact, false );
     }
 
     @Override
@@ -141,14 +138,33 @@ class SimpleLocalRepositoryManager
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( request, "request cannot be null" );
-        String path = getPathForArtifact( request.getArtifact(), false );
+        Artifact artifact = request.getArtifact();
+        String path = getPathForLocalArtifact( artifact );
         File file = new File( getRepository().getBasedir(), path );
 
         LocalArtifactResult result = new LocalArtifactResult( request );
-        if ( file.isFile() )
+
+        // request may ask for specific timestamped snapshot, while getPathForLocalArtifact turns it into -SNAPSHOT
+        if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) && file.isFile() )
         {
             result.setFile( file );
             result.setAvailable( true );
+        }
+
+        if ( !result.isAvailable() )
+        {
+            for ( RemoteRepository repository : request.getRepositories() )
+            {
+                path = getPathForRemoteArtifact( artifact, repository, request.getContext() );
+                file = new File( getRepository().getBasedir(), path );
+                if ( file.isFile() )
+                {
+                    result.setFile( file );
+                    result.setAvailable( true );
+                    break;
+                }
+            }
+
         }
 
         return result;

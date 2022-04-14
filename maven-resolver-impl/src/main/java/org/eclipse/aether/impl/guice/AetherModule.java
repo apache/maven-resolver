@@ -42,7 +42,9 @@ import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.ArtifactPathComposer;
 import org.eclipse.aether.internal.impl.DefaultArtifactPathComposer;
+import org.eclipse.aether.internal.impl.DefaultDynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.DynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
@@ -174,7 +176,10 @@ public class AetherModule
         bind( OfflineController.class ) //
                 .to( DefaultOfflineController.class ).in( Singleton.class );
 
-        bind( ArtifactPathComposer.class ).to( DefaultArtifactPathComposer.class ).in( Singleton.class );
+        bind( ArtifactPathComposer.class ) //
+                .to( DefaultArtifactPathComposer.class ).in( Singleton.class );
+        bind( DynamicPrefixComposerFactory.class ) //
+                .to( DefaultDynamicPrefixComposerFactory.class ).in( Singleton.class );
         bind( LocalRepositoryProvider.class ) //
                 .to( DefaultLocalRepositoryProvider.class ).in( Singleton.class );
         bind( LocalRepositoryManagerFactory.class ).annotatedWith( Names.named( "simple" ) ) //

@@ -1,0 +1,78 @@
+package org.eclipse.aether.internal.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.RemoteRepository;
+
+/**
+ * Composes prefixes for {@link DynamicLocalRepositoryManager}.
+ *
+ * @since TBD
+ */
+public interface DynamicPrefixComposer
+{
+    /**
+     * Returns {@code true} if methods
+     * {@link #getPrefixForRemoteArtifact(Artifact, RemoteRepository, String)} and
+     * {@link #getPrefixForRemoteMetadata(Metadata, RemoteRepository, String)} factor in into
+     * returned prefix the origin, thus physically separating the cache storage for origin.
+     *
+     * @return {@code true} if remote caches are physically separated by origin.
+     */
+    boolean isRemoteSplitByOrigin();
+
+    /**
+     * Gets the path prefix for a locally installed artifact.
+     *
+     * @param artifact The artifact for which to determine the prefix, must not be {@code null}.
+     * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
+     */
+    String getPrefixForLocalArtifact( Artifact artifact );
+
+    /**
+     * Gets the path prefix for an artifact cached from a remote repository.
+     *
+     * @param artifact   The artifact for which to determine the prefix, must not be {@code null}.
+     * @param repository The source repository of the artifact, must not be {@code null}.
+     * @param context    The resolution context in which the artifact is being requested, may be {@code null}.
+     * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
+     */
+    String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context );
+
+    /**
+     * Gets the path prefix for locally installed metadata.
+     *
+     * @param metadata The metadata for which to determine the prefix, must not be {@code null}.
+     * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
+     */
+    String getPrefixForLocalMetadata( Metadata metadata );
+
+    /**
+     * Gets the path prefix for metadata cached from a remote repository.
+     *
+     * @param metadata   The metadata for which to determine the prefix, must not be {@code null}.
+     * @param repository The source repository of the metadata, must not be {@code null}.
+     * @param context    The resolution context in which the metadata is being requested, may be {@code null}.
+     * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
+     */
+    String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context );
+}

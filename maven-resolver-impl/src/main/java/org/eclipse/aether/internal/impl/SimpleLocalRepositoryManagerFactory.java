@@ -45,7 +45,7 @@ public class SimpleLocalRepositoryManagerFactory
 {
     private float priority;
 
-    private ArtifactPathComposer artifactPathComposer;
+    private ArtifactPathComposer artifactPathComposer = new DefaultArtifactPathComposer(); // to enable Maven tests
 
     public SimpleLocalRepositoryManagerFactory()
     {

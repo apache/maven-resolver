@@ -35,7 +35,9 @@ import org.eclipse.aether.internal.impl.ArtifactPathComposer;
 import org.eclipse.aether.internal.impl.DefaultArtifactPathComposer;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider;
+import org.eclipse.aether.internal.impl.DefaultDynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.DynamicPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
@@ -230,6 +232,7 @@ public final class DefaultServiceLocator
         addService( NamedLockFactorySelector.class, SimpleNamedLockFactorySelector.class );
         addService( ChecksumAlgorithmFactorySelector.class, DefaultChecksumAlgorithmFactorySelector.class );
         addService( ArtifactPathComposer.class, DefaultArtifactPathComposer.class );
+        addService( DynamicPrefixComposerFactory.class, DefaultDynamicPrefixComposerFactory.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )
