@@ -26,6 +26,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Default implementation of {@link DynamicPrefixComposerFactory}.
@@ -36,57 +37,46 @@ import org.eclipse.aether.repository.RemoteRepository;
 @Named
 public final class DefaultDynamicPrefixComposerFactory implements DynamicPrefixComposerFactory
 {
+    private static final String CONFIG_PROP_COMPOSER = "aether.dynamicLocalRepository.composer";
+
+    private static final String DEFAULT_COMPOSER = "split";
+
     @Override
     public DynamicPrefixComposer createComposer( RepositorySystemSession session )
     {
-        return new Blow();
+        String composer = ConfigUtils.getString( session, DEFAULT_COMPOSER, CONFIG_PROP_COMPOSER );
+
+        String localPrefix = ConfigUtils.getString(
+                session, "local", "aether.dynamicLocalRepository.localPrefix" );
+        String remotePrefix = ConfigUtils.getString(
+                session, "remote", "aether.dynamicLocalRepository.remotePrefix" );
+        String releasePrefix = ConfigUtils.getString(
+                session, "release", "aether.dynamicLocalRepository.releasePrefix" );
+        String snapshotPrefix = ConfigUtils.getString(
+                session, "snapshot", "aether.dynamicLocalRepository.snapshotPrefix" );
+
+        if ( "split".equals( composer ) )
+        {
+            return new SplitDynamicPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+        }
+        else if ( "split-repository".equals( composer ) )
+        {
+            return new SplitRepositoryDynamicPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+        }
+        // TODO: make composer pluggable
+        throw new IllegalArgumentException( "Unknown " + CONFIG_PROP_COMPOSER + " value=" + composer );
     }
 
-    private static final class Blow implements DynamicPrefixComposer
+    private static final class SplitDynamicPrefixComposer extends DynamicPrefixComposerSupport
     {
-        @Override
-        public boolean isRemoteSplitByOrigin()
+        public SplitDynamicPrefixComposer( String localPrefix,
+                                           String remotePrefix,
+                                           String releasePrefix,
+                                           String snapshotPrefix )
         {
-            return true;
+            super( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
         }
 
-        @Override
-        public String getPrefixForLocalArtifact( Artifact artifact )
-        {
-            return "local-" + ( artifact.isSnapshot() ? "snapshot" : "release" );
-        }
-
-        @Override
-        public String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
-        {
-            return "remote-"
-                    + ( artifact.isSnapshot() ? "snapshot" : "release" ) + '/'
-                    + ( repository == null ? "norepository" : repository.getId() ) + '/'
-                    + ( context == null || context.isEmpty() ? "noctx" : context );
-        }
-
-        @Override
-        public String getPrefixForLocalMetadata( Metadata metadata )
-        {
-            return "local-" + ( isSnapshot( metadata ) ? "snapshot" : "release" );
-        }
-
-        @Override
-        public String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
-        {
-            return "remote-"
-                    + ( isSnapshot( metadata ) ? "snapshot" : "release" ) + '/'
-                    + ( repository == null ? "norepository" : repository.getId() ) + '/'
-                    + ( context == null || context.isEmpty() ? "noctx" : context );
-        }
-
-        private boolean isSnapshot( Metadata metadata )
-        {
-            return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
-        }
-    }
-    private static final class NoopDynamicPrefixComposer implements DynamicPrefixComposer
-    {
         @Override
         public boolean isRemoteSplitByOrigin()
         {
@@ -96,25 +86,100 @@ public final class DefaultDynamicPrefixComposerFactory implements DynamicPrefixC
         @Override
         public String getPrefixForLocalArtifact( Artifact artifact )
         {
-            return null;
+            return localPrefix;
         }
 
         @Override
         public String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
         {
-            return null;
+            return remotePrefix + "/"
+                    + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
         }
 
         @Override
         public String getPrefixForLocalMetadata( Metadata metadata )
         {
-            return null;
+            return localPrefix;
         }
 
         @Override
         public String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
         {
-            return null;
+            return remotePrefix + "/"
+                    + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
         }
+    }
+
+    private static final class SplitRepositoryDynamicPrefixComposer extends  DynamicPrefixComposerSupport
+    {
+        public SplitRepositoryDynamicPrefixComposer( String localPrefix,
+                                                     String remotePrefix,
+                                                     String releasePrefix,
+                                                     String snapshotPrefix )
+        {
+            super( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+        }
+
+        @Override
+        public boolean isRemoteSplitByOrigin()
+        {
+            return true;
+        }
+
+        @Override
+        public String getPrefixForLocalArtifact( Artifact artifact )
+        {
+            return localPrefix;
+        }
+
+        @Override
+        public String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+        {
+            return remotePrefix + "/"
+                    + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix ) + '/'
+                    + repository.getId();
+        }
+
+        @Override
+        public String getPrefixForLocalMetadata( Metadata metadata )
+        {
+            return localPrefix;
+        }
+
+        @Override
+        public String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+        {
+            return remotePrefix + "/"
+                    + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix ) + '/'
+                    + repository.getId();
+        }
+    }
+
+    private static abstract class DynamicPrefixComposerSupport implements DynamicPrefixComposer
+    {
+        protected final String localPrefix;
+
+        protected final String remotePrefix;
+
+        protected final String releasePrefix;
+
+        protected final String snapshotPrefix;
+
+        public DynamicPrefixComposerSupport( String localPrefix,
+                                             String remotePrefix,
+                                             String releasePrefix,
+                                             String snapshotPrefix )
+        {
+            this.localPrefix = localPrefix;
+            this.remotePrefix = remotePrefix;
+            this.releasePrefix = releasePrefix;
+            this.snapshotPrefix = snapshotPrefix;
+        }
+    }
+
+
+    private static boolean isSnapshot( Metadata metadata )
+    {
+        return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
     }
 }
