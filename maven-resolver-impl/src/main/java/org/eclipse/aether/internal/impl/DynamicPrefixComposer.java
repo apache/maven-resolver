@@ -24,7 +24,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Composes prefixes for {@link DynamicLocalRepositoryManager}.
+ * Composes prefixes for {@link EnhancedLocalRepositoryManager}.
  *
  * @since TBD
  */
