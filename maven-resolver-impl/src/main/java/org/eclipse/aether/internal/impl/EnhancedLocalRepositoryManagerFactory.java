@@ -49,9 +49,9 @@ import static java.util.Objects.requireNonNull;
 public class EnhancedLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
-    private static final String CONFIG_PROP_PREFIX_COMPOSER = "aether.enhancedLocalRepository.prefixComposer";
+    private static final String CONFIG_PROP_PATH_PREFIX_COMPOSER = "aether.enhancedLocalRepository.pathPrefixComposer";
 
-    private static final String DEFAULT_PREFIX_COMPOSER = NoopLocalPathPrefixComposerFactory.NAME;
+    private static final String DEFAULT_PATH_PREFIX_COMPOSER = NoopLocalPathPrefixComposerFactory.NAME;
 
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
@@ -115,7 +115,7 @@ public class EnhancedLocalRepositoryManagerFactory
         }
 
         String prefixComposerName = ConfigUtils.getString(
-                session, DEFAULT_PREFIX_COMPOSER, CONFIG_PROP_PREFIX_COMPOSER );
+                session, DEFAULT_PATH_PREFIX_COMPOSER, CONFIG_PROP_PATH_PREFIX_COMPOSER );
         LocalPathPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( prefixComposerName );
         if ( composerFactory == null )
         {
