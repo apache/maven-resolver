@@ -25,18 +25,22 @@ import javax.inject.Singleton;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
+import static java.util.Objects.requireNonNull;
+
 /**
- * Default implementation of {@link ArtifactPathComposer}.
+ * Default implementation of {@link LocalPathComposer}.
  *
  * @since TBD
  */
 @Singleton
 @Named
-public final class DefaultArtifactPathComposer implements ArtifactPathComposer
+public final class DefaultLocalPathComposer implements LocalPathComposer
 {
     @Override
     public String getPathForArtifact( Artifact artifact, boolean local )
     {
+        requireNonNull( artifact );
+
         StringBuilder path = new StringBuilder( 128 );
 
         path.append( artifact.getGroupId().replace( '.', '/' ) ).append( '/' );
@@ -71,6 +75,9 @@ public final class DefaultArtifactPathComposer implements ArtifactPathComposer
     @Override
     public String getPathForMetadata( Metadata metadata, String repositoryKey )
     {
+        requireNonNull( metadata );
+        requireNonNull( repositoryKey );
+
         StringBuilder path = new StringBuilder( 128 );
 
         if ( metadata.getGroupId().length() > 0 )
@@ -93,17 +100,17 @@ public final class DefaultArtifactPathComposer implements ArtifactPathComposer
         return path.toString();
     }
 
-    private String insertRepositoryKey( String filename, String repositoryKey )
+    private String insertRepositoryKey( String metadataType, String repositoryKey )
     {
         String result;
-        int idx = filename.indexOf( '.' );
+        int idx = metadataType.indexOf( '.' );
         if ( idx < 0 )
         {
-            result = filename + '-' + repositoryKey;
+            result = metadataType + '-' + repositoryKey;
         }
         else
         {
-            result = filename.substring( 0, idx ) + '-' + repositoryKey + filename.substring( idx );
+            result = metadataType.substring( 0, idx ) + '-' + repositoryKey + metadataType.substring( idx );
         }
         return result;
     }

@@ -47,7 +47,7 @@ public class EnhancedLocalRepositoryManagerFactory
 {
     private float priority = 10.0f;
 
-    private ArtifactPathComposer artifactPathComposer;
+    private LocalPathComposer localPathComposer;
 
     private TrackingFileManager trackingFileManager;
 
@@ -57,17 +57,17 @@ public class EnhancedLocalRepositoryManagerFactory
     }
 
     @Inject
-    public EnhancedLocalRepositoryManagerFactory( final ArtifactPathComposer artifactPathComposer,
+    public EnhancedLocalRepositoryManagerFactory( final LocalPathComposer localPathComposer,
                                                   final TrackingFileManager trackingFileManager )
     {
-        this.artifactPathComposer = requireNonNull( artifactPathComposer );
+        this.localPathComposer = requireNonNull( localPathComposer );
         this.trackingFileManager = requireNonNull( trackingFileManager );
     }
 
     @Override
     public void initService( final ServiceLocator locator )
     {
-        this.artifactPathComposer = requireNonNull( locator.getService( ArtifactPathComposer.class ) );
+        this.localPathComposer = requireNonNull( locator.getService( LocalPathComposer.class ) );
         this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
     }
 
@@ -81,7 +81,7 @@ public class EnhancedLocalRepositoryManagerFactory
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
             return new EnhancedLocalRepositoryManager(
-                    repository.getBasedir(), artifactPathComposer, session, trackingFileManager
+                    repository.getBasedir(), localPathComposer, session, trackingFileManager
             );
         }
         else

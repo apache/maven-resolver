@@ -67,13 +67,13 @@ public final class FileProvidedChecksumsSource
 
     private final FileProcessor fileProcessor;
 
-    private final ArtifactPathComposer artifactPathComposer;
+    private final LocalPathComposer localPathComposer;
 
     @Inject
-    public FileProvidedChecksumsSource( FileProcessor fileProcessor, ArtifactPathComposer artifactPathComposer )
+    public FileProvidedChecksumsSource( FileProcessor fileProcessor, LocalPathComposer localPathComposer )
     {
         this.fileProcessor = requireNonNull( fileProcessor );
-        this.artifactPathComposer = requireNonNull( artifactPathComposer );
+        this.localPathComposer = requireNonNull( localPathComposer );
     }
 
     @Override
@@ -90,7 +90,7 @@ public final class FileProvidedChecksumsSource
         for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
             checksumFilePaths.add( new ChecksumFilePath(
-                    artifactPathComposer.getPathForArtifact( transfer.getArtifact(), false ) + '.'
+                    localPathComposer.getPathForArtifact( transfer.getArtifact(), false ) + '.'
                     + checksumAlgorithmFactory.getFileExtension(), checksumAlgorithmFactory ) );
         }
         return getProvidedChecksums( baseDir, checksumFilePaths, ArtifactIdUtils.toId( transfer.getArtifact() ) );

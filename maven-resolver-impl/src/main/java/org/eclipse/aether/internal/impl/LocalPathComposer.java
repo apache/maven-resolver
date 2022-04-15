@@ -28,7 +28,7 @@ import org.eclipse.aether.metadata.Metadata;
  *
  * @since TBD
  */
-public interface ArtifactPathComposer
+public interface LocalPathComposer
 {
     /**
      * Gets the relative path for a locally installed (local=true) or remotely cached (local=false) artifact.
@@ -46,7 +46,7 @@ public interface ArtifactPathComposer
      * so far.
      *
      * @param metadata      The metadata for which to determine the path, must not be {@code null}.
-     * @param repositoryKey The repository key, where {@code "local"} denotes locally installed one.
+     * @param repositoryKey The repository key, never {@code null}.
      * @return A relative path representing metadata path.
      */
     String getPathForMetadata( Metadata metadata, String repositoryKey );

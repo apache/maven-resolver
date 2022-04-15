@@ -40,8 +40,8 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.internal.impl.ArtifactPathComposer;
-import org.eclipse.aether.internal.impl.DefaultArtifactPathComposer;
+import org.eclipse.aether.internal.impl.LocalPathComposer;
+import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
@@ -174,7 +174,7 @@ public class AetherModule
         bind( OfflineController.class ) //
                 .to( DefaultOfflineController.class ).in( Singleton.class );
 
-        bind( ArtifactPathComposer.class ).to( DefaultArtifactPathComposer.class ).in( Singleton.class );
+        bind( LocalPathComposer.class ).to( DefaultLocalPathComposer.class ).in( Singleton.class );
         bind( LocalRepositoryProvider.class ) //
                 .to( DefaultLocalRepositoryProvider.class ).in( Singleton.class );
         bind( LocalRepositoryManagerFactory.class ).annotatedWith( Names.named( "simple" ) ) //
