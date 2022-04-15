@@ -52,7 +52,7 @@ public class SimpleLocalRepositoryManagerTest
         throws IOException
     {
         basedir = TestFileUtils.createTempDir( "simple-repo" );
-        manager = new SimpleLocalRepositoryManager( basedir, "simple", new DefaultArtifactPathComposer() );
+        manager = new SimpleLocalRepositoryManager( basedir, "simple", new DefaultLocalPathComposer() );
         session = TestUtils.newSession();
     }
 

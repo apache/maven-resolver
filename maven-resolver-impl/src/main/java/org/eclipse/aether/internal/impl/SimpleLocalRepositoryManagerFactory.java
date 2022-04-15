@@ -45,23 +45,24 @@ public class SimpleLocalRepositoryManagerFactory
 {
     private float priority;
 
-    private ArtifactPathComposer artifactPathComposer = new DefaultArtifactPathComposer(); // to enable Maven tests
+    private LocalPathComposer localPathComposer;
 
     public SimpleLocalRepositoryManagerFactory()
     {
         // enable no-arg constructor
+        this.localPathComposer = new DefaultLocalPathComposer(); // maven UTs needs this
     }
 
     @Inject
-    public SimpleLocalRepositoryManagerFactory( final ArtifactPathComposer artifactPathComposer )
+    public SimpleLocalRepositoryManagerFactory( final LocalPathComposer localPathComposer )
     {
-        this.artifactPathComposer = requireNonNull( artifactPathComposer );
+        this.localPathComposer = requireNonNull( localPathComposer );
     }
 
     @Override
     public void initService( final ServiceLocator locator )
     {
-        this.artifactPathComposer = Objects.requireNonNull( locator.getService( ArtifactPathComposer.class ) );
+        this.localPathComposer = Objects.requireNonNull( locator.getService( LocalPathComposer.class ) );
     }
 
     @Override
@@ -73,7 +74,7 @@ public class SimpleLocalRepositoryManagerFactory
 
         if ( "".equals( repository.getContentType() ) || "simple".equals( repository.getContentType() ) )
         {
-            return new SimpleLocalRepositoryManager( repository.getBasedir(), "simple", artifactPathComposer );
+            return new SimpleLocalRepositoryManager( repository.getBasedir(), "simple", localPathComposer );
         }
         else
         {

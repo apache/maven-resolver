@@ -71,12 +71,12 @@ class EnhancedLocalRepositoryManager
     private final DynamicPrefixComposer dynamicPrefixComposer;
 
     EnhancedLocalRepositoryManager( File basedir,
-                                    ArtifactPathComposer artifactPathComposer,
+                                    LocalPathComposer localPathComposer,
                                     String trackingFilename,
                                     TrackingFileManager trackingFileManager,
                                     DynamicPrefixComposer dynamicPrefixComposer )
     {
-        super( basedir, "enhanced", artifactPathComposer );
+        super( basedir, "enhanced", localPathComposer );
         this.trackingFilename = requireNonNull( trackingFilename );
         this.trackingFileManager = requireNonNull( trackingFileManager );
         this.dynamicPrefixComposer = requireNonNull( dynamicPrefixComposer );

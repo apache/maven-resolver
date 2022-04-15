@@ -100,7 +100,7 @@ public class EnhancedLocalRepositoryManagerTest
         trackingFileManager = new DefaultTrackingFileManager();
         manager = new EnhancedLocalRepositoryManager(
                 basedir,
-                new DefaultArtifactPathComposer(),
+                new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,
                 NoopDynamicPrefixComposerFactory.INSTANCE

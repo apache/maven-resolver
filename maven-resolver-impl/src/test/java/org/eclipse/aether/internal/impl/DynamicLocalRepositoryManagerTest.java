@@ -104,7 +104,7 @@ public class DynamicLocalRepositoryManagerTest
         trackingFileManager = new DefaultTrackingFileManager();
         manager = new EnhancedLocalRepositoryManager(
                 basedir,
-                new DefaultArtifactPathComposer(),
+                new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,
                 new SplitRepositoryDynamicPrefixComposerFactory().createComposer( session )

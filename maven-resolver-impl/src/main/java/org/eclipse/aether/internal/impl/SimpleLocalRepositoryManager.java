@@ -48,13 +48,13 @@ class SimpleLocalRepositoryManager
 
     private final LocalRepository repository;
 
-    private final ArtifactPathComposer artifactPathComposer;
+    private final LocalPathComposer localPathComposer;
 
-    SimpleLocalRepositoryManager( File basedir, String type, ArtifactPathComposer artifactPathComposer )
+    SimpleLocalRepositoryManager( File basedir, String type, LocalPathComposer localPathComposer )
     {
         requireNonNull( basedir, "base directory cannot be null" );
         repository = new LocalRepository( basedir.getAbsoluteFile(), type );
-        this.artifactPathComposer = requireNonNull( artifactPathComposer );
+        this.localPathComposer = requireNonNull( localPathComposer );
     }
 
     @Override
@@ -67,7 +67,7 @@ class SimpleLocalRepositoryManager
     public String getPathForLocalArtifact( Artifact artifact )
     {
         requireNonNull( artifact, "artifact cannot be null" );
-        return artifactPathComposer.getPathForArtifact( artifact, true );
+        return localPathComposer.getPathForArtifact( artifact, true );
     }
 
     @Override
@@ -75,14 +75,14 @@ class SimpleLocalRepositoryManager
     {
         requireNonNull( artifact, "artifact cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
-        return artifactPathComposer.getPathForArtifact( artifact, false );
+        return localPathComposer.getPathForArtifact( artifact, false );
     }
 
     @Override
     public String getPathForLocalMetadata( Metadata metadata )
     {
         requireNonNull( metadata, "metadata cannot be null" );
-        return artifactPathComposer.getPathForMetadata( metadata, "local" );
+        return localPathComposer.getPathForMetadata( metadata, "local" );
     }
 
     @Override
@@ -90,7 +90,7 @@ class SimpleLocalRepositoryManager
     {
         requireNonNull( metadata, "metadata cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
-        return artifactPathComposer.getPathForMetadata( metadata, getRepositoryKey( repository, context ) );
+        return localPathComposer.getPathForMetadata( metadata, getRepositoryKey( repository, context ) );
     }
 
     protected String getRepositoryKey( RemoteRepository repository, String context )
