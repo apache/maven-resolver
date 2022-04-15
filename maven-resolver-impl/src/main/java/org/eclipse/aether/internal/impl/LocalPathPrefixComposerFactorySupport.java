@@ -24,14 +24,14 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Support class for {@link DynamicPrefixComposerFactory} implementations.
+ * Support class for {@link LocalPathPrefixComposerFactory} implementations.
  *
  * @since TBD
  */
-public abstract class DynamicPrefixComposerFactorySupport implements DynamicPrefixComposerFactory
+public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
 {
     @Override
-    public DynamicPrefixComposer createComposer( RepositorySystemSession session )
+    public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
     {
         String localPrefix = ConfigUtils.getString(
                 session, "installed", "aether.enhancedLocalRepository.localPrefix" );
@@ -45,14 +45,14 @@ public abstract class DynamicPrefixComposerFactorySupport implements DynamicPref
         return dpCreateComposer( session, localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
     }
 
-    protected abstract DynamicPrefixComposer dpCreateComposer( RepositorySystemSession session, String localPrefix,
-                                                               String remotePrefix, String releasePrefix,
-                                                               String snapshotPrefix );
+    protected abstract LocalPathPrefixComposer dpCreateComposer( RepositorySystemSession session, String localPrefix,
+                                                                 String remotePrefix, String releasePrefix,
+                                                                 String snapshotPrefix );
 
     /**
      * Support class for composers.
      */
-    protected abstract static class DynamicPrefixComposerSupport implements DynamicPrefixComposer
+    protected abstract static class LocalPathPrefixComposerSupport implements LocalPathPrefixComposer
     {
         protected final String localPrefix;
 
@@ -62,10 +62,10 @@ public abstract class DynamicPrefixComposerFactorySupport implements DynamicPref
 
         protected final String snapshotPrefix;
 
-        protected DynamicPrefixComposerSupport( String localPrefix,
-                                                String remotePrefix,
-                                                String releasePrefix,
-                                                String snapshotPrefix )
+        protected LocalPathPrefixComposerSupport( String localPrefix,
+                                                  String remotePrefix,
+                                                  String releasePrefix,
+                                                  String snapshotPrefix )
         {
             this.localPrefix = localPrefix;
             this.remotePrefix = remotePrefix;

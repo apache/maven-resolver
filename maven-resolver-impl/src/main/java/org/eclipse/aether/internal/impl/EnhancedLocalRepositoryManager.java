@@ -68,18 +68,18 @@ class EnhancedLocalRepositoryManager
 
     private final TrackingFileManager trackingFileManager;
 
-    private final DynamicPrefixComposer dynamicPrefixComposer;
+    private final LocalPathPrefixComposer localPathPrefixComposer;
 
     EnhancedLocalRepositoryManager( File basedir,
                                     LocalPathComposer localPathComposer,
                                     String trackingFilename,
                                     TrackingFileManager trackingFileManager,
-                                    DynamicPrefixComposer dynamicPrefixComposer )
+                                    LocalPathPrefixComposer localPathPrefixComposer )
     {
         super( basedir, "enhanced", localPathComposer );
         this.trackingFilename = requireNonNull( trackingFilename );
         this.trackingFileManager = requireNonNull( trackingFileManager );
-        this.dynamicPrefixComposer = requireNonNull( dynamicPrefixComposer );
+        this.localPathPrefixComposer = requireNonNull( localPathPrefixComposer );
     }
 
     private String concatPaths( String prefix, String artifactPath )
@@ -95,7 +95,7 @@ class EnhancedLocalRepositoryManager
     public String getPathForLocalArtifact( Artifact artifact )
     {
         return concatPaths(
-                dynamicPrefixComposer.getPrefixForLocalArtifact( artifact ),
+                localPathPrefixComposer.getPathPrefixForLocalArtifact( artifact ),
                 super.getPathForLocalArtifact( artifact )
         );
     }
@@ -104,7 +104,7 @@ class EnhancedLocalRepositoryManager
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
     {
         return concatPaths(
-                dynamicPrefixComposer.getPrefixForRemoteArtifact( artifact, repository, context ),
+                localPathPrefixComposer.getPathPrefixForRemoteArtifact( artifact, repository, context ),
                 super.getPathForRemoteArtifact( artifact, repository, context )
         );
     }
@@ -113,7 +113,7 @@ class EnhancedLocalRepositoryManager
     public String getPathForLocalMetadata( Metadata metadata )
     {
         return concatPaths(
-                dynamicPrefixComposer.getPrefixForLocalMetadata( metadata ),
+                localPathPrefixComposer.getPathPrefixForLocalMetadata( metadata ),
                 super.getPathForLocalMetadata( metadata )
         );
     }
@@ -122,7 +122,7 @@ class EnhancedLocalRepositoryManager
     public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
     {
         return concatPaths(
-                dynamicPrefixComposer.getPrefixForRemoteMetadata( metadata, repository, context ),
+                localPathPrefixComposer.getPathPrefixForRemoteMetadata( metadata, repository, context ),
                 super.getPathForRemoteMetadata( metadata, repository, context )
         );
     }

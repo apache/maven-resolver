@@ -51,7 +51,7 @@ public class EnhancedLocalRepositoryManagerFactory
 {
     private static final String CONFIG_PROP_PREFIX_COMPOSER = "aether.enhancedLocalRepository.prefixComposer";
 
-    private static final String DEFAULT_PREFIX_COMPOSER = NoopDynamicPrefixComposerFactory.NAME;
+    private static final String DEFAULT_PREFIX_COMPOSER = NoopLocalPathPrefixComposerFactory.NAME;
 
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
@@ -63,7 +63,7 @@ public class EnhancedLocalRepositoryManagerFactory
 
     private TrackingFileManager trackingFileManager;
 
-    private Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories;
+    private Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories;
 
     public EnhancedLocalRepositoryManagerFactory()
     {
@@ -73,7 +73,7 @@ public class EnhancedLocalRepositoryManagerFactory
     @Inject
     public EnhancedLocalRepositoryManagerFactory( final LocalPathComposer localPathComposer,
                    final TrackingFileManager trackingFileManager,
-                   final Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories )
+                   final Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories )
     {
         this.localPathComposer = requireNonNull( localPathComposer );
         this.trackingFileManager = requireNonNull( trackingFileManager );
@@ -87,16 +87,16 @@ public class EnhancedLocalRepositoryManagerFactory
         this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
         this.dynamicPrefixComposerFactories = new HashMap<>();
         this.dynamicPrefixComposerFactories.put(
-                NoopDynamicPrefixComposerFactory.NAME,
-                new NoopDynamicPrefixComposerFactory()
+                NoopLocalPathPrefixComposerFactory.NAME,
+                new NoopLocalPathPrefixComposerFactory()
         );
         this.dynamicPrefixComposerFactories.put(
-                SplitDynamicPrefixComposerFactory.NAME,
-                new SplitDynamicPrefixComposerFactory()
+                SplitLocalPathPrefixComposerFactory.NAME,
+                new SplitLocalPathPrefixComposerFactory()
         );
         this.dynamicPrefixComposerFactories.put(
-                SplitRepositoryDynamicPrefixComposerFactory.NAME,
-                new SplitRepositoryDynamicPrefixComposerFactory()
+                SplitRepositoryLocalPathPrefixComposerFactory.NAME,
+                new SplitRepositoryLocalPathPrefixComposerFactory()
         );
     }
 
@@ -116,7 +116,7 @@ public class EnhancedLocalRepositoryManagerFactory
 
         String prefixComposerName = ConfigUtils.getString(
                 session, DEFAULT_PREFIX_COMPOSER, CONFIG_PROP_PREFIX_COMPOSER );
-        DynamicPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( prefixComposerName );
+        LocalPathPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( prefixComposerName );
         if ( composerFactory == null )
         {
             throw new IllegalArgumentException( "Unknown prefix composer '" + prefixComposerName

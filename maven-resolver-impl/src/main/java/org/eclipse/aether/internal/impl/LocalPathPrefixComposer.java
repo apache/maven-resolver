@@ -24,11 +24,11 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Composes prefixes for {@link EnhancedLocalRepositoryManager}.
+ * Composes path prefixes for {@link EnhancedLocalRepositoryManager}.
  *
  * @since TBD
  */
-public interface DynamicPrefixComposer
+public interface LocalPathPrefixComposer
 {
     /**
      * Gets the path prefix for a locally installed artifact.
@@ -36,7 +36,7 @@ public interface DynamicPrefixComposer
      * @param artifact The artifact for which to determine the prefix, must not be {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */
-    String getPrefixForLocalArtifact( Artifact artifact );
+    String getPathPrefixForLocalArtifact( Artifact artifact );
 
     /**
      * Gets the path prefix for an artifact cached from a remote repository.
@@ -46,7 +46,7 @@ public interface DynamicPrefixComposer
      * @param context    The resolution context in which the artifact is being requested, may be {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */
-    String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context );
+    String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context );
 
     /**
      * Gets the path prefix for locally installed metadata.
@@ -54,7 +54,7 @@ public interface DynamicPrefixComposer
      * @param metadata The metadata for which to determine the prefix, must not be {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */
-    String getPrefixForLocalMetadata( Metadata metadata );
+    String getPathPrefixForLocalMetadata( Metadata metadata );
 
     /**
      * Gets the path prefix for metadata cached from a remote repository.
@@ -64,5 +64,5 @@ public interface DynamicPrefixComposer
      * @param context    The resolution context in which the metadata is being requested, may be {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */
-    String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context );
+    String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context );
 }

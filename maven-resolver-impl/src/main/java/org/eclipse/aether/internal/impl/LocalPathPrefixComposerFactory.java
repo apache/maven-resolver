@@ -22,17 +22,17 @@ package org.eclipse.aether.internal.impl;
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
- * Creates instances of {@link DynamicPrefixComposer}.
+ * Creates instances of {@link LocalPathPrefixComposer}.
  *
  * @since TBD
  */
-public interface DynamicPrefixComposerFactory
+public interface LocalPathPrefixComposerFactory
 {
     /**
-     * Creates {@link DynamicPrefixComposer} instance out of whatever configuration it finds in passed in session.
+     * Creates {@link LocalPathPrefixComposer} instance out of whatever configuration it finds in passed in session.
      *
-     * @param session The repository session.
+     * @param session The repository session, never {@code null}.
      * @return The created instance, never {@code null}.
      */
-    DynamicPrefixComposer createComposer( RepositorySystemSession session );
+    LocalPathPrefixComposer createComposer( RepositorySystemSession session );
 }

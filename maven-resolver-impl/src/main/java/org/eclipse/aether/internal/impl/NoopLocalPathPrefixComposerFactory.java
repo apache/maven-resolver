@@ -33,41 +33,41 @@ import org.eclipse.aether.repository.RemoteRepository;
  * @since TBD
  */
 @Singleton
-@Named( NoopDynamicPrefixComposerFactory.NAME )
-public final class NoopDynamicPrefixComposerFactory implements DynamicPrefixComposerFactory
+@Named( NoopLocalPathPrefixComposerFactory.NAME )
+public final class NoopLocalPathPrefixComposerFactory implements LocalPathPrefixComposerFactory
 {
     public static final String NAME = "noop";
 
-    public static final DynamicPrefixComposer INSTANCE = new NoopDynamicPrefixComposer();
+    public static final LocalPathPrefixComposer INSTANCE = new NoopLocalPathPrefixComposer();
 
     @Override
-    public DynamicPrefixComposer createComposer( RepositorySystemSession session )
+    public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
     {
         return INSTANCE;
     }
 
-    private static final class NoopDynamicPrefixComposer implements DynamicPrefixComposer
+    private static final class NoopLocalPathPrefixComposer implements LocalPathPrefixComposer
     {
         @Override
-        public String getPrefixForLocalArtifact( Artifact artifact )
+        public String getPathPrefixForLocalArtifact( Artifact artifact )
         {
             return null;
         }
 
         @Override
-        public String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
         {
             return null;
         }
 
         @Override
-        public String getPrefixForLocalMetadata( Metadata metadata )
+        public String getPathPrefixForLocalMetadata( Metadata metadata )
         {
             return null;
         }
 
         @Override
-        public String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
         {
             return null;
         }

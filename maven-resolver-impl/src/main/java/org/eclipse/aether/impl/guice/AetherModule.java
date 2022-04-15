@@ -43,11 +43,11 @@ import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
-import org.eclipse.aether.internal.impl.DynamicPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
-import org.eclipse.aether.internal.impl.NoopDynamicPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.SplitDynamicPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.SplitRepositoryDynamicPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.NoopLocalPathPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.SplitLocalPathPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.SplitRepositoryLocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -179,15 +179,15 @@ public class AetherModule
                 .to( DefaultOfflineController.class ).in( Singleton.class );
 
         bind( LocalPathComposer.class ).to( DefaultLocalPathComposer.class ).in( Singleton.class );
-        bind( DynamicPrefixComposerFactory.class )
-                .annotatedWith( Names.named( NoopDynamicPrefixComposerFactory.NAME ) )
-                .to( NoopDynamicPrefixComposerFactory.class ).in( Singleton.class );
-        bind( DynamicPrefixComposerFactory.class )
-                .annotatedWith( Names.named( SplitDynamicPrefixComposerFactory.NAME ) )
-                .to( SplitDynamicPrefixComposerFactory.class ).in( Singleton.class );
-        bind( DynamicPrefixComposerFactory.class )
-                .annotatedWith( Names.named( SplitRepositoryDynamicPrefixComposerFactory.NAME ) )
-                .to( SplitRepositoryDynamicPrefixComposerFactory.class ).in( Singleton.class );
+        bind( LocalPathPrefixComposerFactory.class )
+                .annotatedWith( Names.named( NoopLocalPathPrefixComposerFactory.NAME ) )
+                .to( NoopLocalPathPrefixComposerFactory.class ).in( Singleton.class );
+        bind( LocalPathPrefixComposerFactory.class )
+                .annotatedWith( Names.named( SplitLocalPathPrefixComposerFactory.NAME ) )
+                .to( SplitLocalPathPrefixComposerFactory.class ).in( Singleton.class );
+        bind( LocalPathPrefixComposerFactory.class )
+                .annotatedWith( Names.named( SplitRepositoryLocalPathPrefixComposerFactory.NAME ) )
+                .to( SplitRepositoryLocalPathPrefixComposerFactory.class ).in( Singleton.class );
 
         bind( LocalRepositoryProvider.class ) //
                 .to( DefaultLocalRepositoryProvider.class ).in( Singleton.class );
@@ -241,16 +241,16 @@ public class AetherModule
 
     @Provides
     @Singleton
-    Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories(
-            @Named( NoopDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory noop,
-            @Named( SplitDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory split,
-            @Named( SplitRepositoryDynamicPrefixComposerFactory.NAME ) DynamicPrefixComposerFactory splitRepository
+    Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories(
+            @Named( NoopLocalPathPrefixComposerFactory.NAME ) LocalPathPrefixComposerFactory noop,
+            @Named( SplitLocalPathPrefixComposerFactory.NAME ) LocalPathPrefixComposerFactory split,
+            @Named( SplitRepositoryLocalPathPrefixComposerFactory.NAME ) LocalPathPrefixComposerFactory splitRepository
     )
     {
-        Map<String, DynamicPrefixComposerFactory> dynamicPrefixComposerFactories = new HashMap<>();
-        dynamicPrefixComposerFactories.put( NoopDynamicPrefixComposerFactory.NAME, noop );
-        dynamicPrefixComposerFactories.put( SplitDynamicPrefixComposerFactory.NAME, split );
-        dynamicPrefixComposerFactories.put( SplitRepositoryDynamicPrefixComposerFactory.NAME, splitRepository );
+        Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories = new HashMap<>();
+        dynamicPrefixComposerFactories.put( NoopLocalPathPrefixComposerFactory.NAME, noop );
+        dynamicPrefixComposerFactories.put( SplitLocalPathPrefixComposerFactory.NAME, split );
+        dynamicPrefixComposerFactories.put( SplitRepositoryLocalPathPrefixComposerFactory.NAME, splitRepository );
         return dynamicPrefixComposerFactories;
     }
 

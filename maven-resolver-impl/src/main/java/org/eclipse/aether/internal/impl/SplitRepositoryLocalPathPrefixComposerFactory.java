@@ -34,36 +34,39 @@ import org.eclipse.aether.repository.RemoteRepository;
  * @since TBD
  */
 @Singleton
-@Named( SplitRepositoryDynamicPrefixComposerFactory.NAME )
-public final class SplitRepositoryDynamicPrefixComposerFactory extends DynamicPrefixComposerFactorySupport
+@Named( SplitRepositoryLocalPathPrefixComposerFactory.NAME )
+public final class SplitRepositoryLocalPathPrefixComposerFactory extends LocalPathPrefixComposerFactorySupport
 {
     public static final String NAME = "split-repository";
 
     @Override
-    protected DynamicPrefixComposer dpCreateComposer( RepositorySystemSession session, String localPrefix,
-                                                      String remotePrefix, String releasePrefix, String snapshotPrefix )
+    protected LocalPathPrefixComposer dpCreateComposer( RepositorySystemSession session,
+                                                        String localPrefix,
+                                                        String remotePrefix,
+                                                        String releasePrefix,
+                                                        String snapshotPrefix )
     {
-        return new SplitRepositoryDynamicPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+        return new SplitRepositoryLocalPathPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
     }
 
-    private static final class SplitRepositoryDynamicPrefixComposer extends DynamicPrefixComposerSupport
+    private static final class SplitRepositoryLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
     {
-        private SplitRepositoryDynamicPrefixComposer( String localPrefix,
-                                                      String remotePrefix,
-                                                      String releasePrefix,
-                                                      String snapshotPrefix )
+        private SplitRepositoryLocalPathPrefixComposer( String localPrefix,
+                                                        String remotePrefix,
+                                                        String releasePrefix,
+                                                        String snapshotPrefix )
         {
             super( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
         }
 
         @Override
-        public String getPrefixForLocalArtifact( Artifact artifact )
+        public String getPathPrefixForLocalArtifact( Artifact artifact )
         {
             return localPrefix;
         }
 
         @Override
-        public String getPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
         {
             return remotePrefix + "/"
                     + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix ) + '/'
@@ -71,13 +74,13 @@ public final class SplitRepositoryDynamicPrefixComposerFactory extends DynamicPr
         }
 
         @Override
-        public String getPrefixForLocalMetadata( Metadata metadata )
+        public String getPathPrefixForLocalMetadata( Metadata metadata )
         {
             return localPrefix;
         }
 
         @Override
-        public String getPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
         {
             return remotePrefix + "/"
                     + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix ) + '/'
