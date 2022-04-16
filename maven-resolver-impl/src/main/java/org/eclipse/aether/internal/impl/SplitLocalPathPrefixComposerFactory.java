@@ -28,7 +28,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Split composer: splits to localPrefix (locally built and installed) and remotePrefix (cached). Cache is further
+ * Split composer: splits to localPrefix (locally built and installed) and remotePrefix (cached). Both may be further
  * split by release or snapshots.
  *
  * @since TBD
@@ -40,49 +40,75 @@ public final class SplitLocalPathPrefixComposerFactory extends LocalPathPrefixCo
     public static final String NAME = "split";
 
     @Override
-    protected LocalPathPrefixComposer dpCreateComposer( RepositorySystemSession session,
-                                                        String localPrefix,
-                                                        String remotePrefix,
-                                                        String releasePrefix,
-                                                        String snapshotPrefix )
+    public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
     {
-        return new SplitLocalPathPrefixComposer( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+        return new SplitLocalPathPrefixComposer( getLocalPrefix( session ), isSplitLocal( session ),
+                getRemotePrefix( session ), isSplitRemote( session ), getReleasePrefix( session ),
+                getSnapshotPrefix( session ) );
     }
 
-    private static final class SplitLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
+    /**
+     * Split {@link LocalPathPrefixComposer} that splits installed and cached. Optionally, splits them by release or
+     * snapshot as well.
+     */
+    public static class SplitLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
     {
-        private SplitLocalPathPrefixComposer( String localPrefix,
-                                              String remotePrefix,
-                                              String releasePrefix,
-                                              String snapshotPrefix )
+        public SplitLocalPathPrefixComposer( String localPrefix, boolean splitLocal, String remotePrefix,
+                                             boolean splitRemote, String releasePrefix, String snapshotPrefix )
         {
-            super( localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
+            super( localPrefix, splitLocal, remotePrefix, splitRemote, releasePrefix, snapshotPrefix );
         }
 
         @Override
         public String getPathPrefixForLocalArtifact( Artifact artifact )
         {
-            return localPrefix;
+            if ( splitLocal )
+            {
+                return localPrefix + "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+            }
+            else
+            {
+                return localPrefix;
+            }
         }
 
         @Override
         public String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
         {
-            return remotePrefix + "/"
-                    + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+            if ( splitRemote )
+            {
+                return remotePrefix + "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+            }
+            else
+            {
+                return remotePrefix;
+            }
         }
 
         @Override
         public String getPathPrefixForLocalMetadata( Metadata metadata )
         {
-            return localPrefix;
+            if ( splitLocal )
+            {
+                return localPrefix + "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+            }
+            else
+            {
+                return localPrefix;
+            }
         }
 
         @Override
         public String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
         {
-            return remotePrefix + "/"
-                    + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+            if ( splitRemote )
+            {
+                return remotePrefix + "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+            }
+            else
+            {
+                return remotePrefix;
+            }
         }
     }
 }

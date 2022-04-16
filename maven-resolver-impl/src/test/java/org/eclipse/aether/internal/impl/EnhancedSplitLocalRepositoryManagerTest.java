@@ -50,7 +50,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class DynamicLocalRepositoryManagerTest
+public class EnhancedSplitLocalRepositoryManagerTest
 {
 
     private Artifact artifact;
@@ -184,12 +184,12 @@ public class DynamicLocalRepositoryManagerTest
 
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "cached/snapshot/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar",
+        assertEquals( "cached/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar",
                       manager.getPathForRemoteArtifact( artifact, remoteRepo, "" ) );
 
         artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-20110329.221805-4" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "cached/snapshot/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-20110329.221805-4.jar",
+        assertEquals( "cached/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-20110329.221805-4.jar",
                       manager.getPathForRemoteArtifact( artifact, remoteRepo, "" ) );
     }
 

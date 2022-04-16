@@ -30,24 +30,41 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
 {
-    @Override
-    public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
+    protected String getLocalPrefix( RepositorySystemSession session )
     {
-        String localPrefix = ConfigUtils.getString(
+        return ConfigUtils.getString(
                 session, "installed", "aether.enhancedLocalRepository.localPrefix" );
-        String remotePrefix = ConfigUtils.getString(
-                session, "cached", "aether.enhancedLocalRepository.remotePrefix" );
-        String releasePrefix = ConfigUtils.getString(
-                session, "release", "aether.enhancedLocalRepository.releasePrefix" );
-        String snapshotPrefix = ConfigUtils.getString(
-                session, "snapshot", "aether.enhancedLocalRepository.snapshotPrefix" );
-
-        return dpCreateComposer( session, localPrefix, remotePrefix, releasePrefix, snapshotPrefix );
     }
 
-    protected abstract LocalPathPrefixComposer dpCreateComposer( RepositorySystemSession session, String localPrefix,
-                                                                 String remotePrefix, String releasePrefix,
-                                                                 String snapshotPrefix );
+    protected boolean isSplitLocal( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean(
+                session, false, "aether.enhancedLocalRepository.splitLocal" );
+    }
+
+    protected String getRemotePrefix( RepositorySystemSession session )
+    {
+        return ConfigUtils.getString(
+                session, "cached", "aether.enhancedLocalRepository.remotePrefix" );
+    }
+
+    protected boolean isSplitRemote( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean(
+                session, false, "aether.enhancedLocalRepository.splitRemote" );
+    }
+
+    protected String getReleasePrefix( RepositorySystemSession session )
+    {
+        return ConfigUtils.getString(
+                session, "release", "aether.enhancedLocalRepository.releasePrefix" );
+    }
+
+    protected String getSnapshotPrefix( RepositorySystemSession session )
+    {
+        return ConfigUtils.getString(
+                session, "snapshot", "aether.enhancedLocalRepository.snapshotPrefix" );
+    }
 
     /**
      * Support class for composers.
@@ -56,19 +73,27 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
     {
         protected final String localPrefix;
 
+        protected final boolean splitLocal;
+
         protected final String remotePrefix;
+
+        protected final boolean splitRemote;
 
         protected final String releasePrefix;
 
         protected final String snapshotPrefix;
 
         protected LocalPathPrefixComposerSupport( String localPrefix,
+                                                  boolean splitLocal,
                                                   String remotePrefix,
+                                                  boolean splitRemote,
                                                   String releasePrefix,
                                                   String snapshotPrefix )
         {
             this.localPrefix = localPrefix;
+            this.splitLocal = splitLocal;
             this.remotePrefix = remotePrefix;
+            this.splitRemote = splitRemote;
             this.releasePrefix = releasePrefix;
             this.snapshotPrefix = snapshotPrefix;
         }
@@ -76,6 +101,9 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
     protected static boolean isSnapshot( Metadata metadata )
     {
-        return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
+        // TODO: this is bad: MD not have always versions
+        // return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
+        // TODO: unsure what Nature really is
+        return metadata.getNature() == Metadata.Nature.SNAPSHOT;
     }
 }
