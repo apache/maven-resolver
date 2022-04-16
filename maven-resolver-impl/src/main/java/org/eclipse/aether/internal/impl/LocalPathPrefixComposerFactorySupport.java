@@ -101,9 +101,6 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
     protected static boolean isSnapshot( Metadata metadata )
     {
-        // TODO: this is bad: MD not have always versions
-        // return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
-        // TODO: unsure what Nature really is
-        return metadata.getNature() == Metadata.Nature.SNAPSHOT;
+        return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
     }
 }
