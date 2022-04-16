@@ -107,7 +107,7 @@ public class EnhancedSplitLocalRepositoryManagerTest
                 new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,
-                new SplitRepositoryLocalPathPrefixComposerFactory().createComposer( session )
+                new SplitLocalPathPrefixComposerFactory().createComposer( session )
         );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
@@ -184,12 +184,12 @@ public class EnhancedSplitLocalRepositoryManagerTest
 
         Artifact artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-SNAPSHOT" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "cached/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar",
+        assertEquals( "cached/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar",
                       manager.getPathForRemoteArtifact( artifact, remoteRepo, "" ) );
 
         artifact = new DefaultArtifact( "g.i.d:a.i.d:1.0-20110329.221805-4" );
         assertEquals( "1.0-SNAPSHOT", artifact.getBaseVersion() );
-        assertEquals( "cached/repo/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-20110329.221805-4.jar",
+        assertEquals( "cached/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-20110329.221805-4.jar",
                       manager.getPathForRemoteArtifact( artifact, remoteRepo, "" ) );
     }
 

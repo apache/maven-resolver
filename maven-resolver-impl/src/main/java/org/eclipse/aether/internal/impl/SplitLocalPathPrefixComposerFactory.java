@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * Split composer: splits to localPrefix (locally built and installed) and remotePrefix (cached). Both may be further
@@ -43,8 +42,8 @@ public final class SplitLocalPathPrefixComposerFactory extends LocalPathPrefixCo
     public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
     {
         return new SplitLocalPathPrefixComposer( getLocalPrefix( session ), isSplitLocal( session ),
-                getRemotePrefix( session ), isSplitRemote( session ), getReleasePrefix( session ),
-                getSnapshotPrefix( session ) );
+                getRemotePrefix( session ), isSplitRemote( session ), isSplitRemoteRepository( session ),
+                getReleasePrefix( session ), getSnapshotPrefix( session ) );
     }
 
     /**
@@ -54,9 +53,11 @@ public final class SplitLocalPathPrefixComposerFactory extends LocalPathPrefixCo
     public static class SplitLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
     {
         public SplitLocalPathPrefixComposer( String localPrefix, boolean splitLocal, String remotePrefix,
-                                             boolean splitRemote, String releasePrefix, String snapshotPrefix )
+                                             boolean splitRemote, boolean splitRemoteRepository, String releasePrefix,
+                                             String snapshotPrefix )
         {
-            super( localPrefix, splitLocal, remotePrefix, splitRemote, releasePrefix, snapshotPrefix );
+            super( localPrefix, splitLocal, remotePrefix, splitRemote, splitRemoteRepository, releasePrefix,
+                    snapshotPrefix );
         }
 
         @Override
@@ -73,16 +74,18 @@ public final class SplitLocalPathPrefixComposerFactory extends LocalPathPrefixCo
         }
 
         @Override
-        public String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteArtifact( Artifact artifact, String repositoryKey )
         {
+            String result = remotePrefix;
             if ( splitRemote )
             {
-                return remotePrefix + "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+                result += "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
             }
-            else
+            if ( splitRemoteRepository )
             {
-                return remotePrefix;
+                result += "/" + repositoryKey;
             }
+            return result;
         }
 
         @Override
@@ -99,16 +102,18 @@ public final class SplitLocalPathPrefixComposerFactory extends LocalPathPrefixCo
         }
 
         @Override
-        public String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteMetadata( Metadata metadata, String repositoryKey )
         {
+            String result = remotePrefix;
             if ( splitRemote )
             {
-                return remotePrefix + "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+                result += "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
             }
-            else
+            if ( splitRemoteRepository )
             {
-                return remotePrefix;
+                result += "/" + repositoryKey;
             }
+            return result;
         }
     }
 }

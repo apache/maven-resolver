@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * No-op composer (makes enhanced LRM behave exactly same as before).
@@ -55,7 +54,7 @@ public final class NoopLocalPathPrefixComposerFactory implements LocalPathPrefix
         }
 
         @Override
-        public String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteArtifact( Artifact artifact, String repositoryKey )
         {
             return null;
         }
@@ -67,7 +66,7 @@ public final class NoopLocalPathPrefixComposerFactory implements LocalPathPrefix
         }
 
         @Override
-        public String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+        public String getPathPrefixForRemoteMetadata( Metadata metadata, String repositoryKey )
         {
             return null;
         }

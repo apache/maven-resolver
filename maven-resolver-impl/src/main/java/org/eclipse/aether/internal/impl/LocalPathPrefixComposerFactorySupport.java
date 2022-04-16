@@ -54,6 +54,12 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                 session, false, "aether.enhancedLocalRepository.splitRemote" );
     }
 
+    protected boolean isSplitRemoteRepository( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean(
+                session, false, "aether.enhancedLocalRepository.splitRemoteRepository" );
+    }
+
     protected String getReleasePrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
@@ -79,6 +85,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected final boolean splitRemote;
 
+        protected final boolean splitRemoteRepository;
+
         protected final String releasePrefix;
 
         protected final String snapshotPrefix;
@@ -87,6 +95,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                                                   boolean splitLocal,
                                                   String remotePrefix,
                                                   boolean splitRemote,
+                                                  boolean splitRemoteRepository,
                                                   String releasePrefix,
                                                   String snapshotPrefix )
         {
@@ -94,6 +103,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             this.splitLocal = splitLocal;
             this.remotePrefix = remotePrefix;
             this.splitRemote = splitRemote;
+            this.splitRemoteRepository = splitRemoteRepository;
             this.releasePrefix = releasePrefix;
             this.snapshotPrefix = snapshotPrefix;
         }

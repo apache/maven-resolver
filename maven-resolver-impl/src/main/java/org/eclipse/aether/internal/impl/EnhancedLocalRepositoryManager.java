@@ -104,7 +104,8 @@ class EnhancedLocalRepositoryManager
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
     {
         return concatPaths(
-                localPathPrefixComposer.getPathPrefixForRemoteArtifact( artifact, repository, context ),
+                localPathPrefixComposer.getPathPrefixForRemoteArtifact(
+                        artifact, getRepositoryKey( repository, context ) ),
                 super.getPathForRemoteArtifact( artifact, repository, context )
         );
     }
@@ -122,7 +123,8 @@ class EnhancedLocalRepositoryManager
     public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
     {
         return concatPaths(
-                localPathPrefixComposer.getPathPrefixForRemoteMetadata( metadata, repository, context ),
+                localPathPrefixComposer.getPathPrefixForRemoteMetadata(
+                        metadata, getRepositoryKey( repository, context ) ),
                 super.getPathForRemoteMetadata( metadata, repository, context )
         );
     }

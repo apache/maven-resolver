@@ -94,10 +94,6 @@ public class EnhancedLocalRepositoryManagerFactory
                 SplitLocalPathPrefixComposerFactory.NAME,
                 new SplitLocalPathPrefixComposerFactory()
         );
-        this.dynamicPrefixComposerFactories.put(
-                SplitRepositoryLocalPathPrefixComposerFactory.NAME,
-                new SplitRepositoryLocalPathPrefixComposerFactory()
-        );
     }
 
     @Override
