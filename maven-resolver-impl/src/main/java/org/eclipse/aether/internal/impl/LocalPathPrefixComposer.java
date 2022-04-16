@@ -40,7 +40,7 @@ public interface LocalPathPrefixComposer
     /**
      * Gets the path prefix for an artifact cached from a remote repository.
      *
-     * @param artifact   The artifact for which to determine the prefix, must not be {@code null}.
+     * @param artifact      The artifact for which to determine the prefix, must not be {@code null}.
      * @param repositoryKey The repository key, never {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */
@@ -57,7 +57,7 @@ public interface LocalPathPrefixComposer
     /**
      * Gets the path prefix for metadata cached from a remote repository.
      *
-     * @param metadata   The metadata for which to determine the prefix, must not be {@code null}.
+     * @param metadata      The metadata for which to determine the prefix, must not be {@code null}.
      * @param repositoryKey The repository key, never {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */

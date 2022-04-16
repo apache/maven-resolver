@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import java.io.File;
+
 import static java.util.Objects.requireNonNull;
 
 import java.util.Objects;
@@ -43,7 +44,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  * A local repository manager that realizes the classical Maven 2.0 local repository.
  */
 class SimpleLocalRepositoryManager
-    implements LocalRepositoryManager
+        implements LocalRepositoryManager
 {
 
     private final LocalRepository repository;
@@ -93,6 +94,11 @@ class SimpleLocalRepositoryManager
         return localPathComposer.getPathForMetadata( metadata, getRepositoryKey( repository, context ) );
     }
 
+    /**
+     * Returns {@link RemoteRepository#getId()}, unless {@link RemoteRepository#isRepositoryManager()} returns
+     * {@code true}, in which case this method creates unique identifier based on ID and current configuration
+     * of the remote repository (as it may change).
+     */
     protected String getRepositoryKey( RemoteRepository repository, String context )
     {
         String key;
