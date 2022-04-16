@@ -139,16 +139,21 @@ class SimpleLocalRepositoryManager
         requireNonNull( session, "session cannot be null" );
         requireNonNull( request, "request cannot be null" );
         Artifact artifact = request.getArtifact();
-        String path = getPathForLocalArtifact( artifact );
-        File file = new File( getRepository().getBasedir(), path );
-
         LocalArtifactResult result = new LocalArtifactResult( request );
 
-        // request may ask for specific timestamped snapshot, while getPathForLocalArtifact turns it into -SNAPSHOT
-        if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) && file.isFile() )
+        String path;
+        File file;
+
+        // Local repository CANNOT have timestamped installed, they are created only during deploy
+        if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) )
         {
-            result.setFile( file );
-            result.setAvailable( true );
+            path = getPathForLocalArtifact( artifact );
+            file = new File( getRepository().getBasedir(), path );
+            if ( file.isFile() )
+            {
+                result.setFile( file );
+                result.setAvailable( true );
+            }
         }
 
         if ( !result.isAvailable() )

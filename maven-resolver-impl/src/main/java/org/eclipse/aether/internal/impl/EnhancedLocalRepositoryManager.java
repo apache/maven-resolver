@@ -131,14 +131,16 @@ class EnhancedLocalRepositoryManager
     public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
     {
         Artifact artifact = request.getArtifact();
-        String path = getPathForLocalArtifact( artifact );
-        File file = new File( getRepository().getBasedir(), path );
-
         LocalArtifactResult result = new LocalArtifactResult( request );
 
-        // request may ask for specific timestamped snapshot, while getPathForLocalArtifact turns it into -SNAPSHOT
+        String path;
+        File file;
+
+        // Local repository CANNOT have timestamped installed, they are created only during deploy
         if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) )
         {
+            path = getPathForLocalArtifact( artifact );
+            file = new File( getRepository().getBasedir(), path );
             checkFind( file, result );
         }
 
