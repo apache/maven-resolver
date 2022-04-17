@@ -30,46 +30,75 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
 {
+    private static final String CONF_PROP_LOCAL_PREFIX = "aether.enhancedLocalRepository.localPrefix";
+
+    private static final String DEFAULT_LOCAL_PREFIX = "installed";
+
+    private static final String CONF_PROP_SPLIT_LOCAL = "aether.enhancedLocalRepository.splitLocal";
+
+    private static final boolean DEFAULT_SPLIT_LOCAL = false;
+
+    private static final String CONF_PROP_REMOTE_PREFIX = "aether.enhancedLocalRepository.remotePrefix";
+
+    private static final String DEFAULT_REMOTE_PREFIX = "cached";
+
+    private static final String CONF_PROP_SPLIT_REMOTE = "aether.enhancedLocalRepository.splitRemote";
+
+    private static final boolean DEFAULT_SPLIT_REMOTE = false;
+
+    private static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY =
+            "aether.enhancedLocalRepository.splitRemoteRepository";
+
+    private static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY = false;
+
+    private static final String CONF_PROP_RELEASE_PREFIX = "aether.enhancedLocalRepository.releasePrefix";
+
+    private static final String DEFAULT_RELEASE_PREFIX = "release";
+
+    private static final String CONF_PROP_SNAPSHOT_PREFIX = "aether.enhancedLocalRepository.snapshotPrefix";
+
+    private static final String DEFAULT_SNAPSHOT_PREFIX = "snapshot";
+
     protected String getLocalPrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
-                session, "installed", "aether.enhancedLocalRepository.localPrefix" );
+                session, DEFAULT_LOCAL_PREFIX, CONF_PROP_LOCAL_PREFIX );
     }
 
     protected boolean isSplitLocal( RepositorySystemSession session )
     {
         return ConfigUtils.getBoolean(
-                session, false, "aether.enhancedLocalRepository.splitLocal" );
+                session, DEFAULT_SPLIT_LOCAL, CONF_PROP_SPLIT_LOCAL );
     }
 
     protected String getRemotePrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
-                session, "cached", "aether.enhancedLocalRepository.remotePrefix" );
+                session, DEFAULT_REMOTE_PREFIX, CONF_PROP_REMOTE_PREFIX );
     }
 
     protected boolean isSplitRemote( RepositorySystemSession session )
     {
         return ConfigUtils.getBoolean(
-                session, false, "aether.enhancedLocalRepository.splitRemote" );
+                session, DEFAULT_SPLIT_REMOTE, CONF_PROP_SPLIT_REMOTE );
     }
 
     protected boolean isSplitRemoteRepository( RepositorySystemSession session )
     {
         return ConfigUtils.getBoolean(
-                session, false, "aether.enhancedLocalRepository.splitRemoteRepository" );
+                session, DEFAULT_SPLIT_REMOTE_REPOSITORY, CONF_PROP_SPLIT_REMOTE_REPOSITORY );
     }
 
     protected String getReleasePrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
-                session, "release", "aether.enhancedLocalRepository.releasePrefix" );
+                session, DEFAULT_RELEASE_PREFIX, CONF_PROP_RELEASE_PREFIX );
     }
 
     protected String getSnapshotPrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
-                session, "snapshot", "aether.enhancedLocalRepository.snapshotPrefix" );
+                session, DEFAULT_SNAPSHOT_PREFIX, CONF_PROP_SNAPSHOT_PREFIX );
     }
 
     /**
