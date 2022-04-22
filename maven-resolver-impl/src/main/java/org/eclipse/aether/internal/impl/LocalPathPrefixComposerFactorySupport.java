@@ -24,11 +24,12 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Support class for {@link LocalPathPrefixComposerFactory} implementations.
+ * Support class for {@link LocalPathPrefixComposerFactory} implementations: it predefines and makes re-usable
+ * common configuration getters, and defines a support class for {@link LocalPathPrefixComposer} carrying same.
  *
  * @since TBD
  */
-public abstract class LocalPathPrefixComposerFactorySupport
+public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
 {
     private static final String CONF_PROP_SPLIT = "aether.enhancedLocalRepository.split";
 
@@ -111,7 +112,7 @@ public abstract class LocalPathPrefixComposerFactorySupport
     }
 
     /**
-     * Support class for composers.
+     * Support class for composers: it defines protected members for all the predefined configuration values.
      */
     @SuppressWarnings( "checkstyle:parameternumber" )
     protected abstract static class LocalPathPrefixComposerSupport implements LocalPathPrefixComposer

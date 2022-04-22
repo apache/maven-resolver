@@ -35,9 +35,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 @Singleton
 @Named
-public final class DefaultLocalPathPrefixComposerFactory
-        extends LocalPathPrefixComposerFactorySupport
-        implements LocalPathPrefixComposerFactory
+public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefixComposerFactorySupport
 {
     @Override
     public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
