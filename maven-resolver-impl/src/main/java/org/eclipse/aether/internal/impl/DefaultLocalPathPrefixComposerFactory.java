@@ -28,8 +28,9 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Default local path prefix composer factory: may split to localPrefix (locally built and installed) and remotePrefix
- * (cached). Both may be further split by release or snapshots.
+ * Default local path prefix composer factory: it creates {@link LocalPathPrefixComposer} instances of (internal) type
+ * {@link DefaultLocalPathPrefixComposer} that observe and implement all the supported parameters predefined in support
+ * class.
  *
  * @since TBD
  */
@@ -47,13 +48,12 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
     }
 
     /**
-     * Split {@link LocalPathPrefixComposer} that splits installed and cached. Optionally, splits them by release or
-     * snapshot as well.
+     * {@link LocalPathPrefixComposer} implementation that observe and implement all the supported parameters.
      */
-    public static class DefaultLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
+    private static class DefaultLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
     {
         @SuppressWarnings( "checkstyle:parameternumber" )
-        public DefaultLocalPathPrefixComposer( boolean split, String localPrefix, boolean splitLocal,
+        private DefaultLocalPathPrefixComposer( boolean split, String localPrefix, boolean splitLocal,
                                                String remotePrefix, boolean splitRemote, boolean splitRemoteRepository,
                                                boolean splitRemoteRepositoryLast,
                                                String releasePrefix, String snapshotPrefix )
