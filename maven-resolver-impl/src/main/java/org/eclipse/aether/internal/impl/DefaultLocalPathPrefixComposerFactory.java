@@ -67,14 +67,12 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
             {
                 return null;
             }
+            String result = localPrefix;
             if ( splitLocal )
             {
-                return localPrefix + "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+                result += "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
             }
-            else
-            {
-                return localPrefix;
-            }
+            return result;
         }
 
         @Override
@@ -85,13 +83,13 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 return null;
             }
             String result = remotePrefix;
-            if ( splitRemote )
-            {
-                result += "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
-            }
             if ( splitRemoteRepository )
             {
                 result += "/" + repository.getId();
+            }
+            if ( splitRemote )
+            {
+                result += "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
             }
             return result;
         }
@@ -103,14 +101,12 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
             {
                 return null;
             }
+            String result = localPrefix;
             if ( splitLocal )
             {
-                return localPrefix + "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+                result += "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
             }
-            else
-            {
-                return localPrefix;
-            }
+            return result;
         }
 
         @Override
@@ -121,13 +117,13 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 return null;
             }
             String result = remotePrefix;
-            if ( splitRemote )
-            {
-                result += "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
-            }
             if ( splitRemoteRepository )
             {
                 result += "/" + repository.getId();
+            }
+            if ( splitRemote )
+            {
+                result += "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
             }
             return result;
         }
