@@ -103,7 +103,7 @@ public class EnhancedLocalRepositoryManagerTest
                 new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,
-                NoopLocalPathPrefixComposerFactory.INSTANCE
+                new DefaultLocalPathPrefixComposerFactory().createComposer( session )
         );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );

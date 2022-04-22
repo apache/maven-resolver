@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * Composes path prefixes for {@link EnhancedLocalRepositoryManager}.
@@ -41,10 +42,10 @@ public interface LocalPathPrefixComposer
      * Gets the path prefix for an artifact cached from a remote repository.
      *
      * @param artifact      The artifact for which to determine the prefix, must not be {@code null}.
-     * @param repositoryKey The repository key, never {@code null}.
+     * @param repository    The remote repository, never {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */
-    String getPathPrefixForRemoteArtifact( Artifact artifact, String repositoryKey );
+    String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository );
 
     /**
      * Gets the path prefix for locally installed metadata.
@@ -58,8 +59,8 @@ public interface LocalPathPrefixComposer
      * Gets the path prefix for metadata cached from a remote repository.
      *
      * @param metadata      The metadata for which to determine the prefix, must not be {@code null}.
-     * @param repositoryKey The repository key, never {@code null}.
+     * @param repository    The remote repository, never {@code null}.
      * @return The prefix, may be {@code null} (note: {@code null}s and empty strings are treated equally).
      */
-    String getPathPrefixForRemoteMetadata( Metadata metadata, String repositoryKey );
+    String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository );
 }

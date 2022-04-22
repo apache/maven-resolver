@@ -28,8 +28,11 @@ import org.eclipse.aether.util.ConfigUtils;
  *
  * @since TBD
  */
-public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
+public abstract class LocalPathPrefixComposerFactorySupport
 {
+    private static final String CONF_PROP_SPLIT = "aether.enhancedLocalRepository.split";
+
+    private static final boolean DEFAULT_SPLIT = false;
     private static final String CONF_PROP_LOCAL_PREFIX = "aether.enhancedLocalRepository.localPrefix";
 
     private static final String DEFAULT_LOCAL_PREFIX = "installed";
@@ -58,6 +61,12 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
     private static final String CONF_PROP_SNAPSHOT_PREFIX = "aether.enhancedLocalRepository.snapshotPrefix";
 
     private static final String DEFAULT_SNAPSHOT_PREFIX = "snapshot";
+
+    protected boolean isSplit( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean(
+                session, DEFAULT_SPLIT, CONF_PROP_SPLIT );
+    }
 
     protected String getLocalPrefix( RepositorySystemSession session )
     {
@@ -104,8 +113,11 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
     /**
      * Support class for composers.
      */
+    @SuppressWarnings( "checkstyle:parameternumber" )
     protected abstract static class LocalPathPrefixComposerSupport implements LocalPathPrefixComposer
     {
+        protected final boolean split;
+
         protected final String localPrefix;
 
         protected final boolean splitLocal;
@@ -120,7 +132,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected final String snapshotPrefix;
 
-        protected LocalPathPrefixComposerSupport( String localPrefix,
+        protected LocalPathPrefixComposerSupport( boolean split,
+                                                  String localPrefix,
                                                   boolean splitLocal,
                                                   String remotePrefix,
                                                   boolean splitRemote,
@@ -128,6 +141,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                                                   String releasePrefix,
                                                   String snapshotPrefix )
         {
+            this.split = split;
             this.localPrefix = localPrefix;
             this.splitLocal = splitLocal;
             this.remotePrefix = remotePrefix;
@@ -136,10 +150,10 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             this.releasePrefix = releasePrefix;
             this.snapshotPrefix = snapshotPrefix;
         }
-    }
 
-    protected static boolean isSnapshot( Metadata metadata )
-    {
-        return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
+        protected boolean isSnapshot( Metadata metadata )
+        {
+            return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
+        }
     }
 }

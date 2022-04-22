@@ -40,13 +40,12 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.internal.impl.DefaultLocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
-import org.eclipse.aether.internal.impl.NoopLocalPathPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.SplitLocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -177,13 +176,10 @@ public class AetherModule
         bind( OfflineController.class ) //
                 .to( DefaultOfflineController.class ).in( Singleton.class );
 
-        bind( LocalPathComposer.class ).to( DefaultLocalPathComposer.class ).in( Singleton.class );
+        bind( LocalPathComposer.class )
+                .to( DefaultLocalPathComposer.class ).in( Singleton.class );
         bind( LocalPathPrefixComposerFactory.class )
-                .annotatedWith( Names.named( NoopLocalPathPrefixComposerFactory.NAME ) )
-                .to( NoopLocalPathPrefixComposerFactory.class ).in( Singleton.class );
-        bind( LocalPathPrefixComposerFactory.class )
-                .annotatedWith( Names.named( SplitLocalPathPrefixComposerFactory.NAME ) )
-                .to( SplitLocalPathPrefixComposerFactory.class ).in( Singleton.class );
+                .to( DefaultLocalPathPrefixComposerFactory.class ).in( Singleton.class );
 
         bind( LocalRepositoryProvider.class ) //
                 .to( DefaultLocalRepositoryProvider.class ).in( Singleton.class );
@@ -233,19 +229,6 @@ public class AetherModule
 
         install( new Slf4jModule() );
 
-    }
-
-    @Provides
-    @Singleton
-    Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories(
-            @Named( NoopLocalPathPrefixComposerFactory.NAME ) LocalPathPrefixComposerFactory noop,
-            @Named( SplitLocalPathPrefixComposerFactory.NAME ) LocalPathPrefixComposerFactory split
-    )
-    {
-        Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories = new HashMap<>();
-        dynamicPrefixComposerFactories.put( NoopLocalPathPrefixComposerFactory.NAME, noop );
-        dynamicPrefixComposerFactories.put( SplitLocalPathPrefixComposerFactory.NAME, split );
-        return dynamicPrefixComposerFactories;
     }
 
     @Provides

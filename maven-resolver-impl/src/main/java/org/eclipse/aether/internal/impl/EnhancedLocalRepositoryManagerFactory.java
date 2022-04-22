@@ -23,9 +23,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -49,10 +46,6 @@ import static java.util.Objects.requireNonNull;
 public class EnhancedLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
-    private static final String CONFIG_PROP_PATH_PREFIX_COMPOSER = "aether.enhancedLocalRepository.pathPrefixComposer";
-
-    private static final String DEFAULT_PATH_PREFIX_COMPOSER = NoopLocalPathPrefixComposerFactory.NAME;
-
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
     private static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
@@ -63,7 +56,7 @@ public class EnhancedLocalRepositoryManagerFactory
 
     private TrackingFileManager trackingFileManager;
 
-    private Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories;
+    private LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
     public EnhancedLocalRepositoryManagerFactory()
     {
@@ -73,11 +66,11 @@ public class EnhancedLocalRepositoryManagerFactory
     @Inject
     public EnhancedLocalRepositoryManagerFactory( final LocalPathComposer localPathComposer,
                    final TrackingFileManager trackingFileManager,
-                   final Map<String, LocalPathPrefixComposerFactory> dynamicPrefixComposerFactories )
+                   final LocalPathPrefixComposerFactory localPathPrefixComposerFactory )
     {
         this.localPathComposer = requireNonNull( localPathComposer );
         this.trackingFileManager = requireNonNull( trackingFileManager );
-        this.dynamicPrefixComposerFactories = requireNonNull( dynamicPrefixComposerFactories );
+        this.localPathPrefixComposerFactory = requireNonNull( localPathPrefixComposerFactory );
     }
 
     @Override
@@ -85,15 +78,7 @@ public class EnhancedLocalRepositoryManagerFactory
     {
         this.localPathComposer = requireNonNull( locator.getService( LocalPathComposer.class ) );
         this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
-        this.dynamicPrefixComposerFactories = new HashMap<>();
-        this.dynamicPrefixComposerFactories.put(
-                NoopLocalPathPrefixComposerFactory.NAME,
-                new NoopLocalPathPrefixComposerFactory()
-        );
-        this.dynamicPrefixComposerFactories.put(
-                SplitLocalPathPrefixComposerFactory.NAME,
-                new SplitLocalPathPrefixComposerFactory()
-        );
+        this.localPathPrefixComposerFactory = new DefaultLocalPathPrefixComposerFactory();
     }
 
     @Override
@@ -110,14 +95,6 @@ public class EnhancedLocalRepositoryManagerFactory
             trackingFilename = DEFAULT_TRACKING_FILENAME;
         }
 
-        String prefixComposerName = ConfigUtils.getString(
-                session, DEFAULT_PATH_PREFIX_COMPOSER, CONFIG_PROP_PATH_PREFIX_COMPOSER );
-        LocalPathPrefixComposerFactory composerFactory = dynamicPrefixComposerFactories.get( prefixComposerName );
-        if ( composerFactory == null )
-        {
-            throw new IllegalArgumentException( "Unknown prefix composer '" + prefixComposerName
-                    + "'. Supported prefix composers are: " + dynamicPrefixComposerFactories.keySet() );
-        }
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
             return new EnhancedLocalRepositoryManager(
@@ -125,7 +102,7 @@ public class EnhancedLocalRepositoryManagerFactory
                     localPathComposer,
                     trackingFilename,
                     trackingFileManager,
-                    composerFactory.createComposer( session )
+                    localPathPrefixComposerFactory.createComposer( session )
             );
         }
         else

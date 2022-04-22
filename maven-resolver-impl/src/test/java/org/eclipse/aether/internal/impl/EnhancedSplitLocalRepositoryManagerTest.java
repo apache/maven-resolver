@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -102,12 +103,15 @@ public class EnhancedSplitLocalRepositoryManagerTest
         basedir = TestFileUtils.createTempDir( "enhanced-repo" );
         session = TestUtils.newSession();
         trackingFileManager = new DefaultTrackingFileManager();
+
+        // enable split
+        ( (DefaultRepositorySystemSession) session ).setConfigProperty( "aether.enhancedLocalRepository.split", "true" );
         manager = new EnhancedLocalRepositoryManager(
                 basedir,
                 new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,
-                new SplitLocalPathPrefixComposerFactory().createComposer( session )
+                new DefaultLocalPathPrefixComposerFactory().createComposer( session )
         );
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
