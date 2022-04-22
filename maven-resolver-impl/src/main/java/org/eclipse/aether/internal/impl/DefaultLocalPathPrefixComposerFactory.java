@@ -42,7 +42,8 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
     {
         return new DefaultLocalPathPrefixComposer( isSplit( session ), getLocalPrefix( session ),
                 isSplitLocal( session ), getRemotePrefix( session ), isSplitRemote( session ),
-                isSplitRemoteRepository( session ), getReleasePrefix( session ), getSnapshotPrefix( session ) );
+                isSplitRemoteRepository( session ), isSplitRemoteRepositoryLast( session ),
+                getReleasePrefix( session ), getSnapshotPrefix( session ) );
     }
 
     /**
@@ -54,10 +55,11 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
         @SuppressWarnings( "checkstyle:parameternumber" )
         public DefaultLocalPathPrefixComposer( boolean split, String localPrefix, boolean splitLocal,
                                                String remotePrefix, boolean splitRemote, boolean splitRemoteRepository,
+                                               boolean splitRemoteRepositoryLast,
                                                String releasePrefix, String snapshotPrefix )
         {
-            super( split, localPrefix, splitLocal, remotePrefix, splitRemote, splitRemoteRepository, releasePrefix,
-                    snapshotPrefix );
+            super( split, localPrefix, splitLocal, remotePrefix, splitRemote, splitRemoteRepository,
+                    splitRemoteRepositoryLast, releasePrefix, snapshotPrefix );
         }
 
         @Override
@@ -83,13 +85,17 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 return null;
             }
             String result = remotePrefix;
-            if ( splitRemoteRepository )
+            if ( !splitRemoteRepositoryLast && splitRemoteRepository )
             {
                 result += "/" + repository.getId();
             }
             if ( splitRemote )
             {
                 result += "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+            }
+            if ( splitRemoteRepositoryLast && splitRemoteRepository )
+            {
+                result += "/" + repository.getId();
             }
             return result;
         }
@@ -117,13 +123,17 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 return null;
             }
             String result = remotePrefix;
-            if ( splitRemoteRepository )
+            if ( !splitRemoteRepositoryLast && splitRemoteRepository )
             {
                 result += "/" + repository.getId();
             }
             if ( splitRemote )
             {
                 result += "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+            }
+            if ( splitRemoteRepositoryLast && splitRemoteRepository )
+            {
+                result += "/" + repository.getId();
             }
             return result;
         }

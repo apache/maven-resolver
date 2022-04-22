@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.AbstractArtifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -54,6 +55,11 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             "aether.enhancedLocalRepository.splitRemoteRepository";
 
     private static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY = false;
+
+    private static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST =
+            "aether.enhancedLocalRepository.splitRemoteRepositoryLast";
+
+    private static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST = false;
 
     private static final String CONF_PROP_RELEASE_PREFIX = "aether.enhancedLocalRepository.releasePrefix";
 
@@ -99,6 +105,12 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                 session, DEFAULT_SPLIT_REMOTE_REPOSITORY, CONF_PROP_SPLIT_REMOTE_REPOSITORY );
     }
 
+    protected boolean isSplitRemoteRepositoryLast( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean(
+                session, DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST, CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST );
+    }
+
     protected String getReleasePrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
@@ -129,6 +141,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected final boolean splitRemoteRepository;
 
+        protected final boolean splitRemoteRepositoryLast;
+
         protected final String releasePrefix;
 
         protected final String snapshotPrefix;
@@ -139,6 +153,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                                                   String remotePrefix,
                                                   boolean splitRemote,
                                                   boolean splitRemoteRepository,
+                                                  boolean splitRemoteRepositoryLast,
                                                   String releasePrefix,
                                                   String snapshotPrefix )
         {
@@ -148,13 +163,16 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             this.remotePrefix = remotePrefix;
             this.splitRemote = splitRemote;
             this.splitRemoteRepository = splitRemoteRepository;
+            this.splitRemoteRepositoryLast = splitRemoteRepositoryLast;
             this.releasePrefix = releasePrefix;
             this.snapshotPrefix = snapshotPrefix;
         }
 
         protected boolean isSnapshot( Metadata metadata )
         {
-            return metadata.getVersion() != null && metadata.getVersion().endsWith( "SNAPSHOT" );
+            return metadata.getVersion() != null
+                    && !metadata.getVersion().isEmpty()
+                    && AbstractArtifact.isSnapshot( metadata.getVersion() );
         }
     }
 }
