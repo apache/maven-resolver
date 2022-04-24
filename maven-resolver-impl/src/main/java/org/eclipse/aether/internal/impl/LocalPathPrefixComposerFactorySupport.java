@@ -170,8 +170,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected boolean isSnapshot( Metadata metadata )
         {
-            return metadata.getVersion() != null
-                    && !metadata.getVersion().isEmpty()
+            return !metadata.getVersion().isEmpty()
                     && AbstractArtifact.isSnapshot( metadata.getVersion() );
         }
     }

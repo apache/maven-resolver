@@ -44,7 +44,7 @@ public abstract class AbstractArtifact
     }
 
     /**
-     * Returns {@code true} if passed in artifact version is a snapshot version.
+     * Returns {@code true} if passed in artifact version is not {@code null} and is a snapshot version.
      */
     public static boolean isSnapshot( String version )
     {
