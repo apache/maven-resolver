@@ -83,18 +83,19 @@ need to re-download the "whole universe". Similarly, deletion of cached ones
 can happen based even on origin repository (if split by remote repository 
 was enabled beforehand).
 
-Another use case is interesting for "branched development". Before, split feature,
+Another use case is interesting for "branched development". Before split feature,
 a developer simultaneously working on several branches of same project was forced
 to "rebuild all" (better: install all), as same built artifacts from different
 branches would still land in local repository on same coordinates, hence, they
-would constantly override each other. It was easy to get into false "error"
-state, where partial overlapping content were present in local reposiory from
-different branches. Today, one case just define unique "local prefix" for each
+would constantly overwrite each other. It was easy to get into "false error"
+state, where partial overlapping content were present in local repository from
+different branches. Today, one can just define unique "local prefix" for each
 branch it is working on (or even by project, like 
 `-Daether.enhancedLocalRepository.localPrefix=${project}/${branch}`) and the
-local repository becomes usable even simultaneously (even concurrently from
-different terminals) as different projects and their branches can simply 
-coexist in local repository.
+local repository becomes usable even simultaneously, even concurrently from
+different terminals, as different projects and their branches can simply 
+coexist in local repository. They will land in different places, due different
+prefixes.
 
 #### Split repository considerations
 
@@ -102,7 +103,7 @@ coexist in local repository.
 of the consequences. For example, if one change all aspects of split
 configuration (all the prefixes), it may be considered logically equivalent 
 of defining new local repository, despite local repository root (`-Dmaven.repo.local`) 
-is unchanged! Simple, as all prefixes will be "new", the composed paths will
+is unchanged! Simply put, as all prefixes will be "new", the composed paths will
 point to potentially non-existing locations, hence, resolver will consider
 is as "new" local repository in each aspect.
 
