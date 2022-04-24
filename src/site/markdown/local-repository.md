@@ -83,6 +83,12 @@ need to re-download the "whole universe". Similarly, deletion of cached ones
 can happen based even on origin repository (if split by remote repository 
 was enabled beforehand).
 
+Example configuration with split by remote repository:
+```java
+$ mvn ... -Daether.enhancedLocalRepository.split=true \
+          -Daether.enhancedLocalRepository.splitRemoteRepository=true
+```
+
 Another use case is interesting for "branched development". Before split feature,
 a developer simultaneously working on several branches of same project was forced
 to "rebuild all" (better: install all), as same built artifacts from different
@@ -91,11 +97,20 @@ would constantly overwrite each other. It was easy to get into "false error"
 state, where partial overlapping content were present in local repository from
 different branches. Today, one can just define unique "local prefix" for each
 branch it is working on (or even by project, like 
-`-Daether.enhancedLocalRepository.localPrefix=${project}/${branch}`) and the
+`-Daether.enhancedLocalRepository.localPrefix=$PROJECT/$BRANCH`, but use
+actual values, these expressions are merely example, there is no interpolation
+happening!) and the
 local repository becomes usable even simultaneously, even concurrently from
 different terminals, as different projects and their branches can simply 
 coexist in local repository. They will land in different places, due different
 prefixes.
+
+Example configuration for branches:
+```java
+$ mvn ... -Daether.enhancedLocalRepository.split=true \
+          -Daether.enhancedLocalRepository.localPrefix=maven-resolver/mresolver-253
+          -Daether.enhancedLocalRepository.splitRemoteRepository=true
+```
 
 #### Split repository considerations
 
