@@ -20,7 +20,6 @@ package org.eclipse.aether.internal.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.AbstractArtifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -171,7 +170,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
         protected boolean isSnapshot( Metadata metadata )
         {
             return !metadata.getVersion().isEmpty()
-                    && AbstractArtifact.isSnapshot( metadata.getVersion() );
+                    && metadata.getVersion().endsWith( "-SNAPSHOT" );
         }
     }
 }

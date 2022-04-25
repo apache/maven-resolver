@@ -43,12 +43,9 @@ public abstract class AbstractArtifact
         return isSnapshot( getVersion() );
     }
 
-    /**
-     * Returns {@code true} if passed in artifact version is not {@code null} and is a snapshot version.
-     */
-    public static boolean isSnapshot( String version )
+    private static boolean isSnapshot( String version )
     {
-        return version != null && ( version.endsWith( SNAPSHOT ) || SNAPSHOT_TIMESTAMP.matcher( version ).matches() );
+        return version.endsWith( SNAPSHOT ) || SNAPSHOT_TIMESTAMP.matcher( version ).matches();
     }
 
     public String getBaseVersion()
