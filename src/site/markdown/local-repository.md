@@ -75,6 +75,30 @@ The split feature is implemented by the `LocalPathPrefixComposer` interface,
 that adds different "prefixes" for the locally stored artifacts, based on
 their context.
 
+#### Note About Release And Snapshot Differentiation
+
+The prefix composer is able to differentiate between release and snapshot
+versioned artifacts, and this is clear-cut: Maven Artifacts are either 
+this or that.
+
+On the other hand, in case of Maven Metadata, things are not so clear.
+Resolver is able to differentiate *only* based on `metadata/version`
+field, but that field is not always present. 
+
+Maven Metadata exists in 3 variants:
+
+* G level metadata does not carry version.
+* GA level metadata does not carry version.
+* GAV level metadata carries version.
+
+In short, G and GA level metadata *always* end up in releases, despite
+GA level metadata body may contain mixed release and snapshot versions enlisted, 
+as this metadata *does not contain* the `metadata/version` field.
+
+The GAV level metadata gets differentiated based on version it carries, so
+they may end up in releases or snapshots, depending on their value of
+`metadata/version` field.
+
 #### Use Cases
 
 Most direct use case is simpler local repository eviction. One can delete all
