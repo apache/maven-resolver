@@ -30,47 +30,51 @@ import org.eclipse.aether.util.ConfigUtils;
  * common configuration getters, and defines a support class for {@link LocalPathPrefixComposer} carrying same
  * configuration and providing default implementation for all methods.
  *
+ * Implementors should extend this class to implement custom split strategies. If one needs to alter default
+ * configuration, they should override any configuration getter from this class.
+ *
+ * @see DefaultLocalPathPrefixComposerFactory
  * @since TBD
  */
 public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
 {
-    private static final String CONF_PROP_SPLIT = "aether.enhancedLocalRepository.split";
+    protected static final String CONF_PROP_SPLIT = "aether.enhancedLocalRepository.split";
 
-    private static final boolean DEFAULT_SPLIT = false;
+    protected static final boolean DEFAULT_SPLIT = false;
 
-    private static final String CONF_PROP_LOCAL_PREFIX = "aether.enhancedLocalRepository.localPrefix";
+    protected static final String CONF_PROP_LOCAL_PREFIX = "aether.enhancedLocalRepository.localPrefix";
 
-    private static final String DEFAULT_LOCAL_PREFIX = "installed";
+    protected static final String DEFAULT_LOCAL_PREFIX = "installed";
 
-    private static final String CONF_PROP_SPLIT_LOCAL = "aether.enhancedLocalRepository.splitLocal";
+    protected static final String CONF_PROP_SPLIT_LOCAL = "aether.enhancedLocalRepository.splitLocal";
 
-    private static final boolean DEFAULT_SPLIT_LOCAL = false;
+    protected static final boolean DEFAULT_SPLIT_LOCAL = false;
 
-    private static final String CONF_PROP_REMOTE_PREFIX = "aether.enhancedLocalRepository.remotePrefix";
+    protected static final String CONF_PROP_REMOTE_PREFIX = "aether.enhancedLocalRepository.remotePrefix";
 
-    private static final String DEFAULT_REMOTE_PREFIX = "cached";
+    protected static final String DEFAULT_REMOTE_PREFIX = "cached";
 
-    private static final String CONF_PROP_SPLIT_REMOTE = "aether.enhancedLocalRepository.splitRemote";
+    protected static final String CONF_PROP_SPLIT_REMOTE = "aether.enhancedLocalRepository.splitRemote";
 
-    private static final boolean DEFAULT_SPLIT_REMOTE = false;
+    protected static final boolean DEFAULT_SPLIT_REMOTE = false;
 
-    private static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY =
+    protected static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY =
             "aether.enhancedLocalRepository.splitRemoteRepository";
 
-    private static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY = false;
+    protected static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY = false;
 
-    private static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST =
+    protected static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST =
             "aether.enhancedLocalRepository.splitRemoteRepositoryLast";
 
-    private static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST = false;
+    protected static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST = false;
 
-    private static final String CONF_PROP_RELEASES_PREFIX = "aether.enhancedLocalRepository.releasesPrefix";
+    protected static final String CONF_PROP_RELEASES_PREFIX = "aether.enhancedLocalRepository.releasesPrefix";
 
-    private static final String DEFAULT_RELEASES_PREFIX = "releases";
+    protected static final String DEFAULT_RELEASES_PREFIX = "releases";
 
-    private static final String CONF_PROP_SNAPSHOTS_PREFIX = "aether.enhancedLocalRepository.snapshotsPrefix";
+    protected static final String CONF_PROP_SNAPSHOTS_PREFIX = "aether.enhancedLocalRepository.snapshotsPrefix";
 
-    private static final String DEFAULT_SNAPSHOTS_PREFIX = "snapshots";
+    protected static final String DEFAULT_SNAPSHOTS_PREFIX = "snapshots";
 
     protected boolean isSplit( RepositorySystemSession session )
     {
