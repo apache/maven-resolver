@@ -19,19 +19,19 @@ under the License.
 -->
 
 Maven Resolver implements a "local repository" (that is used by Maven itself
-as well), that since the beginning of time was a "mixed bag of beans",  
+as well), that since the beginning of time was a "mixed bag of beans", 
 it served twofold purposes: to cache the artifacts downloaded from 
 remote, but also to store the artifacts locally installed (locally built and 
 installed, to be more precise). Both of these artifacts were stored in bulk 
 in the local repository.
 
-Local repository implementations implement the `LocalRepositoryManager` (LRM)
+Local repository implementations implement the `LocalRepositoryManager` (LRM) 
 interface, and Resolver out of the box provides two implementations for it: 
 "simple" and "enhanced". 
 
 ## Simple LRM
 
-Simple is a fully functional LRM implementation, but is used
+Simple is a fully functional LRM implementation, but is used 
 mainly in tests, it is not recommended in production environments. 
 
 To manually instantiate a simple LRM, one needs to invoke following code:
@@ -52,10 +52,10 @@ Enhanced LRM on the other hand is enhanced with several extra
 features, one most notable is scoping cached content by its origin and context: 
 if you downloaded an artifact A1 from repository R1 
 and later initiate build that requires same artifact A1, but repository R1 
-is not defined in build, the A1 artifact cached from R1 remote repository should be handled
-as not present, and needs to be re-downloaded, despite same coordinates.
-Those two, originating from two different repositories may not be the same thing.
-This is meant to protect users from "bad practice" (artifact coordinates are
+is not defined in build, the A1 artifact cached from R1 remote repository should be handled 
+as not present, and needs to be re-downloaded, despite same coordinates. 
+Those two, originating from two different repositories may not be the same thing. 
+This is meant to protect users from "bad practice" (artifact coordinates are 
 unique in ideal world).
 
 ### Split Local Repository
@@ -71,18 +71,18 @@ several conditions:
 * differentiate *cached* artifacts based on their origin (remote repository)
 * differentiate between *release* and *snapshot* versioned artifacts
 
-The split feature is implemented by the `LocalPathPrefixComposer` interface,
-that adds different "prefixes" for the locally stored artifacts, based on
+The split feature is implemented by the `LocalPathPrefixComposer` interface, 
+that adds different "prefixes" for the locally stored artifacts, based on 
 their context.
 
 #### Note About Release And Snapshot Differentiation
 
-The prefix composer is able to differentiate between release and snapshot
+The prefix composer is able to differentiate between release and snapshot 
 versioned artifacts, and this is clear-cut: Maven Artifacts are either 
 this or that.
 
-On the other hand, in case of Maven Metadata, things are not so clear.
-Resolver is able to differentiate *only* based on `metadata/version`
+On the other hand, in case of Maven Metadata, things are not so clear. 
+Resolver is able to differentiate *only* based on `metadata/version` 
 field, but that field is not always present. 
 
 Maven Metadata exists in 3 variants:
@@ -91,19 +91,19 @@ Maven Metadata exists in 3 variants:
 * GA level metadata does not carry version.
 * GAV level metadata carries version.
 
-In short, G and GA level metadata *always* end up in releases, despite
+In short, G and GA level metadata *always* end up in releases, despite 
 GA level metadata body may contain mixed release and snapshot versions enlisted, 
 as this metadata *does not contain* the `metadata/version` field.
 
-The GAV level metadata gets differentiated based on version it carries, so
-they may end up in releases or snapshots, depending on their value of
+The GAV level metadata gets differentiated based on version it carries, so 
+they may end up in releases or snapshots, depending on their value of 
 `metadata/version` field.
 
 #### Use Cases
 
-Most direct use case is simpler local repository eviction. One can delete all
-locally built artifacts without deleting the cached ones, hence, no
-need to re-download the "whole universe". Similarly, deletion of cached ones
+Most direct use case is simpler local repository eviction. One can delete all 
+locally built artifacts without deleting the cached ones, hence, no 
+need to re-download the "whole universe". Similarly, deletion of cached ones 
 can happen based even on origin repository (if split by remote repository 
 was enabled beforehand).
 
