@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,7 +20,10 @@ package org.eclipse.aether.internal.impl;
  */
 
 import java.io.File;
+
 import static java.util.Objects.requireNonNull;
+
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -41,92 +44,62 @@ import org.eclipse.aether.repository.RemoteRepository;
  * A local repository manager that realizes the classical Maven 2.0 local repository.
  */
 class SimpleLocalRepositoryManager
-    implements LocalRepositoryManager
+        implements LocalRepositoryManager
 {
 
     private final LocalRepository repository;
 
-    SimpleLocalRepositoryManager( File basedir )
-    {
-        this( basedir, "simple" );
-    }
+    private final LocalPathComposer localPathComposer;
 
-    SimpleLocalRepositoryManager( String basedir )
-    {
-        this( ( basedir != null ) ? new File( basedir ) : null, "simple" );
-    }
-
-    SimpleLocalRepositoryManager( File basedir, String type )
+    SimpleLocalRepositoryManager( File basedir, String type, LocalPathComposer localPathComposer )
     {
         requireNonNull( basedir, "base directory cannot be null" );
         repository = new LocalRepository( basedir.getAbsoluteFile(), type );
+        this.localPathComposer = requireNonNull( localPathComposer );
     }
 
+    @Override
     public LocalRepository getRepository()
     {
         return repository;
     }
 
-    String getPathForArtifact( Artifact artifact, boolean local )
-    {
-        StringBuilder path = new StringBuilder( 128 );
-
-        path.append( artifact.getGroupId().replace( '.', '/' ) ).append( '/' );
-
-        path.append( artifact.getArtifactId() ).append( '/' );
-
-        path.append( artifact.getBaseVersion() ).append( '/' );
-
-        path.append( artifact.getArtifactId() ).append( '-' );
-        if ( local )
-        {
-            path.append( artifact.getBaseVersion() );
-        }
-        else
-        {
-            path.append( artifact.getVersion() );
-        }
-
-        if ( artifact.getClassifier().length() > 0 )
-        {
-            path.append( '-' ).append( artifact.getClassifier() );
-        }
-
-        if ( artifact.getExtension().length() > 0 )
-        {
-            path.append( '.' ).append( artifact.getExtension() );
-        }
-
-        return path.toString();
-    }
-
+    @Override
     public String getPathForLocalArtifact( Artifact artifact )
     {
         requireNonNull( artifact, "artifact cannot be null" );
-        return getPathForArtifact( artifact, true );
+        return localPathComposer.getPathForArtifact( artifact, true );
     }
 
+    @Override
     public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
     {
         requireNonNull( artifact, "artifact cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
-        return getPathForArtifact( artifact, false );
+        return localPathComposer.getPathForArtifact( artifact, false );
     }
 
+    @Override
     public String getPathForLocalMetadata( Metadata metadata )
     {
         requireNonNull( metadata, "metadata cannot be null" );
-        return getPath( metadata, "local" );
+        return localPathComposer.getPathForMetadata( metadata, "local" );
     }
 
+    @Override
     public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
     {
         requireNonNull( metadata, "metadata cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
-        return getPath( metadata, getRepositoryKey( repository, context ) );
+        return localPathComposer.getPathForMetadata( metadata, getRepositoryKey( repository, context ) );
     }
 
-    String getRepositoryKey( RemoteRepository repository, String context )
+    /**
+     * Returns {@link RemoteRepository#getId()}, unless {@link RemoteRepository#isRepositoryManager()} returns
+     * {@code true}, in which case this method creates unique identifier based on ID and current configuration
+     * of the remote repository (as it may change).
+     */
+    protected String getRepositoryKey( RemoteRepository repository, String context )
     {
         String key;
 
@@ -166,62 +139,49 @@ class SimpleLocalRepositoryManager
         return key;
     }
 
-    private String getPath( Metadata metadata, String repositoryKey )
-    {
-        StringBuilder path = new StringBuilder( 128 );
-
-        if ( metadata.getGroupId().length() > 0 )
-        {
-            path.append( metadata.getGroupId().replace( '.', '/' ) ).append( '/' );
-
-            if ( metadata.getArtifactId().length() > 0 )
-            {
-                path.append( metadata.getArtifactId() ).append( '/' );
-
-                if ( metadata.getVersion().length() > 0 )
-                {
-                    path.append( metadata.getVersion() ).append( '/' );
-                }
-            }
-        }
-
-        path.append( insertRepositoryKey( metadata.getType(), repositoryKey ) );
-
-        return path.toString();
-    }
-
-    private String insertRepositoryKey( String filename, String repositoryKey )
-    {
-        String result;
-        int idx = filename.indexOf( '.' );
-        if ( idx < 0 )
-        {
-            result = filename + '-' + repositoryKey;
-        }
-        else
-        {
-            result = filename.substring( 0, idx ) + '-' + repositoryKey + filename.substring( idx );
-        }
-        return result;
-    }
-
+    @Override
     public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( request, "request cannot be null" );
-        String path = getPathForArtifact( request.getArtifact(), false );
-        File file = new File( getRepository().getBasedir(), path );
-
+        Artifact artifact = request.getArtifact();
         LocalArtifactResult result = new LocalArtifactResult( request );
-        if ( file.isFile() )
+
+        String path;
+        File file;
+
+        // Local repository CANNOT have timestamped installed, they are created only during deploy
+        if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) )
         {
-            result.setFile( file );
-            result.setAvailable( true );
+            path = getPathForLocalArtifact( artifact );
+            file = new File( getRepository().getBasedir(), path );
+            if ( file.isFile() )
+            {
+                result.setFile( file );
+                result.setAvailable( true );
+            }
+        }
+
+        if ( !result.isAvailable() )
+        {
+            for ( RemoteRepository repository : request.getRepositories() )
+            {
+                path = getPathForRemoteArtifact( artifact, repository, request.getContext() );
+                file = new File( getRepository().getBasedir(), path );
+                if ( file.isFile() )
+                {
+                    result.setFile( file );
+                    result.setAvailable( true );
+                    break;
+                }
+            }
+
         }
 
         return result;
     }
 
+    @Override
     public void add( RepositorySystemSession session, LocalArtifactRegistration request )
     {
         requireNonNull( session, "session cannot be null" );
@@ -230,11 +190,6 @@ class SimpleLocalRepositoryManager
     }
 
     @Override
-    public String toString()
-    {
-        return String.valueOf( getRepository() );
-    }
-
     public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
     {
         requireNonNull( session, "session cannot be null" );
@@ -265,6 +220,7 @@ class SimpleLocalRepositoryManager
         return result;
     }
 
+    @Override
     public void add( RepositorySystemSession session, LocalMetadataRegistration request )
     {
         requireNonNull( session, "session cannot be null" );
@@ -272,4 +228,9 @@ class SimpleLocalRepositoryManager
         // noop
     }
 
+    @Override
+    public String toString()
+    {
+        return String.valueOf( getRepository() );
+    }
 }

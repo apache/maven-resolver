@@ -28,10 +28,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
@@ -54,9 +53,9 @@ public class EnhancedLocalRepositoryManagerTest
 
     private Artifact snapshot;
 
-    private File basedir;
+    protected File basedir;
 
-    private EnhancedLocalRepositoryManager manager;
+    protected EnhancedLocalRepositoryManager manager;
 
     private File artifactFile;
 
@@ -64,9 +63,9 @@ public class EnhancedLocalRepositoryManagerTest
 
     private String testContext = "project/compile";
 
-    private TrackingFileManager trackingFileManager;
+    protected TrackingFileManager trackingFileManager;
 
-    private RepositorySystemSession session;
+    protected DefaultRepositorySystemSession session;
 
     private Metadata metadata;
 
@@ -99,9 +98,20 @@ public class EnhancedLocalRepositoryManagerTest
         basedir = TestFileUtils.createTempDir( "enhanced-repo" );
         session = TestUtils.newSession();
         trackingFileManager = new DefaultTrackingFileManager();
-        manager = new EnhancedLocalRepositoryManager( basedir, session, trackingFileManager );
+        manager = getManager();
 
         artifactFile = new File( basedir, manager.getPathForLocalArtifact( artifact ) );
+    }
+
+    protected EnhancedLocalRepositoryManager getManager()
+    {
+        return new EnhancedLocalRepositoryManager(
+                basedir,
+                new DefaultLocalPathComposer(),
+                "_remote.repositories",
+                trackingFileManager,
+                new DefaultLocalPathPrefixComposerFactory().createComposer( session )
+        );
     }
 
     @After
