@@ -151,9 +151,12 @@ it as a "new" local repository in every aspect.
 
 #### Implementing Custom Split Strategy
 
-To implement custom split strategy, one needs to create an implementation of
-`LocalPathPrefixComposerFactory` and override the default component
+To implement custom split strategy, one needs to create a component of
+type `LocalPathPrefixComposerFactory` and override the default component
 offered by Resolver (for example by using Eclipse Sisu priorities for 
-components). The factory should create a stateless instance of a composer
+components). This should be done by extending `LocalPathPrefixComposerFactorySupport` 
+class that provides all the defaults.
+
+The factory should create a stateless instance of a composer
 configured from passed in session, that will be used with the enhanced LRM
 throughout the session.
