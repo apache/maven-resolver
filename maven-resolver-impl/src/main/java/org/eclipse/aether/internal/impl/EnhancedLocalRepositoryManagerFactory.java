@@ -30,6 +30,7 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -45,11 +46,17 @@ import static java.util.Objects.requireNonNull;
 public class EnhancedLocalRepositoryManagerFactory
     implements LocalRepositoryManagerFactory, Service
 {
+    private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
+
+    private static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
+
     private float priority = 10.0f;
 
     private LocalPathComposer localPathComposer;
 
     private TrackingFileManager trackingFileManager;
+
+    private LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
     public EnhancedLocalRepositoryManagerFactory()
     {
@@ -58,10 +65,12 @@ public class EnhancedLocalRepositoryManagerFactory
 
     @Inject
     public EnhancedLocalRepositoryManagerFactory( final LocalPathComposer localPathComposer,
-                                                  final TrackingFileManager trackingFileManager )
+                   final TrackingFileManager trackingFileManager,
+                   final LocalPathPrefixComposerFactory localPathPrefixComposerFactory )
     {
         this.localPathComposer = requireNonNull( localPathComposer );
         this.trackingFileManager = requireNonNull( trackingFileManager );
+        this.localPathPrefixComposerFactory = requireNonNull( localPathPrefixComposerFactory );
     }
 
     @Override
@@ -69,6 +78,7 @@ public class EnhancedLocalRepositoryManagerFactory
     {
         this.localPathComposer = requireNonNull( locator.getService( LocalPathComposer.class ) );
         this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
+        this.localPathPrefixComposerFactory = new DefaultLocalPathPrefixComposerFactory();
     }
 
     @Override
@@ -78,10 +88,21 @@ public class EnhancedLocalRepositoryManagerFactory
         requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
 
+        String trackingFilename = ConfigUtils.getString( session, "", CONFIG_PROP_TRACKING_FILENAME );
+        if ( trackingFilename.isEmpty() || trackingFilename.contains( "/" ) || trackingFilename.contains( "\\" )
+                || trackingFilename.contains( ".." ) )
+        {
+            trackingFilename = DEFAULT_TRACKING_FILENAME;
+        }
+
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {
             return new EnhancedLocalRepositoryManager(
-                    repository.getBasedir(), localPathComposer, session, trackingFileManager
+                    repository.getBasedir(),
+                    localPathComposer,
+                    trackingFilename,
+                    trackingFileManager,
+                    localPathPrefixComposerFactory.createComposer( session )
             );
         }
         else

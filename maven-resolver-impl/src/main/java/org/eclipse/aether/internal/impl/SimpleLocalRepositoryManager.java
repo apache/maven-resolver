@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,7 +20,10 @@ package org.eclipse.aether.internal.impl;
  */
 
 import java.io.File;
+
 import static java.util.Objects.requireNonNull;
+
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -41,7 +44,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  * A local repository manager that realizes the classical Maven 2.0 local repository.
  */
 class SimpleLocalRepositoryManager
-    implements LocalRepositoryManager
+        implements LocalRepositoryManager
 {
 
     private final LocalRepository repository;
@@ -61,16 +64,11 @@ class SimpleLocalRepositoryManager
         return repository;
     }
 
-    protected String getPathForArtifact( Artifact artifact, boolean local )
-    {
-        return localPathComposer.getPathForArtifact( artifact, local );
-    }
-
     @Override
     public String getPathForLocalArtifact( Artifact artifact )
     {
         requireNonNull( artifact, "artifact cannot be null" );
-        return getPathForArtifact( artifact, true );
+        return localPathComposer.getPathForArtifact( artifact, true );
     }
 
     @Override
@@ -78,7 +76,7 @@ class SimpleLocalRepositoryManager
     {
         requireNonNull( artifact, "artifact cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
-        return getPathForArtifact( artifact, false );
+        return localPathComposer.getPathForArtifact( artifact, false );
     }
 
     @Override
@@ -96,6 +94,11 @@ class SimpleLocalRepositoryManager
         return localPathComposer.getPathForMetadata( metadata, getRepositoryKey( repository, context ) );
     }
 
+    /**
+     * Returns {@link RemoteRepository#getId()}, unless {@link RemoteRepository#isRepositoryManager()} returns
+     * {@code true}, in which case this method creates unique identifier based on ID and current configuration
+     * of the remote repository (as it may change).
+     */
     protected String getRepositoryKey( RemoteRepository repository, String context )
     {
         String key;
@@ -141,14 +144,38 @@ class SimpleLocalRepositoryManager
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( request, "request cannot be null" );
-        String path = getPathForArtifact( request.getArtifact(), false );
-        File file = new File( getRepository().getBasedir(), path );
-
+        Artifact artifact = request.getArtifact();
         LocalArtifactResult result = new LocalArtifactResult( request );
-        if ( file.isFile() )
+
+        String path;
+        File file;
+
+        // Local repository CANNOT have timestamped installed, they are created only during deploy
+        if ( Objects.equals( artifact.getVersion(), artifact.getBaseVersion() ) )
         {
-            result.setFile( file );
-            result.setAvailable( true );
+            path = getPathForLocalArtifact( artifact );
+            file = new File( getRepository().getBasedir(), path );
+            if ( file.isFile() )
+            {
+                result.setFile( file );
+                result.setAvailable( true );
+            }
+        }
+
+        if ( !result.isAvailable() )
+        {
+            for ( RemoteRepository repository : request.getRepositories() )
+            {
+                path = getPathForRemoteArtifact( artifact, repository, request.getContext() );
+                file = new File( getRepository().getBasedir(), path );
+                if ( file.isFile() )
+                {
+                    result.setFile( file );
+                    result.setAvailable( true );
+                    break;
+                }
+            }
+
         }
 
         return result;

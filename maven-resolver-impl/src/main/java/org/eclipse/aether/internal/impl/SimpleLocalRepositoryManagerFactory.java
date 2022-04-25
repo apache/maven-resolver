@@ -50,6 +50,7 @@ public class SimpleLocalRepositoryManagerFactory
     public SimpleLocalRepositoryManagerFactory()
     {
         // enable no-arg constructor
+        this.localPathComposer = new DefaultLocalPathComposer(); // maven UTs needs this
     }
 
     @Inject
