@@ -44,7 +44,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
         return new DefaultLocalPathPrefixComposer( isSplit( session ), getLocalPrefix( session ),
                 isSplitLocal( session ), getRemotePrefix( session ), isSplitRemote( session ),
                 isSplitRemoteRepository( session ), isSplitRemoteRepositoryLast( session ),
-                getReleasePrefix( session ), getSnapshotPrefix( session ) );
+                getReleasesPrefix( session ), getSnapshotsPrefix( session ) );
     }
 
     /**
@@ -72,7 +72,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
             String result = localPrefix;
             if ( splitLocal )
             {
-                result += "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+                result += "/" + ( artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix );
             }
             return result;
         }
@@ -91,7 +91,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
             }
             if ( splitRemote )
             {
-                result += "/" + ( artifact.isSnapshot() ? snapshotPrefix : releasePrefix );
+                result += "/" + ( artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix );
             }
             if ( splitRemoteRepositoryLast && splitRemoteRepository )
             {
@@ -110,7 +110,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
             String result = localPrefix;
             if ( splitLocal )
             {
-                result += "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+                result += "/" + ( isSnapshot( metadata ) ? snapshotsPrefix : releasesPrefix );
             }
             return result;
         }
@@ -129,7 +129,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
             }
             if ( splitRemote )
             {
-                result += "/" + ( isSnapshot( metadata ) ? snapshotPrefix : releasePrefix );
+                result += "/" + ( isSnapshot( metadata ) ? snapshotsPrefix : releasesPrefix );
             }
             if ( splitRemoteRepositoryLast && splitRemoteRepository )
             {

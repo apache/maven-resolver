@@ -34,6 +34,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
     private static final String CONF_PROP_SPLIT = "aether.enhancedLocalRepository.split";
 
     private static final boolean DEFAULT_SPLIT = false;
+
     private static final String CONF_PROP_LOCAL_PREFIX = "aether.enhancedLocalRepository.localPrefix";
 
     private static final String DEFAULT_LOCAL_PREFIX = "installed";
@@ -60,13 +61,13 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
     private static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST = false;
 
-    private static final String CONF_PROP_RELEASE_PREFIX = "aether.enhancedLocalRepository.releasePrefix";
+    private static final String CONF_PROP_RELEASES_PREFIX = "aether.enhancedLocalRepository.releasesPrefix";
 
-    private static final String DEFAULT_RELEASE_PREFIX = "release";
+    private static final String DEFAULT_RELEASES_PREFIX = "releases";
 
-    private static final String CONF_PROP_SNAPSHOT_PREFIX = "aether.enhancedLocalRepository.snapshotPrefix";
+    private static final String CONF_PROP_SNAPSHOTS_PREFIX = "aether.enhancedLocalRepository.snapshotsPrefix";
 
-    private static final String DEFAULT_SNAPSHOT_PREFIX = "snapshot";
+    private static final String DEFAULT_SNAPSHOTS_PREFIX = "snapshots";
 
     protected boolean isSplit( RepositorySystemSession session )
     {
@@ -110,16 +111,16 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                 session, DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST, CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST );
     }
 
-    protected String getReleasePrefix( RepositorySystemSession session )
+    protected String getReleasesPrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
-                session, DEFAULT_RELEASE_PREFIX, CONF_PROP_RELEASE_PREFIX );
+                session, DEFAULT_RELEASES_PREFIX, CONF_PROP_RELEASES_PREFIX );
     }
 
-    protected String getSnapshotPrefix( RepositorySystemSession session )
+    protected String getSnapshotsPrefix( RepositorySystemSession session )
     {
         return ConfigUtils.getString(
-                session, DEFAULT_SNAPSHOT_PREFIX, CONF_PROP_SNAPSHOT_PREFIX );
+                session, DEFAULT_SNAPSHOTS_PREFIX, CONF_PROP_SNAPSHOTS_PREFIX );
     }
 
     /**
@@ -142,9 +143,9 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected final boolean splitRemoteRepositoryLast;
 
-        protected final String releasePrefix;
+        protected final String releasesPrefix;
 
-        protected final String snapshotPrefix;
+        protected final String snapshotsPrefix;
 
         protected LocalPathPrefixComposerSupport( boolean split,
                                                   String localPrefix,
@@ -153,8 +154,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                                                   boolean splitRemote,
                                                   boolean splitRemoteRepository,
                                                   boolean splitRemoteRepositoryLast,
-                                                  String releasePrefix,
-                                                  String snapshotPrefix )
+                                                  String releasesPrefix,
+                                                  String snapshotsPrefix )
         {
             this.split = split;
             this.localPrefix = localPrefix;
@@ -163,8 +164,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             this.splitRemote = splitRemote;
             this.splitRemoteRepository = splitRemoteRepository;
             this.splitRemoteRepositoryLast = splitRemoteRepositoryLast;
-            this.releasePrefix = releasePrefix;
-            this.snapshotPrefix = snapshotPrefix;
+            this.releasesPrefix = releasesPrefix;
+            this.snapshotsPrefix = snapshotsPrefix;
         }
 
         protected boolean isSnapshot( Metadata metadata )

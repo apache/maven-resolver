@@ -48,14 +48,14 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.dependencyCollector.bf.skipper` | boolean | Flag controlling whether to skip resolving duplicate/conflicting nodes during the breadth-first (`bf`) dependency collection process. | `true` | no
 `aether.dependencyManager.verbose` | boolean | Flag controlling the verbose mode for dependency management. If enabled, the original attributes of a dependency before its update due to dependency managemnent will be recorded in the node's `DependencyNode#getData()` when building a dependency graph. | `false` | no
 `aether.enhancedLocalRepository.localPrefix` | String | The prefix to use for locally installed artifacts. | `"installed"` | no
-`aether.enhancedLocalRepository.snapshotPrefix` | String | The prefix to use for snapshot artifacts. | `"snapshot"` | no
+`aether.enhancedLocalRepository.snapshotsPrefix` | String | The prefix to use for snapshot artifacts. | `"snapshots"` | no
 `aether.enhancedLocalRepository.split` | boolean | Whether LRM should split local and remote artifacts. | `false` | no
 `aether.enhancedLocalRepository.splitLocal` | boolean | Whether locally installed artifacts should be split by version (release/snapshot). | `false` | no
 `aether.enhancedLocalRepository.splitRemote` | boolean | Whether cached artifacts should be split by version (release/snapshot). | `false` | no
 `aether.enhancedLocalRepository.splitRemoteRepository` | boolean | Whether cached artifacts should be split by origin repository (repository ID). | `false` | no
 `aether.enhancedLocalRepository.splitRemoteRepositoryLast` | boolean | For cached artifacts, if both `splitRemote` and `splitRemoteRepository` are set to `true` sets the splitting order: by default it is repositoryId/version (false) or version/repositoryId (true) | `false` | no
 `aether.enhancedLocalRepository.remotePrefix` | String | The prefix to use for downloaded and cached artifacts. | `"cached"` | no
-`aether.enhancedLocalRepository.releasePrefix` | String | The prefix to use for release artifacts. | `"release"` | no
+`aether.enhancedLocalRepository.releasesPrefix` | String | The prefix to use for release artifacts. | `"releases"` | no
 `aether.enhancedLocalRepository.trackingFilename` | String | Filename of the file in which to track the remote repositories. | `"_remote.repositories"` | no
 `aether.interactive` | boolean | A flag indicating whether interaction with the user is allowed. | `false` | no
 `aether.metadataResolver.threads` | int | Number of threads to use in parallel for resolving metadata. | `4` | no

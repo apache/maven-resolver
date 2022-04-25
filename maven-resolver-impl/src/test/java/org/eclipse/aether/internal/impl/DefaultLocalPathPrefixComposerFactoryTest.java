@@ -117,27 +117,27 @@ public class DefaultLocalPathPrefixComposerFactoryTest
         String prefix;
         prefix = composer.getPathPrefixForLocalArtifact( releaseArtifact );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForLocalArtifact( snapshotArtifact );
         assertNotNull( prefix );
-        assertEquals( "installed/snapshot", prefix );
+        assertEquals( "installed/snapshots", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( releaseMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( snapshotMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/snapshot", prefix );
+        assertEquals( "installed/snapshots", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( gaMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( gMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForRemoteArtifact( releaseArtifact, repository );
         assertNotNull( prefix );
@@ -180,50 +180,50 @@ public class DefaultLocalPathPrefixComposerFactoryTest
         String prefix;
         prefix = composer.getPathPrefixForLocalArtifact( releaseArtifact );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForLocalArtifact( snapshotArtifact );
         assertNotNull( prefix );
-        assertEquals( "installed/snapshot", prefix );
+        assertEquals( "installed/snapshots", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( releaseMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( snapshotMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/snapshot", prefix );
+        assertEquals( "installed/snapshots", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( gaMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForLocalMetadata( gMetadata );
         assertNotNull( prefix );
-        assertEquals( "installed/release", prefix );
+        assertEquals( "installed/releases", prefix );
 
         prefix = composer.getPathPrefixForRemoteArtifact( releaseArtifact, repository );
         assertNotNull( prefix );
-        assertEquals( "cached/my-repo/release", prefix );
+        assertEquals( "cached/my-repo/releases", prefix );
 
         prefix = composer.getPathPrefixForRemoteArtifact( snapshotArtifact, repository );
         assertNotNull( prefix );
-        assertEquals( "cached/my-repo/snapshot", prefix );
+        assertEquals( "cached/my-repo/snapshots", prefix );
 
         prefix = composer.getPathPrefixForRemoteMetadata( releaseMetadata, repository );
         assertNotNull( prefix );
-        assertEquals( "cached/my-repo/release", prefix );
+        assertEquals( "cached/my-repo/releases", prefix );
 
         prefix = composer.getPathPrefixForRemoteMetadata( snapshotMetadata, repository );
         assertNotNull( prefix );
-        assertEquals( "cached/my-repo/snapshot", prefix );
+        assertEquals( "cached/my-repo/snapshots", prefix );
 
         prefix = composer.getPathPrefixForRemoteMetadata( gaMetadata, repository );
         assertNotNull( prefix );
-        assertEquals( "cached/my-repo/release", prefix );
+        assertEquals( "cached/my-repo/releases", prefix );
 
         prefix = composer.getPathPrefixForRemoteMetadata( gMetadata, repository );
         assertNotNull( prefix );
-        assertEquals( "cached/my-repo/release", prefix );
+        assertEquals( "cached/my-repo/releases", prefix );
     }
 }
