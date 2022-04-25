@@ -52,10 +52,10 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
         private DefaultLocalPathPrefixComposer( boolean split, String localPrefix, boolean splitLocal,
                                                String remotePrefix, boolean splitRemote, boolean splitRemoteRepository,
                                                boolean splitRemoteRepositoryLast,
-                                               String releasePrefix, String snapshotPrefix )
+                                               String releasesPrefix, String snapshotsPrefix )
         {
             super( split, localPrefix, splitLocal, remotePrefix, splitRemote, splitRemoteRepository,
-                    splitRemoteRepositoryLast, releasePrefix, snapshotPrefix );
+                    splitRemoteRepositoryLast, releasesPrefix, snapshotsPrefix );
         }
     }
 }
