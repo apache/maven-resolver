@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -54,10 +56,14 @@ public final class Maven2RepositoryLayoutFactory
         implements RepositoryLayoutFactory
 {
 
-    static final String CONFIG_PROP_SIGNATURE_CHECKSUMS = "aether.checksums.forSignature";
-    static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
+    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
 
-    static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+    private static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+
+    public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
+            "aether.checksums.omitChecksumsForExtensions";
+
+    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc";
 
     private float priority;
 
@@ -104,23 +110,41 @@ public final class Maven2RepositoryLayoutFactory
         {
             throw new NoRepositoryLayoutException( repository );
         }
-        boolean forSignature = ConfigUtils.getBoolean( session, false, CONFIG_PROP_SIGNATURE_CHECKSUMS );
-        // ensure order of (potentially user set) algorithm list is kept and is unique
-        LinkedHashSet<String> checksumsAlgorithmNames = new LinkedHashSet<>( Arrays.asList(
-                ConfigUtils.getString(
-                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS
-                ).split( "," ) )
-        );
+        // ensure order and uniqueness of (potentially user set) algorithm list
+        LinkedHashSet<String> checksumsAlgorithmNames = Arrays.stream( ConfigUtils.getString(
+                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS )
+                .split( "," )
+        ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toCollection( LinkedHashSet::new ) );
 
+        // validation: this loop implicitly validates the list above: selector will throw on unknown algorithm
         List<ChecksumAlgorithmFactory> checksumsAlgorithms = new ArrayList<>( checksumsAlgorithmNames.size() );
         for ( String checksumsAlgorithmName : checksumsAlgorithmNames )
         {
             checksumsAlgorithms.add( checksumAlgorithmFactorySelector.select( checksumsAlgorithmName ) );
         }
 
-        return forSignature
-                ? new Maven2RepositoryLayout( checksumsAlgorithms )
-                : new Maven2RepositoryLayoutEx( checksumsAlgorithms );
+        // ensure uniqueness of (potentially user set) extension list
+        Set<String> omitChecksumsForExtensions = Arrays.stream( ConfigUtils.getString(
+                        session, DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS, CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS )
+                .split( "," )
+        ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toSet() );
+
+        // validation: enforce that all strings in this set are having leading dot
+        if ( omitChecksumsForExtensions.stream().anyMatch( s -> !s.startsWith( "." ) ) )
+        {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "The configuration %s contains illegal values: %s (all entries must start with '.' (dot))",
+                            CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS,
+                            omitChecksumsForExtensions
+                    )
+            );
+        }
+
+        return new Maven2RepositoryLayout(
+                checksumsAlgorithms,
+                omitChecksumsForExtensions
+        );
     }
 
     private static class Maven2RepositoryLayout
@@ -129,9 +153,13 @@ public final class Maven2RepositoryLayoutFactory
 
         private final List<ChecksumAlgorithmFactory> checksumAlgorithms;
 
-        protected Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms )
+        private final Set<String> extensionsWithoutChecksums;
+
+        private Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms,
+                                        Set<String> extensionsWithoutChecksums )
         {
             this.checksumAlgorithms = Collections.unmodifiableList( checksumAlgorithms );
+            this.extensionsWithoutChecksums = requireNonNull( extensionsWithoutChecksums );
         }
 
         private URI toUri( String path )
@@ -150,6 +178,20 @@ public final class Maven2RepositoryLayoutFactory
         public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
         {
             return checksumAlgorithms;
+        }
+
+        @Override
+        public boolean hasChecksums( Artifact artifact )
+        {
+            String artifactExtension = artifact.getExtension(); // ie. pom.asc
+            for ( String extensionWithoutChecksums : extensionsWithoutChecksums )
+            {
+                if ( artifactExtension.endsWith( extensionWithoutChecksums ) )
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Override
@@ -206,6 +248,10 @@ public final class Maven2RepositoryLayoutFactory
         @Override
         public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
+            if ( !hasChecksums( artifact ) || isChecksum( artifact.getExtension() ) )
+            {
+                return Collections.emptyList();
+            }
             return getChecksumLocations( location );
         }
 
@@ -225,32 +271,9 @@ public final class Maven2RepositoryLayoutFactory
             return checksumLocations;
         }
 
+        private boolean isChecksum( String extension )
+        {
+            return checksumAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
+        }
     }
-
-    private static class Maven2RepositoryLayoutEx
-            extends Maven2RepositoryLayout
-    {
-
-        protected Maven2RepositoryLayoutEx( List<ChecksumAlgorithmFactory> checksumAlgorithms )
-        {
-            super( checksumAlgorithms );
-        }
-
-        @Override
-        public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
-        {
-            if ( isSignature( artifact.getExtension() ) )
-            {
-                return Collections.emptyList();
-            }
-            return super.getChecksumLocations( artifact, upload, location );
-        }
-
-        private boolean isSignature( String extension )
-        {
-            return extension.endsWith( ".asc" );
-        }
-
-    }
-
 }

@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -35,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,12 +47,12 @@ public class ChecksumCalculatorTest
 
     private ChecksumCalculator newCalculator( String... algos )
     {
-        List<RepositoryLayout.ChecksumLocation> checksumLocations = new ArrayList<>();
+        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = new ArrayList<>();
         for ( String algo : algos )
         {
-            checksumLocations.add( new RepositoryLayout.ChecksumLocation( URI.create( "irrelevant" ), selector.select( algo ) ) );
+            checksumAlgorithmFactories.add( selector.select( algo ) );
         }
-        return ChecksumCalculator.newInstance( file, checksumLocations );
+        return ChecksumCalculator.newInstance( file, checksumAlgorithmFactories );
     }
 
     private ByteBuffer toBuffer( String data )

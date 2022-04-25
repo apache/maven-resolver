@@ -21,7 +21,7 @@ under the License.
 Option | Type | Description | Default Value | Supports Repo ID Suffix
 --- | --- | --- | --- | ---
 `aether.artifactResolver.snapshotNormalization` | boolean | It replaces the timestamped snapshot file name with a filename containing the `SNAPSHOT` qualifier only. This only affects resolving/retrieving artifacts but not uploading those. | `true` | no
-`aether.checksums.forSignature` | boolean | Flag indicating if signature artifacts (`.asc`) should have checksums. | `false` | no
+`aether.checksums.omitChecksumsForExtensions` | String | Comma separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc` | no
 `aether.checksums.algorithms` | String | Comma separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
 `aether.connector.basic.threads` or `maven.artifact.threads` | int | Number of threads to use for uploading/downloading. | `5` | no
@@ -44,6 +44,8 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.wagon.config` | Object | The configuration to use for the Wagon provider. | - | yes (must be used)
 `aether.dependencyCollector.maxCycles` | int | Only up to the given amount cyclic dependencies are emitted. | `10` | no
 `aether.dependencyCollector.maxExceptions` | int | Only exceptions up to the number given in this configuration property are emitted. Exceptions which exceed that number are swallowed. | `50` | no
+`aether.dependencyCollector.impl` | String | The name of the dependency collector implementation to use: depth-first (original) named `df`, and breadth-first (new in 1.8.0) named `bf`. Both collectors produce equivalent results, but they may differ performance wise, depending on project being applied to. Our experience shows that existing `df` is well suited for smaller to medium size projects, while `bf` may perform better on huge projects with many dependencies. Experiment (and come back to us!) to figure out which one suits you the better. | `"df"` | no
+`aether.dependencyCollector.bf.skipper` | boolean | Flag controlling whether to skip resolving duplicate/conflicting nodes during the breadth-first (`bf`) dependency collection process. | `true` | no
 `aether.dependencyManager.verbose` | boolean | Flag controlling the verbose mode for dependency management. If enabled, the original attributes of a dependency before its update due to dependency managemnent will be recorded in the node's `DependencyNode#getData()` when building a dependency graph. | `false` | no
 `aether.enhancedLocalRepository.trackingFilename` | String | Filename of the file in which to track the remote repositories. | `"_remote.repositories"` | no
 `aether.interactive` | boolean | A flag indicating whether interaction with the user is allowed. | `false` | no

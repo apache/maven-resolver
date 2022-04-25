@@ -23,23 +23,24 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 /**
- * @see DefaultDependencyCollector
+ * Default implementation of {@link DependencyCycle}.
+ * Internal helper class for collector implementations.
  */
-final class DefaultDependencyCycle
+public final class DefaultDependencyCycle
     implements DependencyCycle
 {
-
     private final List<Dependency> dependencies;
 
     private final int cycleEntry;
 
-    DefaultDependencyCycle( NodeStack nodes, int cycleEntry, Dependency dependency )
+    public DefaultDependencyCycle( List<DependencyNode> nodes, int cycleEntry, Dependency dependency )
     {
         // skip root node unless it actually has a dependency or is considered the cycle entry (due to its label)
         int offset = ( cycleEntry > 0 && nodes.get( 0 ).getDependency() == null ) ? 1 : 0;
@@ -59,14 +60,68 @@ final class DefaultDependencyCycle
         this.cycleEntry = cycleEntry;
     }
 
+    @Override
     public List<Dependency> getPrecedingDependencies()
     {
         return dependencies.subList( 0, cycleEntry );
     }
 
+    @Override
     public List<Dependency> getCyclicDependencies()
     {
         return dependencies.subList( cycleEntry, dependencies.size() );
+    }
+
+    /**
+     * Searches for a node associated with the given artifact. A version of the artifact is not considered during the
+     * search.
+     *
+     * @param nodes a list representing single path in the dependency graph. First element is the root.
+     * @param artifact to find among the parent nodes.
+     * @return the index of the node furthest from the root and associated with the given artifact, or {@literal -1} if
+     * there is no such node.
+     */
+    public static int find( List<DependencyNode> nodes, Artifact artifact )
+    {
+
+        for ( int i = nodes.size() - 1; i >= 0; i-- )
+        {
+            DependencyNode node = nodes.get( i );
+
+            Artifact a = node.getArtifact();
+            if ( a == null )
+            {
+                break;
+            }
+
+            if ( !a.getArtifactId().equals( artifact.getArtifactId() ) )
+            {
+                continue;
+            }
+            if ( !a.getGroupId().equals( artifact.getGroupId() ) )
+            {
+                continue;
+            }
+            if ( !a.getExtension().equals( artifact.getExtension() ) )
+            {
+                continue;
+            }
+            if ( !a.getClassifier().equals( artifact.getClassifier() ) )
+            {
+                continue;
+            }
+            /*
+             * NOTE: While a:1 and a:2 are technically different artifacts, we want to consider the path a:2 -> b:2 ->
+             * a:1 a cycle in the current context. The artifacts themselves might not form a cycle but their producing
+             * projects surely do. Furthermore, conflict resolution will always have to consider a:1 a loser (otherwise
+             * its ancestor a:2 would get pruned and so would a:1) so there is no point in building the sub graph of
+             * a:1.
+             */
+
+            return i;
+        }
+
+        return -1;
     }
 
     @Override

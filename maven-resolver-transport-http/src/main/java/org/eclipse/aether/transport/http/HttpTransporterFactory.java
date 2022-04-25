@@ -98,8 +98,8 @@ public final class HttpTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        requireNonNull( "session", "session cannot be null" );
-        requireNonNull( "repository", "repository cannot be null" );
+        requireNonNull( session, "session cannot be null" );
+        requireNonNull( repository, "repository cannot be null" );
 
         return new HttpTransporter( extractors, repository, session );
     }

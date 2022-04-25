@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver</artifactId>
-    <version>1.8.0-SNAPSHOT</version>
+    <version>1.8.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>maven-resolver-transport-wagon</artifactId>
@@ -56,7 +56,7 @@
     <dependency>
       <groupId>org.apache.maven.wagon</groupId>
       <artifactId>wagon-provider-api</artifactId>
-      <version>3.4.3</version>
+      <version>3.5.1</version>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
@@ -73,7 +73,7 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>3.3.0</version>
+      <version>3.4.1</version>
       <optional>true</optional>
     </dependency>
     <dependency>

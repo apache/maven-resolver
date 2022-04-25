@@ -69,8 +69,8 @@ public final class FileTransporterFactory
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {
-        Objects.requireNonNull( "session", "session cannot be null" );
-        Objects.requireNonNull( "repository", "repository cannot be null" );
+        Objects.requireNonNull( session, "session cannot be null" );
+        Objects.requireNonNull( repository, "repository cannot be null" );
 
         return new FileTransporter( repository );
     }

@@ -69,8 +69,8 @@ public class EnhancedLocalRepositoryManagerFactory
     public LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
         throws NoLocalRepositoryManagerException
     {
-        Objects.requireNonNull( "session", "session cannot be null" );
-        Objects.requireNonNull( "repository", "repository cannot be null" );
+        Objects.requireNonNull( session, "session cannot be null" );
+        Objects.requireNonNull( repository, "repository cannot be null" );
 
         if ( "".equals( repository.getContentType() ) || "default".equals( repository.getContentType() ) )
         {

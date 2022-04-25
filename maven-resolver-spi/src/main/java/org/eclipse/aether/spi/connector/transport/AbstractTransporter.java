@@ -48,7 +48,7 @@ public abstract class AbstractTransporter
     public void peek( PeekTask task )
         throws Exception
     {
-        Objects.requireNonNull( "task", "task cannot be null" );
+        Objects.requireNonNull( task, "task cannot be null" );
 
         failIfClosed( task );
         implPeek( task );
@@ -66,7 +66,7 @@ public abstract class AbstractTransporter
     public void get( GetTask task )
         throws Exception
     {
-        Objects.requireNonNull( "task", "task cannot be null" );
+        Objects.requireNonNull( task, "task cannot be null" );
 
         failIfClosed( task );
         implGet( task );
@@ -148,7 +148,7 @@ public abstract class AbstractTransporter
     public void put( PutTask task )
         throws Exception
     {
-        Objects.requireNonNull( "task", "task cannot be null" );
+        Objects.requireNonNull( task, "task cannot be null" );
 
         failIfClosed( task );
         implPut( task );

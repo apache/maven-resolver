@@ -22,10 +22,14 @@ package org.eclipse.aether.named.hazelcast;
 import org.junit.BeforeClass;
 
 public class HazelcastCPSemaphoreAdapterIT
-    extends NamedLockFactoryAdapterTestSupport {
+        extends NamedLockFactoryAdapterTestSupport
+{
 
     @BeforeClass
-    public static void createNamedLockFactory() {
-        setNamedLockFactory(new HazelcastCPSemaphoreNamedLockFactory());
+    public static void createNamedLockFactory()
+    {
+        String clusterName = utils.clusterName( HazelcastCPSemaphoreAdapterIT.class );
+        setNamedLockFactory(
+                new HazelcastCPSemaphoreNamedLockFactory( utils.createMember( clusterName ), true ) );
     }
 }

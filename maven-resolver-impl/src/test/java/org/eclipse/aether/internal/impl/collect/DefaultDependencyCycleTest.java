@@ -19,10 +19,14 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
+import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,9 +39,9 @@ public class DefaultDependencyCycleTest
     @Test
     public void testToString()
     {
-        NodeStack nodeStack = new NodeStack();
-        nodeStack.push( new DefaultDependencyNode( FOO_DEPENDENCY ) );
-        DependencyCycle cycle = new DefaultDependencyCycle( nodeStack, 1, BAR_DEPENDENCY );
+        List<DependencyNode> nodes = new ArrayList<>();
+        nodes.add( new DefaultDependencyNode( FOO_DEPENDENCY ) );
+        DependencyCycle cycle = new DefaultDependencyCycle( nodes, 1, BAR_DEPENDENCY );
 
         assertEquals( "group-id:foo:jar -> group-id:bar:jar", cycle.toString() );
     }

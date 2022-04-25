@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver</artifactId>
-    <version>1.8.0-SNAPSHOT</version>
+    <version>1.8.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>maven-resolver-demos</artifactId>
@@ -35,6 +35,10 @@
   <description>
     Maven Artifact Resolver demos, showing concrete code to use Maven Artifact Resolver with Maven repositories.
   </description>
+
+  <properties>
+    <mavenVersion>3.8.4</mavenVersion>
+  </properties>
 
   <modules>
     <module>maven-resolver-demo-snippets</module>

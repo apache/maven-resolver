@@ -20,10 +20,11 @@ package org.apache.maven.resolver.examples;
  */
 
 import org.apache.maven.resolver.examples.util.Booter;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
 
@@ -46,19 +47,39 @@ public class ResolveArtifact
 
         RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
+        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:1.3.3" );
+        Artifact artifact;
+        ArtifactRequest artifactRequest;
+        ArtifactResult artifactResult;
 
-        ArtifactRequest artifactRequest = new ArtifactRequest();
+        // artifact
+        artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:1.3.3" );
+
+        artifactRequest = new ArtifactRequest();
         artifactRequest.setArtifact( artifact );
         artifactRequest.setRepositories( Booter.newRepositories( system, session ) );
 
-        ArtifactResult artifactResult = system.resolveArtifact( session, artifactRequest );
+        artifactResult = system.resolveArtifact( session, artifactRequest );
 
         artifact = artifactResult.getArtifact();
 
         System.out.println( artifact + " resolved to  " + artifact.getFile() );
+
+        // signature
+        session.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
+
+        artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:jar.asc:1.3.3" );
+
+        artifactRequest = new ArtifactRequest();
+        artifactRequest.setArtifact( artifact );
+        artifactRequest.setRepositories( Booter.newRepositories( system, session ) );
+
+        artifactResult = system.resolveArtifact( session, artifactRequest );
+
+        artifact = artifactResult.getArtifact();
+
+        System.out.println( artifact + " resolved signature to  " + artifact.getFile() );
     }
 
 }

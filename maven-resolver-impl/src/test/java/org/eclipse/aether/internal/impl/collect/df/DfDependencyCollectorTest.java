@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.internal.impl.collect.df;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -75,10 +75,10 @@ import org.junit.Test;
 
 /**
  */
-public class DefaultDependencyCollectorTest
+public class DfDependencyCollectorTest
 {
 
-    private DefaultDependencyCollector collector;
+    private DfDependencyCollector collector;
 
     private DefaultRepositorySystemSession session;
 
@@ -106,7 +106,7 @@ public class DefaultDependencyCollectorTest
     {
         session = TestUtils.newSession();
 
-        collector = new DefaultDependencyCollector();
+        collector = new DfDependencyCollector();
         collector.setArtifactDescriptorReader( newReader( "" ) );
         collector.setVersionRangeResolver( new StubVersionRangeResolver() );
         collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );

@@ -19,70 +19,74 @@ package org.eclipse.aether.named.hazelcast;
  * under the License.
  */
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.IntStream;
+
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
-import com.hazelcast.config.cp.CPSubsystemConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
- * Hazelcast Client connects to remote server (or servers, in case of cluster). This class is a helper to
- * help create and validate remote Hazelcast environment, that Hazelcast Client will connect to.
+ * Hazelcast test utilities.
  */
-public final class HazelcastClientUtils {
-
-    private static final int CP_CLUSTER_NODES = 3;
-
-    private List<HazelcastInstance> servers;
+public final class HazelcastClientUtils
+{
+    private final List<HazelcastInstance> servers = new ArrayList<>();
 
     /**
-     * Creates a Hazelcast server instance, that client may connect to.
+     * Creates similar but still randomized name.
      */
-    public HazelcastClientUtils createSingleServer() {
-        servers = Collections.singletonList(Hazelcast.newHazelcastInstance());
-        return this;
+    public String clusterName( Class<?> klazz )
+    {
+        return String.format( "%s-%s", klazz.getSimpleName(), UUID.randomUUID() );
     }
 
     /**
-     * Creates a Hazelcast CP cluster, that client may connect to. When this method returns, cluster is not only
-     * created but it is properly formed as well.
+     * Creates single Hazelcast client instance.
      */
-    public HazelcastClientUtils createCpCluster() {
-        ArrayList<HazelcastInstance> instances = new ArrayList<>(CP_CLUSTER_NODES);
-        for (int i = 0; i < CP_CLUSTER_NODES; i++) {
-            HazelcastInstance instance = Hazelcast.newHazelcastInstance(
-                loadCPNodeConfig().setInstanceName("node" + i)
-            );
-            instances.add(instance);
-        }
-        servers = instances;
-
-        // make sure HZ CP Cluster is ready
-        for (HazelcastInstance instance : servers) {
-            // this call will block until CP cluster if formed
-            // important thing here is that this blocking does not happen during timeout surrounded test
-            // hence, once this method returns, the CP cluster is "ready for use" without any delay.
-            instance.getCPSubsystem().getAtomicLong(instance.getName());
-        }
-        return this;
+    public synchronized HazelcastInstance createClient( String clusterName )
+    {
+        ClientConfig config = ClientConfig.load();
+        config.setClusterName( clusterName );
+        return HazelcastClient.newHazelcastClient( config );
     }
 
     /**
-     * Shuts down the created server(s)
+     * Creates single Hazelcast member instance.
      */
-    public void cleanup() {
-        if (servers != null) {
-            servers.forEach(HazelcastInstance::shutdown);
-        }
+    public synchronized HazelcastInstance createMember( String clusterName )
+    {
+        return createMembers( 1, clusterName ).get( 0 );
     }
 
-    private Config loadCPNodeConfig() {
-        // "cluster" for CP needs some config tweak from the test/resources/hazelcast.xml
-        Config config = Config.load().setCPSubsystemConfig(new CPSubsystemConfig().setCPMemberCount(3));
-        config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(true);
-        return config;
+    /**
+     * Creates given count of Hazelcast member instances.
+     */
+    public synchronized List<HazelcastInstance> createMembers( int memberCount, String clusterName )
+    {
+        Config config = Config.load();
+        config.setClusterName( clusterName );
+        ArrayList<HazelcastInstance> result = new ArrayList<>( memberCount );
+        IntStream.range( 0, memberCount ).forEach( i -> {
+                    config.setInstanceName( "node-" + i );
+                    HazelcastInstance instance = Hazelcast.newHazelcastInstance( config );
+                    result.add( instance );
+                    servers.add( instance );
+                }
+        );
+        return result;
+    }
+
+    /**
+     * Shuts down the created instances.
+     */
+    public synchronized void cleanup()
+    {
+        servers.forEach( HazelcastInstance::shutdown );
+        servers.clear();
     }
 }

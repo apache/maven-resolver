@@ -19,6 +19,7 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,8 +49,9 @@ import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
 /**
+ * Internal helper class for collector implementations.
  */
-final class DataPool
+public final class DataPool
 {
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
@@ -58,21 +60,21 @@ final class DataPool
 
     private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
 
-    static final ArtifactDescriptorResult NO_DESCRIPTOR =
+    public static final ArtifactDescriptorResult NO_DESCRIPTOR =
         new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
 
     private ObjectPool<Artifact> artifacts;
 
     private ObjectPool<Dependency> dependencies;
 
-    private Map<Object, Descriptor> descriptors;
+    private Map<Object, WeakReference<Descriptor>> descriptors;
 
     private final Map<Object, Constraint> constraints = new HashMap<>();
 
     private final Map<Object, List<DependencyNode>> nodes = new HashMap<>( 256 );
 
     @SuppressWarnings( "unchecked" )
-    DataPool( RepositorySystemSession session )
+    public DataPool( RepositorySystemSession session )
     {
         RepositoryCache cache = session.getCache();
 
@@ -80,7 +82,7 @@ final class DataPool
         {
             artifacts = (ObjectPool<Artifact>) cache.get( session, ARTIFACT_POOL );
             dependencies = (ObjectPool<Dependency>) cache.get( session, DEPENDENCY_POOL );
-            descriptors = (Map<Object, Descriptor>) cache.get( session, DESCRIPTORS );
+            descriptors = (Map<Object, WeakReference<Descriptor>>) cache.get( session, DESCRIPTORS );
         }
 
         if ( artifacts == null )
@@ -103,7 +105,7 @@ final class DataPool
 
         if ( descriptors == null )
         {
-            descriptors = Collections.synchronizedMap( new WeakHashMap<Object, Descriptor>( 256 ) );
+            descriptors = Collections.synchronizedMap( new WeakHashMap<>( 256 ) );
             if ( cache != null )
             {
                 cache.put( session, DESCRIPTORS, descriptors );
@@ -121,14 +123,15 @@ final class DataPool
         return dependencies.intern( dependency );
     }
 
-    Object toKey( ArtifactDescriptorRequest request )
+    public Object toKey( ArtifactDescriptorRequest request )
     {
         return request.getArtifact();
     }
 
-    ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
+    public ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
     {
-        Descriptor descriptor = descriptors.get( key );
+        WeakReference<Descriptor> descriptorRef = descriptors.get( key );
+        Descriptor descriptor = descriptorRef != null ? descriptorRef.get() : null;
         if ( descriptor != null )
         {
             return descriptor.toResult( request );
@@ -136,22 +139,22 @@ final class DataPool
         return null;
     }
 
-    void putDescriptor( Object key, ArtifactDescriptorResult result )
+    public void putDescriptor( Object key, ArtifactDescriptorResult result )
     {
-        descriptors.put( key, new GoodDescriptor( result ) );
+        descriptors.put( key, new WeakReference<>( new GoodDescriptor( result ) ) );
     }
 
-    void putDescriptor( Object key, ArtifactDescriptorException e )
+    public void putDescriptor( Object key, ArtifactDescriptorException e )
     {
-        descriptors.put( key, BadDescriptor.INSTANCE );
+        descriptors.put( key, new WeakReference<>( BadDescriptor.INSTANCE ) );
     }
 
-    Object toKey( VersionRangeRequest request )
+    public Object toKey( VersionRangeRequest request )
     {
         return new ConstraintKey( request );
     }
 
-    VersionRangeResult getConstraint( Object key, VersionRangeRequest request )
+    public VersionRangeResult getConstraint( Object key, VersionRangeRequest request )
     {
         Constraint constraint = constraints.get( key );
         if ( constraint != null )
@@ -161,7 +164,7 @@ final class DataPool
         return null;
     }
 
-    void putConstraint( Object key, VersionRangeResult result )
+    public void putConstraint( Object key, VersionRangeResult result )
     {
         constraints.put( key, new Constraint( result ) );
     }
