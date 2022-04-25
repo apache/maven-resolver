@@ -136,6 +136,9 @@ $ mvn ... -Daether.enhancedLocalRepository.split \
           -Daether.enhancedLocalRepository.splitRemoteRepository
 ```
 
+For complete reference of enhanced LRM configuration possibilities, refer to 
+[configuration page](configuration.html).
+
 #### Split Repository Considerations
 
 **Word of warning**: on every change of "split" parameters, user must be aware
