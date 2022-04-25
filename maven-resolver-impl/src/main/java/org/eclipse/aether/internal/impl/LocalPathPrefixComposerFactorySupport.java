@@ -20,12 +20,15 @@ package org.eclipse.aether.internal.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Support class for {@link LocalPathPrefixComposerFactory} implementations: it predefines and makes re-usable
- * common configuration getters, and defines a support class for {@link LocalPathPrefixComposer} carrying same.
+ * common configuration getters, and defines a support class for {@link LocalPathPrefixComposer} carrying same
+ * configuration and providing default implementation for all methods.
  *
  * @since TBD
  */
@@ -124,7 +127,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
     }
 
     /**
-     * Support class for composers: it defines protected members for all the predefined configuration values.
+     * Support class for composers: it defines protected members for all the predefined configuration values and
+     * provides default implementation for methods. Implementors may change it's behaviour by overriding methods.
      */
     @SuppressWarnings( "checkstyle:parameternumber" )
     protected abstract static class LocalPathPrefixComposerSupport implements LocalPathPrefixComposer
@@ -166,6 +170,82 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             this.splitRemoteRepositoryLast = splitRemoteRepositoryLast;
             this.releasesPrefix = releasesPrefix;
             this.snapshotsPrefix = snapshotsPrefix;
+        }
+
+        @Override
+        public String getPathPrefixForLocalArtifact( Artifact artifact )
+        {
+            if ( !split )
+            {
+                return null;
+            }
+            String result = localPrefix;
+            if ( splitLocal )
+            {
+                result += "/" + ( artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix );
+            }
+            return result;
+        }
+
+        @Override
+        public String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository )
+        {
+            if ( !split )
+            {
+                return null;
+            }
+            String result = remotePrefix;
+            if ( !splitRemoteRepositoryLast && splitRemoteRepository )
+            {
+                result += "/" + repository.getId();
+            }
+            if ( splitRemote )
+            {
+                result += "/" + ( artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix );
+            }
+            if ( splitRemoteRepositoryLast && splitRemoteRepository )
+            {
+                result += "/" + repository.getId();
+            }
+            return result;
+        }
+
+        @Override
+        public String getPathPrefixForLocalMetadata( Metadata metadata )
+        {
+            if ( !split )
+            {
+                return null;
+            }
+            String result = localPrefix;
+            if ( splitLocal )
+            {
+                result += "/" + ( isSnapshot( metadata ) ? snapshotsPrefix : releasesPrefix );
+            }
+            return result;
+        }
+
+        @Override
+        public String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository )
+        {
+            if ( !split )
+            {
+                return null;
+            }
+            String result = remotePrefix;
+            if ( !splitRemoteRepositoryLast && splitRemoteRepository )
+            {
+                result += "/" + repository.getId();
+            }
+            if ( splitRemote )
+            {
+                result += "/" + ( isSnapshot( metadata ) ? snapshotsPrefix : releasesPrefix );
+            }
+            if ( splitRemoteRepositoryLast && splitRemoteRepository )
+            {
+                result += "/" + repository.getId();
+            }
+            return result;
         }
 
         protected boolean isSnapshot( Metadata metadata )

@@ -23,14 +23,10 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
- * Default local path prefix composer factory: it creates {@link LocalPathPrefixComposer} instances of (internal) type
- * {@link DefaultLocalPathPrefixComposer} that observe and implement all the supported parameters predefined in support
- * class.
+ * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
+ * without changing anything from it.
  *
  * @since TBD
  */
@@ -48,7 +44,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
     }
 
     /**
-     * {@link LocalPathPrefixComposer} implementation that observe and implement all the supported parameters.
+     * {@link LocalPathPrefixComposer} implementation that fully reuses {@link LocalPathPrefixComposerSupport} class.
      */
     private static class DefaultLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
     {
@@ -60,82 +56,6 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
         {
             super( split, localPrefix, splitLocal, remotePrefix, splitRemote, splitRemoteRepository,
                     splitRemoteRepositoryLast, releasePrefix, snapshotPrefix );
-        }
-
-        @Override
-        public String getPathPrefixForLocalArtifact( Artifact artifact )
-        {
-            if ( !split )
-            {
-                return null;
-            }
-            String result = localPrefix;
-            if ( splitLocal )
-            {
-                result += "/" + ( artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix );
-            }
-            return result;
-        }
-
-        @Override
-        public String getPathPrefixForRemoteArtifact( Artifact artifact, RemoteRepository repository )
-        {
-            if ( !split )
-            {
-                return null;
-            }
-            String result = remotePrefix;
-            if ( !splitRemoteRepositoryLast && splitRemoteRepository )
-            {
-                result += "/" + repository.getId();
-            }
-            if ( splitRemote )
-            {
-                result += "/" + ( artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix );
-            }
-            if ( splitRemoteRepositoryLast && splitRemoteRepository )
-            {
-                result += "/" + repository.getId();
-            }
-            return result;
-        }
-
-        @Override
-        public String getPathPrefixForLocalMetadata( Metadata metadata )
-        {
-            if ( !split )
-            {
-                return null;
-            }
-            String result = localPrefix;
-            if ( splitLocal )
-            {
-                result += "/" + ( isSnapshot( metadata ) ? snapshotsPrefix : releasesPrefix );
-            }
-            return result;
-        }
-
-        @Override
-        public String getPathPrefixForRemoteMetadata( Metadata metadata, RemoteRepository repository )
-        {
-            if ( !split )
-            {
-                return null;
-            }
-            String result = remotePrefix;
-            if ( !splitRemoteRepositoryLast && splitRemoteRepository )
-            {
-                result += "/" + repository.getId();
-            }
-            if ( splitRemote )
-            {
-                result += "/" + ( isSnapshot( metadata ) ? snapshotsPrefix : releasesPrefix );
-            }
-            if ( splitRemoteRepositoryLast && splitRemoteRepository )
-            {
-                result += "/" + repository.getId();
-            }
-            return result;
         }
     }
 }
