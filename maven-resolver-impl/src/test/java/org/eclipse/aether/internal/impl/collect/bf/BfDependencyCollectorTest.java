@@ -61,6 +61,11 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
+import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
+import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
+import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -574,6 +579,26 @@ public class BfDependencyCollectorTest
         CollectRequest request = new CollectRequest().setRoot( newDep( "gid:aid:1" ) );
         CollectResult result = collector.collectDependencies( session, request );
         assertEquals( 1, result.getRoot().getChildren().size() );
+    }
+
+
+    @Test
+    public void testDescriptorDependenciesEmpty()
+            throws Exception
+    {
+        DependencyNode root = parser.parseResource("expectedSubtreeOnDescriptorDependenciesEmpty.txt");
+        Dependency dependency = root.getDependency();
+        CollectRequest request = new CollectRequest(dependency, Arrays.asList(repository));
+
+        collector.setArtifactDescriptorReader(newReader("dependencies-empty/"));
+
+        session.setDependencyGraphTransformer(new ConflictResolver(
+                new NearestVersionSelector(), new JavaScopeSelector(), new SimpleOptionalitySelector(),
+                new JavaScopeDeriver()
+        ));
+
+        CollectResult result = collector.collectDependencies(session, request);
+        assertEqualSubtree(root, result.getRoot());
     }
 
     static class TestDependencyManager
