@@ -448,9 +448,17 @@ public class BfDependencyCollector
                     context.getParent().getChildren().add( child );
 
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
+                    DependencyProcessingContext parentContext = context.withDependency( d );
                     if ( recurse )
                     {
-                        doRecurse( args, context.withDependency( d ), descriptorResult, child );
+                        doRecurse( args, parentContext, descriptorResult, child );
+                    }
+                    else if ( !args.skipper.skipResolution( child, parentContext.parents ) )
+                    {
+                        List<DependencyNode> parents = new ArrayList<>( parentContext.parents.size() + 1 );
+                        parents.addAll( parentContext.parents );
+                        parents.add( child );
+                        args.skipper.cache( child, parents );
                     }
                 }
             }
