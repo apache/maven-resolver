@@ -453,7 +453,7 @@ public class BfDependencyCollector
                     {
                         doRecurse( args, parentContext, descriptorResult, child );
                     }
-                    else if(!args.skipper.skipResolution( child, parentContext.parents ))
+                    else if ( !args.skipper.skipResolution( child, parentContext.parents ) )
                     {
                         List<DependencyNode> parents = new ArrayList<>( parentContext.parents.size() + 1 );
                         parents.addAll( parentContext.parents );
