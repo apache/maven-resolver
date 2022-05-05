@@ -420,6 +420,7 @@ public class DfDependencyCollector
                                               descriptorResult.getAliases(), repos, args.request.getRequestContext() );
 
                     node.getChildren().add( child );
+                    dependencyCollected( args.session, args.nodes.nodes, d, descriptorRequest, descriptorResult );
 
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
                     if ( recurse )
@@ -438,6 +439,7 @@ public class DfDependencyCollector
                     createDependencyNode( relocations, preManaged, rangeResult, version, d, null, repos,
                                           args.request.getRequestContext() );
                 node.getChildren().add( child );
+                dependencyCollected( args.session, args.nodes.nodes, d, descriptorRequest, descriptorResult );
             }
         }
     }

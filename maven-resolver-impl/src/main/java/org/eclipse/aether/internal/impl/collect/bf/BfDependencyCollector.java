@@ -446,6 +446,7 @@ public class BfDependencyCollector
                                               descriptorResult.getAliases(), repos, args.request.getRequestContext() );
 
                     context.getParent().getChildren().add( child );
+                    dependencyCollected( args.session, context.parents, d, descriptorRequest, descriptorResult );
 
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
                     if ( recurse )
@@ -462,6 +463,7 @@ public class BfDependencyCollector
                     createDependencyNode( relocations, preManaged, rangeResult, version, d, null, repos,
                                           args.request.getRequestContext() );
                 context.getParent().getChildren().add( child );
+                dependencyCollected( args.session, context.parents, d, descriptorRequest, descriptorResult );
             }
         }
     }
@@ -506,6 +508,7 @@ public class BfDependencyCollector
                     args.dependencyProcessingQueue.add(
                             new DependencyProcessingContext( childSelector, childManager, childTraverser, childFilter,
                                     childRepos, descriptorResult.getManagedDependencies(), parents, dependency ) );
+
                 }
                 args.pool.putChildren( key, child.getChildren() );
                 args.skipper.cache( child, parents );
