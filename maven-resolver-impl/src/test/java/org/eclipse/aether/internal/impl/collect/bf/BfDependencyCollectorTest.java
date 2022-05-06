@@ -586,10 +586,6 @@ public class BfDependencyCollectorTest
     public void testDescriptorDependenciesEmpty()
             throws Exception
     {
-        DependencyNode root = parser.parseResource("expectedSubtreeOnDescriptorDependenciesEmpty.txt");
-        Dependency dependency = root.getDependency();
-        CollectRequest request = new CollectRequest(dependency, Arrays.asList(repository));
-
         collector.setArtifactDescriptorReader(newReader("dependencies-empty/"));
 
         session.setDependencyGraphTransformer(new ConflictResolver(
@@ -597,7 +593,17 @@ public class BfDependencyCollectorTest
                 new JavaScopeDeriver()
         ));
 
+
+        DependencyNode root = parser.parseResource("expectedSubtreeOnDescriptorDependenciesEmptyLeft.txt");
+        Dependency dependency = root.getDependency();
+        CollectRequest request = new CollectRequest(dependency, Arrays.asList(repository));
         CollectResult result = collector.collectDependencies(session, request);
+        assertEqualSubtree(root, result.getRoot());
+
+        root = parser.parseResource("expectedSubtreeOnDescriptorDependenciesEmptyRight.txt");
+        dependency = root.getDependency();
+        request = new CollectRequest(dependency, Arrays.asList(repository));
+        result = collector.collectDependencies(session, request);
         assertEqualSubtree(root, result.getRoot());
     }
 
