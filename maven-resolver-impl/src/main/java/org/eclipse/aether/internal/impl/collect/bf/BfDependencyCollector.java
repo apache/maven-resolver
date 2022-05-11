@@ -446,7 +446,7 @@ public class BfDependencyCollector
                                               descriptorResult.getAliases(), repos, args.request.getRequestContext() );
 
                     context.getParent().getChildren().add( child );
-                    dependencyCollected( args.session, context.parents, d, descriptorRequest, descriptorResult );
+                    dependencyCollected( args.session, context.parents, child );
 
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
                     DependencyProcessingContext parentContext = context.withDependency( d );
@@ -471,7 +471,7 @@ public class BfDependencyCollector
                     createDependencyNode( relocations, preManaged, rangeResult, version, d, null, repos,
                                           args.request.getRequestContext() );
                 context.getParent().getChildren().add( child );
-                dependencyCollected( args.session, context.parents, d, descriptorRequest, descriptorResult );
+                dependencyCollected( args.session, context.parents, child );
             }
         }
     }

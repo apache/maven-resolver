@@ -22,7 +22,6 @@ package org.apache.maven.resolver.examples;
 import java.util.List;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -54,17 +53,15 @@ public class ResolveTransitiveDependencies
 
         RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( system );
-        session.setConfigProperty( "aether.collector.impl", "df" );
+        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-core:3.8.5" );
+        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-impl:1.3.3" );
 
         DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter( JavaScopes.COMPILE );
 
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRoot( new Dependency( artifact, JavaScopes.COMPILE ) );
         collectRequest.setRepositories( Booter.newRepositories( system, session ) );
-        collectRequest.setRequestContext( "test" );
 
         DependencyRequest dependencyRequest = new DependencyRequest( collectRequest, classpathFlter );
 

@@ -19,19 +19,17 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
-import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
-import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
-import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,26 +101,27 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     }
 
     protected void dependencyCollected( RepositorySystemSession session,
-                                        List<DependencyNode> path,
-                                        Dependency dependency,
-                                        ArtifactDescriptorRequest artifactDescriptorRequest,
-                                        ArtifactDescriptorResult artifactDescriptorResult )
+                                        List<DependencyNode> pathToCollectedNode,
+                                        DependencyNode collectedNode )
     {
-        logger.info(String.format("%s (context: %s) @ %s", dependency, artifactDescriptorRequest.getRequestContext(),
-                artifactDescriptorResult != null && artifactDescriptorResult.getRepository() == null ? "unknown" : artifactDescriptorResult.getRepository().getId()));
+        // TODO: this is below "demo", but will be an extension point
+        logger.info( String.format( "%s (context: %s)",
+                collectedNode.getDependency(), collectedNode.getRequestContext() ) );
         int distance = 0;
-        ListIterator<DependencyNode> reversePathIterator = path.listIterator( path.size() );
+        ListIterator<DependencyNode> reversePathIterator = pathToCollectedNode
+                .listIterator( pathToCollectedNode.size() );
         while ( reversePathIterator.hasPrevious() )
         {
             DependencyNode dn = reversePathIterator.previous();
             StringBuilder indent = new StringBuilder();
-            for (int i = 0; i < distance; i++) {
-                indent.append("  ");
+            for ( int i = 0; i < distance; i++ )
+            {
+                indent.append( "  " );
             }
             distance++;
             indent.append( " -> " );
-            logger.info(String.format("%s%s (context: %s) @ %s", indent, dn, dn.getRequestContext(),
-                    artifactDescriptorResult.getRepository() == null ? "unknown" : artifactDescriptorResult.getRepository().getId()));
+            logger.info( String.format( "%s%s (context: %s) @ %s", indent, dn, dn.getRequestContext(),
+                    dn.getRepositories().stream().map( RemoteRepository::getId ).collect( Collectors.toList() ) ) );
         }
     }
 }

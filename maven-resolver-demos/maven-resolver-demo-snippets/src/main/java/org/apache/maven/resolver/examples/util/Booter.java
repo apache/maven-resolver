@@ -75,8 +75,8 @@ public class Booter
         LocalRepository localRepo = new LocalRepository( "target/local-repo" );
         session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
 
-        //session.setTransferListener( new ConsoleTransferListener() );
-        //session.setRepositoryListener( new ConsoleRepositoryListener() );
+        session.setTransferListener( new ConsoleTransferListener() );
+        session.setRepositoryListener( new ConsoleRepositoryListener() );
 
         // uncomment to generate dirty trees
         // session.setDependencyGraphTransformer( null );
