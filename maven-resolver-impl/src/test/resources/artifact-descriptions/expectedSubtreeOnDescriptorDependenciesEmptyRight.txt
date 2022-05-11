@@ -1,0 +1,8 @@
+gid:aa:jar:ver
++- gid:c:jar:ver compile
+|  +- gid:d:jar:2 compile
+|  |  +- gid:g:jar:1 compile
+|  |  |  \- gid:h:jar:1 compile
++- gid:b:jar:ver compile
+\- gid:e:jar:ver compile
+|  \- gid:f:jar:ver compile
