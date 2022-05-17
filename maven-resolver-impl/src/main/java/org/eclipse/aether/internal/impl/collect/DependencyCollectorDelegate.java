@@ -22,7 +22,6 @@ package org.eclipse.aether.internal.impl.collect;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,7 +37,6 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
-import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
@@ -46,12 +44,10 @@ import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
-import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -62,7 +58,6 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
 import org.slf4j.Logger;
@@ -370,7 +365,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     }
 
     protected static DefaultDependencyNode createDependencyNode( List<Artifact> relocations,
-                                                                 BfDependencyCollector.PremanagedDependency preManaged,
+                                                                 PremanagedDependency preManaged,
                                                                  VersionRangeResult rangeResult, Version version,
                                                                  Dependency d,
                                                                  ArtifactDescriptorResult descriptorResult,
@@ -549,127 +544,4 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         }
     }
 
-    /**
-     * Helper class used during collection.
-     */
-    protected static class PremanagedDependency
-    {
-
-        final String premanagedVersion;
-
-        final String premanagedScope;
-
-        final Boolean premanagedOptional;
-
-        /**
-         * @since 1.1.0
-         */
-        final Collection<Exclusion> premanagedExclusions;
-
-        /**
-         * @since 1.1.0
-         */
-        final Map<String, String> premanagedProperties;
-
-        final int managedBits;
-
-        final Dependency managedDependency;
-
-        final boolean premanagedState;
-
-        @SuppressWarnings( "checkstyle:parameternumber" )
-        PremanagedDependency( String premanagedVersion, String premanagedScope, Boolean premanagedOptional,
-                              Collection<Exclusion> premanagedExclusions, Map<String, String> premanagedProperties,
-                              int managedBits, Dependency managedDependency, boolean premanagedState )
-        {
-            this.premanagedVersion = premanagedVersion;
-            this.premanagedScope = premanagedScope;
-            this.premanagedOptional = premanagedOptional;
-            this.premanagedExclusions =
-                    premanagedExclusions != null
-                            ? Collections.unmodifiableCollection( new ArrayList<>( premanagedExclusions ) )
-                            : null;
-
-            this.premanagedProperties =
-                    premanagedProperties != null
-                            ? Collections.unmodifiableMap( new HashMap<>( premanagedProperties ) )
-                            : null;
-
-            this.managedBits = managedBits;
-            this.managedDependency = managedDependency;
-            this.premanagedState = premanagedState;
-        }
-
-        public static PremanagedDependency create( DependencyManager depManager, Dependency dependency,
-                                                   boolean disableVersionManagement, boolean premanagedState )
-        {
-            DependencyManagement depMngt = depManager != null ? depManager.manageDependency( dependency ) : null;
-
-            int managedBits = 0;
-            String premanagedVersion = null;
-            String premanagedScope = null;
-            Boolean premanagedOptional = null;
-            Collection<Exclusion> premanagedExclusions = null;
-            Map<String, String> premanagedProperties = null;
-
-            if ( depMngt != null )
-            {
-                if ( depMngt.getVersion() != null && !disableVersionManagement )
-                {
-                    Artifact artifact = dependency.getArtifact();
-                    premanagedVersion = artifact.getVersion();
-                    dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
-                    managedBits |= DependencyNode.MANAGED_VERSION;
-                }
-                if ( depMngt.getProperties() != null )
-                {
-                    Artifact artifact = dependency.getArtifact();
-                    premanagedProperties = artifact.getProperties();
-                    dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
-                    managedBits |= DependencyNode.MANAGED_PROPERTIES;
-                }
-                if ( depMngt.getScope() != null )
-                {
-                    premanagedScope = dependency.getScope();
-                    dependency = dependency.setScope( depMngt.getScope() );
-                    managedBits |= DependencyNode.MANAGED_SCOPE;
-                }
-                if ( depMngt.getOptional() != null )
-                {
-                    premanagedOptional = dependency.isOptional();
-                    dependency = dependency.setOptional( depMngt.getOptional() );
-                    managedBits |= DependencyNode.MANAGED_OPTIONAL;
-                }
-                if ( depMngt.getExclusions() != null )
-                {
-                    premanagedExclusions = dependency.getExclusions();
-                    dependency = dependency.setExclusions( depMngt.getExclusions() );
-                    managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
-                }
-            }
-            return new PremanagedDependency( premanagedVersion, premanagedScope, premanagedOptional,
-                    premanagedExclusions, premanagedProperties, managedBits, dependency,
-                    premanagedState );
-
-        }
-
-        public Dependency getManagedDependency()
-        {
-            return managedDependency;
-        }
-
-        public void applyTo( DefaultDependencyNode child )
-        {
-            child.setManagedBits( managedBits );
-            if ( premanagedState )
-            {
-                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion );
-                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope );
-                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_OPTIONAL, premanagedOptional );
-                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_EXCLUSIONS, premanagedExclusions );
-                child.setData( DependencyManagerUtils.NODE_DATA_PREMANAGED_PROPERTIES, premanagedProperties );
-            }
-        }
-
-    }
 }

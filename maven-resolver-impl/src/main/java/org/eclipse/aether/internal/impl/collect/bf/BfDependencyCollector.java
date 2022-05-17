@@ -47,6 +47,7 @@ import org.eclipse.aether.internal.impl.collect.DataPool;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollectionContext;
 import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
+import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
