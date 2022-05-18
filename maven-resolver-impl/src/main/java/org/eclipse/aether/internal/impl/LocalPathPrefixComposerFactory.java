@@ -24,7 +24,7 @@ import org.eclipse.aether.RepositorySystemSession;
 /**
  * Creates instances of {@link LocalPathPrefixComposer}.
  *
- * @since TBD
+ * @since 1.8.1
  */
 public interface LocalPathPrefixComposerFactory
 {

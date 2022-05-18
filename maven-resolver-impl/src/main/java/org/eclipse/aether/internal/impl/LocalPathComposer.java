@@ -26,7 +26,7 @@ import org.eclipse.aether.metadata.Metadata;
  * Composes {@link Artifact} and {@link Metadata} relative paths to be used in
  * {@link org.eclipse.aether.repository.LocalRepositoryManager}.
  *
- * @since TBD
+ * @since 1.8.1
  */
 public interface LocalPathComposer
 {

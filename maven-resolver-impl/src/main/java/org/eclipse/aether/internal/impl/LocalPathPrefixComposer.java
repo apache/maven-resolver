@@ -26,7 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * Composes path prefixes for {@link EnhancedLocalRepositoryManager}.
  *
- * @since TBD
+ * @since 1.8.1
  */
 public interface LocalPathPrefixComposer
 {

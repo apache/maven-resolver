@@ -34,7 +34,7 @@ import org.eclipse.aether.util.ConfigUtils;
  * configuration, they should override any configuration getter from this class.
  *
  * @see DefaultLocalPathPrefixComposerFactory
- * @since TBD
+ * @since 1.8.1
  */
 public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
 {

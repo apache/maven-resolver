@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Default implementation of {@link LocalPathComposer}.
  *
- * @since TBD
+ * @since 1.8.1
  */
 @Singleton
 @Named

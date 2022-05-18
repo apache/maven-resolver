@@ -28,7 +28,7 @@ import org.eclipse.aether.RepositorySystemSession;
  * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
  * without changing anything from it.
  *
- * @since TBD
+ * @since 1.8.1
  */
 @Singleton
 @Named
