@@ -8,9 +8,9 @@ package org.apache.maven.resolver.examples.util;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,6 +23,9 @@ import java.io.PrintStream;
 
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
+import org.eclipse.aether.RequestTrace;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.internal.impl.collect.DependencyCollectorTrace;
 
 import static java.util.Objects.requireNonNull;
 
@@ -30,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * A simplistic repository listener that logs events to the console.
  */
 public class ConsoleRepositoryListener
-    extends AbstractRepositoryListener
+        extends AbstractRepositoryListener
 {
 
     private final PrintStream out;
@@ -61,7 +64,7 @@ public class ConsoleRepositoryListener
     {
         requireNonNull( event, "event cannot be null" );
         out.println( "Invalid artifact descriptor for " + event.getArtifact() + ": "
-            + event.getException().getMessage() );
+                + event.getException().getMessage() );
     }
 
     public void artifactDescriptorMissing( RepositoryEvent event )
@@ -85,6 +88,27 @@ public class ConsoleRepositoryListener
     public void artifactResolved( RepositoryEvent event )
     {
         requireNonNull( event, "event cannot be null" );
+        DependencyCollectorTrace dependencyCollectorTrace = null;
+        RequestTrace trace = event.getTrace();
+        while ( trace != null )
+        {
+            if ( trace.getData() instanceof DependencyCollectorTrace )
+            {
+                dependencyCollectorTrace = (DependencyCollectorTrace) trace.getData();
+                break;
+            }
+            trace = trace.getParent();
+        }
+        if ( dependencyCollectorTrace != null && event.getArtifact().getFile() != null )
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            for ( DependencyNode dependency : dependencyCollectorTrace.getPath() )
+            {
+                stringBuilder.append( " -> " ).append( dependency.getArtifact() );
+            }
+            stringBuilder.append( " -> " ).append( dependencyCollectorTrace.getNode() );
+            out.println( ">> " + stringBuilder.toString() );
+        }
         out.println( "Resolved artifact " + event.getArtifact() + " from " + event.getRepository() );
     }
 
@@ -103,7 +127,7 @@ public class ConsoleRepositoryListener
     public void artifactResolving( RepositoryEvent event )
     {
         requireNonNull( event, "event cannot be null" );
-        out.println( "Resolving artifact " + event.getArtifact() );
+        //out.println( "Resolving artifact " + event.getArtifact() );
     }
 
     public void metadataDeployed( RepositoryEvent event )

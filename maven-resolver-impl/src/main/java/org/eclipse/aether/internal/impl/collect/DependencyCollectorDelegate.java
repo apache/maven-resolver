@@ -290,6 +290,18 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         return result;
     }
 
+    protected RequestTrace trailTrace( RequestTrace trace, String context, List<DependencyNode> path, Dependency node )
+    {
+        return RequestTrace.newChild(
+                trace,
+                new DependencyCollectorTrace(
+                        context,
+                        path,
+                        node
+                )
+        );
+    }
+
     @SuppressWarnings( "checkstyle:parameternumber" )
     protected abstract void doCollectDependencies( RepositorySystemSession session, RequestTrace trace, DataPool pool,
                                                    DefaultDependencyCollectionContext context,

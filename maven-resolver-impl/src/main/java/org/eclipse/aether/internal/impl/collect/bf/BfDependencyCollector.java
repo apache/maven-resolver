@@ -126,7 +126,7 @@ public class BfDependencyCollector
         }
 
         Args args =
-                new Args( session, trace, pool, context, versionContext, request,
+                new Args( session, pool, context, versionContext, request,
                         useSkip ? DependencyResolutionSkipper.defaultSkipper()
                                 : DependencyResolutionSkipper.neverSkipper() );
 
@@ -150,7 +150,7 @@ public class BfDependencyCollector
 
         while ( !args.dependencyProcessingQueue.isEmpty() )
         {
-            processDependency( args, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(),
+            processDependency( args, trace, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(),
                     false );
         }
 
@@ -158,15 +158,17 @@ public class BfDependencyCollector
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    private void processDependency( Args args, Results results, DependencyProcessingContext context,
-                                    List<Artifact> relocations, boolean disableVersionManagement )
+    private void processDependency( Args args, RequestTrace parent, Results results,
+                                    DependencyProcessingContext context, List<Artifact> relocations,
+                                    boolean disableVersionManagement )
     {
-
         if ( context.depSelector != null && !context.depSelector.selectDependency( context.dependency ) )
         {
             return;
         }
 
+        RequestTrace trace = trailTrace( parent, args.request.getRequestContext(), context.parents,
+                context.dependency );
         PremanagedDependency preManaged =
                 PremanagedDependency.create( context.depManager, context.dependency, disableVersionManagement,
                         args.premanagedState );
@@ -182,7 +184,7 @@ public class BfDependencyCollector
         VersionRangeResult rangeResult;
         try
         {
-            VersionRangeRequest rangeRequest = createVersionRangeRequest( args.request.getRequestContext(), args.trace,
+            VersionRangeRequest rangeRequest = createVersionRangeRequest( args.request.getRequestContext(), trace,
                     context.repositories, dependency );
 
             rangeResult = cachedResolveRangeResult( rangeRequest, args.pool, args.session );
@@ -203,7 +205,7 @@ public class BfDependencyCollector
             Dependency d = dependency.setArtifact( originalArtifact );
 
             ArtifactDescriptorRequest descriptorRequest = createArtifactDescriptorRequest(
-                    args.request.getRequestContext(), args.trace, context.repositories, d );
+                    args.request.getRequestContext(), trace, context.repositories, d );
 
             final ArtifactDescriptorResult descriptorResult =
                     noDescriptor
@@ -236,8 +238,8 @@ public class BfDependencyCollector
                         originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
                             && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
 
-                    processDependency( args, results, context.withDependency( d ), descriptorResult.getRelocations(),
-                            disableVersionManagementSubsequently );
+                    processDependency( args, parent, results, context.withDependency( d ),
+                            descriptorResult.getRelocations(), disableVersionManagementSubsequently );
                     return;
                 }
                 else
@@ -372,8 +374,6 @@ public class BfDependencyCollector
 
         final boolean premanagedState;
 
-        final RequestTrace trace;
-
         final DataPool pool;
 
         final Queue<DependencyProcessingContext> dependencyProcessingQueue = new ArrayDeque<>( 128 );
@@ -386,7 +386,7 @@ public class BfDependencyCollector
 
         final DependencyResolutionSkipper skipper;
 
-        Args( RepositorySystemSession session, RequestTrace trace, DataPool pool,
+        Args( RepositorySystemSession session, DataPool pool,
                      DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
                      CollectRequest request, DependencyResolutionSkipper skipper )
         {
@@ -394,7 +394,6 @@ public class BfDependencyCollector
             this.request = request;
             this.ignoreRepos = session.isIgnoreArtifactDescriptorRepositories();
             this.premanagedState = ConfigUtils.getBoolean( session, false, DependencyManagerUtils.CONFIG_PROP_VERBOSE );
-            this.trace = trace;
             this.pool = pool;
             this.collectionContext = collectionContext;
             this.versionContext = versionContext;
