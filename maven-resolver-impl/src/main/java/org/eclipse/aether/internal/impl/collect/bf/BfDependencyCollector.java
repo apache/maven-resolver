@@ -167,7 +167,7 @@ public class BfDependencyCollector
             return;
         }
 
-        RequestTrace trace = trailTrace( parent, args.request.getRequestContext(), context.parents,
+        RequestTrace trace = collectStepTrace( parent, args.request.getRequestContext(), context.parents,
                 context.dependency );
         PremanagedDependency preManaged =
                 PremanagedDependency.create( context.depManager, context.dependency, disableVersionManagement,

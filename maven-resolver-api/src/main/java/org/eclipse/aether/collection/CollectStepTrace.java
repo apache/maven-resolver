@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.collect;
+package org.eclipse.aether.collection;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,35 +24,27 @@ import java.util.List;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
-import static java.util.Objects.requireNonNull;
-
 /**
- * Trace objects for dependency collection.
+ * A trace data object revealing collect step (while executing {@link CollectRequest}.
  *
+ * @see org.eclipse.aether.RequestTrace
  * @since 1.8.1
  */
-public final class DependencyCollectorTrace
+public interface CollectStepTrace
 {
-    private final String context;
+    /**
+     * Returns the context this step happened in. Never {@code null}.
+     */
+    String getContext();
 
-    private final List<DependencyNode> path;
+    /**
+     * Returns the path of dependency nodes that led collector to current node returned by {@link #getNode()}.
+     * Never {@code null}.
+     */
+    List<DependencyNode> getPath();
 
-    private final Dependency node;
-
-    public DependencyCollectorTrace( final String context, final List<DependencyNode> path, final Dependency node )
-    {
-        this.context = context;
-        this.path = requireNonNull( path );
-        this.node = requireNonNull( node );
-    }
-
-    public List<DependencyNode> getPath()
-    {
-        return path;
-    }
-
-    public Dependency getNode()
-    {
-        return node;
-    }
+    /**
+     * Returns the current node being processed. Never {@code null}.
+     */
+    Dependency getNode();
 }

@@ -290,11 +290,12 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         return result;
     }
 
-    protected RequestTrace trailTrace( RequestTrace trace, String context, List<DependencyNode> path, Dependency node )
+    protected RequestTrace collectStepTrace( RequestTrace trace, String context, List<DependencyNode> path,
+                                             Dependency node )
     {
         return RequestTrace.newChild(
                 trace,
-                new DependencyCollectorTrace(
+                new CollectStepTraceImpl(
                         context,
                         path,
                         node

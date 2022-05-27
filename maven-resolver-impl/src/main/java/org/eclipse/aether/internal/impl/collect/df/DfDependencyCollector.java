@@ -150,7 +150,7 @@ public class DfDependencyCollector
             return;
         }
 
-        RequestTrace trace = trailTrace( parent, args.request.getRequestContext(), args.nodes.nodes, dependency );
+        RequestTrace trace = collectStepTrace( parent, args.request.getRequestContext(), args.nodes.nodes, dependency );
         PremanagedDependency preManaged =
             PremanagedDependency.create( depManager, dependency, disableVersionManagement, args.premanagedState );
         dependency = preManaged.getManagedDependency();
