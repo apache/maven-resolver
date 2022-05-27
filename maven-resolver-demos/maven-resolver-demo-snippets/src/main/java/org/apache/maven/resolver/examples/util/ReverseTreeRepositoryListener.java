@@ -31,14 +31,14 @@ import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.collection.CollectStepTrace;
+import org.eclipse.aether.collection.CollectStepData;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * A demo using {@link org.eclipse.aether.collection.CollectStepTrace}.
+ * A demo using {@link CollectStepData}.
  */
 public class ReverseTreeRepositoryListener
         extends AbstractRepositoryListener
@@ -48,12 +48,12 @@ public class ReverseTreeRepositoryListener
         requireNonNull( event, "event cannot be null" );
 
         RequestTrace trace = event.getTrace();
-        CollectStepTrace collectStepTrace = null;
+        CollectStepData collectStepTrace = null;
         while ( trace != null )
         {
-            if ( trace.getData() instanceof CollectStepTrace )
+            if ( trace.getData() instanceof CollectStepData )
             {
-                collectStepTrace = (CollectStepTrace) trace.getData();
+                collectStepTrace = (CollectStepData) trace.getData();
                 break;
             }
             trace = trace.getParent();

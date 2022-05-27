@@ -21,7 +21,7 @@ package org.eclipse.aether.internal.impl.collect;
 
 import java.util.List;
 
-import org.eclipse.aether.collection.CollectStepTrace;
+import org.eclipse.aether.collection.CollectStepData;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 1.8.1
  */
-public final class CollectStepTraceImpl implements CollectStepTrace
+public final class CollectStepDataImpl implements CollectStepData
 {
     private final String context;
 
@@ -40,7 +40,7 @@ public final class CollectStepTraceImpl implements CollectStepTrace
 
     private final Dependency node;
 
-    public CollectStepTraceImpl( final String context, final List<DependencyNode> path, final Dependency node )
+    public CollectStepDataImpl( final String context, final List<DependencyNode> path, final Dependency node )
     {
         this.context = context;
         this.path = requireNonNull( path );

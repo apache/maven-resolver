@@ -30,10 +30,10 @@ import org.eclipse.aether.graph.DependencyNode;
  * @see org.eclipse.aether.RequestTrace
  * @since 1.8.1
  */
-public interface CollectStepTrace
+public interface CollectStepData
 {
     /**
-     * Returns the context this step happened in. Never {@code null}.
+     * Returns the context of collection. Never {@code null}.
      */
     String getContext();
 
@@ -44,7 +44,7 @@ public interface CollectStepTrace
     List<DependencyNode> getPath();
 
     /**
-     * Returns the current node being processed. Never {@code null}.
+     * Returns the current node being collected. Never {@code null}.
      */
     Dependency getNode();
 }

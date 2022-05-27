@@ -295,7 +295,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     {
         return RequestTrace.newChild(
                 trace,
-                new CollectStepTraceImpl(
+                new CollectStepDataImpl(
                         context,
                         path,
                         node
