@@ -72,17 +72,20 @@ public class ReverseTreeRepositoryListener
             Dependency node = collectStepTrace.getNode();
             String trackingData = node.toString() + " (" + collectStepTrace.getContext() + ")\n";
             String indent = "";
-            ListIterator<DependencyNode> iter = collectStepTrace.getPath().listIterator(collectStepTrace.getPath().size());
-            while (iter.hasPrevious())
+            ListIterator<DependencyNode> iter = collectStepTrace.getPath()
+                    .listIterator( collectStepTrace.getPath().size() );
+            while ( iter.hasPrevious() )
             {
                 DependencyNode curr = iter.previous();
-                trackingData += (indent += "  ") + curr + " (" + collectStepTrace.getContext() + ")\n";
+                indent += "  ";
+                trackingData += indent + curr + " (" + collectStepTrace.getContext() + ")\n";
             }
             try
             {
                 Path trackingDir = resolvedArtifact.getFile().getParentFile().toPath().resolve( ".tracking" );
                 Files.createDirectories( trackingDir );
-                Path trackingFile = trackingDir.resolve( collectStepTrace.getPath().get( 0 ).getArtifact().toString().replace( ":", "_" ) );
+                Path trackingFile = trackingDir.resolve( collectStepTrace.getPath().get( 0 )
+                        .getArtifact().toString().replace( ":", "_" ) );
                 Files.write( trackingFile, trackingData.getBytes( StandardCharsets.UTF_8 ) );
                 System.out.println( trackingData );
             }
