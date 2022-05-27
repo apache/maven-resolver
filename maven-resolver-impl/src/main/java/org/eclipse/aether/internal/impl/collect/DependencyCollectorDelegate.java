@@ -37,8 +37,6 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
-import org.eclipse.aether.collection.DependencyManager;
-import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
@@ -148,8 +146,6 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
         CollectResult result = new CollectResult( request );
 
-        DependencySelector depSelector = session.getDependencySelector();
-        DependencyManager depManager = session.getDependencyManager();
         DependencyTraverser depTraverser = session.getDependencyTraverser();
         VersionFilter verFilter = session.getVersionFilter();
 
