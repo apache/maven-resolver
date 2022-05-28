@@ -33,7 +33,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.listener.ChainedRepositoryListener;
 
 /**
- * Example of building reverse dependency tree.
+ * Example of building reverse dependency tree using custom {@link ReverseTreeRepositoryListener}.
  */
 public class ReverseDependencyTree
 {
@@ -52,6 +52,8 @@ public class ReverseDependencyTree
         RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
 
         DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( system );
+
+        // install the listener into session
         session.setRepositoryListener( new ChainedRepositoryListener( session.getRepositoryListener(),
                 new ReverseTreeRepositoryListener() ) );
 
@@ -73,6 +75,9 @@ public class ReverseDependencyTree
         collectRequest.setRepositories( descriptorRequest.getRepositories() );
 
         system.collectDependencies( session, collectRequest );
+
+        // in this demo we are not interested in collect result,
+        // as all the "demo work" is done by installed ReverseTreeRepositoryListener
     }
 
 }

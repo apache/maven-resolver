@@ -38,11 +38,13 @@ import org.eclipse.aether.graph.DependencyNode;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A demo using {@link CollectStepData}.
+ * A demo class building reverse tree using {@link CollectStepData} trace data provided in {@link RepositoryEvent}
+ * events fired during collection.
  */
 public class ReverseTreeRepositoryListener
         extends AbstractRepositoryListener
 {
+    @Override
     public void artifactResolved( RepositoryEvent event )
     {
         requireNonNull( event, "event cannot be null" );

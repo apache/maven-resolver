@@ -39,6 +39,7 @@ public class AllResolverDemos
         GetDependencyHierarchy.main( args );
         ResolveArtifact.main( args );
         ResolveTransitiveDependencies.main( args );
+        ReverseDependencyTree.main( args );
         InstallArtifacts.main( args );
         DeployArtifacts.main( args );
     }
