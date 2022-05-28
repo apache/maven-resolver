@@ -42,7 +42,7 @@ public final class CollectStepDataImpl implements CollectStepData
 
     public CollectStepDataImpl( final String context, final List<DependencyNode> path, final Dependency node )
     {
-        this.context = context;
+        this.context = requireNonNull( context );
         this.path = requireNonNull( path );
         this.node = requireNonNull( node );
     }
