@@ -44,7 +44,7 @@ import static java.util.Objects.requireNonNull;
 public class ReverseTreeRepositoryListener
         extends AbstractRepositoryListener
 {
-    private static final String LINE_SEP = System.lineSeparator();
+    private static final String EOL = System.lineSeparator();
 
     @Override
     public void artifactResolved( RepositoryEvent event )
@@ -74,7 +74,7 @@ public class ReverseTreeRepositoryListener
         if ( isInScope( resolvedArtifact, nodeArtifact ) )
         {
             Dependency node = collectStepTrace.getNode();
-            String trackingData = node + " (" + collectStepTrace.getContext() + ")" + LINE_SEP;
+            String trackingData = node + " (" + collectStepTrace.getContext() + ")" + EOL;
             String indent = "";
             ListIterator<DependencyNode> iter = collectStepTrace.getPath()
                     .listIterator( collectStepTrace.getPath().size() );
@@ -82,7 +82,7 @@ public class ReverseTreeRepositoryListener
             {
                 DependencyNode curr = iter.previous();
                 indent += "  ";
-                trackingData += indent + curr + " (" + collectStepTrace.getContext() + ")" + LINE_SEP;
+                trackingData += indent + curr + " (" + collectStepTrace.getContext() + ")" + EOL;
             }
             try
             {
