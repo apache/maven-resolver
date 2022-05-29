@@ -44,6 +44,8 @@ import static java.util.Objects.requireNonNull;
 public class ReverseTreeRepositoryListener
         extends AbstractRepositoryListener
 {
+    private static final String LINE_SEP = System.lineSeparator();
+
     @Override
     public void artifactResolved( RepositoryEvent event )
     {
@@ -72,7 +74,7 @@ public class ReverseTreeRepositoryListener
         if ( isInScope( resolvedArtifact, nodeArtifact ) )
         {
             Dependency node = collectStepTrace.getNode();
-            String trackingData = node.toString() + " (" + collectStepTrace.getContext() + ")\n";
+            String trackingData = node + " (" + collectStepTrace.getContext() + ")" + LINE_SEP;
             String indent = "";
             ListIterator<DependencyNode> iter = collectStepTrace.getPath()
                     .listIterator( collectStepTrace.getPath().size() );
@@ -80,7 +82,7 @@ public class ReverseTreeRepositoryListener
             {
                 DependencyNode curr = iter.previous();
                 indent += "  ";
-                trackingData += indent + curr + " (" + collectStepTrace.getContext() + ")\n";
+                trackingData += indent + curr + " (" + collectStepTrace.getContext() + ")" + LINE_SEP;
             }
             try
             {
@@ -99,9 +101,9 @@ public class ReverseTreeRepositoryListener
     }
 
     /**
-     * The event "artifact resolved" if fired WHENEVER an artifact is resolved, BUT, it happens also when an artifact
+     * The event "artifact resolved" if fired WHENEVER an artifact is resolved, BUT it happens also when an artifact
      * descriptor (model, the POM) is being built, and parent (and parent of parent...) is being asked for. Hence, this
-     * method "filters" out in WHICH artifact are we interested in, but it intentionally neglects extension, as
+     * method "filters" out in WHICH artifact are we interested in, but it intentionally neglects extension as
      * ArtifactDescriptorReader modifies extension to "pom" during collect. So all we have to rely on is GAV only.
      */
     private boolean isInScope( Artifact artifact, Artifact nodeArtifact )
