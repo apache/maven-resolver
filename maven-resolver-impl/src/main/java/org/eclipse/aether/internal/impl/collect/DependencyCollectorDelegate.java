@@ -290,6 +290,33 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         return result;
     }
 
+    /**
+     * Creates child {@link RequestTrace} instance from passed in {@link RequestTrace} and parameters by creating
+     * {@link CollectStepDataImpl} instance out of passed in data. Caller must ensure that passed in parameters are
+     * NOT affected by threading (or that there is no multi threading involved). In other words, the passed in values
+     * should be immutable.
+     *
+     * @param trace   The current trace instance.
+     * @param context The context from {@link CollectRequest#getRequestContext()}, never {@code null}.
+     * @param path    List representing the path of dependency nodes, never {@code null}. Caller must ensure, that this
+     *                list does not change during the lifetime of the requested {@link RequestTrace} instance. If it may
+     *                change, simplest is to pass here a copy of used list.
+     * @param node    Currently collected node, that collector came by following the passed in path.
+     * @return A child request trance instance, never {@code null}.
+     */
+    protected RequestTrace collectStepTrace( RequestTrace trace, String context, List<DependencyNode> path,
+                                             Dependency node )
+    {
+        return RequestTrace.newChild(
+                trace,
+                new CollectStepDataImpl(
+                        context,
+                        path,
+                        node
+                )
+        );
+    }
+
     @SuppressWarnings( "checkstyle:parameternumber" )
     protected abstract void doCollectDependencies( RepositorySystemSession session, RequestTrace trace, DataPool pool,
                                                    DefaultDependencyCollectionContext context,

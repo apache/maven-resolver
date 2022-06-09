@@ -102,9 +102,9 @@ public class DfDependencyCollector
         NodeStack nodes = new NodeStack();
         nodes.push( node );
 
-        Args args = new Args( session, trace, pool, nodes, context, versionContext, request );
+        Args args = new Args( session, pool, nodes, context, versionContext, request );
 
-        process( args, results, dependencies, repositories,
+        process( args, trace, results, dependencies, repositories,
                 session.getDependencySelector() != null
                         ? session.getDependencySelector().deriveChildSelector( context ) : null,
                 session.getDependencyManager() != null
@@ -116,40 +116,41 @@ public class DfDependencyCollector
     }
 
         @SuppressWarnings( "checkstyle:parameternumber" )
-    private void process( final Args args, Results results, List<Dependency> dependencies,
+    private void process( final Args args, RequestTrace trace, Results results, List<Dependency> dependencies,
                           List<RemoteRepository> repositories, DependencySelector depSelector,
                           DependencyManager depManager, DependencyTraverser depTraverser, VersionFilter verFilter )
     {
         for ( Dependency dependency : dependencies )
         {
-            processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter,
+            processDependency( args, trace, results, repositories, depSelector, depManager, depTraverser, verFilter,
                                dependency );
         }
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    private void processDependency( Args args, Results results, List<RemoteRepository> repositories,
+    private void processDependency( Args args, RequestTrace trace, Results results, List<RemoteRepository> repositories,
                                     DependencySelector depSelector, DependencyManager depManager,
                                     DependencyTraverser depTraverser, VersionFilter verFilter, Dependency dependency )
     {
 
         List<Artifact> relocations = Collections.emptyList();
-        processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter, dependency,
-                           relocations, false );
+        processDependency( args, trace, results, repositories, depSelector, depManager, depTraverser, verFilter,
+                dependency, relocations, false );
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    private void processDependency( Args args, Results results, List<RemoteRepository> repositories,
-                                    DependencySelector depSelector, DependencyManager depManager,
-                                    DependencyTraverser depTraverser, VersionFilter verFilter, Dependency dependency,
-                                    List<Artifact> relocations, boolean disableVersionManagement )
+    private void processDependency( Args args, RequestTrace parent, Results results,
+                                    List<RemoteRepository> repositories, DependencySelector depSelector,
+                                    DependencyManager depManager, DependencyTraverser depTraverser,
+                                    VersionFilter verFilter, Dependency dependency, List<Artifact> relocations,
+                                    boolean disableVersionManagement )
     {
-
         if ( depSelector != null && !depSelector.selectDependency( dependency ) )
         {
             return;
         }
 
+        RequestTrace trace = collectStepTrace( parent, args.request.getRequestContext(), args.nodes.nodes, dependency );
         PremanagedDependency preManaged =
             PremanagedDependency.create( depManager, dependency, disableVersionManagement, args.premanagedState );
         dependency = preManaged.getManagedDependency();
@@ -162,7 +163,7 @@ public class DfDependencyCollector
         VersionRangeResult rangeResult;
         try
         {
-            VersionRangeRequest rangeRequest = createVersionRangeRequest( args.request.getRequestContext(), args.trace,
+            VersionRangeRequest rangeRequest = createVersionRangeRequest( args.request.getRequestContext(), trace,
                     repositories, dependency );
 
             rangeResult = cachedResolveRangeResult( rangeRequest, args.pool, args.session );
@@ -181,7 +182,7 @@ public class DfDependencyCollector
             Dependency d = dependency.setArtifact( originalArtifact );
 
             ArtifactDescriptorRequest descriptorRequest = createArtifactDescriptorRequest(
-                    args.request.getRequestContext(), args.trace, repositories, d );
+                    args.request.getRequestContext(), trace, repositories, d );
 
             final ArtifactDescriptorResult descriptorResult =
                 getArtifactDescriptorResult( args, results, noDescriptor, d, descriptorRequest );
@@ -212,8 +213,8 @@ public class DfDependencyCollector
                         originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
                             && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
 
-                    processDependency( args, results, repositories, depSelector, depManager, depTraverser, verFilter, d,
-                                       descriptorResult.getRelocations(), disableVersionManagementSubsequently );
+                    processDependency( args, parent, results, repositories, depSelector, depManager, depTraverser,
+                            verFilter, d, descriptorResult.getRelocations(), disableVersionManagementSubsequently );
                     return;
                 }
                 else
@@ -232,8 +233,8 @@ public class DfDependencyCollector
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
                     if ( recurse )
                     {
-                        doRecurse( args, results, repositories, depSelector, depManager, depTraverser, verFilter, d,
-                                   descriptorResult, child );
+                        doRecurse( args, parent, results, repositories, depSelector, depManager, depTraverser,
+                                verFilter, d, descriptorResult, child );
                     }
                 }
             }
@@ -251,7 +252,7 @@ public class DfDependencyCollector
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    private void doRecurse( Args args, Results results, List<RemoteRepository> repositories,
+    private void doRecurse( Args args, RequestTrace trace, Results results, List<RemoteRepository> repositories,
                             DependencySelector depSelector, DependencyManager depManager,
                             DependencyTraverser depTraverser, VersionFilter verFilter, Dependency d,
                             ArtifactDescriptorResult descriptorResult, DefaultDependencyNode child )
@@ -280,7 +281,7 @@ public class DfDependencyCollector
 
             args.nodes.push( child );
 
-            process( args, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
+            process( args, trace, results, descriptorResult.getDependencies(), childRepos, childSelector, childManager,
                      childTraverser, childFilter );
 
             args.nodes.pop();
@@ -340,8 +341,6 @@ public class DfDependencyCollector
 
         final boolean premanagedState;
 
-        final RequestTrace trace;
-
         final DataPool pool;
 
         final NodeStack nodes;
@@ -352,7 +351,7 @@ public class DfDependencyCollector
 
         final CollectRequest request;
 
-        Args( RepositorySystemSession session, RequestTrace trace, DataPool pool, NodeStack nodes,
+        Args( RepositorySystemSession session, DataPool pool, NodeStack nodes,
                      DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
                      CollectRequest request )
         {
@@ -360,7 +359,6 @@ public class DfDependencyCollector
             this.request = request;
             this.ignoreRepos = session.isIgnoreArtifactDescriptorRepositories();
             this.premanagedState = ConfigUtils.getBoolean( session, false, DependencyManagerUtils.CONFIG_PROP_VERBOSE );
-            this.trace = trace;
             this.pool = pool;
             this.nodes = nodes;
             this.collectionContext = collectionContext;

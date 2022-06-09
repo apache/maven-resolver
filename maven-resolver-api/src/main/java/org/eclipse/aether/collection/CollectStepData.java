@@ -1,4 +1,4 @@
-package org.apache.maven.resolver.examples;
+package org.eclipse.aether.collection;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package org.apache.maven.resolver.examples;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,29 +19,32 @@ package org.apache.maven.resolver.examples;
  * under the License.
  */
 
+import java.util.List;
+
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
+
 /**
- * Runs all demos at once.
+ * A trace data object revealing collect step (while executing {@link CollectRequest}.
+ *
+ * @see org.eclipse.aether.RequestTrace
+ * @since 1.8.1
  */
-public class AllResolverDemos
+public interface CollectStepData
 {
     /**
-     * Main 
-     * @param args
-     * @throws Exception
+     * Returns the context of collection. Never {@code null}.
      */
-    public static void main( String[] args )
-        throws Exception
-    {
-        FindAvailableVersions.main( args );
-        FindNewestVersion.main( args );
-        GetDirectDependencies.main( args );
-        GetDependencyTree.main( args );
-        GetDependencyHierarchy.main( args );
-        ResolveArtifact.main( args );
-        ResolveTransitiveDependencies.main( args );
-        ReverseDependencyTree.main( args );
-        InstallArtifacts.main( args );
-        DeployArtifacts.main( args );
-    }
+    String getContext();
 
+    /**
+     * Returns the path of dependency nodes that led collector to current node returned by {@link #getNode()}.
+     * Never {@code null}.
+     */
+    List<DependencyNode> getPath();
+
+    /**
+     * Returns the current node being collected. Never {@code null}.
+     */
+    Dependency getNode();
 }
