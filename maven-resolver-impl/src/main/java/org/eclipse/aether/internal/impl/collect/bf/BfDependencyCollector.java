@@ -26,12 +26,25 @@ import javax.inject.Singleton;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactType;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -53,12 +66,14 @@ import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.find;
 
@@ -128,7 +143,8 @@ public class BfDependencyCollector
         Args args =
                 new Args( session, pool, context, versionContext, request,
                         useSkip ? DependencyResolutionSkipper.defaultSkipper()
-                                : DependencyResolutionSkipper.neverSkipper() );
+                                : DependencyResolutionSkipper.neverSkipper(),
+                        new ParallelDescriptorResolver( session ) );
 
         DependencySelector rootDepSelector = session.getDependencySelector() != null
                 ? session.getDependencySelector().deriveChildSelector( context ) : null;
@@ -142,10 +158,12 @@ public class BfDependencyCollector
         List<DependencyNode> parents = Collections.singletonList( node );
         for ( Dependency dependency : dependencies )
         {
-            args.dependencyProcessingQueue.add(
+            DependencyProcessingContext processingContext =
                     new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
-                            rootVerFilter, repositories, managedDependencies, parents,
-                            dependency ) );
+                            rootVerFilter, repositories, managedDependencies, parents, dependency,
+                            PremanagedDependency.create( rootDepManager, dependency,
+                                    false, args.premanagedState ) );
+            putToQueue( args, trace, processingContext, results );
         }
 
         while ( !args.dependencyProcessingQueue.isEmpty() )
@@ -154,6 +172,7 @@ public class BfDependencyCollector
                     false );
         }
 
+        args.resolver.shutdown();
         args.skipper.report();
     }
 
@@ -162,57 +181,37 @@ public class BfDependencyCollector
                                     DependencyProcessingContext context, List<Artifact> relocations,
                                     boolean disableVersionManagement )
     {
-        if ( context.depSelector != null && !context.depSelector.selectDependency( context.dependency ) )
-        {
-            return;
-        }
-
         RequestTrace trace = collectStepTrace( parent, args.request.getRequestContext(), context.parents,
                 context.dependency );
-        PremanagedDependency preManaged =
-                PremanagedDependency.create( context.depManager, context.dependency, disableVersionManagement,
-                        args.premanagedState );
-        Dependency dependency = preManaged.getManagedDependency();
+        PremanagedDependency preManaged = context.premanagedDependency;
+        Dependency dependency = context.dependency;
 
         boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
-
         boolean traverse =
                 !noDescriptor && ( context.depTraverser == null || context.depTraverser.traverseDependency(
                         dependency ) );
 
-        List<? extends Version> versions;
+        Future<DescriptorResolutionResult> resolutionResultFuture = args.resolver.find( dependency );
+        DescriptorResolutionResult resolutionResult;
         VersionRangeResult rangeResult;
         try
         {
-            VersionRangeRequest rangeRequest = createVersionRangeRequest( args.request.getRequestContext(), trace,
-                    context.repositories, dependency );
-
-            rangeResult = cachedResolveRangeResult( rangeRequest, args.pool, args.session );
-
-            versions = filterVersions( dependency, rangeResult, context.verFilter, args.versionContext );
+            resolutionResult = resolutionResultFuture.get();
+            rangeResult = resolutionResult.rangeResult;
         }
-        catch ( VersionRangeResolutionException e )
+        catch ( Exception e )
         {
             results.addException( dependency, e, context.parents );
             return;
         }
 
-        //Resolve newer version first to maximize benefits of skipper
-        Collections.reverse( versions );
+        Set<Version> versions = resolutionResult.descriptors.keySet();
         for ( Version version : versions )
         {
             Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
             Dependency d = dependency.setArtifact( originalArtifact );
 
-            ArtifactDescriptorRequest descriptorRequest = createArtifactDescriptorRequest(
-                    args.request.getRequestContext(), trace, context.repositories, d );
-
-            final ArtifactDescriptorResult descriptorResult =
-                    noDescriptor
-                            ? new ArtifactDescriptorResult( descriptorRequest )
-                            : resolveCachedArtifactDescriptor( args.pool, descriptorRequest, args.session,
-                                    context.withDependency( d ), results );
-
+            final ArtifactDescriptorResult descriptorResult = resolutionResult.descriptors.get( version );
             if ( descriptorResult != null )
             {
                 d = d.setArtifact( descriptorResult.getArtifact() );
@@ -238,8 +237,10 @@ public class BfDependencyCollector
                         originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
                             && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
 
-                    processDependency( args, parent, results, context.withDependency( d ),
-                            descriptorResult.getRelocations(), disableVersionManagementSubsequently );
+                    context.withDependency( d );
+                    resolveArtifactDescriptorAsync( args, trace, context, results );
+                    processDependency( args, trace, results, context, descriptorResult.getRelocations(),
+                            disableVersionManagementSubsequently );
                     return;
                 }
                 else
@@ -256,10 +257,12 @@ public class BfDependencyCollector
                     context.getParent().getChildren().add( child );
 
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
+                    resolveArtifactDescriptorAsync( args, trace, context, results );
                     DependencyProcessingContext parentContext = context.withDependency( d );
                     if ( recurse )
                     {
-                        doRecurse( args, parentContext, descriptorResult, child );
+                        doRecurse( args, trace, parentContext, descriptorResult, child, results,
+                                disableVersionManagement );
                     }
                     else if ( !args.skipper.skipResolution( child, parentContext.parents ) )
                     {
@@ -283,8 +286,9 @@ public class BfDependencyCollector
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
-    private void doRecurse( Args args, DependencyProcessingContext parentContext,
-                            ArtifactDescriptorResult descriptorResult, DefaultDependencyNode child )
+    private void doRecurse( Args args, RequestTrace trace, DependencyProcessingContext parentContext,
+                            ArtifactDescriptorResult descriptorResult, DefaultDependencyNode child, Results results,
+                            boolean disableVersionManagement )
     {
         DefaultDependencyCollectionContext context = args.collectionContext;
         context.set( parentContext.dependency, descriptorResult.getManagedDependencies() );
@@ -319,9 +323,12 @@ public class BfDependencyCollector
                 parents.add( child );
                 for ( Dependency dependency : descriptorResult.getDependencies() )
                 {
-                    args.dependencyProcessingQueue.add(
+                    DependencyProcessingContext processingContext =
                             new DependencyProcessingContext( childSelector, childManager, childTraverser, childFilter,
-                                    childRepos, descriptorResult.getManagedDependencies(), parents, dependency ) );
+                                    childRepos, descriptorResult.getManagedDependencies(), parents, dependency,
+                                    PremanagedDependency.create( childManager, dependency, disableVersionManagement,
+                                            args.premanagedState ) );
+                    putToQueue( args, trace, processingContext, results );
 
                 }
                 args.pool.putChildren( key, child.getChildren() );
@@ -332,6 +339,85 @@ public class BfDependencyCollector
         {
             child.setChildren( children );
         }
+    }
+
+    private void putToQueue( Args args, RequestTrace trace, DependencyProcessingContext context,
+                             Results results )
+    {
+        //filter with original dependency
+        if ( context.depSelector != null && !context.depSelector.selectDependency( context.dependency ) )
+        {
+            return;
+        }
+
+        //resolve descriptors for managed dependency
+        context.withDependency( context.premanagedDependency.getManagedDependency() );
+        args.dependencyProcessingQueue.add( context );
+        resolveArtifactDescriptorAsync( args, trace, context, results );
+    }
+
+    private void resolveArtifactDescriptorAsync( Args args, RequestTrace trace, DependencyProcessingContext context,
+                                                 Results results )
+    {
+        final Dependency dependency = context.dependency;
+        args.resolver.resolveDescriptors( dependency, () ->
+        {
+            VersionRangeRequest rangeRequest =
+                    createVersionRangeRequest( args.request.getRequestContext(), trace, context.repositories,
+                            dependency );
+            VersionRangeResult rangeResult = cachedResolveRangeResult( rangeRequest, args.pool, args.session );
+            DescriptorResolutionResult resolutionResult = new DescriptorResolutionResult( rangeResult );
+
+            List<? extends Version> versions = filterVersions( dependency, rangeResult, context.verFilter,
+                    args.versionContext );
+
+            Function<Version, ArtifactDescriptorResult> resolveVersion = ( version ) ->
+            {
+                Artifact original = dependency.getArtifact();
+                Artifact newArtifact = new DefaultArtifact( original.getGroupId(),
+                        original.getArtifactId(), original.getClassifier(), original.getExtension(),
+                        version.toString(), original.getProperties(), (ArtifactType) null );
+                Dependency newDependency = new Dependency( newArtifact, dependency.getScope(), dependency.isOptional(),
+                        dependency.getExclusions() );
+                DependencyProcessingContext newContext = context.copy();
+
+                ArtifactDescriptorRequest descriptorRequest =
+                        createArtifactDescriptorRequest( args.request.getRequestContext(), trace,
+                                newContext.repositories, newDependency );
+                return isLackingDescriptor( newArtifact )
+                        ? new ArtifactDescriptorResult( descriptorRequest )
+                        : resolveCachedArtifactDescriptor( args.pool, descriptorRequest, args.session,
+                        newContext.withDependency( newDependency ), results );
+            };
+
+            Map<Version, ArtifactDescriptorResult> descriptors = new ConcurrentHashMap<>( versions.size() );
+            Stream<? extends Version> stream = versions.size() > 1 ? versions.parallelStream() : versions.stream();
+            stream.forEach( version ->
+            {
+                ArtifactDescriptorResult descriptorResult = resolveVersion.apply( version );
+                if ( descriptorResult != null )
+                {
+                    descriptors.put( version, descriptorResult );
+                }
+            } );
+
+            //Resolve newer version first to maximize benefits of skipper
+            Collections.reverse( versions );
+            versions.forEach( version -> resolutionResult.descriptors.put( version, descriptors.get( version ) ) );
+            if ( versions.size() > 1 )
+            {
+                //dependency with version range
+                versions.forEach( version ->
+                {
+                    ArtifactDescriptorResult descriptorResult = descriptors.get( version );
+                    DescriptorResolutionResult result = new DescriptorResolutionResult( rangeResult );
+                    result.descriptors.put( version, descriptorResult );
+                    args.resolver.cacheVersionRangeDescriptor( descriptorResult.getArtifact(),
+                            ConcurrentUtils.constantFuture( result ) );
+                } );
+            }
+            return resolutionResult;
+        } );
     }
 
     private ArtifactDescriptorResult resolveCachedArtifactDescriptor( DataPool pool,
@@ -365,6 +451,64 @@ public class BfDependencyCollector
         return descriptorResult;
     }
 
+    static class ParallelDescriptorResolver
+    {
+        final ExecutorService executorService;
+
+        /**
+         * Artifact ID -> Future of DescriptorResolutionResult
+         */
+        final Map<String, Future<DescriptorResolutionResult>> results = new ConcurrentHashMap<>( 256 );
+        final Logger logger = LoggerFactory.getLogger( getClass() );
+
+        ParallelDescriptorResolver( RepositorySystemSession session )
+        {
+            this.executorService = getExecutorService( session );
+        }
+
+        Future<DescriptorResolutionResult> resolveDescriptors( Dependency dependency,
+                                                               Callable<DescriptorResolutionResult> callable )
+        {
+            return results.computeIfAbsent( ArtifactIdUtils.toId( dependency.getArtifact() ),
+                    key -> this.executorService.submit( callable ) );
+        }
+
+        void cacheVersionRangeDescriptor( Artifact artifact, Future<DescriptorResolutionResult> constantFuture )
+        {
+            results.computeIfAbsent( ArtifactIdUtils.toId( artifact ), key -> constantFuture );
+        }
+
+        Future<DescriptorResolutionResult> find( Dependency dependency )
+        {
+            return results.get( ArtifactIdUtils.toId( dependency.getArtifact() ) );
+        }
+
+        void shutdown()
+        {
+            executorService.shutdown();
+        }
+
+        private ExecutorService getExecutorService( RepositorySystemSession session )
+        {
+            int nThreads = ConfigUtils.getInteger( session, 5, "maven.descriptor.threads", "maven.artifact.threads" );
+            logger.debug( "Created thread pool with {} threads to resolve descriptors.", nThreads );
+            return Executors.newFixedThreadPool( nThreads );
+        }
+    }
+
+    static class DescriptorResolutionResult
+    {
+        VersionRangeResult rangeResult;
+
+        Map<Version, ArtifactDescriptorResult> descriptors;
+
+        DescriptorResolutionResult( VersionRangeResult rangeResult )
+        {
+            this.rangeResult = rangeResult;
+            this.descriptors = new LinkedHashMap<>( rangeResult.getVersions().size() );
+        }
+    }
+
     static class Args
     {
 
@@ -386,9 +530,12 @@ public class BfDependencyCollector
 
         final DependencyResolutionSkipper skipper;
 
+        final ParallelDescriptorResolver resolver;
+
         Args( RepositorySystemSession session, DataPool pool,
-                     DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
-                     CollectRequest request, DependencyResolutionSkipper skipper )
+              DefaultDependencyCollectionContext collectionContext, DefaultVersionFilterContext versionContext,
+              CollectRequest request, DependencyResolutionSkipper skipper,
+              ParallelDescriptorResolver resolver )
         {
             this.session = session;
             this.request = request;
@@ -398,6 +545,7 @@ public class BfDependencyCollector
             this.collectionContext = collectionContext;
             this.versionContext = versionContext;
             this.skipper = skipper;
+            this.resolver = resolver;
         }
 
     }

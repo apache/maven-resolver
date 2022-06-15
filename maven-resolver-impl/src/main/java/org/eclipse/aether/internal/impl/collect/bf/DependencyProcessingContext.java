@@ -27,6 +27,7 @@ import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
@@ -48,6 +49,7 @@ final class DependencyProcessingContext
      */
     final List<DependencyNode> parents;
     Dependency dependency;
+    PremanagedDependency premanagedDependency;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     DependencyProcessingContext( DependencySelector depSelector,
@@ -57,7 +59,8 @@ final class DependencyProcessingContext
                                  List<RemoteRepository> repositories,
                                  List<Dependency> managedDependencies,
                                  List<DependencyNode> parents,
-                                 Dependency dependency )
+                                 Dependency dependency,
+                                 PremanagedDependency premanagedDependency )
     {
         this.depSelector = depSelector;
         this.depManager = depManager;
@@ -65,6 +68,7 @@ final class DependencyProcessingContext
         this.verFilter = verFilter;
         this.repositories = repositories;
         this.dependency = dependency;
+        this.premanagedDependency = premanagedDependency;
         this.managedDependencies = managedDependencies;
         this.parents = parents;
     }
@@ -73,6 +77,13 @@ final class DependencyProcessingContext
     {
         this.dependency = dependency;
         return this;
+    }
+
+    DependencyProcessingContext copy()
+    {
+        return new DependencyProcessingContext( depSelector, depManager, depTraverser,
+                verFilter, repositories, managedDependencies, parents, dependency,
+                premanagedDependency );
     }
 
     DependencyNode getParent()
