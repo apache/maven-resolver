@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.collect.bf;
 
 import java.util.List;
 
+import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
@@ -48,14 +49,16 @@ final class DependencyProcessingContext
      * All parents of the dependency in the top > down order.
      */
     final List<DependencyNode> parents;
+    final PremanagedDependency premanagedDependency;
+    final RequestTrace trace;
     Dependency dependency;
-    PremanagedDependency premanagedDependency;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
     DependencyProcessingContext( DependencySelector depSelector,
                                  DependencyManager depManager,
                                  DependencyTraverser depTraverser,
                                  VersionFilter verFilter,
+                                 RequestTrace trace,
                                  List<RemoteRepository> repositories,
                                  List<Dependency> managedDependencies,
                                  List<DependencyNode> parents,
@@ -66,6 +69,7 @@ final class DependencyProcessingContext
         this.depManager = depManager;
         this.depTraverser = depTraverser;
         this.verFilter = verFilter;
+        this.trace = trace;
         this.repositories = repositories;
         this.dependency = dependency;
         this.premanagedDependency = premanagedDependency;
@@ -82,7 +86,7 @@ final class DependencyProcessingContext
     DependencyProcessingContext copy()
     {
         return new DependencyProcessingContext( depSelector, depManager, depTraverser,
-                verFilter, repositories, managedDependencies, parents, dependency,
+                verFilter, trace, repositories, managedDependencies, parents, dependency,
                 premanagedDependency );
     }
 
