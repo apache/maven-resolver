@@ -43,7 +43,7 @@ Following named lock implementations use underlying OS advisory file locking:
   JVM `java.nio.channels.FileLock`.
 
 The `file-lock` implementation uses OS advisory file locking, hence, concurrently running Maven processes
-set up to use `file-loxk` implementation can safely share one local repository. This is almost certain on
+set up to use `file-lock` implementation can safely share one local repository. This is almost certain on
 local file systems across all operating systems. In case of NFS mounts, file advisory locking MAY work if NFSv4+
 used with complete setup (with all the necessary services like `RPC` and `portmapper` needed to implement NFS advisory
 file locking, check your NFS and/or OS manuals for details). In short: if your (local or remote) FS correctly support
