@@ -34,7 +34,7 @@ scenarios (is not meant for production use).
 
 ### Enhanced LRM
 
-Enhanced LRM on the other hand is enhanced with several extra 
+Enhanced LRM is enhanced with several extra 
 features, one most notable is scoping cached content by its origin and context: 
 if you downloaded an artifact A1 from repository R1 
 and later initiate build that requires same artifact A1, but repository R1 
