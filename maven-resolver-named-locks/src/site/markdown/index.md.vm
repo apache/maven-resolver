@@ -33,6 +33,10 @@ Following implementations are "local" (local to JVM) named lock implementations:
   JVM `java.util.concurrent.Semaphore`.
 - `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
 
+Note about "local" locks: they are in-JVM, in a way, they properly coordinate in case of multithreaded access from
+same JVM, but does not cover accesses across multiple processes and multiple hosts access.
+In other words, local named locks are only suited within one JVM with a multithreaded build.
+
 Following named lock implementations use underlying OS advisory file locking:
 
 - `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
@@ -52,8 +56,7 @@ Finally, "distributed" named lock implementations are the following (separate mo
 - `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`.
 - `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
 
-Local named locks are only suited within one JVM with a multithreaded build.
-Sharing a local repository between multiple Maven processes (i.e., on a busy CI server) requires a distributed named lock!
+Sharing a local repository between multiple hosts (i.e., on a busy CI server) requires a distributed named lock!
 
 The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
 
