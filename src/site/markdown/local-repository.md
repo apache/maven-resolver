@@ -25,28 +25,14 @@ remote, but also to store the artifacts locally installed (locally built and
 installed, to be more precise). Both of these artifacts were stored in bulk 
 in the local repository.
 
+## Implementations
+
 Local repository implementations implement the `LocalRepositoryManager` (LRM) 
 interface, and Resolver out of the box provides two implementations for it: 
-"simple" and "enhanced". 
+"enhanced" used at runtime and "simple" meant to be used in tests and alike
+scenarios (is not meant for production use). 
 
-## Simple LRM
-
-Simple is a fully functional LRM implementation, but is used 
-mainly in tests, it is not recommended in production environments. 
-
-To manually instantiate a simple LRM, one needs to invoke following code:
-
-```java
-LocalRepositoryManager simple = new SimpleLocalRepositoryManagerFactory()
-        .newInstance( session, new LocalRepository( baseDir ) );
-```
-
-Note: This code snippet above instantiates a component, that is not 
-recommended way to use it, as it should be rather injected whenever possible. 
-This example above is merely a showcase how to obtain LRM implementation 
-in unit tests.
-
-## Enhanced LRM
+### Enhanced LRM
 
 Enhanced LRM on the other hand is enhanced with several extra 
 features, one most notable is scoping cached content by its origin and context: 
@@ -58,7 +44,7 @@ Those two, originating from two different repositories may not be the same thing
 This is meant to protect users from "bad practice" (artifact coordinates are 
 unique in ideal world).
 
-### Split Local Repository
+#### Split Local Repository
 
 Latest addition to the enhanced LRM is *split* feature. By default, split 
 feature is **not enabled**, enhanced LRM behaves as it behaved in all 
@@ -75,7 +61,7 @@ The split feature is implemented by the `LocalPathPrefixComposer` interface,
 that adds different "prefixes" for the locally stored artifacts, based on 
 their context.
 
-#### Note About Release And Snapshot Differentiation
+##### Note About Release And Snapshot Differentiation
 
 The prefix composer is able to differentiate between release and snapshot 
 versioned artifacts, and this is clear-cut: Maven Artifacts are either 
@@ -99,7 +85,7 @@ The GAV level metadata gets differentiated based on version it carries, so
 they may end up in releases or snapshots, depending on their value of 
 `metadata/version` field.
 
-#### Use Cases
+##### Use Cases
 
 Most direct use case is simpler local repository eviction. One can delete all 
 locally built artifacts without deleting the cached ones, hence, no 
@@ -139,7 +125,7 @@ $ mvn ... -Daether.enhancedLocalRepository.split \
 For complete reference of enhanced LRM configuration possibilities, refer to 
 [configuration page](configuration.html).
 
-#### Split Repository Considerations
+##### Split Repository Considerations
 
 **Word of warning**: on every change of "split" parameters, user must be aware
 of the consequences. For example, if one change all aspects of split
@@ -149,7 +135,7 @@ is unchanged! Simply put, as all prefixes will be "new", the composed paths will
 point to potentially non-existing locations, hence, resolver will consider
 it as a "new" local repository in every aspect.
 
-#### Implementing Custom Split Strategy
+##### Implementing Custom Split Strategy
 
 To implement custom split strategy, one needs to create a component of
 type `LocalPathPrefixComposerFactory` and override the default component
@@ -160,3 +146,36 @@ class that provides all the defaults.
 The factory should create a stateless instance of a composer
 configured from passed in session, that will be used with the enhanced LRM
 throughout the session.
+
+### Simple LRM
+
+Simple is a fully functional LRM implementation, but is used
+mainly in tests, it is not recommended in production environments.
+
+To manually instantiate a simple LRM, one needs to invoke following code:
+
+```java
+LocalRepositoryManager simple = new SimpleLocalRepositoryManagerFactory()
+        .newInstance( session, new LocalRepository( baseDir ) );
+```
+
+Note: This code snippet above instantiates a component, that is not
+recommended way to use it, as it should be rather injected whenever possible.
+This example above is merely a showcase how to obtain LRM implementation
+in unit tests.
+
+## Shared access to Local Repository
+
+In case of shared (multi-threaded, multi-process or even multi host) access
+to local repository coordination is required, as local repository is hosted
+on file system, and each thread may read and write concurrently into it,
+causing other threads get incomplete or partially written data.
+
+Hence, since Resolver 1.7.x line, there is a pluggable API called "Named Locks" 
+available, providing out of the box lock implementations for cases:
+
+* multi-threaded, in JVM locking (the default)
+* multi-process locking using file system advisory locking
+* multi-host locking using Hazelcast or Redisson (needs Redisson or Hazelcast cluster)
+
+For details see [Named Locks module](maven-resolver-named-locks/).
