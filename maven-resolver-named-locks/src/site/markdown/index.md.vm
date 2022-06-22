@@ -23,7 +23,7 @@ Named locks are essentially locks that are assigned to some given (opaque) ID. I
 resources that each can have unique ID assigned (i.e., file with an absolute path, some entities with unique ID),
 then you can use named locks to make sure they are being protected from concurrent read and write actions.
 
-Named locks provide support classes for implementations, and provide out of the box seven named lock implementations and three name mappers.
+Named locks provide support classes for implementations, and provide out of the box several lock and name mapper implementations.
 
 Following implementations are "local" (local to JVM) named lock implementations:
 
@@ -35,17 +35,17 @@ Following implementations are "local" (local to JVM) named lock implementations:
 
 Note about "local" locks: they are in-JVM, in a way, they properly coordinate in case of multithreaded access from
 same JVM, but does not cover accesses across multiple processes and multiple hosts access.
-In other words, local named locks are only suited within one JVM with a multithreaded build.
+In other words, local named locks are only suited within one JVM with a multithreaded access.
 
 Following named lock implementations use underlying OS advisory file locking:
 
 - `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
   JVM `java.nio.channels.FileLock`.
 
-Note about `file-lock` implementation: it uses OS advisory file locking, hence, concurrently running Maven processes
-all set up to use `file-loxk` implementation can safely share one local repository. This is almost certain on
+The `file-lock` implementation uses OS advisory file locking, hence, concurrently running Maven processes
+set up to use `file-loxk` implementation can safely share one local repository. This is almost certain on
 local file systems across all operating systems. In case of NFS mounts, file advisory locking MAY work if NFSv4+
-used with complete setup (with all the necessary services like `RPC` and `portmapper` needed to implement advisory
+used with complete setup (with all the necessary services like `RPC` and `portmapper` needed to implement NFS advisory
 file locking, check your NFS and/or OS manuals for details). In short: if your (local or remote) FS correctly support
 and implements advisory locking, it should work. Local FS usually does, while with NFS your mileage may vary.
 
@@ -66,3 +66,5 @@ Out of the box, name mapper implementations are the following:
 - `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
 - `discriminating` implemented in `org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper`.
 - `file-gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper`.
+
+Note: the `file-gav` name mapper MUST be used with `file-lock` named locking, no other mapper will work with it.
