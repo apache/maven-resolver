@@ -169,7 +169,7 @@ in unit tests.
 In case of shared (multi-threaded, multi-process or even multi host) access
 to local repository, coordination is a must, as local repository is hosted
 on file system, and each thread may read and write concurrently into it,
-causing other threads to get incomplete or partially written data.
+causing other threads or processes to get incomplete or partially written data.
 
 Hence, since Resolver 1.7.x version, there is a pluggable API called "Named Locks" 
 available, providing out of the box lock implementations for cases like:
