@@ -25,17 +25,27 @@ then you can use named locks to make sure they are being protected from concurre
 
 Named locks provide support classes for implementations, and provide out of the box seven named lock implementations and three name mappers.
 
-Out of the box, "local" (local to JVM) named lock implementations are the following:
+Following implementations are "local" (local to JVM) named lock implementations:
 
 - `rwlock-local` implemented in `org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory` that uses
   JVM `java.util.concurrent.locks.ReentrantReadWriteLock`.
 - `semaphore-local` implemented in `org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory` that uses
   JVM `java.util.concurrent.Semaphore`.
-- `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
-  JVM `java.nio.channels.FileLock`.
 - `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
 
-Out of the box, "distributed" named lock implementations are the following (separate modules which require additional dependencies):
+Following named lock implementations use underlying OS advisory file locking:
+
+- `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
+  JVM `java.nio.channels.FileLock`.
+
+Note about `file-lock` implementation: it uses OS advisory file locking, hence, concurrently running Maven processes
+all set up to use `file-loxk` implementation can safely share one local repository. This is almost certain on
+local file systems across all operating systems. In case of NFS mounts, file advisory locking MAY work if NFSv4+
+used with complete setup (with all the necessary services like `RPC` and `portmapper` needed to implement advisory
+file locking, check your NFS and/or OS manuals for details). In short: if your (local or remote) FS correctly support
+and implements advisory locking, it should work. Local FS usually does, while with NFS your mileage may vary.
+
+Finally, "distributed" named lock implementations are the following (separate modules which require additional dependencies and remote services):
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`.
 - `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`.
@@ -44,7 +54,6 @@ Out of the box, "distributed" named lock implementations are the following (sepa
 
 Local named locks are only suited within one JVM with a multithreaded build.
 Sharing a local repository between multiple Maven processes (i.e., on a busy CI server) requires a distributed named lock!
-
 
 The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
 

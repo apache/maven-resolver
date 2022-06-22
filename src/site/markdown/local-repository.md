@@ -167,15 +167,15 @@ in unit tests.
 ## Shared access to Local Repository
 
 In case of shared (multi-threaded, multi-process or even multi host) access
-to local repository coordination is required, as local repository is hosted
+to local repository, coordination is a must, as local repository is hosted
 on file system, and each thread may read and write concurrently into it,
-causing other threads get incomplete or partially written data.
+causing other threads to get incomplete or partially written data.
 
-Hence, since Resolver 1.7.x line, there is a pluggable API called "Named Locks" 
-available, providing out of the box lock implementations for cases:
+Hence, since Resolver 1.7.x version, there is a pluggable API called "Named Locks" 
+available, providing out of the box lock implementations for cases like:
 
 * multi-threaded, in JVM locking (the default)
 * multi-process locking using file system advisory locking
-* multi-host locking using Hazelcast or Redisson (needs Redisson or Hazelcast cluster)
+* multi-host locking using Hazelcast or Redisson (needs Hazelcast or Redisson cluster)
 
 For details see [Named Locks module](maven-resolver-named-locks/).
