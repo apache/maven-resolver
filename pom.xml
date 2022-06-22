@@ -286,6 +286,39 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>com.github.siom79.japicmp</groupId>
+          <artifactId>japicmp-maven-plugin</artifactId>
+          <version>0.15.7</version>
+          <configuration>
+            <oldVersion>
+              <!-- We compare same module against 1.6.3 set as "baseline" -->
+              <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>1.6.3</version>
+                <type>jar</type>
+              </dependency>
+            </oldVersion>
+            <newVersion>
+              <file>
+                <path>${project.build.directory}/${project.artifactId}-${project.version}.${project.packaging}</path>
+              </file>
+            </newVersion>
+            <parameter>
+              <onlyBinaryIncompatible>true</onlyBinaryIncompatible>
+              <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+            </parameter>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>verify</phase>
+              <goals>
+                <goal>cmp</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
