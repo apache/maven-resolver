@@ -64,8 +64,8 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.priority.<class>` | float | The priority to use for a certain extension class. `class` can either be the fully qualified name or the simple name stands for fully qualified class name. If the class name ends with `Factory` that suffix could optionally be left out. | - |  no
 `aether.priority.implicit` | boolean | Flag indicating whether the priorities of pluggable extensions are implicitly given by their iteration order such that the first extension has the highest priority. If set, an extension's built-in priority as well as any corresponding `aether.priority.<class>` configuration properties are ignored when searching for a suitable implementation among the available extensions. This priority mode is meant for cases where the application will present/inject extensions in the desired search order. | `false` | no
 `aether.snapshotFilter` | boolean | Flag whether the `ContextualSnapshotVersionFilter` should be forced to ban snapshots. By default, snapshots are only filtered if the root artifact is not a snapshot. | `false` | no
-`aether.syncContext.named.factory` | String | Name of the named lock factory implementing the `org.eclipse.aether.named.NamedLockFactory` interface. | `"rwlock-local"` | no
-`aether.syncContext.named.nameMapper` | String | Name of name mapper implementing the `org.eclipse.aether.internal.impl.synccontext.named.NameMapper` interface. | `"gav"` | no
+`aether.syncContext.named.factory` | String | Name of the named lock factory implementing the `NamedLockFactory` interface. | `"rwlock-local"` | no
+`aether.syncContext.named.nameMapper` | String | Name of name mapper implementing the `NameMapper` interface. | `"gav"` | no
 `aether.syncContext.named.time` | long | Amount of time a synchronization context shall wait to obtain a lock. | 30 | no
 `aether.syncContext.named.time.unit` | long | Unit of the lock wait time. | `"SECONDS"` | no
 `aether.syncContext.named.static.name` | String | Lock name for the static name mapper. | `"static"` | no

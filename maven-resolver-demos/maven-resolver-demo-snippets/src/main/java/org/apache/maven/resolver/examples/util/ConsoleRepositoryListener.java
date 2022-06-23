@@ -21,8 +21,8 @@ package org.apache.maven.resolver.examples.util;
 
 import java.io.PrintStream;
 
-import org.eclipse.aether.AbstractRepositoryListener;
-import org.eclipse.aether.RepositoryEvent;
+import org.apache.maven.resolver.AbstractRepositoryListener;
+import org.apache.maven.resolver.RepositoryEvent;
 
 import static java.util.Objects.requireNonNull;
 

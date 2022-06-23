@@ -20,13 +20,13 @@ package org.apache.maven.resolver.examples.manual;
  */
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
-import org.eclipse.aether.impl.DefaultServiceLocator;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.transport.file.FileTransporterFactory;
-import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.connector.basic.BasicRepositoryConnectorFactory;
+import org.apache.maven.resolver.impl.DefaultServiceLocator;
+import org.apache.maven.resolver.spi.connector.RepositoryConnectorFactory;
+import org.apache.maven.resolver.spi.connector.transport.TransporterFactory;
+import org.apache.maven.resolver.transport.file.FileTransporterFactory;
+import org.apache.maven.resolver.transport.http.HttpTransporterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

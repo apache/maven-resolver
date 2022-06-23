@@ -27,20 +27,20 @@ Named locks provide support classes for implementations, and provide out of the 
 
 Out of the box, "local" (local to JVM) named lock implementations are the following:
 
-- `rwlock-local` implemented in `org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory` that uses
+- `rwlock-local` implemented in `LocalReadWriteLockNamedLockFactory` that uses
   JVM `java.util.concurrent.locks.ReentrantReadWriteLock`.
-- `semaphore-local` implemented in `org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory` that uses
+- `semaphore-local` implemented in `LocalSemaphoreNamedLockFactory` that uses
   JVM `java.util.concurrent.Semaphore`.
-- `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
+- `file-lock` implemented in `FileLockNamedLockFactory` that uses
   JVM `java.nio.channels.FileLock`.
-- `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
+- `noop` implemented in `NoopNamedLockFactory` that uses no locking.
 
 Out of the box, "distributed" named lock implementations are the following (separate modules which require additional dependencies):
 
-- `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`.
-- `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`.
-- `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`.
-- `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
+- `rwlock-redisson` implemented in `RedissonReadWriteLockNamedLockFactory`.
+- `semaphore-redisson` implemented in `RedissonSemaphoreNamedLockFactory`.
+- `semaphore-hazelcast-client` implemented in `HazelcastClientCPSemaphoreNamedLockFactory`.
+- `semaphore-hazelcast` implemented in `HazelcastCPSemaphoreNamedLockFactory`.
 
 Local named locks are only suited within one JVM with a multithreaded build.
 Sharing a local repository between multiple Maven processes (i.e., on a busy CI server) requires a distributed named lock!
@@ -50,7 +50,7 @@ The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
 
 Out of the box, name mapper implementations are the following:
 
-- `static` implemented in `org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper`.
-- `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
-- `discriminating` implemented in `org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper`.
-- `file-gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper`.
+- `static` implemented in `StaticNameMapper`.
+- `gav` implemented in `GAVNameMapper`.
+- `discriminating` implemented in `DiscriminatingNameMapper`.
+- `file-gav` implemented in `FileGAVNameMapper`.

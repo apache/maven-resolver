@@ -19,7 +19,7 @@ package org.apache.maven.resolver.examples.guice;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystem;
 
 import com.google.inject.Guice;
 

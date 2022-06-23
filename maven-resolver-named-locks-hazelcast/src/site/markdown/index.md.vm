@@ -24,9 +24,9 @@ rely on Hazelcast ISemaphore instances.
 
 Out of the box "hazelcast" (distributed) named lock implementations are the following:
 
-- `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
+- `semaphore-hazelcast` implemented in `HazelcastCPSemaphoreNamedLockFactory`.
   Full Hazelcast member is used here.
-- `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`
+- `semaphore-hazelcast-client` implemented in `HazelcastClientCPSemaphoreNamedLockFactory`
   This implementation uses Hazelcast Client, so existing Hazelcast cluster to connect to is a requirement.
 
 The semaphore name prefix is `maven:resolver:` and pre-configuring semaphores in Hazelcast is a must. The Hazelcast

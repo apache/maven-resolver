@@ -24,11 +24,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.repository.RemoteRepository;
+import org.apache.maven.resolver.DefaultRepositorySystemSession;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystemSession;
+import org.apache.maven.resolver.repository.LocalRepository;
+import org.apache.maven.resolver.repository.RemoteRepository;
 
 /**
  * A helper to boot the repository system and a repository system session.

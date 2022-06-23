@@ -24,25 +24,25 @@ import java.io.PrintStream;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.apache.maven.resolver.examples.util.ConsoleDependencyGraphDumper;
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.deployment.DeployRequest;
-import org.eclipse.aether.deployment.DeploymentException;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.installation.InstallRequest;
-import org.eclipse.aether.installation.InstallationException;
-import org.eclipse.aether.repository.Authentication;
-import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.DependencyRequest;
-import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
-import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.apache.maven.resolver.DefaultRepositorySystemSession;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystemSession;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.collection.CollectRequest;
+import org.apache.maven.resolver.deployment.DeployRequest;
+import org.apache.maven.resolver.deployment.DeploymentException;
+import org.apache.maven.resolver.graph.Dependency;
+import org.apache.maven.resolver.graph.DependencyNode;
+import org.apache.maven.resolver.installation.InstallRequest;
+import org.apache.maven.resolver.installation.InstallationException;
+import org.apache.maven.resolver.repository.Authentication;
+import org.apache.maven.resolver.repository.LocalRepository;
+import org.apache.maven.resolver.repository.RemoteRepository;
+import org.apache.maven.resolver.resolution.DependencyRequest;
+import org.apache.maven.resolver.resolution.DependencyResolutionException;
+import org.apache.maven.resolver.util.graph.visitor.PreorderNodeListGenerator;
+import org.apache.maven.resolver.util.repository.AuthenticationBuilder;
 
 /**
  */

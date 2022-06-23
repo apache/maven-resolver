@@ -26,10 +26,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.eclipse.aether.transfer.AbstractTransferListener;
-import org.eclipse.aether.transfer.MetadataNotFoundException;
-import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.transfer.TransferResource;
+import org.apache.maven.resolver.transfer.AbstractTransferListener;
+import org.apache.maven.resolver.transfer.MetadataNotFoundException;
+import org.apache.maven.resolver.transfer.TransferEvent;
+import org.apache.maven.resolver.transfer.TransferResource;
 
 import static java.util.Objects.requireNonNull;
 

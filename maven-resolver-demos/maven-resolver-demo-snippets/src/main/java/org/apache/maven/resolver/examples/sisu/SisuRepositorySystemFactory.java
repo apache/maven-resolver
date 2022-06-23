@@ -27,7 +27,7 @@ import com.google.inject.Guice;
 import com.google.inject.Module;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
-import org.eclipse.aether.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystem;
 import org.eclipse.sisu.launch.Main;
 import org.eclipse.sisu.space.BeanScanning;
 

@@ -27,13 +27,13 @@ import java.nio.file.Path;
 import java.util.ListIterator;
 import java.util.Objects;
 
-import org.eclipse.aether.AbstractRepositoryListener;
-import org.eclipse.aether.RepositoryEvent;
-import org.eclipse.aether.RequestTrace;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.collection.CollectStepData;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
+import org.apache.maven.resolver.AbstractRepositoryListener;
+import org.apache.maven.resolver.RepositoryEvent;
+import org.apache.maven.resolver.RequestTrace;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.collection.CollectStepData;
+import org.apache.maven.resolver.graph.Dependency;
+import org.apache.maven.resolver.graph.DependencyNode;
 
 import static java.util.Objects.requireNonNull;
 
