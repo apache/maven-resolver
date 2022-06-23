@@ -66,7 +66,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.util.ConfigUtils;
@@ -380,14 +379,9 @@ public class BfDependencyCollector
         return false;
     }
 
+
     private void resolveArtifactDescriptorAsync( Args args, DependencyProcessingContext context,
                                                  Results results )
-    {
-        args.resolver.resolveDescriptors( context.dependency, () -> resolveDescriptor( args, context, results ) );
-    }
-
-    private DescriptorResolutionResult resolveDescriptor( Args args, DependencyProcessingContext context,
-                                                          Results results )
     {
         Dependency dependency = context.dependency;
 
@@ -410,7 +404,7 @@ public class BfDependencyCollector
                     newContext.withDependency( newDependency ), results );
         };
 
-        try
+        args.resolver.resolveDescriptors( dependency, () ->
         {
             VersionRangeRequest rangeRequest =
                     createVersionRangeRequest( args.request.getRequestContext(), context.trace, context.repositories,
@@ -449,12 +443,7 @@ public class BfDependencyCollector
             }
 
             return resolutionResult;
-        }
-        catch ( VersionRangeResolutionException e )
-        {
-            results.addException( context.dependency, e, context.parents );
-            return null;
-        }
+        } );
     }
 
     private ArtifactDescriptorResult resolveCachedArtifactDescriptor( DataPool pool,
