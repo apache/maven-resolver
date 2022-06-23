@@ -38,7 +38,7 @@ a cross process, and in MP multi-host case a cross process and cross host coordi
 
 The defaults in Maven Resolver cover ST and MT cases out of the box (by default).
 
-This module implementation for the interface `org.eclipse.aether.spi.synccontext.SyncContextFactory`
+This module implementation for the interface `SyncContextFactory`
 uses resolver named locks.
 
 ${esc.hash}${esc.hash} Configuration Options for "named" `SyncContextFactory`

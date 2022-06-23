@@ -22,13 +22,13 @@ package org.apache.maven.resolver.examples;
 import java.io.File;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.deployment.DeployRequest;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.artifact.SubArtifact;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystemSession;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.deployment.DeployRequest;
+import org.apache.maven.resolver.repository.RemoteRepository;
+import org.apache.maven.resolver.util.artifact.SubArtifact;
 
 /**
  * Deploys a JAR and its POM to a remote repository.

@@ -20,13 +20,13 @@ package org.apache.maven.resolver.examples;
  */
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
-import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystemSession;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.graph.Dependency;
+import org.apache.maven.resolver.resolution.ArtifactDescriptorRequest;
+import org.apache.maven.resolver.resolution.ArtifactDescriptorResult;
 
 /**
  * Determines the direct dependencies of an artifact as declared in its artifact descriptor (POM).

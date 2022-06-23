@@ -22,13 +22,13 @@ package org.apache.maven.resolver.examples.resolver;
 import java.io.File;
 import java.util.List;
 
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.deployment.DeploymentException;
-import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.installation.InstallationException;
-import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.util.artifact.SubArtifact;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.deployment.DeploymentException;
+import org.apache.maven.resolver.graph.DependencyNode;
+import org.apache.maven.resolver.installation.InstallationException;
+import org.apache.maven.resolver.resolution.DependencyResolutionException;
+import org.apache.maven.resolver.util.artifact.SubArtifact;
 
 /**
  */

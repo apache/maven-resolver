@@ -1,0 +1,107 @@
+package org.apache.maven.resolver.internal.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+
+import org.apache.maven.resolver.DefaultRepositorySystemSession;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
+import org.apache.maven.resolver.internal.test.util.TestFileProcessor;
+import org.apache.maven.resolver.internal.test.util.TestUtils;
+import org.apache.maven.resolver.repository.RemoteRepository;
+import org.apache.maven.resolver.repository.RepositoryPolicy;
+import org.apache.maven.resolver.spi.connector.ArtifactDownload;
+import org.apache.maven.resolver.spi.connector.layout.RepositoryLayout;
+import org.apache.maven.resolver.transfer.NoRepositoryLayoutException;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+public class FileProvidedChecksumsSourceTest
+{
+  private DefaultRepositorySystemSession session;
+
+  private RepositoryLayout repositoryLayout;
+
+  private FileProvidedChecksumsSource subject;
+
+  @Before
+  public void setup() throws NoRepositoryLayoutException, IOException
+  {
+    RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://irrelevant.com").build();
+    session = TestUtils.newSession();
+    repositoryLayout = new Maven2RepositoryLayoutFactory().newInstance(session, repository);
+    subject = new FileProvidedChecksumsSource(new TestFileProcessor(), new DefaultLocalPathComposer() );
+
+    // populate local repository
+    Path baseDir = session.getLocalRepository().getBasedir().toPath().resolve( FileProvidedChecksumsSource.LOCAL_REPO_PREFIX);
+
+    // artifact: test:test:2.0 => "foobar"
+    {
+      Path test = baseDir.resolve("test/test/2.0/test-2.0.jar.sha1");
+      Files.createDirectories(test.getParent());
+      Files.write(test, "foobar".getBytes(StandardCharsets.UTF_8));
+    }
+  }
+
+  @Test
+  public void noProvidedArtifactChecksum()
+  {
+    ArtifactDownload transfer = new ArtifactDownload(
+        new DefaultArtifact("test:test:1.0"),
+        "irrelevant",
+        new File("irrelevant"),
+        RepositoryPolicy.CHECKSUM_POLICY_FAIL
+    );
+    Map<String, String> providedChecksums = subject.getProvidedArtifactChecksums(
+        session,
+        transfer,
+        repositoryLayout.getChecksumAlgorithmFactories()
+    );
+    assertNull(providedChecksums);
+  }
+
+  @Test
+  public void haveProvidedArtifactChecksum()
+  {
+    ArtifactDownload transfer = new ArtifactDownload(
+        new DefaultArtifact("test:test:2.0"),
+        "irrelevant",
+        new File("irrelevant"),
+        RepositoryPolicy.CHECKSUM_POLICY_FAIL
+    );
+    Map<String, String> providedChecksums = subject.getProvidedArtifactChecksums(
+        session,
+        transfer,
+        repositoryLayout.getChecksumAlgorithmFactories()
+    );
+    assertNotNull(providedChecksums);
+    assertEquals(providedChecksums.get(Sha1ChecksumAlgorithmFactory.NAME), "foobar");
+  }
+}

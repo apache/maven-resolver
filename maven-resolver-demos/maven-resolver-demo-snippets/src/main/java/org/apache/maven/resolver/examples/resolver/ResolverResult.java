@@ -22,7 +22,7 @@ package org.apache.maven.resolver.examples.resolver;
 import java.io.File;
 import java.util.List;
 
-import org.eclipse.aether.graph.DependencyNode;
+import org.apache.maven.resolver.graph.DependencyNode;
 
 /**
  */

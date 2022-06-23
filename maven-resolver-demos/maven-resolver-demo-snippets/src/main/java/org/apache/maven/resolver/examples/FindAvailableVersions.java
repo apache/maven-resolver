@@ -22,13 +22,13 @@ package org.apache.maven.resolver.examples;
 import java.util.List;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.version.Version;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystemSession;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.resolution.VersionRangeRequest;
+import org.apache.maven.resolver.resolution.VersionRangeResult;
+import org.apache.maven.resolver.version.Version;
 
 /**
  * Determines all available versions of an artifact.

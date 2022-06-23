@@ -22,17 +22,17 @@ package org.apache.maven.resolver.examples;
 import java.util.List;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyFilter;
-import org.eclipse.aether.resolution.ArtifactResult;
-import org.eclipse.aether.resolution.DependencyRequest;
-import org.eclipse.aether.util.artifact.JavaScopes;
-import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystemSession;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.collection.CollectRequest;
+import org.apache.maven.resolver.graph.Dependency;
+import org.apache.maven.resolver.graph.DependencyFilter;
+import org.apache.maven.resolver.resolution.ArtifactResult;
+import org.apache.maven.resolver.resolution.DependencyRequest;
+import org.apache.maven.resolver.util.artifact.JavaScopes;
+import org.apache.maven.resolver.util.filter.DependencyFilterUtils;
 
 /**
  * Resolves the transitive (compile) dependencies of an artifact.

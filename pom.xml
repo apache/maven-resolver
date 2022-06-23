@@ -330,27 +330,27 @@
             <groups>
               <group>
                 <title>API</title>
-                <packages>org.eclipse.aether*</packages>
+                <packages>org.apache.mavem.resolver*</packages>
               </group>
               <group>
                 <title>SPI</title>
-                <packages>org.eclipse.aether.spi*</packages>
+                <packages>org.apache.mavem.resolver.spi*</packages>
               </group>
               <group>
                 <title>Utilities</title>
-                <packages>org.eclipse.aether.util*</packages>
+                <packages>org.apache.mavem.resolver.util*</packages>
               </group>
               <group>
                 <title>Repository Connectors</title>
-                <packages>org.eclipse.aether.connector*</packages>
+                <packages>org.apache.mavem.resolver.connector*</packages>
               </group>
               <group>
                 <title>Transporters</title>
-                <packages>org.eclipse.aether.transport*</packages>
+                <packages>org.apache.mavem.resolver.transport*</packages>
               </group>
               <group>
                 <title>Implementation</title>
-                <packages>org.eclipse.aether.impl*</packages>
+                <packages>org.apache.mavem.resolver.impl*</packages>
               </group>
               <group>
                 <title>Demo Maven Plugin</title>
@@ -362,7 +362,7 @@
               </group>
               <group>
                 <title>Internals</title>
-                <packages>org.eclipse.aether.internal*</packages>
+                <packages>org.apache.mavem.resolver.internal*</packages>
               </group>
             </groups>
           </configuration>

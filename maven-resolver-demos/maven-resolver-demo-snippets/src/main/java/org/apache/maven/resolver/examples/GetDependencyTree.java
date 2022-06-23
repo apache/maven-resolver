@@ -21,13 +21,13 @@ package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.apache.maven.resolver.examples.util.ConsoleDependencyGraphDumper;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.graph.Dependency;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.RepositorySystemSession;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.collection.CollectRequest;
+import org.apache.maven.resolver.collection.CollectResult;
+import org.apache.maven.resolver.graph.Dependency;
 
 /**
  * Collects the transitive dependencies of an artifact.

@@ -20,13 +20,13 @@ package org.apache.maven.resolver.examples;
  */
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResult;
+import org.apache.maven.resolver.DefaultRepositorySystemSession;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.repository.RepositoryPolicy;
+import org.apache.maven.resolver.resolution.ArtifactRequest;
+import org.apache.maven.resolver.resolution.ArtifactResult;
 
 /**
  * Resolves a single artifact.

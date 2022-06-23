@@ -24,13 +24,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.graph.DependencyVisitor;
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
-import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.graph.Dependency;
+import org.apache.maven.resolver.graph.DependencyNode;
+import org.apache.maven.resolver.graph.DependencyVisitor;
+import org.apache.maven.resolver.util.artifact.ArtifactIdUtils;
+import org.apache.maven.resolver.util.graph.manager.DependencyManagerUtils;
+import org.apache.maven.resolver.util.graph.transformer.ConflictResolver;
 
 /**
  * A dependency visitor that dumps the graph to the console.

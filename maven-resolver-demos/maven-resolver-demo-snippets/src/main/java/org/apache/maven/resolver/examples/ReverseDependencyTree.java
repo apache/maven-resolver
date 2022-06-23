@@ -21,16 +21,16 @@ package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.apache.maven.resolver.examples.util.ReverseTreeRepositoryListener;
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
-import org.eclipse.aether.resolution.ArtifactDescriptorResult;
-import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
-import org.eclipse.aether.util.graph.transformer.ConflictResolver;
-import org.eclipse.aether.util.listener.ChainedRepositoryListener;
+import org.apache.maven.resolver.DefaultRepositorySystemSession;
+import org.apache.maven.resolver.RepositorySystem;
+import org.apache.maven.resolver.artifact.Artifact;
+import org.apache.maven.resolver.artifact.DefaultArtifact;
+import org.apache.maven.resolver.collection.CollectRequest;
+import org.apache.maven.resolver.resolution.ArtifactDescriptorRequest;
+import org.apache.maven.resolver.resolution.ArtifactDescriptorResult;
+import org.apache.maven.resolver.util.graph.manager.DependencyManagerUtils;
+import org.apache.maven.resolver.util.graph.transformer.ConflictResolver;
+import org.apache.maven.resolver.util.listener.ChainedRepositoryListener;
 
 /**
  * Example of building reverse dependency tree using custom {@link ReverseTreeRepositoryListener}.
