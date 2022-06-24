@@ -58,8 +58,6 @@ import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
-import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
@@ -227,7 +225,6 @@ public final class DefaultServiceLocator
         addService( LocalRepositoryManagerFactory.class, EnhancedLocalRepositoryManagerFactory.class );
         addService( LoggerFactory.class, Slf4jLoggerFactory.class );
         addService( TrackingFileManager.class, DefaultTrackingFileManager.class );
-        addService( NamedLockFactorySelector.class, SimpleNamedLockFactorySelector.class );
         addService( ChecksumAlgorithmFactorySelector.class, DefaultChecksumAlgorithmFactorySelector.class );
         addService( LocalPathComposer.class, DefaultLocalPathComposer.class );
     }
