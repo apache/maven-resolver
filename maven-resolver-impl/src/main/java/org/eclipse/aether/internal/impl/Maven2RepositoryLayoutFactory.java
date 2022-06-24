@@ -142,6 +142,7 @@ public final class Maven2RepositoryLayoutFactory
         }
 
         return new Maven2RepositoryLayout(
+                new ArrayList<>( checksumAlgorithmFactorySelector.getChecksumAlgorithmFactories() ),
                 checksumsAlgorithms,
                 omitChecksumsForExtensions
         );
@@ -150,15 +151,18 @@ public final class Maven2RepositoryLayoutFactory
     private static class Maven2RepositoryLayout
             implements RepositoryLayout
     {
+        private final List<ChecksumAlgorithmFactory> allChecksumAlgorithms;
 
-        private final List<ChecksumAlgorithmFactory> checksumAlgorithms;
+        private final List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms;
 
         private final Set<String> extensionsWithoutChecksums;
 
-        private Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> checksumAlgorithms,
+        private Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> allChecksumAlgorithms,
+                                        List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms,
                                         Set<String> extensionsWithoutChecksums )
         {
-            this.checksumAlgorithms = Collections.unmodifiableList( checksumAlgorithms );
+            this.allChecksumAlgorithms = Collections.unmodifiableList( allChecksumAlgorithms );
+            this.configuredChecksumAlgorithms = Collections.unmodifiableList( configuredChecksumAlgorithms );
             this.extensionsWithoutChecksums = requireNonNull( extensionsWithoutChecksums );
         }
 
@@ -177,7 +181,7 @@ public final class Maven2RepositoryLayoutFactory
         @Override
         public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
         {
-            return checksumAlgorithms;
+            return configuredChecksumAlgorithms;
         }
 
         @Override
@@ -263,8 +267,8 @@ public final class Maven2RepositoryLayoutFactory
 
         private List<ChecksumLocation> getChecksumLocations( URI location )
         {
-            List<ChecksumLocation> checksumLocations = new ArrayList<>( checksumAlgorithms.size() );
-            for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithms )
+            List<ChecksumLocation> checksumLocations = new ArrayList<>( configuredChecksumAlgorithms.size() );
+            for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : configuredChecksumAlgorithms )
             {
                 checksumLocations.add( ChecksumLocation.forLocation( location, checksumAlgorithmFactory ) );
             }
@@ -273,7 +277,7 @@ public final class Maven2RepositoryLayoutFactory
 
         private boolean isChecksum( String extension )
         {
-            return checksumAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
+            return allChecksumAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
         }
     }
 }
