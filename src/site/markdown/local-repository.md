@@ -164,7 +164,7 @@ recommended way to use it, as it should be rather injected whenever possible.
 This example above is merely a showcase how to obtain LRM implementation
 in unit tests.
 
-## Shared access to Local Repository
+## Shared Access to Local Repository
 
 In case of shared (multi-threaded, multi-process or even multi host) access
 to local repository, coordination is a must, as local repository is hosted
@@ -179,3 +179,4 @@ available, providing out of the box lock implementations for cases like:
 * multi-host locking using Hazelcast or Redisson (needs Hazelcast or Redisson cluster)
 
 For details see [Named Locks module](maven-resolver-named-locks/).
+

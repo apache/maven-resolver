@@ -34,15 +34,15 @@ Following implementations are "local" (local to JVM) named lock implementations:
 - `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
 
 Note about "local" locks: they are in-JVM, in a way, they properly coordinate in case of multithreaded access from
-same JVM, but does not cover accesses across multiple processes and multiple hosts access.
+same JVM, but do not cover accesses across multiple processes and/or multiple hosts access.
 In other words, local named locks are only suited within one JVM with a multithreaded access.
 
-Following named lock implementations use underlying OS advisory file locking:
+Following named lock implementations use underlying file system advisory file locking:
 
 - `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
   JVM `java.nio.channels.FileLock`.
 
-The `file-lock` implementation uses OS advisory file locking, hence, concurrently running Maven processes
+The `file-lock` implementation uses file system advisory file locking, hence, concurrently running Maven processes
 set up to use `file-lock` implementation can safely share one local repository. This is almost certain on
 local file systems across all operating systems. In case of NFS mounts, file advisory locking MAY work if NFSv4+
 used with complete setup (with all the necessary services like `RPC` and `portmapper` needed to implement NFS advisory
