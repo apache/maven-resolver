@@ -28,7 +28,10 @@ import java.util.Map;
  * alternative way of configuration. This implementation uses Java System properties to select factory and name mapper.
  *
  * @since 1.7.3
+ * @deprecated left in place but is completely unused.
+ * @see org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory
  */
+@Deprecated
 public abstract class NamedLockFactorySelectorSupport
     implements NamedLockFactorySelector
 {

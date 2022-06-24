@@ -36,7 +36,10 @@ import java.util.Map;
  * default name lock factory and name mapper.
  *
  * @since 1.7.3
+ * @deprecated left in place but is completely unused.
+ * @see org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory
  */
+@Deprecated
 @Singleton
 @Named
 public final class SimpleNamedLockFactorySelector

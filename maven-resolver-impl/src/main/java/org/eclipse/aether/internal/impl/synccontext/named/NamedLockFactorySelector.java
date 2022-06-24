@@ -24,7 +24,11 @@ import org.eclipse.aether.named.NamedLockFactory;
 /**
  * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
  * all the named locks configuration is here. Implementations may use different strategies to perform selection.
+ *
+ * @deprecated left in place but is completely unused.
+ * @see org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory
  */
+@Deprecated
 public interface NamedLockFactorySelector
 {
     /**
