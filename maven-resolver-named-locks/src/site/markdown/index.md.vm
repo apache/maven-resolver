@@ -56,7 +56,8 @@ Finally, "distributed" named lock implementations are the following (separate mo
 - `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`.
 - `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
 
-Sharing a local repository between multiple hosts (i.e., on a busy CI server) requires a distributed named lock!
+Sharing a local repository between multiple hosts (i.e., on a busy CI server) may be best done with one of distributed named lock,
+if NFS locking is not working for you.
 
 The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
 
