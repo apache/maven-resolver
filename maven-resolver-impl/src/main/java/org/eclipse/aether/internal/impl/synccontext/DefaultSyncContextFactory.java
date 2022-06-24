@@ -64,11 +64,11 @@ public final class DefaultSyncContextFactory
 
     private static final String NAME_MAPPER_KEY = "aether.syncContext.named.nameMapper";
 
-    private static final String DEFAULT_NAME_MAPPER = FileGAVNameMapper.NAME;
+    private static final String DEFAULT_NAME_MAPPER = GAVNameMapper.NAME;
 
     private static final String FACTORY_KEY = "aether.syncContext.named.factory";
 
-    private static final String DEFAULT_FACTORY = FileLockNamedLockFactory.NAME;
+    private static final String DEFAULT_FACTORY = LocalReadWriteLockNamedLockFactory.NAME;
 
     private Map<String, NameMapper> nameMappers;
 
