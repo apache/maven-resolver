@@ -36,8 +36,6 @@ import org.apache.maven.resolver.repository.Proxy;
 import org.apache.maven.resolver.repository.RemoteRepository;
 import org.apache.maven.resolver.spi.connector.RepositoryConnector;
 import org.apache.maven.resolver.spi.connector.RepositoryConnectorFactory;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.NoRepositoryConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +45,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultRepositoryConnectorProvider
-    implements RepositoryConnectorProvider, Service
+    implements RepositoryConnectorProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryConnectorProvider.class );
@@ -63,11 +61,6 @@ public class DefaultRepositoryConnectorProvider
     DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories )
     {
         setRepositoryConnectorFactories( connectorFactories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        connectorFactories = locator.getServices( RepositoryConnectorFactory.class );
     }
 
     public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory( RepositoryConnectorFactory factory )

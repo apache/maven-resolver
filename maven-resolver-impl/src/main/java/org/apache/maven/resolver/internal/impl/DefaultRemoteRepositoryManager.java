@@ -42,8 +42,6 @@ import org.apache.maven.resolver.repository.ProxySelector;
 import org.apache.maven.resolver.repository.RemoteRepository;
 import org.apache.maven.resolver.repository.RepositoryPolicy;
 import org.apache.maven.resolver.spi.connector.checksum.ChecksumPolicyProvider;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +50,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultRemoteRepositoryManager
-    implements RemoteRepositoryManager, Service
+    implements RemoteRepositoryManager
 {
 
     private static final class LoggedMirror
@@ -105,12 +103,6 @@ public class DefaultRemoteRepositoryManager
     {
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
         setChecksumPolicyProvider( checksumPolicyProvider );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
-        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
     }
 
     public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )

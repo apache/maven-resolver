@@ -54,7 +54,6 @@ import org.apache.maven.resolver.resolution.ArtifactDescriptorResult;
 import org.apache.maven.resolver.resolution.VersionRangeRequest;
 import org.apache.maven.resolver.resolution.VersionRangeResolutionException;
 import org.apache.maven.resolver.resolution.VersionRangeResult;
-import org.apache.maven.resolver.spi.locator.Service;
 import org.apache.maven.resolver.util.ConfigUtils;
 import org.apache.maven.resolver.util.graph.manager.DependencyManagerUtils;
 import org.apache.maven.resolver.version.Version;
@@ -68,7 +67,7 @@ import org.apache.maven.resolver.version.Version;
 @Singleton
 @Named( DfDependencyCollector.NAME )
 public class DfDependencyCollector
-        extends DependencyCollectorDelegate implements Service
+        extends DependencyCollectorDelegate
 {
     public static final String NAME = "df";
 

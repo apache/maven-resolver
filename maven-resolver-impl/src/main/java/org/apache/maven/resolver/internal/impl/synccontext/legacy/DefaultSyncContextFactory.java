@@ -27,8 +27,6 @@ import javax.inject.Singleton;
 
 import org.apache.maven.resolver.RepositorySystemSession;
 import org.apache.maven.resolver.SyncContext;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.spi.synccontext.SyncContextFactory;
 
 import static java.util.Objects.requireNonNull;
@@ -44,7 +42,7 @@ import static java.util.Objects.requireNonNull;
 @Named
 @Deprecated
 public final class DefaultSyncContextFactory
-        implements org.apache.maven.resolver.impl.SyncContextFactory, Service
+        implements org.apache.maven.resolver.impl.SyncContextFactory
 {
     private SyncContextFactory delegate;
 
@@ -57,12 +55,6 @@ public final class DefaultSyncContextFactory
     public DefaultSyncContextFactory( final SyncContextFactory delegate )
     {
         this.delegate = Objects.requireNonNull( delegate );
-    }
-
-    @Override
-    public void initService( final ServiceLocator locator )
-    {
-        this.delegate = Objects.requireNonNull( locator.getService( SyncContextFactory.class ) );
     }
 
     @Override

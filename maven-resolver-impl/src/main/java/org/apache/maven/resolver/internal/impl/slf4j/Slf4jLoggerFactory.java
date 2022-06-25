@@ -23,8 +23,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.spi.log.Logger;
 import org.apache.maven.resolver.spi.log.LoggerFactory;
 import org.eclipse.sisu.Nullable;
@@ -40,7 +38,7 @@ import org.slf4j.spi.LocationAwareLogger;
 @Named( "slf4j" )
 @Deprecated
 public class Slf4jLoggerFactory
-    implements LoggerFactory, Service
+    implements LoggerFactory
 {
 
     private static final boolean AVAILABLE;
@@ -79,11 +77,6 @@ public class Slf4jLoggerFactory
     Slf4jLoggerFactory( @Nullable ILoggerFactory factory )
     {
         setLoggerFactory( factory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( ILoggerFactory.class ) );
     }
 
     public Slf4jLoggerFactory setLoggerFactory( ILoggerFactory factory )

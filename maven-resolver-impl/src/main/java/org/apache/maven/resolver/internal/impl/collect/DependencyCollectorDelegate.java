@@ -54,7 +54,6 @@ import org.apache.maven.resolver.resolution.ArtifactDescriptorResult;
 import org.apache.maven.resolver.resolution.VersionRangeRequest;
 import org.apache.maven.resolver.resolution.VersionRangeResolutionException;
 import org.apache.maven.resolver.resolution.VersionRangeResult;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.util.ConfigUtils;
 import org.apache.maven.resolver.util.graph.transformer.TransformationContextKeys;
 import org.apache.maven.resolver.version.Version;
@@ -104,13 +103,6 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         setRemoteRepositoryManager( remoteRepositoryManager );
         setArtifactDescriptorReader( artifactDescriptorReader );
         setVersionRangeResolver( versionRangeResolver );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
-        setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
     }
 
     public DependencyCollector setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )

@@ -56,7 +56,6 @@ import org.apache.maven.resolver.resolution.ArtifactDescriptorResult;
 import org.apache.maven.resolver.resolution.VersionRangeRequest;
 import org.apache.maven.resolver.resolution.VersionRangeResolutionException;
 import org.apache.maven.resolver.resolution.VersionRangeResult;
-import org.apache.maven.resolver.spi.locator.Service;
 import org.apache.maven.resolver.util.ConfigUtils;
 import org.apache.maven.resolver.util.graph.manager.DependencyManagerUtils;
 import org.apache.maven.resolver.version.Version;
@@ -71,7 +70,7 @@ import static org.apache.maven.resolver.internal.impl.collect.DefaultDependencyC
 @Singleton
 @Named( BfDependencyCollector.NAME )
 public class BfDependencyCollector
-    extends DependencyCollectorDelegate implements Service
+    extends DependencyCollectorDelegate
 {
     public static final String NAME = "bf";
 

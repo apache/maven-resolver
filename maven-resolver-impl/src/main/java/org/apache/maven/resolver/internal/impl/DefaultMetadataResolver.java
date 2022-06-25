@@ -63,8 +63,6 @@ import org.apache.maven.resolver.resolution.MetadataRequest;
 import org.apache.maven.resolver.resolution.MetadataResult;
 import org.apache.maven.resolver.spi.connector.MetadataDownload;
 import org.apache.maven.resolver.spi.connector.RepositoryConnector;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.MetadataNotFoundException;
 import org.apache.maven.resolver.transfer.MetadataTransferException;
 import org.apache.maven.resolver.transfer.NoRepositoryConnectorException;
@@ -78,7 +76,7 @@ import org.apache.maven.resolver.util.concurrency.WorkerThreadFactory;
 @Singleton
 @Named
 public class DefaultMetadataResolver
-    implements MetadataResolver, Service
+    implements MetadataResolver
 {
 
     private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
@@ -113,16 +111,6 @@ public class DefaultMetadataResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )

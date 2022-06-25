@@ -54,8 +54,6 @@ import org.apache.maven.resolver.repository.LocalArtifactRegistration;
 import org.apache.maven.resolver.repository.LocalMetadataRegistration;
 import org.apache.maven.resolver.repository.LocalRepositoryManager;
 import org.apache.maven.resolver.spi.io.FileProcessor;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transform.FileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +63,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultInstaller
-    implements Installer, Service
+    implements Installer
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultInstaller.class );
@@ -91,14 +89,6 @@ public class DefaultInstaller
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
     public DefaultInstaller setFileProcessor( FileProcessor fileProcessor )

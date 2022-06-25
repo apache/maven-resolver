@@ -48,7 +48,7 @@ public class RedissonSemaphoreNamedLockFactory
     }
 
     @Override
-    protected AdaptedSemaphoreNamedLock createLock(final String name )
+    protected AdaptedSemaphoreNamedLock createLock( final String name )
     {
         RSemaphore semaphore = semaphores.computeIfAbsent( name, k ->
         {

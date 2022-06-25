@@ -44,8 +44,6 @@ import org.apache.maven.resolver.repository.AuthenticationDigest;
 import org.apache.maven.resolver.repository.Proxy;
 import org.apache.maven.resolver.repository.RemoteRepository;
 import org.apache.maven.resolver.resolution.ResolutionErrorPolicy;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.ArtifactNotFoundException;
 import org.apache.maven.resolver.transfer.ArtifactTransferException;
 import org.apache.maven.resolver.transfer.MetadataNotFoundException;
@@ -59,7 +57,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultUpdateCheckManager
-    implements UpdateCheckManager, Service
+    implements UpdateCheckManager
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
@@ -101,12 +99,6 @@ public class DefaultUpdateCheckManager
     {
         setTrackingFileManager( trackingFileManager );
         setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setTrackingFileManager( locator.getService( TrackingFileManager.class ) );
-        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
     }
 
     public DefaultUpdateCheckManager setTrackingFileManager( TrackingFileManager trackingFileManager )

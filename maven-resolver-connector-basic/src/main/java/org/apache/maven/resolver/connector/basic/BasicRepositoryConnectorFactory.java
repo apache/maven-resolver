@@ -19,7 +19,6 @@ package org.apache.maven.resolver.connector.basic;
  * under the License.
  */
 
-import java.util.Collections;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -38,8 +37,6 @@ import org.apache.maven.resolver.spi.connector.checksum.ProvidedChecksumsSource;
 import org.apache.maven.resolver.spi.connector.layout.RepositoryLayoutProvider;
 import org.apache.maven.resolver.spi.connector.transport.TransporterProvider;
 import org.apache.maven.resolver.spi.io.FileProcessor;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.NoRepositoryConnectorException;
 
 /**
@@ -49,7 +46,7 @@ import org.apache.maven.resolver.transfer.NoRepositoryConnectorException;
  */
 @Named( "basic" )
 public final class BasicRepositoryConnectorFactory
-    implements RepositoryConnectorFactory, Service
+    implements RepositoryConnectorFactory
 {
     private TransporterProvider transporterProvider;
 
@@ -85,15 +82,6 @@ public final class BasicRepositoryConnectorFactory
         setChecksumPolicyProvider( checksumPolicyProvider );
         setFileProcessor( fileProcessor );
         setProvidedChecksumSources( providedChecksumsSources );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setTransporterProvider( locator.getService( TransporterProvider.class ) );
-        setRepositoryLayoutProvider( locator.getService( RepositoryLayoutProvider.class ) );
-        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setProvidedChecksumSources( Collections.emptyMap() );
     }
 
     /**

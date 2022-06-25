@@ -31,8 +31,6 @@ import javax.inject.Singleton;
 import org.apache.maven.resolver.RepositoryEvent;
 import org.apache.maven.resolver.RepositoryListener;
 import org.apache.maven.resolver.impl.RepositoryEventDispatcher;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +39,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultRepositoryEventDispatcher
-    implements RepositoryEventDispatcher, Service
+    implements RepositoryEventDispatcher
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryEventDispatcher.class );
@@ -76,11 +74,6 @@ public class DefaultRepositoryEventDispatcher
             this.listeners = listeners;
         }
         return this;
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRepositoryListeners( locator.getServices( RepositoryListener.class ) );
     }
 
     public void dispatch( RepositoryEvent event )

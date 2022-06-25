@@ -35,8 +35,6 @@ import org.apache.maven.resolver.repository.LocalRepository;
 import org.apache.maven.resolver.repository.LocalRepositoryManager;
 import org.apache.maven.resolver.repository.NoLocalRepositoryManagerException;
 import org.apache.maven.resolver.spi.localrepo.LocalRepositoryManagerFactory;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +43,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultLocalRepositoryProvider
-    implements LocalRepositoryProvider, Service
+    implements LocalRepositoryProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultLocalRepositoryProvider.class );
@@ -61,11 +59,6 @@ public class DefaultLocalRepositoryProvider
     DefaultLocalRepositoryProvider( Set<LocalRepositoryManagerFactory> factories )
     {
         setLocalRepositoryManagerFactories( factories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setLocalRepositoryManagerFactories( locator.getServices( LocalRepositoryManagerFactory.class ) );
     }
 
     public DefaultLocalRepositoryProvider addLocalRepositoryManagerFactory( LocalRepositoryManagerFactory factory )

@@ -26,15 +26,12 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.maven.resolver.internal.impl.collect.bf.BfDependencyCollector;
 import org.apache.maven.resolver.RepositorySystemSession;
 import org.apache.maven.resolver.collection.CollectRequest;
 import org.apache.maven.resolver.collection.CollectResult;
 import org.apache.maven.resolver.collection.DependencyCollectionException;
 import org.apache.maven.resolver.impl.DependencyCollector;
 import org.apache.maven.resolver.internal.impl.collect.df.DfDependencyCollector;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -45,7 +42,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultDependencyCollector
-        implements DependencyCollector, Service
+        implements DependencyCollector
 {
     private static final String CONFIG_PROP_COLLECTOR_IMPL = "aether.collector.impl";
 
@@ -68,17 +65,6 @@ public class DefaultDependencyCollector
     public DefaultDependencyCollector( Map<String, DependencyCollectorDelegate> delegates )
     {
         this.delegates = requireNonNull( delegates );
-    }
-
-    @Override
-    public void initService( ServiceLocator locator )
-    {
-        BfDependencyCollector bf = new BfDependencyCollector();
-        bf.initService( locator );
-        DfDependencyCollector df = new DfDependencyCollector();
-        df.initService( locator );
-        this.delegates.put( BfDependencyCollector.NAME, bf );
-        this.delegates.put( DfDependencyCollector.NAME, df );
     }
 
     @Override

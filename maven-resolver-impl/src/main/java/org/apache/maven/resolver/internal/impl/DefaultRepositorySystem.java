@@ -79,8 +79,6 @@ import org.apache.maven.resolver.resolution.VersionRangeResult;
 import org.apache.maven.resolver.resolution.VersionRequest;
 import org.apache.maven.resolver.resolution.VersionResolutionException;
 import org.apache.maven.resolver.resolution.VersionResult;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.util.graph.visitor.FilteringDependencyVisitor;
 import org.apache.maven.resolver.util.graph.visitor.TreeDependencyVisitor;
 
@@ -89,7 +87,7 @@ import org.apache.maven.resolver.util.graph.visitor.TreeDependencyVisitor;
 @Singleton
 @Named
 public class DefaultRepositorySystem
-    implements RepositorySystem, Service
+    implements RepositorySystem
 {
 
     private VersionResolver versionResolver;
@@ -139,21 +137,6 @@ public class DefaultRepositorySystem
         setLocalRepositoryProvider( localRepositoryProvider );
         setSyncContextFactory( syncContextFactory );
         setRemoteRepositoryManager( remoteRepositoryManager );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setVersionResolver( locator.getService( VersionResolver.class ) );
-        setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
-        setArtifactResolver( locator.getService( ArtifactResolver.class ) );
-        setMetadataResolver( locator.getService( MetadataResolver.class ) );
-        setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
-        setDependencyCollector( locator.getService( DependencyCollector.class ) );
-        setInstaller( locator.getService( Installer.class ) );
-        setDeployer( locator.getService( Deployer.class ) );
-        setLocalRepositoryProvider( locator.getService( LocalRepositoryProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
     }
 
     /**

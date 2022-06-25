@@ -23,15 +23,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.Objects;
-
 import org.apache.maven.resolver.RepositorySystemSession;
 import org.apache.maven.resolver.repository.LocalRepository;
 import org.apache.maven.resolver.repository.LocalRepositoryManager;
 import org.apache.maven.resolver.repository.NoLocalRepositoryManagerException;
 import org.apache.maven.resolver.spi.localrepo.LocalRepositoryManagerFactory;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 
 import static java.util.Objects.requireNonNull;
 
@@ -41,7 +37,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named( "simple" )
 public class SimpleLocalRepositoryManagerFactory
-    implements LocalRepositoryManagerFactory, Service
+    implements LocalRepositoryManagerFactory
 {
     private float priority;
 
@@ -57,12 +53,6 @@ public class SimpleLocalRepositoryManagerFactory
     public SimpleLocalRepositoryManagerFactory( final LocalPathComposer localPathComposer )
     {
         this.localPathComposer = requireNonNull( localPathComposer );
-    }
-
-    @Override
-    public void initService( final ServiceLocator locator )
-    {
-        this.localPathComposer = Objects.requireNonNull( locator.getService( LocalPathComposer.class ) );
     }
 
     @Override

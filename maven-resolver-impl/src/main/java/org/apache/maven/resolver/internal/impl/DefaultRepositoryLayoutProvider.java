@@ -34,8 +34,6 @@ import org.apache.maven.resolver.repository.RemoteRepository;
 import org.apache.maven.resolver.spi.connector.layout.RepositoryLayout;
 import org.apache.maven.resolver.spi.connector.layout.RepositoryLayoutFactory;
 import org.apache.maven.resolver.spi.connector.layout.RepositoryLayoutProvider;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.NoRepositoryLayoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +43,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public final class DefaultRepositoryLayoutProvider
-    implements RepositoryLayoutProvider, Service
+    implements RepositoryLayoutProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRepositoryLayoutProvider.class );
@@ -61,11 +59,6 @@ public final class DefaultRepositoryLayoutProvider
     DefaultRepositoryLayoutProvider( Set<RepositoryLayoutFactory> layoutFactories )
     {
         setRepositoryLayoutFactories( layoutFactories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setRepositoryLayoutFactories( locator.getServices( RepositoryLayoutFactory.class ) );
     }
 
     public DefaultRepositoryLayoutProvider addRepositoryLayoutFactory( RepositoryLayoutFactory factory )

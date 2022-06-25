@@ -28,8 +28,6 @@ import org.apache.maven.resolver.repository.LocalRepository;
 import org.apache.maven.resolver.repository.LocalRepositoryManager;
 import org.apache.maven.resolver.repository.NoLocalRepositoryManagerException;
 import org.apache.maven.resolver.spi.localrepo.LocalRepositoryManagerFactory;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -44,7 +42,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named( "enhanced" )
 public class EnhancedLocalRepositoryManagerFactory
-    implements LocalRepositoryManagerFactory, Service
+    implements LocalRepositoryManagerFactory
 {
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
@@ -71,14 +69,6 @@ public class EnhancedLocalRepositoryManagerFactory
         this.localPathComposer = requireNonNull( localPathComposer );
         this.trackingFileManager = requireNonNull( trackingFileManager );
         this.localPathPrefixComposerFactory = requireNonNull( localPathPrefixComposerFactory );
-    }
-
-    @Override
-    public void initService( final ServiceLocator locator )
-    {
-        this.localPathComposer = requireNonNull( locator.getService( LocalPathComposer.class ) );
-        this.trackingFileManager = requireNonNull( locator.getService( TrackingFileManager.class ) );
-        this.localPathPrefixComposerFactory = new DefaultLocalPathPrefixComposerFactory();
     }
 
     @Override

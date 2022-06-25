@@ -65,8 +65,6 @@ import org.apache.maven.resolver.spi.connector.MetadataDownload;
 import org.apache.maven.resolver.spi.connector.MetadataUpload;
 import org.apache.maven.resolver.spi.connector.RepositoryConnector;
 import org.apache.maven.resolver.spi.io.FileProcessor;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.ArtifactTransferException;
 import org.apache.maven.resolver.transfer.MetadataNotFoundException;
 import org.apache.maven.resolver.transfer.MetadataTransferException;
@@ -82,7 +80,7 @@ import org.apache.maven.resolver.transform.FileTransformerManager;
 @Singleton
 @Named
 public class DefaultDeployer
-    implements Deployer, Service
+    implements Deployer
 {
     private FileProcessor fileProcessor;
 
@@ -121,18 +119,6 @@ public class DefaultDeployer
         setMetadataGeneratorFactories( metadataFactories );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setMetadataGeneratorFactories( locator.getServices( MetadataGeneratorFactory.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     public DefaultDeployer setFileProcessor( FileProcessor fileProcessor )

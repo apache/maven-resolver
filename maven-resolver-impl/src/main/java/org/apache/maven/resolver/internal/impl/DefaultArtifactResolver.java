@@ -68,8 +68,6 @@ import org.apache.maven.resolver.resolution.VersionResult;
 import org.apache.maven.resolver.spi.connector.ArtifactDownload;
 import org.apache.maven.resolver.spi.connector.RepositoryConnector;
 import org.apache.maven.resolver.spi.io.FileProcessor;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.ArtifactNotFoundException;
 import org.apache.maven.resolver.transfer.ArtifactTransferException;
 import org.apache.maven.resolver.transfer.NoRepositoryConnectorException;
@@ -83,7 +81,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public class DefaultArtifactResolver
-    implements ArtifactResolver, Service
+    implements ArtifactResolver
 {
 
     private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
@@ -127,18 +125,6 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setVersionResolver( locator.getService( VersionResolver.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
     }
 
     /**

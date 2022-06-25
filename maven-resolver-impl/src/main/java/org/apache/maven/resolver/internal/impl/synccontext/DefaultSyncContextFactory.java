@@ -19,8 +19,6 @@ package org.apache.maven.resolver.internal.impl.synccontext;
  * under the License.
  */
 
-import java.util.Objects;
-
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -30,8 +28,6 @@ import org.apache.maven.resolver.internal.impl.synccontext.named.NamedLockFactor
 import org.apache.maven.resolver.internal.impl.synccontext.named.NamedLockFactorySelector;
 import org.apache.maven.resolver.RepositorySystemSession;
 import org.apache.maven.resolver.SyncContext;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.spi.synccontext.SyncContextFactory;
 
 import static java.util.Objects.requireNonNull;
@@ -42,7 +38,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public final class DefaultSyncContextFactory
-        implements SyncContextFactory, Service
+        implements SyncContextFactory
 {
     private NamedLockFactoryAdapter namedLockFactoryAdapter;
 
@@ -61,17 +57,6 @@ public final class DefaultSyncContextFactory
     public DefaultSyncContextFactory()
     {
         // ctor for ServiceLoader
-    }
-
-    @Override
-    public void initService( final ServiceLocator locator )
-    {
-        NamedLockFactorySelector selector = Objects.requireNonNull(
-            locator.getService( NamedLockFactorySelector.class ) );
-        this.namedLockFactoryAdapter = new NamedLockFactoryAdapter(
-            selector.getSelectedNameMapper(),
-            selector.getSelectedNamedLockFactory()
-        );
     }
 
     @Override

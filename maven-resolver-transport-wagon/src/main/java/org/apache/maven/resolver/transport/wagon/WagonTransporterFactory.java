@@ -28,8 +28,6 @@ import org.apache.maven.resolver.RepositorySystemSession;
 import org.apache.maven.resolver.repository.RemoteRepository;
 import org.apache.maven.resolver.spi.connector.transport.Transporter;
 import org.apache.maven.resolver.spi.connector.transport.TransporterFactory;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
 import org.apache.maven.resolver.transfer.NoTransporterException;
 
 /**
@@ -39,7 +37,7 @@ import org.apache.maven.resolver.transfer.NoTransporterException;
  */
 @Named( "wagon" )
 public final class WagonTransporterFactory
-    implements TransporterFactory, Service
+    implements TransporterFactory
 {
 
     private WagonProvider wagonProvider;
@@ -63,12 +61,6 @@ public final class WagonTransporterFactory
     {
         setWagonProvider( wagonProvider );
         setWagonConfigurator( wagonConfigurator );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setWagonProvider( locator.getService( WagonProvider.class ) );
-        setWagonConfigurator( locator.getService( WagonConfigurator.class ) );
     }
 
     /**

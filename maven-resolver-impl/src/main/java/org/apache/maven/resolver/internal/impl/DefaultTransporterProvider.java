@@ -33,9 +33,7 @@ import org.apache.maven.resolver.RepositorySystemSession;
 import org.apache.maven.resolver.repository.RemoteRepository;
 import org.apache.maven.resolver.spi.connector.transport.Transporter;
 import org.apache.maven.resolver.spi.connector.transport.TransporterFactory;
-import org.apache.maven.resolver.spi.connector.transport.TransporterProvider;
-import org.apache.maven.resolver.spi.locator.Service;
-import org.apache.maven.resolver.spi.locator.ServiceLocator;
+import org.apache.maven.resolver.spi.connector.transport.TransporterProvider;;
 import org.apache.maven.resolver.transfer.NoTransporterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +43,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @Named
 public final class DefaultTransporterProvider
-    implements TransporterProvider, Service
+    implements TransporterProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTransporterProvider.class );
@@ -61,11 +59,6 @@ public final class DefaultTransporterProvider
     DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
     {
         setTransporterFactories( transporterFactories );
-    }
-
-    public void initService( ServiceLocator locator )
-    {
-        setTransporterFactories( locator.getServices( TransporterFactory.class ) );
     }
 
     public DefaultTransporterProvider addTransporterFactory( TransporterFactory factory )
