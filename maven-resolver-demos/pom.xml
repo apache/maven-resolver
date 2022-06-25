@@ -38,6 +38,7 @@
 
   <properties>
     <mavenVersion>3.8.4</mavenVersion>
+    <skipTests>true</skipTests>
   </properties>
 
   <modules>
