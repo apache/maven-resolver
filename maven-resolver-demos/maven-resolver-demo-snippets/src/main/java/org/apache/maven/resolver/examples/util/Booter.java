@@ -23,11 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.apache.maven.resolver.DefaultRepositorySystemSession;
 import org.apache.maven.resolver.RepositorySystem;
 import org.apache.maven.resolver.RepositorySystemSession;
-import org.apache.maven.resolver.repository.LocalRepository;
 import org.apache.maven.resolver.repository.RemoteRepository;
 
 /**
@@ -70,18 +68,19 @@ public class Booter
 
     public static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )
     {
-        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-
-        LocalRepository localRepo = new LocalRepository( "target/local-repo" );
-        session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
-
-        session.setTransferListener( new ConsoleTransferListener() );
-        session.setRepositoryListener( new ConsoleRepositoryListener() );
+        // FIXME
+//        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+//
+//        LocalRepository localRepo = new LocalRepository( "target/local-repo" );
+//        session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
+//
+//        session.setTransferListener( new ConsoleTransferListener() );
+//        session.setRepositoryListener( new ConsoleRepositoryListener() );
 
         // uncomment to generate dirty trees
         // session.setDependencyGraphTransformer( null );
 
-        return session;
+        return null;
     }
 
     public static List<RemoteRepository> newRepositories( RepositorySystem system, RepositorySystemSession session )

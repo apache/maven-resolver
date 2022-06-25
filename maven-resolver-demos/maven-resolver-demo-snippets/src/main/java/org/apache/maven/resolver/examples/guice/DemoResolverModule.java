@@ -29,16 +29,8 @@ import javax.inject.Singleton;
 
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
-import org.apache.maven.repository.internal.DefaultArtifactDescriptorReader;
-import org.apache.maven.repository.internal.DefaultVersionRangeResolver;
-import org.apache.maven.repository.internal.DefaultVersionResolver;
-import org.apache.maven.repository.internal.SnapshotMetadataGeneratorFactory;
-import org.apache.maven.repository.internal.VersionsMetadataGeneratorFactory;
 import org.apache.maven.resolver.connector.basic.BasicRepositoryConnectorFactory;
-import org.apache.maven.resolver.impl.ArtifactDescriptorReader;
 import org.apache.maven.resolver.impl.MetadataGeneratorFactory;
-import org.apache.maven.resolver.impl.VersionRangeResolver;
-import org.apache.maven.resolver.impl.VersionResolver;
 import org.apache.maven.resolver.impl.guice.AetherModule;
 import org.apache.maven.resolver.spi.connector.RepositoryConnectorFactory;
 import org.apache.maven.resolver.spi.connector.transport.TransporterFactory;
@@ -69,14 +61,15 @@ class DemoResolverModule
         install( new AetherModule() );
 
         // make module "complete" by binding things not bound by AetherModule
-        bind( ArtifactDescriptorReader.class ).to( DefaultArtifactDescriptorReader.class ).in( Singleton.class );
-        bind( VersionResolver.class ).to( DefaultVersionResolver.class ).in( Singleton.class );
-        bind( VersionRangeResolver.class ).to( DefaultVersionRangeResolver.class ).in( Singleton.class );
-        bind( MetadataGeneratorFactory.class ).annotatedWith( Names.named( "snapshot" ) )
-                                              .to( SnapshotMetadataGeneratorFactory.class ).in( Singleton.class );
-
-        bind( MetadataGeneratorFactory.class ).annotatedWith( Names.named( "versions" ) )
-                                              .to( VersionsMetadataGeneratorFactory.class ).in( Singleton.class );
+        // FIXME
+//        bind( ArtifactDescriptorReader.class ).to( DefaultArtifactDescriptorReader.class ).in( Singleton.class );
+//        bind( VersionResolver.class ).to( DefaultVersionResolver.class ).in( Singleton.class );
+//        bind( VersionRangeResolver.class ).to( DefaultVersionRangeResolver.class ).in( Singleton.class );
+//        bind( MetadataGeneratorFactory.class ).annotatedWith( Names.named( "snapshot" ) )
+//                                              .to( SnapshotMetadataGeneratorFactory.class ).in( Singleton.class );
+//
+//        bind( MetadataGeneratorFactory.class ).annotatedWith( Names.named( "versions" ) )
+//                                              .to( VersionsMetadataGeneratorFactory.class ).in( Singleton.class );
 
         bind( RepositoryConnectorFactory.class ).annotatedWith( Names.named( "basic" ) )
                 .to( BasicRepositoryConnectorFactory.class );
