@@ -46,27 +46,32 @@ To use this implementation within your project, depending on how you integrate, 
 
 ${esc.hash}${esc.hash} Installation/Testing
 
+#set( $jacksonVersion = "2.13.3" )
+#set( $jbossMarshallingVersion = "2.0.11.Final" )
+#set( $nettyVersion = "4.1.79.Final" )
+#set( $snakeyamlVersion = "1.30" )
+
 - Create the directory `${maven.home}/lib/ext/redisson/`.
 - Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/redisson/*.jar`
   right after the `${maven.conf}/logging` line.
 - Copy the following dependencies from Maven Central to `${maven.home}/lib/ext/redisson/`:
   <pre class="source">
   ├── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.12.1/jackson-annotations-2.12.1.jar">jackson-annotations-2.12.1.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.12.1/jackson-core-2.12.1.jar">jackson-core-2.12.1.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.12.1/jackson-databind-2.12.1.jar">jackson-databind-2.12.1.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.12.1/jackson-dataformat-yaml-2.12.1.jar">jackson-dataformat-yaml-2.12.1.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling/2.0.11.Final/jboss-marshalling-2.0.11.Final.jar">jboss-marshalling-2.0.11.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling-river/2.0.11.Final/jboss-marshalling-river-2.0.11.Final.jar">jboss-marshalling-river-2.0.11.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.65.Final/netty-buffer-4.1.65.Final.jar">netty-buffer-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.65.Final/netty-codec-4.1.65.Final.jar">netty-codec-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.65.Final/netty-codec-dns-4.1.65.Final.jar">netty-codec-dns-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-common/4.1.65.Final/netty-common-4.1.65.Final.jar">netty-common-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-handler/4.1.65.Final/netty-handler-4.1.65.Final.jar">netty-handler-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.65.Final/netty-resolver-4.1.65.Final.jar">netty-resolver-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.65.Final/netty-resolver-dns-4.1.65.Final.jar">netty-resolver-dns-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.65.Final/netty-transport-4.1.65.Final.jar">netty-transport-4.1.65.Final.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/3.15.6/redisson-3.15.6.jar">redisson-3.15.6.jar</a>
-  └── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.27/snakeyaml-1.27.jar">snakeyaml-1.27.jar</a></pre>
+  ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/${redissonVersion}/redisson-${redissonVersion}.jar">redisson-${redissonVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/${jacksonVersion}/jackson-annotations-${jacksonVersion}.jar">jackson-annotations-${jacksonVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/${jacksonVersion}/jackson-core-${jacksonVersion}.jar">jackson-core-${jacksonVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/${jacksonVersion}/jackson-databind-${jacksonVersion}.jar">jackson-databind-${jacksonVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/${jacksonVersion}/jackson-dataformat-yaml-${jacksonVersion}.jar">jackson-dataformat-yaml-${jacksonVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling/${jbossMarshallingVersion}/jboss-marshalling-${jbossMarshallingVersion}.jar">jboss-marshalling-${jbossMarshallingVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling-river/${jbossMarshallingVersion}/jboss-marshalling-river-${jbossMarshallingVersion}.jar">jboss-marshalling-river-${jbossMarshallingVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/${nettyVersion}/netty-buffer-${nettyVersion}.jar">netty-buffer-${nettyVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/${nettyVersion}/netty-codec-${nettyVersion}.jar">netty-codec-${nettyVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/${nettyVersion}/netty-codec-dns-${nettyVersion}.jar">netty-codec-dns-${nettyVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-common/${nettyVersion}/netty-common-${nettyVersion}.jar">netty-common-${nettyVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-handler/${nettyVersion}/netty-handler-${nettyVersion}.jar">netty-handler-${nettyVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/${nettyVersion}/netty-resolver-${nettyVersion}.jar">netty-resolver-${nettyVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/${nettyVersion}/netty-resolver-dns-${nettyVersion}.jar">netty-resolver-dns-${nettyVersion}.jar</a>
+  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/${nettyVersion}/netty-transport-${nettyVersion}.jar">netty-transport-${nettyVersion}.jar</a>
+  └── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/${snakeyamlVersion}/snakeyaml-${snakeyamlVersion}.jar">snakeyaml-${snakeyamlVersion}.jar</a></pre>
 - Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
 - Now start a multithreaded Maven build on your project.

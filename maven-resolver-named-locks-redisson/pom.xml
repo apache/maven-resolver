@@ -38,6 +38,8 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.named.redisson</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+    <!-- Used in site also -->
+    <redissonVersion>3.17.5</redissonVersion>
   </properties>
 
   <dependencies>
@@ -52,7 +54,7 @@
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>3.15.6</version>
+      <version>${redissonVersion}</version>
       <exclusions>
         <exclusion>
           <groupId>javax.cache</groupId>
@@ -73,6 +75,14 @@
         <exclusion>
           <groupId>io.reactivex.rxjava3</groupId>
           <artifactId>rxjava</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-transport-native-unix-common</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.reactivestreams</groupId>
+          <artifactId>reactive-streams</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
