@@ -24,4 +24,6 @@ Java 7 to run. Maven 3.8.x will continue to use version 1.6.x which you will fin
 [here](/resolver-archives/resolver-1.6.3/).
 This also means that you cannot make use of the features provided by version 1.7.0 and later.
 If you require the changes in this version, but must use Maven 3.8.x, you can build an adapted version
-of Maven from the branch [`maven-3.8.x-maven-resolver-1.7.x`](https://github.com/apache/maven/tree/maven-3.8.x-resolver-1.7.x) and use as if you would use Maven 4.
+of Maven from the branch [`maven-3.8.x-resolver-1.8.x`](https://github.com/apache/maven/tree/maven-3.8.x-resolver-1.8.x)
+with Java 8 requirement or use signed binaries and source from the [dev dist area](https://dist.apache.org/repos/dist/dev/maven/maven-3/3.8.x-resolver-1.8.x/)
+and use as if you would use Maven 3.9.x.
