@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver-demos</artifactId>
-    <version>1.8.2</version>
+    <version>1.8.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>resolver-demo-maven-plugin</artifactId>
@@ -132,8 +132,4 @@
       </build>
     </profile>
   </profiles>
-
-  <scm>
-    <tag>maven-resolver-1.8.2</tag>
-  </scm>
 </project>
