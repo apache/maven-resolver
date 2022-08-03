@@ -22,6 +22,9 @@ package org.eclipse.aether.internal.impl;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
 
+import java.io.File;
+import java.util.function.Consumer;
+
 /**
  * Implements {@link org.eclipse.aether.repository.RepositoryPolicy#CHECKSUM_POLICY_WARN}.
  */
@@ -29,17 +32,31 @@ final class WarnChecksumPolicy
     extends AbstractChecksumPolicy
 {
 
+    private final Consumer<ChecksumFailureException> onTransferChecksumFailure;
+
+    WarnChecksumPolicy( File file )
+    {
+        super( file );
+        onTransferChecksumFailure = exception -> logger.warn(
+                "Could not validate integrity of available file {}",
+                file.getAbsoluteFile(),
+                exception );
+    }
+
     WarnChecksumPolicy( TransferResource resource )
     {
         super( resource );
+        onTransferChecksumFailure = exception -> logger.warn(
+                "Could not validate integrity of download from {}{}",
+                resource.getRepositoryUrl(),
+                resource.getResourceName(),
+                exception );
     }
 
     @Override
     public boolean onTransferChecksumFailure( ChecksumFailureException exception )
     {
-        logger.warn( "Could not validate integrity of download from {}{}", resource.getRepositoryUrl(),
-                resource.getResourceName(), exception );
+        onTransferChecksumFailure.accept( exception );
         return true;
     }
-
 }

@@ -19,6 +19,8 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
+import java.io.File;
+
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
 
@@ -28,6 +30,11 @@ import org.eclipse.aether.transfer.TransferResource;
 final class FailChecksumPolicy
     extends AbstractChecksumPolicy
 {
+
+    FailChecksumPolicy( File file )
+    {
+        super( file );
+    }
 
     FailChecksumPolicy( TransferResource resource )
     {

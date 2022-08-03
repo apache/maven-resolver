@@ -19,6 +19,8 @@ package org.eclipse.aether.spi.connector.checksum;
  * under the License.
  */
 
+import java.io.File;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.TransferResource;
@@ -31,6 +33,16 @@ import org.eclipse.aether.transfer.TransferResource;
  */
 public interface ChecksumPolicyProvider
 {
+
+    /**
+     * Retrieves the checksum policy with the specified identifier for use on the given local resource.
+     *
+     * @param session The repository system session during which the request is made, must not be {@code null}.
+     * @param resource The resource on which the policy will be applied, must not be {@code null}.
+     * @param policy The identifier of the policy to apply, must not be {@code null}.
+     * @return The policy to apply or {@code null} if checksums should be ignored.
+     */
+    ChecksumPolicy newChecksumPolicy( RepositorySystemSession session, File resource, String policy );
 
     /**
      * Retrieves the checksum policy with the specified identifier for use on the given remote resource.

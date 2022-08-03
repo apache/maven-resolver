@@ -22,9 +22,9 @@ package org.eclipse.aether.spi.connector.checksum;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 
 /**
- * A checksum policy gets employed by repository connectors to validate the integrity of a downloaded file. For each
- * downloaded file, a checksum policy instance is obtained and presented with the available checksums to conclude
- * whether the download is valid or not. The following pseudo-code illustrates the usage of a checksum policy by a
+ * A checksum policy gets employed by repository connectors to validate the integrity of a file. For each
+ * file, a checksum policy instance is obtained and presented with the available checksums to conclude
+ * whether the file is valid or not. The following pseudo-code illustrates the usage of a checksum policy by a
  * repository connector in some more detail (the retry logic has been omitted for the sake of brevity):
  *
  * <pre>
@@ -95,19 +95,18 @@ public interface ChecksumPolicy
     }
 
     /**
-     * Signals a match between the locally computed checksum value and the checksum value declared by the remote
-     * repository.
+     * Signals a match between the locally computed checksum value and the expected checksum.
      *
      * @param algorithm The name of the checksum algorithm being used, must not be {@code null}.
      * @param kind      A field providing further details about the checksum.
-     * @return {@code true} to accept the download as valid and stop further validation, {@code false} to continue
+     * @return {@code true} to accept the artifact as valid and stop further validation, {@code false} to continue
      * validation with the next checksum.
      */
     boolean onChecksumMatch( String algorithm, ChecksumKind kind );
 
     /**
-     * Signals a mismatch between the locally computed checksum value and the checksum value declared by the remote
-     * repository. A simple policy would just rethrow the provided exception. More sophisticated policies could update
+     * Signals a mismatch between the locally computed checksum value and the expected checksum. A simple
+     * policy would just rethrow the provided exception. More sophisticated policies could update
      * their internal state and defer a conclusion until all available checksums have been processed.
      *
      * @param algorithm The name of the checksum algorithm being used, must not be {@code null}.
@@ -136,7 +135,7 @@ public interface ChecksumPolicy
      * Signals that all available checksums have been processed.
      *
      * @throws ChecksumFailureException If the checksum validation is to be failed. If the method returns normally, the
-     *                                  download is assumed to be valid.
+     *                                  resource is assumed to be valid.
      */
     void onNoMoreChecksums()
             throws ChecksumFailureException;
@@ -156,8 +155,8 @@ public interface ChecksumPolicy
      *                  {@link #onChecksumMismatch(String, ChecksumKind, ChecksumFailureException)},
      *                  {@link #onChecksumError(String, ChecksumKind, ChecksumFailureException)} or {@link
      *                  #onNoMoreChecksums()}.
-     * @return {@code true} to accept the download nevertheless and let artifact resolution succeed, {@code false} to
-     * reject the transferred file as unusable.
+     * @return {@code true} to accept the file nevertheless and let artifact resolution succeed, {@code false} to
+     * reject the file as unusable.
      */
     boolean onTransferChecksumFailure( ChecksumFailureException exception );
 

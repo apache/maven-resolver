@@ -20,7 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.io.FileProcessor;
@@ -78,7 +78,7 @@ public final class FileProvidedChecksumsSource
 
     @Override
     public Map<String, String> getProvidedArtifactChecksums( RepositorySystemSession session,
-                                                             ArtifactDownload transfer,
+                                                             Artifact artifact,
                                                              List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         Path baseDir = getBaseDir( session );
@@ -90,10 +90,10 @@ public final class FileProvidedChecksumsSource
         for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
             checksumFilePaths.add( new ChecksumFilePath(
-                    localPathComposer.getPathForArtifact( transfer.getArtifact(), false ) + '.'
+                    localPathComposer.getPathForArtifact( artifact, false ) + '.'
                     + checksumAlgorithmFactory.getFileExtension(), checksumAlgorithmFactory ) );
         }
-        return getProvidedChecksums( baseDir, checksumFilePaths, ArtifactIdUtils.toId( transfer.getArtifact() ) );
+        return getProvidedChecksums( baseDir, checksumFilePaths, ArtifactIdUtils.toId( artifact ) );
     }
 
     /**

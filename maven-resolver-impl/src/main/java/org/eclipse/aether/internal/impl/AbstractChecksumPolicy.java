@@ -25,6 +25,9 @@ import org.eclipse.aether.transfer.TransferResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.util.function.Supplier;
+
 import static java.util.Objects.requireNonNull;
 
 abstract class AbstractChecksumPolicy
@@ -33,11 +36,16 @@ abstract class AbstractChecksumPolicy
 
     protected final Logger logger = LoggerFactory.getLogger( getClass() );
 
-    protected final TransferResource resource;
+    private final Supplier<String> name;
 
-    protected AbstractChecksumPolicy( TransferResource resource )
+    AbstractChecksumPolicy( TransferResource resource )
     {
-        this.resource = resource;
+        name = resource::getResourceName;
+    }
+
+    AbstractChecksumPolicy( File file )
+    {
+        name = file::getAbsolutePath;
     }
 
     @Override
@@ -62,7 +70,7 @@ abstract class AbstractChecksumPolicy
     {
         requireNonNull( algorithm, "algorithm cannot be null" );
         requireNonNull( exception, "exception cannot be null" );
-        logger.debug( "Could not validate {} checksum for {}", algorithm, resource.getResourceName(), exception );
+        logger.debug( "Could not validate {} checksum for {}", algorithm, name.get(), exception );
     }
 
     @Override

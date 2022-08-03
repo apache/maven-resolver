@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 
 /**
@@ -37,11 +38,26 @@ public interface ProvidedChecksumsSource
      * May return the provided checksums (for given artifact transfer) from trusted source other than remote
      * repository, or {@code null}.
      *
-     * @param transfer The transfer that is about to be executed.
+     * @param artifact The resolved artifact.
      * @param checksumAlgorithmFactories The checksum algorithms that are expected.
      * @return Map of expected checksums, or {@code null}.
      */
     Map<String, String> getProvidedArtifactChecksums( RepositorySystemSession session,
-                                                      ArtifactDownload transfer,
+                                                      Artifact artifact,
                                                       List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
+    /**
+     * May return the provided checksums (for given artifact transfer) from trusted source other than remote
+     * repository, or {@code null}.
+     *
+     * @param transfer The transfer that is about to be executed.
+     * @param checksumAlgorithmFactories The checksum algorithms that are expected.
+     * @return Map of expected checksums, or {@code null}.
+     */
+    default Map<String, String> getProvidedArtifactChecksums(
+            RepositorySystemSession session,
+            ArtifactDownload transfer,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
+    {
+        return getProvidedArtifactChecksums( session, transfer.getArtifact(), checksumAlgorithmFactories );
+    }
 }

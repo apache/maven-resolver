@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
+import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
@@ -65,6 +67,7 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
+import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
 import org.junit.After;
 import org.junit.Before;
@@ -103,6 +106,7 @@ public class DefaultArtifactResolverTest
         resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
         resolver.setOfflineController( new DefaultOfflineController() );
+        resolver.setChecksumPolicyProvider( new DefaultChecksumPolicyProvider() );
 
         artifact = new DefaultArtifact( "gid", "aid", "", "ext", "ver" );
 
@@ -899,4 +903,139 @@ public class DefaultArtifactResolverTest
         assertEquals( artifact, resolved );
     }
 
+    @Test
+    public void testResolveChecksumDoesMatch()
+            throws IOException, ArtifactResolutionException
+    {
+        session.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
+
+        resolver.setProvidedChecksumsSources( Collections.singletonList(
+                ( session, artifact, checksumAlgorithmFactories ) -> Collections.singletonMap(
+                        Md5ChecksumAlgorithmFactory.NAME,
+                        "fa816edb83e95bf0c8da580bdfd491ef" ) ) );
+        resolver.setChecksumAlgorithmFactories( Collections.singletonList( new Md5ChecksumAlgorithmFactory() ) );
+
+        File tmpFile = TestFileUtils.createTempFile( "tmp" );
+        Map<String, String> properties = new HashMap<>();
+        properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
+        artifact = artifact.setProperties( properties );
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
+        ArtifactResult result = resolver.resolveArtifact( session, request );
+
+        assertTrue( result.getExceptions().isEmpty() );
+
+        Artifact resolved = result.getArtifact();
+        assertNotNull( resolved.getFile() );
+        resolved = resolved.setFile( null );
+
+        assertEquals( artifact, resolved );
+    }
+
+    @Test
+    public void testResolveChecksumDoesNotMatchWithoutFail()
+            throws IOException, ArtifactResolutionException
+    {
+        session.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_WARN );
+
+        resolver.setProvidedChecksumsSources( Collections.singletonList(
+                ( session, artifact, checksumAlgorithmFactories ) -> Collections.singletonMap(
+                        Md5ChecksumAlgorithmFactory.NAME,
+                        "f21bf591cf832b6af242e76bb977bc49" ) ) );
+        resolver.setChecksumAlgorithmFactories( Collections.singletonList( new Md5ChecksumAlgorithmFactory() ) );
+
+        File tmpFile = TestFileUtils.createTempFile( "tmp" );
+        Map<String, String> properties = new HashMap<>();
+        properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
+        artifact = artifact.setProperties( properties );
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
+        ArtifactResult result = resolver.resolveArtifact( session, request );
+
+        assertTrue( result.getExceptions().isEmpty() );
+
+        Artifact resolved = result.getArtifact();
+        assertNotNull( resolved.getFile() );
+        resolved = resolved.setFile( null );
+
+        assertEquals( artifact, resolved );
+    }
+
+    @Test
+    public void testResolveChecksumDoesNotMatch()
+            throws IOException
+    {
+        session.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
+
+        resolver.setProvidedChecksumsSources( Collections.singletonList(
+                ( session, artifact, checksumAlgorithmFactories ) -> Collections.singletonMap(
+                        Md5ChecksumAlgorithmFactory.NAME,
+                        "f21bf591cf832b6af242e76bb977bc49" ) ) );
+        resolver.setChecksumAlgorithmFactories( Collections.singletonList( new Md5ChecksumAlgorithmFactory() ) );
+
+        File tmpFile = TestFileUtils.createTempFile( "tmp" );
+        Map<String, String> properties = new HashMap<>();
+        properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
+        artifact = artifact.setProperties( properties );
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
+        try {
+            resolver.resolveArtifact( session, request );
+            fail( "expected exception" );
+        }
+        catch (ArtifactResolutionException e)
+        {
+            assertNotNull( e.getResults() );
+            assertEquals( 1, e.getResults().size() );
+
+            ArtifactResult result = e.getResults().get( 0 );
+
+            assertSame( request, result.getRequest() );
+
+            assertFalse( result.getExceptions().isEmpty() );
+            assertTrue( result.getExceptions().get( 0 ) instanceof ChecksumFailureException );
+
+            Artifact resolved = result.getArtifact();
+            assertNotNull( resolved );
+        }
+    }
+
+    @Test
+    public void testResolveChecksumUnknown()
+            throws IOException
+    {
+        session.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
+
+        resolver.setProvidedChecksumsSources( Collections.singletonList(
+                ( session, artifact, checksumAlgorithmFactories ) -> Collections.singletonMap(
+                        "unknown",
+                        "unknown" ) ) );
+        resolver.setChecksumAlgorithmFactories( Collections.singletonList( new Md5ChecksumAlgorithmFactory() ) );
+
+        File tmpFile = TestFileUtils.createTempFile( "tmp" );
+        Map<String, String> properties = new HashMap<>();
+        properties.put( ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath() );
+        artifact = artifact.setProperties( properties );
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
+        try {
+            resolver.resolveArtifact( session, request );
+            fail( "expected exception" );
+        }
+        catch (ArtifactResolutionException e)
+        {
+            assertNotNull( e.getResults() );
+            assertEquals( 1, e.getResults().size() );
+
+            ArtifactResult result = e.getResults().get( 0 );
+
+            assertSame( request, result.getRequest() );
+
+            assertFalse( result.getExceptions().isEmpty() );
+            assertTrue( result.getExceptions().get( 0 ) instanceof IllegalStateException );
+
+            Artifact resolved = result.getArtifact();
+            assertNotNull( resolved );
+        }
+    }
 }

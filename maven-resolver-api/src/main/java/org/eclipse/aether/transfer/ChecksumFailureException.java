@@ -61,13 +61,28 @@ public class ChecksumFailureException
      */
     public ChecksumFailureException( String expected, String expectedKind, String actual )
     {
+        this( expected, expectedKind, actual, true );
+    }
+
+    /**
+     * Creates a new exception with the specified expected, expected kind and actual checksum.
+     *
+     * @param expected The expected checksum as declared by the hosting repository, may be {@code null}.
+     * @param expectedKind The expected checksum kind, may be {@code null}.
+     * @param actual The actual checksum as computed from the local bytes, may be {@code null}.
+     * @param retryWorthy if retrying the download might solve the checksum failure, {@code false} if the checksum
+     *                    failure is non-recoverable.
+     * @since 1.8.4
+     */
+    public ChecksumFailureException( String expected, String expectedKind, String actual, boolean retryWorthy )
+    {
         super( "Checksum validation failed, expected '"
             + expected + "'" + ( expectedKind == null ? "" : " (" + expectedKind + ")" )
             + " but is actually '" + actual + "'" );
         this.expected = expected;
         this.expectedKind = expectedKind;
         this.actual = actual;
-        this.retryWorthy = true;
+        this.retryWorthy = retryWorthy;
     }
 
     /**

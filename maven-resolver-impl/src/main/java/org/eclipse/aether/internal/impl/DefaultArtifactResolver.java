@@ -20,12 +20,15 @@ package org.eclipse.aether.internal.impl;
  */
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import static java.util.Objects.requireNonNull;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -45,6 +48,11 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
+import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
@@ -72,6 +80,7 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
+import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
@@ -106,6 +115,12 @@ public class DefaultArtifactResolver
 
     private OfflineController offlineController;
 
+    private ChecksumPolicyProvider checksumPolicyProvider;
+
+    private List<ProvidedChecksumsSource> providedChecksumsSources = Collections.emptyList();
+
+    private List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = Collections.emptyList();
+
     public DefaultArtifactResolver()
     {
         // enables default constructor
@@ -117,7 +132,10 @@ public class DefaultArtifactResolver
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             OfflineController offlineController )
+                             OfflineController offlineController,
+                             ChecksumPolicyProvider checksumPolicyProvider,
+                             List<ProvidedChecksumsSource> providedChecksumsSources,
+                             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -127,6 +145,9 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
+        setChecksumPolicyProvider( checksumPolicyProvider );
+        setProvidedChecksumsSources( providedChecksumsSources );
+        setChecksumAlgorithmFactories( checksumAlgorithmFactories );
     }
 
     public void initService( ServiceLocator locator )
@@ -139,6 +160,19 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
+        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
+        List<ProvidedChecksumsSource> providedChecksumsSources = locator.getServices(
+                ProvidedChecksumsSource.class );
+        if ( providedChecksumsSources != null )
+        {
+            setProvidedChecksumsSources( providedChecksumsSources );
+        }
+        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = locator.getServices(
+                ChecksumAlgorithmFactory.class );
+        if ( checksumAlgorithmFactories != null )
+        {
+            setChecksumAlgorithmFactories( checksumAlgorithmFactories );
+        }
     }
 
     /**
@@ -200,6 +234,33 @@ public class DefaultArtifactResolver
     public DefaultArtifactResolver setOfflineController( OfflineController offlineController )
     {
         this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
+        return this;
+    }
+
+    public DefaultArtifactResolver setChecksumPolicyProvider(
+            ChecksumPolicyProvider checksumPolicyProvider )
+    {
+        this.checksumPolicyProvider = requireNonNull(
+                checksumPolicyProvider,
+                "checksum policy provider cannot be null" );
+        return this;
+    }
+
+    public DefaultArtifactResolver setProvidedChecksumsSources(
+            List<ProvidedChecksumsSource> providedChecksumsSources )
+    {
+        this.providedChecksumsSources = requireNonNull(
+                providedChecksumsSources,
+                "provided checksum sources cannot be null" );
+        return this;
+    }
+
+    public DefaultArtifactResolver setChecksumAlgorithmFactories(
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
+    {
+        this.checksumAlgorithmFactories = requireNonNull(
+                checksumAlgorithmFactories,
+                "checksum algorithm factories cannot be null" );
         return this;
     }
 
@@ -423,6 +484,138 @@ public class DefaultArtifactResolver
                 }
                 RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
                 artifactResolved( session, trace, request.getArtifact(), null, result.getExceptions() );
+            }
+            else
+            {
+                String checksumPolicyName = session.getChecksumPolicy();
+                if ( checksumPolicyName == null || checksumPolicyName.isEmpty() )
+                {
+                    continue;
+                }
+                Map<String, String> checksums = null;
+                for ( ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources )
+                {
+                    Map<String, String> candidates = providedChecksumsSource.getProvidedArtifactChecksums(
+                            session,
+                            artifact,
+                            checksumAlgorithmFactories );
+                    if ( candidates != null )
+                    {
+                        checksums = candidates;
+                        break;
+                    }
+                }
+                if ( checksums == null )
+                {
+                    continue;
+                }
+                ChecksumPolicy checksumPolicy = checksumPolicyProvider.newChecksumPolicy(
+                        session,
+                        artifact.getFile(),
+                        checksumPolicyName );
+                if ( checksumPolicy == null )
+                {
+                    continue;
+                }
+                boolean noMoreChecksum = true;
+                for ( Map.Entry<String, String> entry : checksums.entrySet() )
+                {
+                    ChecksumAlgorithmFactory checksumAlgorithmFactory = checksumAlgorithmFactories.stream()
+                            .filter( factory -> factory.getName().equals( entry.getKey() ) )
+                            .findFirst()
+                            .orElse( null );
+                    if ( checksumAlgorithmFactory == null )
+                    {
+                        failures = true;
+                        Exception exception = new IllegalStateException(
+                                "Validator resolution failed for " + entry.getKey() );
+                        result.addException( exception );
+                        break;
+                    }
+                    else
+                    {
+                        File file = artifact.getFile();
+                        ChecksumAlgorithm algorithm = checksumAlgorithmFactory.getAlgorithm();
+                        try ( FileInputStream inputStream = new FileInputStream( file ) )
+                        {
+                            byte[] buffer = new byte[ 1024 * 8 ];
+                            int length;
+                            while ( ( length = inputStream.read( buffer ) ) != -1 )
+                            {
+                                algorithm.update( ByteBuffer.wrap( buffer, 0, length ) );
+                            }
+                            String expected = algorithm.checksum();
+                            if ( expected.equals( entry.getValue() ) )
+                            {
+                                if ( checksumPolicy.onChecksumMatch(
+                                        entry.getKey(),
+                                        ChecksumPolicy.ChecksumKind.PROVIDED ) )
+                                {
+                                    noMoreChecksum = false;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    checksumPolicy.onChecksumMismatch(
+                                            entry.getKey(),
+                                            ChecksumPolicy.ChecksumKind.PROVIDED,
+                                            new ChecksumFailureException(
+                                                    expected,
+                                                    ChecksumPolicy.ChecksumKind.PROVIDED.name(),
+                                                    entry.getValue(),
+                                                    false ) );
+                                }
+                                catch ( ChecksumFailureException failure )
+                                {
+                                    if ( !checksumPolicy.onTransferChecksumFailure( failure ) )
+                                    {
+                                        failures = true;
+                                        result.addException( failure );
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        catch ( IOException exception )
+                        {
+                            try
+                            {
+                                checksumPolicy.onChecksumError(
+                                        entry.getKey(),
+                                        ChecksumPolicy.ChecksumKind.PROVIDED,
+                                        new ChecksumFailureException( exception ) );
+                            }
+                            catch ( ChecksumFailureException failure )
+                            {
+                                if ( !checksumPolicy.onTransferChecksumFailure( failure ) )
+                                {
+                                    failures = true;
+                                    result.addException( exception );
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if ( noMoreChecksum )
+                {
+                    try
+                    {
+                        checksumPolicy.onNoMoreChecksums();
+                    }
+                    catch ( ChecksumFailureException failure )
+                    {
+                        if ( !checksumPolicy.onTransferChecksumFailure( failure ) )
+                        {
+                            failures = true;
+                            result.addException( failure );
+                            break;
+                        }
+                    }
+                }
             }
         }
 

@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.File;
 import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -48,6 +49,26 @@ public final class DefaultChecksumPolicyProvider
     public DefaultChecksumPolicyProvider()
     {
         // enables default constructor
+    }
+
+    public ChecksumPolicy newChecksumPolicy( RepositorySystemSession session, File resource, String policy )
+    {
+        Objects.requireNonNull( session, "session cannot be null" );
+        Objects.requireNonNull( resource, "resource cannot be null" );
+        validatePolicy( "policy", policy );
+
+        switch ( policy )
+        {
+            case RepositoryPolicy.CHECKSUM_POLICY_IGNORE:
+                return null;
+            case RepositoryPolicy.CHECKSUM_POLICY_FAIL:
+                return new FailChecksumPolicy( resource );
+            case RepositoryPolicy.CHECKSUM_POLICY_WARN:
+                return new WarnChecksumPolicy( resource );
+            default:
+                throw new IllegalArgumentException( "Unsupported policy: " + policy );
+        }
+
     }
 
     public ChecksumPolicy newChecksumPolicy( RepositorySystemSession session, RemoteRepository repository,
@@ -110,7 +131,7 @@ public final class DefaultChecksumPolicyProvider
 
     private static void validatePolicy( String paramName, String policy )
     {
-        Objects.requireNonNull( policy, paramName + "cannot be null" );
+        Objects.requireNonNull( policy, paramName + " cannot be null" );
 
         switch ( policy )
         {
