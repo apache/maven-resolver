@@ -389,32 +389,31 @@ public class BfDependencyCollector
                     createVersionRangeRequest( args.request.getRequestContext(), context.trace, context.repositories,
                             dependency );
             VersionRangeResult rangeResult = cachedResolveRangeResult( rangeRequest, args.pool, args.session );
-            DescriptorResolutionResult resolutionResult = new DescriptorResolutionResult( rangeResult );
             List<? extends Version> versions = filterVersions( dependency, rangeResult, context.verFilter,
                     args.versionContext );
 
             //resolve newer version first to maximize benefits of skipper
             Collections.reverse( versions );
 
+            boolean isVersionRange = versions.size() > 1;
             Map<Version, ArtifactDescriptorResult> descriptors = new ConcurrentHashMap<>( versions.size() );
-            Stream<? extends Version> stream = versions.size() > 1 ? versions.parallelStream() : versions.stream();
-            stream.forEachOrdered( version ->
+            Stream<? extends Version> stream = isVersionRange ? versions.parallelStream() : versions.stream();
+            stream.forEach( version ->
             {
                 ArtifactDescriptorResult descriptorResult =
                         resolveDescriptorForVersion( args, context, results, dependency, version );
-                resolutionResult.descriptors.put( version, descriptorResult );
-                if ( versions.size() > 1 )
+                Optional.ofNullable( descriptorResult ).ifPresent( r -> descriptors.put( version, r ) );
+                if ( isVersionRange )
                 {
-                    Optional.ofNullable( descriptorResult ).ifPresent( r ->
-                    {
-                        //cache for specific version in version range
-                        descriptors.put( version, r );
-                        args.resolver.cacheVersionRangeDescriptor( r.getArtifact(),
-                                ConcurrentUtils.constantFuture(
-                                        new DescriptorResolutionResult( rangeResult, descriptors ) ) );
-                    } );
+                    //cache for specific version in version range
+                    args.resolver.cacheVersionRangeDescriptor( descriptorResult.getArtifact(),
+                            ConcurrentUtils.constantFuture(
+                                    new DescriptorResolutionResult( rangeResult, descriptors ) ) );
                 }
             } );
+
+            DescriptorResolutionResult resolutionResult = new DescriptorResolutionResult( rangeResult );
+            versions.forEach( version -> resolutionResult.descriptors.put( version, descriptors.get( version ) ) );
             return resolutionResult;
         } );
     }
