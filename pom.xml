@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>36</version>
+    <version>37</version>
     <relativePath />
   </parent>
 
@@ -381,7 +381,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M6</version>
           <configuration>
             <argLine>-Xmx128m</argLine>
             <redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</redirectTestOutputToFile>
@@ -393,7 +392,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>3.0.0-M6</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
             <argLine>-Xmx128m</argLine>
@@ -440,7 +438,7 @@
         <plugin>
           <groupId>biz.aQute.bnd</groupId>
           <artifactId>bnd-maven-plugin</artifactId>
-          <version>6.2.0</version>
+          <version>6.3.1</version>
           <executions>
             <execution>
               <id>bnd-process</id>
