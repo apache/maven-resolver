@@ -36,6 +36,10 @@ import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
@@ -64,7 +68,7 @@ public final class DefaultSyncContextFactory
 
     private static final String NAME_MAPPER_KEY = "aether.syncContext.named.nameMapper";
 
-    private static final String DEFAULT_NAME_MAPPER_NAME = GAVNameMapper.NAME;
+    private static final String DEFAULT_NAME_MAPPER_NAME = GAVNameMapperProvider.NAME;
 
     private static final String FACTORY_KEY = "aether.syncContext.named.factory";
 
@@ -102,10 +106,10 @@ public final class DefaultSyncContextFactory
     public void initService( final ServiceLocator locator )
     {
         HashMap<String, NameMapper> mappers = new HashMap<>();
-        mappers.put( StaticNameMapper.NAME, new StaticNameMapper() );
-        mappers.put( GAVNameMapper.NAME, new GAVNameMapper() );
-        mappers.put( DiscriminatingNameMapper.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        mappers.put( FileGAVNameMapper.NAME, new FileGAVNameMapper() );
+        mappers.put( StaticNameMapperProvider.NAME, new StaticNameMapper() );
+        mappers.put( GAVNameMapperProvider.NAME, new GAVNameMapper() );
+        mappers.put( DiscriminatingNameMapperProvider.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
+        mappers.put( FileGAVNameMapperProvider.NAME, new FileGAVNameMapper() );
         this.nameMappers = mappers;
 
         HashMap<String, NamedLockFactory> factories = new HashMap<>();

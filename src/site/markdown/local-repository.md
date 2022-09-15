@@ -156,7 +156,7 @@ To manually instantiate a simple LRM, one needs to invoke following code:
 
 ```java
 LocalRepositoryManager simple = new SimpleLocalRepositoryManagerFactory()
-        .newInstance( session, new LocalRepository( baseDir ) );
+        .newInstance( session, new LocalRepository( basedir ) );
 ```
 
 Note: This code snippet above instantiates a component, that is not

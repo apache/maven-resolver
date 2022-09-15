@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext;
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,19 +19,36 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
-public class FileLockAdapterTest
-    extends NamedLockFactoryAdapterTestSupport
+import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.HashingNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+
+/**
+ * The "file-hgav" name mapper provider.
+ *
+ * @since TBD
+ */
+@Singleton
+@Named( FileHashingGAVNameMapperProvider.NAME )
+public class FileHashingGAVNameMapperProvider implements Provider<NameMapper>
 {
-    @BeforeClass
-    public static void createNamedLockFactory()
+    public static final String NAME = "file-hgav";
+
+    private final NameMapper mapper;
+
+    public FileHashingGAVNameMapperProvider()
     {
-        nameMapper = new BasedirNameMapper( new FileGAVNameMapper() );
-        namedLockFactory = new FileLockNamedLockFactory();
-        createAdapter();
+        this.mapper = new BasedirNameMapper( new HashingNameMapper( new GAVNameMapper() ) );
+    }
+
+    @Override
+    public NameMapper get()
+    {
+        return mapper;
     }
 }

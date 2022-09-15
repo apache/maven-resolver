@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext;
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,19 +19,34 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
-public class FileLockAdapterTest
-    extends NamedLockFactoryAdapterTestSupport
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
+
+/**
+ * The "static" name mapper provider.
+ *
+ * @since TBD
+ */
+@Singleton
+@Named( StaticNameMapperProvider.NAME )
+public class StaticNameMapperProvider implements Provider<NameMapper>
 {
-    @BeforeClass
-    public static void createNamedLockFactory()
+    public static final String NAME = "static";
+
+    private final NameMapper mapper;
+
+    public StaticNameMapperProvider()
     {
-        nameMapper = new BasedirNameMapper( new FileGAVNameMapper() );
-        namedLockFactory = new FileLockNamedLockFactory();
-        createAdapter();
+        this.mapper = new StaticNameMapper();
+    }
+
+    @Override
+    public NameMapper get()
+    {
+        return mapper;
     }
 }

@@ -20,29 +20,47 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  */
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.TreeSet;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context:
- * always maps ANY input to same name.
+ * Support class to implement {@link NameMapper}s. It implements deadlock prevention by "stable ordered result" (sorting
+ * the result) and all the null-checks that are needed.
+ *
+ * @since TBD
  */
-public class StaticNameMapper implements NameMapper
+public abstract class NameMapperSupport implements NameMapper
 {
-    /**
-     * Configuration property to pass in static name
-     */
-    private static final String CONFIG_PROP_NAME = "aether.syncContext.named.static.name";
-
     @Override
     public Collection<String> nameLocks( final RepositorySystemSession session,
                                          final Collection<? extends Artifact> artifacts,
                                          final Collection<? extends Metadata> metadatas )
     {
-        return Collections.singletonList( ConfigUtils.getString( session, "static", CONFIG_PROP_NAME ) );
+        // Deadlock prevention: https://stackoverflow.com/a/16780988/696632
+        // We must acquire multiple locks always in the same order!
+        TreeSet<String> keys = new TreeSet<>();
+        if ( artifacts != null )
+        {
+            for ( Artifact artifact : artifacts )
+            {
+                keys.add( getArtifactName( artifact ) );
+            }
+        }
+
+        if ( metadatas != null )
+        {
+            for ( Metadata metadata : metadatas )
+            {
+                keys.add( getMetadataName( metadata ) );
+            }
+        }
+        return keys;
     }
+
+    protected abstract String getArtifactName( final Artifact artifact );
+
+    protected abstract String getMetadataName( final Metadata metadata );
 }

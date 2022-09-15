@@ -22,27 +22,21 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.StringDigestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 
 /**
- * Discriminating {@link NameMapper}, that wraps another {@link NameMapper} and adds a "discriminator" as prefix, that
+ * Wrapping {@link NameMapper}, that wraps another {@link NameMapper} and adds a "discriminator" as prefix, that
  * makes lock names unique including the hostname and local repository (by default). The discriminator may be passed
  * in via {@link RepositorySystemSession} or is automatically calculated based on the local hostname and repository
  * path. The implementation retains order of collection elements as it got it from
@@ -50,12 +44,8 @@ import static java.util.stream.Collectors.toList;
  * <p>
  * The default setup wraps {@link GAVNameMapper}, but manually may be created any instance needed.
  */
-@Singleton
-@Named( DiscriminatingNameMapper.NAME )
 public class DiscriminatingNameMapper implements NameMapper
 {
-    public static final String NAME = "discriminating";
-
     /**
      * Configuration property to pass in discriminator
      */
@@ -72,14 +62,13 @@ public class DiscriminatingNameMapper implements NameMapper
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DiscriminatingNameMapper.class );
 
-    private final NameMapper nameMapper;
+    private final NameMapper delegate;
 
     private final String hostname;
 
-    @Inject
-    public DiscriminatingNameMapper( @Named( GAVNameMapper.NAME ) final NameMapper nameMapper )
+    public DiscriminatingNameMapper( final NameMapper delegate )
     {
-        this.nameMapper = Objects.requireNonNull( nameMapper );
+        this.delegate = Objects.requireNonNull( delegate );
         this.hostname = getHostname();
     }
 
@@ -89,8 +78,9 @@ public class DiscriminatingNameMapper implements NameMapper
                                          final Collection<? extends Metadata> metadatas )
     {
         String discriminator = createDiscriminator( session );
-        return nameMapper.nameLocks( session, artifacts, metadatas ).stream().map( s -> discriminator + ":" + s )
-                         .collect( toList() );
+        return delegate.nameLocks( session, artifacts, metadatas ).stream()
+                .map( s -> discriminator + ":" + s )
+                .collect( toList() );
     }
 
     private String getHostname()
@@ -117,16 +107,7 @@ public class DiscriminatingNameMapper implements NameMapper
             discriminator = hostname + ":" + basedir;
             try
             {
-                Map<String, Object> checksums = ChecksumUtils
-                        .calc( discriminator.getBytes( StandardCharsets.UTF_8 ), Collections.singletonList( "SHA-1" ) );
-                Object checksum = checksums.get( "SHA-1" );
-
-                if ( checksum instanceof Exception )
-                {
-                    throw (Exception) checksum;
-                }
-
-                return String.valueOf( checksum );
+                return StringDigestUtil.sha1( discriminator );
             }
             catch ( Exception e )
             {

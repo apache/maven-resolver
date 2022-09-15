@@ -19,64 +19,39 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.util.Collection;
-import java.util.TreeSet;
 
 /**
  * Artifact GAV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
  * considering local repository, only the artifact coordinates.
  */
-@Singleton
-@Named( GAVNameMapper.NAME )
-public class GAVNameMapper implements NameMapper
+public class GAVNameMapper extends NameMapperSupport
 {
-    public static final String NAME = "gav";
+    @Override
+    protected String getArtifactName( Artifact artifact )
+    {
+        return "artifact:" + artifact.getGroupId()
+                + ":" + artifact.getArtifactId()
+                + ":" + artifact.getBaseVersion();
+    }
 
     @Override
-    public Collection<String> nameLocks( final RepositorySystemSession session,
-                                         final Collection<? extends Artifact> artifacts,
-                                         final Collection<? extends Metadata> metadatas )
+    protected String getMetadataName( Metadata metadata )
     {
-        // Deadlock prevention: https://stackoverflow.com/a/16780988/696632
-        // We must acquire multiple locks always in the same order!
-        Collection<String> keys = new TreeSet<>();
-        if ( artifacts != null )
+        String name = "metadata:";
+        if ( !metadata.getGroupId().isEmpty() )
         {
-            for ( Artifact artifact : artifacts )
+            name += metadata.getGroupId();
+            if ( !metadata.getArtifactId().isEmpty() )
             {
-                String key = "artifact:" + artifact.getGroupId()
-                             + ":" + artifact.getArtifactId()
-                             + ":" + artifact.getBaseVersion();
-                keys.add( key );
-            }
-        }
-
-        if ( metadatas != null )
-        {
-            for ( Metadata metadata : metadatas )
-            {
-                StringBuilder key = new StringBuilder( "metadata:" );
-                if ( !metadata.getGroupId().isEmpty() )
+                name += ":" + metadata.getArtifactId();
+                if ( !metadata.getVersion().isEmpty() )
                 {
-                    key.append( metadata.getGroupId() );
-                    if ( !metadata.getArtifactId().isEmpty() )
-                    {
-                        key.append( ':' ).append( metadata.getArtifactId() );
-                        if ( !metadata.getVersion().isEmpty() )
-                        {
-                            key.append( ':' ).append( metadata.getVersion() );
-                        }
-                    }
+                    name += ":" + metadata.getVersion();
                 }
-                keys.add( key.toString() );
             }
         }
-        return keys;
+        return name;
     }
 }

@@ -56,11 +56,11 @@ import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
@@ -206,14 +206,14 @@ public class AetherModule
                 .to( org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class )
                 .in( Singleton.class );
 
-        bind( NameMapper.class ).annotatedWith( Names.named( StaticNameMapper.NAME ) )
-                .to( StaticNameMapper.class ).in( Singleton.class );
-        bind( NameMapper.class ).annotatedWith( Names.named( GAVNameMapper.NAME ) )
-                .to( GAVNameMapper.class ).in( Singleton.class );
-        bind( NameMapper.class ).annotatedWith( Names.named( DiscriminatingNameMapper.NAME ) )
-                .to( DiscriminatingNameMapper.class ).in( Singleton.class );
-        bind( NameMapper.class ).annotatedWith( Names.named( FileGAVNameMapper.NAME ) )
-                .to( FileGAVNameMapper.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( StaticNameMapperProvider.NAME ) )
+                .toProvider( StaticNameMapperProvider.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( GAVNameMapperProvider.NAME ) )
+                .toProvider( GAVNameMapperProvider.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( DiscriminatingNameMapperProvider.NAME ) )
+                .toProvider( DiscriminatingNameMapperProvider.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( FileGAVNameMapperProvider.NAME ) )
+                .toProvider( FileGAVNameMapperProvider.class ).in( Singleton.class );
 
         bind( NamedLockFactory.class ).annotatedWith( Names.named( NoopNamedLockFactory.NAME ) )
                 .to( NoopNamedLockFactory.class ).in( Singleton.class );
@@ -271,16 +271,16 @@ public class AetherModule
     @Provides
     @Singleton
     Map<String, NameMapper> provideNameMappers(
-            @Named( StaticNameMapper.NAME ) NameMapper staticNameMapper,
-            @Named( GAVNameMapper.NAME ) NameMapper gavNameMapper,
-            @Named( DiscriminatingNameMapper.NAME ) NameMapper discriminatingNameMapper,
-            @Named( FileGAVNameMapper.NAME ) NameMapper fileGavNameMapper )
+            @Named( StaticNameMapperProvider.NAME ) NameMapper staticNameMapper,
+            @Named( GAVNameMapperProvider.NAME ) NameMapper gavNameMapper,
+            @Named( DiscriminatingNameMapperProvider.NAME ) NameMapper discriminatingNameMapper,
+            @Named( FileGAVNameMapperProvider.NAME ) NameMapper fileGavNameMapper )
     {
         Map<String, NameMapper> nameMappers = new HashMap<>();
-        nameMappers.put( StaticNameMapper.NAME, staticNameMapper );
-        nameMappers.put( GAVNameMapper.NAME, gavNameMapper );
-        nameMappers.put( DiscriminatingNameMapper.NAME, discriminatingNameMapper );
-        nameMappers.put( FileGAVNameMapper.NAME, fileGavNameMapper );
+        nameMappers.put( StaticNameMapperProvider.NAME, staticNameMapper );
+        nameMappers.put( GAVNameMapperProvider.NAME, gavNameMapper );
+        nameMappers.put( DiscriminatingNameMapperProvider.NAME, discriminatingNameMapper );
+        nameMappers.put( FileGAVNameMapperProvider.NAME, fileGavNameMapper );
         return Collections.unmodifiableMap( nameMappers );
     }
 

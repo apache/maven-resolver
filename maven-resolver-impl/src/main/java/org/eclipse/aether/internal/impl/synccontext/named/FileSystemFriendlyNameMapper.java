@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext;
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,19 +19,14 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
+import org.eclipse.aether.named.support.FileSystemFriendly;
 
-public class FileLockAdapterTest
-    extends NamedLockFactoryAdapterTestSupport
+/**
+ * A {@link NameMapper} that declares itself "file system friendly", in a way it produces locks names that contains
+ * file system friendly characters, so they can be used as file names as well.
+ *
+ * @since TBD
+ */
+public interface FileSystemFriendlyNameMapper extends NameMapper, FileSystemFriendly
 {
-    @BeforeClass
-    public static void createNamedLockFactory()
-    {
-        nameMapper = new BasedirNameMapper( new FileGAVNameMapper() );
-        namedLockFactory = new FileLockNamedLockFactory();
-        createAdapter();
-    }
 }
