@@ -23,28 +23,41 @@ Named locks are essentially locks that are assigned to some given (opaque) ID. I
 resources that each can have unique ID assigned (i.e., file with an absolute path, some entities with unique ID),
 then you can use named locks to make sure they are being protected from concurrent read and write actions.
 
-Named locks provide support classes for implementations, and provide out of the box seven named lock implementations and three name mappers.
+Named locks provide support classes for implementations, and provide out of the box several lock and name mapper implementations.
 
-Out of the box, "local" (local to JVM) named lock implementations are the following:
+Following implementations are "local" (local to JVM) named lock implementations:
 
 - `rwlock-local` implemented in `org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory` that uses
   JVM `java.util.concurrent.locks.ReentrantReadWriteLock`.
 - `semaphore-local` implemented in `org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory` that uses
   JVM `java.util.concurrent.Semaphore`.
-- `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
-  JVM `java.nio.channels.FileLock`.
 - `noop` implemented in `org.eclipse.aether.named.providers.NoopNamedLockFactory` that uses no locking.
 
-Out of the box, "distributed" named lock implementations are the following (separate modules which require additional dependencies):
+Note about "local" locks: they are in-JVM, in a way, they properly coordinate in case of multithreaded access from
+same JVM, but do not cover accesses across multiple processes and/or multiple hosts access.
+In other words, local named locks are only suited within one JVM with a multithreaded access.
+
+Following named lock implementations use underlying file system advisory file locking:
+
+- `file-lock` implemented in `org.eclipse.aether.named.providers.FileLockNamedLockFactory` that uses
+  JVM `java.nio.channels.FileLock`.
+
+The `file-lock` implementation uses file system advisory file locking, hence, concurrently running Maven processes
+set up to use `file-lock` implementation can safely share one local repository. This is almost certain on
+local file systems across all operating systems. In case of NFS mounts, file advisory locking MAY work if NFSv4+
+used with complete setup (with all the necessary services like `RPC` and `portmapper` needed to implement NFS advisory
+file locking, check your NFS and/or OS manuals for details). In short: if your (local or remote) FS correctly support
+and implements advisory locking, it should work. Local FS usually does, while with NFS your mileage may vary.
+
+Finally, "distributed" named lock implementations are the following (separate modules which require additional dependencies and remote services):
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`.
 - `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`.
 - `semaphore-hazelcast-client` implemented in `org.eclipse.aether.named.hazelcast.HazelcastClientCPSemaphoreNamedLockFactory`.
 - `semaphore-hazelcast` implemented in `org.eclipse.aether.named.hazelcast.HazelcastCPSemaphoreNamedLockFactory`.
 
-Local named locks are only suited within one JVM with a multithreaded build.
-Sharing a local repository between multiple Maven processes (i.e., on a busy CI server) requires a distributed named lock!
-
+Sharing a local repository between multiple hosts (i.e., on a busy CI server) may be best done with one of distributed named lock,
+if NFS locking is not working for you.
 
 The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
 
@@ -54,3 +67,5 @@ Out of the box, name mapper implementations are the following:
 - `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
 - `discriminating` implemented in `org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper`.
 - `file-gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper`.
+
+Note: the `file-gav` name mapper MUST be used with `file-lock` named locking, no other mapper will work with it.
