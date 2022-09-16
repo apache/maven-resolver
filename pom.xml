@@ -431,7 +431,7 @@
               <exclude>src/test/resources/**/*.ini</exclude>
               <exclude>src/test/resources/**/*.txt</exclude>
               <exclude>src/test/resources/ssl/*-store</exclude>
-              <exclude>.travis.yml</exclude>
+              <exclude>.gitattributes</exclude>
             </excludes>
           </configuration>
         </plugin>
