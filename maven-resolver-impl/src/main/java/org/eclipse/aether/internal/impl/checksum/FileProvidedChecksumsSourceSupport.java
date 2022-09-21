@@ -42,8 +42,13 @@ import static java.util.Objects.requireNonNull;
 abstract class FileProvidedChecksumsSourceSupport
         implements ProvidedChecksumsSource
 {
-    static final String CONFIG_PROP_PREFIX = "aether.artifactResolver.providedChecksumsSource.";
+    private static final String CONFIG_PROP_PREFIX = "aether.artifactResolver.providedChecksumsSource.";
 
+    private static final String CONF_NAME_ENABLED = "enabled";
+
+    /**
+     * Visible for testing.
+     */
     static final String LOCAL_REPO_PREFIX = ".checksums";
 
     private final String name;
@@ -63,13 +68,17 @@ abstract class FileProvidedChecksumsSourceSupport
                                                              ArtifactDownload transfer,
                                                              List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        Path baseDir = getBaseDir( session );
-        if ( baseDir != null && !checksumAlgorithmFactories.isEmpty() )
+        boolean enabled = ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ENABLED ) );
+        if ( enabled )
         {
-            Map<String, String> result =  performLookup(
-                    session, baseDir, transfer.getArtifact(), checksumAlgorithmFactories );
+            Path baseDir = getBaseDir( session );
+            if ( baseDir != null && !checksumAlgorithmFactories.isEmpty() )
+            {
+                Map<String, String> result = performLookup(
+                        session, baseDir, transfer.getArtifact(), checksumAlgorithmFactories );
 
-            return result == null || result.isEmpty() ? null : result;
+                return result == null || result.isEmpty() ? null : result;
+            }
         }
         return null;
     }

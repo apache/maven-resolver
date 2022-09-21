@@ -19,92 +19,31 @@ package org.eclipse.aether.internal.impl.checksum;
  * under the License.
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
-import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
-import org.eclipse.aether.internal.test.util.TestUtils;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.spi.connector.ArtifactDownload;
-import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
-import org.eclipse.aether.transfer.NoRepositoryLayoutException;
-import org.junit.Before;
-import org.junit.Test;
+import org.eclipse.aether.internal.impl.LocalPathComposer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-public class SparseFileProvidedChecksumsSourceTest
+public class SparseFileProvidedChecksumsSourceTest extends FileProvidedChecksumsSourceTestSupport
 {
-    private RepositorySystemSession session;
-
-    private RepositoryLayout repositoryLayout;
-
-    private SparseFileProvidedChecksumsSource subject;
-
-    @Before
-    public void before() throws NoRepositoryLayoutException, IOException
+    @Override
+    protected FileProvidedChecksumsSourceSupport prepareSubject( Path baseDir ) throws IOException
     {
-        RemoteRepository repository =
-                new RemoteRepository.Builder( "test", "default", "https://irrelevant.com" ).build();
-        session = TestUtils.newSession();
-        repositoryLayout = new Maven2RepositoryLayoutFactory().newInstance( session, repository );
-        subject = new SparseFileProvidedChecksumsSource( new DefaultFileProcessor(), new DefaultLocalPathComposer() );
-
-        // populate local repository
-        Path baseDir = session.getLocalRepository().getBasedir().toPath()
-                .resolve( SparseFileProvidedChecksumsSource.LOCAL_REPO_PREFIX );
-
+        session.setConfigProperty( "aether.artifactResolver.providedChecksumsSource.file-sparse.enabled",
+                Boolean.TRUE.toString() );
+        LocalPathComposer localPathComposer = new DefaultLocalPathComposer();
         // artifact: test:test:2.0 => "foobar"
         {
-            Path test = baseDir.resolve( "test/test/2.0/test-2.0.jar.sha1" );
+            Path test =
+                    baseDir.resolve( localPathComposer.getPathForArtifact( ARTIFACT_WITH_CHECKSUM, false ) + ".sha1" );
             Files.createDirectories( test.getParent() );
-            Files.write( test, "foobar".getBytes( StandardCharsets.UTF_8 ) );
+            Files.write( test, ARTIFACT_PROVIDED_CHECKSUM.getBytes( StandardCharsets.UTF_8 ) );
         }
-    }
 
-    @Test
-    public void noProvidedArtifactChecksum()
-    {
-        ArtifactDownload transfer = new ArtifactDownload(
-                new DefaultArtifact( "test:test:1.0" ),
-                "irrelevant",
-                new File( "irrelevant" ),
-                RepositoryPolicy.CHECKSUM_POLICY_FAIL
-        );
-        Map<String, String> providedChecksums = subject.getProvidedArtifactChecksums(
-                session,
-                transfer,
-                repositoryLayout.getChecksumAlgorithmFactories()
-        );
-        assertNull( providedChecksums );
-    }
-
-    @Test
-    public void haveProvidedArtifactChecksum()
-    {
-        ArtifactDownload transfer = new ArtifactDownload(
-                new DefaultArtifact( "test:test:2.0" ),
-                "irrelevant",
-                new File( "irrelevant" ),
-                RepositoryPolicy.CHECKSUM_POLICY_FAIL
-        );
-        Map<String, String> providedChecksums = subject.getProvidedArtifactChecksums(
-                session,
-                transfer,
-                repositoryLayout.getChecksumAlgorithmFactories()
-        );
-        assertNotNull( providedChecksums );
-        assertEquals( providedChecksums.get( Sha1ChecksumAlgorithmFactory.NAME ), "foobar" );
+        return new SparseFileProvidedChecksumsSource( new DefaultFileProcessor(), localPathComposer );
     }
 }

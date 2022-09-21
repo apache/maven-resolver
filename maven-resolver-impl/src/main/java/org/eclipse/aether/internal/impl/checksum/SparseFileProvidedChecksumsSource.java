@@ -23,8 +23,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -94,7 +94,7 @@ public final class SparseFileProvidedChecksumsSource
                         checksums.put( checksumFilePath.checksumAlgorithmFactory.getName(), checksum );
                     }
                 }
-                catch ( NoSuchFileException e )
+                catch ( FileNotFoundException e )
                 {
                     LOGGER.debug( "No provided checksum file exist for '{}' at path '{}'", artifact, checksumPath );
                 }
