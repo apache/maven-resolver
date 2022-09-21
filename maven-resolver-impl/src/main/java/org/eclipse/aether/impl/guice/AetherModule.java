@@ -45,13 +45,14 @@ import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
+import org.eclipse.aether.internal.impl.checksum.CompactFileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.checksum.SparseFileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
@@ -189,8 +190,10 @@ public class AetherModule
                 .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
-        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( FileProvidedChecksumsSource.NAME ) ) //
-            .to( FileProvidedChecksumsSource.class ).in( Singleton.class );
+        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( SparseFileProvidedChecksumsSource.NAME ) ) //
+                .to( SparseFileProvidedChecksumsSource.class ).in( Singleton.class );
+        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( CompactFileProvidedChecksumsSource.NAME ) ) //
+                .to( CompactFileProvidedChecksumsSource.class ).in( Singleton.class );
 
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
@@ -247,11 +250,13 @@ public class AetherModule
     @Provides
     @Singleton
     Map<String, ProvidedChecksumsSource> provideChecksumSources(
-        @Named( FileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource fileProvidedChecksumSource
+        @Named( SparseFileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource sparse,
+        @Named( CompactFileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource compact
     )
     {
         Map<String, ProvidedChecksumsSource> providedChecksumsSource = new HashMap<>();
-        providedChecksumsSource.put( FileProvidedChecksumsSource.NAME, fileProvidedChecksumSource );
+        providedChecksumsSource.put( SparseFileProvidedChecksumsSource.NAME, sparse );
+        providedChecksumsSource.put( CompactFileProvidedChecksumsSource.NAME, compact );
         return providedChecksumsSource;
     }
 
