@@ -30,6 +30,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import static java.util.Objects.requireNonNull;
+
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositoryEvent;
@@ -44,6 +47,8 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
@@ -68,7 +73,6 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -76,8 +80,6 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  *
@@ -108,6 +110,8 @@ public class DefaultArtifactResolver
 
     private OfflineController offlineController;
 
+    private Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors;
+
     public DefaultArtifactResolver()
     {
         // enables default constructor
@@ -119,7 +123,8 @@ public class DefaultArtifactResolver
                              VersionResolver versionResolver, UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             OfflineController offlineController )
+                             OfflineController offlineController,
+                             Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -129,6 +134,7 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
+        setArtifactResolverPostProcessors( artifactResolverPostProcessors );
     }
 
     public void initService( ServiceLocator locator )
@@ -141,6 +147,7 @@ public class DefaultArtifactResolver
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
+        setArtifactResolverPostProcessors( Collections.emptyMap() );
     }
 
     /**
@@ -202,6 +209,14 @@ public class DefaultArtifactResolver
     public DefaultArtifactResolver setOfflineController( OfflineController offlineController )
     {
         this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
+        return this;
+    }
+
+    public DefaultArtifactResolver setArtifactResolverPostProcessors(
+            Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors )
+    {
+        this.artifactResolverPostProcessors = requireNonNull( artifactResolverPostProcessors,
+                "artifact resolver post-processors cannot be null" );
         return this;
     }
 
@@ -408,6 +423,11 @@ public class DefaultArtifactResolver
         for ( ResolutionGroup group : groups )
         {
             performDownloads( session, group );
+        }
+
+        for ( ArtifactResolverPostProcessor artifactResolverPostProcessor : artifactResolverPostProcessors.values() )
+        {
+            artifactResolverPostProcessor.postProcess( session, results );
         }
 
         for ( ArtifactResult result : results )

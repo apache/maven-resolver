@@ -19,6 +19,8 @@ package org.eclipse.aether.spi.checksums;
  * under the License.
  */
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -39,16 +41,42 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 public interface TrustedChecksumsSource
 {
     /**
-     * May return the trusted checksums (for given artifact) from trusted source, or {@code null}.
+     * May return the trusted checksums (for given artifact) from trusted source, or {@code null} if not enabled.
+     * Enabled trusted checksum source SHOULD return non-null (empty map) result, when it has no data for given
+     * artifact. Empty map means in this case "no information", but how that case is interpreted depends on consumer
+     * for trusted checksums.
      *
      * @param session                    The repository system session, never {@code null}.
      * @param artifact                   The artifact we want checksums for, never {@code null}.
      * @param artifactRepository         The origin repository: local, workspace, remote repository, never {@code null}.
      * @param checksumAlgorithmFactories The checksum algorithms that are expected, never {@code null}.
-     * @return Map of expected checksums, or {@code null}.
+     * @return Map of expected checksums, or {@code null} if not enabled.
      */
     Map<String, String> getTrustedArtifactChecksums( RepositorySystemSession session,
                                                      Artifact artifact,
                                                      ArtifactRepository artifactRepository,
                                                      List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
+
+    /**
+     * A writer that is able to write/add trusted checksums to this implementation. Should be treated as a resource
+     * as underlying implementation may rely on being closed after not used anymore.
+     */
+    interface Writer extends Closeable
+    {
+        /**
+         * Performs whatever implementation requires to "set" (write/add/append) given map of trusted checksums.
+         * The passed in list of checksum algorithm factories and the map must have equal size and mapping must
+         * contain all algorithm names in list.
+         */
+        void addTrustedArtifactChecksums( Artifact artifact,
+                                          ArtifactRepository artifactRepository,
+                                          List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+                                          Map<String, String> trustedArtifactChecksums ) throws IOException;
+    }
+
+    /**
+     * Some trusted checksums sources may implement this optional method: ability to write/add checksums to them.
+     * If source does not support this feature, method should return {@code null}.
+     */
+    Writer getTrustedArtifactChecksumsWriter( RepositorySystemSession session );
 }

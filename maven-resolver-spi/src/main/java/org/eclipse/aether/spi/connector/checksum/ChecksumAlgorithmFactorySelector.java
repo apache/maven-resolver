@@ -20,6 +20,9 @@ package org.eclipse.aether.spi.connector.checksum;
  */
 
 import java.util.Collection;
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Component performing selection of {@link ChecksumAlgorithmFactory} based on known factory names.
@@ -34,6 +37,19 @@ public interface ChecksumAlgorithmFactorySelector
      * @throws IllegalArgumentException if asked algorithm name is not supported.
      */
     ChecksumAlgorithmFactory select( String algorithmName );
+
+    /**
+     * Returns list of factories for given algorithm names in order as collection is ordered, or throws if algorithm
+     * not supported.
+     *
+     * @throws IllegalArgumentException if asked algorithm name is not supported.
+     * @throws NullPointerException if passed in list of names is {@code null}.
+     * @since TBD
+     */
+    default List<ChecksumAlgorithmFactory> select( Collection<String> algorithmNames )
+    {
+        return algorithmNames.stream().map( this::select ).collect( toList() );
+    }
 
     /**
      * Returns a collection of supported algorithms. This set represents ALL the algorithms supported by Resolver,

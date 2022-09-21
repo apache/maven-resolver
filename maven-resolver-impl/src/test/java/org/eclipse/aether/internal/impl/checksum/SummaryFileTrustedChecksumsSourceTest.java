@@ -31,8 +31,6 @@ public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
     {
-        session.setConfigProperty( "aether.trustedChecksumsSource.summary-file",
-                Boolean.TRUE.toString() );
         // artifact: test:test:2.0 => "foobar"
         {
             Path test = basedir.resolve( "checksums." + checksumAlgorithmFactory.getFileExtension() );
@@ -43,5 +41,11 @@ public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
         }
 
         return new SummaryFileTrustedChecksumsSource();
+    }
+
+    @Override
+    protected void enableSource()
+    {
+        session.setConfigProperty( "aether.trustedChecksumsSource.summary-file", Boolean.TRUE.toString() );
     }
 }

@@ -34,10 +34,16 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 public interface ProvidedChecksumsSource
 {
     /**
-     * May return the provided checksums (for given artifact transfer) from trusted source other than remote
-     * repository, or {@code null}.
+     * May return the provided checksums (for given artifact transfer) from source other than remote repository, or
+     * {@code null} if it have no checksums available for given transfer. Provided checksums are "opt-in" for
+     * transfer, in a way IF they are available upfront, they will be enforced according to checksum policy
+     * in effect. Otherwise, provided checksum verification is completely left out.
+     * <p>
+     * For enabled provided checksum source is completely acceptable to return {@code null} values, as that carries
+     * the meaning "nothing to add here", as there are no checksums to be provided upfront transfer. Semantically, this
+     * is equivalent to returning empty map, but signals the intent better.
      *
-     * @param transfer The transfer that is about to be executed.
+     * @param transfer                   The transfer that is about to be executed.
      * @param checksumAlgorithmFactories The checksum algorithms that are expected.
      * @return Map of expected checksums, or {@code null}.
      */
