@@ -27,22 +27,22 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Support class for implementing {@link ProvidedChecksumsSource} backed by local filesystem.
+ * Support class for implementing {@link TrustedChecksumsSource} backed by local filesystem.
  *
  * @since TBD
  */
-abstract class FileProvidedChecksumsSourceSupport
-        implements ProvidedChecksumsSource
+abstract class FileTrustedChecksumsSourceSupport
+        implements TrustedChecksumsSource
 {
-    private static final String CONFIG_PROP_PREFIX = "aether.artifactResolver.providedChecksumsSource.";
+    private static final String CONFIG_PROP_PREFIX = "aether.trustedChecksumsSource.";
 
     private static final String CONF_NAME_ENABLED = "enabled";
 
@@ -53,7 +53,7 @@ abstract class FileProvidedChecksumsSourceSupport
 
     private final String name;
 
-    FileProvidedChecksumsSourceSupport( String name )
+    FileTrustedChecksumsSourceSupport( String name )
     {
         this.name = requireNonNull( name );
     }
@@ -64,9 +64,10 @@ abstract class FileProvidedChecksumsSourceSupport
     }
 
     @Override
-    public Map<String, String> getProvidedArtifactChecksums( RepositorySystemSession session,
-                                                             ArtifactDownload transfer,
-                                                             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
+    public Map<String, String> getTrustedArtifactChecksums( RepositorySystemSession session,
+                                                            Artifact artifact,
+                                                            ArtifactRepository artifactRepository,
+                                                            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         boolean enabled = ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ENABLED ) );
         if ( enabled )
@@ -75,7 +76,7 @@ abstract class FileProvidedChecksumsSourceSupport
             if ( baseDir != null && !checksumAlgorithmFactories.isEmpty() )
             {
                 Map<String, String> result = performLookup(
-                        session, baseDir, transfer.getArtifact(), checksumAlgorithmFactories );
+                        session, baseDir, artifact, artifactRepository, checksumAlgorithmFactories );
 
                 return result == null || result.isEmpty() ? null : result;
             }
@@ -84,7 +85,9 @@ abstract class FileProvidedChecksumsSourceSupport
     }
 
     protected abstract Map<String, String> performLookup( RepositorySystemSession session,
-                                                          Path baseDir, Artifact artifact,
+                                                          Path baseDir,
+                                                          Artifact artifact,
+                                                          ArtifactRepository artifactRepository,
                                                           List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
 
     protected String configPropKey( String name )

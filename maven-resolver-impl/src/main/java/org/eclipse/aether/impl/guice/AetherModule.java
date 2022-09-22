@@ -46,13 +46,14 @@ import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
-import org.eclipse.aether.internal.impl.checksum.CompactFileProvidedChecksumsSource;
+import org.eclipse.aether.internal.impl.checksum.CompactFileTrustedChecksumsSource;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
-import org.eclipse.aether.internal.impl.checksum.SparseFileProvidedChecksumsSource;
+import org.eclipse.aether.internal.impl.checksum.SparseFileTrustedChecksumsSource;
+import org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourceAdapter;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
@@ -92,6 +93,7 @@ import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
@@ -190,10 +192,14 @@ public class AetherModule
                 .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
-        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( SparseFileProvidedChecksumsSource.NAME ) ) //
-                .to( SparseFileProvidedChecksumsSource.class ).in( Singleton.class );
-        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( CompactFileProvidedChecksumsSource.NAME ) ) //
-                .to( CompactFileProvidedChecksumsSource.class ).in( Singleton.class );
+        bind( ProvidedChecksumsSource.class )
+                .annotatedWith( Names.named( TrustedToProvidedChecksumsSourceAdapter.NAME ) )
+                .to( TrustedToProvidedChecksumsSourceAdapter.class ).in( Singleton.class );
+
+        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SparseFileTrustedChecksumsSource.NAME ) ) //
+                .to( SparseFileTrustedChecksumsSource.class ).in( Singleton.class );
+        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( CompactFileTrustedChecksumsSource.NAME ) ) //
+                .to( CompactFileTrustedChecksumsSource.class ).in( Singleton.class );
 
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
@@ -249,15 +255,26 @@ public class AetherModule
 
     @Provides
     @Singleton
-    Map<String, ProvidedChecksumsSource> provideChecksumSources(
-        @Named( SparseFileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource sparse,
-        @Named( CompactFileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource compact
+    Map<String, ProvidedChecksumsSource> providedChecksumSources(
+            @Named( TrustedToProvidedChecksumsSourceAdapter.NAME ) ProvidedChecksumsSource adapter
     )
     {
-        Map<String, ProvidedChecksumsSource> providedChecksumsSource = new HashMap<>();
-        providedChecksumsSource.put( SparseFileProvidedChecksumsSource.NAME, sparse );
-        providedChecksumsSource.put( CompactFileProvidedChecksumsSource.NAME, compact );
-        return providedChecksumsSource;
+        Map<String, ProvidedChecksumsSource> result = new HashMap<>();
+        result.put( TrustedToProvidedChecksumsSourceAdapter.NAME, adapter );
+        return result;
+    }
+
+    @Provides
+    @Singleton
+    Map<String, TrustedChecksumsSource> trustedChecksumSources(
+        @Named( SparseFileTrustedChecksumsSource.NAME ) TrustedChecksumsSource sparse,
+        @Named( CompactFileTrustedChecksumsSource.NAME ) TrustedChecksumsSource compact
+    )
+    {
+        Map<String, TrustedChecksumsSource> result = new HashMap<>();
+        result.put( SparseFileTrustedChecksumsSource.NAME, sparse );
+        result.put( CompactFileTrustedChecksumsSource.NAME, compact );
+        return result;
     }
 
     @Provides

@@ -24,24 +24,27 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
+import org.eclipse.aether.internal.impl.DefaultFileProcessor;
+import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
+import org.eclipse.aether.internal.impl.LocalPathComposer;
 
-public class CompactFileProvidedChecksumsSourceTest extends FileProvidedChecksumsSourceTestSupport
+public class SparseFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
-    protected FileProvidedChecksumsSourceSupport prepareSubject( Path baseDir ) throws IOException
+    protected FileTrustedChecksumsSourceSupport prepareSubject( Path baseDir ) throws IOException
     {
-        session.setConfigProperty( "aether.artifactResolver.providedChecksumsSource.file-compact.enabled",
+        session.setConfigProperty( "aether.trustedChecksumsSource.file-sparse.enabled",
                 Boolean.TRUE.toString() );
+        LocalPathComposer localPathComposer = new DefaultLocalPathComposer();
         // artifact: test:test:2.0 => "foobar"
         {
-            Path test = baseDir.resolve( "checksums.sha1" );
+            Path test = baseDir.resolve( localPathComposer
+                    .getPathForArtifact( ARTIFACT_WITH_CHECKSUM, false )
+                    + "." + checksumAlgorithmFactory.getFileExtension() );
             Files.createDirectories( test.getParent() );
-            Files.write( test,
-                    ( ArtifactIdUtils.toId( ARTIFACT_WITH_CHECKSUM ) + " " + ARTIFACT_PROVIDED_CHECKSUM ).getBytes(
-                            StandardCharsets.UTF_8 ) );
+            Files.write( test, ARTIFACT_TRUSTED_CHECKSUM.getBytes( StandardCharsets.UTF_8 ) );
         }
 
-        return new CompactFileProvidedChecksumsSource();
+        return new SparseFileTrustedChecksumsSource( new DefaultFileProcessor(), localPathComposer );
     }
 }

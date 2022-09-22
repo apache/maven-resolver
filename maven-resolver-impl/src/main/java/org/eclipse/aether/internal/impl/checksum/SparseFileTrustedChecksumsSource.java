@@ -33,9 +33,11 @@ import java.util.Map;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,20 +52,22 @@ import static java.util.stream.Collectors.toList;
  * @since TBD
  */
 @Singleton
-@Named( SparseFileProvidedChecksumsSource.NAME )
-public final class SparseFileProvidedChecksumsSource
-        extends FileProvidedChecksumsSourceSupport
+@Named( SparseFileTrustedChecksumsSource.NAME )
+public final class SparseFileTrustedChecksumsSource
+        extends FileTrustedChecksumsSourceSupport
 {
     public static final String NAME = "file-sparse";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( SparseFileProvidedChecksumsSource.class );
+    private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( SparseFileTrustedChecksumsSource.class );
 
     private final FileProcessor fileProcessor;
 
     private final LocalPathComposer localPathComposer;
 
     @Inject
-    public SparseFileProvidedChecksumsSource( FileProcessor fileProcessor, LocalPathComposer localPathComposer )
+    public SparseFileTrustedChecksumsSource( FileProcessor fileProcessor, LocalPathComposer localPathComposer )
     {
         super( NAME );
         this.fileProcessor = requireNonNull( fileProcessor );
@@ -74,34 +78,46 @@ public final class SparseFileProvidedChecksumsSource
     protected Map<String, String> performLookup( RepositorySystemSession session,
                                                  Path baseDir,
                                                  Artifact artifact,
+                                                 ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        HashMap<String, String> checksums = new HashMap<>();
+        final HashMap<String, String> checksums = new HashMap<>();
+        final boolean originAware = ConfigUtils.getBoolean(
+                session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
+        final String prefix;
+        if ( originAware && artifactRepository != null )
+        {
+            prefix = artifactRepository.getId() + "/";
+        }
+        else
+        {
+            prefix = "";
+        }
         List<ChecksumFilePath> checksumFilePaths = checksumAlgorithmFactories.stream().map(
-                f -> new ChecksumFilePath(
-                        localPathComposer.getPathForArtifact( artifact, false ) + "." + f.getFileExtension(),
-                        f
+                alg -> new ChecksumFilePath( prefix
+                        + localPathComposer.getPathForArtifact( artifact, false ) + "." + alg.getFileExtension(),
+                        alg
                 )
         ).collect( toList() );
         for ( ChecksumFilePath checksumFilePath : checksumFilePaths )
         {
             Path checksumPath = baseDir.resolve( checksumFilePath.path );
-                try
+            try
+            {
+                String checksum = fileProcessor.readChecksum( checksumPath.toFile() );
+                if ( checksum != null )
                 {
-                    String checksum = fileProcessor.readChecksum( checksumPath.toFile() );
-                    if ( checksum != null )
-                    {
-                        checksums.put( checksumFilePath.checksumAlgorithmFactory.getName(), checksum );
-                    }
+                    checksums.put( checksumFilePath.checksumAlgorithmFactory.getName(), checksum );
                 }
-                catch ( FileNotFoundException e )
-                {
-                    LOGGER.debug( "No provided checksum file exist for '{}' at path '{}'", artifact, checksumPath );
-                }
-                catch ( IOException e )
-                {
-                    LOGGER.warn( "Could not read provided checksum for '{}' at path '{}'", artifact, checksumPath, e );
-                }
+            }
+            catch ( FileNotFoundException e )
+            {
+                LOGGER.debug( "No provided checksum file exist for '{}' at path '{}'", artifact, checksumPath );
+            }
+            catch ( IOException e )
+            {
+                LOGGER.warn( "Could not read provided checksum for '{}' at path '{}'", artifact, checksumPath, e );
+            }
         }
         return checksums;
     }

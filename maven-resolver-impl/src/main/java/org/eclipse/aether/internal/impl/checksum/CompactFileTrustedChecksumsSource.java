@@ -37,8 +37,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,20 +54,22 @@ import org.slf4j.LoggerFactory;
  * @since TBD
  */
 @Singleton
-@Named( CompactFileProvidedChecksumsSource.NAME )
-public final class CompactFileProvidedChecksumsSource
-        extends FileProvidedChecksumsSourceSupport
+@Named( CompactFileTrustedChecksumsSource.NAME )
+public final class CompactFileTrustedChecksumsSource
+        extends FileTrustedChecksumsSourceSupport
 {
     public static final String NAME = "file-compact";
 
     private static final String CHECKSUM_FILE_PREFIX = "checksums.";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileProvidedChecksumsSource.class );
+    private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileTrustedChecksumsSource.class );
 
     private final ConcurrentHashMap<Path, ConcurrentHashMap<String, ConcurrentHashMap<String, String>>> checksumCache;
 
     @Inject
-    public CompactFileProvidedChecksumsSource()
+    public CompactFileTrustedChecksumsSource()
     {
         super( NAME );
         this.checksumCache = new ConcurrentHashMap<>();
@@ -75,17 +79,29 @@ public final class CompactFileProvidedChecksumsSource
     protected Map<String, String> performLookup( RepositorySystemSession session,
                                                  Path baseDir,
                                                  Artifact artifact,
+                                                 ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        HashMap<String, String> checksums = new HashMap<>();
-        ConcurrentHashMap<String, ConcurrentHashMap<String, String>> baseDirProvidedHashes = checksumCache
+        final HashMap<String, String> checksums = new HashMap<>();
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> baseDirProvidedHashes = checksumCache
                 .computeIfAbsent( baseDir, b -> new ConcurrentHashMap<>() );
+        final boolean originAware = ConfigUtils.getBoolean(
+                session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
+        final String prefix;
+        if ( originAware && artifactRepository != null )
+        {
+            prefix = artifactRepository.getId() + "-" + CHECKSUM_FILE_PREFIX;
+        }
+        else
+        {
+            prefix = CHECKSUM_FILE_PREFIX;
+        }
         for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
             ConcurrentHashMap<String, String> algorithmHashes = baseDirProvidedHashes.computeIfAbsent(
                     checksumAlgorithmFactory.getName(),
-                    b -> loadProvidedHashes(
-                            baseDir.resolve( CHECKSUM_FILE_PREFIX + checksumAlgorithmFactory.getFileExtension() )
+                    algName -> loadProvidedHashes(
+                            baseDir.resolve( prefix + checksumAlgorithmFactory.getFileExtension() )
                     )
             );
             String checksum = algorithmHashes.get( ArtifactIdUtils.toId( artifact ) );
@@ -94,7 +110,7 @@ public final class CompactFileProvidedChecksumsSource
                 checksums.put( checksumAlgorithmFactory.getName(), checksum );
             }
         }
-        return checksums.isEmpty() ? null : checksums;
+        return checksums;
     }
 
     private ConcurrentHashMap<String, String> loadProvidedHashes( Path checksumFile )
