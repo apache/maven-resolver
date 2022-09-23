@@ -29,18 +29,17 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 /**
  * Component able to provide (trusted) checksums for artifacts.
- *
+ * <p>
  * Note: the "trusted" meaning depends solely on implementation and the user using it. Resolver itself does nothing
- * for "trust" (like some crypto magic or what not). It all boils down that any source being used by implemention is
- * "trusted" by user or not, does user decide accept it as "trust" or not.
+ * for "trust" (like some crypto magic or what not). It all boils down that the source being used by implementation is
+ * "trusted" by user or not.
  *
  * @since TBD
  */
 public interface TrustedChecksumsSource
 {
     /**
-     * May return the provided checksums (for given artifact transfer) from trusted source other than remote
-     * repository, or {@code null}.
+     * May return the trusted checksums (for given artifact) from trusted source, or {@code null}.
      *
      * @param session                    The repository system session.
      * @param artifact                   The artifact we want checksums for.
