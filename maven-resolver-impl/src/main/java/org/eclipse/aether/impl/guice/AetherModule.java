@@ -56,8 +56,6 @@ import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
-import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
@@ -203,7 +201,6 @@ public class AetherModule
         bind( ChecksumAlgorithmFactorySelector.class )
                 .to( DefaultChecksumAlgorithmFactorySelector.class ).in ( Singleton.class );
 
-        bind( NamedLockFactorySelector.class ).to( SimpleNamedLockFactorySelector.class ).in( Singleton.class );
         bind( SyncContextFactory.class ).to( DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( org.eclipse.aether.impl.SyncContextFactory.class )
                 .to( org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class )

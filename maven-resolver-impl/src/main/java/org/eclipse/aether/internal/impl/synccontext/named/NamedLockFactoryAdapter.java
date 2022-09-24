@@ -78,6 +78,14 @@ public final class NamedLockFactoryAdapter
         namedLockFactory.shutdown();
     }
 
+    public String toString()
+    {
+        return getClass().getSimpleName()
+                + "(nameMapper=" + nameMapper
+                + ", namedLockFactory=" + namedLockFactory
+                + ")";
+    }
+
     private static class AdaptedLockSyncContext implements SyncContext
     {
         private static final Logger LOGGER = LoggerFactory.getLogger( AdaptedLockSyncContext.class );
