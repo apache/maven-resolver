@@ -30,14 +30,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
-import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.FileHashingGAVNameMapperProvider;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider;
 import org.eclipse.aether.named.NamedLockFactory;
@@ -106,10 +103,11 @@ public final class DefaultSyncContextFactory
     public void initService( final ServiceLocator locator )
     {
         HashMap<String, NameMapper> mappers = new HashMap<>();
-        mappers.put( StaticNameMapperProvider.NAME, new StaticNameMapper() );
-        mappers.put( GAVNameMapperProvider.NAME, new GAVNameMapper() );
-        mappers.put( DiscriminatingNameMapperProvider.NAME, new DiscriminatingNameMapper( new GAVNameMapper() ) );
-        mappers.put( FileGAVNameMapperProvider.NAME, new FileGAVNameMapper() );
+        mappers.put( StaticNameMapperProvider.NAME, new StaticNameMapperProvider().get() );
+        mappers.put( GAVNameMapperProvider.NAME, new GAVNameMapperProvider().get() );
+        mappers.put( DiscriminatingNameMapperProvider.NAME, new DiscriminatingNameMapperProvider().get() );
+        mappers.put( FileGAVNameMapperProvider.NAME, new FileGAVNameMapperProvider().get() );
+        mappers.put( FileHashingGAVNameMapperProvider.NAME, new FileHashingGAVNameMapperProvider().get() );
         this.nameMappers = mappers;
 
         HashMap<String, NamedLockFactory> factories = new HashMap<>();
