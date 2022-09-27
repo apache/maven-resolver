@@ -57,13 +57,13 @@ public class DirectoryUtilsTest
         assertThat( result, equalTo( tmpDir.resolve( "foo" ) ) );
 
         result = DirectoryUtils.resolveDirectory( "/foo", tmpDir, false );
-        assertThat( result, equalTo( FileSystems.getDefault().getPath( "/foo" ) ) );
+        assertThat( result, equalTo( FileSystems.getDefault().getPath( "/foo" ).toAbsolutePath() ) );
 
         result = DirectoryUtils.resolveDirectory( "/foo/bar", tmpDir, false );
-        assertThat( result, equalTo( FileSystems.getDefault().getPath( "/foo/bar" ) ) );
+        assertThat( result, equalTo( FileSystems.getDefault().getPath( "/foo/bar" ).toAbsolutePath() ) );
 
         result = DirectoryUtils.resolveDirectory( "/foo/./bar/..", tmpDir, false );
-        assertThat( result, equalTo( FileSystems.getDefault().getPath( "/foo" ) ) );
+        assertThat( result, equalTo( FileSystems.getDefault().getPath( "/foo" ).toAbsolutePath() ) );
     }
 
     @Test
