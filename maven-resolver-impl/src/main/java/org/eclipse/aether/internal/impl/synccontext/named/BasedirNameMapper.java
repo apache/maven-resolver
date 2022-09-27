@@ -41,7 +41,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class BasedirNameMapper implements NameMapper
 {
-    private static final String CONFIG_PROP_LOCKS_DIR_NAME = "aether.syncContext.named.basedir.locksDirName";
+    private static final String CONFIG_PROP_LOCKS_DIR = "aether.syncContext.named.basedir.locksDir";
 
     private final NameMapper delegate;
 
@@ -64,7 +64,7 @@ public class BasedirNameMapper implements NameMapper
         try
         {
             final Path basedir = DirectoryUtils.resolveDirectory(
-                    session, ".locks", CONFIG_PROP_LOCKS_DIR_NAME, false );
+                    session, ".locks", CONFIG_PROP_LOCKS_DIR, false );
 
             return delegate.nameLocks( session, artifacts, metadatas ).stream()
                     .map( name -> basedir.resolve( name ).toAbsolutePath().toString() )

@@ -61,10 +61,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
     }
 
     @Test
-    public void defaultLocksDirName()
+    public void defaultLocksDir()
     {
         configProperties.put( "aether.syncContext.named.hashing.depth", "0" );
-        configProperties.put( "aether.syncContext.named.basedir.locksDirName", null );
+        configProperties.put( "aether.syncContext.named.basedir.locksDir", null );
         DefaultArtifact artifact = new DefaultArtifact( "group:artifact:1.0" );
         Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
         assertThat( names, hasSize( 1 ) );
@@ -73,10 +73,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
     }
 
     @Test
-    public void relativeLocksDirName()
+    public void relativeLocksDir()
     {
         configProperties.put( "aether.syncContext.named.hashing.depth", "0" );
-        configProperties.put( "aether.syncContext.named.basedir.locksDirName", "my/locks" );
+        configProperties.put( "aether.syncContext.named.basedir.locksDir", "my/locks" );
         DefaultArtifact artifact = new DefaultArtifact( "group:artifact:1.0" );
         Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
         assertThat( names, hasSize( 1 ) );
@@ -85,13 +85,13 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
     }
 
     @Test
-    public void absoluteLocksDirName() throws IOException
+    public void absoluteLocksDir() throws IOException
     {
-        String absoluteLocksDirName = "/my/locks";
-        String customBaseDir = new File( absoluteLocksDirName ).getCanonicalPath();
+        String absoluteLocksDir = "/my/locks";
+        String customBaseDir = new File( absoluteLocksDir ).getCanonicalPath();
 
         configProperties.put( "aether.syncContext.named.hashing.depth", "0" );
-        configProperties.put( "aether.syncContext.named.basedir.locksDirName", absoluteLocksDirName );
+        configProperties.put( "aether.syncContext.named.basedir.locksDir", absoluteLocksDir );
         DefaultArtifact artifact = new DefaultArtifact( "group:artifact:1.0" );
         Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
         assertThat( names, hasSize( 1 ) );
