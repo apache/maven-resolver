@@ -19,6 +19,7 @@ package org.eclipse.aether.util;
  * under the License.
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,13 +57,13 @@ public class DirectoryUtilsTest
         assertThat( result, equalTo( tmpDir.resolve( "foo" ) ) );
 
         result = DirectoryUtils.resolveDirectory( "/foo", tmpDir, false );
-        assertThat( result, equalTo( Paths.get( "/foo" ) ) );
+        assertThat( result, equalTo( new File( "/foo" ).getAbsoluteFile().toPath() ) );
 
         result = DirectoryUtils.resolveDirectory( "/foo/bar", tmpDir, false );
-        assertThat( result, equalTo( Paths.get( "/foo/bar" ) ) );
+        assertThat( result, equalTo( new File( "/foo/bar" ).getAbsoluteFile().toPath() ) );
 
         result = DirectoryUtils.resolveDirectory( "/foo/./bar/..", tmpDir, false );
-        assertThat( result, equalTo( Paths.get( "/foo" ) ) );
+        assertThat( result, equalTo( new File( "/foo" ).getAbsoluteFile().toPath() ) );
     }
 
     @Test
