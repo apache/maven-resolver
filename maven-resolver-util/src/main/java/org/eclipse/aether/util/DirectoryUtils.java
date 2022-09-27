@@ -29,7 +29,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A utility class to calculate (and create) Paths backed by directories using configuration properties from a
+ * A utility class to calculate (and create if needed) paths backed by directories using configuration properties from
  * repository system session and others.
  *
  * @see RepositorySystemSession#getConfigProperties()
