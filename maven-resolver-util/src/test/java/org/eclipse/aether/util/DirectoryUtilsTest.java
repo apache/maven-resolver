@@ -40,6 +40,9 @@ public class DirectoryUtilsTest
     @Test
     public void expectedCases() throws IOException
     {
+        // hack for surefire: sets the property but directory may not exist
+        Files.createDirectories( Paths.get ( System.getProperty( "java.io.tmpdir" ) ) );
+
         Path tmpDir = Files.createTempDirectory( testName.getMethodName() );
         Path result;
 
@@ -65,6 +68,9 @@ public class DirectoryUtilsTest
     @Test
     public void existsButIsADirectory() throws IOException
     {
+        // hack for surefire: sets the property but directory may not exist
+        Files.createDirectories( Paths.get ( System.getProperty( "java.io.tmpdir" ) ) );
+
         Path tmpDir = Files.createTempDirectory( testName.getMethodName() );
         Files.createDirectories( tmpDir.resolve( "foo" ) );
         Path result = DirectoryUtils.resolveDirectory( "foo", tmpDir, false );
@@ -74,6 +80,9 @@ public class DirectoryUtilsTest
     @Test
     public void existsButNotADirectory() throws IOException
     {
+        // hack for surefire: sets the property but directory may not exist
+        Files.createDirectories( Paths.get ( System.getProperty( "java.io.tmpdir" ) ) );
+
         Path tmpDir = Files.createTempDirectory( testName.getMethodName() );
         Files.createFile( tmpDir.resolve( "foo" ) );
         try
@@ -89,6 +98,9 @@ public class DirectoryUtilsTest
     @Test
     public void notExistsAndIsCreated() throws IOException
     {
+        // hack for surefire: sets the property but directory may not exist
+        Files.createDirectories( Paths.get ( System.getProperty( "java.io.tmpdir" ) ) );
+
         Path tmpDir = Files.createTempDirectory( testName.getMethodName() );
         Files.createDirectories( tmpDir.resolve( "foo" ) );
         Path result = DirectoryUtils.resolveDirectory( "foo", tmpDir, true );
