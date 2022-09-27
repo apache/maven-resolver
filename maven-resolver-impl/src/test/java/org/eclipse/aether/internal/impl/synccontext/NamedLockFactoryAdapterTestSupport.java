@@ -57,7 +57,7 @@ public abstract class NamedLockFactoryAdapterTestSupport
     /**
      * Subclass MAY populate this field but subclass must take care of proper cleanup as well, if needed!
      */
-    protected static NameMapper nameMapper = new DiscriminatingNameMapper(new GAVNameMapper());
+    protected static NameMapper nameMapper = new DiscriminatingNameMapper( GAVNameMapper.gav() );
 
     /**
      * Subclass MUST populate this field but subclass must take care of proper cleanup as well, if needed! Once set,

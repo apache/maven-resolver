@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,21 +19,34 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
-import org.eclipse.aether.named.NamedLockFactory;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
 
 /**
- * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
- * all the named locks configuration is here. Implementations may use different strategies to perform selection.
+ * The "static" name mapper provider.
+ *
+ * @since TBD
  */
-public interface NamedLockFactorySelector
+@Singleton
+@Named( StaticNameMapperProvider.NAME )
+public class StaticNameMapperProvider implements Provider<NameMapper>
 {
-    /**
-     * Returns the selected {@link NamedLockFactory}, never null.
-     */
-    NamedLockFactory getSelectedNamedLockFactory();
+    public static final String NAME = "static";
 
-    /**
-     * Returns the selected {@link NameMapper}, never null.
-     */
-    NameMapper getSelectedNameMapper();
+    private final NameMapper mapper;
+
+    public StaticNameMapperProvider()
+    {
+        this.mapper = new StaticNameMapper();
+    }
+
+    @Override
+    public NameMapper get()
+    {
+        return mapper;
+    }
 }

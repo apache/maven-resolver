@@ -1,4 +1,4 @@
-package org.eclipse.aether.named.support;
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,15 +19,34 @@ package org.eclipse.aether.named.support;
  * under the License.
  */
 
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+
 /**
- * A marker interface that mark component "file system friendly". In case of lock factory, it
- * would mean that passed in lock names MUST ADHERE to file path naming convention (and not use
- * some special, non FS friendly characters in it). Essentially, component marked with this
- * interface expects (or uses) that "name" is an absolute and valid file path.
+ * The "gav" name mapper provider.
  *
- * <strong>Important note:</strong> Experimental interface, is not meant to be used outside of
- * Maven Resolver codebase. May change or be removed completely without any further notice.
+ * @since TBD
  */
-public interface FileSystemFriendly
+@Singleton
+@Named( GAVNameMapperProvider.NAME )
+public class GAVNameMapperProvider implements Provider<NameMapper>
 {
+    public static final String NAME = "gav";
+
+    private final NameMapper mapper;
+
+    public GAVNameMapperProvider()
+    {
+        this.mapper = GAVNameMapper.gav();
+    }
+
+    @Override
+    public NameMapper get()
+    {
+        return mapper;
+    }
 }

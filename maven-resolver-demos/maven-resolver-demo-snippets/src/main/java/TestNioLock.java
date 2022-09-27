@@ -32,7 +32,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A simple tool to check file locking on your OS/FS/Java combo. To use this tool, just copy it to baseDir on
+ * A simple tool to check file locking on your OS/FS/Java combo. To use this tool, just copy it to basedir on
  * the volume you plan to use as local repository and compile and run it:
  * <ul>
  *   <li><pre>javac TestNioLock.java</pre></li>

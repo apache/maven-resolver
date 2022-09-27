@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.synccontext;
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,19 +19,35 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
-public class FileLockAdapterTest
-    extends NamedLockFactoryAdapterTestSupport
+import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+
+/**
+ * The "discriminating" name mapper provider.
+ *
+ * @since TBD
+ */
+@Singleton
+@Named( DiscriminatingNameMapperProvider.NAME )
+public class DiscriminatingNameMapperProvider implements Provider<NameMapper>
 {
-    @BeforeClass
-    public static void createNamedLockFactory()
+    public static final String NAME = "discriminating";
+
+    private final NameMapper mapper;
+
+    public DiscriminatingNameMapperProvider()
     {
-        nameMapper = new BasedirNameMapper( GAVNameMapper.fileGav() );
-        namedLockFactory = new FileLockNamedLockFactory();
-        createAdapter();
+        this.mapper = new DiscriminatingNameMapper( GAVNameMapper.gav() );
+    }
+
+    @Override
+    public NameMapper get()
+    {
+        return mapper;
     }
 }
