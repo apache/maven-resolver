@@ -32,6 +32,7 @@ import org.junit.Test;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -57,6 +58,42 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
 
         names = mapper.nameLocks( session, emptyList(), emptyList() );
         assertThat( names, Matchers.empty() );
+    }
+
+    @Test
+    public void defaultLocksDirName()
+    {
+        configProperties.put( "aether.syncContext.named.hashing.depth", "0" );
+        configProperties.put( "aether.syncContext.named.basedir.locksDirName", null );
+        DefaultArtifact artifact = new DefaultArtifact( "group:artifact:1.0" );
+        Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
+        assertThat( names, hasSize( 1 ) );
+        assertThat( names.iterator().next(),
+                equalTo( baseDir + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
+    }
+
+    @Test
+    public void relativeLocksDirName()
+    {
+        configProperties.put( "aether.syncContext.named.hashing.depth", "0" );
+        configProperties.put( "aether.syncContext.named.basedir.locksDirName", "my/locks" );
+        DefaultArtifact artifact = new DefaultArtifact( "group:artifact:1.0" );
+        Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
+        assertThat( names, hasSize( 1 ) );
+        assertThat( names.iterator().next(),
+                equalTo( baseDir + PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
+    }
+
+    @Test
+    public void absoluteLocksDirName()
+    {
+        configProperties.put( "aether.syncContext.named.hashing.depth", "0" );
+        configProperties.put( "aether.syncContext.named.basedir.locksDirName", "/my/locks" );
+        DefaultArtifact artifact = new DefaultArtifact( "group:artifact:1.0" );
+        Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
+        assertThat( names, hasSize( 1 ) );
+        assertThat( names.iterator().next(), // ends with as we do not test drive letter on non-Win plaf
+                endsWith( PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
     }
 
     @Test

@@ -19,9 +19,6 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,7 +46,7 @@ public class BasedirNameMapper implements FileSystemFriendlyNameMapper
 
     private final FileSystemFriendlyNameMapper delegate;
 
-    private final ConcurrentMap<String, Path> basedirs;
+    private final ConcurrentMap<Path, Path> basedirs;
 
     public BasedirNameMapper( final FileSystemFriendlyNameMapper delegate )
     {
@@ -62,20 +59,12 @@ public class BasedirNameMapper implements FileSystemFriendlyNameMapper
                                          final Collection<? extends Artifact> artifacts,
                                          final Collection<? extends Metadata> metadatas )
     {
-        final String locksDirName = ConfigUtils.getString( session, ".locks", CONFIG_PROP_LOCKS_DIR_NAME );
-        final File localRepositoryBasedir = session.getLocalRepository().getBasedir();
-        // here we abuse concurrent hash map to make sure costly getCanonicalFile is invoked only once
-        final Path basedir = basedirs.computeIfAbsent( localRepositoryBasedir.getPath(), k ->
-        {
-            try
-            {
-                return new File( localRepositoryBasedir, locksDirName ).getCanonicalFile().toPath();
-            }
-            catch ( IOException e )
-            {
-                throw new UncheckedIOException( e );
-            }
-        } );
+        // here we abuse concurrent hash map to make sure costly path ops happens only once
+        final Path basedir = basedirs.computeIfAbsent(
+                session.getLocalRepository().getBasedir().toPath(),
+                localRepo -> localRepo
+                        .resolve( ConfigUtils.getString( session, ".locks", CONFIG_PROP_LOCKS_DIR_NAME ) )
+                        .normalize() );
 
         return delegate.nameLocks( session, artifacts, metadatas ).stream()
                 .map( name -> basedir.resolve( name ).toAbsolutePath().toString() )
