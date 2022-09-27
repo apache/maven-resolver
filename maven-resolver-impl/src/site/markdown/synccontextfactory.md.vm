@@ -77,9 +77,7 @@ Extra values for factory (these need extra setup and will work with Sisu DI only
 
 Other configuration keys:
 
-- `aether.syncContext.named.static.name`, the value to use as static lock name, if `static` name mapper is used.
-  If not set, defaults to "static".
-- `aether.syncContext.named.basedir.locksDirName`, the directory within local repository to store the lock files.
+- `aether.syncContext.named.basedir.locksDirName`, the relative directory within local repository to store the lock files,
   If not set, defaults to ".locks".
 - `aether.syncContext.named.discriminating.discriminator`, when `discriminating` name mapper is used, sets the a
   discriminator uniquely identifying a host and local repository pair. If not set, discriminator is calculated by

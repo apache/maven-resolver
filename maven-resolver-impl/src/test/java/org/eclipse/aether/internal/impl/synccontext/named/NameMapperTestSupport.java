@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
  */
 public abstract class NameMapperTestSupport
 {
-    protected String baseDir;
+    protected String basedir;
 
     protected HashMap<String, Object> configProperties;
 
@@ -44,10 +44,10 @@ public abstract class NameMapperTestSupport
     @Before
     public void before() throws IOException
     {
-        baseDir = new File("/home/maven/.m2/repository").getCanonicalPath();
+        basedir = new File("/home/maven/.m2/repository").getCanonicalPath();
         configProperties = new HashMap<>();
 
-        LocalRepository localRepository = new LocalRepository( new File( baseDir ) );
+        LocalRepository localRepository = new LocalRepository( new File( basedir ) );
         session = mock( RepositorySystemSession.class );
         when( session.getConfigProperties() ).thenReturn( configProperties );
         when( session.getLocalRepository() ).thenReturn( localRepository );

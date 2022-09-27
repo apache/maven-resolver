@@ -69,7 +69,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
         Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
         assertThat( names, hasSize( 1 ) );
         assertThat( names.iterator().next(),
-                equalTo( baseDir + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
+                equalTo( basedir + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
     }
 
     @Test
@@ -81,7 +81,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
         Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
         assertThat( names, hasSize( 1 ) );
         assertThat( names.iterator().next(),
-                equalTo( baseDir + PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
+                equalTo( basedir + PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
     }
 
     @Test
@@ -109,7 +109,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
 
         assertThat( names, hasSize( 1 ) );
         assertThat( names.iterator().next(),
-                equalTo( baseDir + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
+                equalTo( basedir + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10" ) );
     }
 
     @Test
@@ -123,7 +123,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
 
         assertThat( names, hasSize( 1 ) );
         assertThat( names.iterator().next(),
-                equalTo( baseDir + PS + ".locks" + PS + "293b3990971f4b4b02b220620d2538eaac5f221b" ) );
+                equalTo( basedir + PS + ".locks" + PS + "293b3990971f4b4b02b220620d2538eaac5f221b" ) );
     }
 
     @Test
@@ -141,8 +141,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
 
         // they are sorted as well
         assertThat( namesIterator.next(),
-                equalTo( baseDir + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085" ) );
+                equalTo( basedir + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085" ) );
         assertThat( namesIterator.next(),
-                equalTo( baseDir + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638" ) );
+                equalTo( basedir + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638" ) );
     }
 }
