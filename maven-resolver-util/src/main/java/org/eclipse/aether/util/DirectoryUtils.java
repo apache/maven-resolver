@@ -26,6 +26,8 @@ import java.nio.file.Paths;
 
 import org.eclipse.aether.RepositorySystemSession;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A utility class to calculate (and create) Paths backed by directories using configuration properties from a
  * repository system session and others.
@@ -51,13 +53,16 @@ public final class DirectoryUtils
      * Resulting path is being checked is a directory, and if not, it will be created. If resulting path exists but
      * is not a directory, this method will fail.
      *
-     * @param name The name to create directory with, cannot be {@code null}.
-     * @param base The base {@link Path} to resolve name if it is relative path.
+     * @param name      The name to create directory with, cannot be {@code null}.
+     * @param base      The base {@link Path} to resolve name, if it is relative path, cannot be {@code null}.
+     * @param mayCreate If resulting path does not exist, should it create?
      * @return The {@link Path} instance that is resolved and backed by existing directory.
      * @throws IOException If some IO related errors happens.
      */
     public static Path resolveDirectory( String name, Path base, boolean mayCreate ) throws IOException
     {
+        requireNonNull( name, "name is null" );
+        requireNonNull( base, "base is null" );
         final Path namePath = Paths.get( name );
         final Path result;
         if ( namePath.isAbsolute() )
@@ -81,5 +86,34 @@ public final class DirectoryUtils
             throw new IOException( "Path exists, but is not a directory: " + result );
         }
         return result;
+    }
+
+    /**
+     * Creates {@link Path} instance out of session configuration, and (if relative) resolve it against local
+     * repository
+     * basedir. Pre-populates values and invokes {@link #resolveDirectory(String, Path, boolean)}.
+     * <p>
+     * For this method to work, {@link org.eclipse.aether.repository.LocalRepository#getBasedir()} must return
+     * non-{@code null} value, otherwise {@link NullPointerException} is thrown.
+     *
+     * @param session     The session, may not be {@code null}.
+     * @param defaultName The default value if not present in session configuration, may not be {@code null}.
+     * @param nameKey     The key to look up for in session configuration to obtain user set value.
+     * @param mayCreate   If resulting path does not exist, should it create?
+     * @return The {@link Path} instance that is resolved and backed by existing directory.
+     * @throws IOException If some IO related errors happens.
+     */
+    public static Path resolveDirectory( RepositorySystemSession session,
+                                         String defaultName,
+                                         String nameKey,
+                                         boolean mayCreate )
+            throws IOException
+    {
+        requireNonNull( session, "session is null" );
+        requireNonNull( defaultName, "defaultName is null" );
+        requireNonNull( nameKey, "nameKey is null" );
+        requireNonNull( session.getLocalRepository().getBasedir(), "session.localRepository.basedir is null" );
+        return resolveDirectory( ConfigUtils.getString( session, defaultName, nameKey ),
+                session.getLocalRepository().getBasedir().toPath(), mayCreate );
     }
 }
