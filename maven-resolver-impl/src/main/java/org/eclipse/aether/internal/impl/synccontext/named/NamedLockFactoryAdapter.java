@@ -25,7 +25,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.named.support.FileSystemFriendly;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.util.ConfigUtils;
 
 import org.slf4j.Logger;
@@ -59,11 +59,11 @@ public final class NamedLockFactoryAdapter
         this.nameMapper = Objects.requireNonNull( nameMapper );
         this.namedLockFactory = Objects.requireNonNull( namedLockFactory );
         // TODO: this is ad-hoc "validation", experimental and likely to change
-        if ( this.namedLockFactory instanceof FileSystemFriendly
-                && !( this.nameMapper instanceof FileSystemFriendly ) )
+        if ( this.namedLockFactory instanceof FileLockNamedLockFactory
+                && !this.nameMapper.isFileSystemFriendly() )
         {
             throw new IllegalArgumentException(
-                    "Misconfiguration: FS friendly lock factory requires FS friendly name mapper"
+                    "Misconfiguration: FileLockNamedLockFactory lock factory requires FS friendly NameMapper"
             );
         }
     }

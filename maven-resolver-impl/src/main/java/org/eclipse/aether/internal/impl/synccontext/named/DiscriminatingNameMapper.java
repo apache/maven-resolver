@@ -73,6 +73,12 @@ public class DiscriminatingNameMapper implements NameMapper
     }
 
     @Override
+    public boolean isFileSystemFriendly()
+    {
+        return false; // uses ":" in produced lock names
+    }
+
+    @Override
     public Collection<String> nameLocks( final RepositorySystemSession session,
                                          final Collection<? extends Artifact> artifacts,
                                          final Collection<? extends Metadata> metadatas )

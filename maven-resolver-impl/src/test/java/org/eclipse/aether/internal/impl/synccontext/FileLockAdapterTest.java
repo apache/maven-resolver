@@ -20,7 +20,7 @@ package org.eclipse.aether.internal.impl.synccontext;
  */
 
 import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.junit.BeforeClass;
 
@@ -30,7 +30,7 @@ public class FileLockAdapterTest
     @BeforeClass
     public static void createNamedLockFactory()
     {
-        nameMapper = new BasedirNameMapper( new FileGAVNameMapper() );
+        nameMapper = new BasedirNameMapper( GAVNameMapper.fileGav() );
         namedLockFactory = new FileLockNamedLockFactory();
         createAdapter();
     }

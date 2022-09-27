@@ -25,7 +25,6 @@ import java.util.Collections;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context:
@@ -33,16 +32,24 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 public class StaticNameMapper implements NameMapper
 {
-    /**
-     * Configuration property to pass in static name
-     */
-    private static final String CONFIG_PROP_NAME = "aether.syncContext.named.static.name";
+    @Override
+    public boolean isFileSystemFriendly()
+    {
+        return true;
+    }
 
     @Override
     public Collection<String> nameLocks( final RepositorySystemSession session,
                                          final Collection<? extends Artifact> artifacts,
                                          final Collection<? extends Metadata> metadatas )
     {
-        return Collections.singletonList( ConfigUtils.getString( session, "static", CONFIG_PROP_NAME ) );
+        if ( ( artifacts != null && !artifacts.isEmpty() ) || ( metadatas != null && !metadatas.isEmpty() ) )
+        {
+            return Collections.singletonList( "static" );
+        }
+        else
+        {
+            return Collections.emptyList();
+        }
     }
 }

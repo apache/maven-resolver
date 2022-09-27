@@ -28,30 +28,35 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.named.support.FileSystemFriendly;
 import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Wrapping {@link NameMapper} class that is {@link FileSystemFriendly}: it wraps another
- * {@link FileSystemFriendlyNameMapper} and resolves the resulting "file system friendly" names against local
+ * Wrapping {@link NameMapper} class that is file system friendly: it wraps another
+ * {@link NameMapper} and resolves the resulting "file system friendly" names against local
  * repository basedir.
  *
  * @since TBD
  */
-public class BasedirNameMapper implements FileSystemFriendlyNameMapper
+public class BasedirNameMapper implements NameMapper
 {
     private static final String CONFIG_PROP_LOCKS_DIR_NAME = "aether.syncContext.named.basedir.locksDirName";
 
-    private final FileSystemFriendlyNameMapper delegate;
+    private final NameMapper delegate;
 
     private final ConcurrentMap<Path, Path> basedirs;
 
-    public BasedirNameMapper( final FileSystemFriendlyNameMapper delegate )
+    public BasedirNameMapper( final NameMapper delegate )
     {
         this.delegate = requireNonNull( delegate );
         this.basedirs = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    public boolean isFileSystemFriendly()
+    {
+        return delegate.isFileSystemFriendly();
     }
 
     @Override

@@ -34,9 +34,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
-public class FileGAVNameMapperTest extends NameMapperTestSupport
+public class GAVNameMapperTest extends NameMapperTestSupport
 {
-    FileGAVNameMapper mapper = new FileGAVNameMapper();
+    NameMapper mapper = GAVNameMapper.fileGav();
 
     @Test
     public void nullsAndEmptyInputs()

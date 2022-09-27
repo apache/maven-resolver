@@ -43,7 +43,7 @@ public class FileHashingGAVNameMapperProvider implements Provider<NameMapper>
 
     public FileHashingGAVNameMapperProvider()
     {
-        this.mapper = new BasedirNameMapper( new HashingNameMapper( new GAVNameMapper() ) );
+        this.mapper = new BasedirNameMapper( new HashingNameMapper( GAVNameMapper.gav() ) );
     }
 
     @Override

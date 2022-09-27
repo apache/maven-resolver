@@ -36,7 +36,7 @@ import static org.hamcrest.Matchers.hasSize;
 
 public class HashingNameMapperTest extends NameMapperTestSupport
 {
-    HashingNameMapper mapper = new HashingNameMapper( new GAVNameMapper() );
+    HashingNameMapper mapper = new HashingNameMapper( GAVNameMapper.gav() );
 
     @Test
     public void nullsAndEmptyInputs()

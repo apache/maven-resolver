@@ -42,7 +42,7 @@ public class DiscriminatingNameMapperProvider implements Provider<NameMapper>
 
     public DiscriminatingNameMapperProvider()
     {
-        this.mapper = new DiscriminatingNameMapper( new GAVNameMapper() );
+        this.mapper = new DiscriminatingNameMapper( GAVNameMapper.gav() );
     }
 
     @Override

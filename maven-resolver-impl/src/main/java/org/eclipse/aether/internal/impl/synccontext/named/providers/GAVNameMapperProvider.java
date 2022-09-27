@@ -41,7 +41,7 @@ public class GAVNameMapperProvider implements Provider<NameMapper>
 
     public GAVNameMapperProvider()
     {
-        this.mapper = new GAVNameMapper();
+        this.mapper = GAVNameMapper.gav();
     }
 
     @Override

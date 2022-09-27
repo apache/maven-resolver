@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @since TBD
  */
-public class HashingNameMapper implements FileSystemFriendlyNameMapper
+public class HashingNameMapper implements NameMapper
 {
     private static final String CONFIG_PROP_DEPTH = "aether.syncContext.named.hashing.depth";
 
@@ -49,6 +49,12 @@ public class HashingNameMapper implements FileSystemFriendlyNameMapper
     public HashingNameMapper( final NameMapper delegate )
     {
         this.delegate = requireNonNull( delegate );
+    }
+
+    @Override
+    public boolean isFileSystemFriendly()
+    {
+        return true; // hashes delegated strings, so whatever it wrapped, it does not come through
     }
 
     @Override

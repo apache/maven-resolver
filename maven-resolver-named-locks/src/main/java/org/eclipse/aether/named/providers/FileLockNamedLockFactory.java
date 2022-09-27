@@ -33,7 +33,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.named.support.FileLockNamedLock;
-import org.eclipse.aether.named.support.FileSystemFriendly;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 
@@ -47,7 +46,6 @@ import org.eclipse.aether.named.support.NamedLockSupport;
 @Named( FileLockNamedLockFactory.NAME )
 public class FileLockNamedLockFactory
     extends NamedLockFactorySupport
-    implements FileSystemFriendly
 {
     public static final String NAME = "file-lock";
 

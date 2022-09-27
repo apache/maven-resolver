@@ -40,7 +40,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport
 {
     private final String PS = File.separator;
 
-    BasedirNameMapper mapper = new BasedirNameMapper( new HashingNameMapper( new GAVNameMapper() ) );
+    BasedirNameMapper mapper = new BasedirNameMapper( new HashingNameMapper( GAVNameMapper.gav() ) );
 
     @Test
     public void nullsAndEmptyInputs()

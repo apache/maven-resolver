@@ -31,6 +31,14 @@ import org.eclipse.aether.metadata.Metadata;
 public interface NameMapper
 {
     /**
+     * Returns {@code true} if lock names returned by this lock name mapper are file system friendly, can be used
+     * as file names and paths.
+     *
+     * @since TBD
+     */
+    boolean isFileSystemFriendly();
+
+    /**
      * Creates (opaque) names for passed in artifacts and metadata. Returned collection has max size of sum of the
      * passed in artifacts and metadata collections, or less. If an empty collection is returned, there will be no
      * locking happening. Never returns {@code null}. The resulting collection MUST BE "stable" (always sorted by
