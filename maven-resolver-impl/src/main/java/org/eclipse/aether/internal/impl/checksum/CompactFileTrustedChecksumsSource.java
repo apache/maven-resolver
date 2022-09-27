@@ -40,7 +40,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
-import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,8 +60,6 @@ public final class CompactFileTrustedChecksumsSource
     public static final String NAME = "file-compact";
 
     private static final String CHECKSUM_FILE_PREFIX = "checksums.";
-
-    private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileTrustedChecksumsSource.class );
 
@@ -85,17 +82,23 @@ public final class CompactFileTrustedChecksumsSource
         final HashMap<String, String> checksums = new HashMap<>();
         final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> baseDirProvidedHashes = checksumCache
                 .computeIfAbsent( basedir, b -> new ConcurrentHashMap<>() );
-        final boolean originAware = ConfigUtils.getBoolean(
-                session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
         final String prefix;
-        if ( originAware && artifactRepository != null )
+        if ( isOriginAware( session ) )
         {
-            prefix = artifactRepository.getId() + "-" + CHECKSUM_FILE_PREFIX;
+            if ( artifactRepository != null )
+            {
+                prefix = artifactRepository.getId() + "-" + CHECKSUM_FILE_PREFIX;
+            }
+            else
+            {
+                prefix = session.getLocalRepository().getId() + "-" + CHECKSUM_FILE_PREFIX;
+            }
         }
         else
         {
             prefix = CHECKSUM_FILE_PREFIX;
         }
+
         for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
             ConcurrentHashMap<String, String> algorithmHashes = baseDirProvidedHashes.computeIfAbsent(

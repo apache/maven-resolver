@@ -48,6 +48,8 @@ abstract class FileTrustedChecksumsSourceSupport
 
     private static final String CONF_NAME_ENABLED = "enabled";
 
+    private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
+
     /**
      * Visible for testing.
      */
@@ -95,6 +97,11 @@ abstract class FileTrustedChecksumsSourceSupport
     protected String configPropKey( String name )
     {
         return CONFIG_PROP_PREFIX + getName() + "." + name;
+    }
+
+    protected boolean isOriginAware( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
     }
 
     private Path getBasedir( RepositorySystemSession session )

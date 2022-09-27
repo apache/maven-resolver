@@ -37,7 +37,6 @@ import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +56,6 @@ public final class SparseFileTrustedChecksumsSource
         extends FileTrustedChecksumsSourceSupport
 {
     public static final String NAME = "file-sparse";
-
-    private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( SparseFileTrustedChecksumsSource.class );
 
@@ -82,17 +79,23 @@ public final class SparseFileTrustedChecksumsSource
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         final HashMap<String, String> checksums = new HashMap<>();
-        final boolean originAware = ConfigUtils.getBoolean(
-                session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
         final String prefix;
-        if ( originAware && artifactRepository != null )
+        if ( isOriginAware( session ) )
         {
-            prefix = artifactRepository.getId() + "/";
+            if ( artifactRepository != null )
+            {
+                prefix = artifactRepository.getId() + "/";
+            }
+            else
+            {
+                prefix = session.getLocalRepository().getId() + "/";
+            }
         }
         else
         {
             prefix = "";
         }
+
         List<ChecksumFilePath> checksumFilePaths = checksumAlgorithmFactories.stream().map(
                 alg -> new ChecksumFilePath( prefix
                         + localPathComposer.getPathForArtifact( artifact, false ) + "." + alg.getFileExtension(),
