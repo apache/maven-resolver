@@ -19,23 +19,41 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.util.DirectoryUtils;
+
+import static java.util.Objects.requireNonNull;
 
 /**
- * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context:
- * always maps ANY input to same name.
+ * Wrapping {@link NameMapper} class that is file system friendly: it wraps another
+ * {@link NameMapper} and resolves the resulting "file system friendly" names against local
+ * repository basedir.
+ *
+ * @since TBD
  */
-public class StaticNameMapper implements NameMapper
+public class BasedirNameMapper implements NameMapper
 {
+    private static final String CONFIG_PROP_LOCKS_DIR = "aether.syncContext.named.basedir.locksDir";
+
+    private final NameMapper delegate;
+
+    public BasedirNameMapper( final NameMapper delegate )
+    {
+        this.delegate = requireNonNull( delegate );
+    }
+
     @Override
     public boolean isFileSystemFriendly()
     {
-        return true;
+        return delegate.isFileSystemFriendly();
     }
 
     @Override
@@ -43,13 +61,18 @@ public class StaticNameMapper implements NameMapper
                                          final Collection<? extends Artifact> artifacts,
                                          final Collection<? extends Metadata> metadatas )
     {
-        if ( ( artifacts != null && !artifacts.isEmpty() ) || ( metadatas != null && !metadatas.isEmpty() ) )
+        try
         {
-            return Collections.singletonList( "static" );
+            final Path basedir = DirectoryUtils.resolveDirectory(
+                    session, ".locks", CONFIG_PROP_LOCKS_DIR, false );
+
+            return delegate.nameLocks( session, artifacts, metadatas ).stream()
+                    .map( name -> basedir.resolve( name ).toAbsolutePath().toString() )
+                    .collect( Collectors.toList() );
         }
-        else
+        catch ( IOException e )
         {
-            return Collections.emptyList();
+            throw new UncheckedIOException( e );
         }
     }
 }

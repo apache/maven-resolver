@@ -66,7 +66,7 @@ public abstract class NamedLockFactoryAdapterTestSupport
     protected static void setNamedLockFactory( final NamedLockFactory namedLockFactory )
     {
         adapter = new NamedLockFactoryAdapter(
-                new DiscriminatingNameMapper( new GAVNameMapper() ), namedLockFactory
+                new DiscriminatingNameMapper( GAVNameMapper.gav() ), namedLockFactory
         );
     }
 
