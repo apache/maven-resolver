@@ -19,9 +19,10 @@ package org.eclipse.aether.internal.impl.checksum;
  * under the License.
  */
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -72,7 +74,7 @@ abstract class FileTrustedChecksumsSourceSupport
         boolean enabled = ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ENABLED ) );
         if ( enabled )
         {
-            Path baseDir = getBaseDir( session );
+            Path baseDir = getBasedir( session );
             if ( baseDir != null && !checksumAlgorithmFactories.isEmpty() )
             {
                 Map<String, String> result = performLookup(
@@ -95,22 +97,21 @@ abstract class FileTrustedChecksumsSourceSupport
         return CONFIG_PROP_PREFIX + getName() + "." + name;
     }
 
-    private Path getBaseDir( RepositorySystemSession session )
+    private Path getBasedir( RepositorySystemSession session )
     {
-        final String baseDirPath = ConfigUtils.getString( session, null, configPropKey( "baseDir" ) );
-        final Path baseDir;
-        if ( baseDirPath != null )
+        try
         {
-            baseDir = Paths.get( baseDirPath );
+            Path basedir = DirectoryUtils.resolveDirectory(
+                    session, LOCAL_REPO_PREFIX, configPropKey( "basedir" ), false );
+            if ( !Files.isDirectory( basedir ) )
+            {
+                return null;
+            }
+            return basedir;
         }
-        else
+        catch ( IOException e )
         {
-            baseDir = session.getLocalRepository().getBasedir().toPath().resolve( LOCAL_REPO_PREFIX );
+            throw new UncheckedIOException( e );
         }
-        if ( !Files.isDirectory( baseDir ) )
-        {
-            return null;
-        }
-        return baseDir;
     }
 }

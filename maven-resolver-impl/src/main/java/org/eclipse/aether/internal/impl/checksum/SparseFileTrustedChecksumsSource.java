@@ -76,7 +76,7 @@ public final class SparseFileTrustedChecksumsSource
 
     @Override
     protected Map<String, String> performLookup( RepositorySystemSession session,
-                                                 Path baseDir,
+                                                 Path basedir,
                                                  Artifact artifact,
                                                  ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
@@ -101,7 +101,7 @@ public final class SparseFileTrustedChecksumsSource
         ).collect( toList() );
         for ( ChecksumFilePath checksumFilePath : checksumFilePaths )
         {
-            Path checksumPath = baseDir.resolve( checksumFilePath.path );
+            Path checksumPath = basedir.resolve( checksumFilePath.path );
             try
             {
                 String checksum = fileProcessor.readChecksum( checksumPath.toFile() );

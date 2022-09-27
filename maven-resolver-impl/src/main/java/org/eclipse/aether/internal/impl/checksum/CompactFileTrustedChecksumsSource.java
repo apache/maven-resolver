@@ -77,14 +77,14 @@ public final class CompactFileTrustedChecksumsSource
 
     @Override
     protected Map<String, String> performLookup( RepositorySystemSession session,
-                                                 Path baseDir,
+                                                 Path basedir,
                                                  Artifact artifact,
                                                  ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         final HashMap<String, String> checksums = new HashMap<>();
         final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> baseDirProvidedHashes = checksumCache
-                .computeIfAbsent( baseDir, b -> new ConcurrentHashMap<>() );
+                .computeIfAbsent( basedir, b -> new ConcurrentHashMap<>() );
         final boolean originAware = ConfigUtils.getBoolean(
                 session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
         final String prefix;
@@ -101,7 +101,7 @@ public final class CompactFileTrustedChecksumsSource
             ConcurrentHashMap<String, String> algorithmHashes = baseDirProvidedHashes.computeIfAbsent(
                     checksumAlgorithmFactory.getName(),
                     algName -> loadProvidedHashes(
-                            baseDir.resolve( prefix + checksumAlgorithmFactory.getFileExtension() )
+                            basedir.resolve( prefix + checksumAlgorithmFactory.getFileExtension() )
                     )
             );
             String checksum = algorithmHashes.get( ArtifactIdUtils.toId( artifact ) );
