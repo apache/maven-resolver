@@ -19,16 +19,16 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -45,12 +45,9 @@ public class BasedirNameMapper implements NameMapper
 
     private final NameMapper delegate;
 
-    private final ConcurrentMap<Path, Path> basedirs;
-
     public BasedirNameMapper( final NameMapper delegate )
     {
         this.delegate = requireNonNull( delegate );
-        this.basedirs = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -64,15 +61,18 @@ public class BasedirNameMapper implements NameMapper
                                          final Collection<? extends Artifact> artifacts,
                                          final Collection<? extends Metadata> metadatas )
     {
-        // here we abuse concurrent hash map to make sure costly path ops happens only once
-        final Path basedir = basedirs.computeIfAbsent(
-                session.getLocalRepository().getBasedir().toPath(),
-                localRepo -> localRepo
-                        .resolve( ConfigUtils.getString( session, ".locks", CONFIG_PROP_LOCKS_DIR_NAME ) )
-                        .normalize() );
+        try
+        {
+            final Path basedir = DirectoryUtils.resolveDirectory(
+                    session, ".locks", CONFIG_PROP_LOCKS_DIR_NAME, false );
 
-        return delegate.nameLocks( session, artifacts, metadatas ).stream()
-                .map( name -> basedir.resolve( name ).toAbsolutePath().toString() )
-                .collect( Collectors.toList() );
+            return delegate.nameLocks( session, artifacts, metadatas ).stream()
+                    .map( name -> basedir.resolve( name ).toAbsolutePath().toString() )
+                    .collect( Collectors.toList() );
+        }
+        catch ( IOException e )
+        {
+            throw new UncheckedIOException( e );
+        }
     }
 }

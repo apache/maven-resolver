@@ -77,8 +77,8 @@ Extra values for factory (these need extra setup and will work with Sisu DI only
 
 Other configuration keys:
 
-- `aether.syncContext.named.basedir.locksDirName`, the relative directory within local repository to store the lock files,
-  If not set, defaults to ".locks".
+- `aether.syncContext.named.basedir.locksDirName`, the relative or absolute directory path to to store the lock files.
+  If relative, is resolved against local repository, if absolute, is used as is. If not set, defaults to ".locks".
 - `aether.syncContext.named.discriminating.discriminator`, when `discriminating` name mapper is used, sets the a
   discriminator uniquely identifying a host and local repository pair. If not set, discriminator is calculated by
   applying `sha1(hostname + ":" + localRepoPath)` + GAV name mapper.

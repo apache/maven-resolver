@@ -48,7 +48,8 @@ public final class DirectoryUtils
      * if not exists. Following outcomes may happen:
      * <ul>
      *     <li>{@code name} is absolute path - results in {@link Path} instance created directly from name.</li>
-     *     <li>{@code name} is relative path - results in {@link Path} instance resolved with {@code base} parameter.</li>
+     *     <li>{@code name} is relative path - results in {@link Path} instance resolved with {@code base} parameter.
+     *     </li>
      * </ul>
      * Resulting path is being checked is a directory, and if not, it will be created. If resulting path exists but
      * is not a directory, this method will fail.
