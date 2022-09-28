@@ -84,7 +84,7 @@ public final class CompactFileTrustedChecksumsSource
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
         final HashMap<String, String> checksums = new HashMap<>();
-        final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> baseDirProvidedHashes = checksumCache
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> basedirProvidedChecksums = checksumCache
                 .computeIfAbsent( basedir, b -> new ConcurrentHashMap<>() );
         final String prefix;
         if ( isOriginAware( session ) )
@@ -105,13 +105,13 @@ public final class CompactFileTrustedChecksumsSource
 
         for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
-            ConcurrentHashMap<String, String> algorithmHashes = baseDirProvidedHashes.computeIfAbsent(
+            ConcurrentHashMap<String, String> algorithmChecksums = basedirProvidedChecksums.computeIfAbsent(
                     checksumAlgorithmFactory.getName(),
-                    algName -> loadProvidedHashes(
+                    algName -> loadProvidedChecksums(
                             basedir.resolve( prefix + checksumAlgorithmFactory.getFileExtension() )
                     )
             );
-            String checksum = algorithmHashes.get( ArtifactIdUtils.toId( artifact ) );
+            String checksum = algorithmChecksums.get( ArtifactIdUtils.toId( artifact ) );
             if ( checksum != null )
             {
                 checksums.put( checksumAlgorithmFactory.getName(), checksum );
@@ -120,7 +120,7 @@ public final class CompactFileTrustedChecksumsSource
         return checksums;
     }
 
-    private ConcurrentHashMap<String, String> loadProvidedHashes( Path checksumFile )
+    private ConcurrentHashMap<String, String> loadProvidedChecksums( Path checksumFile )
     {
         ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>();
         try

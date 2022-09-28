@@ -44,7 +44,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Sparse file {@link FileTrustedChecksumsSourceSupport} implementation that use specified directory as base
  * directory, where it expects artifacts checksums on standard Maven2 "local" layout. This implementation uses Artifact
- * coordinates solely to form path from baseDir, pretty much as Maven local repository does.
+ * coordinates solely to form path from basedir, pretty much as Maven local repository does.
  * <p>
  * The source may be configured to be "origin aware", in that case it will factor in origin repository ID as well into
  * base directory name (for example ".checksums/central/...").

@@ -38,14 +38,15 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Support class for implementing {@link TrustedChecksumsSource} backed by local filesystem. It implements basic support
- * like bqsedir calculation, "enabled" flag and "originAware" flag.
+ * like basedir calculation, "enabled" flag and "originAware" flag.
  * <p>
  * The configuration keys supported:
  * <ul>
  *     <li><pre>aether.trustedChecksumsSource.${name}.enabled</pre> (boolean) must be explicitly set to "true"
  *     to become enabled</li>
  *     <li><pre>aether.trustedChecksumsSource.${name}.basedir</pre> (string, path) directory from where implementation
- *     can use files. If unset, default value is ".checksums" and is resolved from local repository basedir.</li>
+ *     can use files. May be relative path (the is resolved from local repository basedir) or absolute. If unset,
+ *     default value is ".checksums" and is resolved from local repository basedir.</li>
  *     <li><pre>aether.trustedChecksumsSource.${name}.originAware</pre> (boolean) whether to make implementation
  *     "originAware", to factor in origin repository ID as well or not.</li>
  * </ul>
