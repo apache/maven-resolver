@@ -23,8 +23,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -104,6 +104,12 @@ public final class SparseFileTrustedChecksumsSource
         {
             Path checksumPath = basedir.resolve(
                     prefix + artifactPath + "." + checksumAlgorithmFactory.getFileExtension() );
+
+            if ( !Files.isRegularFile( checksumPath ) )
+            {
+                continue;
+            }
+
             try
             {
                 String checksum = fileProcessor.readChecksum( checksumPath.toFile() );
@@ -111,11 +117,6 @@ public final class SparseFileTrustedChecksumsSource
                 {
                     checksums.put( checksumAlgorithmFactory.getName(), checksum );
                 }
-            }
-            catch ( FileNotFoundException e )
-            {
-                // expected, skip
-                LOGGER.debug( "No provided checksum file exist for '{}' at path '{}'", artifact, checksumPath );
             }
             catch ( IOException e )
             {
