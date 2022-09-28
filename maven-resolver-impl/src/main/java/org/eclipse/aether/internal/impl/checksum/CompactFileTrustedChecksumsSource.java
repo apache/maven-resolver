@@ -65,17 +65,17 @@ public final class CompactFileTrustedChecksumsSource
 
     private static final String CHECKSUM_FILE_PREFIX = "checksums.";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileTrustedChecksumsSource.class );
+    private static final String CHECKSUMS_CACHE_KEY = NAME + "-checksums";
 
-    private final ConcurrentHashMap<Path, ConcurrentHashMap<String, ConcurrentHashMap<String, String>>> checksumCache;
+    private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileTrustedChecksumsSource.class );
 
     @Inject
     public CompactFileTrustedChecksumsSource()
     {
         super( NAME );
-        this.checksumCache = new ConcurrentHashMap<>();
     }
 
+    @SuppressWarnings( "unchecked" )
     @Override
     protected Map<String, String> performLookup( RepositorySystemSession session,
                                                  Path basedir,
@@ -83,9 +83,6 @@ public final class CompactFileTrustedChecksumsSource
                                                  ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        final HashMap<String, String> checksums = new HashMap<>();
-        final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> basedirProvidedChecksums = checksumCache
-                .computeIfAbsent( basedir, b -> new ConcurrentHashMap<>() );
         final String prefix;
         if ( isOriginAware( session ) )
         {
@@ -103,6 +100,11 @@ public final class CompactFileTrustedChecksumsSource
             prefix = CHECKSUM_FILE_PREFIX;
         }
 
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> basedirProvidedChecksums =
+                (ConcurrentHashMap<String, ConcurrentHashMap<String, String>>) session.getData()
+                        .computeIfAbsent( CHECKSUMS_CACHE_KEY, ConcurrentHashMap::new );
+
+        final HashMap<String, String> checksums = new HashMap<>();
         for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
             ConcurrentHashMap<String, String> algorithmChecksums = basedirProvidedChecksums.computeIfAbsent(
