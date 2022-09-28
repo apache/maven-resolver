@@ -52,6 +52,9 @@ import org.slf4j.LoggerFactory;
  * The source may be configured to be "origin aware", in that case it will factor in origin repository ID as well into
  * file name (for example "central-checksums.sha1").
  * <p>
+ * The checksums file once loaded are cached in session, so in-flight file changes during lifecycle of session are NOT
+ * noticed.
+ * <p>
  * The name of this implementation is "file-compact".
  *
  * @since TBD
