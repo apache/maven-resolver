@@ -37,7 +37,8 @@ import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import static java.util.Objects.requireNonNull;
 
 /**
- * An adapter that adapts {@link TrustedChecksumsSource} to {@link ProvidedChecksumsSource} used by connector.
+ * Adapter that adapts {@link TrustedChecksumsSource} to {@link ProvidedChecksumsSource} used by connector. Hence, any
+ * "trusted" source exist that is enabled, automatically becomes "provided" source as well.
  *
  * @since TBD
  */

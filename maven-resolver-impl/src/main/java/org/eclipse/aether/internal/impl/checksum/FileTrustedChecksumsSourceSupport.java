@@ -37,7 +37,20 @@ import org.eclipse.aether.util.DirectoryUtils;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Support class for implementing {@link TrustedChecksumsSource} backed by local filesystem.
+ * Support class for implementing {@link TrustedChecksumsSource} backed by local filesystem. It implements basic support
+ * like bqsedir calculation, "enabled" flag and "originAware" flag.
+ * <p>
+ * The configuration keys supported:
+ * <ul>
+ *     <li><pre>aether.trustedChecksumsSource.${name}.enabled</pre> (boolean) must be explicitly set to "true"
+ *     to become enabled</li>
+ *     <li><pre>aether.trustedChecksumsSource.${name}.basedir</pre> (string, path) directory from where implementation
+ *     can use files. If unset, default value is ".checksums" and is resolved from local repository basedir.</li>
+ *     <li><pre>aether.trustedChecksumsSource.${name}.originAware</pre> (boolean) whether to make implementation
+ *     "originAware", to factor in origin repository ID as well or not.</li>
+ * </ul>
+ * <p>
+ * This implementation ensures that implementations have "name" property, used in configuration properties above.
  *
  * @since TBD
  */
@@ -47,6 +60,8 @@ abstract class FileTrustedChecksumsSourceSupport
     private static final String CONFIG_PROP_PREFIX = "aether.trustedChecksumsSource.";
 
     private static final String CONF_NAME_ENABLED = "enabled";
+
+    private static final String CONF_NAME_BASEDIR = "basedir";
 
     private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
 
@@ -62,11 +77,10 @@ abstract class FileTrustedChecksumsSourceSupport
         this.name = requireNonNull( name );
     }
 
-    protected String getName()
-    {
-        return name;
-    }
-
+    /**
+     * The implementation will call into underlying code only if enabled, chosen basedir exists, and requested
+     * checksum algorithms are not empty.
+     */
     @Override
     public Map<String, String> getTrustedArtifactChecksums( RepositorySystemSession session,
                                                             Artifact artifact,
@@ -94,22 +108,33 @@ abstract class FileTrustedChecksumsSourceSupport
                                                           ArtifactRepository artifactRepository,
                                                           List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
 
+    /**
+     * To be used by underlying implementations to form configuration property keys properly scoped.
+     */
     protected String configPropKey( String name )
     {
-        return CONFIG_PROP_PREFIX + getName() + "." + name;
+        requireNonNull( name );
+        return CONFIG_PROP_PREFIX + this.name + "." + name;
     }
 
+    /**
+     * Returns {@code true} if session configuration contains "originAware" property set to {@code true}.
+     */
     protected boolean isOriginAware( RepositorySystemSession session )
     {
         return ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
     }
 
+    /**
+     * Uses common {@link DirectoryUtils} to calculate (but not) create basedir for this implementation. Returns
+     * {@code null} if the calculated basedir does not exist.
+     */
     private Path getBasedir( RepositorySystemSession session )
     {
         try
         {
             Path basedir = DirectoryUtils.resolveDirectory(
-                    session, LOCAL_REPO_PREFIX, configPropKey( "basedir" ), false );
+                    session, LOCAL_REPO_PREFIX, configPropKey( CONF_NAME_BASEDIR ), false );
             if ( !Files.isDirectory( basedir ) )
             {
                 return null;

@@ -35,18 +35,21 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 /**
- * Sparse local filesystem backed {@link ProvidedChecksumsSource} implementation that use specified directory as base
+ * Sparse file {@link FileTrustedChecksumsSourceSupport} implementation that use specified directory as base
  * directory, where it expects artifacts checksums on standard Maven2 "local" layout. This implementation uses Artifact
- * coordinates solely to form path from baseDir in case of SHA-1 checksum).
+ * coordinates solely to form path from baseDir, pretty much as Maven local repository does.
+ * <p>
+ * The source may be configured to be "origin aware", in that case it will factor in origin repository ID as well into
+ * base directory name (for example ".checksums/central/...").
+ * <p>
+ * The name of this implementation is "file-sparse".
  *
  * @since TBD
  */
@@ -78,7 +81,6 @@ public final class SparseFileTrustedChecksumsSource
                                                  ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        final HashMap<String, String> checksums = new HashMap<>();
         final String prefix;
         if ( isOriginAware( session ) )
         {
@@ -96,45 +98,31 @@ public final class SparseFileTrustedChecksumsSource
             prefix = "";
         }
 
-        List<ChecksumFilePath> checksumFilePaths = checksumAlgorithmFactories.stream().map(
-                alg -> new ChecksumFilePath( prefix
-                        + localPathComposer.getPathForArtifact( artifact, false ) + "." + alg.getFileExtension(),
-                        alg
-                )
-        ).collect( toList() );
-        for ( ChecksumFilePath checksumFilePath : checksumFilePaths )
+        final HashMap<String, String> checksums = new HashMap<>();
+        final String artifactPath = localPathComposer.getPathForArtifact( artifact, false );
+        for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
         {
-            Path checksumPath = basedir.resolve( checksumFilePath.path );
+            Path checksumPath = basedir.resolve(
+                    prefix + artifactPath + "." + checksumAlgorithmFactory.getFileExtension() );
             try
             {
                 String checksum = fileProcessor.readChecksum( checksumPath.toFile() );
                 if ( checksum != null )
                 {
-                    checksums.put( checksumFilePath.checksumAlgorithmFactory.getName(), checksum );
+                    checksums.put( checksumAlgorithmFactory.getName(), checksum );
                 }
             }
             catch ( FileNotFoundException e )
             {
+                // expected, skip
                 LOGGER.debug( "No provided checksum file exist for '{}' at path '{}'", artifact, checksumPath );
             }
             catch ( IOException e )
             {
+                // unexpected, log, skip
                 LOGGER.warn( "Could not read provided checksum for '{}' at path '{}'", artifact, checksumPath, e );
             }
         }
         return checksums;
-    }
-
-    private static final class ChecksumFilePath
-    {
-        private final String path;
-
-        private final ChecksumAlgorithmFactory checksumAlgorithmFactory;
-
-        private ChecksumFilePath( String path, ChecksumAlgorithmFactory checksumAlgorithmFactory )
-        {
-            this.path = path;
-            this.checksumAlgorithmFactory = checksumAlgorithmFactory;
-        }
     }
 }

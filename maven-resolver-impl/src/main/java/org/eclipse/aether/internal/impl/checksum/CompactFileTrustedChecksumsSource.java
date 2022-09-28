@@ -39,16 +39,20 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Compact local filesystem backed {@link ProvidedChecksumsSource} implementation that use specified directory as base
+ * Compact file {@link FileTrustedChecksumsSourceSupport} implementation that use specified directory as base
  * directory, where it expects a "summary" file named as "checksums.${checksumExt}" for each checksum algorithm, and
- * file format is artifact ID and checksum separated by space, per line. The format supports comments "#" (hash) and
+ * file format is artifact ID and checksum separated by space per line. The format supports comments "#" (hash) and
  * empty lines (both are ignored).
+ * <p>
+ * The source may be configured to be "origin aware", in that case it will factor in origin repository ID as well into
+ * file name (for example "central-checksums.sha1").
+ * <p>
+ * The name of this implementation is "file-compact".
  *
  * @since TBD
  */
