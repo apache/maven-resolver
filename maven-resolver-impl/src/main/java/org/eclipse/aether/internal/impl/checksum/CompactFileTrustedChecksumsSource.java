@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * The name of this implementation is "file-compact".
  *
+ * @see ArtifactIdUtils#toId(Artifact)
  * @since TBD
  */
 @Singleton

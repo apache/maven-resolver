@@ -51,6 +51,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * The name of this implementation is "file-sparse".
  *
+ * @see LocalPathComposer
  * @since TBD
  */
 @Singleton
