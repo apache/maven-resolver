@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * empty lines (both are ignored).
  * <p>
  * The source may be configured to be "origin aware", in that case it will factor in origin repository ID as well into
- * file name (for example "central-checksums.sha1").
+ * file name (for example "checksums-central.sha1").
  * <p>
  * The checksums file once loaded are cached in session, so in-flight file changes during lifecycle of session are NOT
  * noticed.
@@ -66,7 +66,7 @@ public final class CompactFileTrustedChecksumsSource
 {
     public static final String NAME = "file-compact";
 
-    private static final String CHECKSUM_FILE_PREFIX = "checksums.";
+    private static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
     private static final String CHECKSUMS_CACHE_KEY = CompactFileTrustedChecksumsSource.class.getName() + "-checksums";
 
@@ -88,11 +88,11 @@ public final class CompactFileTrustedChecksumsSource
         final String prefix;
         if ( isOriginAware( session ) )
         {
-            prefix = artifactRepository.getId() + "-" + CHECKSUM_FILE_PREFIX;
+            prefix = CHECKSUMS_FILE_PREFIX + "-" + artifactRepository.getId() + ".";
         }
         else
         {
-            prefix = CHECKSUM_FILE_PREFIX;
+            prefix = CHECKSUMS_FILE_PREFIX + ".";
         }
 
         final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> basedirProvidedChecksums =
