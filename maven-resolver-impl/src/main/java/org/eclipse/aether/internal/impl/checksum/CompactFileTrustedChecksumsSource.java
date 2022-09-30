@@ -19,7 +19,6 @@ package org.eclipse.aether.internal.impl.checksum;
  * under the License.
  */
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -69,11 +68,10 @@ public final class CompactFileTrustedChecksumsSource
 
     private static final String CHECKSUM_FILE_PREFIX = "checksums.";
 
-    private static final String CHECKSUMS_CACHE_KEY = NAME + "-checksums";
+    private static final String CHECKSUMS_CACHE_KEY = CompactFileTrustedChecksumsSource.class.getName() + "-checksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileTrustedChecksumsSource.class );
 
-    @Inject
     public CompactFileTrustedChecksumsSource()
     {
         super( NAME );
@@ -134,8 +132,8 @@ public final class CompactFileTrustedChecksumsSource
             try ( BufferedReader reader = Files.newBufferedReader( checksumFile, StandardCharsets.UTF_8 ) )
             {
                 LOGGER.debug( "Loading provided checksums file '{}'", checksumFile );
-                String line = reader.readLine();
-                while ( line != null )
+                String line;
+                while ( ( line = reader.readLine() ) != null )
                 {
                     if ( !line.startsWith( "#" ) && !line.isEmpty() )
                     {
@@ -154,7 +152,6 @@ public final class CompactFileTrustedChecksumsSource
                             LOGGER.warn( "Checksums file '{}' ignored malformed line '{}'", checksumFile, line );
                         }
                     }
-                    line = reader.readLine();
                 }
             }
         }

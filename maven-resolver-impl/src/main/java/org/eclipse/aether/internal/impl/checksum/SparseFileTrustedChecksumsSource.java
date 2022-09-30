@@ -108,6 +108,8 @@ public final class SparseFileTrustedChecksumsSource
 
             if ( !Files.isRegularFile( checksumPath ) )
             {
+                LOGGER.debug( "Artifact {} checksum {} not found on path {}",
+                        artifact, checksumAlgorithmFactory.getName(), checksumPath );
                 continue;
             }
 

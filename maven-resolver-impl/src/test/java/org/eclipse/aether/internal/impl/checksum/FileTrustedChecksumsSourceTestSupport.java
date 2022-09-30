@@ -55,13 +55,13 @@ public abstract class FileTrustedChecksumsSourceTestSupport
     {
         session = TestUtils.newSession();
         // populate local repository
-        Path baseDir = session.getLocalRepository().getBasedir().toPath()
+        Path basedir = session.getLocalRepository().getBasedir().toPath()
                 .resolve( FileTrustedChecksumsSourceSupport.LOCAL_REPO_PREFIX );
         checksumAlgorithmFactory = new Sha1ChecksumAlgorithmFactory();
-        subject = prepareSubject( baseDir );
+        subject = prepareSubject( basedir );
     }
 
-    protected abstract FileTrustedChecksumsSourceSupport prepareSubject( Path baseDir ) throws IOException;
+    protected abstract FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException;
 
     @Test
     public void noProvidedArtifactChecksum()

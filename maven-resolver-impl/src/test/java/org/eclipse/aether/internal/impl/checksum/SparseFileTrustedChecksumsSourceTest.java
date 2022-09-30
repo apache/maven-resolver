@@ -31,14 +31,14 @@ import org.eclipse.aether.internal.impl.LocalPathComposer;
 public class SparseFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
-    protected FileTrustedChecksumsSourceSupport prepareSubject( Path baseDir ) throws IOException
+    protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
     {
         session.setConfigProperty( "aether.trustedChecksumsSource.file-sparse.enabled",
                 Boolean.TRUE.toString() );
         LocalPathComposer localPathComposer = new DefaultLocalPathComposer();
         // artifact: test:test:2.0 => "foobar"
         {
-            Path test = baseDir.resolve( localPathComposer
+            Path test = basedir.resolve( localPathComposer
                     .getPathForArtifact( ARTIFACT_WITH_CHECKSUM, false )
                     + "." + checksumAlgorithmFactory.getFileExtension() );
             Files.createDirectories( test.getParent() );

@@ -29,13 +29,13 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 public class CompactFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
-    protected FileTrustedChecksumsSourceSupport prepareSubject( Path baseDir ) throws IOException
+    protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
     {
         session.setConfigProperty( "aether.trustedChecksumsSource.file-compact.enabled",
                 Boolean.TRUE.toString() );
         // artifact: test:test:2.0 => "foobar"
         {
-            Path test = baseDir.resolve( "checksums." + checksumAlgorithmFactory.getFileExtension() );
+            Path test = basedir.resolve( "checksums." + checksumAlgorithmFactory.getFileExtension() );
             Files.createDirectories( test.getParent() );
             Files.write( test,
                     ( ArtifactIdUtils.toId( ARTIFACT_WITH_CHECKSUM ) + " " + ARTIFACT_TRUSTED_CHECKSUM ).getBytes(
