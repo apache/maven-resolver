@@ -88,6 +88,10 @@ abstract class FileTrustedChecksumsSourceSupport
                                                             ArtifactRepository artifactRepository,
                                                             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
+        requireNonNull( session, "session is null" );
+        requireNonNull( artifact, "artifact is null" );
+        requireNonNull( artifactRepository, "artifactRepository is null" );
+        requireNonNull( checksumAlgorithmFactories, "checksumAlgorithmFactories is null" );
         boolean enabled = ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ENABLED ) );
         if ( enabled )
         {

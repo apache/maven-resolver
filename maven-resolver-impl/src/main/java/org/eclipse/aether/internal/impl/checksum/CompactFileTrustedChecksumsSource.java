@@ -88,14 +88,7 @@ public final class CompactFileTrustedChecksumsSource
         final String prefix;
         if ( isOriginAware( session ) )
         {
-            if ( artifactRepository != null )
-            {
-                prefix = artifactRepository.getId() + "-" + CHECKSUM_FILE_PREFIX;
-            }
-            else
-            {
-                prefix = session.getLocalRepository().getId() + "-" + CHECKSUM_FILE_PREFIX;
-            }
+            prefix = artifactRepository.getId() + "-" + CHECKSUM_FILE_PREFIX;
         }
         else
         {

@@ -85,14 +85,7 @@ public final class SparseFileTrustedChecksumsSource
         final String prefix;
         if ( isOriginAware( session ) )
         {
-            if ( artifactRepository != null )
-            {
-                prefix = artifactRepository.getId() + "/";
-            }
-            else
-            {
-                prefix = session.getLocalRepository().getId() + "/";
-            }
+            prefix = artifactRepository.getId() + "/";
         }
         else
         {

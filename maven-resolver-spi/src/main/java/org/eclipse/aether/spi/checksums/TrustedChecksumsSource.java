@@ -41,11 +41,10 @@ public interface TrustedChecksumsSource
     /**
      * May return the trusted checksums (for given artifact) from trusted source, or {@code null}.
      *
-     * @param session                    The repository system session.
-     * @param artifact                   The artifact we want checksums for.
-     * @param artifactRepository         The origin of the artifact (local, workspace, remote or {@code null}
-     *                                   "hosted").
-     * @param checksumAlgorithmFactories The checksum algorithms that are expected.
+     * @param session                    The repository system session, never {@code null}.
+     * @param artifact                   The artifact we want checksums for, never {@code null}.
+     * @param artifactRepository         The origin repository: local, workspace, remote repository, never {@code null}.
+     * @param checksumAlgorithmFactories The checksum algorithms that are expected, never {@code null}.
      * @return Map of expected checksums, or {@code null}.
      */
     Map<String, String> getTrustedArtifactChecksums( RepositorySystemSession session,
