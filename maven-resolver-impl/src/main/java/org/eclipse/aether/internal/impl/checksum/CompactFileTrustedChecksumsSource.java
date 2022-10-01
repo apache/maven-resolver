@@ -68,7 +68,7 @@ public final class CompactFileTrustedChecksumsSource
 
     private static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
-    private static final String CHECKSUMS_CACHE_KEY = CompactFileTrustedChecksumsSource.class.getName() + "-checksums";
+    private static final String CHECKSUMS_CACHE_KEY = CompactFileTrustedChecksumsSource.class.getName() + ".checksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileTrustedChecksumsSource.class );
 
