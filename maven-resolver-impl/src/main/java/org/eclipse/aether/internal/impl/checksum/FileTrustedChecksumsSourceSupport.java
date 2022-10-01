@@ -45,8 +45,8 @@ import static java.util.Objects.requireNonNull;
  *     <li><pre>aether.trustedChecksumsSource.${name}.enabled</pre> (boolean) must be explicitly set to "true"
  *     to become enabled</li>
  *     <li><pre>aether.trustedChecksumsSource.${name}.basedir</pre> (string, path) directory from where implementation
- *     can use files. May be relative path (the is resolved from local repository basedir) or absolute. If unset,
- *     default value is ".checksums" and is resolved from local repository basedir.</li>
+ *     can use files. May be relative path (the is resolved against local repository basedir) or absolute. If unset,
+ *     default value is ".checksums" and is resolved against local repository basedir.</li>
  *     <li><pre>aether.trustedChecksumsSource.${name}.originAware</pre> (boolean) whether to make implementation
  *     "originAware", to factor in origin repository ID as well or not.</li>
  * </ul>
@@ -95,11 +95,11 @@ abstract class FileTrustedChecksumsSourceSupport
         boolean enabled = ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ENABLED ) );
         if ( enabled )
         {
-            Path baseDir = getBasedir( session );
-            if ( baseDir != null && !checksumAlgorithmFactories.isEmpty() )
+            Path basedir = getBasedir( session );
+            if ( basedir != null && !checksumAlgorithmFactories.isEmpty() )
             {
                 Map<String, String> result = performLookup(
-                        session, baseDir, artifact, artifactRepository, checksumAlgorithmFactories );
+                        session, basedir, artifact, artifactRepository, checksumAlgorithmFactories );
 
                 return result == null || result.isEmpty() ? null : result;
             }
@@ -108,7 +108,7 @@ abstract class FileTrustedChecksumsSourceSupport
     }
 
     protected abstract Map<String, String> performLookup( RepositorySystemSession session,
-                                                          Path baseDir,
+                                                          Path basedir,
                                                           Artifact artifact,
                                                           ArtifactRepository artifactRepository,
                                                           List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );

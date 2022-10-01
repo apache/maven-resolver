@@ -85,14 +85,14 @@ public final class CompactFileTrustedChecksumsSource
                                                  ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        final String prefix;
+        final String fileName;
         if ( isOriginAware( session ) )
         {
-            prefix = CHECKSUMS_FILE_PREFIX + "-" + artifactRepository.getId() + ".";
+            fileName = CHECKSUMS_FILE_PREFIX + "-" + artifactRepository.getId();
         }
         else
         {
-            prefix = CHECKSUMS_FILE_PREFIX + ".";
+            fileName = CHECKSUMS_FILE_PREFIX;
         }
 
         final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> basedirProvidedChecksums =
@@ -105,7 +105,7 @@ public final class CompactFileTrustedChecksumsSource
             ConcurrentHashMap<String, String> algorithmChecksums = basedirProvidedChecksums.computeIfAbsent(
                     checksumAlgorithmFactory.getName(),
                     algName -> loadProvidedChecksums(
-                            basedir.resolve( prefix + checksumAlgorithmFactory.getFileExtension() )
+                            basedir.resolve( fileName + "." + checksumAlgorithmFactory.getFileExtension() )
                     )
             );
             String checksum = algorithmChecksums.get( ArtifactIdUtils.toId( artifact ) );
@@ -117,14 +117,14 @@ public final class CompactFileTrustedChecksumsSource
         return checksums;
     }
 
-    private ConcurrentHashMap<String, String> loadProvidedChecksums( Path checksumFile )
+    private ConcurrentHashMap<String, String> loadProvidedChecksums( Path checksumsFile )
     {
         ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>();
         try
         {
-            try ( BufferedReader reader = Files.newBufferedReader( checksumFile, StandardCharsets.UTF_8 ) )
+            try ( BufferedReader reader = Files.newBufferedReader( checksumsFile, StandardCharsets.UTF_8 ) )
             {
-                LOGGER.debug( "Loading provided checksums file '{}'", checksumFile );
+                LOGGER.debug( "Loading provided checksums file '{}'", checksumsFile );
                 String line;
                 while ( ( line = reader.readLine() ) != null )
                 {
@@ -137,12 +137,12 @@ public final class CompactFileTrustedChecksumsSource
                             if ( old != null )
                             {
                                 LOGGER.warn( "Checksums file '{}' contains duplicate checksums for artifact {}: "
-                                        + "old '{}' replaced by new '{}'", checksumFile, parts[0], old, parts[1] );
+                                        + "old '{}' replaced by new '{}'", checksumsFile, parts[0], old, parts[1] );
                             }
                         }
                         else
                         {
-                            LOGGER.warn( "Checksums file '{}' ignored malformed line '{}'", checksumFile, line );
+                            LOGGER.warn( "Checksums file '{}' ignored malformed line '{}'", checksumsFile, line );
                         }
                     }
                 }
@@ -151,7 +151,7 @@ public final class CompactFileTrustedChecksumsSource
         catch ( NoSuchFileException e )
         {
             // ignore, will return empty result
-            LOGGER.debug( "Checksums file '{}' not found", checksumFile );
+            LOGGER.debug( "Checksums file '{}' not found", checksumsFile );
         }
         catch ( IOException e )
         {
