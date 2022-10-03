@@ -481,10 +481,9 @@ public class BfDependencyCollector
             this.executorService = getExecutorService( session );
         }
 
-        Future<DescriptorResolutionResult> resolveDescriptors( Artifact artifact,
-                                                               Callable<DescriptorResolutionResult> callable )
+        void resolveDescriptors( Artifact artifact, Callable<DescriptorResolutionResult> callable )
         {
-            return results.computeIfAbsent( ArtifactIdUtils.toId( artifact ),
+            results.computeIfAbsent( ArtifactIdUtils.toId( artifact ),
                     key -> this.executorService.submit( callable ) );
         }
 
