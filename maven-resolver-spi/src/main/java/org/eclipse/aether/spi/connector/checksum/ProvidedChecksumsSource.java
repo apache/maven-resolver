@@ -26,8 +26,8 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 
 /**
- * Component able to provide (expected) checksums beforehand the download happens. Checksum provided by this component
- * are of kind {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#PROVIDED}.
+ * Component able to provide (expected) checksums to connector beforehand the download happens. Checksum provided by
+ * this component are of kind {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#PROVIDED}.
  *
  * @since 1.8.0
  */

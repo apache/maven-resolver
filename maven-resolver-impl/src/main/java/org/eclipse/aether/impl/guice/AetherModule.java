@@ -45,13 +45,15 @@ import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
+import org.eclipse.aether.internal.impl.checksum.SummaryFileTrustedChecksumsSource;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.checksum.SparseDirectoryTrustedChecksumsSource;
+import org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourceAdapter;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
@@ -90,6 +92,7 @@ import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
@@ -188,8 +191,14 @@ public class AetherModule
                 .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
-        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( FileProvidedChecksumsSource.NAME ) ) //
-            .to( FileProvidedChecksumsSource.class ).in( Singleton.class );
+        bind( ProvidedChecksumsSource.class )
+                .annotatedWith( Names.named( TrustedToProvidedChecksumsSourceAdapter.NAME ) )
+                .to( TrustedToProvidedChecksumsSourceAdapter.class ).in( Singleton.class );
+
+        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SparseDirectoryTrustedChecksumsSource.NAME ) )
+                .to( SparseDirectoryTrustedChecksumsSource.class ).in( Singleton.class );
+        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SummaryFileTrustedChecksumsSource.NAME ) )
+                .to( SummaryFileTrustedChecksumsSource.class ).in( Singleton.class );
 
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
@@ -238,21 +247,34 @@ public class AetherModule
             @Named( DfDependencyCollector.NAME ) DependencyCollectorDelegate df
     )
     {
-        Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates = new HashMap<>();
-        dependencyCollectorDelegates.put( BfDependencyCollector.NAME, bf );
-        dependencyCollectorDelegates.put( DfDependencyCollector.NAME, df );
-        return dependencyCollectorDelegates;
+        Map<String, DependencyCollectorDelegate> result = new HashMap<>();
+        result.put( BfDependencyCollector.NAME, bf );
+        result.put( DfDependencyCollector.NAME, df );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
     @Singleton
-    Map<String, ProvidedChecksumsSource> provideChecksumSources(
-        @Named( FileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource fileProvidedChecksumSource
+    Map<String, ProvidedChecksumsSource> providedChecksumSources(
+            @Named( TrustedToProvidedChecksumsSourceAdapter.NAME ) ProvidedChecksumsSource adapter
     )
     {
-        Map<String, ProvidedChecksumsSource> providedChecksumsSource = new HashMap<>();
-        providedChecksumsSource.put( FileProvidedChecksumsSource.NAME, fileProvidedChecksumSource );
-        return providedChecksumsSource;
+        Map<String, ProvidedChecksumsSource> result = new HashMap<>();
+        result.put( TrustedToProvidedChecksumsSourceAdapter.NAME, adapter );
+        return Collections.unmodifiableMap( result );
+    }
+
+    @Provides
+    @Singleton
+    Map<String, TrustedChecksumsSource> trustedChecksumSources(
+        @Named( SparseDirectoryTrustedChecksumsSource.NAME ) TrustedChecksumsSource sparse,
+        @Named( SummaryFileTrustedChecksumsSource.NAME ) TrustedChecksumsSource compact
+    )
+    {
+        Map<String, TrustedChecksumsSource> result = new HashMap<>();
+        result.put( SparseDirectoryTrustedChecksumsSource.NAME, sparse );
+        result.put( SummaryFileTrustedChecksumsSource.NAME, compact );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
@@ -263,12 +285,12 @@ public class AetherModule
             @Named( Sha1ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory sha1,
             @Named( Md5ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory md5 )
     {
-        Map<String, ChecksumAlgorithmFactory> checksumTypes = new HashMap<>();
-        checksumTypes.put( Sha512ChecksumAlgorithmFactory.NAME, sha512 );
-        checksumTypes.put( Sha256ChecksumAlgorithmFactory.NAME, sha256 );
-        checksumTypes.put( Sha1ChecksumAlgorithmFactory.NAME, sha1 );
-        checksumTypes.put( Md5ChecksumAlgorithmFactory.NAME, md5 );
-        return Collections.unmodifiableMap( checksumTypes );
+        Map<String, ChecksumAlgorithmFactory> result = new HashMap<>();
+        result.put( Sha512ChecksumAlgorithmFactory.NAME, sha512 );
+        result.put( Sha256ChecksumAlgorithmFactory.NAME, sha256 );
+        result.put( Sha1ChecksumAlgorithmFactory.NAME, sha1 );
+        result.put( Md5ChecksumAlgorithmFactory.NAME, md5 );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
@@ -280,13 +302,13 @@ public class AetherModule
             @Named( FileGAVNameMapperProvider.NAME ) NameMapper fileGavNameMapper,
             @Named( FileHashingGAVNameMapperProvider.NAME ) NameMapper fileHashingGavNameMapper )
     {
-        Map<String, NameMapper> nameMappers = new HashMap<>();
-        nameMappers.put( StaticNameMapperProvider.NAME, staticNameMapper );
-        nameMappers.put( GAVNameMapperProvider.NAME, gavNameMapper );
-        nameMappers.put( DiscriminatingNameMapperProvider.NAME, discriminatingNameMapper );
-        nameMappers.put( FileGAVNameMapperProvider.NAME, fileGavNameMapper );
-        nameMappers.put( FileHashingGAVNameMapperProvider.NAME, fileHashingGavNameMapper );
-        return Collections.unmodifiableMap( nameMappers );
+        Map<String, NameMapper> result = new HashMap<>();
+        result.put( StaticNameMapperProvider.NAME, staticNameMapper );
+        result.put( GAVNameMapperProvider.NAME, gavNameMapper );
+        result.put( DiscriminatingNameMapperProvider.NAME, discriminatingNameMapper );
+        result.put( FileGAVNameMapperProvider.NAME, fileGavNameMapper );
+        result.put( FileHashingGAVNameMapperProvider.NAME, fileHashingGavNameMapper );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
@@ -296,11 +318,11 @@ public class AetherModule
             @Named( LocalSemaphoreNamedLockFactory.NAME ) NamedLockFactory localSemaphore,
             @Named( FileLockNamedLockFactory.NAME ) NamedLockFactory fileLockFactory )
     {
-        Map<String, NamedLockFactory> factories = new HashMap<>();
-        factories.put( LocalReadWriteLockNamedLockFactory.NAME, localRwLock );
-        factories.put( LocalSemaphoreNamedLockFactory.NAME, localSemaphore );
-        factories.put( FileLockNamedLockFactory.NAME, fileLockFactory );
-        return Collections.unmodifiableMap( factories );
+        Map<String, NamedLockFactory> result = new HashMap<>();
+        result.put( LocalReadWriteLockNamedLockFactory.NAME, localRwLock );
+        result.put( LocalSemaphoreNamedLockFactory.NAME, localSemaphore );
+        result.put( FileLockNamedLockFactory.NAME, fileLockFactory );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
@@ -309,19 +331,19 @@ public class AetherModule
             @Named( "simple" ) LocalRepositoryManagerFactory simple,
             @Named( "enhanced" ) LocalRepositoryManagerFactory enhanced )
     {
-        Set<LocalRepositoryManagerFactory> factories = new HashSet<>();
-        factories.add( simple );
-        factories.add( enhanced );
-        return Collections.unmodifiableSet( factories );
+        Set<LocalRepositoryManagerFactory> result = new HashSet<>();
+        result.add( simple );
+        result.add( enhanced );
+        return Collections.unmodifiableSet( result );
     }
 
     @Provides
     @Singleton
     Set<RepositoryLayoutFactory> provideRepositoryLayoutFactories( @Named( "maven2" ) RepositoryLayoutFactory maven2 )
     {
-        Set<RepositoryLayoutFactory> factories = new HashSet<>();
-        factories.add( maven2 );
-        return Collections.unmodifiableSet( factories );
+        Set<RepositoryLayoutFactory> result = new HashSet<>();
+        result.add( maven2 );
+        return Collections.unmodifiableSet( result );
     }
 
     @Provides
