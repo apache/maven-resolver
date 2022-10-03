@@ -26,12 +26,12 @@ import java.nio.file.Path;
 
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
-public class CompactFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
+public class SummarytFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
     {
-        session.setConfigProperty( "aether.trustedChecksumsSource.file-compact.enabled",
+        session.setConfigProperty( "aether.trustedChecksumsSource.summary-file",
                 Boolean.TRUE.toString() );
         // artifact: test:test:2.0 => "foobar"
         {
@@ -42,6 +42,6 @@ public class CompactFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
                             StandardCharsets.UTF_8 ) );
         }
 
-        return new CompactFileTrustedChecksumsSource();
+        return new SummarytFileTrustedChecksumsSource();
     }
 }

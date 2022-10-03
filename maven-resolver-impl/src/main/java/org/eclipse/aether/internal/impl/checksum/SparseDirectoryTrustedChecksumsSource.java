@@ -49,26 +49,26 @@ import static java.util.Objects.requireNonNull;
  * The source may be configured to be "origin aware", in that case it will factor in origin repository ID as well into
  * base directory name (for example ".checksums/central/...").
  * <p>
- * The name of this implementation is "file-sparse".
+ * The name of this implementation is "sparse-directory".
  *
  * @see LocalPathComposer
  * @since TBD
  */
 @Singleton
-@Named( SparseFileTrustedChecksumsSource.NAME )
-public final class SparseFileTrustedChecksumsSource
+@Named( SparseDirectoryTrustedChecksumsSource.NAME )
+public final class SparseDirectoryTrustedChecksumsSource
         extends FileTrustedChecksumsSourceSupport
 {
-    public static final String NAME = "file-sparse";
+    public static final String NAME = "sparse-directory";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( SparseFileTrustedChecksumsSource.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger( SparseDirectoryTrustedChecksumsSource.class );
 
     private final FileProcessor fileProcessor;
 
     private final LocalPathComposer localPathComposer;
 
     @Inject
-    public SparseFileTrustedChecksumsSource( FileProcessor fileProcessor, LocalPathComposer localPathComposer )
+    public SparseDirectoryTrustedChecksumsSource( FileProcessor fileProcessor, LocalPathComposer localPathComposer )
     {
         super( NAME );
         this.fileProcessor = requireNonNull( fileProcessor );

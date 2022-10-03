@@ -28,12 +28,12 @@ import org.eclipse.aether.internal.impl.DefaultFileProcessor;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 
-public class SparseFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
+public class SparseDirectoryTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
     {
-        session.setConfigProperty( "aether.trustedChecksumsSource.file-sparse.enabled",
+        session.setConfigProperty( "aether.trustedChecksumsSource.sparse-directory",
                 Boolean.TRUE.toString() );
         LocalPathComposer localPathComposer = new DefaultLocalPathComposer();
         // artifact: test:test:2.0 => "foobar"
@@ -45,6 +45,6 @@ public class SparseFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSo
             Files.write( test, ARTIFACT_TRUSTED_CHECKSUM.getBytes( StandardCharsets.UTF_8 ) );
         }
 
-        return new SparseFileTrustedChecksumsSource( new DefaultFileProcessor(), localPathComposer );
+        return new SparseDirectoryTrustedChecksumsSource( new DefaultFileProcessor(), localPathComposer );
     }
 }

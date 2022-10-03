@@ -54,25 +54,25 @@ import org.slf4j.LoggerFactory;
  * The checksums file once loaded are cached in session, so in-flight file changes during lifecycle of session are NOT
  * noticed.
  * <p>
- * The name of this implementation is "file-compact".
+ * The name of this implementation is "summary-file".
  *
  * @see ArtifactIdUtils#toId(Artifact)
  * @since TBD
  */
 @Singleton
-@Named( CompactFileTrustedChecksumsSource.NAME )
-public final class CompactFileTrustedChecksumsSource
+@Named( SummarytFileTrustedChecksumsSource.NAME )
+public final class SummarytFileTrustedChecksumsSource
         extends FileTrustedChecksumsSourceSupport
 {
-    public static final String NAME = "file-compact";
+    public static final String NAME = "summary-file";
 
     private static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
-    private static final String CHECKSUMS_CACHE_KEY = CompactFileTrustedChecksumsSource.class.getName() + ".checksums";
+    private static final String CHECKSUMS_CACHE_KEY = SummarytFileTrustedChecksumsSource.class.getName() + ".checksums";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( CompactFileTrustedChecksumsSource.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger( SummarytFileTrustedChecksumsSource.class );
 
-    public CompactFileTrustedChecksumsSource()
+    public SummarytFileTrustedChecksumsSource()
     {
         super( NAME );
     }
@@ -120,7 +120,7 @@ public final class CompactFileTrustedChecksumsSource
     private ConcurrentHashMap<String, String> loadProvidedChecksums( Path checksumsFile )
     {
         ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>();
-        try
+        if ( Files.isReadable( checksumsFile ) )
         {
             try ( BufferedReader reader = Files.newBufferedReader( checksumsFile, StandardCharsets.UTF_8 ) )
             {
@@ -147,16 +147,21 @@ public final class CompactFileTrustedChecksumsSource
                     }
                 }
             }
+            catch ( NoSuchFileException e )
+            {
+                // strange: we tested for it above, still, we should not fail
+                LOGGER.debug( "Checksums file '{}' not found", checksumsFile );
+            }
+            catch ( IOException e )
+            {
+                throw new UncheckedIOException( e );
+            }
         }
-        catch ( NoSuchFileException e )
+        else
         {
-            // ignore, will return empty result
             LOGGER.debug( "Checksums file '{}' not found", checksumsFile );
         }
-        catch ( IOException e )
-        {
-            throw new UncheckedIOException( e );
-        }
+
         return result;
     }
 }

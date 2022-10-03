@@ -56,7 +56,7 @@ public abstract class FileTrustedChecksumsSourceTestSupport
         session = TestUtils.newSession();
         // populate local repository
         Path basedir = session.getLocalRepository().getBasedir().toPath()
-                .resolve( FileTrustedChecksumsSourceSupport.LOCAL_REPO_PREFIX );
+                .resolve( FileTrustedChecksumsSourceSupport.LOCAL_REPO_PREFIX_DIR );
         checksumAlgorithmFactory = new Sha1ChecksumAlgorithmFactory();
         subject = prepareSubject( basedir );
     }

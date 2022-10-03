@@ -42,10 +42,10 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * The configuration keys supported:
  * <ul>
- *     <li><pre>aether.trustedChecksumsSource.${name}.enabled</pre> (boolean) must be explicitly set to "true"
+ *     <li><pre>aether.trustedChecksumsSource.${name}</pre> (boolean) must be explicitly set to "true"
  *     to become enabled</li>
  *     <li><pre>aether.trustedChecksumsSource.${name}.basedir</pre> (string, path) directory from where implementation
- *     can use files. May be relative path (the is resolved against local repository basedir) or absolute. If unset,
+ *     can use files. May be relative path (then is resolved against local repository basedir) or absolute. If unset,
  *     default value is ".checksums" and is resolved against local repository basedir.</li>
  *     <li><pre>aether.trustedChecksumsSource.${name}.originAware</pre> (boolean) whether to make implementation
  *     "originAware", to factor in origin repository ID as well or not.</li>
@@ -60,8 +60,6 @@ abstract class FileTrustedChecksumsSourceSupport
 {
     private static final String CONFIG_PROP_PREFIX = "aether.trustedChecksumsSource.";
 
-    private static final String CONF_NAME_ENABLED = "enabled";
-
     private static final String CONF_NAME_BASEDIR = "basedir";
 
     private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
@@ -69,7 +67,7 @@ abstract class FileTrustedChecksumsSourceSupport
     /**
      * Visible for testing.
      */
-    static final String LOCAL_REPO_PREFIX = ".checksums";
+    static final String LOCAL_REPO_PREFIX_DIR = ".checksums";
 
     private final String name;
 
@@ -92,7 +90,7 @@ abstract class FileTrustedChecksumsSourceSupport
         requireNonNull( artifact, "artifact is null" );
         requireNonNull( artifactRepository, "artifactRepository is null" );
         requireNonNull( checksumAlgorithmFactories, "checksumAlgorithmFactories is null" );
-        boolean enabled = ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ENABLED ) );
+        boolean enabled = ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
         if ( enabled )
         {
             Path basedir = getBasedir( session );
@@ -139,7 +137,7 @@ abstract class FileTrustedChecksumsSourceSupport
         try
         {
             Path basedir = DirectoryUtils.resolveDirectory(
-                    session, LOCAL_REPO_PREFIX, configPropKey( CONF_NAME_BASEDIR ), false );
+                    session, LOCAL_REPO_PREFIX_DIR, configPropKey( CONF_NAME_BASEDIR ), false );
             if ( !Files.isDirectory( basedir ) )
             {
                 return null;
