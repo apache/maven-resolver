@@ -26,7 +26,7 @@ import java.nio.file.Path;
 
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
-public class SummarytFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
+public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
@@ -42,6 +42,6 @@ public class SummarytFileTrustedChecksumsSourceTest extends FileTrustedChecksums
                             StandardCharsets.UTF_8 ) );
         }
 
-        return new SummarytFileTrustedChecksumsSource();
+        return new SummaryFileTrustedChecksumsSource();
     }
 }

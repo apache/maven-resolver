@@ -46,7 +46,7 @@ import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
-import org.eclipse.aether.internal.impl.checksum.SummarytFileTrustedChecksumsSource;
+import org.eclipse.aether.internal.impl.checksum.SummaryFileTrustedChecksumsSource;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
@@ -197,8 +197,8 @@ public class AetherModule
 
         bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SparseDirectoryTrustedChecksumsSource.NAME ) )
                 .to( SparseDirectoryTrustedChecksumsSource.class ).in( Singleton.class );
-        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SummarytFileTrustedChecksumsSource.NAME ) )
-                .to( SummarytFileTrustedChecksumsSource.class ).in( Singleton.class );
+        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SummaryFileTrustedChecksumsSource.NAME ) )
+                .to( SummaryFileTrustedChecksumsSource.class ).in( Singleton.class );
 
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
@@ -268,12 +268,12 @@ public class AetherModule
     @Singleton
     Map<String, TrustedChecksumsSource> trustedChecksumSources(
         @Named( SparseDirectoryTrustedChecksumsSource.NAME ) TrustedChecksumsSource sparse,
-        @Named( SummarytFileTrustedChecksumsSource.NAME ) TrustedChecksumsSource compact
+        @Named( SummaryFileTrustedChecksumsSource.NAME ) TrustedChecksumsSource compact
     )
     {
         Map<String, TrustedChecksumsSource> result = new HashMap<>();
         result.put( SparseDirectoryTrustedChecksumsSource.NAME, sparse );
-        result.put( SummarytFileTrustedChecksumsSource.NAME, compact );
+        result.put( SummaryFileTrustedChecksumsSource.NAME, compact );
         return Collections.unmodifiableMap( result );
     }
 

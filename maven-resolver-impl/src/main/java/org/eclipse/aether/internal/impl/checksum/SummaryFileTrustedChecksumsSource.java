@@ -60,19 +60,19 @@ import org.slf4j.LoggerFactory;
  * @since TBD
  */
 @Singleton
-@Named( SummarytFileTrustedChecksumsSource.NAME )
-public final class SummarytFileTrustedChecksumsSource
+@Named( SummaryFileTrustedChecksumsSource.NAME )
+public final class SummaryFileTrustedChecksumsSource
         extends FileTrustedChecksumsSourceSupport
 {
     public static final String NAME = "summary-file";
 
     private static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
-    private static final String CHECKSUMS_CACHE_KEY = SummarytFileTrustedChecksumsSource.class.getName() + ".checksums";
+    private static final String CHECKSUMS_CACHE_KEY = SummaryFileTrustedChecksumsSource.class.getName() + ".checksums";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( SummarytFileTrustedChecksumsSource.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger( SummaryFileTrustedChecksumsSource.class );
 
-    public SummarytFileTrustedChecksumsSource()
+    public SummaryFileTrustedChecksumsSource()
     {
         super( NAME );
     }
