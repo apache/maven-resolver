@@ -19,24 +19,52 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
+import java.util.Collection;
+import java.util.TreeSet;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.util.Collection;
-import java.util.TreeSet;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Artifact GAV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
- * considering local repository, only the artifact coordinates.
+ * considering local repository, only the artifact coordinates. May use custom prefixes and sufixes and separators,
+ * hence this instance may or may not be filesystem friendly (depends on strings used).
  */
-@Singleton
-@Named( GAVNameMapper.NAME )
 public class GAVNameMapper implements NameMapper
 {
-    public static final String NAME = "gav";
+    private final boolean fileSystemFriendly;
+
+    private final String artifactPrefix;
+
+    private final String artifactSuffix;
+
+    private final String metadataPrefix;
+
+    private final String metadataSuffix;
+
+    private final String fieldSeparator;
+
+    public GAVNameMapper( boolean fileSystemFriendly,
+                          String artifactPrefix, String artifactSuffix,
+                          String metadataPrefix, String metadataSuffix,
+                          String fieldSeparator )
+    {
+        this.fileSystemFriendly = fileSystemFriendly;
+        this.artifactPrefix = requireNonNull( artifactPrefix );
+        this.artifactSuffix = requireNonNull( artifactSuffix );
+        this.metadataPrefix = requireNonNull( metadataPrefix );
+        this.metadataSuffix = requireNonNull( metadataSuffix );
+        this.fieldSeparator = requireNonNull( fieldSeparator );
+    }
+
+    @Override
+    public boolean isFileSystemFriendly()
+    {
+        return fileSystemFriendly;
+    }
 
     @Override
     public Collection<String> nameLocks( final RepositorySystemSession session,
@@ -45,15 +73,12 @@ public class GAVNameMapper implements NameMapper
     {
         // Deadlock prevention: https://stackoverflow.com/a/16780988/696632
         // We must acquire multiple locks always in the same order!
-        Collection<String> keys = new TreeSet<>();
+        TreeSet<String> keys = new TreeSet<>();
         if ( artifacts != null )
         {
             for ( Artifact artifact : artifacts )
             {
-                String key = "artifact:" + artifact.getGroupId()
-                             + ":" + artifact.getArtifactId()
-                             + ":" + artifact.getBaseVersion();
-                keys.add( key );
+                keys.add( getArtifactName( artifact ) );
             }
         }
 
@@ -61,22 +86,45 @@ public class GAVNameMapper implements NameMapper
         {
             for ( Metadata metadata : metadatas )
             {
-                StringBuilder key = new StringBuilder( "metadata:" );
-                if ( !metadata.getGroupId().isEmpty() )
-                {
-                    key.append( metadata.getGroupId() );
-                    if ( !metadata.getArtifactId().isEmpty() )
-                    {
-                        key.append( ':' ).append( metadata.getArtifactId() );
-                        if ( !metadata.getVersion().isEmpty() )
-                        {
-                            key.append( ':' ).append( metadata.getVersion() );
-                        }
-                    }
-                }
-                keys.add( key.toString() );
+                keys.add( getMetadataName( metadata ) );
             }
         }
         return keys;
+    }
+
+    private String getArtifactName( Artifact artifact )
+    {
+        return artifactPrefix + artifact.getGroupId()
+                + fieldSeparator + artifact.getArtifactId()
+                + fieldSeparator + artifact.getBaseVersion()
+                + artifactSuffix;
+    }
+
+    private String getMetadataName( Metadata metadata )
+    {
+        String name = metadataPrefix;
+        if ( !metadata.getGroupId().isEmpty() )
+        {
+            name += metadata.getGroupId();
+            if ( !metadata.getArtifactId().isEmpty() )
+            {
+                name += fieldSeparator + metadata.getArtifactId();
+                if ( !metadata.getVersion().isEmpty() )
+                {
+                    name += fieldSeparator + metadata.getVersion();
+                }
+            }
+        }
+        return name + metadataSuffix;
+    }
+
+    public static NameMapper gav()
+    {
+        return new GAVNameMapper( false, "artifact:", "", "metadata:", "", ":" );
+    }
+
+    public static NameMapper fileGav()
+    {
+        return new GAVNameMapper( true, "", ".lock", "", ".lock", "~" );
     }
 }

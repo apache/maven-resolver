@@ -45,24 +45,25 @@ import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.FileProvidedChecksumsSource;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
+import org.eclipse.aether.internal.impl.checksum.SummaryFileTrustedChecksumsSource;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
+import org.eclipse.aether.internal.impl.checksum.SparseDirectoryTrustedChecksumsSource;
+import org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourceAdapter;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
-import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
-import org.eclipse.aether.internal.impl.synccontext.named.SimpleNamedLockFactorySelector;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.FileHashingGAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
@@ -91,6 +92,7 @@ import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
@@ -189,8 +191,14 @@ public class AetherModule
                 .to( EnhancedLocalRepositoryManagerFactory.class ).in( Singleton.class );
         bind( TrackingFileManager.class ).to( DefaultTrackingFileManager.class ).in( Singleton.class );
 
-        bind( ProvidedChecksumsSource.class ).annotatedWith( Names.named( FileProvidedChecksumsSource.NAME ) ) //
-            .to( FileProvidedChecksumsSource.class ).in( Singleton.class );
+        bind( ProvidedChecksumsSource.class )
+                .annotatedWith( Names.named( TrustedToProvidedChecksumsSourceAdapter.NAME ) )
+                .to( TrustedToProvidedChecksumsSourceAdapter.class ).in( Singleton.class );
+
+        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SparseDirectoryTrustedChecksumsSource.NAME ) )
+                .to( SparseDirectoryTrustedChecksumsSource.class ).in( Singleton.class );
+        bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SummaryFileTrustedChecksumsSource.NAME ) )
+                .to( SummaryFileTrustedChecksumsSource.class ).in( Singleton.class );
 
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
@@ -203,20 +211,21 @@ public class AetherModule
         bind( ChecksumAlgorithmFactorySelector.class )
                 .to( DefaultChecksumAlgorithmFactorySelector.class ).in ( Singleton.class );
 
-        bind( NamedLockFactorySelector.class ).to( SimpleNamedLockFactorySelector.class ).in( Singleton.class );
         bind( SyncContextFactory.class ).to( DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( org.eclipse.aether.impl.SyncContextFactory.class )
                 .to( org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class )
                 .in( Singleton.class );
 
-        bind( NameMapper.class ).annotatedWith( Names.named( StaticNameMapper.NAME ) )
-                .to( StaticNameMapper.class ).in( Singleton.class );
-        bind( NameMapper.class ).annotatedWith( Names.named( GAVNameMapper.NAME ) )
-                .to( GAVNameMapper.class ).in( Singleton.class );
-        bind( NameMapper.class ).annotatedWith( Names.named( DiscriminatingNameMapper.NAME ) )
-                .to( DiscriminatingNameMapper.class ).in( Singleton.class );
-        bind( NameMapper.class ).annotatedWith( Names.named( FileGAVNameMapper.NAME ) )
-                .to( FileGAVNameMapper.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( StaticNameMapperProvider.NAME ) )
+                .toProvider( StaticNameMapperProvider.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( GAVNameMapperProvider.NAME ) )
+                .toProvider( GAVNameMapperProvider.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( DiscriminatingNameMapperProvider.NAME ) )
+                .toProvider( DiscriminatingNameMapperProvider.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( FileGAVNameMapperProvider.NAME ) )
+                .toProvider( FileGAVNameMapperProvider.class ).in( Singleton.class );
+        bind( NameMapper.class ).annotatedWith( Names.named( FileHashingGAVNameMapperProvider.NAME ) )
+                .toProvider( FileHashingGAVNameMapperProvider.class ).in( Singleton.class );
 
         bind( NamedLockFactory.class ).annotatedWith( Names.named( NoopNamedLockFactory.NAME ) )
                 .to( NoopNamedLockFactory.class ).in( Singleton.class );
@@ -238,21 +247,34 @@ public class AetherModule
             @Named( DfDependencyCollector.NAME ) DependencyCollectorDelegate df
     )
     {
-        Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates = new HashMap<>();
-        dependencyCollectorDelegates.put( BfDependencyCollector.NAME, bf );
-        dependencyCollectorDelegates.put( DfDependencyCollector.NAME, df );
-        return dependencyCollectorDelegates;
+        Map<String, DependencyCollectorDelegate> result = new HashMap<>();
+        result.put( BfDependencyCollector.NAME, bf );
+        result.put( DfDependencyCollector.NAME, df );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
     @Singleton
-    Map<String, ProvidedChecksumsSource> provideChecksumSources(
-        @Named( FileProvidedChecksumsSource.NAME ) ProvidedChecksumsSource fileProvidedChecksumSource
+    Map<String, ProvidedChecksumsSource> providedChecksumSources(
+            @Named( TrustedToProvidedChecksumsSourceAdapter.NAME ) ProvidedChecksumsSource adapter
     )
     {
-        Map<String, ProvidedChecksumsSource> providedChecksumsSource = new HashMap<>();
-        providedChecksumsSource.put( FileProvidedChecksumsSource.NAME, fileProvidedChecksumSource );
-        return providedChecksumsSource;
+        Map<String, ProvidedChecksumsSource> result = new HashMap<>();
+        result.put( TrustedToProvidedChecksumsSourceAdapter.NAME, adapter );
+        return Collections.unmodifiableMap( result );
+    }
+
+    @Provides
+    @Singleton
+    Map<String, TrustedChecksumsSource> trustedChecksumSources(
+        @Named( SparseDirectoryTrustedChecksumsSource.NAME ) TrustedChecksumsSource sparse,
+        @Named( SummaryFileTrustedChecksumsSource.NAME ) TrustedChecksumsSource compact
+    )
+    {
+        Map<String, TrustedChecksumsSource> result = new HashMap<>();
+        result.put( SparseDirectoryTrustedChecksumsSource.NAME, sparse );
+        result.put( SummaryFileTrustedChecksumsSource.NAME, compact );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
@@ -263,28 +285,30 @@ public class AetherModule
             @Named( Sha1ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory sha1,
             @Named( Md5ChecksumAlgorithmFactory.NAME ) ChecksumAlgorithmFactory md5 )
     {
-        Map<String, ChecksumAlgorithmFactory> checksumTypes = new HashMap<>();
-        checksumTypes.put( Sha512ChecksumAlgorithmFactory.NAME, sha512 );
-        checksumTypes.put( Sha256ChecksumAlgorithmFactory.NAME, sha256 );
-        checksumTypes.put( Sha1ChecksumAlgorithmFactory.NAME, sha1 );
-        checksumTypes.put( Md5ChecksumAlgorithmFactory.NAME, md5 );
-        return Collections.unmodifiableMap( checksumTypes );
+        Map<String, ChecksumAlgorithmFactory> result = new HashMap<>();
+        result.put( Sha512ChecksumAlgorithmFactory.NAME, sha512 );
+        result.put( Sha256ChecksumAlgorithmFactory.NAME, sha256 );
+        result.put( Sha1ChecksumAlgorithmFactory.NAME, sha1 );
+        result.put( Md5ChecksumAlgorithmFactory.NAME, md5 );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
     @Singleton
     Map<String, NameMapper> provideNameMappers(
-            @Named( StaticNameMapper.NAME ) NameMapper staticNameMapper,
-            @Named( GAVNameMapper.NAME ) NameMapper gavNameMapper,
-            @Named( DiscriminatingNameMapper.NAME ) NameMapper discriminatingNameMapper,
-            @Named( FileGAVNameMapper.NAME ) NameMapper fileGavNameMapper )
+            @Named( StaticNameMapperProvider.NAME ) NameMapper staticNameMapper,
+            @Named( GAVNameMapperProvider.NAME ) NameMapper gavNameMapper,
+            @Named( DiscriminatingNameMapperProvider.NAME ) NameMapper discriminatingNameMapper,
+            @Named( FileGAVNameMapperProvider.NAME ) NameMapper fileGavNameMapper,
+            @Named( FileHashingGAVNameMapperProvider.NAME ) NameMapper fileHashingGavNameMapper )
     {
-        Map<String, NameMapper> nameMappers = new HashMap<>();
-        nameMappers.put( StaticNameMapper.NAME, staticNameMapper );
-        nameMappers.put( GAVNameMapper.NAME, gavNameMapper );
-        nameMappers.put( DiscriminatingNameMapper.NAME, discriminatingNameMapper );
-        nameMappers.put( FileGAVNameMapper.NAME, fileGavNameMapper );
-        return Collections.unmodifiableMap( nameMappers );
+        Map<String, NameMapper> result = new HashMap<>();
+        result.put( StaticNameMapperProvider.NAME, staticNameMapper );
+        result.put( GAVNameMapperProvider.NAME, gavNameMapper );
+        result.put( DiscriminatingNameMapperProvider.NAME, discriminatingNameMapper );
+        result.put( FileGAVNameMapperProvider.NAME, fileGavNameMapper );
+        result.put( FileHashingGAVNameMapperProvider.NAME, fileHashingGavNameMapper );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
@@ -294,11 +318,11 @@ public class AetherModule
             @Named( LocalSemaphoreNamedLockFactory.NAME ) NamedLockFactory localSemaphore,
             @Named( FileLockNamedLockFactory.NAME ) NamedLockFactory fileLockFactory )
     {
-        Map<String, NamedLockFactory> factories = new HashMap<>();
-        factories.put( LocalReadWriteLockNamedLockFactory.NAME, localRwLock );
-        factories.put( LocalSemaphoreNamedLockFactory.NAME, localSemaphore );
-        factories.put( FileLockNamedLockFactory.NAME, fileLockFactory );
-        return Collections.unmodifiableMap( factories );
+        Map<String, NamedLockFactory> result = new HashMap<>();
+        result.put( LocalReadWriteLockNamedLockFactory.NAME, localRwLock );
+        result.put( LocalSemaphoreNamedLockFactory.NAME, localSemaphore );
+        result.put( FileLockNamedLockFactory.NAME, fileLockFactory );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
@@ -307,19 +331,19 @@ public class AetherModule
             @Named( "simple" ) LocalRepositoryManagerFactory simple,
             @Named( "enhanced" ) LocalRepositoryManagerFactory enhanced )
     {
-        Set<LocalRepositoryManagerFactory> factories = new HashSet<>();
-        factories.add( simple );
-        factories.add( enhanced );
-        return Collections.unmodifiableSet( factories );
+        Set<LocalRepositoryManagerFactory> result = new HashSet<>();
+        result.add( simple );
+        result.add( enhanced );
+        return Collections.unmodifiableSet( result );
     }
 
     @Provides
     @Singleton
     Set<RepositoryLayoutFactory> provideRepositoryLayoutFactories( @Named( "maven2" ) RepositoryLayoutFactory maven2 )
     {
-        Set<RepositoryLayoutFactory> factories = new HashSet<>();
-        factories.add( maven2 );
-        return Collections.unmodifiableSet( factories );
+        Set<RepositoryLayoutFactory> result = new HashSet<>();
+        result.add( maven2 );
+        return Collections.unmodifiableSet( result );
     }
 
     @Provides

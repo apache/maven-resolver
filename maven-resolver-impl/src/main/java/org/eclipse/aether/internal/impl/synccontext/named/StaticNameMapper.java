@@ -19,49 +19,23 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.util.ConfigUtils;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
 
 /**
- * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context.
+ * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context:
+ * always maps ANY input to same name.
  */
-@Singleton
-@Named( StaticNameMapper.NAME )
 public class StaticNameMapper implements NameMapper
 {
-    public static final String NAME = "static";
-
-    /**
-     * Configuration property to pass in static name
-     */
-    private static final String CONFIG_PROP_NAME = "aether.syncContext.named.static.name";
-
-    private final String name;
-
-    /**
-     * Uses string {@code "static"} for the static name
-     */
-    @Inject
-    public StaticNameMapper()
+    @Override
+    public boolean isFileSystemFriendly()
     {
-        this( NAME );
-    }
-
-    /**
-     * Uses passed in non-{@code null} string for the static name
-     */
-    public StaticNameMapper( final String name )
-    {
-        this.name = Objects.requireNonNull( name );
+        return true;
     }
 
     @Override
@@ -69,6 +43,13 @@ public class StaticNameMapper implements NameMapper
                                          final Collection<? extends Artifact> artifacts,
                                          final Collection<? extends Metadata> metadatas )
     {
-        return Collections.singletonList( ConfigUtils.getString( session, name, CONFIG_PROP_NAME ) );
+        if ( ( artifacts != null && !artifacts.isEmpty() ) || ( metadatas != null && !metadatas.isEmpty() ) )
+        {
+            return Collections.singletonList( "static" );
+        }
+        else
+        {
+            return Collections.emptyList();
+        }
     }
 }

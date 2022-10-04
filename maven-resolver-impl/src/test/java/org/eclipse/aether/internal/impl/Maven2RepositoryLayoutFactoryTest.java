@@ -332,6 +332,17 @@ public class Maven2RepositoryLayoutFactoryTest
     }
 
     @Test
+    public void testNotConfiguredButSupportedChecksumsHandledAsChecksums()
+            throws Exception
+    {
+        layout = factory.newInstance( session, newRepo( "default" ) );
+        DefaultArtifact artifact = new DefaultArtifact( "g.i.d", "a-i.d", "cls", "jar.sha512", "1.0" );
+        URI uri = layout.getLocation( artifact, true );
+        List<ChecksumLocation> checksums = layout.getChecksumLocations( artifact, true, uri );
+        assertEquals( 0, checksums.size() );
+    }
+
+    @Test
     public void testCustomChecksumsIgnored_IllegalInout()
             throws Exception
     {

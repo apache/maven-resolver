@@ -39,6 +39,7 @@ import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.StringDigestUtil;
 
 /**
  * A local repository manager that realizes the classical Maven 2.0 local repository.
@@ -119,13 +120,13 @@ class SimpleLocalRepositoryManager
                 subKeys.add( mirroredRepo.getId() );
             }
 
-            SimpleDigest digest = new SimpleDigest();
-            digest.update( context );
+            StringDigestUtil sha1 = StringDigestUtil.sha1();
+            sha1.update( context );
             for ( String subKey : subKeys )
             {
-                digest.update( subKey );
+                sha1.update( subKey );
             }
-            buffer.append( digest.digest() );
+            buffer.append( sha1.digest() );
 
             key = buffer.toString();
         }

@@ -55,7 +55,7 @@ For the `aether.syncContext.named.factory` property following values are allowed
 
 - `rwlock-local` (default), uses JVM `ReentrantReadWriteLock` per lock name, usable for MT builds.
 - `semaphore-local`, uses JVM `Semaphore` per lock name, usable for MT builds.
-- `file-lock`, uses advisory file locking, usable for MP builds (must be used with `file-gav` name mapping).
+- `file-lock`, uses advisory file locking, usable for MP builds (must be used with any of `file-` prefixed name mapping).
 - `noop`, implement no-op locking (no locking). For experimenting only. Has same functionality as old "nolock"
   SyncContextFactory implementation.
 
@@ -64,6 +64,7 @@ For the `aether.syncContext.named.nameMapper` property following values are allo
 - `discriminating` (default), uses hostname + local repo + GAV to create unique lock names for artifacts.
 - `gav` uses GAV to create unique lock names for artifacts and metadata. Is not unique if multiple local repositories are involved.
 - `file-gav` uses GAV and session to create absolute file paths (to be used with `file-lock` factory)
+- `file-hgav` uses more compact layout than `file-gav` by SHA-1 digest, similar to git (to be used with `file-lock` factory)
 - `static` uses static (same) string as lock name for any input. Effectively providing functionality same as old
   "global" locking SyncContextFactory.
 
@@ -76,10 +77,13 @@ Extra values for factory (these need extra setup and will work with Sisu DI only
 
 Other configuration keys:
 
-- `aether.syncContext.named.static.name`, the value to use as static lock name, if `static` name mapper is used.
-  If not set, defaults to "static".
+- `aether.syncContext.named.basedir.locksDir`, the relative or absolute directory path to to store the lock files.
+  If relative, is resolved against local repository, if absolute, is used as is. If not set, defaults to ".locks".
 - `aether.syncContext.named.discriminating.discriminator`, when `discriminating` name mapper is used, sets the a
   discriminator uniquely identifying a host and local repository pair. If not set, discriminator is calculated by
   applying `sha1(hostname + ":" + localRepoPath)` + GAV name mapper.
 - `aether.syncContext.named.discriminating.hostname`, the hostname to be used to calculate discriminator value,
   if above value not set. If not set, the hostname is detected using Java API.
+- `aether.syncContext.named.hashing.depth`, the depth of sub-directories (0=xxxx..., 1=xx/xxxx..., 2=xx/xx/xxxx..., etc)
+  to be created by HashingNameMapper (used with `file-hgav` mapper). Only integer values from 0 to 4 are accepted (inclusive).
+  If not set, defaults to 2.
