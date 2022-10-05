@@ -8,9 +8,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,6 +19,10 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,12 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import static java.util.Objects.requireNonNull;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -45,7 +44,6 @@ import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
@@ -70,6 +68,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -78,12 +77,15 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
+
 /**
+ *
  */
 @Singleton
 @Named
 public class DefaultArtifactResolver
-    implements ArtifactResolver, Service
+        implements ArtifactResolver, Service
 {
 
     private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
@@ -204,7 +206,7 @@ public class DefaultArtifactResolver
     }
 
     public ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
-        throws ArtifactResolutionException
+            throws ArtifactResolutionException
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( session, "session cannot be null" );
@@ -214,7 +216,7 @@ public class DefaultArtifactResolver
 
     public List<ArtifactResult> resolveArtifacts( RepositorySystemSession session,
                                                   Collection<? extends ArtifactRequest> requests )
-        throws ArtifactResolutionException
+            throws ArtifactResolutionException
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( session, "session cannot be null" );
@@ -239,7 +241,7 @@ public class DefaultArtifactResolver
     @SuppressWarnings( "checkstyle:methodlength" )
     private List<ArtifactResult> resolve( RepositorySystemSession session,
                                           Collection<? extends ArtifactRequest> requests )
-        throws ArtifactResolutionException
+            throws ArtifactResolutionException
     {
         List<ArtifactResult> results = new ArrayList<>( requests.size() );
         boolean failures = false;
@@ -321,7 +323,7 @@ public class DefaultArtifactResolver
             }
 
             LocalArtifactResult local =
-                lrm.find( session, new LocalArtifactRequest( artifact, repos, request.getRequestContext() ) );
+                    lrm.find( session, new LocalArtifactRequest( artifact, repos, request.getRequestContext() ) );
             if ( isLocallyInstalled( local, versionResult ) )
             {
                 if ( local.getRepository() != null )
@@ -376,9 +378,9 @@ public class DefaultArtifactResolver
                 catch ( RepositoryOfflineException e )
                 {
                     Exception exception =
-                        new ArtifactNotFoundException( artifact, repo, "Cannot access " + repo.getId() + " ("
-                            + repo.getUrl() + ") in offline mode and the artifact " + artifact
-                            + " has not been downloaded from it before.", e );
+                            new ArtifactNotFoundException( artifact, repo, "Cannot access " + repo.getId() + " ("
+                                    + repo.getUrl() + ") in offline mode and the artifact " + artifact
+                                    + " has not been downloaded from it before.", e );
                     result.addException( exception );
                     continue;
                 }
@@ -457,10 +459,10 @@ public class DefaultArtifactResolver
     }
 
     private File getFile( RepositorySystemSession session, Artifact artifact, File file )
-        throws ArtifactTransferException
+            throws ArtifactTransferException
     {
         if ( artifact.isSnapshot() && !artifact.getVersion().equals( artifact.getBaseVersion() )
-            && ConfigUtils.getBoolean( session, true, CONFIG_PROP_SNAPSHOT_NORMALIZATION ) )
+                && ConfigUtils.getBoolean( session, true, CONFIG_PROP_SNAPSHOT_NORMALIZATION ) )
         {
             String name = file.getName().replace( artifact.getVersion(), artifact.getBaseVersion() );
             File dst = new File( file.getParent(), name );
@@ -510,7 +512,7 @@ public class DefaultArtifactResolver
                 else
                 {
                     throw new NoRepositoryConnectorException( repo, "Blocked mirror for repositories: "
-                        + repo.getMirroredRepositories() );
+                            + repo.getMirroredRepositories() );
                 }
             }
 
@@ -559,13 +561,13 @@ public class DefaultArtifactResolver
             else
             {
                 String path =
-                    lrm.getPathForRemoteArtifact( artifact, group.repository, item.request.getRequestContext() );
+                        lrm.getPathForRemoteArtifact( artifact, group.repository, item.request.getRequestContext() );
                 download.setFile( new File( lrm.getRepository().getBasedir(), path ) );
             }
 
             boolean snapshot = artifact.isSnapshot();
             RepositoryPolicy policy =
-                remoteRepositoryManager.getPolicy( session, group.repository, !snapshot, snapshot );
+                    remoteRepositoryManager.getPolicy( session, group.repository, !snapshot, snapshot );
 
             int errorPolicy = Utils.getPolicy( session, artifact, group.repository );
             if ( ( errorPolicy & ResolutionErrorPolicy.CACHE_ALL ) != 0 )
@@ -715,8 +717,8 @@ public class DefaultArtifactResolver
         boolean matches( RemoteRepository repo )
         {
             return repository.getUrl().equals( repo.getUrl() )
-                && repository.getContentType().equals( repo.getContentType() )
-                && repository.isRepositoryManager() == repo.isRepositoryManager();
+                    && repository.getContentType().equals( repo.getContentType() )
+                    && repository.isRepositoryManager() == repo.isRepositoryManager();
         }
 
     }
