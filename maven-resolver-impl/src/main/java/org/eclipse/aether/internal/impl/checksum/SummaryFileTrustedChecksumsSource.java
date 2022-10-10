@@ -201,6 +201,14 @@ public final class SummaryFileTrustedChecksumsSource
         return fileName + "." + checksumAlgorithmFactory.getFileExtension();
     }
 
+    /**
+     * Note: this implementation will work only in single-thread (T1) model. While not ideal, the "workaround" is
+     * possible in both, Maven and Maven Daemon: force single threaded execution model while "recording" (in mvn:
+     * do not pass any {@code -T} CLI parameter, while for mvnd use {@code -1} CLI parameter.
+     * 
+     * TODO: this will need to be reworked for at least two reasons: a) avoid duplicates in summary file and b)
+     * support multi threaded builds (probably will need "on session close" hook).
+     */
     private class SummaryFileWriter implements Writer
     {
         private final Path basedir;
