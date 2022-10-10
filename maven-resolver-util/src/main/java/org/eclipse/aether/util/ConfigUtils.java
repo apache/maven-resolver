@@ -404,13 +404,13 @@ public final class ConfigUtils
      *
      * @since TBD
      */
-    public static List<String> parseCommaSeparatedNames( String commaSeparatedNamed )
+    public static List<String> parseCommaSeparatedNames( String commaSeparatedNames )
     {
-        if ( commaSeparatedNamed == null || commaSeparatedNamed.trim().isEmpty() )
+        if ( commaSeparatedNames == null || commaSeparatedNames.trim().isEmpty() )
         {
             return Collections.emptyList();
         }
-        return Arrays.stream( commaSeparatedNamed.split( "," ) )
+        return Arrays.stream( commaSeparatedNames.split( "," ) )
                 .filter( s -> s != null && !s.trim().isEmpty() )
                 .collect( toList() );
     }
@@ -421,8 +421,8 @@ public final class ConfigUtils
      *
      * @since TBD
      */
-    public static List<String> parseCommaSeparatedUniqueNames( String commaSeparatedNamed )
+    public static List<String> parseCommaSeparatedUniqueNames( String commaSeparatedNames )
     {
-        return parseCommaSeparatedNames( commaSeparatedNamed ).stream().distinct().collect( toList() );
+        return parseCommaSeparatedNames( commaSeparatedNames ).stream().distinct().collect( toList() );
     }
 }

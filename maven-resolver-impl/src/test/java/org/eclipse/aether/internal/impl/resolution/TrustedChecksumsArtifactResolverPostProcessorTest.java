@@ -22,7 +22,6 @@ package org.eclipse.aether.internal.impl.resolution;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -53,9 +52,9 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 
 /**
- * UT for {@link TrustedChecksumArtifactResolverPostProcessor}.
+ * UT for {@link TrustedChecksumsArtifactResolverPostProcessor}.
  */
-public class TrustedChecksumArtifactResolverPostProcessorTest implements TrustedChecksumsSource
+public class TrustedChecksumsArtifactResolverPostProcessorTest implements TrustedChecksumsSource
 {
     private static final String TRUSTED_SOURCE_NAME = "test";
 
@@ -69,7 +68,7 @@ public class TrustedChecksumArtifactResolverPostProcessorTest implements Trusted
 
     protected ChecksumAlgorithmFactory checksumAlgorithmFactory = new Sha1ChecksumAlgorithmFactory();
 
-    private TrustedChecksumArtifactResolverPostProcessor subject;
+    private TrustedChecksumsArtifactResolverPostProcessor subject;
 
     private TrustedChecksumsSource.Writer trustedChecksumsWriter;
 
@@ -101,7 +100,7 @@ public class TrustedChecksumArtifactResolverPostProcessorTest implements Trusted
                 return Collections.singletonList( checksumAlgorithmFactory );
             }
         };
-        subject = new TrustedChecksumArtifactResolverPostProcessor( selector,
+        subject = new TrustedChecksumsArtifactResolverPostProcessor( selector,
                 Collections.singletonMap( TRUSTED_SOURCE_NAME, this ) );
         trustedChecksumsWriter = null;
         session.setConfigProperty( "aether.artifactResolver.postProcessor.trusted-checksum", Boolean.TRUE.toString() );

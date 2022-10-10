@@ -57,7 +57,7 @@ import org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourc
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
-import org.eclipse.aether.internal.impl.resolution.TrustedChecksumArtifactResolverPostProcessor;
+import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
@@ -203,8 +203,8 @@ public class AetherModule
                 .to( SummaryFileTrustedChecksumsSource.class ).in( Singleton.class );
 
         bind( ArtifactResolverPostProcessor.class )
-                .annotatedWith( Names.named( TrustedChecksumArtifactResolverPostProcessor.NAME ) )
-                .to( TrustedChecksumArtifactResolverPostProcessor.class ).in( Singleton.class );
+                .annotatedWith( Names.named( TrustedChecksumsArtifactResolverPostProcessor.NAME ) )
+                .to( TrustedChecksumsArtifactResolverPostProcessor.class ).in( Singleton.class );
 
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
@@ -249,11 +249,11 @@ public class AetherModule
     @Provides
     @Singleton
     Map<String, ArtifactResolverPostProcessor> artifactResolverProcessors(
-            @Named( TrustedChecksumArtifactResolverPostProcessor.NAME ) ArtifactResolverPostProcessor trustedChecksums
+            @Named( TrustedChecksumsArtifactResolverPostProcessor.NAME ) ArtifactResolverPostProcessor trustedChecksums
     )
     {
         Map<String, ArtifactResolverPostProcessor> result = new HashMap<>();
-        result.put( TrustedChecksumArtifactResolverPostProcessor.NAME, trustedChecksums );
+        result.put( TrustedChecksumsArtifactResolverPostProcessor.NAME, trustedChecksums );
         return Collections.unmodifiableMap( result );
     }
 

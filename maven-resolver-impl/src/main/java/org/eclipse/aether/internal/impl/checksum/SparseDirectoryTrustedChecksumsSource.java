@@ -108,7 +108,7 @@ public final class SparseDirectoryTrustedChecksumsSource
             catch ( IOException e )
             {
                 // unexpected, log, skip
-                LOGGER.warn( "Could not read '{}' trusted checksum on path '{}'", artifact, checksumPath, e );
+                LOGGER.warn( "Could not read artifact '{}' trusted checksum on path '{}'", artifact, checksumPath, e );
             }
         }
         return checksums;

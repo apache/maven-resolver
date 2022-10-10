@@ -52,11 +52,11 @@ import static java.util.Objects.requireNonNull;
  * @since TBD
  */
 @Singleton
-@Named( TrustedChecksumArtifactResolverPostProcessor.NAME )
-public final class TrustedChecksumArtifactResolverPostProcessor
+@Named( TrustedChecksumsArtifactResolverPostProcessor.NAME )
+public final class TrustedChecksumsArtifactResolverPostProcessor
         extends ArtifactResolverPostProcessorSupport
 {
-    public static final String NAME = "trusted-checksum";
+    public static final String NAME = "trusted-checksums";
 
     private static final String CONF_CHECKSUM_ALGORITHMS = "checksumAlgorithms";
 
@@ -67,14 +67,14 @@ public final class TrustedChecksumArtifactResolverPostProcessor
     private static final String CONF_RECORD = "record";
 
     private static final String CHECKSUM_ALGORITHMS_CACHE_KEY =
-            TrustedChecksumArtifactResolverPostProcessor.class.getName() + ".checksumAlgorithms";
+            TrustedChecksumsArtifactResolverPostProcessor.class.getName() + ".checksumAlgorithms";
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
     private final Map<String, TrustedChecksumsSource> trustedChecksumsSources;
 
     @Inject
-    public TrustedChecksumArtifactResolverPostProcessor(
+    public TrustedChecksumsArtifactResolverPostProcessor(
             ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
             Map<String, TrustedChecksumsSource> trustedChecksumsSources )
     {
@@ -217,7 +217,7 @@ public final class TrustedChecksumArtifactResolverPostProcessor
 
             if ( !validated && failIfMissing )
             {
-                artifactResult.addException( new ChecksumFailureException( "There are no enabled trusted checksum"
+                artifactResult.addException( new ChecksumFailureException( "There are no enabled trusted checksums"
                         + " source(s) to validate against." ) );
                 valid = false;
             }
