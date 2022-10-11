@@ -39,6 +39,8 @@ import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
+import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
+import org.eclipse.aether.internal.impl.filter.Filters;
 import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
@@ -64,6 +66,7 @@ import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
@@ -87,9 +90,16 @@ public class DefaultArtifactResolverTest
 
     private RecordingRepositoryConnector connector;
 
+    private HashMap<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources;
+
+    private DefaultRemoteRepositoryFilterManager remoteRepositoryFilterManager;
+
     @Before
     public void setup()
     {
+        remoteRepositoryFilterSources = new HashMap<>();
+        remoteRepositoryFilterManager = new DefaultRemoteRepositoryFilterManager( remoteRepositoryFilterSources );
+
         UpdateCheckManager updateCheckManager = new StaticUpdateCheckManager( true );
         repositoryConnectorProvider = new StubRepositoryConnectorProvider();
         VersionResolver versionResolver = new StubVersionResolver();
@@ -105,6 +115,7 @@ public class DefaultArtifactResolverTest
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
         resolver.setOfflineController( new DefaultOfflineController() );
         resolver.setArtifactResolverPostProcessors( Collections.emptyMap() );
+        resolver.setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
 
         artifact = new DefaultArtifact( "gid", "aid", "", "ext", "ver" );
 
@@ -248,6 +259,121 @@ public class DefaultArtifactResolverTest
             assertNull( resolved );
         }
 
+    }
+
+    @Test
+    public void testResolveRemoteArtifactAlwaysAcceptFilter()
+            throws ArtifactResolutionException
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.neverAcceptFrom("invalid repo id") );
+        remoteRepositoryFilterSources.put( "filter2", Filters.alwaysAccept() );
+        connector.setExpectGet( artifact );
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
+
+        ArtifactResult result = resolver.resolveArtifact( session, request );
+
+        assertTrue( result.getExceptions().isEmpty() );
+
+        Artifact resolved = result.getArtifact();
+        assertNotNull( resolved.getFile() );
+
+        resolved = resolved.setFile( null );
+        assertEquals( artifact, resolved );
+
+        connector.assertSeenExpected();
+    }
+
+    @Test
+    public void testResolveRemoteArtifactNeverAcceptFilter()
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.neverAcceptFrom("invalid repo id") );
+        remoteRepositoryFilterSources.put( "filter2", Filters.neverAccept() );
+        //connector.setExpectGet( artifact ); // should not see it
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "project" );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
+
+        try
+        {
+            resolver.resolveArtifact( session, request );
+            fail( "expected exception" );
+        }
+        catch ( ArtifactResolutionException e )
+        {
+            connector.assertSeenExpected();
+            assertNotNull( e.getResults() );
+            assertEquals( 1, e.getResults().size() );
+
+            ArtifactResult result = e.getResults().get( 0 );
+
+            assertSame( request, result.getRequest() );
+
+            assertFalse( result.getExceptions().isEmpty() );
+            assertTrue( result.getExceptions().get( 0 ) instanceof ArtifactNotFoundException );
+            assertEquals( "never-accept", result.getExceptions().get( 0 ).getMessage() );
+
+            Artifact resolved = result.getArtifact();
+            assertNull( resolved );
+        }
+    }
+
+
+    @Test
+    public void testResolveRemoteArtifactAlwaysAcceptFromRepoFilter()
+            throws ArtifactResolutionException
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.alwaysAcceptFrom( "id" ) );
+        connector.setExpectGet( artifact );
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "" );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
+
+        ArtifactResult result = resolver.resolveArtifact( session, request );
+
+        assertTrue( result.getExceptions().isEmpty() );
+
+        Artifact resolved = result.getArtifact();
+        assertNotNull( resolved.getFile() );
+
+        resolved = resolved.setFile( null );
+        assertEquals( artifact, resolved );
+
+        connector.assertSeenExpected();
+    }
+
+    @Test
+    public void testResolveRemoteArtifactNeverAcceptFilterFromRepo()
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.neverAcceptFrom( "id" ) );
+        //connector.setExpectGet( artifact ); // should not see it
+
+        ArtifactRequest request = new ArtifactRequest( artifact, null, "project" );
+        request.addRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
+
+        try
+        {
+            resolver.resolveArtifact( session, request );
+            fail( "expected exception" );
+        }
+        catch ( ArtifactResolutionException e )
+        {
+            connector.assertSeenExpected();
+            assertNotNull( e.getResults() );
+            assertEquals( 1, e.getResults().size() );
+
+            ArtifactResult result = e.getResults().get( 0 );
+
+            assertSame( request, result.getRequest() );
+
+            assertFalse( result.getExceptions().isEmpty() );
+            assertTrue( result.getExceptions().get( 0 ) instanceof ArtifactNotFoundException );
+            assertEquals( "never-accept-id", result.getExceptions().get( 0 ).getMessage() );
+
+            Artifact resolved = result.getArtifact();
+            assertNull( resolved );
+        }
     }
 
     @Test
@@ -744,7 +870,7 @@ public class DefaultArtifactResolverTest
 
             public LocalRepository getRepository()
             {
-                return null;
+                return new LocalRepository( new File("") );
             }
 
             public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
@@ -827,7 +953,7 @@ public class DefaultArtifactResolverTest
 
             public LocalRepository getRepository()
             {
-                return null;
+                return new LocalRepository( new File( "" ) );
             }
 
             public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )

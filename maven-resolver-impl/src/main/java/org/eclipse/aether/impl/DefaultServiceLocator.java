@@ -56,6 +56,7 @@ import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
+import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
@@ -227,6 +228,7 @@ public final class DefaultServiceLocator
         addService( TrackingFileManager.class, DefaultTrackingFileManager.class );
         addService( ChecksumAlgorithmFactorySelector.class, DefaultChecksumAlgorithmFactorySelector.class );
         addService( LocalPathComposer.class, DefaultLocalPathComposer.class );
+        addService( RemoteRepositoryFilterManager.class, DefaultRemoteRepositoryFilterManager.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )

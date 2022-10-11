@@ -37,6 +37,7 @@ import org.eclipse.aether.impl.Installer;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.OfflineController;
+import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
@@ -57,6 +58,9 @@ import org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourc
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
+import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
+import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
+import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
@@ -98,6 +102,7 @@ import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
@@ -242,8 +247,30 @@ public class AetherModule
         bind( NamedLockFactory.class ).annotatedWith( Names.named( FileLockNamedLockFactory.NAME ) )
                 .to( FileLockNamedLockFactory.class ).in( Singleton.class );
 
+        bind( RemoteRepositoryFilterManager.class )
+                .to( DefaultRemoteRepositoryFilterManager.class ).in( Singleton.class );
+        bind( RemoteRepositoryFilterSource.class ).annotatedWith(
+                Names.named( GroupIdRemoteRepositoryFilterSource.NAME ) )
+                .to( GroupIdRemoteRepositoryFilterSource.class ).in( Singleton.class );
+        bind( RemoteRepositoryFilterSource.class ).annotatedWith(
+                Names.named( PrefixesRemoteRepositoryFilterSource.NAME ) )
+                .to( PrefixesRemoteRepositoryFilterSource.class ).in( Singleton.class );
+
         install( new Slf4jModule() );
 
+    }
+
+    @Provides
+    @Singleton
+    Map<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources(
+            @Named( GroupIdRemoteRepositoryFilterSource.NAME ) RemoteRepositoryFilterSource groupId,
+            @Named( PrefixesRemoteRepositoryFilterSource.NAME ) RemoteRepositoryFilterSource prefixes
+    )
+    {
+        Map<String, RemoteRepositoryFilterSource> result = new HashMap<>();
+        result.put( GroupIdRemoteRepositoryFilterSource.NAME, groupId );
+        result.put( PrefixesRemoteRepositoryFilterSource.NAME, prefixes );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides
