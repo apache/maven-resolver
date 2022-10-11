@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +104,7 @@ public class DefaultArtifactResolverTest
         resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
         resolver.setOfflineController( new DefaultOfflineController() );
+        resolver.setArtifactResolverPostProcessors( Collections.emptyMap() );
 
         artifact = new DefaultArtifact( "gid", "aid", "", "ext", "ver" );
 

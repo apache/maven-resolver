@@ -69,15 +69,15 @@ public class DefaultChecksumAlgorithmFactorySelector
     public ChecksumAlgorithmFactory select( String algorithmName )
     {
         requireNonNull( algorithmName, "algorithmMame must not be null" );
-        ChecksumAlgorithmFactory factory =  factories.get( algorithmName );
+        ChecksumAlgorithmFactory factory = factories.get( algorithmName );
         if ( factory == null )
         {
             throw new IllegalArgumentException(
                     String.format( "Unsupported checksum algorithm %s, supported ones are %s",
                             algorithmName,
                             getChecksumAlgorithmFactories().stream()
-                                                           .map( ChecksumAlgorithmFactory::getName )
-                                                           .collect( toList() )
+                                    .map( ChecksumAlgorithmFactory::getName )
+                                    .collect( toList() )
                     )
             );
         }

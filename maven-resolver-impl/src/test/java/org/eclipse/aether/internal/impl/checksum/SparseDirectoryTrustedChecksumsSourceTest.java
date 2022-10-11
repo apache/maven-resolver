@@ -33,8 +33,6 @@ public class SparseDirectoryTrustedChecksumsSourceTest extends FileTrustedChecks
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
     {
-        session.setConfigProperty( "aether.trustedChecksumsSource.sparse-directory",
-                Boolean.TRUE.toString() );
         LocalPathComposer localPathComposer = new DefaultLocalPathComposer();
         // artifact: test:test:2.0 => "foobar"
         {
@@ -46,5 +44,11 @@ public class SparseDirectoryTrustedChecksumsSourceTest extends FileTrustedChecks
         }
 
         return new SparseDirectoryTrustedChecksumsSource( new DefaultFileProcessor(), localPathComposer );
+    }
+
+    @Override
+    protected void enableSource()
+    {
+        session.setConfigProperty( "aether.trustedChecksumsSource.sparse-directory", Boolean.TRUE.toString() );
     }
 }

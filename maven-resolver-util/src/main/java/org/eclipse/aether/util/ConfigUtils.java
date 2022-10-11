@@ -20,12 +20,15 @@ package org.eclipse.aether.util;
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * A utility class to read configuration properties from a repository system session.
@@ -395,4 +398,31 @@ public final class ConfigUtils
         return getMap( session.getConfigProperties(), defaultValue, keys );
     }
 
+    /**
+     * Utility method to parse configuration string that contains comma separated list of names into
+     * {@link List<String>}, never returns {@code null}.
+     *
+     * @since TBD
+     */
+    public static List<String> parseCommaSeparatedNames( String commaSeparatedNames )
+    {
+        if ( commaSeparatedNames == null || commaSeparatedNames.trim().isEmpty() )
+        {
+            return Collections.emptyList();
+        }
+        return Arrays.stream( commaSeparatedNames.split( "," ) )
+                .filter( s -> s != null && !s.trim().isEmpty() )
+                .collect( toList() );
+    }
+
+    /**
+     * Utility method to parse configuration string that contains comma separated list of names into
+     * {@link List<String>} with unique elements (duplicates, if any, are discarded), never returns {@code null}.
+     *
+     * @since TBD
+     */
+    public static List<String> parseCommaSeparatedUniqueNames( String commaSeparatedNames )
+    {
+        return parseCommaSeparatedNames( commaSeparatedNames ).stream().distinct().collect( toList() );
+    }
 }

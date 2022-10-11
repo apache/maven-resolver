@@ -24,7 +24,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -110,18 +109,11 @@ public final class Maven2RepositoryLayoutFactory
         {
             throw new NoRepositoryLayoutException( repository );
         }
-        // ensure order and uniqueness of (potentially user set) algorithm list
-        LinkedHashSet<String> checksumsAlgorithmNames = Arrays.stream( ConfigUtils.getString(
-                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS )
-                .split( "," )
-        ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toCollection( LinkedHashSet::new ) );
 
-        // validation: this loop implicitly validates the list above: selector will throw on unknown algorithm
-        List<ChecksumAlgorithmFactory> checksumsAlgorithms = new ArrayList<>( checksumsAlgorithmNames.size() );
-        for ( String checksumsAlgorithmName : checksumsAlgorithmNames )
-        {
-            checksumsAlgorithms.add( checksumAlgorithmFactorySelector.select( checksumsAlgorithmName ) );
-        }
+        List<ChecksumAlgorithmFactory> checksumsAlgorithms = checksumAlgorithmFactorySelector.select(
+                ConfigUtils.parseCommaSeparatedUniqueNames( ConfigUtils.getString(
+                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS ) )
+        );
 
         // ensure uniqueness of (potentially user set) extension list
         Set<String> omitChecksumsForExtensions = Arrays.stream( ConfigUtils.getString(

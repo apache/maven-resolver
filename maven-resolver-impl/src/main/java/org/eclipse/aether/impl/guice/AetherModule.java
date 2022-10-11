@@ -57,6 +57,7 @@ import org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourc
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
+import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
@@ -103,6 +104,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.log.LoggerFactory;
+import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.slf4j.ILoggerFactory;
 
@@ -200,6 +202,10 @@ public class AetherModule
         bind( TrustedChecksumsSource.class ).annotatedWith( Names.named( SummaryFileTrustedChecksumsSource.NAME ) )
                 .to( SummaryFileTrustedChecksumsSource.class ).in( Singleton.class );
 
+        bind( ArtifactResolverPostProcessor.class )
+                .annotatedWith( Names.named( TrustedChecksumsArtifactResolverPostProcessor.NAME ) )
+                .to( TrustedChecksumsArtifactResolverPostProcessor.class ).in( Singleton.class );
+
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Md5ChecksumAlgorithmFactory.NAME ) )
                 .to( Md5ChecksumAlgorithmFactory.class );
         bind( ChecksumAlgorithmFactory.class ).annotatedWith( Names.named( Sha1ChecksumAlgorithmFactory.NAME ) )
@@ -238,6 +244,17 @@ public class AetherModule
 
         install( new Slf4jModule() );
 
+    }
+
+    @Provides
+    @Singleton
+    Map<String, ArtifactResolverPostProcessor> artifactResolverProcessors(
+            @Named( TrustedChecksumsArtifactResolverPostProcessor.NAME ) ArtifactResolverPostProcessor trustedChecksums
+    )
+    {
+        Map<String, ArtifactResolverPostProcessor> result = new HashMap<>();
+        result.put( TrustedChecksumsArtifactResolverPostProcessor.NAME, trustedChecksums );
+        return Collections.unmodifiableMap( result );
     }
 
     @Provides

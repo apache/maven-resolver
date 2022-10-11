@@ -35,6 +35,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public abstract class FileTrustedChecksumsSourceTestSupport
 {
@@ -63,21 +64,38 @@ public abstract class FileTrustedChecksumsSourceTestSupport
 
     protected abstract FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException;
 
+    protected abstract void enableSource();
+
+    @Test
+    public void notEnabled()
+    {
+        assertNull( subject.getTrustedArtifactChecksums(
+                        session,
+                        ARTIFACT_WITH_CHECKSUM,
+                        session.getLocalRepository(),
+                        Collections.singletonList( checksumAlgorithmFactory )
+                )
+        );
+    }
+
     @Test
     public void noProvidedArtifactChecksum()
     {
+        enableSource();
         Map<String, String> providedChecksums = subject.getTrustedArtifactChecksums(
                 session,
                 ARTIFACT_WITHOUT_CHECKSUM,
                 session.getLocalRepository(),
                 Collections.singletonList( checksumAlgorithmFactory )
         );
-        assertNull( providedChecksums );
+        assertNotNull( providedChecksums );
+        assertTrue( providedChecksums.isEmpty() );
     }
 
     @Test
     public void haveProvidedArtifactChecksum()
     {
+        enableSource();
         Map<String, String> providedChecksums = subject.getTrustedArtifactChecksums(
                 session,
                 ARTIFACT_WITH_CHECKSUM,

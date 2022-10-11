@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -93,23 +94,52 @@ abstract class FileTrustedChecksumsSourceSupport
         boolean enabled = ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
         if ( enabled )
         {
-            Path basedir = getBasedir( session );
+            Path basedir = getBasedir( session, false );
             if ( basedir != null && !checksumAlgorithmFactories.isEmpty() )
             {
-                Map<String, String> result = performLookup(
-                        session, basedir, artifact, artifactRepository, checksumAlgorithmFactories );
-
-                return result == null || result.isEmpty() ? null : result;
+                return requireNonNull(
+                        performLookup( session, basedir, artifact, artifactRepository, checksumAlgorithmFactories )
+                );
+            }
+            else
+            {
+                return Collections.emptyMap();
             }
         }
         return null;
     }
 
+    @Override
+    public Writer getTrustedArtifactChecksumsWriter( RepositorySystemSession session )
+    {
+        requireNonNull( session, "session is null" );
+        boolean enabled = ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
+        if ( enabled )
+        {
+            return getWriter( session, getBasedir( session, true ) );
+        }
+        return null;
+    }
+
+    /**
+     * Implementors MUST NOT return {@code null} at this point, as the "source is enabled" check was already performed
+     * and IS enabled, worst can happen is checksums for asked artifact are not available.
+     */
     protected abstract Map<String, String> performLookup( RepositorySystemSession session,
                                                           Path basedir,
                                                           Artifact artifact,
                                                           ArtifactRepository artifactRepository,
                                                           List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
+
+    /**
+     * If a subclass of this support class support
+     * {@link org.eclipse.aether.spi.checksums.TrustedChecksumsSource.Writer}, or in other words "is writable", it
+     * should override this method and return proper instance.
+     */
+    protected Writer getWriter( RepositorySystemSession session, Path basedir )
+    {
+        return null;
+    }
 
     /**
      * To be used by underlying implementations to form configuration property keys properly scoped.
@@ -129,15 +159,16 @@ abstract class FileTrustedChecksumsSourceSupport
     }
 
     /**
-     * Uses common {@link DirectoryUtils} to calculate (but not) create basedir for this implementation. Returns
-     * {@code null} if the calculated basedir does not exist.
+     * Uses common {@link DirectoryUtils} to calculate (and maybe create) basedir for this implementation. Returns
+     * {@code null} if the calculated basedir does not exist and {@code mayCreate} was {@code false}. If
+     * {@code mayCreate} parameter was {@code true}, this method always returns non-null {@link Path} or throws.
      */
-    private Path getBasedir( RepositorySystemSession session )
+    private Path getBasedir( RepositorySystemSession session, boolean mayCreate )
     {
         try
         {
             Path basedir = DirectoryUtils.resolveDirectory(
-                    session, LOCAL_REPO_PREFIX_DIR, configPropKey( CONF_NAME_BASEDIR ), false );
+                    session, LOCAL_REPO_PREFIX_DIR, configPropKey( CONF_NAME_BASEDIR ), mayCreate );
             if ( !Files.isDirectory( basedir ) )
             {
                 return null;
