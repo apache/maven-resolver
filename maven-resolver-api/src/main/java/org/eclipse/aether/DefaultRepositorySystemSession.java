@@ -19,12 +19,17 @@ package org.eclipse.aether;
  * under the License.
  */
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.ListIterator;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactType;
@@ -61,6 +66,8 @@ import org.eclipse.aether.transform.FileTransformerManager;
 public final class DefaultRepositorySystemSession
     implements RepositorySystemSession
 {
+
+    private final AtomicBoolean closed;
 
     private boolean readOnly;
 
@@ -127,6 +134,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession()
     {
+        closed = new AtomicBoolean( false );
         systemProperties = new HashMap<>();
         systemPropertiesView = Collections.unmodifiableMap( systemProperties );
         userProperties = new HashMap<>();
@@ -153,6 +161,7 @@ public final class DefaultRepositorySystemSession
     {
         requireNonNull( session, "repository system session cannot be null" );
 
+        closed = new AtomicBoolean( false );
         setOffline( session.isOffline() );
         setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );
         setResolutionErrorPolicy( session.getResolutionErrorPolicy() );
@@ -194,7 +203,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setOffline( boolean offline )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.offline = offline;
         return this;
     }
@@ -215,7 +224,7 @@ public final class DefaultRepositorySystemSession
     public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories(
             boolean ignoreArtifactDescriptorRepositories )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
         return this;
     }
@@ -234,7 +243,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setResolutionErrorPolicy( ResolutionErrorPolicy resolutionErrorPolicy )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.resolutionErrorPolicy = resolutionErrorPolicy;
         return this;
     }
@@ -254,7 +263,7 @@ public final class DefaultRepositorySystemSession
     public DefaultRepositorySystemSession setArtifactDescriptorPolicy(
             ArtifactDescriptorPolicy artifactDescriptorPolicy )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.artifactDescriptorPolicy = artifactDescriptorPolicy;
         return this;
     }
@@ -276,7 +285,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setChecksumPolicy( String checksumPolicy )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.checksumPolicy = checksumPolicy;
         return this;
     }
@@ -298,7 +307,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUpdatePolicy( String updatePolicy )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.updatePolicy = updatePolicy;
         return this;
     }
@@ -323,7 +332,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setLocalRepositoryManager( LocalRepositoryManager localRepositoryManager )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.localRepositoryManager = localRepositoryManager;
         return this;
     }
@@ -336,7 +345,7 @@ public final class DefaultRepositorySystemSession
 
     public DefaultRepositorySystemSession setFileTransformerManager( FileTransformerManager fileTransformerManager )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.fileTransformerManager = fileTransformerManager;
         if ( this.fileTransformerManager == null )
         {
@@ -359,7 +368,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setWorkspaceReader( WorkspaceReader workspaceReader )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.workspaceReader = workspaceReader;
         return this;
     }
@@ -377,7 +386,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setRepositoryListener( RepositoryListener repositoryListener )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.repositoryListener = repositoryListener;
         return this;
     }
@@ -395,7 +404,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setTransferListener( TransferListener transferListener )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.transferListener = transferListener;
         return this;
     }
@@ -444,7 +453,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setSystemProperties( Map<?, ?> systemProperties )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.systemProperties = copySafe( systemProperties, String.class );
         systemPropertiesView = Collections.unmodifiableMap( this.systemProperties );
         return this;
@@ -459,7 +468,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setSystemProperty( String key, String value )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         if ( value != null )
         {
             systemProperties.put( key, value );
@@ -489,7 +498,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUserProperties( Map<?, ?> userProperties )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.userProperties = copySafe( userProperties, String.class );
         userPropertiesView = Collections.unmodifiableMap( this.userProperties );
         return this;
@@ -504,7 +513,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setUserProperty( String key, String value )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         if ( value != null )
         {
             userProperties.put( key, value );
@@ -533,7 +542,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setConfigProperties( Map<?, ?> configProperties )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.configProperties = copySafe( configProperties, Object.class );
         configPropertiesView = Collections.unmodifiableMap( this.configProperties );
         return this;
@@ -548,7 +557,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setConfigProperty( String key, Object value )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         if ( value != null )
         {
             configProperties.put( key, value );
@@ -575,7 +584,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setMirrorSelector( MirrorSelector mirrorSelector )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.mirrorSelector = mirrorSelector;
         if ( this.mirrorSelector == null )
         {
@@ -600,7 +609,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setProxySelector( ProxySelector proxySelector )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.proxySelector = proxySelector;
         if ( this.proxySelector == null )
         {
@@ -625,7 +634,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setAuthenticationSelector( AuthenticationSelector authenticationSelector )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.authenticationSelector = authenticationSelector;
         if ( this.authenticationSelector == null )
         {
@@ -647,7 +656,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setArtifactTypeRegistry( ArtifactTypeRegistry artifactTypeRegistry )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.artifactTypeRegistry = artifactTypeRegistry;
         if ( this.artifactTypeRegistry == null )
         {
@@ -669,7 +678,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setDependencyTraverser( DependencyTraverser dependencyTraverser )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.dependencyTraverser = dependencyTraverser;
         return this;
     }
@@ -687,7 +696,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setDependencyManager( DependencyManager dependencyManager )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.dependencyManager = dependencyManager;
         return this;
     }
@@ -705,7 +714,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setDependencySelector( DependencySelector dependencySelector )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.dependencySelector = dependencySelector;
         return this;
     }
@@ -724,7 +733,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setVersionFilter( VersionFilter versionFilter )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.versionFilter = versionFilter;
         return this;
     }
@@ -744,7 +753,7 @@ public final class DefaultRepositorySystemSession
     public DefaultRepositorySystemSession setDependencyGraphTransformer(
             DependencyGraphTransformer dependencyGraphTransformer )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.dependencyGraphTransformer = dependencyGraphTransformer;
         return this;
     }
@@ -762,7 +771,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setData( SessionData data )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.data = data;
         if ( this.data == null )
         {
@@ -784,7 +793,7 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession setCache( RepositoryCache cache )
     {
-        failIfReadOnly();
+        verifyStateForMutation();
         this.cache = cache;
         return this;
     }
@@ -799,11 +808,18 @@ public final class DefaultRepositorySystemSession
         readOnly = true;
     }
 
-    private void failIfReadOnly()
+    /**
+     * Verifies this instance state for mutation operations: mutated instance must not be read-only or closed.
+     */
+    private void verifyStateForMutation()
     {
         if ( readOnly )
         {
             throw new IllegalStateException( "repository system session is read-only" );
+        }
+        if ( isClosed() )
+        {
+            throw new IllegalStateException( "repository system session is closed" );
         }
     }
 
@@ -873,4 +889,44 @@ public final class DefaultRepositorySystemSession
         }
     }
 
+    private final CopyOnWriteArrayList<Consumer<RepositorySystemSession>> onCloseHandlers
+            = new CopyOnWriteArrayList<>();
+
+    @Override
+    public void addOnCloseHandler( Consumer<RepositorySystemSession> handler )
+    {
+        verifyStateForMutation();
+        requireNonNull( handler, "handler cannot be null" );
+        onCloseHandlers.add( handler );
+    }
+
+    @Override
+    public boolean isClosed()
+    {
+        return closed.get();
+    }
+
+    @Override
+    public void close()
+    {
+        if ( closed.compareAndSet( false, true ) )
+        {
+            ArrayList<Exception> exceptions = new ArrayList<>();
+            ListIterator<Consumer<RepositorySystemSession>> handlerIterator
+                    = onCloseHandlers.listIterator( onCloseHandlers.size() );
+            while ( handlerIterator.hasPrevious() )
+            {
+                Consumer<RepositorySystemSession> handler = handlerIterator.previous();
+                try
+                {
+                    handler.accept( this );
+                }
+                catch ( Exception e )
+                {
+                    exceptions.add( e );
+                }
+            }
+            MultiRuntimeException.mayThrow( "session onClose handler failures", exceptions );
+        }
+    }
 }

@@ -29,13 +29,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -74,6 +78,8 @@ public final class SummaryFileTrustedChecksumsSource
 
     private static final String CHECKSUMS_CACHE_KEY = SummaryFileTrustedChecksumsSource.class.getName() + ".checksums";
 
+    private static final String RECORDING_KEY = SummaryFileTrustedChecksumsSource.class.getName() + ".recording";
+
     private static final Logger LOGGER = LoggerFactory.getLogger( SummaryFileTrustedChecksumsSource.class );
 
     public SummaryFileTrustedChecksumsSource()
@@ -111,10 +117,17 @@ public final class SummaryFileTrustedChecksumsSource
         return checksums;
     }
 
+    @SuppressWarnings( "unchecked" )
     @Override
     protected SummaryFileWriter getWriter( RepositorySystemSession session, Path basedir )
     {
-        return new SummaryFileWriter( basedir, isOriginAware( session ) );
+        ConcurrentHashMap<Path, Set<String>> recordedLines = (ConcurrentHashMap<Path, Set<String>>) session.getData()
+                .computeIfAbsent( RECORDING_KEY, () ->
+                {
+                    session.addOnCloseHandler( this::saveSessionRecordedLines );
+                    return new ConcurrentHashMap<>();
+                } );
+        return new SummaryFileWriter( basedir, isOriginAware( session ), recordedLines );
     }
 
     private ConcurrentHashMap<String, String> loadProvidedChecksums( Path basedir,
@@ -201,41 +214,38 @@ public final class SummaryFileTrustedChecksumsSource
         return fileName + "." + checksumAlgorithmFactory.getFileExtension();
     }
 
-    /**
-     * Note: this implementation will work only in single-thread (T1) model. While not ideal, the "workaround" is
-     * possible in both, Maven and Maven Daemon: force single threaded execution model while "recording" (in mvn:
-     * do not pass any {@code -T} CLI parameter, while for mvnd use {@code -1} CLI parameter.
-     * 
-     * TODO: this will need to be reworked for at least two reasons: a) avoid duplicates in summary file and b)
-     * support multi threaded builds (probably will need "on session close" hook).
-     */
     private class SummaryFileWriter implements Writer
     {
         private final Path basedir;
 
         private final boolean originAware;
 
-        private SummaryFileWriter( Path basedir, boolean originAware )
+        private final ConcurrentHashMap<Path, Set<String>> recordedLines;
+
+        private SummaryFileWriter( Path basedir,
+                                   boolean originAware,
+                                   ConcurrentHashMap<Path, Set<String>> recordedLines )
         {
             this.basedir = basedir;
             this.originAware = originAware;
+            this.recordedLines = recordedLines;
         }
 
         @Override
         public void addTrustedArtifactChecksums( Artifact artifact, ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
-                                                 Map<String, String> trustedArtifactChecksums ) throws IOException
+                                                 Map<String, String> trustedArtifactChecksums )
         {
             for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
             {
                 String checksum = requireNonNull(
                         trustedArtifactChecksums.get( checksumAlgorithmFactory.getName() ) );
-                String summaryLine = ArtifactIdUtils.toId( artifact ) + " " + checksum + "\n";
+                String summaryLine = ArtifactIdUtils.toId( artifact ) + " " + checksum;
                 Path summaryPath = basedir.resolve(
                         calculateSummaryPath( originAware, artifactRepository, checksumAlgorithmFactory ) );
-                Files.createDirectories( summaryPath.getParent() );
-                Files.write( summaryPath, summaryLine.getBytes( StandardCharsets.UTF_8 ),
-                        StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND );
+
+                recordedLines.computeIfAbsent( summaryPath, p -> Collections.synchronizedSet( new TreeSet<>() ) )
+                        .add( summaryLine );
             }
         }
 
@@ -244,5 +254,36 @@ public final class SummaryFileTrustedChecksumsSource
         {
             // nop
         }
+    }
+
+    @SuppressWarnings( "unchecked" )
+    private void saveSessionRecordedLines( RepositorySystemSession session )
+    {
+        Map<Path, Set<String>> recordedLines = (Map<Path, Set<String>>) session.getData().get( RECORDING_KEY );
+        if ( recordedLines == null || recordedLines.isEmpty() )
+        {
+            return;
+        }
+
+        ArrayList<Exception> exceptions = new ArrayList<>();
+        for ( Map.Entry<Path, Set<String>> entry : recordedLines.entrySet() )
+        {
+            Path file = entry.getKey();
+            Set<String> lines = entry.getValue();
+            if ( !lines.isEmpty() )
+            {
+                LOGGER.info( "Saving {} checksums to '{}'", lines.size(), file );
+                try
+                {
+                    Files.createDirectories( file.getParent() );
+                    Files.write( file, lines );
+                }
+                catch ( IOException e )
+                {
+                    exceptions.add( e );
+                }
+            }
+        }
+        MultiRuntimeException.mayThrow( "session save checksums failure", exceptions );
     }
 }

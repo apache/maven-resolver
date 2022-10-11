@@ -140,7 +140,10 @@ public class DefaultRepositorySystemSessionTest
 
         for ( Method method : methods )
         {
-            assertEquals( method.getName(), method.invoke( session ) == null, method.invoke( newSession ) == null );
+            if ( method.getParameterCount() == 0 )
+            {
+                assertEquals( method.getName(), method.invoke( session ) == null, method.invoke( newSession ) == null );
+            }
         }
     }
 
