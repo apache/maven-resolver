@@ -32,26 +32,26 @@ import static java.util.Objects.requireNonNull;
 public final class MultiRuntimeException
         extends RuntimeException
 {
-    private final List<? extends Throwable> throwable;
+    private final List<? extends Throwable> throwables;
 
-    private MultiRuntimeException( String message, List<? extends Throwable> throwable )
+    private MultiRuntimeException( String message, List<? extends Throwable> throwables )
     {
         super( message );
-        this.throwable = throwable;
-        for ( Throwable t : throwable )
+        this.throwables = throwables;
+        for ( Throwable throwable : throwables )
         {
-            addSuppressed( t );
+            addSuppressed( throwable );
         }
     }
 
     /**
-     * Returns the list of throwable that is wrapped in this exception.
+     * Returns the list of throwables that are wrapped in this exception.
      *
-     * @return The list of throwable, never {@code null}.
+     * @return The list of throwables, never {@code null}.
      */
-    public List<? extends Throwable> getThrowable()
+    public List<? extends Throwable> getThrowables()
     {
-        return throwable;
+        return throwables;
     }
 
     /**
@@ -61,14 +61,14 @@ public final class MultiRuntimeException
      *     <li>if list not empty - {@link MultiRuntimeException} is thrown wrapping all elements</li>
      * </ul>
      */
-    public static void mayThrow( String message, List<? extends Throwable> throwable )
+    public static void mayThrow( String message, List<? extends Throwable> throwables )
     {
         requireNonNull( message );
-        requireNonNull( throwable );
+        requireNonNull( throwables );
 
-        if ( !throwable.isEmpty() )
+        if ( !throwables.isEmpty() )
         {
-            throw new MultiRuntimeException( message, throwable );
+            throw new MultiRuntimeException( message, throwables );
         }
     }
 }

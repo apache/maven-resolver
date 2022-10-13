@@ -49,7 +49,7 @@ import org.eclipse.aether.transform.FileTransformerManager;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RepositorySystemSession
+public interface RepositorySystemSession extends AutoCloseable
 {
 
     /**
@@ -299,24 +299,24 @@ public interface RepositorySystemSession
      * of operation a {@link MultiRuntimeException} may be thrown signaling that some handler(s) failed. This exception
      * may be ignored, is at the discretion of caller.
      * <p>
-     * Important: ideally it is the session creator who should be responsible to close the session. While "nested"
-     * (wrapped) sessions {@link AbstractForwardingRepositorySystemSession} and alike) are able to close session,
-     * they should not do that. The pattern that is recommended is like:
+     * Important: ideally it is the session creator who should be responsible to close the session. The "nested"
+     * (delegating, wrapped) sessions {@link AbstractForwardingRepositorySystemSession} and alike) by default
+     * (without overriding the {@link AbstractForwardingRepositorySystemSession#close()} method) are not able to close
+     * session, and it is the "recommended" behaviour as well. The session "copy" (using copy-constructor) creates
+     * a copy instance, that does NOT share "closed" (nor "read-only") state with original session.
+     * <p>
+     * The recommended pattern for "top level" sessions is the usual try-with-resource:
      *
      * <pre> {@code
-     * RepositorySystemSession session = create session...
-     * try
+     * try ( RepositorySystemSession session = create session... )
      * {
      *   ... use/nest session
-     * }
-     * finally
-     * {
-     *   session.close();
      * }
      * }</pre>
      *
      * @since TBD
      */
+    @Override
     void close();
 
 }

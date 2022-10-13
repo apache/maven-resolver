@@ -34,8 +34,6 @@ public class SisuRepositorySystemDemoModule implements Module
     @Override
     public void configure( final Binder binder )
     {
-        // Resolver does not use anymore PostConstruct/PreDestroy annotations
-        // binder.install( new LifecycleModule() );
         // NOTE: Maven 3.8.1 used in demo has Sisu Index for ALL components (older Maven does NOT have!)
         binder.bind( ParameterKeys.PROPERTIES ).toInstance( System.getProperties() );
         binder.bind( ShutdownThread.class ).asEagerSingleton();

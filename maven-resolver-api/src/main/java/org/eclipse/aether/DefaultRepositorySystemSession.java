@@ -22,7 +22,6 @@ package org.eclipse.aether;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.ListIterator;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
@@ -897,7 +896,7 @@ public final class DefaultRepositorySystemSession
     {
         verifyStateForMutation();
         requireNonNull( handler, "handler cannot be null" );
-        onCloseHandlers.add( handler );
+        onCloseHandlers.add( 0, handler );
     }
 
     @Override
@@ -912,14 +911,11 @@ public final class DefaultRepositorySystemSession
         if ( closed.compareAndSet( false, true ) )
         {
             ArrayList<Exception> exceptions = new ArrayList<>();
-            ListIterator<Consumer<RepositorySystemSession>> handlerIterator
-                    = onCloseHandlers.listIterator( onCloseHandlers.size() );
-            while ( handlerIterator.hasPrevious() )
+            for ( Consumer<RepositorySystemSession> onCloseHandler : onCloseHandlers )
             {
-                Consumer<RepositorySystemSession> handler = handlerIterator.previous();
                 try
                 {
-                    handler.accept( this );
+                    onCloseHandler.accept( this );
                 }
                 catch ( Exception e )
                 {
