@@ -301,14 +301,15 @@ public interface RepositorySystemSession extends AutoCloseable
      * <p>
      * Important: ideally it is the session creator who should be responsible to close the session. The "nested"
      * (delegating, wrapped) sessions {@link AbstractForwardingRepositorySystemSession} and alike) by default
-     * (without overriding the {@link AbstractForwardingRepositorySystemSession#close()} method) are not able to close
-     * session, and it is the "recommended" behaviour as well. On the other hand, "nested" session may receive
-     * "on close" handler registration, but those registrations are passed to delegated session and will be invoked
+     * (without overriding the {@link AbstractForwardingRepositorySystemSession#close()} method) are prevented to close
+     * session, and it is the "recommended" behaviour as well. On the other hand, "nested" session may receive new
+     * "on close" handler registrations, but those registrations are passed to delegated session, and will be invoked
      * once the "top level" (delegated) session is closed.
      * <p>
-     * The session "copy" instances (created using copy-constructor) result in new session instance, that does NOT
-     * share "closed" (nor "read-only") state with original session, hence they should be treated as "top level"
-     * sessions as well.
+     * New session "copy" instances created using copy-constructor
+     * {@link DefaultRepositorySystemSession#DefaultRepositorySystemSession(RepositorySystemSession)} result in new,
+     * independent session instances, and they do NOT share states like "read-only", "closed" and "on close handlers"
+     * with the copied session. Hence, they should be treated as "top level" sessions as well.
      * <p>
      * The recommended pattern for "top level" sessions is the usual try-with-resource:
      *
