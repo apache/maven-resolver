@@ -922,7 +922,7 @@ public final class DefaultRepositorySystemSession
                     exceptions.add( e );
                 }
             }
-            MultiRuntimeException.mayThrow( "session onClose handler failures", exceptions );
+            MultiRuntimeException.mayThrow( "session on-close handler failures", exceptions );
         }
     }
 }
