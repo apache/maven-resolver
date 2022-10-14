@@ -23,7 +23,6 @@ import javax.inject.Inject;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import org.eclipse.sisu.bean.LifecycleModule;
 import org.eclipse.sisu.inject.MutableBeanLocator;
 import org.eclipse.sisu.wire.ParameterKeys;
 
@@ -35,7 +34,6 @@ public class SisuRepositorySystemDemoModule implements Module
     @Override
     public void configure( final Binder binder )
     {
-        binder.install( new LifecycleModule() );
         // NOTE: Maven 3.8.1 used in demo has Sisu Index for ALL components (older Maven does NOT have!)
         binder.bind( ParameterKeys.PROPERTIES ).toInstance( System.getProperties() );
         binder.bind( ShutdownThread.class ).asEagerSingleton();

@@ -466,6 +466,10 @@ public class DefaultRepositorySystem
         invalidSession( session.getAuthenticationSelector(), "authentication selector" );
         invalidSession( session.getArtifactTypeRegistry(), "artifact type registry" );
         invalidSession( session.getData(), "data" );
+        if ( session.isClosed() )
+        {
+            throw new IllegalStateException( "session is already closed" );
+        }
     }
 
     private void validateRepositories( List<RemoteRepository> repositories )

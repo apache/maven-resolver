@@ -20,6 +20,7 @@ package org.eclipse.aether;
  */
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -218,4 +219,27 @@ public abstract class AbstractForwardingRepositorySystemSession
         return getSession().getFileTransformerManager();
     }
 
+    @Override
+    public final void addOnCloseHandler( Consumer<RepositorySystemSession> handler )
+    {
+        getSession().addOnCloseHandler( handler );
+    }
+
+    @Override
+    public final boolean isClosed()
+    {
+        return getSession().isClosed();
+    }
+
+    /**
+     * This method is special: by default it throws (nested session should never be closed), the "top level" session
+     * should be closed instead. Still, this method is NOT {@code final}, to allow implementations overriding it,
+     * and in case when needed, handle forwarded session as "top level" session.
+     */
+    @Override
+    public void close()
+    {
+        throw new IllegalStateException( "Forwarding session should not be closed, "
+                + "close the top-level (forwarded) session instead." );
+    }
 }

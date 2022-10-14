@@ -19,14 +19,12 @@ package org.eclipse.aether.internal.impl.synccontext;
  * under the License.
  */
 
-import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
@@ -46,8 +44,6 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.util.ConfigUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -59,8 +55,6 @@ import static java.util.Objects.requireNonNull;
 public final class DefaultSyncContextFactory
         implements SyncContextFactory, Service
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultSyncContextFactory.class );
-
     private static final String ADAPTER_KEY = DefaultSyncContextFactory.class.getName() + ".adapter";
 
     private static final String NAME_MAPPER_KEY = "aether.syncContext.named.nameMapper";
@@ -74,8 +68,6 @@ public final class DefaultSyncContextFactory
     private Map<String, NameMapper> nameMappers;
 
     private Map<String, NamedLockFactory> namedLockFactories;
-
-    private final CopyOnWriteArrayList<NamedLockFactoryAdapter> createdAdapters = new CopyOnWriteArrayList<>();
 
     /**
      * Constructor used with DI, where factories are injected and selected based on key.
@@ -122,50 +114,39 @@ public final class DefaultSyncContextFactory
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
         requireNonNull( session, "session cannot be null" );
-        NamedLockFactoryAdapter adapter =
-                (NamedLockFactoryAdapter) session.getData().computeIfAbsent(
-                        ADAPTER_KEY,
-                        () -> createAdapter( session )
-                );
+        NamedLockFactoryAdapter adapter = getOrCreateSessionAdapter( session );
         return adapter.newInstance( session, shared );
     }
 
-    private NamedLockFactoryAdapter createAdapter( final RepositorySystemSession session )
+    private NamedLockFactoryAdapter getOrCreateSessionAdapter( final RepositorySystemSession session )
     {
-        String nameMapperName = ConfigUtils.getString( session, DEFAULT_NAME_MAPPER_NAME, NAME_MAPPER_KEY );
-        String namedLockFactoryName = ConfigUtils.getString( session, DEFAULT_FACTORY_NAME, FACTORY_KEY );
-        NameMapper nameMapper = nameMappers.get( nameMapperName );
-        if ( nameMapper == null )
+        return (NamedLockFactoryAdapter) session.getData().computeIfAbsent( ADAPTER_KEY, () ->
         {
-            throw new IllegalArgumentException( "Unknown NameMapper name: " + nameMapperName
-                    + ", known ones: " + nameMappers.keySet() );
-        }
-        NamedLockFactory namedLockFactory = namedLockFactories.get( namedLockFactoryName );
-        if ( namedLockFactory == null )
-        {
-            throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + namedLockFactoryName
-                    + ", known ones: " + namedLockFactories.keySet() );
-        }
-        NamedLockFactoryAdapter adapter = new NamedLockFactoryAdapter( nameMapper, namedLockFactory );
-        createdAdapters.add( adapter );
-        return adapter;
+            String nameMapperName = ConfigUtils.getString( session, DEFAULT_NAME_MAPPER_NAME, NAME_MAPPER_KEY );
+            String namedLockFactoryName = ConfigUtils.getString( session, DEFAULT_FACTORY_NAME, FACTORY_KEY );
+            NameMapper nameMapper = nameMappers.get( nameMapperName );
+            if ( nameMapper == null )
+            {
+                throw new IllegalArgumentException( "Unknown NameMapper name: " + nameMapperName
+                        + ", known ones: " + nameMappers.keySet() );
+            }
+            NamedLockFactory namedLockFactory = namedLockFactories.get( namedLockFactoryName );
+            if ( namedLockFactory == null )
+            {
+                throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + namedLockFactoryName
+                        + ", known ones: " + namedLockFactories.keySet() );
+            }
+            session.addOnCloseHandler( this::shutDownSessionAdapter );
+            return new NamedLockFactoryAdapter( nameMapper, namedLockFactory );
+        } );
     }
 
-    @PreDestroy
-    public void shutdown()
+    private void shutDownSessionAdapter( RepositorySystemSession session )
     {
-        LOGGER.debug( "Shutting down created adapters..." );
-        createdAdapters.forEach( adapter ->
-                {
-                    try
-                    {
-                        adapter.shutdown();
-                    }
-                    catch ( Exception e )
-                    {
-                        LOGGER.warn( "Could not shutdown: {}", adapter, e );
-                    }
-                }
-        );
+        NamedLockFactoryAdapter adapter = (NamedLockFactoryAdapter) session.getData().get( ADAPTER_KEY );
+        if ( adapter != null )
+        {
+            adapter.shutdown();
+        }
     }
 }
