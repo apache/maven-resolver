@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
@@ -35,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -64,8 +62,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DefaultDeployerTest
-{
+public class DefaultDeployerTest {
 
     private Artifact artifact;
 
@@ -84,43 +81,37 @@ public class DefaultDeployerTest
     private RecordingRepositoryListener listener;
 
     @Before
-    public void setup()
-        throws IOException
-    {
-        artifact = new DefaultArtifact( "gid", "aid", "jar", "ver" );
-        artifact = artifact.setFile( TestFileUtils.createTempFile( "artifact" ) );
-        metadata =
-            new DefaultMetadata( "gid", "aid", "ver", "type", Nature.RELEASE_OR_SNAPSHOT,
-                                 TestFileUtils.createTempFile( "metadata" ) );
+    public void setup() throws IOException {
+        artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
+        artifact = artifact.setFile(TestFileUtils.createTempFile("artifact"));
+        metadata = new DefaultMetadata(
+                "gid", "aid", "ver", "type", Nature.RELEASE_OR_SNAPSHOT, TestFileUtils.createTempFile("metadata"));
 
         session = TestUtils.newSession();
         connectorProvider = new StubRepositoryConnectorProvider();
 
         deployer = new DefaultDeployer();
-        deployer.setRepositoryConnectorProvider( connectorProvider );
-        deployer.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
-        deployer.setRepositoryEventDispatcher( new StubRepositoryEventDispatcher() );
-        deployer.setUpdateCheckManager( new StaticUpdateCheckManager( true ) );
-        deployer.setFileProcessor( new TestFileProcessor() );
-        deployer.setSyncContextFactory( new StubSyncContextFactory() );
-        deployer.setOfflineController( new DefaultOfflineController() );
+        deployer.setRepositoryConnectorProvider(connectorProvider);
+        deployer.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
+        deployer.setRepositoryEventDispatcher(new StubRepositoryEventDispatcher());
+        deployer.setUpdateCheckManager(new StaticUpdateCheckManager(true));
+        deployer.setFileProcessor(new TestFileProcessor());
+        deployer.setSyncContextFactory(new StubSyncContextFactory());
+        deployer.setOfflineController(new DefaultOfflineController());
 
         request = new DeployRequest();
-        request.setRepository( new RemoteRepository.Builder( "id", "default", "file:///" ).build() );
-        connector = new RecordingRepositoryConnector( session );
-        connectorProvider.setConnector( connector );
+        request.setRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
+        connector = new RecordingRepositoryConnector(session);
+        connectorProvider.setConnector(connector);
 
         listener = new RecordingRepositoryListener();
-        session.setRepositoryListener( listener );
+        session.setRepositoryListener(listener);
     }
 
     @After
-    public void teardown()
-        throws Exception
-    {
-        if ( session.getLocalRepository() != null )
-        {
-            TestFileUtils.deleteFile( session.getLocalRepository().getBasedir() );
+    public void teardown() throws Exception {
+        if (session.getLocalRepository() != null) {
+            TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
         session = null;
         listener = null;
@@ -130,297 +121,248 @@ public class DefaultDeployerTest
     }
 
     @Test
-    public void testSuccessfulDeploy()
-        throws DeploymentException
-    {
+    public void testSuccessfulDeploy() throws DeploymentException {
 
-        connector.setExpectPut( artifact );
-        connector.setExpectPut( metadata );
+        connector.setExpectPut(artifact);
+        connector.setExpectPut(metadata);
 
-        request.addArtifact( artifact );
-        request.addMetadata( metadata );
+        request.addArtifact(artifact);
+        request.addMetadata(metadata);
 
-        deployer.deploy( session, request );
+        deployer.deploy(session, request);
 
         connector.assertSeenExpected();
     }
 
-    @Test( expected = DeploymentException.class )
-    public void testNullArtifactFile()
-        throws DeploymentException
-    {
-        request.addArtifact( artifact.setFile( null ) );
-        deployer.deploy( session, request );
+    @Test(expected = DeploymentException.class)
+    public void testNullArtifactFile() throws DeploymentException {
+        request.addArtifact(artifact.setFile(null));
+        deployer.deploy(session, request);
     }
 
-    @Test( expected = DeploymentException.class )
-    public void testNullMetadataFile()
-        throws DeploymentException
-    {
-        request.addArtifact( artifact.setFile( null ) );
-        deployer.deploy( session, request );
+    @Test(expected = DeploymentException.class)
+    public void testNullMetadataFile() throws DeploymentException {
+        request.addArtifact(artifact.setFile(null));
+        deployer.deploy(session, request);
     }
 
     @Test
-    public void testSuccessfulArtifactEvents()
-        throws DeploymentException
-    {
-        request.addArtifact( artifact );
+    public void testSuccessfulArtifactEvents() throws DeploymentException {
+        request.addArtifact(artifact);
 
-        deployer.deploy( session, request );
+        deployer.deploy(session, request);
 
         List<RepositoryEvent> events = listener.getEvents();
-        assertEquals( 2, events.size() );
+        assertEquals(2, events.size());
 
-        RepositoryEvent event = events.get( 0 );
-        assertEquals( EventType.ARTIFACT_DEPLOYING, event.getType() );
-        assertEquals( artifact, event.getArtifact() );
-        assertNull( event.getException() );
+        RepositoryEvent event = events.get(0);
+        assertEquals(EventType.ARTIFACT_DEPLOYING, event.getType());
+        assertEquals(artifact, event.getArtifact());
+        assertNull(event.getException());
 
-        event = events.get( 1 );
-        assertEquals( EventType.ARTIFACT_DEPLOYED, event.getType() );
-        assertEquals( artifact, event.getArtifact() );
-        assertNull( event.getException() );
+        event = events.get(1);
+        assertEquals(EventType.ARTIFACT_DEPLOYED, event.getType());
+        assertEquals(artifact, event.getArtifact());
+        assertNull(event.getException());
     }
 
     @Test
-    public void testFailingArtifactEvents()
-    {
+    public void testFailingArtifactEvents() {
         connector.fail = true;
 
-        request.addArtifact( artifact );
+        request.addArtifact(artifact);
 
-        try
-        {
-            deployer.deploy( session, request );
-            fail( "expected exception" );
-        }
-        catch ( DeploymentException e )
-        {
+        try {
+            deployer.deploy(session, request);
+            fail("expected exception");
+        } catch (DeploymentException e) {
             List<RepositoryEvent> events = listener.getEvents();
-            assertEquals( 2, events.size() );
+            assertEquals(2, events.size());
 
-            RepositoryEvent event = events.get( 0 );
-            assertEquals( EventType.ARTIFACT_DEPLOYING, event.getType() );
-            assertEquals( artifact, event.getArtifact() );
-            assertNull( event.getException() );
+            RepositoryEvent event = events.get(0);
+            assertEquals(EventType.ARTIFACT_DEPLOYING, event.getType());
+            assertEquals(artifact, event.getArtifact());
+            assertNull(event.getException());
 
-            event = events.get( 1 );
-            assertEquals( EventType.ARTIFACT_DEPLOYED, event.getType() );
-            assertEquals( artifact, event.getArtifact() );
-            assertNotNull( event.getException() );
+            event = events.get(1);
+            assertEquals(EventType.ARTIFACT_DEPLOYED, event.getType());
+            assertEquals(artifact, event.getArtifact());
+            assertNotNull(event.getException());
         }
     }
 
     @Test
-    public void testSuccessfulMetadataEvents()
-        throws DeploymentException
-    {
-        request.addMetadata( metadata );
+    public void testSuccessfulMetadataEvents() throws DeploymentException {
+        request.addMetadata(metadata);
 
-        deployer.deploy( session, request );
+        deployer.deploy(session, request);
 
         List<RepositoryEvent> events = listener.getEvents();
-        assertEquals( 2, events.size() );
+        assertEquals(2, events.size());
 
-        RepositoryEvent event = events.get( 0 );
-        assertEquals( EventType.METADATA_DEPLOYING, event.getType() );
-        assertEquals( metadata, event.getMetadata() );
-        assertNull( event.getException() );
+        RepositoryEvent event = events.get(0);
+        assertEquals(EventType.METADATA_DEPLOYING, event.getType());
+        assertEquals(metadata, event.getMetadata());
+        assertNull(event.getException());
 
-        event = events.get( 1 );
-        assertEquals( EventType.METADATA_DEPLOYED, event.getType() );
-        assertEquals( metadata, event.getMetadata() );
-        assertNull( event.getException() );
+        event = events.get(1);
+        assertEquals(EventType.METADATA_DEPLOYED, event.getType());
+        assertEquals(metadata, event.getMetadata());
+        assertNull(event.getException());
     }
 
     @Test
-    public void testFailingMetdataEvents()
-    {
+    public void testFailingMetdataEvents() {
         connector.fail = true;
 
-        request.addMetadata( metadata );
+        request.addMetadata(metadata);
 
-        try
-        {
-            deployer.deploy( session, request );
-            fail( "expected exception" );
-        }
-        catch ( DeploymentException e )
-        {
+        try {
+            deployer.deploy(session, request);
+            fail("expected exception");
+        } catch (DeploymentException e) {
             List<RepositoryEvent> events = listener.getEvents();
-            assertEquals( 2, events.size() );
+            assertEquals(2, events.size());
 
-            RepositoryEvent event = events.get( 0 );
-            assertEquals( EventType.METADATA_DEPLOYING, event.getType() );
-            assertEquals( metadata, event.getMetadata() );
-            assertNull( event.getException() );
+            RepositoryEvent event = events.get(0);
+            assertEquals(EventType.METADATA_DEPLOYING, event.getType());
+            assertEquals(metadata, event.getMetadata());
+            assertNull(event.getException());
 
-            event = events.get( 1 );
-            assertEquals( EventType.METADATA_DEPLOYED, event.getType() );
-            assertEquals( metadata, event.getMetadata() );
-            assertNotNull( event.getException() );
+            event = events.get(1);
+            assertEquals(EventType.METADATA_DEPLOYED, event.getType());
+            assertEquals(metadata, event.getMetadata());
+            assertNotNull(event.getException());
         }
     }
 
     @Test
     public void testStaleLocalMetadataCopyGetsDeletedBeforeMergeWhenMetadataIsNotCurrentlyPresentInRemoteRepo()
-        throws Exception
-    {
-        MergeableMetadata metadata = new MergeableMetadata()
-        {
+            throws Exception {
+        MergeableMetadata metadata = new MergeableMetadata() {
 
-            public Metadata setFile( File file )
-            {
+            public Metadata setFile(File file) {
                 return this;
             }
 
-            public String getVersion()
-            {
+            public String getVersion() {
                 return "";
             }
 
-            public String getType()
-            {
+            public String getType() {
                 return "test.properties";
             }
 
-            public Nature getNature()
-            {
+            public Nature getNature() {
                 return Nature.RELEASE;
             }
 
-            public String getGroupId()
-            {
+            public String getGroupId() {
                 return "org";
             }
 
-            public File getFile()
-            {
+            public File getFile() {
                 return null;
             }
 
-            public String getArtifactId()
-            {
+            public String getArtifactId() {
                 return "aether";
             }
 
-            public Metadata setProperties( Map<String, String> properties )
-            {
+            public Metadata setProperties(Map<String, String> properties) {
                 return this;
             }
 
-            public Map<String, String> getProperties()
-            {
+            public Map<String, String> getProperties() {
                 return Collections.emptyMap();
             }
 
-            public String getProperty( String key, String defaultValue )
-            {
+            public String getProperty(String key, String defaultValue) {
                 return defaultValue;
             }
 
-            public void merge( File current, File result )
-                throws RepositoryException
-            {
-                requireNonNull( current, "current cannot be null" );
-                requireNonNull( result, "result cannot be null" );
+            public void merge(File current, File result) throws RepositoryException {
+                requireNonNull(current, "current cannot be null");
+                requireNonNull(result, "result cannot be null");
                 Properties props = new Properties();
 
-                try
-                {
-                    if ( current.isFile() )
-                    {
-                        TestFileUtils.readProps( current, props );
+                try {
+                    if (current.isFile()) {
+                        TestFileUtils.readProps(current, props);
                     }
 
-                    props.setProperty( "new", "value" );
+                    props.setProperty("new", "value");
 
-                    TestFileUtils.writeProps( result, props );
-                }
-                catch ( IOException e )
-                {
-                    throw new RepositoryException( e.getMessage(), e );
+                    TestFileUtils.writeProps(result, props);
+                } catch (IOException e) {
+                    throw new RepositoryException(e.getMessage(), e);
                 }
             }
 
-            public boolean isMerged()
-            {
+            public boolean isMerged() {
                 return false;
             }
         };
 
-        connectorProvider.setConnector( new RepositoryConnector()
-        {
+        connectorProvider.setConnector(new RepositoryConnector() {
 
-            public void put( Collection<? extends ArtifactUpload> artifactUploads,
-                             Collection<? extends MetadataUpload> metadataUploads )
-            {
-            }
+            public void put(
+                    Collection<? extends ArtifactUpload> artifactUploads,
+                    Collection<? extends MetadataUpload> metadataUploads) {}
 
-            public void get( Collection<? extends ArtifactDownload> artifactDownloads,
-                             Collection<? extends MetadataDownload> metadataDownloads )
-            {
-                if ( metadataDownloads != null )
-                {
-                    for ( MetadataDownload download : metadataDownloads )
-                    {
-                        download.setException( new MetadataNotFoundException( download.getMetadata(), null, null ) );
+            public void get(
+                    Collection<? extends ArtifactDownload> artifactDownloads,
+                    Collection<? extends MetadataDownload> metadataDownloads) {
+                if (metadataDownloads != null) {
+                    for (MetadataDownload download : metadataDownloads) {
+                        download.setException(new MetadataNotFoundException(download.getMetadata(), null, null));
                     }
                 }
             }
 
-            public void close()
-            {
-            }
-        } );
+            public void close() {}
+        });
 
-        request.addMetadata( metadata );
+        request.addMetadata(metadata);
 
-        File metadataFile =
-            new File( session.getLocalRepository().getBasedir(),
-                      session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, request.getRepository(),
-                                                                                    "" ) );
+        File metadataFile = new File(
+                session.getLocalRepository().getBasedir(),
+                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, request.getRepository(), ""));
         Properties props = new Properties();
-        props.setProperty( "old", "value" );
-        TestFileUtils.writeProps( metadataFile, props );
+        props.setProperty("old", "value");
+        TestFileUtils.writeProps(metadataFile, props);
 
-        deployer.deploy( session, request );
+        deployer.deploy(session, request);
 
         props = new Properties();
-        TestFileUtils.readProps( metadataFile, props );
-        assertNull( props.toString(), props.get( "old" ) );
+        TestFileUtils.readProps(metadataFile, props);
+        assertNull(props.toString(), props.get("old"));
     }
 
     @Test
-    public void testFileTransformer() throws Exception
-    {
-        final Artifact transformedArtifact = new SubArtifact( artifact, null, "raj" );
-        FileTransformer transformer = new FileTransformer()
-        {
+    public void testFileTransformer() throws Exception {
+        final Artifact transformedArtifact = new SubArtifact(artifact, null, "raj");
+        FileTransformer transformer = new FileTransformer() {
             @Override
-            public InputStream transformData( File file )
-            {
-                return new ByteArrayInputStream( "transformed data".getBytes( StandardCharsets.UTF_8 ) );
+            public InputStream transformData(File file) {
+                return new ByteArrayInputStream("transformed data".getBytes(StandardCharsets.UTF_8));
             }
-            
+
             @Override
-            public Artifact transformArtifact( Artifact artifact )
-            {
+            public Artifact transformArtifact(Artifact artifact) {
                 return transformedArtifact;
             }
         };
-        
-        StubFileTransformerManager fileTransformerManager = new StubFileTransformerManager();
-        fileTransformerManager.addFileTransformer( "jar", transformer );
-        session.setFileTransformerManager( fileTransformerManager );
-        
-        request = new DeployRequest();
-        request.addArtifact( artifact );
-        deployer.deploy( session, request );
-        
-        Artifact putArtifact = connector.getActualArtifactPutRequests().get( 0 );
-        assertEquals( transformedArtifact, putArtifact );
-    }
 
+        StubFileTransformerManager fileTransformerManager = new StubFileTransformerManager();
+        fileTransformerManager.addFileTransformer("jar", transformer);
+        session.setFileTransformerManager(fileTransformerManager);
+
+        request = new DeployRequest();
+        request.addArtifact(artifact);
+        deployer.deploy(session, request);
+
+        Artifact putArtifact = connector.getActualArtifactPutRequests().get(0);
+        assertEquals(transformedArtifact, putArtifact);
+    }
 }

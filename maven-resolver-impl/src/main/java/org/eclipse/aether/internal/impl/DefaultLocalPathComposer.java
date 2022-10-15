@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,14 +16,14 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
+
+import static java.util.Objects.requireNonNull;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Default implementation of {@link LocalPathComposer}.
@@ -34,83 +32,68 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public final class DefaultLocalPathComposer implements LocalPathComposer
-{
+public final class DefaultLocalPathComposer implements LocalPathComposer {
     @Override
-    public String getPathForArtifact( Artifact artifact, boolean local )
-    {
-        requireNonNull( artifact );
+    public String getPathForArtifact(Artifact artifact, boolean local) {
+        requireNonNull(artifact);
 
-        StringBuilder path = new StringBuilder( 128 );
+        StringBuilder path = new StringBuilder(128);
 
-        path.append( artifact.getGroupId().replace( '.', '/' ) ).append( '/' );
+        path.append(artifact.getGroupId().replace('.', '/')).append('/');
 
-        path.append( artifact.getArtifactId() ).append( '/' );
+        path.append(artifact.getArtifactId()).append('/');
 
-        path.append( artifact.getBaseVersion() ).append( '/' );
+        path.append(artifact.getBaseVersion()).append('/');
 
-        path.append( artifact.getArtifactId() ).append( '-' );
-        if ( local )
-        {
-            path.append( artifact.getBaseVersion() );
-        }
-        else
-        {
-            path.append( artifact.getVersion() );
+        path.append(artifact.getArtifactId()).append('-');
+        if (local) {
+            path.append(artifact.getBaseVersion());
+        } else {
+            path.append(artifact.getVersion());
         }
 
-        if ( artifact.getClassifier().length() > 0 )
-        {
-            path.append( '-' ).append( artifact.getClassifier() );
+        if (artifact.getClassifier().length() > 0) {
+            path.append('-').append(artifact.getClassifier());
         }
 
-        if ( artifact.getExtension().length() > 0 )
-        {
-            path.append( '.' ).append( artifact.getExtension() );
+        if (artifact.getExtension().length() > 0) {
+            path.append('.').append(artifact.getExtension());
         }
 
         return path.toString();
     }
 
     @Override
-    public String getPathForMetadata( Metadata metadata, String repositoryKey )
-    {
-        requireNonNull( metadata );
-        requireNonNull( repositoryKey );
+    public String getPathForMetadata(Metadata metadata, String repositoryKey) {
+        requireNonNull(metadata);
+        requireNonNull(repositoryKey);
 
-        StringBuilder path = new StringBuilder( 128 );
+        StringBuilder path = new StringBuilder(128);
 
-        if ( metadata.getGroupId().length() > 0 )
-        {
-            path.append( metadata.getGroupId().replace( '.', '/' ) ).append( '/' );
+        if (metadata.getGroupId().length() > 0) {
+            path.append(metadata.getGroupId().replace('.', '/')).append('/');
 
-            if ( metadata.getArtifactId().length() > 0 )
-            {
-                path.append( metadata.getArtifactId() ).append( '/' );
+            if (metadata.getArtifactId().length() > 0) {
+                path.append(metadata.getArtifactId()).append('/');
 
-                if ( metadata.getVersion().length() > 0 )
-                {
-                    path.append( metadata.getVersion() ).append( '/' );
+                if (metadata.getVersion().length() > 0) {
+                    path.append(metadata.getVersion()).append('/');
                 }
             }
         }
 
-        path.append( insertRepositoryKey( metadata.getType(), repositoryKey ) );
+        path.append(insertRepositoryKey(metadata.getType(), repositoryKey));
 
         return path.toString();
     }
 
-    private String insertRepositoryKey( String metadataType, String repositoryKey )
-    {
+    private String insertRepositoryKey(String metadataType, String repositoryKey) {
         String result;
-        int idx = metadataType.indexOf( '.' );
-        if ( idx < 0 )
-        {
+        int idx = metadataType.indexOf('.');
+        if (idx < 0) {
             result = metadataType + '-' + repositoryKey;
-        }
-        else
-        {
-            result = metadataType.substring( 0, idx ) + '-' + repositoryKey + metadataType.substring( idx );
+        } else {
+            result = metadataType.substring(0, idx) + '-' + repositoryKey + metadataType.substring(idx);
         }
         return result;
     }

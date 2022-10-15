@@ -1,5 +1,3 @@
-package org.eclipse.aether.named.support;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named.support;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.named.support;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.named.support;
 
 import org.eclipse.aether.named.NamedLock;
 import org.slf4j.Logger;
@@ -26,30 +25,25 @@ import org.slf4j.LoggerFactory;
 /**
  * Support class for {@link NamedLock} implementations providing reference counting.
  */
-public abstract class NamedLockSupport
-    implements NamedLock
-{
-    protected final Logger logger = LoggerFactory.getLogger( getClass() );
+public abstract class NamedLockSupport implements NamedLock {
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final String name;
 
     private final NamedLockFactorySupport factory;
 
-    public NamedLockSupport( final String name, final NamedLockFactorySupport factory )
-    {
+    public NamedLockSupport(final String name, final NamedLockFactorySupport factory) {
         this.name = name;
         this.factory = factory;
     }
 
     @Override
-    public String name()
-    {
+    public String name() {
         return name;
     }
 
     @Override
-    public void close()
-    {
-        factory.closeLock( name );
+    public void close() {
+        factory.closeLock(name);
     }
 }

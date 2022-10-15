@@ -1,5 +1,3 @@
-package org.eclipse.aether.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.util;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,15 +16,15 @@ package org.eclipse.aether.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util;
+
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import org.eclipse.aether.RepositorySystemSession;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * A utility class to calculate (and create if needed) paths backed by directories using configuration properties from
@@ -36,10 +34,8 @@ import static java.util.Objects.requireNonNull;
  * @see RepositorySystemSession#getLocalRepository()
  * @since TBD
  */
-public final class DirectoryUtils
-{
-    private DirectoryUtils()
-    {
+public final class DirectoryUtils {
+    private DirectoryUtils() {
         // hide constructor
     }
 
@@ -47,12 +43,11 @@ public final class DirectoryUtils
      * Creates {@link Path} instance out of passed in {@code name} parameter. May create a directory on resulting path,
      * if not exists. Following outcomes may happen:
      * <ul>
-     *     <li>{@code name} is absolute path - results in {@link Path} instance created directly from name.</li>
-     *     <li>{@code name} is relative path - results in {@link Path} instance resolved with {@code base} parameter.
-     *     </li>
+     * <li>{@code name} is absolute path - results in {@link Path} instance created directly from name.</li>
+     * <li>{@code name} is relative path - results in {@link Path} instance resolved with {@code base} parameter.</li>
      * </ul>
-     * Resulting path is being checked is a directory, and if not, it will be created. If resulting path exists but
-     * is not a directory, this method will fail.
+     * Resulting path is being checked is a directory, and if not, it will be created. If resulting path exists but is
+     * not a directory, this method will fail.
      *
      * @param name      The name to create directory with, cannot be {@code null}.
      * @param base      The base {@link Path} to resolve name, if it is relative path, cannot be {@code null}.
@@ -60,38 +55,29 @@ public final class DirectoryUtils
      * @return The {@link Path} instance that is resolved and backed by existing directory.
      * @throws IOException If some IO related errors happens.
      */
-    public static Path resolveDirectory( String name, Path base, boolean mayCreate ) throws IOException
-    {
-        requireNonNull( name, "name is null" );
-        requireNonNull( base, "base is null" );
-        final Path namePath = Paths.get( name );
+    public static Path resolveDirectory(String name, Path base, boolean mayCreate) throws IOException {
+        requireNonNull(name, "name is null");
+        requireNonNull(base, "base is null");
+        final Path namePath = Paths.get(name);
         final Path result;
-        if ( namePath.isAbsolute() )
-        {
+        if (namePath.isAbsolute()) {
             result = namePath.normalize();
-        }
-        else
-        {
-            result = base.resolve( namePath ).normalize();
+        } else {
+            result = base.resolve(namePath).normalize();
         }
 
-        if ( !Files.exists( result ) )
-        {
-            if ( mayCreate )
-            {
-                Files.createDirectories( result );
+        if (!Files.exists(result)) {
+            if (mayCreate) {
+                Files.createDirectories(result);
             }
-        }
-        else if ( !Files.isDirectory( result ) )
-        {
-            throw new IOException( "Path exists, but is not a directory: " + result );
+        } else if (!Files.isDirectory(result)) {
+            throw new IOException("Path exists, but is not a directory: " + result);
         }
         return result;
     }
 
     /**
-     * Creates {@link Path} instance out of session configuration, and (if relative) resolve it against local
-     * repository
+     * Creates {@link Path} instance out of session configuration, and (if relative) resolve it against local repository
      * basedir. Pre-populates values and invokes {@link #resolveDirectory(String, Path, boolean)}.
      * <p>
      * For this method to work, {@link org.eclipse.aether.repository.LocalRepository#getBasedir()} must return
@@ -104,17 +90,15 @@ public final class DirectoryUtils
      * @return The {@link Path} instance that is resolved and backed by existing directory.
      * @throws IOException If some IO related errors happens.
      */
-    public static Path resolveDirectory( RepositorySystemSession session,
-                                         String defaultName,
-                                         String nameKey,
-                                         boolean mayCreate )
-            throws IOException
-    {
-        requireNonNull( session, "session is null" );
-        requireNonNull( defaultName, "defaultName is null" );
-        requireNonNull( nameKey, "nameKey is null" );
-        requireNonNull( session.getLocalRepository().getBasedir(), "session.localRepository.basedir is null" );
-        return resolveDirectory( ConfigUtils.getString( session, defaultName, nameKey ),
-                session.getLocalRepository().getBasedir().toPath(), mayCreate );
+    public static Path resolveDirectory(
+            RepositorySystemSession session, String defaultName, String nameKey, boolean mayCreate) throws IOException {
+        requireNonNull(session, "session is null");
+        requireNonNull(defaultName, "defaultName is null");
+        requireNonNull(nameKey, "nameKey is null");
+        requireNonNull(session.getLocalRepository().getBasedir(), "session.localRepository.basedir is null");
+        return resolveDirectory(
+                ConfigUtils.getString(session, defaultName, nameKey),
+                session.getLocalRepository().getBasedir().toPath(),
+                mayCreate);
     }
 }

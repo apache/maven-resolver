@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.log;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.log;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.log;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.log;
 
 /**
  * A logger factory that disables any logging.
@@ -25,9 +24,7 @@ package org.eclipse.aether.spi.log;
  * @deprecated Use SLF4J instead
  */
 @Deprecated
-public final class NullLoggerFactory
-    implements LoggerFactory
-{
+public final class NullLoggerFactory implements LoggerFactory {
 
     /**
      * The singleton instance of this factory.
@@ -39,13 +36,11 @@ public final class NullLoggerFactory
      */
     public static final Logger LOGGER = new NullLogger();
 
-    public Logger getLogger( String name )
-    {
+    public Logger getLogger(String name) {
         return LOGGER;
     }
 
-    private NullLoggerFactory()
-    {
+    private NullLoggerFactory() {
         // hide constructor
     }
 
@@ -54,21 +49,17 @@ public final class NullLoggerFactory
      * specified factory is {@code null} or fails to provide a logger.
      *
      * @param loggerFactory The logger factory from which to get the logger, may be {@code null}.
-     * @param type The class for which to get the logger, must not be {@code null}.
+     * @param type          The class for which to get the logger, must not be {@code null}.
      * @return The requested logger, never {@code null}.
      */
-    public static Logger getSafeLogger( LoggerFactory loggerFactory, Class<?> type )
-    {
-        if ( loggerFactory == null )
-        {
+    public static Logger getSafeLogger(LoggerFactory loggerFactory, Class<?> type) {
+        if (loggerFactory == null) {
             return LOGGER;
         }
-        Logger logger = loggerFactory.getLogger( type.getName() );
-        if ( logger == null )
-        {
+        Logger logger = loggerFactory.getLogger(type.getName());
+        if (logger == null) {
             return LOGGER;
         }
         return logger;
     }
-
 }

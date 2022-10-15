@@ -1,5 +1,3 @@
-package org.eclipse.aether.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,53 +16,76 @@ package org.eclipse.aether.named;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+package org.eclipse.aether.named;
 
 import static org.eclipse.aether.named.support.Retry.retry;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
 /**
  * UT for {@link org.eclipse.aether.named.support.Retry}.
  */
-public class RetryTest
-{
+public class RetryTest {
     private static final long RETRY_SLEEP_MILLIS = 250L;
 
     @Rule
     public TestName testName = new TestName();
 
     @Test
-    public void happy() throws InterruptedException
-    {
+    public void happy() throws InterruptedException {
         LongAdder retries = new LongAdder();
-        String result = retry( 1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return "happy"; }, null, "notHappy" );
-        assertThat( result, equalTo( "happy" ) );
-        assertThat( retries.sum(), equalTo( 1L ) );
+        String result = retry(
+                1L,
+                TimeUnit.SECONDS,
+                RETRY_SLEEP_MILLIS,
+                () -> {
+                    retries.increment();
+                    return "happy";
+                },
+                null,
+                "notHappy");
+        assertThat(result, equalTo("happy"));
+        assertThat(retries.sum(), equalTo(1L));
     }
 
     @Test
-    public void notHappy() throws InterruptedException
-    {
+    public void notHappy() throws InterruptedException {
         LongAdder retries = new LongAdder();
-        String result = retry( 1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return null; }, null, "notHappy" );
-        assertThat( result, equalTo( "notHappy" ) );
-        assertThat( retries.sum(), greaterThan( 1L ) );
+        String result = retry(
+                1L,
+                TimeUnit.SECONDS,
+                RETRY_SLEEP_MILLIS,
+                () -> {
+                    retries.increment();
+                    return null;
+                },
+                null,
+                "notHappy");
+        assertThat(result, equalTo("notHappy"));
+        assertThat(retries.sum(), greaterThan(1L));
     }
 
     @Test
-    public void happyOnSomeAttempt() throws InterruptedException
-    {
+    public void happyOnSomeAttempt() throws InterruptedException {
         LongAdder retries = new LongAdder();
-        String result = retry( 1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return retries.sum() == 2 ? "got it" : null; }, null, "notHappy" );
-        assertThat( result, equalTo( "got it" ) );
-        assertThat( retries.sum(), equalTo( 2L ) );
+        String result = retry(
+                1L,
+                TimeUnit.SECONDS,
+                RETRY_SLEEP_MILLIS,
+                () -> {
+                    retries.increment();
+                    return retries.sum() == 2 ? "got it" : null;
+                },
+                null,
+                "notHappy");
+        assertThat(result, equalTo("got it"));
+        assertThat(retries.sum(), equalTo(2L));
     }
 }

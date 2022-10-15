@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.test.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.test.util;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,9 +16,9 @@ package org.eclipse.aether.internal.test.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.test.util;
 
 import java.io.PrintStream;
-
 import org.eclipse.aether.spi.log.Logger;
 import org.eclipse.aether.spi.log.LoggerFactory;
 
@@ -30,82 +28,64 @@ import org.eclipse.aether.spi.log.LoggerFactory;
  * @deprecated Use SLF4J instead
  */
 @Deprecated
-public final class TestLoggerFactory
-    implements LoggerFactory
-{
+public final class TestLoggerFactory implements LoggerFactory {
 
     private final Logger logger;
 
     /**
      * Creates a new logger factory that writes to {@link System#out}.
      */
-    public TestLoggerFactory()
-    {
-        this( null );
+    public TestLoggerFactory() {
+        this(null);
     }
 
     /**
      * Creates a new logger factory that writes to the specified print stream.
      */
-    public TestLoggerFactory( PrintStream out )
-    {
-        logger = new TestLogger( out );
+    public TestLoggerFactory(PrintStream out) {
+        logger = new TestLogger(out);
     }
 
-    public Logger getLogger( String name )
-    {
+    public Logger getLogger(String name) {
         return logger;
     }
 
-    private static final class TestLogger
-        implements Logger
-    {
+    private static final class TestLogger implements Logger {
 
         private final PrintStream out;
 
-        TestLogger( PrintStream out )
-        {
-            this.out = ( out != null ) ? out : System.out;
+        TestLogger(PrintStream out) {
+            this.out = (out != null) ? out : System.out;
         }
 
-        public boolean isWarnEnabled()
-        {
+        public boolean isWarnEnabled() {
             return true;
         }
 
-        public void warn( String msg, Throwable error )
-        {
-            out.println( "[WARN] " + msg );
-            if ( error != null )
-            {
-                error.printStackTrace( out );
+        public void warn(String msg, Throwable error) {
+            out.println("[WARN] " + msg);
+            if (error != null) {
+                error.printStackTrace(out);
             }
         }
 
-        public void warn( String msg )
-        {
-            warn( msg, null );
+        public void warn(String msg) {
+            warn(msg, null);
         }
 
-        public boolean isDebugEnabled()
-        {
+        public boolean isDebugEnabled() {
             return true;
         }
 
-        public void debug( String msg, Throwable error )
-        {
-            out.println( "[DEBUG] " + msg );
-            if ( error != null )
-            {
-                error.printStackTrace( out );
+        public void debug(String msg, Throwable error) {
+            out.println("[DEBUG] " + msg);
+            if (error != null) {
+                error.printStackTrace(out);
             }
         }
 
-        public void debug( String msg )
-        {
-            debug( msg, null );
+        public void debug(String msg) {
+            debug(msg, null);
         }
-
     }
-
 }

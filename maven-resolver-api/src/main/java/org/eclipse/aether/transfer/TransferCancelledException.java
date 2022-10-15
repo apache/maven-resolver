@@ -1,5 +1,3 @@
-package org.eclipse.aether.transfer;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.transfer;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,43 +16,38 @@ package org.eclipse.aether.transfer;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transfer;
 
 import org.eclipse.aether.RepositoryException;
 
 /**
  * Thrown in case an upload/download was cancelled (e.g. due to user request).
  */
-public class TransferCancelledException
-    extends RepositoryException
-{
+public class TransferCancelledException extends RepositoryException {
 
     /**
      * Creates a new exception with a stock detail message.
      */
-    public TransferCancelledException()
-    {
-        super( "The operation was cancelled." );
+    public TransferCancelledException() {
+        super("The operation was cancelled.");
     }
 
     /**
      * Creates a new exception with the specified detail message.
-     * 
+     *
      * @param message The detail message, may be {@code null}.
      */
-    public TransferCancelledException( String message )
-    {
-        super( message );
+    public TransferCancelledException(String message) {
+        super(message);
     }
 
     /**
      * Creates a new exception with the specified detail message and cause.
-     * 
+     *
      * @param message The detail message, may be {@code null}.
-     * @param cause The exception that caused this one, may be {@code null}.
+     * @param cause   The exception that caused this one, may be {@code null}.
      */
-    public TransferCancelledException( String message, Throwable cause )
-    {
-        super( message, cause );
+    public TransferCancelledException(String message, Throwable cause) {
+        super(message, cause);
     }
-
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.transport.http;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.transport.http;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,38 +16,34 @@ package org.eclipse.aether.transport.http;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.http;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import static java.util.Objects.requireNonNull;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * A transporter factory for repositories using the {@code http:} or {@code https:} protocol. The provided transporters
  * support uploads to WebDAV servers and resumable downloads.
  */
-@Named( "http" )
-public final class HttpTransporterFactory
-    implements TransporterFactory
-{
+@Named("http")
+public final class HttpTransporterFactory implements TransporterFactory {
     private static final Map<String, ChecksumExtractor> EXTRACTORS;
 
-    static
-    {
+    static {
         HashMap<String, ChecksumExtractor> map = new HashMap<>();
-        map.put( Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor() );
-        map.put( XChecksumChecksumExtractor.NAME, new XChecksumChecksumExtractor() );
-        EXTRACTORS = Collections.unmodifiableMap( map );
+        map.put(Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor());
+        map.put(XChecksumChecksumExtractor.NAME, new XChecksumChecksumExtractor());
+        EXTRACTORS = Collections.unmodifiableMap(map);
     }
 
     private float priority = 5.0f;
@@ -60,9 +54,8 @@ public final class HttpTransporterFactory
      * Ctor for ServiceLocator.
      */
     @Deprecated
-    public HttpTransporterFactory()
-    {
-        this( EXTRACTORS );
+    public HttpTransporterFactory() {
+        this(EXTRACTORS);
     }
 
     /**
@@ -71,14 +64,12 @@ public final class HttpTransporterFactory
      * will occur.
      */
     @Inject
-    public HttpTransporterFactory( Map<String, ChecksumExtractor> extractors )
-    {
-        this.extractors = requireNonNull( extractors );
+    public HttpTransporterFactory(Map<String, ChecksumExtractor> extractors) {
+        this.extractors = requireNonNull(extractors);
     }
 
     @Override
-    public float getPriority()
-    {
+    public float getPriority() {
         return priority;
     }
 
@@ -88,20 +79,17 @@ public final class HttpTransporterFactory
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */
-    public HttpTransporterFactory setPriority( float priority )
-    {
+    public HttpTransporterFactory setPriority(float priority) {
         this.priority = priority;
         return this;
     }
 
     @Override
-    public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
-        throws NoTransporterException
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
+    public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
+            throws NoTransporterException {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
 
-        return new HttpTransporter( extractors, repository, session );
+        return new HttpTransporter(extractors, repository, session);
     }
-
 }

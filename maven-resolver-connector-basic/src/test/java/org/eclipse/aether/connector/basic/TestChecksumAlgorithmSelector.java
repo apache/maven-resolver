@@ -1,5 +1,3 @@
-package org.eclipse.aether.connector.basic;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.connector.basic;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.connector.basic;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.connector.basic;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -25,7 +24,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
-
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
@@ -35,9 +33,7 @@ import org.eclipse.aether.util.ChecksumUtils;
 /**
  * Test implementation of {@link ChecksumAlgorithmFactorySelector}.
  */
-public class TestChecksumAlgorithmSelector
-        implements ChecksumAlgorithmFactorySelector
-{
+public class TestChecksumAlgorithmSelector implements ChecksumAlgorithmFactorySelector {
     public static final String SHA512 = "SHA-512";
 
     public static final String SHA256 = "SHA-256";
@@ -51,73 +47,53 @@ public class TestChecksumAlgorithmSelector
     public static final String TEST_CHECKSUM_VALUE = "01020304";
 
     @Override
-    public Set<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
-    {
+    public Set<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories() {
         return Collections.emptySet(); // irrelevant
     }
 
     @Override
-    public ChecksumAlgorithmFactory select( final String algorithm )
-    {
-        if ( TEST_CHECKSUM.equals( algorithm ) )
-        {
-            return new ChecksumAlgorithmFactorySupport( TEST_CHECKSUM, "test" )
-            {
+    public ChecksumAlgorithmFactory select(final String algorithm) {
+        if (TEST_CHECKSUM.equals(algorithm)) {
+            return new ChecksumAlgorithmFactorySupport(TEST_CHECKSUM, "test") {
                 @Override
-                public ChecksumAlgorithm getAlgorithm()
-                {
-                    return new ChecksumAlgorithm()
-                    {
+                public ChecksumAlgorithm getAlgorithm() {
+                    return new ChecksumAlgorithm() {
                         @Override
-                        public void update( final ByteBuffer input )
-                        {
-
-                        }
+                        public void update(final ByteBuffer input) {}
 
                         @Override
-                        public String checksum()
-                        {
+                        public String checksum() {
                             return TEST_CHECKSUM_VALUE;
                         }
                     };
                 }
             };
         }
-        return new MessageDigestChecksumAlgorithmFactory( algorithm );
+        return new MessageDigestChecksumAlgorithmFactory(algorithm);
     }
 
-    private static class MessageDigestChecksumAlgorithmFactory
-            extends ChecksumAlgorithmFactorySupport
-    {
-        public MessageDigestChecksumAlgorithmFactory( String name )
-        {
-            super( name, name.replace( "-", "" ).toLowerCase( Locale.ENGLISH ) );
+    private static class MessageDigestChecksumAlgorithmFactory extends ChecksumAlgorithmFactorySupport {
+        public MessageDigestChecksumAlgorithmFactory(String name) {
+            super(name, name.replace("-", "").toLowerCase(Locale.ENGLISH));
         }
 
         @Override
-        public ChecksumAlgorithm getAlgorithm()
-        {
-            try
-            {
-                MessageDigest messageDigest = MessageDigest.getInstance( getName() );
-                return new ChecksumAlgorithm()
-                {
+        public ChecksumAlgorithm getAlgorithm() {
+            try {
+                MessageDigest messageDigest = MessageDigest.getInstance(getName());
+                return new ChecksumAlgorithm() {
                     @Override
-                    public void update( final ByteBuffer input )
-                    {
-                        messageDigest.update( input );
+                    public void update(final ByteBuffer input) {
+                        messageDigest.update(input);
                     }
 
                     @Override
-                    public String checksum()
-                    {
-                        return ChecksumUtils.toHexString( messageDigest.digest() );
+                    public String checksum() {
+                        return ChecksumUtils.toHexString(messageDigest.digest());
                     }
                 };
-            }
-            catch ( NoSuchAlgorithmException e )
-            {
-                throw new IllegalArgumentException( "Algorithm '" + getName() + "' not supported." );
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalArgumentException("Algorithm '" + getName() + "' not supported.");
             }
         }
     }

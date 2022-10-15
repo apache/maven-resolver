@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.repository;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.repository;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.repository;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.repository;
 
 import static java.util.Objects.requireNonNull;
 
@@ -29,9 +28,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  * A proxy selector that delegates to another selector but only if a repository has no proxy yet. If a proxy has already
  * been assigned to a repository, that is selected.
  */
-public final class ConservativeProxySelector
-    implements ProxySelector
-{
+public final class ConservativeProxySelector implements ProxySelector {
 
     private final ProxySelector selector;
 
@@ -40,20 +37,16 @@ public final class ConservativeProxySelector
      *
      * @param selector The selector to delegate to in case a repository has no proxy yet, must not be {@code null}.
      */
-    public ConservativeProxySelector( ProxySelector selector )
-    {
-        this.selector = requireNonNull( selector, "proxy selector cannot be null" );
+    public ConservativeProxySelector(ProxySelector selector) {
+        this.selector = requireNonNull(selector, "proxy selector cannot be null");
     }
 
-    public Proxy getProxy( RemoteRepository repository )
-    {
-        requireNonNull( repository, "repository cannot be null" );
+    public Proxy getProxy(RemoteRepository repository) {
+        requireNonNull(repository, "repository cannot be null");
         Proxy proxy = repository.getProxy();
-        if ( proxy != null )
-        {
+        if (proxy != null) {
             return proxy;
         }
-        return selector.getProxy( repository );
+        return selector.getProxy(repository);
     }
-
 }

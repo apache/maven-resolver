@@ -1,5 +1,3 @@
-package org.eclipse.aether.transport.wagon;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.transport.wagon;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,19 +16,17 @@ package org.eclipse.aether.transport.wagon;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.wagon;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-
 import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 
-class RecordingTransportListener
-    extends TransportListener
-{
+class RecordingTransportListener extends TransportListener {
 
-    public final ByteArrayOutputStream baos = new ByteArrayOutputStream( 1024 );
+    public final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
 
     public long dataOffset;
 
@@ -45,30 +41,23 @@ class RecordingTransportListener
     public boolean cancelProgress;
 
     @Override
-    public void transportStarted( long dataOffset, long dataLength )
-        throws TransferCancelledException
-    {
+    public void transportStarted(long dataOffset, long dataLength) throws TransferCancelledException {
         startedCount++;
         progressedCount = 0;
         this.dataLength = dataLength;
         this.dataOffset = dataOffset;
         baos.reset();
-        if ( cancelStart )
-        {
+        if (cancelStart) {
             throw new TransferCancelledException();
         }
     }
 
     @Override
-    public void transportProgressed( ByteBuffer data )
-        throws TransferCancelledException
-    {
+    public void transportProgressed(ByteBuffer data) throws TransferCancelledException {
         progressedCount++;
-        baos.write( data.array(), data.arrayOffset() + ( (Buffer) data ).position(), data.remaining() );
-        if ( cancelProgress )
-        {
+        baos.write(data.array(), data.arrayOffset() + ((Buffer) data).position(), data.remaining());
+        if (cancelProgress) {
             throw new TransferCancelledException();
         }
     }
-
 }

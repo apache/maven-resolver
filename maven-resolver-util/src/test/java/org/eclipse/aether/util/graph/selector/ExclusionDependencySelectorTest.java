@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.selector;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.util.graph.selector;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,22 +16,20 @@ package org.eclipse.aether.util.graph.selector;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.selector;
 
 import static org.junit.Assert.*;
 
+import java.util.Collections;
 import org.eclipse.aether.graph.Exclusion;
 import org.junit.Test;
 
-import java.util.Collections;
-
-public class ExclusionDependencySelectorTest
-{
+public class ExclusionDependencySelectorTest {
     @Test
-    public void testToString()
-    {
+    public void testToString() {
         assertEquals(
-            "ExclusionDependencySelector(a:b:d:c)",
-            new ExclusionDependencySelector( Collections.singletonList( new Exclusion("a", "b", "c", "d") ) ).toString()
-        );
+                "ExclusionDependencySelector(a:b:d:c)",
+                new ExclusionDependencySelector(Collections.singletonList(new Exclusion("a", "b", "c", "d")))
+                        .toString());
     }
 }

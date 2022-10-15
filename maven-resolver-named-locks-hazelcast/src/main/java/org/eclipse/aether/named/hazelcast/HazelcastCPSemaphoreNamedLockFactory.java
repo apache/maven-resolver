@@ -1,5 +1,3 @@
-package org.eclipse.aether.named.hazelcast;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named.hazelcast;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,38 +16,34 @@ package org.eclipse.aether.named.hazelcast;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+package org.eclipse.aether.named.hazelcast;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * {@link HazelcastSemaphoreNamedLockFactory} using {@link DirectHazelcastSemaphoreProvider} full Hazelcast member.
  */
 @Singleton
-@Named( HazelcastCPSemaphoreNamedLockFactory.NAME )
-public class HazelcastCPSemaphoreNamedLockFactory extends HazelcastSemaphoreNamedLockFactory
-{
+@Named(HazelcastCPSemaphoreNamedLockFactory.NAME)
+public class HazelcastCPSemaphoreNamedLockFactory extends HazelcastSemaphoreNamedLockFactory {
     public static final String NAME = "semaphore-hazelcast";
 
     /**
      * The default constructor: creates own instance of Hazelcast using standard Hazelcast configuration discovery.
      */
     @Inject
-    public HazelcastCPSemaphoreNamedLockFactory()
-    {
-        this( Hazelcast.newHazelcastInstance(), true );
+    public HazelcastCPSemaphoreNamedLockFactory() {
+        this(Hazelcast.newHazelcastInstance(), true);
     }
 
     /**
      * Constructor for customization.
      */
-    public HazelcastCPSemaphoreNamedLockFactory( HazelcastInstance hazelcastInstance,
-                                                 boolean manageHazelcast )
-    {
-        super( hazelcastInstance, manageHazelcast, new DirectHazelcastSemaphoreProvider() );
+    public HazelcastCPSemaphoreNamedLockFactory(HazelcastInstance hazelcastInstance, boolean manageHazelcast) {
+        super(hazelcastInstance, manageHazelcast, new DirectHazelcastSemaphoreProvider());
     }
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,10 +16,10 @@ package org.eclipse.aether;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether;
 
 import java.util.Map;
 import java.util.function.Consumer;
-
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
@@ -43,191 +41,159 @@ import org.eclipse.aether.transform.FileTransformerManager;
  * A special repository system session to enable decorating or proxying another session. To do so, clients have to
  * create a subclass and implement {@link #getSession()}.
  */
-public abstract class AbstractForwardingRepositorySystemSession
-    implements RepositorySystemSession
-{
+public abstract class AbstractForwardingRepositorySystemSession implements RepositorySystemSession {
 
     /**
      * Creates a new forwarding session.
      */
-    protected AbstractForwardingRepositorySystemSession()
-    {
-    }
+    protected AbstractForwardingRepositorySystemSession() {}
 
     /**
      * Gets the repository system session to which this instance forwards calls. It's worth noting that this class does
      * not save/cache the returned reference but queries this method before each forwarding. Hence, the session
      * forwarded to may change over time or depending on the context (e.g. calling thread).
-     * 
+     *
      * @return The repository system session to forward calls to, never {@code null}.
      */
     protected abstract RepositorySystemSession getSession();
 
     @Override
-    public boolean isOffline()
-    {
+    public boolean isOffline() {
         return getSession().isOffline();
     }
 
     @Override
-    public boolean isIgnoreArtifactDescriptorRepositories()
-    {
+    public boolean isIgnoreArtifactDescriptorRepositories() {
         return getSession().isIgnoreArtifactDescriptorRepositories();
     }
 
     @Override
-    public ResolutionErrorPolicy getResolutionErrorPolicy()
-    {
+    public ResolutionErrorPolicy getResolutionErrorPolicy() {
         return getSession().getResolutionErrorPolicy();
     }
 
     @Override
-    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy()
-    {
+    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
         return getSession().getArtifactDescriptorPolicy();
     }
 
     @Override
-    public String getChecksumPolicy()
-    {
+    public String getChecksumPolicy() {
         return getSession().getChecksumPolicy();
     }
 
     @Override
-    public String getUpdatePolicy()
-    {
+    public String getUpdatePolicy() {
         return getSession().getUpdatePolicy();
     }
 
     @Override
-    public LocalRepository getLocalRepository()
-    {
+    public LocalRepository getLocalRepository() {
         return getSession().getLocalRepository();
     }
 
     @Override
-    public LocalRepositoryManager getLocalRepositoryManager()
-    {
+    public LocalRepositoryManager getLocalRepositoryManager() {
         return getSession().getLocalRepositoryManager();
     }
 
     @Override
-    public WorkspaceReader getWorkspaceReader()
-    {
+    public WorkspaceReader getWorkspaceReader() {
         return getSession().getWorkspaceReader();
     }
 
     @Override
-    public RepositoryListener getRepositoryListener()
-    {
+    public RepositoryListener getRepositoryListener() {
         return getSession().getRepositoryListener();
     }
 
     @Override
-    public TransferListener getTransferListener()
-    {
+    public TransferListener getTransferListener() {
         return getSession().getTransferListener();
     }
 
     @Override
-    public Map<String, String> getSystemProperties()
-    {
+    public Map<String, String> getSystemProperties() {
         return getSession().getSystemProperties();
     }
 
     @Override
-    public Map<String, String> getUserProperties()
-    {
+    public Map<String, String> getUserProperties() {
         return getSession().getUserProperties();
     }
 
     @Override
-    public Map<String, Object> getConfigProperties()
-    {
+    public Map<String, Object> getConfigProperties() {
         return getSession().getConfigProperties();
     }
 
     @Override
-    public MirrorSelector getMirrorSelector()
-    {
+    public MirrorSelector getMirrorSelector() {
         return getSession().getMirrorSelector();
     }
 
     @Override
-    public ProxySelector getProxySelector()
-    {
+    public ProxySelector getProxySelector() {
         return getSession().getProxySelector();
     }
 
     @Override
-    public AuthenticationSelector getAuthenticationSelector()
-    {
+    public AuthenticationSelector getAuthenticationSelector() {
         return getSession().getAuthenticationSelector();
     }
 
     @Override
-    public ArtifactTypeRegistry getArtifactTypeRegistry()
-    {
+    public ArtifactTypeRegistry getArtifactTypeRegistry() {
         return getSession().getArtifactTypeRegistry();
     }
 
     @Override
-    public DependencyTraverser getDependencyTraverser()
-    {
+    public DependencyTraverser getDependencyTraverser() {
         return getSession().getDependencyTraverser();
     }
 
     @Override
-    public DependencyManager getDependencyManager()
-    {
+    public DependencyManager getDependencyManager() {
         return getSession().getDependencyManager();
     }
 
     @Override
-    public DependencySelector getDependencySelector()
-    {
+    public DependencySelector getDependencySelector() {
         return getSession().getDependencySelector();
     }
 
     @Override
-    public VersionFilter getVersionFilter()
-    {
+    public VersionFilter getVersionFilter() {
         return getSession().getVersionFilter();
     }
 
     @Override
-    public DependencyGraphTransformer getDependencyGraphTransformer()
-    {
+    public DependencyGraphTransformer getDependencyGraphTransformer() {
         return getSession().getDependencyGraphTransformer();
     }
 
     @Override
-    public SessionData getData()
-    {
+    public SessionData getData() {
         return getSession().getData();
     }
 
     @Override
-    public RepositoryCache getCache()
-    {
+    public RepositoryCache getCache() {
         return getSession().getCache();
     }
-    
+
     @Override
-    public FileTransformerManager getFileTransformerManager()
-    {
+    public FileTransformerManager getFileTransformerManager() {
         return getSession().getFileTransformerManager();
     }
 
     @Override
-    public final void addOnCloseHandler( Consumer<RepositorySystemSession> handler )
-    {
-        getSession().addOnCloseHandler( handler );
+    public final void addOnCloseHandler(Consumer<RepositorySystemSession> handler) {
+        getSession().addOnCloseHandler(handler);
     }
 
     @Override
-    public final boolean isClosed()
-    {
+    public final boolean isClosed() {
         return getSession().isClosed();
     }
 
@@ -237,9 +203,8 @@ public abstract class AbstractForwardingRepositorySystemSession
      * and in case when needed, handle forwarded session as "top level" session.
      */
     @Override
-    public void close()
-    {
-        throw new IllegalStateException( "Forwarding session should not be closed, "
-                + "close the top-level (forwarded) session instead." );
+    public void close() {
+        throw new IllegalStateException(
+                "Forwarding session should not be closed, " + "close the top-level (forwarded) session instead.");
     }
 }

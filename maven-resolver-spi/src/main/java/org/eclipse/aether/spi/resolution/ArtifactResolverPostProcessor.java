@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.resolution;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.resolution;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,30 +16,29 @@ package org.eclipse.aether.spi.resolution;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.resolution;
 
 import java.util.List;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.resolution.ArtifactResult;
 
 /**
  * Artifact resolver post-resolution processor component, is able to hook into resolver and post-process the resolved
- * artifact results, if needed even produce resolution failure. It will always be invoked (even when failure is about
- * to happen), so detecting these cases are left to post processor implementations.
+ * artifact results, if needed even produce resolution failure. It will always be invoked (even when failure is about to
+ * happen), so detecting these cases are left to post processor implementations.
  *
  * @since TBD
  */
-public interface ArtifactResolverPostProcessor
-{
+public interface ArtifactResolverPostProcessor {
     /**
-     * Receives resolver results just before it would return it to caller. Is able to generate "resolution failure"
-     * by augmenting passed in {@link ArtifactResult}s (artifacts should be "unresolved" and exceptions added).
+     * Receives resolver results just before it would return it to caller. Is able to generate "resolution failure" by
+     * augmenting passed in {@link ArtifactResult}s (artifacts should be "unresolved" and exceptions added).
      * <p>
      * Implementations must be aware that the passed in list of {@link ArtifactResult}s may have failed resolutions,
      * best to check that using {@link ArtifactResult#isResolved()} method.
      * <p>
-     * The implementations must be aware that this call may be "hot", so it directly affects the performance of
-     * resolver in general.
+     * The implementations must be aware that this call may be "hot", so it directly affects the performance of resolver
+     * in general.
      */
-    void postProcess( RepositorySystemSession session, List<ArtifactResult> artifactResults );
+    void postProcess(RepositorySystemSession session, List<ArtifactResult> artifactResults);
 }

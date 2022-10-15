@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.transport.wagon;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.transport.wagon;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,9 +16,13 @@ package org.eclipse.aether.internal.transport.wagon;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.transport.wagon;
 
 import static java.util.Objects.requireNonNull;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import org.apache.maven.wagon.Wagon;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
@@ -34,18 +36,12 @@ import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.aether.transport.wagon.WagonConfigurator;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 /**
  * A wagon configurator based on the Plexus component configuration framework.
  */
-@Named ( "plexus" )
+@Named("plexus")
 @Singleton
-public class PlexusWagonConfigurator
-    implements WagonConfigurator
-{
+public class PlexusWagonConfigurator implements WagonConfigurator {
     private final PlexusContainer container;
 
     /**
@@ -54,53 +50,43 @@ public class PlexusWagonConfigurator
      * @param container The Plexus container instance to use, must not be {@code null}.
      */
     @Inject
-    public PlexusWagonConfigurator( final PlexusContainer container )
-    {
-        this.container = requireNonNull( container, "plexus container cannot be null" );
+    public PlexusWagonConfigurator(final PlexusContainer container) {
+        this.container = requireNonNull(container, "plexus container cannot be null");
     }
 
-    public void configure( Wagon wagon, Object configuration )
-        throws Exception
-    {
-        requireNonNull( wagon, "wagon cannot be null" );
-        requireNonNull( configuration, "configuration cannot be null" );
+    public void configure(Wagon wagon, Object configuration) throws Exception {
+        requireNonNull(wagon, "wagon cannot be null");
+        requireNonNull(configuration, "configuration cannot be null");
 
         PlexusConfiguration config;
-        if ( configuration instanceof PlexusConfiguration )
-        {
+        if (configuration instanceof PlexusConfiguration) {
             config = (PlexusConfiguration) configuration;
-        }
-        else if ( configuration instanceof Xpp3Dom )
-        {
-            config = new XmlPlexusConfiguration( (Xpp3Dom) configuration );
-        }
-        else
-        {
-            throw new IllegalArgumentException( "unexpected configuration type: "
-                    + configuration.getClass().getName() );
+        } else if (configuration instanceof Xpp3Dom) {
+            config = new XmlPlexusConfiguration((Xpp3Dom) configuration);
+        } else {
+            throw new IllegalArgumentException(
+                    "unexpected configuration type: " + configuration.getClass().getName());
         }
 
         WagonComponentConfigurator configurator = new WagonComponentConfigurator();
 
-        configurator.configureComponent( wagon, config, container.getContainerRealm() );
+        configurator.configureComponent(wagon, config, container.getContainerRealm());
     }
 
-    static class WagonComponentConfigurator
-        extends AbstractComponentConfigurator
-    {
+    static class WagonComponentConfigurator extends AbstractComponentConfigurator {
 
         @Override
-        public void configureComponent( Object component, PlexusConfiguration configuration,
-                                        ExpressionEvaluator expressionEvaluator, ClassRealm containerRealm,
-                                        ConfigurationListener listener )
-            throws ComponentConfigurationException
-        {
+        public void configureComponent(
+                Object component,
+                PlexusConfiguration configuration,
+                ExpressionEvaluator expressionEvaluator,
+                ClassRealm containerRealm,
+                ConfigurationListener listener)
+                throws ComponentConfigurationException {
             ObjectWithFieldsConverter converter = new ObjectWithFieldsConverter();
 
-            converter.processConfiguration( converterLookup, component, containerRealm, configuration,
-                                            expressionEvaluator, listener );
+            converter.processConfiguration(
+                    converterLookup, component, containerRealm, configuration, expressionEvaluator, listener);
         }
-
     }
-
 }

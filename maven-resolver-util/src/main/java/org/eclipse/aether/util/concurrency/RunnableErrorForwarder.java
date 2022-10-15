@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.concurrency;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.concurrency;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.concurrency;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.concurrency;
 
 import static java.util.Objects.requireNonNull;
 
@@ -28,18 +27,16 @@ import java.util.concurrent.locks.LockSupport;
 /**
  * A utility class to forward any uncaught {@link Error} or {@link RuntimeException} from a {@link Runnable} executed in
  * a worker thread back to the parent thread. The simplified usage pattern looks like this:
- * 
+ *
  * <pre>
  * RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
- * for ( Runnable task : tasks )
- * {
+ * for( Runnable task : tasks ) {
  *     executor.execute( errorForwarder.wrap( task ) );
  * }
  * errorForwarder.await();
  * </pre>
  */
-public final class RunnableErrorForwarder
-{
+public final class RunnableErrorForwarder {
 
     private final Thread thread = Thread.currentThread();
 
@@ -50,9 +47,7 @@ public final class RunnableErrorForwarder
     /**
      * Creates a new error forwarder for worker threads spawned by the current thread.
      */
-    public RunnableErrorForwarder()
-    {
-    }
+    public RunnableErrorForwarder() {}
 
     /**
      * Wraps the specified runnable into an equivalent runnable that will allow forwarding of uncaught errors.
@@ -60,27 +55,20 @@ public final class RunnableErrorForwarder
      * @param runnable The runnable from which to forward errors, must not be {@code null}.
      * @return The error-forwarding runnable to eventually execute, never {@code null}.
      */
-    public Runnable wrap( final Runnable runnable )
-    {
-        requireNonNull( runnable, "runnable cannot be null" );
+    public Runnable wrap(final Runnable runnable) {
+        requireNonNull(runnable, "runnable cannot be null");
 
         counter.incrementAndGet();
 
-        return () ->
-        {
-            try
-            {
+        return () -> {
+            try {
                 runnable.run();
-            }
-            catch ( RuntimeException | Error e )
-            {
-                error.compareAndSet( null, e );
+            } catch (RuntimeException | Error e) {
+                error.compareAndSet(null, e);
                 throw e;
-            }
-            finally
-            {
+            } finally {
                 counter.decrementAndGet();
-                LockSupport.unpark( thread );
+                LockSupport.unpark(thread);
             }
         };
     }
@@ -91,53 +79,40 @@ public final class RunnableErrorForwarder
      * case multiple runnables encountered uncaught errors, one error is arbitrarily selected. <em>Note:</em> This
      * method must be called from the same thread that created this error forwarder instance.
      */
-    public void await()
-    {
+    public void await() {
         awaitTerminationOfAllRunnables();
 
         Throwable error = this.error.get();
-        if ( error != null )
-        {
-            if ( error instanceof RuntimeException )
-            {
+        if (error != null) {
+            if (error instanceof RuntimeException) {
                 throw (RuntimeException) error;
-            }
-            else if ( error instanceof ThreadDeath )
-            {
-                throw new IllegalStateException( error );
-            }
-            else if ( error instanceof Error )
-            {
+            } else if (error instanceof ThreadDeath) {
+                throw new IllegalStateException(error);
+            } else if (error instanceof Error) {
                 throw (Error) error;
             }
-            throw new IllegalStateException( error );
+            throw new IllegalStateException(error);
         }
     }
 
-    private void awaitTerminationOfAllRunnables()
-    {
-        if ( !thread.equals( Thread.currentThread() ) )
-        {
-            throw new IllegalStateException( "wrong caller thread, expected " + thread + " and not "
-                + Thread.currentThread() );
+    private void awaitTerminationOfAllRunnables() {
+        if (!thread.equals(Thread.currentThread())) {
+            throw new IllegalStateException(
+                    "wrong caller thread, expected " + thread + " and not " + Thread.currentThread());
         }
 
         boolean interrupted = false;
 
-        while ( counter.get() > 0 )
-        {
+        while (counter.get() > 0) {
             LockSupport.park();
 
-            if ( Thread.interrupted() )
-            {
+            if (Thread.interrupted()) {
                 interrupted = true;
             }
         }
 
-        if ( interrupted )
-        {
+        if (interrupted) {
             Thread.currentThread().interrupt();
         }
     }
-
 }

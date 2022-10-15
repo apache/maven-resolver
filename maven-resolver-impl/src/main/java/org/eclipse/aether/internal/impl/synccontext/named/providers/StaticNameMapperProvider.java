@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named.providers;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named.providers;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,11 +16,11 @@ package org.eclipse.aether.internal.impl.synccontext.named.providers;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
 
@@ -32,21 +30,18 @@ import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
  * @since TBD
  */
 @Singleton
-@Named( StaticNameMapperProvider.NAME )
-public class StaticNameMapperProvider implements Provider<NameMapper>
-{
+@Named(StaticNameMapperProvider.NAME)
+public class StaticNameMapperProvider implements Provider<NameMapper> {
     public static final String NAME = "static";
 
     private final NameMapper mapper;
 
-    public StaticNameMapperProvider()
-    {
+    public StaticNameMapperProvider() {
         this.mapper = new StaticNameMapper();
     }
 
     @Override
-    public NameMapper get()
-    {
+    public NameMapper get() {
         return mapper;
     }
 }

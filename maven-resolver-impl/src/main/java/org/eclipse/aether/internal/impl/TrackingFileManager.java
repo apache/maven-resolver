@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.util.Map;
@@ -26,9 +25,8 @@ import java.util.Properties;
 /**
  * Manages access to a properties file.
  */
-public interface TrackingFileManager
-{
-    Properties read( File file );
+public interface TrackingFileManager {
+    Properties read(File file);
 
-    Properties update( File file, Map<String, String> updates );
+    Properties update(File file, Map<String, String> updates);
 }

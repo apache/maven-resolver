@@ -1,5 +1,3 @@
-package org.eclipse.aether.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,17 +16,17 @@ package org.eclipse.aether.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.named;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 /**
  * UT support for {@link NamedLockFactory}.
@@ -40,8 +38,7 @@ public abstract class NamedLockFactoryTestSupport {
     @Rule
     public TestName testName = new TestName();
 
-    protected String lockName()
-    {
+    protected String lockName() {
         return testName.getMethodName();
     }
 
@@ -49,7 +46,7 @@ public abstract class NamedLockFactoryTestSupport {
     public void refCounting() {
         final String name = lockName();
         try (NamedLock one = namedLockFactory.getLock(name);
-             NamedLock two = namedLockFactory.getLock(name)) {
+                NamedLock two = namedLockFactory.getLock(name)) {
             assertThat(one, sameInstance(two));
             one.close();
             two.close();
@@ -172,7 +169,7 @@ public abstract class NamedLockFactoryTestSupport {
         losers.await();
         long end = System.nanoTime();
         long duration = end - start;
-        long expectedDuration = TimeUnit.MILLISECONDS.toNanos( ACCESS_WAIT_MILLIS );
+        long expectedDuration = TimeUnit.MILLISECONDS.toNanos(ACCESS_WAIT_MILLIS);
         assertThat(duration, greaterThanOrEqualTo(expectedDuration)); // equal in ideal case
     }
 
@@ -182,15 +179,12 @@ public abstract class NamedLockFactoryTestSupport {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 loser
         Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
-        try (NamedLock namedLock = namedLockFactory.getLock(name))
-        {
-            assertThat( namedLock.lockExclusively( 50L, TimeUnit.MILLISECONDS ), is( true ));
+        try (NamedLock namedLock = namedLockFactory.getLock(name)) {
+            assertThat(namedLock.lockExclusively(50L, TimeUnit.MILLISECONDS), is(true));
             try {
                 t1.start();
-                Thread.sleep(50L );
-            }
-            finally
-            {
+                Thread.sleep(50L);
+            } finally {
                 namedLock.unlock();
             }
         }
@@ -203,16 +197,21 @@ public abstract class NamedLockFactoryTestSupport {
 
     private static class Access implements Runnable {
         final NamedLockFactory namedLockFactory;
+
         final String name;
+
         final boolean shared;
+
         final CountDownLatch winner;
+
         final CountDownLatch loser;
 
-        public Access(NamedLockFactory namedLockFactory,
-                      String name,
-                      boolean shared,
-                      CountDownLatch winner,
-                      CountDownLatch loser) {
+        public Access(
+                NamedLockFactory namedLockFactory,
+                String name,
+                boolean shared,
+                CountDownLatch winner,
+                CountDownLatch loser) {
             this.namedLockFactory = namedLockFactory;
             this.name = name;
             this.shared = shared;
@@ -223,7 +222,9 @@ public abstract class NamedLockFactoryTestSupport {
         @Override
         public void run() {
             try (NamedLock lock = namedLockFactory.getLock(name)) {
-                if (shared ? lock.lockShared(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS) : lock.lockExclusively(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS)) {
+                if (shared
+                        ? lock.lockShared(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS)
+                        : lock.lockExclusively(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS)) {
                     try {
                         winner.countDown();
                         loser.await();

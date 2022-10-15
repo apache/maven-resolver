@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,10 +16,10 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
-
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
@@ -32,30 +30,46 @@ import org.eclipse.aether.RepositorySystemSession;
  */
 @Singleton
 @Named
-public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefixComposerFactorySupport
-{
+public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefixComposerFactorySupport {
     @Override
-    public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
-    {
-        return new DefaultLocalPathPrefixComposer( isSplit( session ), getLocalPrefix( session ),
-                isSplitLocal( session ), getRemotePrefix( session ), isSplitRemote( session ),
-                isSplitRemoteRepository( session ), isSplitRemoteRepositoryLast( session ),
-                getReleasesPrefix( session ), getSnapshotsPrefix( session ) );
+    public LocalPathPrefixComposer createComposer(RepositorySystemSession session) {
+        return new DefaultLocalPathPrefixComposer(
+                isSplit(session),
+                getLocalPrefix(session),
+                isSplitLocal(session),
+                getRemotePrefix(session),
+                isSplitRemote(session),
+                isSplitRemoteRepository(session),
+                isSplitRemoteRepositoryLast(session),
+                getReleasesPrefix(session),
+                getSnapshotsPrefix(session));
     }
 
     /**
      * {@link LocalPathPrefixComposer} implementation that fully reuses {@link LocalPathPrefixComposerSupport} class.
      */
-    private static class DefaultLocalPathPrefixComposer extends LocalPathPrefixComposerSupport
-    {
-        @SuppressWarnings( "checkstyle:parameternumber" )
-        private DefaultLocalPathPrefixComposer( boolean split, String localPrefix, boolean splitLocal,
-                                               String remotePrefix, boolean splitRemote, boolean splitRemoteRepository,
-                                               boolean splitRemoteRepositoryLast,
-                                               String releasesPrefix, String snapshotsPrefix )
-        {
-            super( split, localPrefix, splitLocal, remotePrefix, splitRemote, splitRemoteRepository,
-                    splitRemoteRepositoryLast, releasesPrefix, snapshotsPrefix );
+    private static class DefaultLocalPathPrefixComposer extends LocalPathPrefixComposerSupport {
+        @SuppressWarnings("checkstyle:parameternumber")
+        private DefaultLocalPathPrefixComposer(
+                boolean split,
+                String localPrefix,
+                boolean splitLocal,
+                String remotePrefix,
+                boolean splitRemote,
+                boolean splitRemoteRepository,
+                boolean splitRemoteRepositoryLast,
+                String releasesPrefix,
+                String snapshotsPrefix) {
+            super(
+                    split,
+                    localPrefix,
+                    splitLocal,
+                    remotePrefix,
+                    splitRemote,
+                    splitRemoteRepository,
+                    splitRemoteRepositoryLast,
+                    releasesPrefix,
+                    snapshotsPrefix);
         }
     }
 }

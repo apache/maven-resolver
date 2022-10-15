@@ -1,5 +1,3 @@
-package org.eclipse.aether.resolution;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.resolution;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.resolution;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.resolution;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -31,11 +30,10 @@ import org.eclipse.aether.metadata.Metadata;
  * Error caching considers the current network settings such that fixes to the configuration like authentication or
  * proxy automatically trigger revalidation with the remote side regardless of the time elapsed since the previous
  * resolution error.
- * 
+ *
  * @see RepositorySystemSession#getResolutionErrorPolicy()
  */
-public interface ResolutionErrorPolicy
-{
+public interface ResolutionErrorPolicy {
 
     /**
      * Bit mask indicating that resolution errors should not be cached in the local repository. This forces the system
@@ -63,20 +61,19 @@ public interface ResolutionErrorPolicy
 
     /**
      * Gets the error policy for an artifact.
-     * 
+     *
      * @param session The repository session during which the policy is determined, must not be {@code null}.
      * @param request The policy request holding further details, must not be {@code null}.
      * @return The bit mask describing the desired error policy.
      */
-    int getArtifactPolicy( RepositorySystemSession session, ResolutionErrorPolicyRequest<Artifact> request );
+    int getArtifactPolicy(RepositorySystemSession session, ResolutionErrorPolicyRequest<Artifact> request);
 
     /**
      * Gets the error policy for some metadata.
-     * 
+     *
      * @param session The repository session during which the policy is determined, must not be {@code null}.
      * @param request The policy request holding further details, must not be {@code null}.
      * @return The bit mask describing the desired error policy.
      */
-    int getMetadataPolicy( RepositorySystemSession session, ResolutionErrorPolicyRequest<Metadata> request );
-
+    int getMetadataPolicy(RepositorySystemSession session, ResolutionErrorPolicyRequest<Metadata> request);
 }

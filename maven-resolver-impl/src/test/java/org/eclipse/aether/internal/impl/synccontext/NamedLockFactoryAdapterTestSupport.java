@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,18 +16,12 @@ package org.eclipse.aether.internal.impl.synccontext;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext;
 
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.synccontext.named.*;
-import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,17 +31,25 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.SyncContext;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
+import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * UT support for {@link SyncContextFactory}.
  */
-public abstract class NamedLockFactoryAdapterTestSupport
-{
+public abstract class NamedLockFactoryAdapterTestSupport {
     private static final long ADAPTER_TIME = 1000L;
 
     private static final TimeUnit ADAPTER_TIME_UNIT = TimeUnit.MILLISECONDS;
@@ -57,7 +57,7 @@ public abstract class NamedLockFactoryAdapterTestSupport
     /**
      * Subclass MAY populate this field but subclass must take care of proper cleanup as well, if needed!
      */
-    protected static NameMapper nameMapper = new DiscriminatingNameMapper( GAVNameMapper.gav() );
+    protected static NameMapper nameMapper = new DiscriminatingNameMapper(GAVNameMapper.gav());
 
     /**
      * Subclass MUST populate this field but subclass must take care of proper cleanup as well, if needed! Once set,
@@ -84,7 +84,8 @@ public abstract class NamedLockFactoryAdapterTestSupport
     @Before
     public void before() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
-        LocalRepository localRepository = new LocalRepository(Files.createTempDirectory("test").toFile());
+        LocalRepository localRepository =
+                new LocalRepository(Files.createTempDirectory("test").toFile());
         session = mock(RepositorySystemSession.class);
         when(session.getLocalRepository()).thenReturn(localRepository);
         HashMap<String, Object> config = new HashMap<>();
@@ -102,9 +103,10 @@ public abstract class NamedLockFactoryAdapterTestSupport
     public void justAcquire() {
         try (SyncContext syncContext = adapter.newInstance(session, false)) {
             syncContext.acquire(
-                    Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0"), new DefaultArtifact("groupId:artifactId:1.1")),
-                    null
-            );
+                    Arrays.asList(
+                            new DefaultArtifact("groupId:artifactId:1.0"),
+                            new DefaultArtifact("groupId:artifactId:1.1")),
+                    null);
         }
     }
 
@@ -154,11 +156,8 @@ public abstract class NamedLockFactoryAdapterTestSupport
     public void nestedSharedShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
-        Thread t1 = new Thread(
-                new Access(true, winners, losers, adapter, session,
-                        new Access(true, winners, losers, adapter, session, null)
-                )
-        );
+        Thread t1 = new Thread(new Access(
+                true, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
         t1.start();
         t1.join();
         winners.await();
@@ -169,11 +168,8 @@ public abstract class NamedLockFactoryAdapterTestSupport
     public void nestedExclusiveShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
-        Thread t1 = new Thread(
-                new Access(false, winners, losers, adapter, session,
-                        new Access(true, winners, losers, adapter, session, null)
-                )
-        );
+        Thread t1 = new Thread(new Access(
+                false, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
         t1.start();
         t1.join();
         winners.await();
@@ -184,11 +180,8 @@ public abstract class NamedLockFactoryAdapterTestSupport
     public void nestedExclusiveExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
-        Thread t1 = new Thread(
-                new Access(false, winners, losers, adapter, session,
-                        new Access(false, winners, losers, adapter, session, null)
-                )
-        );
+        Thread t1 = new Thread(new Access(
+                false, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
         t1.start();
         t1.join();
         winners.await();
@@ -199,11 +192,8 @@ public abstract class NamedLockFactoryAdapterTestSupport
     public void nestedSharedExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner (outer)
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser (inner)
-        Thread t1 = new Thread(
-                new Access(true, winners, losers, adapter, session,
-                        new Access(false, winners, losers, adapter, session, null)
-                )
-        );
+        Thread t1 = new Thread(new Access(
+                true, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
         t1.start();
         t1.join();
         winners.await();
@@ -243,18 +233,24 @@ public abstract class NamedLockFactoryAdapterTestSupport
 
     private static class Access implements Runnable {
         final boolean shared;
+
         final CountDownLatch winner;
+
         final CountDownLatch loser;
+
         final NamedLockFactoryAdapter adapter;
+
         final RepositorySystemSession session;
+
         final Access chained;
 
-        public Access(boolean shared,
-                      CountDownLatch winner,
-                      CountDownLatch loser,
-                      NamedLockFactoryAdapter adapter,
-                      RepositorySystemSession session,
-                      Access chained) {
+        public Access(
+                boolean shared,
+                CountDownLatch winner,
+                CountDownLatch loser,
+                NamedLockFactoryAdapter adapter,
+                RepositorySystemSession session,
+                Access chained) {
             this.shared = shared;
             this.winner = winner;
             this.loser = loser;
@@ -268,9 +264,10 @@ public abstract class NamedLockFactoryAdapterTestSupport
             try {
                 try (SyncContext syncContext = adapter.newInstance(session, shared)) {
                     syncContext.acquire(
-                            Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0"), new DefaultArtifact("groupId:artifactId:1.1")),
-                            null
-                    );
+                            Arrays.asList(
+                                    new DefaultArtifact("groupId:artifactId:1.0"),
+                                    new DefaultArtifact("groupId:artifactId:1.1")),
+                            null);
                     winner.countDown();
                     if (chained != null) {
                         chained.run();

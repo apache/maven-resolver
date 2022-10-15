@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.log;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.log;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.log;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.log;
 
 /**
  * A factory to create loggers.
@@ -25,8 +24,7 @@ package org.eclipse.aether.spi.log;
  * @deprecated Use SLF4J instead
  */
 @Deprecated
-public interface LoggerFactory
-{
+public interface LoggerFactory {
 
     /**
      * Gets a logger for a class with the specified name.
@@ -34,6 +32,5 @@ public interface LoggerFactory
      * @param name The name of the class requesting a logger, must not be {@code null}.
      * @return The requested logger, never {@code null}.
      */
-    Logger getLogger( String name );
-
+    Logger getLogger(String name);
 }

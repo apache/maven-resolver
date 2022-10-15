@@ -1,5 +1,3 @@
-package org.eclipse.aether;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,14 +16,14 @@ package org.eclipse.aether;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether;
 
 /**
  * The keys and defaults for common configuration properties.
- * 
+ *
  * @see RepositorySystemSession#getConfigProperties()
  */
-public final class ConfigurationProperties
-{
+public final class ConfigurationProperties {
 
     private static final String PREFIX_AETHER = "aether.";
 
@@ -47,7 +45,7 @@ public final class ConfigurationProperties
      * corresponding {@code aether.priority.*} configuration properties are ignored when searching for a suitable
      * implementation among the available extensions. This priority mode is meant for cases where the application will
      * present/inject extensions in the desired search order.
-     * 
+     *
      * @see #DEFAULT_IMPLICIT_PRIORITIES
      */
     public static final String IMPLICIT_PRIORITIES = PREFIX_PRIORITY + "implicit";
@@ -59,7 +57,7 @@ public final class ConfigurationProperties
 
     /**
      * A flag indicating whether interaction with the user is allowed.
-     * 
+     *
      * @see #DEFAULT_INTERACTIVE
      */
     public static final String INTERACTIVE = PREFIX_AETHER + "interactive";
@@ -71,7 +69,7 @@ public final class ConfigurationProperties
 
     /**
      * The user agent that repository connectors should report to servers.
-     * 
+     *
      * @see #DEFAULT_USER_AGENT
      */
     public static final String USER_AGENT = PREFIX_CONNECTOR + "userAgent";
@@ -84,7 +82,7 @@ public final class ConfigurationProperties
     /**
      * The maximum amount of time (in milliseconds) to wait for a successful connection to a remote server. Non-positive
      * values indicate no timeout.
-     * 
+     *
      * @see #DEFAULT_CONNECT_TIMEOUT
      */
     public static final String CONNECT_TIMEOUT = PREFIX_CONNECTOR + "connectTimeout";
@@ -98,7 +96,7 @@ public final class ConfigurationProperties
      * The maximum amount of time (in milliseconds) to wait for remaining data to arrive from a remote server. Note that
      * this timeout does not restrict the overall duration of a request, it only restricts the duration of inactivity
      * between consecutive data packets. Non-positive values indicate no timeout.
-     * 
+     *
      * @see #DEFAULT_REQUEST_TIMEOUT
      */
     public static final String REQUEST_TIMEOUT = PREFIX_CONNECTOR + "requestTimeout";
@@ -121,7 +119,7 @@ public final class ConfigurationProperties
      * The encoding/charset to use when exchanging credentials with HTTP servers. Besides this general key, clients may
      * also specify the encoding for a specific remote repository by appending the suffix {@code .<repoId>} to this key
      * when storing the charset name.
-     * 
+     *
      * @see #DEFAULT_HTTP_CREDENTIAL_ENCODING
      */
     public static final String HTTP_CREDENTIAL_ENCODING = PREFIX_CONNECTOR + "http.credentialEncoding";
@@ -134,7 +132,7 @@ public final class ConfigurationProperties
     /**
      * A flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
      * local filesystem next to the file they provide the checksum for.
-     * 
+     *
      * @see #DEFAULT_PERSISTED_CHECKSUMS
      */
     public static final String PERSISTED_CHECKSUMS = PREFIX_CONNECTOR + "persistedChecksums";
@@ -144,9 +142,7 @@ public final class ConfigurationProperties
      */
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
 
-    private ConfigurationProperties()
-    {
+    private ConfigurationProperties() {
         // hide constructor
     }
-
 }

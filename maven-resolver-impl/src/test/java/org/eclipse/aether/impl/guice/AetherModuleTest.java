@@ -1,5 +1,3 @@
-package org.eclipse.aether.impl.guice;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.impl.guice;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,12 +16,15 @@ package org.eclipse.aether.impl.guice;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.impl.guice;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Provides;
 import java.util.Collections;
 import java.util.Set;
-
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.MetadataGeneratorFactory;
@@ -36,50 +37,36 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.junit.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Provides;
-
-public class AetherModuleTest
-{
+public class AetherModuleTest {
 
     @Test
-    public void testModuleCompleteness()
-    {
-        assertNotNull( Guice.createInjector( new SystemModule() ).getInstance( RepositorySystem.class ) );
+    public void testModuleCompleteness() {
+        assertNotNull(Guice.createInjector(new SystemModule()).getInstance(RepositorySystem.class));
     }
 
-    static class SystemModule
-        extends AbstractModule
-    {
+    static class SystemModule extends AbstractModule {
 
         @Override
-        protected void configure()
-        {
-            install( new AetherModule() );
-            bind( ArtifactDescriptorReader.class ).to( StubArtifactDescriptorReader.class );
-            bind( VersionRangeResolver.class ).to( StubVersionRangeResolver.class );
-            bind( VersionResolver.class ).to( StubVersionResolver.class );
+        protected void configure() {
+            install(new AetherModule());
+            bind(ArtifactDescriptorReader.class).to(StubArtifactDescriptorReader.class);
+            bind(VersionRangeResolver.class).to(StubVersionRangeResolver.class);
+            bind(VersionResolver.class).to(StubVersionResolver.class);
         }
 
         @Provides
-        public Set<MetadataGeneratorFactory> metadataGeneratorFactories()
-        {
+        public Set<MetadataGeneratorFactory> metadataGeneratorFactories() {
             return Collections.emptySet();
         }
 
         @Provides
-        public Set<RepositoryConnectorFactory> repositoryConnectorFactories()
-        {
+        public Set<RepositoryConnectorFactory> repositoryConnectorFactories() {
             return Collections.emptySet();
         }
 
         @Provides
-        public Set<TransporterFactory> transporterFactories()
-        {
+        public Set<TransporterFactory> transporterFactories() {
             return Collections.emptySet();
         }
-
     }
-
 }

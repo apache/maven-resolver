@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.visitor;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.visitor;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.graph.visitor;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.visitor;
 
 import static java.util.Objects.requireNonNull;
 
@@ -29,9 +28,7 @@ import org.eclipse.aether.graph.DependencyVisitor;
  * A dependency visitor that delegates to another visitor if nodes match a filter. Note that in case of a mismatching
  * node, the children of that node are still visisted and presented to the filter.
  */
-public final class FilteringDependencyVisitor
-    implements DependencyVisitor
-{
+public final class FilteringDependencyVisitor implements DependencyVisitor {
 
     private final DependencyFilter filter;
 
@@ -45,11 +42,10 @@ public final class FilteringDependencyVisitor
      * Creates a new visitor that delegates traversal of nodes matching the given filter to the specified visitor.
      *
      * @param visitor The visitor to delegate to, must not be {@code null}.
-     * @param filter The filter to apply, may be {@code null} to not filter.
+     * @param filter  The filter to apply, may be {@code null} to not filter.
      */
-    public FilteringDependencyVisitor( DependencyVisitor visitor, DependencyFilter filter )
-    {
-        this.visitor = requireNonNull( visitor, "dependency visitor delegate cannot be null" );
+    public FilteringDependencyVisitor(DependencyVisitor visitor, DependencyFilter filter) {
+        this.visitor = requireNonNull(visitor, "dependency visitor delegate cannot be null");
         this.filter = filter;
         this.accepts = new Stack<>();
         this.parents = new Stack<>();
@@ -57,56 +53,45 @@ public final class FilteringDependencyVisitor
 
     /**
      * Gets the visitor to which this visitor delegates to.
-     * 
+     *
      * @return The visitor being delegated to, never {@code null}.
      */
-    public DependencyVisitor getVisitor()
-    {
+    public DependencyVisitor getVisitor() {
         return visitor;
     }
 
     /**
      * Gets the filter being applied before delegation.
-     * 
+     *
      * @return The filter being applied or {@code null} if none.
      */
-    public DependencyFilter getFilter()
-    {
+    public DependencyFilter getFilter() {
         return filter;
     }
 
-    public boolean visitEnter( DependencyNode node )
-    {
-        boolean accept = filter == null || filter.accept( node, parents );
+    public boolean visitEnter(DependencyNode node) {
+        boolean accept = filter == null || filter.accept(node, parents);
 
-        accepts.push( accept );
+        accepts.push(accept);
 
-        parents.push( node );
+        parents.push(node);
 
-        if ( accept )
-        {
-            return visitor.visitEnter( node );
-        }
-        else
-        {
+        if (accept) {
+            return visitor.visitEnter(node);
+        } else {
             return true;
         }
     }
 
-    public boolean visitLeave( DependencyNode node )
-    {
+    public boolean visitLeave(DependencyNode node) {
         parents.pop();
 
         Boolean accept = accepts.pop();
 
-        if ( accept )
-        {
-            return visitor.visitLeave( node );
-        }
-        else
-        {
+        if (accept) {
+            return visitor.visitLeave(node);
+        } else {
             return true;
         }
     }
-
 }

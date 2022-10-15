@@ -1,5 +1,3 @@
-package org.eclipse.aether;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,10 +16,11 @@ package org.eclipse.aether;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.List;
+package org.eclipse.aether;
 
 import static java.util.Objects.requireNonNull;
+
+import java.util.List;
 
 /**
  * Runtime exception to be thrown when multiple actions were executed and one or more failed. To be used when no
@@ -29,18 +28,14 @@ import static java.util.Objects.requireNonNull;
  *
  * @since TBD
  */
-public final class MultiRuntimeException
-        extends RuntimeException
-{
+public final class MultiRuntimeException extends RuntimeException {
     private final List<? extends Throwable> throwables;
 
-    private MultiRuntimeException( String message, List<? extends Throwable> throwables )
-    {
-        super( message );
+    private MultiRuntimeException(String message, List<? extends Throwable> throwables) {
+        super(message);
         this.throwables = throwables;
-        for ( Throwable throwable : throwables )
-        {
-            addSuppressed( throwable );
+        for (Throwable throwable : throwables) {
+            addSuppressed(throwable);
         }
     }
 
@@ -49,8 +44,7 @@ public final class MultiRuntimeException
      *
      * @return The list of throwables, never {@code null}.
      */
-    public List<? extends Throwable> getThrowables()
-    {
+    public List<? extends Throwable> getThrowables() {
         return throwables;
     }
 
@@ -61,14 +55,12 @@ public final class MultiRuntimeException
      *     <li>if list not empty - {@link MultiRuntimeException} is thrown wrapping all elements</li>
      * </ul>
      */
-    public static void mayThrow( String message, List<? extends Throwable> throwables )
-    {
-        requireNonNull( message );
-        requireNonNull( throwables );
+    public static void mayThrow(String message, List<? extends Throwable> throwables) {
+        requireNonNull(message);
+        requireNonNull(throwables);
 
-        if ( !throwables.isEmpty() )
-        {
-            throw new MultiRuntimeException( message, throwables );
+        if (!throwables.isEmpty()) {
+            throw new MultiRuntimeException(message, throwables);
         }
     }
 }

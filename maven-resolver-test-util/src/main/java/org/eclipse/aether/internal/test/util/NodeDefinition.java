@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.test.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.test.util;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.test.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.test.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,11 +28,10 @@ import java.util.regex.Pattern;
 
 /**
  * A definition of a dependency node via a single line of text.
- * 
+ *
  * @see DependencyGraphParser
  */
-class NodeDefinition
-{
+class NodeDefinition {
 
     static final String ID = "\\(([-_a-zA-Z0-9]+)\\)";
 
@@ -41,7 +39,7 @@ class NodeDefinition
 
     static final String COORDS = "([^: \\(]+):([^: ]+)(?::([^: ]*)(?::([^: ]+))?)?:([^: \\[\\(<]+)";
 
-    private static final String COORDS_NC = NodeDefinition.COORDS.replaceAll( "\\((?=\\[)", "(?:" );
+    private static final String COORDS_NC = NodeDefinition.COORDS.replaceAll("\\((?=\\[)", "(?:");
 
     private static final String RANGE_NC = "[\\(\\[][^\\(\\)\\[\\]]+[\\)\\]]";
 
@@ -60,11 +58,11 @@ class NodeDefinition
     static final String COORDSX = "(" + COORDS_NC + ")" + RANGE + "?(?:<((?:" + RANGE_NC + ")|\\S+))?";
 
     static final String NODE = COORDSX + "(?:\\s+" + PROPS + ")?" + "(?:\\s+" + SCOPE + ")?" + "(?:\\s+" + OPTIONAL
-        + ")?" + "(?:\\s+" + RELOCATIONS + ")?" + "(?:\\s+" + ID + ")?";
+            + ")?" + "(?:\\s+" + RELOCATIONS + ")?" + "(?:\\s+" + ID + ")?";
 
     static final String LINE = "(?:" + IDREF + ")|(?:" + NODE + ")";
 
-    private static final Pattern PATTERN = Pattern.compile( LINE );
+    private static final Pattern PATTERN = Pattern.compile(LINE);
 
     private final String def;
 
@@ -88,57 +86,49 @@ class NodeDefinition
 
     String reference;
 
-    NodeDefinition( String definition )
-    {
+    NodeDefinition(String definition) {
         def = definition.trim();
 
-        Matcher m = PATTERN.matcher( def );
-        if ( !m.matches() )
-        {
-            throw new IllegalArgumentException( "bad syntax: " + def );
+        Matcher m = PATTERN.matcher(def);
+        if (!m.matches()) {
+            throw new IllegalArgumentException("bad syntax: " + def);
         }
 
-        reference = m.group( 1 );
-        if ( reference != null )
-        {
+        reference = m.group(1);
+        if (reference != null) {
             return;
         }
 
-        coords = m.group( 2 );
-        range = m.group( 3 );
-        premanagedVersion = m.group( 4 );
+        coords = m.group(2);
+        range = m.group(3);
+        premanagedVersion = m.group(4);
 
-        String props = m.group( 5 );
-        if ( props != null )
-        {
+        String props = m.group(5);
+        if (props != null) {
             properties = new LinkedHashMap<>();
-            for ( String prop : props.split( "\\s*,\\s*" ) )
-            {
-                int sep = prop.indexOf( ':' );
-                String key = prop.substring( 0, sep );
-                String val = prop.substring( sep + 1 );
-                properties.put( key, val );
+            for (String prop : props.split("\\s*,\\s*")) {
+                int sep = prop.indexOf(':');
+                String key = prop.substring(0, sep);
+                String val = prop.substring(sep + 1);
+                properties.put(key, val);
             }
         }
 
-        scope = m.group( 6 );
-        premanagedScope = m.group( 7 );
-        optional = ( m.group( 8 ) != null ) ? !m.group( 8 ).startsWith( "!" ) : Boolean.FALSE;
+        scope = m.group(6);
+        premanagedScope = m.group(7);
+        optional = (m.group(8) != null) ? !m.group(8).startsWith("!") : Boolean.FALSE;
 
-        String relocs = m.group( 9 );
-        if ( relocs != null )
-        {
+        String relocs = m.group(9);
+        if (relocs != null) {
             relocations = new ArrayList<>();
-            Collections.addAll( relocations, relocs.split( "\\s*,\\s*" ) );
+            Collections.addAll(relocations, relocs.split("\\s*,\\s*"));
         }
 
-        id = m.group( 10 );
+        id = m.group(10);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return def;
     }
-
 }

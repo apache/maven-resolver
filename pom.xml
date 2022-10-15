@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -18,7 +17,6 @@
   specific language governing permissions and limitations
   under the License.
 -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -26,7 +24,7 @@
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
     <version>38-SNAPSHOT</version>
-    <relativePath />
+    <relativePath/>
   </parent>
 
   <groupId>org.apache.maven.resolver</groupId>
@@ -35,9 +33,7 @@
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
-  <description>
-    The parent and aggregator for the repository system.
-  </description>
+  <description>The parent and aggregator for the repository system.</description>
   <url>https://maven.apache.org/resolver/</url>
   <inceptionYear>2010</inceptionYear>
 
@@ -47,11 +43,29 @@
     </contributor>
   </contributors>
 
+  <modules>
+    <!-- NOTE: Be sure to update the bin assembly descriptor as well if the module list changes -->
+    <module>maven-resolver-api</module>
+    <module>maven-resolver-spi</module>
+    <module>maven-resolver-util</module>
+    <module>maven-resolver-named-locks</module>
+    <module>maven-resolver-named-locks-hazelcast</module>
+    <module>maven-resolver-named-locks-redisson</module>
+    <module>maven-resolver-impl</module>
+    <module>maven-resolver-test-util</module>
+    <module>maven-resolver-connector-basic</module>
+    <module>maven-resolver-transport-classpath</module>
+    <module>maven-resolver-transport-file</module>
+    <module>maven-resolver-transport-http</module>
+    <module>maven-resolver-transport-wagon</module>
+    <module>maven-resolver-demos</module>
+  </modules>
+
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</developerConnection>
-    <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
     <tag>master</tag>
+    <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
   </scm>
   <issueManagement>
     <system>jira</system>
@@ -82,24 +96,6 @@
     <minimalMavenBuildVersion>3.8.4</minimalMavenBuildVersion>
     <project.build.outputTimestamp>2022-07-25T16:26:16Z</project.build.outputTimestamp>
   </properties>
-
-  <modules>
-    <!-- NOTE: Be sure to update the bin assembly descriptor as well if the module list changes -->
-    <module>maven-resolver-api</module>
-    <module>maven-resolver-spi</module>
-    <module>maven-resolver-util</module>
-    <module>maven-resolver-named-locks</module>
-    <module>maven-resolver-named-locks-hazelcast</module>
-    <module>maven-resolver-named-locks-redisson</module>
-    <module>maven-resolver-impl</module>
-    <module>maven-resolver-test-util</module>
-    <module>maven-resolver-connector-basic</module>
-    <module>maven-resolver-transport-classpath</module>
-    <module>maven-resolver-transport-file</module>
-    <module>maven-resolver-transport-http</module>
-    <module>maven-resolver-transport-wagon</module>
-    <module>maven-resolver-demos</module>
-  </modules>
 
   <dependencyManagement>
     <dependencies>
@@ -286,12 +282,14 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin> <!-- remove once parent POM updated -->
+        <plugin>
+          <!-- remove once parent POM updated -->
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
-        <plugin> <!-- remove once parent POM updated -->
+        <plugin>
+          <!-- remove once parent POM updated -->
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-install-plugin</artifactId>
           <version>3.0.1</version>
@@ -324,10 +322,10 @@
           </configuration>
           <executions>
             <execution>
-              <phase>verify</phase>
               <goals>
                 <goal>cmp</goal>
               </goals>
+              <phase>verify</phase>
             </execution>
           </executions>
         </plugin>
@@ -462,10 +460,10 @@
           <executions>
             <execution>
               <id>generate-index</id>
-              <phase>process-classes</phase>
               <goals>
                 <goal>main-index</goal>
               </goals>
+              <phase>process-classes</phase>
             </execution>
           </executions>
         </plugin>
@@ -492,13 +490,11 @@
                 <goal>bnd-process</goal>
               </goals>
               <configuration>
-                <bnd>
-                  Bundle-SymbolicName: ${Bundle-SymbolicName}
+                <bnd>Bundle-SymbolicName: ${Bundle-SymbolicName}
                   # Export packages not containing the substring 'internal'
                   -exportcontents: ${removeall;${packages};${packages;NAMED;*internal*}}
                   # Reproducible build
-                  -noextraheaders: true
-                </bnd>
+                  -noextraheaders: true</bnd>
               </configuration>
             </execution>
           </executions>
@@ -531,10 +527,10 @@
         <executions>
           <execution>
             <id>check-java-compat</id>
-            <phase>process-classes</phase>
             <goals>
               <goal>check</goal>
             </goals>
+            <phase>process-classes</phase>
           </execution>
         </executions>
       </plugin>
@@ -552,10 +548,10 @@
             <reportSets>
               <reportSet>
                 <id>aggregate</id>
-                <inherited>false</inherited>
                 <reports>
                   <report>aggregate</report>
                 </reports>
+                <inherited>false</inherited>
               </reportSet>
             </reportSets>
           </plugin>
@@ -565,10 +561,10 @@
             <reportSets>
               <reportSet>
                 <id>aggregate</id>
-                <inherited>false</inherited>
                 <reports>
                   <report>aggregate</report>
                 </reports>
+                <inherited>false</inherited>
               </reportSet>
             </reportSets>
           </plugin>
@@ -603,7 +599,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <ignore/>
                       </action>
                     </pluginExecution>
                   </pluginExecutions>

@@ -1,5 +1,3 @@
-package org.eclipse.aether;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,18 +16,18 @@ package org.eclipse.aether;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether;
+
+import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import static java.util.Objects.requireNonNull;
-
-import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -62,9 +60,7 @@ import org.eclipse.aether.transform.FileTransformerManager;
  * system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to prevent
  * accidental manipulation of it afterwards.
  */
-public final class DefaultRepositorySystemSession
-    implements RepositorySystemSession
-{
+public final class DefaultRepositorySystemSession implements RepositorySystemSession {
 
     private final AtomicBoolean closed;
 
@@ -131,15 +127,14 @@ public final class DefaultRepositorySystemSession
      * {@link #setLocalRepositoryManager(LocalRepositoryManager)} needs to be called but usually other settings also
      * need to be customized to achieve meaningful behavior.
      */
-    public DefaultRepositorySystemSession()
-    {
-        closed = new AtomicBoolean( false );
+    public DefaultRepositorySystemSession() {
+        closed = new AtomicBoolean(false);
         systemProperties = new HashMap<>();
-        systemPropertiesView = Collections.unmodifiableMap( systemProperties );
+        systemPropertiesView = Collections.unmodifiableMap(systemProperties);
         userProperties = new HashMap<>();
-        userPropertiesView = Collections.unmodifiableMap( userProperties );
+        userPropertiesView = Collections.unmodifiableMap(userProperties);
         configProperties = new HashMap<>();
-        configPropertiesView = Collections.unmodifiableMap( configProperties );
+        configPropertiesView = Collections.unmodifiableMap(configProperties);
         mirrorSelector = NullMirrorSelector.INSTANCE;
         proxySelector = NullProxySelector.INSTANCE;
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
@@ -156,278 +151,246 @@ public final class DefaultRepositorySystemSession
      *
      * @param session The session to copy, must not be {@code null}.
      */
-    public DefaultRepositorySystemSession( RepositorySystemSession session )
-    {
-        requireNonNull( session, "repository system session cannot be null" );
+    public DefaultRepositorySystemSession(RepositorySystemSession session) {
+        requireNonNull(session, "repository system session cannot be null");
 
-        closed = new AtomicBoolean( false );
-        setOffline( session.isOffline() );
-        setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );
-        setResolutionErrorPolicy( session.getResolutionErrorPolicy() );
-        setArtifactDescriptorPolicy( session.getArtifactDescriptorPolicy() );
-        setChecksumPolicy( session.getChecksumPolicy() );
-        setUpdatePolicy( session.getUpdatePolicy() );
-        setLocalRepositoryManager( session.getLocalRepositoryManager() );
-        setWorkspaceReader( session.getWorkspaceReader() );
-        setRepositoryListener( session.getRepositoryListener() );
-        setTransferListener( session.getTransferListener() );
-        setSystemProperties( session.getSystemProperties() );
-        setUserProperties( session.getUserProperties() );
-        setConfigProperties( session.getConfigProperties() );
-        setMirrorSelector( session.getMirrorSelector() );
-        setProxySelector( session.getProxySelector() );
-        setAuthenticationSelector( session.getAuthenticationSelector() );
-        setArtifactTypeRegistry( session.getArtifactTypeRegistry() );
-        setDependencyTraverser( session.getDependencyTraverser() );
-        setDependencyManager( session.getDependencyManager() );
-        setDependencySelector( session.getDependencySelector() );
-        setVersionFilter( session.getVersionFilter() );
-        setDependencyGraphTransformer( session.getDependencyGraphTransformer() );
-        setFileTransformerManager( session.getFileTransformerManager() );
-        setData( session.getData() );
-        setCache( session.getCache() );
+        closed = new AtomicBoolean(false);
+        setOffline(session.isOffline());
+        setIgnoreArtifactDescriptorRepositories(session.isIgnoreArtifactDescriptorRepositories());
+        setResolutionErrorPolicy(session.getResolutionErrorPolicy());
+        setArtifactDescriptorPolicy(session.getArtifactDescriptorPolicy());
+        setChecksumPolicy(session.getChecksumPolicy());
+        setUpdatePolicy(session.getUpdatePolicy());
+        setLocalRepositoryManager(session.getLocalRepositoryManager());
+        setWorkspaceReader(session.getWorkspaceReader());
+        setRepositoryListener(session.getRepositoryListener());
+        setTransferListener(session.getTransferListener());
+        setSystemProperties(session.getSystemProperties());
+        setUserProperties(session.getUserProperties());
+        setConfigProperties(session.getConfigProperties());
+        setMirrorSelector(session.getMirrorSelector());
+        setProxySelector(session.getProxySelector());
+        setAuthenticationSelector(session.getAuthenticationSelector());
+        setArtifactTypeRegistry(session.getArtifactTypeRegistry());
+        setDependencyTraverser(session.getDependencyTraverser());
+        setDependencyManager(session.getDependencyManager());
+        setDependencySelector(session.getDependencySelector());
+        setVersionFilter(session.getVersionFilter());
+        setDependencyGraphTransformer(session.getDependencyGraphTransformer());
+        setFileTransformerManager(session.getFileTransformerManager());
+        setData(session.getData());
+        setCache(session.getCache());
     }
 
-    public boolean isOffline()
-    {
+    public boolean isOffline() {
         return offline;
     }
 
     /**
      * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
      * repositories.
-     * 
+     *
      * @param offline {@code true} if the repository system is in offline mode, {@code false} otherwise.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setOffline( boolean offline )
-    {
+    public DefaultRepositorySystemSession setOffline(boolean offline) {
         verifyStateForMutation();
         this.offline = offline;
         return this;
     }
 
-    public boolean isIgnoreArtifactDescriptorRepositories()
-    {
+    public boolean isIgnoreArtifactDescriptorRepositories() {
         return ignoreArtifactDescriptorRepositories;
     }
 
     /**
      * Controls whether repositories declared in artifact descriptors should be ignored during transitive dependency
      * collection. If enabled, only the repositories originally provided with the collect request will be considered.
-     * 
+     *
      * @param ignoreArtifactDescriptorRepositories {@code true} to ignore additional repositories from artifact
      *            descriptors, {@code false} to merge those with the originally specified repositories.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories(
-            boolean ignoreArtifactDescriptorRepositories )
-    {
+            boolean ignoreArtifactDescriptorRepositories) {
         verifyStateForMutation();
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
         return this;
     }
 
-    public ResolutionErrorPolicy getResolutionErrorPolicy()
-    {
+    public ResolutionErrorPolicy getResolutionErrorPolicy() {
         return resolutionErrorPolicy;
     }
 
     /**
      * Sets the policy which controls whether resolutions errors from remote repositories should be cached.
-     * 
+     *
      * @param resolutionErrorPolicy The resolution error policy for this session, may be {@code null} if resolution
      *            errors should generally not be cached.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setResolutionErrorPolicy( ResolutionErrorPolicy resolutionErrorPolicy )
-    {
+    public DefaultRepositorySystemSession setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy) {
         verifyStateForMutation();
         this.resolutionErrorPolicy = resolutionErrorPolicy;
         return this;
     }
 
-    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy()
-    {
+    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
         return artifactDescriptorPolicy;
     }
 
     /**
      * Sets the policy which controls how errors related to reading artifact descriptors should be handled.
-     * 
+     *
      * @param artifactDescriptorPolicy The descriptor error policy for this session, may be {@code null} if descriptor
      *            errors should generally not be tolerated.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setArtifactDescriptorPolicy(
-            ArtifactDescriptorPolicy artifactDescriptorPolicy )
-    {
+            ArtifactDescriptorPolicy artifactDescriptorPolicy) {
         verifyStateForMutation();
         this.artifactDescriptorPolicy = artifactDescriptorPolicy;
         return this;
     }
 
-    public String getChecksumPolicy()
-    {
+    public String getChecksumPolicy() {
         return checksumPolicy;
     }
 
     /**
      * Sets the global checksum policy. If set, the global checksum policy overrides the checksum policies of the remote
      * repositories being used for resolution.
-     * 
+     *
      * @param checksumPolicy The global checksum policy, may be {@code null}/empty to apply the per-repository policies.
      * @return This session for chaining, never {@code null}.
      * @see RepositoryPolicy#CHECKSUM_POLICY_FAIL
      * @see RepositoryPolicy#CHECKSUM_POLICY_IGNORE
      * @see RepositoryPolicy#CHECKSUM_POLICY_WARN
      */
-    public DefaultRepositorySystemSession setChecksumPolicy( String checksumPolicy )
-    {
+    public DefaultRepositorySystemSession setChecksumPolicy(String checksumPolicy) {
         verifyStateForMutation();
         this.checksumPolicy = checksumPolicy;
         return this;
     }
 
-    public String getUpdatePolicy()
-    {
+    public String getUpdatePolicy() {
         return updatePolicy;
     }
 
     /**
      * Sets the global update policy. If set, the global update policy overrides the update policies of the remote
      * repositories being used for resolution.
-     * 
+     *
      * @param updatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
      * @return This session for chaining, never {@code null}.
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
      */
-    public DefaultRepositorySystemSession setUpdatePolicy( String updatePolicy )
-    {
+    public DefaultRepositorySystemSession setUpdatePolicy(String updatePolicy) {
         verifyStateForMutation();
         this.updatePolicy = updatePolicy;
         return this;
     }
 
-    public LocalRepository getLocalRepository()
-    {
+    public LocalRepository getLocalRepository() {
         LocalRepositoryManager lrm = getLocalRepositoryManager();
-        return ( lrm != null ) ? lrm.getRepository() : null;
+        return (lrm != null) ? lrm.getRepository() : null;
     }
 
-    public LocalRepositoryManager getLocalRepositoryManager()
-    {
+    public LocalRepositoryManager getLocalRepositoryManager() {
         return localRepositoryManager;
     }
 
     /**
      * Sets the local repository manager used during this session. <em>Note:</em> Eventually, a valid session must have
      * a local repository manager set.
-     * 
+     *
      * @param localRepositoryManager The local repository manager used during this session, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setLocalRepositoryManager( LocalRepositoryManager localRepositoryManager )
-    {
+    public DefaultRepositorySystemSession setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager) {
         verifyStateForMutation();
         this.localRepositoryManager = localRepositoryManager;
         return this;
     }
 
     @Override
-    public FileTransformerManager getFileTransformerManager()
-    {
+    public FileTransformerManager getFileTransformerManager() {
         return fileTransformerManager;
     }
 
-    public DefaultRepositorySystemSession setFileTransformerManager( FileTransformerManager fileTransformerManager )
-    {
+    public DefaultRepositorySystemSession setFileTransformerManager(FileTransformerManager fileTransformerManager) {
         verifyStateForMutation();
         this.fileTransformerManager = fileTransformerManager;
-        if ( this.fileTransformerManager == null )
-        {
+        if (this.fileTransformerManager == null) {
             this.fileTransformerManager = NullFileTransformerManager.INSTANCE;
         }
         return this;
     }
 
-    public WorkspaceReader getWorkspaceReader()
-    {
+    public WorkspaceReader getWorkspaceReader() {
         return workspaceReader;
     }
 
     /**
      * Sets the workspace reader used during this session. If set, the workspace reader will usually be consulted first
      * to resolve artifacts.
-     * 
+     *
      * @param workspaceReader The workspace reader for this session, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setWorkspaceReader( WorkspaceReader workspaceReader )
-    {
+    public DefaultRepositorySystemSession setWorkspaceReader(WorkspaceReader workspaceReader) {
         verifyStateForMutation();
         this.workspaceReader = workspaceReader;
         return this;
     }
 
-    public RepositoryListener getRepositoryListener()
-    {
+    public RepositoryListener getRepositoryListener() {
         return repositoryListener;
     }
 
     /**
      * Sets the listener being notified of actions in the repository system.
-     * 
+     *
      * @param repositoryListener The repository listener, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setRepositoryListener( RepositoryListener repositoryListener )
-    {
+    public DefaultRepositorySystemSession setRepositoryListener(RepositoryListener repositoryListener) {
         verifyStateForMutation();
         this.repositoryListener = repositoryListener;
         return this;
     }
 
-    public TransferListener getTransferListener()
-    {
+    public TransferListener getTransferListener() {
         return transferListener;
     }
 
     /**
      * Sets the listener being notified of uploads/downloads by the repository system.
-     * 
+     *
      * @param transferListener The transfer listener, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setTransferListener( TransferListener transferListener )
-    {
+    public DefaultRepositorySystemSession setTransferListener(TransferListener transferListener) {
         verifyStateForMutation();
         this.transferListener = transferListener;
         return this;
     }
 
-    @SuppressWarnings( "checkstyle:magicnumber" )
-    private <T> Map<String, T> copySafe( Map<?, ?> table, Class<T> valueType )
-    {
+    @SuppressWarnings("checkstyle:magicnumber")
+    private <T> Map<String, T> copySafe(Map<?, ?> table, Class<T> valueType) {
         Map<String, T> map;
-        if ( table == null || table.isEmpty() )
-        {
+        if (table == null || table.isEmpty()) {
             map = new HashMap<>();
-        }
-        else
-        {
-            map = new HashMap<>( (int) ( table.size() / 0.75f ) + 1 );
-            for ( Map.Entry<?, ?> entry : table.entrySet() )
-            {
+        } else {
+            map = new HashMap<>((int) (table.size() / 0.75f) + 1);
+            for (Map.Entry<?, ?> entry : table.entrySet()) {
                 Object key = entry.getKey();
-                if ( key instanceof String )
-                {
+                if (key instanceof String) {
                     Object value = entry.getValue();
-                    if ( valueType.isInstance( value ) )
-                    {
-                        map.put( key.toString(), valueType.cast( value ) );
+                    if (valueType.isInstance(value)) {
+                        map.put(key.toString(), valueType.cast(value));
                     }
                 }
             }
@@ -435,8 +398,7 @@ public final class DefaultRepositorySystemSession
         return map;
     }
 
-    public Map<String, String> getSystemProperties()
-    {
+    public Map<String, String> getSystemProperties() {
         return systemPropertiesView;
     }
 
@@ -446,41 +408,35 @@ public final class DefaultRepositorySystemSession
      * <p>
      * <em>Note:</em> System properties are of type {@code Map<String, String>} and any key-value pair in the input map
      * that doesn't match this type will be silently ignored.
-     * 
+     *
      * @param systemProperties The system properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setSystemProperties( Map<?, ?> systemProperties )
-    {
+    public DefaultRepositorySystemSession setSystemProperties(Map<?, ?> systemProperties) {
         verifyStateForMutation();
-        this.systemProperties = copySafe( systemProperties, String.class );
-        systemPropertiesView = Collections.unmodifiableMap( this.systemProperties );
+        this.systemProperties = copySafe(systemProperties, String.class);
+        systemPropertiesView = Collections.unmodifiableMap(this.systemProperties);
         return this;
     }
 
     /**
      * Sets the specified system property.
-     * 
+     *
      * @param key The property key, must not be {@code null}.
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setSystemProperty( String key, String value )
-    {
+    public DefaultRepositorySystemSession setSystemProperty(String key, String value) {
         verifyStateForMutation();
-        if ( value != null )
-        {
-            systemProperties.put( key, value );
-        }
-        else
-        {
-            systemProperties.remove( key );
+        if (value != null) {
+            systemProperties.put(key, value);
+        } else {
+            systemProperties.remove(key);
         }
         return this;
     }
 
-    public Map<String, String> getUserProperties()
-    {
+    public Map<String, String> getUserProperties() {
         return userPropertiesView;
     }
 
@@ -491,41 +447,35 @@ public final class DefaultRepositorySystemSession
      * <p>
      * <em>Note:</em> User properties are of type {@code Map<String, String>} and any key-value pair in the input map
      * that doesn't match this type will be silently ignored.
-     * 
+     *
      * @param userProperties The user properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setUserProperties( Map<?, ?> userProperties )
-    {
+    public DefaultRepositorySystemSession setUserProperties(Map<?, ?> userProperties) {
         verifyStateForMutation();
-        this.userProperties = copySafe( userProperties, String.class );
-        userPropertiesView = Collections.unmodifiableMap( this.userProperties );
+        this.userProperties = copySafe(userProperties, String.class);
+        userPropertiesView = Collections.unmodifiableMap(this.userProperties);
         return this;
     }
 
     /**
      * Sets the specified user property.
-     * 
+     *
      * @param key The property key, must not be {@code null}.
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setUserProperty( String key, String value )
-    {
+    public DefaultRepositorySystemSession setUserProperty(String key, String value) {
         verifyStateForMutation();
-        if ( value != null )
-        {
-            userProperties.put( key, value );
-        }
-        else
-        {
-            userProperties.remove( key );
+        if (value != null) {
+            userProperties.put(key, value);
+        } else {
+            userProperties.remove(key);
         }
         return this;
     }
 
-    public Map<String, Object> getConfigProperties()
-    {
+    public Map<String, Object> getConfigProperties() {
         return configPropertiesView;
     }
 
@@ -535,41 +485,35 @@ public final class DefaultRepositorySystemSession
      * <p>
      * <em>Note:</em> Configuration properties are of type {@code Map<String, Object>} and any key-value pair in the
      * input map that doesn't match this type will be silently ignored.
-     * 
+     *
      * @param configProperties The configuration properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setConfigProperties( Map<?, ?> configProperties )
-    {
+    public DefaultRepositorySystemSession setConfigProperties(Map<?, ?> configProperties) {
         verifyStateForMutation();
-        this.configProperties = copySafe( configProperties, Object.class );
-        configPropertiesView = Collections.unmodifiableMap( this.configProperties );
+        this.configProperties = copySafe(configProperties, Object.class);
+        configPropertiesView = Collections.unmodifiableMap(this.configProperties);
         return this;
     }
 
     /**
      * Sets the specified configuration property.
-     * 
+     *
      * @param key The property key, must not be {@code null}.
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setConfigProperty( String key, Object value )
-    {
+    public DefaultRepositorySystemSession setConfigProperty(String key, Object value) {
         verifyStateForMutation();
-        if ( value != null )
-        {
-            configProperties.put( key, value );
-        }
-        else
-        {
-            configProperties.remove( key );
+        if (value != null) {
+            configProperties.put(key, value);
+        } else {
+            configProperties.remove(key);
         }
         return this;
     }
 
-    public MirrorSelector getMirrorSelector()
-    {
+    public MirrorSelector getMirrorSelector() {
         return mirrorSelector;
     }
 
@@ -577,23 +521,20 @@ public final class DefaultRepositorySystemSession
      * Sets the mirror selector to use for repositories discovered in artifact descriptors. Note that this selector is
      * not used for remote repositories which are passed as request parameters to the repository system, those
      * repositories are supposed to denote the effective repositories.
-     * 
+     *
      * @param mirrorSelector The mirror selector to use, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setMirrorSelector( MirrorSelector mirrorSelector )
-    {
+    public DefaultRepositorySystemSession setMirrorSelector(MirrorSelector mirrorSelector) {
         verifyStateForMutation();
         this.mirrorSelector = mirrorSelector;
-        if ( this.mirrorSelector == null )
-        {
+        if (this.mirrorSelector == null) {
             this.mirrorSelector = NullMirrorSelector.INSTANCE;
         }
         return this;
     }
 
-    public ProxySelector getProxySelector()
-    {
+    public ProxySelector getProxySelector() {
         return proxySelector;
     }
 
@@ -601,24 +542,21 @@ public final class DefaultRepositorySystemSession
      * Sets the proxy selector to use for repositories discovered in artifact descriptors. Note that this selector is
      * not used for remote repositories which are passed as request parameters to the repository system, those
      * repositories are supposed to have their proxy (if any) already set.
-     * 
+     *
      * @param proxySelector The proxy selector to use, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getProxy()
      */
-    public DefaultRepositorySystemSession setProxySelector( ProxySelector proxySelector )
-    {
+    public DefaultRepositorySystemSession setProxySelector(ProxySelector proxySelector) {
         verifyStateForMutation();
         this.proxySelector = proxySelector;
-        if ( this.proxySelector == null )
-        {
+        if (this.proxySelector == null) {
             this.proxySelector = NullProxySelector.INSTANCE;
         }
         return this;
     }
 
-    public AuthenticationSelector getAuthenticationSelector()
-    {
+    public AuthenticationSelector getAuthenticationSelector() {
         return authenticationSelector;
     }
 
@@ -626,172 +564,152 @@ public final class DefaultRepositorySystemSession
      * Sets the authentication selector to use for repositories discovered in artifact descriptors. Note that this
      * selector is not used for remote repositories which are passed as request parameters to the repository system,
      * those repositories are supposed to have their authentication (if any) already set.
-     * 
+     *
      * @param authenticationSelector The authentication selector to use, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getAuthentication()
      */
-    public DefaultRepositorySystemSession setAuthenticationSelector( AuthenticationSelector authenticationSelector )
-    {
+    public DefaultRepositorySystemSession setAuthenticationSelector(AuthenticationSelector authenticationSelector) {
         verifyStateForMutation();
         this.authenticationSelector = authenticationSelector;
-        if ( this.authenticationSelector == null )
-        {
+        if (this.authenticationSelector == null) {
             this.authenticationSelector = NullAuthenticationSelector.INSTANCE;
         }
         return this;
     }
 
-    public ArtifactTypeRegistry getArtifactTypeRegistry()
-    {
+    public ArtifactTypeRegistry getArtifactTypeRegistry() {
         return artifactTypeRegistry;
     }
 
     /**
      * Sets the registry of artifact types recognized by this session.
-     * 
+     *
      * @param artifactTypeRegistry The artifact type registry, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setArtifactTypeRegistry( ArtifactTypeRegistry artifactTypeRegistry )
-    {
+    public DefaultRepositorySystemSession setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry) {
         verifyStateForMutation();
         this.artifactTypeRegistry = artifactTypeRegistry;
-        if ( this.artifactTypeRegistry == null )
-        {
+        if (this.artifactTypeRegistry == null) {
             this.artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
         }
         return this;
     }
 
-    public DependencyTraverser getDependencyTraverser()
-    {
+    public DependencyTraverser getDependencyTraverser() {
         return dependencyTraverser;
     }
 
     /**
      * Sets the dependency traverser to use for building dependency graphs.
-     * 
+     *
      * @param dependencyTraverser The dependency traverser to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setDependencyTraverser( DependencyTraverser dependencyTraverser )
-    {
+    public DefaultRepositorySystemSession setDependencyTraverser(DependencyTraverser dependencyTraverser) {
         verifyStateForMutation();
         this.dependencyTraverser = dependencyTraverser;
         return this;
     }
 
-    public DependencyManager getDependencyManager()
-    {
+    public DependencyManager getDependencyManager() {
         return dependencyManager;
     }
 
     /**
      * Sets the dependency manager to use for building dependency graphs.
-     * 
+     *
      * @param dependencyManager The dependency manager to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setDependencyManager( DependencyManager dependencyManager )
-    {
+    public DefaultRepositorySystemSession setDependencyManager(DependencyManager dependencyManager) {
         verifyStateForMutation();
         this.dependencyManager = dependencyManager;
         return this;
     }
 
-    public DependencySelector getDependencySelector()
-    {
+    public DependencySelector getDependencySelector() {
         return dependencySelector;
     }
 
     /**
      * Sets the dependency selector to use for building dependency graphs.
-     * 
+     *
      * @param dependencySelector The dependency selector to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setDependencySelector( DependencySelector dependencySelector )
-    {
+    public DefaultRepositorySystemSession setDependencySelector(DependencySelector dependencySelector) {
         verifyStateForMutation();
         this.dependencySelector = dependencySelector;
         return this;
     }
 
-    public VersionFilter getVersionFilter()
-    {
+    public VersionFilter getVersionFilter() {
         return versionFilter;
     }
 
     /**
      * Sets the version filter to use for building dependency graphs.
-     * 
+     *
      * @param versionFilter The version filter to use for building dependency graphs, may be {@code null} to not filter
      *            versions.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setVersionFilter( VersionFilter versionFilter )
-    {
+    public DefaultRepositorySystemSession setVersionFilter(VersionFilter versionFilter) {
         verifyStateForMutation();
         this.versionFilter = versionFilter;
         return this;
     }
 
-    public DependencyGraphTransformer getDependencyGraphTransformer()
-    {
+    public DependencyGraphTransformer getDependencyGraphTransformer() {
         return dependencyGraphTransformer;
     }
 
     /**
      * Sets the dependency graph transformer to use for building dependency graphs.
-     * 
+     *
      * @param dependencyGraphTransformer The dependency graph transformer to use for building dependency graphs, may be
      *            {@code null}.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setDependencyGraphTransformer(
-            DependencyGraphTransformer dependencyGraphTransformer )
-    {
+            DependencyGraphTransformer dependencyGraphTransformer) {
         verifyStateForMutation();
         this.dependencyGraphTransformer = dependencyGraphTransformer;
         return this;
     }
 
-    public SessionData getData()
-    {
+    public SessionData getData() {
         return data;
     }
 
     /**
      * Sets the custom data associated with this session.
-     * 
+     *
      * @param data The session data, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setData( SessionData data )
-    {
+    public DefaultRepositorySystemSession setData(SessionData data) {
         verifyStateForMutation();
         this.data = data;
-        if ( this.data == null )
-        {
+        if (this.data == null) {
             this.data = new DefaultSessionData();
         }
         return this;
     }
 
-    public RepositoryCache getCache()
-    {
+    public RepositoryCache getCache() {
         return cache;
     }
 
     /**
      * Sets the cache the repository system may use to save data for future reuse during the session.
-     * 
+     *
      * @param cache The repository cache, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
-    public DefaultRepositorySystemSession setCache( RepositoryCache cache )
-    {
+    public DefaultRepositorySystemSession setCache(RepositoryCache cache) {
         verifyStateForMutation();
         this.cache = cache;
         return this;
@@ -802,127 +720,97 @@ public final class DefaultRepositorySystemSession
      * Marking an already read-only session as read-only has no effect. The session's data and cache remain writable
      * though.
      */
-    public void setReadOnly()
-    {
+    public void setReadOnly() {
         readOnly = true;
     }
 
     /**
      * Verifies this instance state for mutation operations: mutated instance must not be read-only or closed.
      */
-    private void verifyStateForMutation()
-    {
-        if ( readOnly )
-        {
-            throw new IllegalStateException( "repository system session is read-only" );
+    private void verifyStateForMutation() {
+        if (readOnly) {
+            throw new IllegalStateException("repository system session is read-only");
         }
-        if ( isClosed() )
-        {
-            throw new IllegalStateException( "repository system session is closed" );
+        if (isClosed()) {
+            throw new IllegalStateException("repository system session is closed");
         }
     }
 
-    static class NullProxySelector
-        implements ProxySelector
-    {
+    static class NullProxySelector implements ProxySelector {
 
         public static final ProxySelector INSTANCE = new NullProxySelector();
 
-        public Proxy getProxy( RemoteRepository repository )
-        {
-            requireNonNull( repository, "repository cannot be null" );
+        public Proxy getProxy(RemoteRepository repository) {
+            requireNonNull(repository, "repository cannot be null");
             return repository.getProxy();
         }
-
     }
 
-    static class NullMirrorSelector
-        implements MirrorSelector
-    {
+    static class NullMirrorSelector implements MirrorSelector {
 
         public static final MirrorSelector INSTANCE = new NullMirrorSelector();
 
-        public RemoteRepository getMirror( RemoteRepository repository )
-        {
-            requireNonNull( repository, "repository cannot be null" );
+        public RemoteRepository getMirror(RemoteRepository repository) {
+            requireNonNull(repository, "repository cannot be null");
             return null;
         }
-
     }
 
-    static class NullAuthenticationSelector
-        implements AuthenticationSelector
-    {
+    static class NullAuthenticationSelector implements AuthenticationSelector {
 
         public static final AuthenticationSelector INSTANCE = new NullAuthenticationSelector();
 
-        public Authentication getAuthentication( RemoteRepository repository )
-        {
-            requireNonNull( repository, "repository cannot be null" );
+        public Authentication getAuthentication(RemoteRepository repository) {
+            requireNonNull(repository, "repository cannot be null");
             return repository.getAuthentication();
         }
-
     }
 
-    static final class NullArtifactTypeRegistry
-        implements ArtifactTypeRegistry
-    {
+    static final class NullArtifactTypeRegistry implements ArtifactTypeRegistry {
 
         public static final ArtifactTypeRegistry INSTANCE = new NullArtifactTypeRegistry();
 
-        public ArtifactType get( String typeId )
-        {
+        public ArtifactType get(String typeId) {
             return null;
         }
-
     }
 
-    static final class NullFileTransformerManager implements FileTransformerManager
-    {
+    static final class NullFileTransformerManager implements FileTransformerManager {
         public static final FileTransformerManager INSTANCE = new NullFileTransformerManager();
 
         @Override
-        public Collection<FileTransformer> getTransformersForArtifact( Artifact artifact )
-        {
+        public Collection<FileTransformer> getTransformersForArtifact(Artifact artifact) {
             return Collections.emptyList();
         }
     }
 
-    private final CopyOnWriteArrayList<Consumer<RepositorySystemSession>> onCloseHandlers
-            = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Consumer<RepositorySystemSession>> onCloseHandlers =
+            new CopyOnWriteArrayList<>();
 
     @Override
-    public void addOnCloseHandler( Consumer<RepositorySystemSession> handler )
-    {
+    public void addOnCloseHandler(Consumer<RepositorySystemSession> handler) {
         verifyStateForMutation();
-        requireNonNull( handler, "handler cannot be null" );
-        onCloseHandlers.add( 0, handler );
+        requireNonNull(handler, "handler cannot be null");
+        onCloseHandlers.add(0, handler);
     }
 
     @Override
-    public boolean isClosed()
-    {
+    public boolean isClosed() {
         return closed.get();
     }
 
     @Override
-    public void close()
-    {
-        if ( closed.compareAndSet( false, true ) )
-        {
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
             ArrayList<Exception> exceptions = new ArrayList<>();
-            for ( Consumer<RepositorySystemSession> onCloseHandler : onCloseHandlers )
-            {
-                try
-                {
-                    onCloseHandler.accept( this );
-                }
-                catch ( Exception e )
-                {
-                    exceptions.add( e );
+            for (Consumer<RepositorySystemSession> onCloseHandler : onCloseHandlers) {
+                try {
+                    onCloseHandler.accept(this);
+                } catch (Exception e) {
+                    exceptions.add(e);
                 }
             }
-            MultiRuntimeException.mayThrow( "session on-close handler failures", exceptions );
+            MultiRuntimeException.mayThrow("session on-close handler failures", exceptions);
         }
     }
 }
