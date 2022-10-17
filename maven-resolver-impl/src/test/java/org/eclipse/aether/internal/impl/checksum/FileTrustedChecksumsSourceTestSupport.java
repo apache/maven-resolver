@@ -19,23 +19,28 @@ package org.eclipse.aether.internal.impl.checksum;
  * under the License.
  */
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assume.assumeThat;
 
 public abstract class FileTrustedChecksumsSourceTestSupport
 {
@@ -51,58 +56,79 @@ public abstract class FileTrustedChecksumsSourceTestSupport
 
     private FileTrustedChecksumsSourceSupport subject;
 
+    private boolean checksumWritten;
+
     @Before
     public void before() throws Exception
     {
         session = TestUtils.newSession();
         // populate local repository
-        Path basedir = session.getLocalRepository().getBasedir().toPath()
-                .resolve( FileTrustedChecksumsSourceSupport.LOCAL_REPO_PREFIX_DIR );
         checksumAlgorithmFactory = new Sha1ChecksumAlgorithmFactory();
-        subject = prepareSubject( basedir );
+        subject = prepareSubject();
+        checksumWritten = false;
+
+        try ( DefaultRepositorySystemSession prepareSession = new DefaultRepositorySystemSession( session ) )
+        {
+            enableSource( prepareSession );
+            try ( TrustedChecksumsSource.Writer writer = subject.getTrustedArtifactChecksumsWriter( prepareSession ) )
+            {
+                if ( writer != null )
+                {
+                    HashMap<String, String> checksums = new HashMap<>();
+                    checksums.put( checksumAlgorithmFactory.getName(), ARTIFACT_TRUSTED_CHECKSUM );
+                    writer.addTrustedArtifactChecksums( ARTIFACT_WITH_CHECKSUM, prepareSession.getLocalRepository(),
+                            Collections.singletonList( checksumAlgorithmFactory ), checksums );
+                    checksumWritten = true;
+                }
+            }
+        }
     }
 
-    protected abstract FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException;
+    protected abstract FileTrustedChecksumsSourceSupport prepareSubject();
 
-    protected abstract void enableSource();
+    protected abstract void enableSource( DefaultRepositorySystemSession session );
 
     @Test
     public void notEnabled()
     {
-        assertNull( subject.getTrustedArtifactChecksums(
+        assertThat(
+                subject.getTrustedArtifactChecksums(
                         session,
                         ARTIFACT_WITH_CHECKSUM,
                         session.getLocalRepository(),
                         Collections.singletonList( checksumAlgorithmFactory )
-                )
+                ),
+                nullValue()
         );
     }
 
     @Test
     public void noProvidedArtifactChecksum()
     {
-        enableSource();
+        enableSource( session );
         Map<String, String> providedChecksums = subject.getTrustedArtifactChecksums(
                 session,
                 ARTIFACT_WITHOUT_CHECKSUM,
                 session.getLocalRepository(),
                 Collections.singletonList( checksumAlgorithmFactory )
         );
-        assertNotNull( providedChecksums );
-        assertTrue( providedChecksums.isEmpty() );
+        assertThat( providedChecksums, notNullValue() );
+        assertThat( providedChecksums, anEmptyMap() );
     }
 
     @Test
     public void haveProvidedArtifactChecksum()
     {
-        enableSource();
+        assumeThat( checksumWritten, is( true ) );
+        enableSource( session );
         Map<String, String> providedChecksums = subject.getTrustedArtifactChecksums(
                 session,
                 ARTIFACT_WITH_CHECKSUM,
                 session.getLocalRepository(),
                 Collections.singletonList( checksumAlgorithmFactory )
         );
-        assertNotNull( providedChecksums );
-        assertEquals( providedChecksums.get( Sha1ChecksumAlgorithmFactory.NAME ), ARTIFACT_TRUSTED_CHECKSUM );
+        assertThat( providedChecksums, notNullValue() );
+        assertThat( providedChecksums, aMapWithSize( 1 ) );
+        assertThat( providedChecksums, hasEntry( checksumAlgorithmFactory.getName(), ARTIFACT_TRUSTED_CHECKSUM ) );
     }
 }

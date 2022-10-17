@@ -45,14 +45,16 @@ public final class DirectoryUtils
 
     /**
      * Creates {@link Path} instance out of passed in {@code name} parameter. May create a directory on resulting path,
-     * if not exists. Following outcomes may happen:
+     * if not exist, when invoked with {@code mayCreate} being {@code true}. Never returns {@code null}.
+     * <p>
+     * Following outcomes may happen:
      * <ul>
      *     <li>{@code name} is absolute path - results in {@link Path} instance created directly from name.</li>
-     *     <li>{@code name} is relative path - results in {@link Path} instance resolved with {@code base} parameter.
+     *     <li>{@code name} is relative path - results in {@link Path} instance resolved against {@code base} parameter.
      *     </li>
      * </ul>
-     * Resulting path is being checked is a directory, and if not, it will be created. If resulting path exists but
-     * is not a directory, this method will fail.
+     * Resulting path is being checked is a directory, and if not, it will be created if {@code mayCreate} is
+     * {@code true}. If resulting path exist but is not a directory, this method will throw.
      *
      * @param name      The name to create directory with, cannot be {@code null}.
      * @param base      The base {@link Path} to resolve name, if it is relative path, cannot be {@code null}.
@@ -91,8 +93,7 @@ public final class DirectoryUtils
 
     /**
      * Creates {@link Path} instance out of session configuration, and (if relative) resolve it against local
-     * repository
-     * basedir. Pre-populates values and invokes {@link #resolveDirectory(String, Path, boolean)}.
+     * repository basedir. Pre-populates values and invokes {@link #resolveDirectory(String, Path, boolean)}.
      * <p>
      * For this method to work, {@link org.eclipse.aether.repository.LocalRepository#getBasedir()} must return
      * non-{@code null} value, otherwise {@link NullPointerException} is thrown.
@@ -103,6 +104,7 @@ public final class DirectoryUtils
      * @param mayCreate   If resulting path does not exist, should it create?
      * @return The {@link Path} instance that is resolved and backed by existing directory.
      * @throws IOException If some IO related errors happens.
+     * @see #resolveDirectory(String, Path, boolean)
      */
     public static Path resolveDirectory( RepositorySystemSession session,
                                          String defaultName,

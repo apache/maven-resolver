@@ -19,6 +19,7 @@ package org.eclipse.aether.internal.impl.checksum;
  * under the License.
  */
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -27,45 +28,62 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
+import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Compact file {@link FileTrustedChecksumsSourceSupport} implementation that use specified directory as base
- * directory, where it expects a "summary" file named as "checksums.${checksumExt}" for each checksum algorithm, and
- * file format is artifact ID and checksum separated by space per line. The format supports comments "#" (hash) and
- * empty lines (both are ignored).
+ * directory, where it expects a "summary" file named as "checksums.${checksumExt}" for each checksum algorithm.
+ * File format is GNU Coreutils compatible: each line holds checksum followed by two spaces and artifact relative path
+ * (from local repository root, without leading "./"). This means that trusted checksums summary file can be used to
+ * validate artifacts or generate it using standard GNU tools like GNU {@code sha1sum} is (for BSD derivatives same
+ * file can be used with {@code -r} switch).
  * <p>
- * The source may be configured to be "origin aware", in that case it will factor in origin repository ID as well into
- * file name (for example "checksums-central.sha1").
+ * The format supports comments "#" (hash) and empty lines for easier structuring the file content, and both are
+ * ignored. Also, their presence makes the summary file incompatible with GNU Coreutils format. On save of the
+ * summary file, the comments and empty lines are lost, and file is sorted by path names for easier diffing
+ * (2nd column in file).
  * <p>
- * The checksums file once loaded are cached in session, so in-flight file changes during lifecycle of session are NOT
- * noticed.
+ * The source by default is "origin aware", and it will factor in origin repository ID as well into summary file name,
+ * for example "checksums-central.sha256".
+ * <p>
+ * Example commands for managing summary file (in examples will use repository ID "central"):
+ * <ul>
+ *     <li>To create summary file: {@code find * -not -name "checksums-central.sha256" -type f -print0 |
+ *       xargs -0 sha256sum | sort -k 2 > checksums-central.sha256}</li>
+ *     <li>To verify artifacts using summary file: {@code sha256sum --quiet -c checksums-central.sha256}</li>
+ * </ul>
+ * <p>
+ * The checksums summary file is lazily loaded and remains cached in session, so file changes during lifecycle of the
+ * session are not picked up. This implementation can be simultaneously used to lookup and also write checksums. The
+ * written checksums will become visible only for writer session, and newly written checksums, if any, will be flushed
+ * at session end, merged with existing ones on disk, unless {@code truncateOnSave} is enabled.
  * <p>
  * The name of this implementation is "summary-file".
  *
- * @see ArtifactIdUtils#toId(Artifact)
  * @since TBD
+ * @see <a href="https://man7.org/linux/man-pages/man1/sha1sum.1.html">sha1sum man page</a>
+ * @see <a href="https://www.gnu.org/software/coreutils/manual/coreutils.html#md5sum-invocation">GNU Coreutils: md5sum</a>
  */
 @Singleton
 @Named( SummaryFileTrustedChecksumsSource.NAME )
@@ -76,176 +94,197 @@ public final class SummaryFileTrustedChecksumsSource
 
     private static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
-    private static final String CHECKSUMS_CACHE_KEY = SummaryFileTrustedChecksumsSource.class.getName() + ".checksums";
+    private static final String CONF_NAME_TRUNCATE_ON_SAVE = "truncateOnSave";
 
-    private static final String RECORDING_KEY = SummaryFileTrustedChecksumsSource.class.getName() + ".recording";
+    /**
+     * Session key for path -> artifactId -> checksum nested map. The trick is that 1st level key "path" composition
+     * may change across sessions, based on session being origin aware or not.
+     */
+    private static final String CHECKSUMS_KEY = SummaryFileTrustedChecksumsSource.class.getName() + ".checksums";
+
+    private static final String ON_CLOSE_HANDLER_REG_KEY = SummaryFileTrustedChecksumsSource.class.getName()
+            + ".onCloseHandlerRwg";
+
+    private static final String NEW_CHECKSUMS_RECORDED_KEY = SummaryFileTrustedChecksumsSource.class.getName()
+            + ".newChecksumsRecorded";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( SummaryFileTrustedChecksumsSource.class );
 
-    public SummaryFileTrustedChecksumsSource()
+    private final LocalPathComposer localPathComposer;
+
+    @Inject
+    public SummaryFileTrustedChecksumsSource( LocalPathComposer localPathComposer )
     {
         super( NAME );
+        this.localPathComposer = requireNonNull( localPathComposer );
     }
 
-    @SuppressWarnings( "unchecked" )
     @Override
-    protected Map<String, String> performLookup( RepositorySystemSession session,
-                                                 Path basedir,
-                                                 Artifact artifact,
-                                                 ArtifactRepository artifactRepository,
-                                                 List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
+    protected Map<String, String> doGetTrustedArtifactChecksums(
+            RepositorySystemSession session, Artifact artifact, ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
     {
-        final boolean originAware = isOriginAware( session );
-        final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> basedirProvidedChecksums =
-                (ConcurrentHashMap<String, ConcurrentHashMap<String, String>>) session.getData()
-                        .computeIfAbsent( CHECKSUMS_CACHE_KEY, ConcurrentHashMap::new );
-
         final HashMap<String, String> checksums = new HashMap<>();
-        for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
+        final Path basedir = getBasedir( session, false );
+        if ( Files.isDirectory( basedir ) )
         {
-            ConcurrentHashMap<String, String> algorithmChecksums = basedirProvidedChecksums.computeIfAbsent(
-                    checksumAlgorithmFactory.getName(),
-                    algName -> loadProvidedChecksums(
-                            basedir, originAware, artifactRepository, checksumAlgorithmFactory )
-            );
-            String checksum = algorithmChecksums.get( ArtifactIdUtils.toId( artifact ) );
-            if ( checksum != null )
+            final String artifactPath = localPathComposer.getPathForArtifact( artifact, false );
+            final boolean originAware = isOriginAware( session );
+            final ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> cache = cache( session );
+            for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
             {
-                checksums.put( checksumAlgorithmFactory.getName(), checksum );
+                Path summaryFile = summaryFile( basedir, originAware, artifactRepository.getId(),
+                        checksumAlgorithmFactory.getFileExtension() );
+                ConcurrentHashMap<String, String> algorithmChecksums = cache.computeIfAbsent( summaryFile, f ->
+                        {
+                            ConcurrentHashMap<String, String> loaded = loadProvidedChecksums( summaryFile );
+                            if ( Files.isRegularFile( summaryFile ) )
+                            {
+                                LOGGER.info( "Loaded {} {} trusted checksums for remote repository {}",
+                                        loaded.size(), checksumAlgorithmFactory.getName(), artifactRepository.getId() );
+                            }
+                            return loaded;
+                        }
+                );
+                String checksum = algorithmChecksums.get( artifactPath );
+                if ( checksum != null )
+                {
+                    checksums.put( checksumAlgorithmFactory.getName(), checksum );
+                }
             }
         }
         return checksums;
     }
 
-    @SuppressWarnings( "unchecked" )
     @Override
-    protected SummaryFileWriter getWriter( RepositorySystemSession session, Path basedir )
+    protected SummaryFileWriter doGetTrustedArtifactChecksumsWriter( RepositorySystemSession session )
     {
-        ConcurrentHashMap<Path, Set<String>> recordedLines = (ConcurrentHashMap<Path, Set<String>>) session.getData()
-                .computeIfAbsent( RECORDING_KEY, () ->
-                {
-                    session.addOnCloseHandler( this::saveSessionRecordedLines );
-                    return new ConcurrentHashMap<>();
-                } );
-        return new SummaryFileWriter( basedir, isOriginAware( session ), recordedLines );
+        if ( onCloseHandlerRegistered( session ).compareAndSet( false, true ) )
+        {
+            session.addOnCloseHandler( this::saveSessionRecordedLines );
+        }
+        return new SummaryFileWriter( session, cache( session ), getBasedir( session, true ),
+                isOriginAware( session ) );
     }
 
-    private ConcurrentHashMap<String, String> loadProvidedChecksums( Path basedir,
-                                                                     boolean originAware,
-                                                                     ArtifactRepository artifactRepository,
-                                                                     ChecksumAlgorithmFactory checksumAlgorithmFactory )
+    @SuppressWarnings( "unchecked" )
+    private ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> cache( RepositorySystemSession session )
     {
-        Path checksumsFile = basedir.resolve(
-                calculateSummaryPath( originAware, artifactRepository, checksumAlgorithmFactory ) );
-        ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>();
-        if ( Files.isReadable( checksumsFile ) )
+        return (ConcurrentHashMap<Path, ConcurrentHashMap<String, String>>) session.getData()
+                .computeIfAbsent( CHECKSUMS_KEY, ConcurrentHashMap::new );
+    }
+
+    /**
+     * Returns the summary file path. The file itself and its parent directories may not exist, this method merely
+     * calculate the path.
+     */
+    private Path summaryFile( Path basedir, boolean originAware, String repositoryId, String checksumExtension )
+    {
+        String fileName = CHECKSUMS_FILE_PREFIX;
+        if ( originAware )
         {
-            try ( BufferedReader reader = Files.newBufferedReader( checksumsFile, StandardCharsets.UTF_8 ) )
+            fileName += "-" + repositoryId;
+        }
+        return basedir.resolve( fileName + "." + checksumExtension );
+    }
+
+    private ConcurrentHashMap<String, String> loadProvidedChecksums( Path summaryFile )
+    {
+        ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>();
+        if ( Files.isRegularFile( summaryFile ) )
+        {
+            try ( BufferedReader reader = Files.newBufferedReader( summaryFile, StandardCharsets.UTF_8 ) )
             {
-                LOGGER.debug( "Loading {} trusted checksums for remote repository {} from '{}'",
-                        checksumAlgorithmFactory.getName(), artifactRepository.getId(), checksumsFile );
                 String line;
                 while ( ( line = reader.readLine() ) != null )
                 {
                     if ( !line.startsWith( "#" ) && !line.isEmpty() )
                     {
-                        String[] parts = line.split( " ", 2 );
+                        String[] parts = line.split( "  ", 2 );
                         if ( parts.length == 2 )
                         {
-                            String newChecksum = parts[1];
-                            String oldChecksum = result.put( parts[0], newChecksum );
+                            String newChecksum = parts[0];
+                            String artifactPath = parts[1];
+                            String oldChecksum = result.put( artifactPath, newChecksum );
                             if ( oldChecksum != null )
                             {
                                 if ( Objects.equals( oldChecksum, newChecksum ) )
                                 {
-                                    LOGGER.warn( "Checksums file '{}' contains duplicate checksums for artifact {}: {}",
-                                            checksumsFile, parts[0], oldChecksum );
+                                    LOGGER.warn(
+                                            "Checksums file '{}' contains duplicate checksums for artifact {}: {}",
+                                            summaryFile, artifactPath, oldChecksum );
                                 }
                                 else
                                 {
-                                    LOGGER.warn( "Checksums file '{}' contains different checksums for artifact {}: "
-                                                    + "old '{}' replaced by new '{}'", checksumsFile, parts[0],
+                                    LOGGER.warn(
+                                            "Checksums file '{}' contains different checksums for artifact {}: "
+                                                    + "old '{}' replaced by new '{}'", summaryFile, artifactPath,
                                             oldChecksum, newChecksum );
                                 }
                             }
                         }
                         else
                         {
-                            LOGGER.warn( "Checksums file '{}' ignored malformed line '{}'", checksumsFile, line );
+                            LOGGER.warn( "Checksums file '{}' ignored malformed line '{}'", summaryFile, line );
                         }
                     }
                 }
-                LOGGER.info( "Loaded {} {} trusted checksums for remote repository {}",
-                        result.size(), checksumAlgorithmFactory.getName(), artifactRepository.getId() );
-            }
-            catch ( NoSuchFileException e )
-            {
-                // strange: we tested for it above, still, we should not fail
-                LOGGER.debug( "The {} trusted checksums for remote repository {} not exist at '{}'",
-                        checksumAlgorithmFactory.getName(), artifactRepository.getId(), checksumsFile );
             }
             catch ( IOException e )
             {
                 throw new UncheckedIOException( e );
             }
         }
-        else
-        {
-            LOGGER.debug( "The {} trusted checksums for remote repository {} not exist at '{}'",
-                    checksumAlgorithmFactory.getName(), artifactRepository.getId(), checksumsFile );
-        }
-
         return result;
-    }
-
-    private String calculateSummaryPath( boolean originAware,
-                                         ArtifactRepository artifactRepository,
-                                         ChecksumAlgorithmFactory checksumAlgorithmFactory )
-    {
-        final String fileName;
-        if ( originAware )
-        {
-            fileName = CHECKSUMS_FILE_PREFIX + "-" + artifactRepository.getId();
-        }
-        else
-        {
-            fileName = CHECKSUMS_FILE_PREFIX;
-        }
-        return fileName + "." + checksumAlgorithmFactory.getFileExtension();
     }
 
     private class SummaryFileWriter implements Writer
     {
+        private final RepositorySystemSession session;
+        private final ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> cache;
+
         private final Path basedir;
 
         private final boolean originAware;
 
-        private final ConcurrentHashMap<Path, Set<String>> recordedLines;
-
-        private SummaryFileWriter( Path basedir,
-                                   boolean originAware,
-                                   ConcurrentHashMap<Path, Set<String>> recordedLines )
+        private SummaryFileWriter( RepositorySystemSession session,
+                                   ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> cache,
+                                   Path basedir,
+                                   boolean originAware )
         {
+            this.session = session;
+            this.cache = cache;
             this.basedir = basedir;
             this.originAware = originAware;
-            this.recordedLines = recordedLines;
         }
 
         @Override
-        public void addTrustedArtifactChecksums( Artifact artifact, ArtifactRepository artifactRepository,
+        public void addTrustedArtifactChecksums( Artifact artifact,
+                                                 ArtifactRepository artifactRepository,
                                                  List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
                                                  Map<String, String> trustedArtifactChecksums )
         {
+            String artifactPath = localPathComposer.getPathForArtifact( artifact, false );
             for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
             {
+                Path summaryFile = summaryFile( basedir, originAware, artifactRepository.getId(),
+                        checksumAlgorithmFactory.getFileExtension() );
                 String checksum = requireNonNull(
                         trustedArtifactChecksums.get( checksumAlgorithmFactory.getName() ) );
-                String summaryLine = ArtifactIdUtils.toId( artifact ) + " " + checksum;
-                Path summaryPath = basedir.resolve(
-                        calculateSummaryPath( originAware, artifactRepository, checksumAlgorithmFactory ) );
 
-                recordedLines.computeIfAbsent( summaryPath, p -> Collections.synchronizedSet( new TreeSet<>() ) )
-                        .add( summaryLine );
+                String oldChecksum = cache.computeIfAbsent( summaryFile, k -> loadProvidedChecksums( summaryFile ) )
+                        .put( artifactPath, checksum );
+
+                if ( oldChecksum == null )
+                {
+                    newChecksumsRecorded( session ).set( true ); // new
+                }
+                else if ( !Objects.equals( oldChecksum, checksum ) )
+                {
+                    newChecksumsRecorded( session ).set( true ); // updated
+                    LOGGER.info( "Trusted checksum for artifact {} replaced: old {}, new {}",
+                            artifact, oldChecksum, checksum );
+                }
             }
         }
 
@@ -256,27 +295,72 @@ public final class SummaryFileTrustedChecksumsSource
         }
     }
 
-    @SuppressWarnings( "unchecked" )
+    /**
+     * Returns {@code true} if on save existing checksums file should be truncated. Otherwise, existing file is merged
+     * with newly recorded checksums.
+     * <p>
+     * Default value is {@code false}.
+     */
+    private boolean isTruncateOnSave( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_TRUNCATE_ON_SAVE ) );
+    }
+
+    /**
+     * Flag to preserve on-close handler registration state.
+     */
+    private AtomicBoolean onCloseHandlerRegistered( RepositorySystemSession session )
+    {
+        return (AtomicBoolean) session.getData().computeIfAbsent( ON_CLOSE_HANDLER_REG_KEY,
+                () -> new AtomicBoolean( false ) );
+    }
+
+    /**
+     * Flag to preserve new checksums recorded state.
+     */
+    private AtomicBoolean newChecksumsRecorded( RepositorySystemSession session )
+    {
+        return (AtomicBoolean) session.getData().computeIfAbsent( NEW_CHECKSUMS_RECORDED_KEY,
+                () -> new AtomicBoolean( false ) );
+    }
+
+    /**
+     * On-close handler that saves recorded checksums, if any.
+     */
     private void saveSessionRecordedLines( RepositorySystemSession session )
     {
-        Map<Path, Set<String>> recordedLines = (Map<Path, Set<String>>) session.getData().get( RECORDING_KEY );
-        if ( recordedLines == null || recordedLines.isEmpty() )
+        if ( !newChecksumsRecorded( session ).get() )
         {
             return;
         }
 
+        Map<Path, ConcurrentHashMap<String, String>> cache = cache( session );
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for ( Map.Entry<Path, Set<String>> entry : recordedLines.entrySet() )
+        for ( Map.Entry<Path, ConcurrentHashMap<String, String>> entry : cache.entrySet() )
         {
-            Path file = entry.getKey();
-            Set<String> lines = entry.getValue();
-            if ( !lines.isEmpty() )
+            Path summaryFile = entry.getKey();
+            ConcurrentHashMap<String, String> recordedLines = entry.getValue();
+            if ( !recordedLines.isEmpty() )
             {
-                LOGGER.info( "Saving {} checksums to '{}'", lines.size(), file );
                 try
                 {
-                    Files.createDirectories( file.getParent() );
-                    Files.write( file, lines );
+                    ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>();
+                    if ( !isTruncateOnSave( session ) )
+                    {
+                        result.putAll( loadProvidedChecksums( summaryFile ) );
+                    }
+                    result.putAll( recordedLines );
+
+                    LOGGER.info( "Saving {} checksums to '{}'", result.size(), summaryFile );
+                    FileUtils.writeFileWithBackup(
+                            summaryFile,
+                            p -> Files.write( p,
+                                    result.entrySet().stream()
+                                            .sorted( Map.Entry.comparingByValue() )
+                                            .map( e -> e.getValue() + "  " + e.getKey() )
+                                            .collect( toList() )
+                            )
+                    );
                 }
                 catch ( IOException e )
                 {
