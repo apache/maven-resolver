@@ -21,8 +21,6 @@ package org.eclipse.aether.util.version;
 
 import static org.junit.Assert.*;
 
-import org.eclipse.aether.util.version.GenericVersion;
-import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionConstraint;
 import org.junit.Before;
@@ -109,4 +107,14 @@ public class GenericVersionSchemeTest
         parseInvalid( "[1,2],(3," );
         parseInvalid( "[1,2],3" );
     }
+
+    @Test
+    public void testSameUpperAndLowerBound() throws InvalidVersionSpecificationException {
+        VersionConstraint c = scheme.parseVersionConstraint( "[1.0]" );
+        assertEquals( "[1.0,1.0]", c.toString() );
+        VersionConstraint c2 = scheme.parseVersionConstraint( c.toString() );
+        assertEquals( c, c2 );
+        assertTrue( c.containsVersion( new GenericVersion( "1.0" ) ) );
+    }
+
 }
