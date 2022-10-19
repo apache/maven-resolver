@@ -89,7 +89,7 @@ public final class TrustedChecksumsArtifactResolverPostProcessor
     {
         final List<ChecksumAlgorithmFactory> checksumAlgorithms = (List<ChecksumAlgorithmFactory>) session.getData()
                 .computeIfAbsent( CHECKSUM_ALGORITHMS_CACHE_KEY, () ->
-                        checksumAlgorithmFactorySelector.select(
+                        checksumAlgorithmFactorySelector.selectList(
                                 ConfigUtils.parseCommaSeparatedUniqueNames( ConfigUtils.getString(
                                         session, DEFAULT_CHECKSUM_ALGORITHMS, CONF_CHECKSUM_ALGORITHMS ) )
                         ) );

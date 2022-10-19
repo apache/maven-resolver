@@ -39,16 +39,19 @@ public interface ChecksumAlgorithmFactorySelector
     ChecksumAlgorithmFactory select( String algorithmName );
 
     /**
-     * Returns list of factories for given algorithm names in order as collection is ordered, or throws if algorithm
-     * not supported.
+     * Returns a list of factories for given algorithm names in order as collection is ordered, or throws if any of the
+     * algorithm name is not supported. The returned list has equal count of elements as passed in collection of names,
+     * and if names contains duplicated elements, the returned list of algorithms will have duplicates as well.
      *
-     * @throws IllegalArgumentException if asked algorithm name is not supported.
+     * @throws IllegalArgumentException if any asked algorithm name is not supported.
      * @throws NullPointerException if passed in list of names is {@code null}.
      * @since TBD
      */
-    default List<ChecksumAlgorithmFactory> select( Collection<String> algorithmNames )
+    default List<ChecksumAlgorithmFactory> selectList( Collection<String> algorithmNames )
     {
-        return algorithmNames.stream().map( this::select ).collect( toList() );
+        return algorithmNames.stream()
+                .map( this::select )
+                .collect( toList() );
     }
 
     /**

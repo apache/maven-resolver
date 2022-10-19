@@ -110,7 +110,7 @@ public final class Maven2RepositoryLayoutFactory
             throw new NoRepositoryLayoutException( repository );
         }
 
-        List<ChecksumAlgorithmFactory> checksumsAlgorithms = checksumAlgorithmFactorySelector.select(
+        List<ChecksumAlgorithmFactory> checksumsAlgorithms = checksumAlgorithmFactorySelector.selectList(
                 ConfigUtils.parseCommaSeparatedUniqueNames( ConfigUtils.getString(
                         session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS ) )
         );

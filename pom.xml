@@ -302,6 +302,13 @@
             <parameter>
               <onlyBinaryIncompatible>true</onlyBinaryIncompatible>
               <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+              <overrideCompatibilityChangeParameters>
+                <overrideCompatibilityChangeParameter>
+                  <compatibilityChange>METHOD_NEW_DEFAULT</compatibilityChange>
+                  <binaryCompatible>true</binaryCompatible>
+                  <sourceCompatible>false</sourceCompatible>
+                </overrideCompatibilityChangeParameter>
+              </overrideCompatibilityChangeParameters>
             </parameter>
           </configuration>
           <executions>
