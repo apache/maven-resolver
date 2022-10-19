@@ -79,6 +79,7 @@
     <guavaVersion>30.1-jre</guavaVersion>
     <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
+    <minimalMavenBuildVersion>3.8.4</minimalMavenBuildVersion>
     <project.build.outputTimestamp>2022-07-25T16:26:16Z</project.build.outputTimestamp>
   </properties>
 
@@ -285,6 +286,16 @@
   <build>
     <pluginManagement>
       <plugins>
+        <plugin> <!-- remove once parent POM updated -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+        <plugin> <!-- remove once parent POM updated -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>3.0.1</version>
+        </plugin>
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
@@ -509,7 +520,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.21</version>
+        <version>1.22</version>
         <configuration>
           <signature>
             <groupId>org.codehaus.mojo.signature</groupId>
