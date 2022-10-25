@@ -66,7 +66,7 @@ most often a bad idea (filtering, as in "limiting what can come from it"). On ot
 to prevent request leakage to it (see "prefixes" filter).
 
 So, **most often** limiting "what can be fetched" from MC is a bad idea, it **can be done** but in very, very cautious way,
-as otherwise you risk your build. RRF does not distinguish the "context" of an artifact, it merely filters them out
+as otherwise you put your build at risk. RRF does not distinguish the "context" of an artifact, it merely filters them out
 by (artifact, remoteRepository) pair, and by limiting MC you can easily get into state where you break your build (as
 plugin depends on filtered artifact).
 
@@ -100,7 +100,7 @@ prefixes is set by publisher, and is usually value between 2 and 4. It all boils
 paths of deployed artifact from repository root would be 100% coverage, but the cost would be huge
 file size for huge repositories like Maven Central).
 
-As this file is (automatically) published by MC and MRMs, using them is simplest. Manual authoring
+As this file is (automatically) published by MC and MRMs, using them is the simplest. Manual authoring
 of these files, while possible, is not recommended. Best is to keep them up to date by
 downloading published files from remote repositories.
 
@@ -134,19 +134,22 @@ groupIds per remote repository and saves them into properly placed file(s).
 
 To enable GroupId Filter recording, use following setting: `-Daether.remoteRepositoryFilter.groupId.record=true`.
 
-To truncate recorded file(s) instead to merge recorded entries with existing file, use following setting:
-`-Daether.remoteRepositoryFilter.groupId.truncateOnSave=true`.
+To truncate recorded file(s) instead of merging recorded entries with existing file, use following setting:
+`-Daether.remoteRepositoryFilter.groupId.truncateOnSave=true`. If enabled, the saved file will contain ONLY
+the groupIds that were recorded in current session, otherwise the recorded groupIds and already present ones
+in file will be merged, and then saved.
 
 ## Operation
 
 To make RRF filter operate, you have to provide two things: you have to explicitly enable the filter, and you have to
 provide input for the filter. 
 
-Enabling filters does not make them active (participate in filtering): for remote repository not having filter 
-input present, the filter pulls out from "voting" (does not participate in filtering, abstains from voting).
+Enabling filters does not make them active (participate in filtering): if a given remote repository does not have 
+any input available, the filter pulls out from "voting" (does not participate in filtering, abstains 
+from voting).
 
-In short, enabling filters are not enough, to make it active for a remote repository, you
-must provide them "input data" for given remote repository as well.
+In short, enabling filters is not enough, to make it active for a remote repository, you
+must provide them with "input data" for this remote repository as well.
 
 The most common case in case of multiple remote repositories is following setup: enable both filtering, and
 provide Maven Central prefixes file (downloaded) and if any remote repository offers prefixes, download them
