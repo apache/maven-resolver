@@ -84,51 +84,51 @@ where "somePath" can be relative path, then is resolved from local repository ro
 
 ### The Prefixes Filter
 
-The "prefixes" named filter relies on file containing list of "repository prefixes" available from given repository.
-The prefix is essentially "starts with" of Artifact path as translated by Repository Layout. Its effect is that
+The "prefixes" named filter relies on a file containing a list of "repository prefixes" available from a given repository.
+The prefix is essentially the "starts with" of Artifact path as translated by the repository layout. Its effect is that
 only those artifacts will be attempted to be downloaded from given remote repository, if there is a
-"starts with" match between artifact path translated by layout, and prefixes file published by remote repository.
+"starts with" match between the artifact path translated by the layout, and the prefixes file published by remote repository.
 
-Prefixes are usually published by remote repositories, hence, are kinda filtering other way around:
-is rather remote repository advising us "do not even bother by coming to me with a path that has no
+Prefixes are usually published by remote repositories, hence, are kinda filtering the other way around:
+it is rather the remote repository advising us "do not even bother to come to me with a path that has no
 appropriate prefix enlisted in this file". On the other hand, having a prefix enlisted does not
-provide 100% guarantee that matched artifact is really present! For example presence of `/com/foo`
+provide 100% guarantee that a matching artifact is really present! For example the presence of `/com/foo`
 prefix does NOT imply that `com.foo:baz:1.0` artifact is present, it merely tells "I do have
 something that starts with `/com/foo`" (for example `com.foo.baz:lib:1.0`). The depth of published
-prefixes is set by publisher, and is usually value between 2 and 4. It all boils down to equilibrium of
-"best coverage" and "acceptable file size" (ultimately, prefixes file containing all the relative
-paths of deployed artifact from repository root would be 100% coverage, but the cost would be huge
+prefixes is set by the publisher, and is usually a value between 2 and 4. It all boils down to the balance between
+"best coverage" and "acceptable file size" (ultimately, the prefixes file containing all the relative
+paths of deployed artifacts from the repository root would be 100% coverage, but the cost would be a huge
 file size for huge repositories like Maven Central).
 
 As this file is (automatically) published by MC and MRMs, using them is the simplest. Manual authoring
-of these files, while possible, is not recommended. Best is to keep them up to date by
-downloading published files from remote repositories.
+of these files, while possible, is not recommended. The best is to keep them up to date by
+downloading the published files from the remote repositories.
 
-Many MRMs and Maven Central itself publishes this file. Some prefixes file examples:
+Many MRMs and Maven Central itself publish these files. Some prefixes file examples:
 * Maven Central [prefixes.txt](https://repo.maven.apache.org/maven2/.meta/prefixes.txt)
 * ASF Releases hosted repository [prefixes.txt](https://repository.apache.org/content/repositories/releases/.meta/prefixes.txt)
 
-The prefixes files are expected in following location by default: 
+The prefixes files are expected in the following location by default: 
 `${filterBasedir}/prefixes-${remoteRepository.id}.txt`.
 
-To enable prefixes filter, use following setting: `-Daether.remoteRepositoryFilter.prefixes=true`.
+To enable prefixes filter, use the following setting: `-Daether.remoteRepositoryFilter.prefixes=true`.
 
-The prefixes filter "abstains" from filtering for given remote repository, if there is no input for it provided.
+The prefixes filter will "abstain" from filtering for the given remote repository, if there is no input provided for it.
 
 ### The GroupId Filter
 
-The "groupId" named implementation is filtering based on allowed `groupId` of Artifact. In essence, is a list
-of "allowed groupId coordinates from given remote repository". The file contains Artifact groupId per one line.
+The "groupId" named implementation is filtering based on allowed `groupId` of Artifact. In essence, it is a list
+of "allowed groupId coordinates from given remote repository". The file contains one Artifact groupId per line.
 
-The groupId files are expected in following location by default: 
+The groupId files are expected in the following location by default: 
 `${filterBasedir}/groupId-${remoteRepository.id}.txt`.
 
-To enable groupId filter, use following setting: `-Daether.remoteRepositoryFilter.groupId=true`.
+To enable groupId filtering, use the following setting: `-Daether.remoteRepositoryFilter.groupId=true`.
 
-The groupId filter "abstains" from filtering for given remote repository, if there is no input for it provided.
+The groupId filter will "abstain" from filtering for the given remote repository, if there is no input provided for it.
 
-The GroupId filter allows "recording" of encountered groupIds as well, that can be used as
-starting point: after "recording" done, one can edit it, remove or add entries as needed. When
+The GroupId filter allows the "recording" of encountered groupIds as well, that can be used as
+starting point: after the "recording" is done, one can edit, remove or add entries as needed. When
 groupId filter set to "record", it does NOT filter, but instead collects all the encountered
 groupIds per remote repository and saves them into properly placed file(s).
 
@@ -145,14 +145,14 @@ To make RRF filter operate, you have to provide two things: you have to explicit
 provide input for the filter. 
 
 Enabling filters does not make them active (participate in filtering): if a given remote repository does not have 
-any input available, the filter pulls out from "voting" (does not participate in filtering, abstains 
+any input available, the filter pulls out from "voting" (does not participate in filtering, will abstain 
 from voting).
 
 In short, enabling filters is not enough, to make it active for a remote repository, you
 must provide them with "input data" for this remote repository as well.
 
-The most common case in case of multiple remote repositories is following setup: enable both filtering, and
-provide Maven Central prefixes file (downloaded) and if any remote repository offers prefixes, download them
+The most common configuration in case of multiple remote repositories is the following setup: enable both filters, 
+provide the Maven Central prefixes file (downloaded) and if any remote repository offers prefixes, download them
 as well. Optionally provide groupId files for other remote repositories, if needed. It results in following filter 
 activity:
 
@@ -161,6 +161,6 @@ activity:
 | Maven Central     | active          | inactive       |
 | Some Remote       | inactive        | active         |
 
-It results in following "constraints":
+This leads to the following "constraints":
 * "Maven Central" is asked only for those artifacts it claims it may have (prefixes)
 * "Some Remote" is asked only for allowed groupIds. If it publishes prefixes, it can be safely added as well.
