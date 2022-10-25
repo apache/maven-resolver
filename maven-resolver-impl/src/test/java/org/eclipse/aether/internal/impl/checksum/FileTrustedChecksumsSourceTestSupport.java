@@ -44,15 +44,15 @@ import static org.junit.Assume.assumeThat;
 
 public abstract class FileTrustedChecksumsSourceTestSupport
 {
-    protected static final Artifact ARTIFACT_WITHOUT_CHECKSUM = new DefaultArtifact( "test:test:1.0" );
+    private static final Artifact ARTIFACT_WITHOUT_CHECKSUM = new DefaultArtifact( "test:test:1.0" );
 
-    protected static final Artifact ARTIFACT_WITH_CHECKSUM = new DefaultArtifact( "test:test:2.0" );
+    private static final Artifact ARTIFACT_WITH_CHECKSUM = new DefaultArtifact( "test:test:2.0" );
 
-    protected static final String ARTIFACT_TRUSTED_CHECKSUM = "trustedChecksum";
+    private static final String ARTIFACT_TRUSTED_CHECKSUM = "trustedChecksum";
 
-    protected DefaultRepositorySystemSession session;
+    private DefaultRepositorySystemSession session;
 
-    protected ChecksumAlgorithmFactory checksumAlgorithmFactory;
+    private ChecksumAlgorithmFactory checksumAlgorithmFactory;
 
     private FileTrustedChecksumsSourceSupport subject;
 
