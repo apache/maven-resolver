@@ -62,12 +62,12 @@ faster and more private, optimized, without loosing build information (remote re
 
 Maven Central (MC) repository is special in this respect, as Maven will always try to get things from here, as your build,
 plugins, plugin dependencies, extension, etc. will most often come from here. While you CAN filter MC, filtering MC is
-most often a bad idea (filtering, as in "limiting what can come from it"). On other hand, MC itself offers helps
-to prevent request leakage to it (publishes available prefixes).
+most often a bad idea (filtering, as in "limiting what can come from it"). On other hand, MC itself offers help
+to prevent request leakage to it (see "prefixes" filter).
 
 So, **most often** limiting "what can be fetched" from MC is a bad idea, it **can be done** but in very, very cautious way,
 as otherwise you risk your build. RRF does not distinguish the "context" of an artifact, it merely filters them out
-by {artifact, remoteRepository) pair, and by limiting MC you can easily get into state where you break your build (as
+by (artifact, remoteRepository) pair, and by limiting MC you can easily get into state where you break your build (as
 plugin depends on filtered artifact).
 
 ## RRF
@@ -80,7 +80,7 @@ default, filter basedir is resolved from local repository root and resolves to `
 directory, and will refer to it in this document with `${filterBasedir}` placeholder.
 
 To explicitly set filter basedir, use following setting: `-Daether.remoteRepositoryFilter.${filterName}.basedir=somePath`, 
-where "somePath" can be relative (then is resolved from local repository root) or absolute (then is used as is).
+where "somePath" can be relative path, then is resolved from local repository root, or absolute path, then is used as is.
 
 ### The Prefixes Filter
 
