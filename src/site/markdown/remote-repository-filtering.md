@@ -23,11 +23,11 @@ criteria.
 
 ### Why?
 
-Remote Repository Filtering (RRF) is a long asked feature of Maven, and plays huge role when your build uses
+Remote Repository Filtering (RRF) is a long asked feature of Maven, and plays a huge role when your build uses
 several remote repositories. In such cases Maven "searches" the ordered list (effective POM) of remote repositories,
-and artifact gets resolved using loop and "first found wins" strategy. This have several implications:
+and artifacts get resolved using a loop and a "first found wins" strategy. This has several implications:
 
-* your build gets slower, as if your artifact is in Nth repository, Maven must make N-1 requests that will result in
+* your build gets slower, as if your artifact is in the Nth repository, Maven must make N-1 requests that will result in
   404 Not Found only to get to Nth repository to finally get the artifact.
 * you build "leaks" artifact requests, as those repositories are asked for artifacts, that does not (or worse,
   cannot) have them. Still, those remote repository operators do get your requests in access logs.
@@ -72,12 +72,12 @@ plugin depends on filtered artifact).
 
 ## RRF
 
-The RRF feature offer filter source SPI for 3rd party implementors, but it also provides 2 out of the box 
+The RRF feature offers a filter source SPI for 3rd party implementors, but it also provides 2 out of the box 
 implementations for filtering: "prefixes" and "groupId" filters.
 
 Both implementation operate with several files (per remote repository), and they use the term "filter basedir". By
 default, filter basedir is resolved from local repository root and resolves to `${localRepo}/.remoteRepositoryFilters`
-directory, and will refer to it in this document with `${filterBasedir}` placeholder.
+directory. It will be referred to in this document with `${filterBasedir}` placeholder.
 
 To explicitly set filter basedir, use following setting: `-Daether.remoteRepositoryFilter.${filterName}.basedir=somePath`, 
 where "somePath" can be relative path, then is resolved from local repository root, or absolute path, then is used as is.
