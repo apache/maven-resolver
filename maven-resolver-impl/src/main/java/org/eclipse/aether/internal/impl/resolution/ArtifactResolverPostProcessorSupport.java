@@ -45,20 +45,36 @@ public abstract class ArtifactResolverPostProcessorSupport
         this.name = requireNonNull( name );
     }
 
-    protected String configPropKey( String name )
-    {
-        return CONFIG_PROP_PREFIX + this.name + "." + name;
-    }
-
+    /**
+     * This implementation will call into underlying code only if enabled.
+     */
     @Override
     public void postProcess( RepositorySystemSession session, List<ArtifactResult> artifactResults )
     {
-        boolean enabled = ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
-        if ( enabled )
+        if ( isEnabled( session ) )
         {
-            doProcess( session, artifactResults );
+            doPostProcess( session, artifactResults );
         }
     }
 
-    protected abstract void doProcess( RepositorySystemSession session, List<ArtifactResult> artifactResults );
+    protected abstract void doPostProcess( RepositorySystemSession session, List<ArtifactResult> artifactResults );
+
+    /**
+     * To be used by underlying implementations to form configuration property keys properly scoped.
+     */
+    protected String configPropKey( String name )
+    {
+        requireNonNull( name );
+        return CONFIG_PROP_PREFIX + this.name + "." + name;
+    }
+
+    /**
+     * Returns {@code true} if session configuration marks this instance as enabled.
+     * <p>
+     * Default value is {@code false}.
+     */
+    protected boolean isEnabled( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
+    }
 }

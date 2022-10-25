@@ -21,9 +21,7 @@ package org.eclipse.aether.internal.impl.checksum;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -78,8 +76,8 @@ abstract class FileTrustedChecksumsSourceSupport
     }
 
     /**
-     * The implementation will call into underlying code only if enabled, chosen basedir exists, and requested
-     * checksum algorithms are not empty.
+     * This implementation will call into underlying code only if enabled, and will enforce non-{@code null} return
+     * value. In worst case, empty map should be returned, meaning "no trusted checksums available".
      */
     @Override
     public Map<String, String> getTrustedArtifactChecksums( RepositorySystemSession session,
@@ -91,52 +89,41 @@ abstract class FileTrustedChecksumsSourceSupport
         requireNonNull( artifact, "artifact is null" );
         requireNonNull( artifactRepository, "artifactRepository is null" );
         requireNonNull( checksumAlgorithmFactories, "checksumAlgorithmFactories is null" );
-        boolean enabled = ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
-        if ( enabled )
+        if ( isEnabled( session ) )
         {
-            Path basedir = getBasedir( session, false );
-            if ( basedir != null && !checksumAlgorithmFactories.isEmpty() )
-            {
-                return requireNonNull(
-                        performLookup( session, basedir, artifact, artifactRepository, checksumAlgorithmFactories )
-                );
-            }
-            else
-            {
-                return Collections.emptyMap();
-            }
+            return requireNonNull(
+                    doGetTrustedArtifactChecksums( session, artifact, artifactRepository, checksumAlgorithmFactories )
+            );
         }
         return null;
     }
 
+    /**
+     * This implementation will call into underlying code only if enabled. Underlying implementation may still choose
+     * to return {@code null}.
+     */
     @Override
     public Writer getTrustedArtifactChecksumsWriter( RepositorySystemSession session )
     {
         requireNonNull( session, "session is null" );
-        boolean enabled = ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
-        if ( enabled )
+        if ( isEnabled( session ) )
         {
-            return getWriter( session, getBasedir( session, true ) );
+            return doGetTrustedArtifactChecksumsWriter( session );
         }
         return null;
     }
 
     /**
-     * Implementors MUST NOT return {@code null} at this point, as the "source is enabled" check was already performed
-     * and IS enabled, worst can happen is checksums for asked artifact are not available.
+     * Implementors MUST NOT return {@code null} at this point, as this source is enabled.
      */
-    protected abstract Map<String, String> performLookup( RepositorySystemSession session,
-                                                          Path basedir,
-                                                          Artifact artifact,
-                                                          ArtifactRepository artifactRepository,
-                                                          List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
+    protected abstract Map<String, String> doGetTrustedArtifactChecksums(
+            RepositorySystemSession session, Artifact artifact, ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
 
     /**
-     * If a subclass of this support class support
-     * {@link org.eclipse.aether.spi.checksums.TrustedChecksumsSource.Writer}, or in other words "is writable", it
-     * should override this method and return proper instance.
+     * Implementors may override this method and return {@link Writer} instance.
      */
-    protected Writer getWriter( RepositorySystemSession session, Path basedir )
+    protected Writer doGetTrustedArtifactChecksumsWriter( RepositorySystemSession session )
     {
         return null;
     }
@@ -151,29 +138,40 @@ abstract class FileTrustedChecksumsSourceSupport
     }
 
     /**
-     * Returns {@code true} if session configuration contains "originAware" property set to {@code true}.
+     * Returns {@code true} if session configuration marks this instance as enabled.
+     * <p>
+     * Default value is {@code false}.
      */
-    protected boolean isOriginAware( RepositorySystemSession session )
+    protected boolean isEnabled( RepositorySystemSession session )
     {
-        return ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
+        return ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
     }
 
     /**
-     * Uses common {@link DirectoryUtils} to calculate (and maybe create) basedir for this implementation. Returns
-     * {@code null} if the calculated basedir does not exist and {@code mayCreate} was {@code false}. If
-     * {@code mayCreate} parameter was {@code true}, this method always returns non-null {@link Path} or throws.
+     * Returns {@code true} if session configuration marks this instance as origin aware.
+     * <p>
+     * Default value is {@code true}.
      */
-    private Path getBasedir( RepositorySystemSession session, boolean mayCreate )
+    protected boolean isOriginAware( RepositorySystemSession session )
+    {
+        return ConfigUtils.getBoolean( session, true, configPropKey( CONF_NAME_ORIGIN_AWARE ) );
+    }
+
+    /**
+     * Uses utility {@link DirectoryUtils#resolveDirectory(RepositorySystemSession, String, String, boolean)} to
+     * calculate (and maybe create) basedir for this implementation, never returns {@code null}. The returned
+     * {@link Path} may not exist, if invoked with {@code mayCreate} being {@code false}.
+     * <p>
+     * Default value is {@code ${LOCAL_REPOSITORY}/.checksums}.
+     *
+     * @return The {@link Path} of basedir, never {@code null}.
+     */
+    protected Path getBasedir( RepositorySystemSession session, boolean mayCreate )
     {
         try
         {
-            Path basedir = DirectoryUtils.resolveDirectory(
+            return DirectoryUtils.resolveDirectory(
                     session, LOCAL_REPO_PREFIX_DIR, configPropKey( CONF_NAME_BASEDIR ), mayCreate );
-            if ( !Files.isDirectory( basedir ) )
-            {
-                return null;
-            }
-            return basedir;
         }
         catch ( IOException e )
         {

@@ -48,6 +48,28 @@ import static java.util.Objects.requireNonNull;
 /**
  * Artifact resolver processor that verifies the checksums of all resolved artifacts against trusted checksums. Is also
  * able to "record" (calculate and write them) to trusted checksum sources, that do support this operation.
+ * <p>
+ * It uses a list of {@link ChecksumAlgorithmFactory}ies to work with, by default SHA-1.
+ * <p>
+ * Configuration keys:
+ * <ul>
+ *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.checksumAlgorithms} - Comma separated
+ *       list of {@link ChecksumAlgorithmFactory} names to use (default "SHA-1").</li>
+ *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.failIfMissing} - To fail if artifact
+ *       being validated is missing a trusted checksum (default {@code false}).</li>
+ *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.snapshots} - Should snapshot artifacts be
+ *       handled (validated or recorded). Snapshots are by "best practice" in-house produced, hence should be trusted
+ *       (default {@code false}).</li>
+ *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.record} - If this value set to {@code true},
+ *       this component with not validate but "record" encountered artifact checksums instead
+ *       (default {@code false}).</li>
+ * </ul>
+ * <p>
+ * This component uses {@link TrustedChecksumsSource} as source of checksums for validation and also to "record" the
+ * calculated checksums. To have this component usable, there must exist at least one enabled checksum source. In case
+ * of multiple checksum sources enabled, ALL of them are used as source for validation or recording. This
+ * implies that if two enabled checksum sources "disagree" about an artifact checksum, the validation failure is
+ * inevitable.
  *
  * @since TBD
  */
@@ -58,13 +80,15 @@ public final class TrustedChecksumsArtifactResolverPostProcessor
 {
     public static final String NAME = "trusted-checksums";
 
-    private static final String CONF_CHECKSUM_ALGORITHMS = "checksumAlgorithms";
+    private static final String CONF_NAME_CHECKSUM_ALGORITHMS = "checksumAlgorithms";
 
     private static final String DEFAULT_CHECKSUM_ALGORITHMS = "SHA-1";
 
-    private static final String CONF_FAIL_IF_MISSING = "failIfMissing";
+    private static final String CONF_NAME_FAIL_IF_MISSING = "failIfMissing";
 
-    private static final String CONF_RECORD = "record";
+    private static final String CONF_NAME_SNAPSHOTS = "snapshots";
+
+    private static final String CONF_NAME_RECORD = "record";
 
     private static final String CHECKSUM_ALGORITHMS_CACHE_KEY =
             TrustedChecksumsArtifactResolverPostProcessor.class.getName() + ".checksumAlgorithms";
@@ -85,21 +109,28 @@ public final class TrustedChecksumsArtifactResolverPostProcessor
 
     @SuppressWarnings( "unchecked" )
     @Override
-    protected void doProcess( RepositorySystemSession session, List<ArtifactResult> artifactResults )
+    protected void doPostProcess( RepositorySystemSession session, List<ArtifactResult> artifactResults )
     {
         final List<ChecksumAlgorithmFactory> checksumAlgorithms = (List<ChecksumAlgorithmFactory>) session.getData()
                 .computeIfAbsent( CHECKSUM_ALGORITHMS_CACHE_KEY, () ->
                         checksumAlgorithmFactorySelector.selectList(
                                 ConfigUtils.parseCommaSeparatedUniqueNames( ConfigUtils.getString(
-                                        session, DEFAULT_CHECKSUM_ALGORITHMS, CONF_CHECKSUM_ALGORITHMS ) )
+                                        session, DEFAULT_CHECKSUM_ALGORITHMS, CONF_NAME_CHECKSUM_ALGORITHMS ) )
                         ) );
 
         final boolean failIfMissing = ConfigUtils.getBoolean(
-                session, false, configPropKey( CONF_FAIL_IF_MISSING ) );
-        final boolean record = ConfigUtils.getBoolean( session, false, configPropKey( CONF_RECORD ) );
+                session, false, configPropKey( CONF_NAME_FAIL_IF_MISSING ) );
+        final boolean record = ConfigUtils.getBoolean(
+                session, false, configPropKey( CONF_NAME_RECORD ) );
+        final boolean snapshots = ConfigUtils.getBoolean(
+                session, false, configPropKey( CONF_NAME_SNAPSHOTS ) );
 
         for ( ArtifactResult artifactResult : artifactResults )
         {
+            if ( artifactResult.getArtifact().isSnapshot() && !snapshots )
+            {
+                continue;
+            }
             if ( artifactResult.isResolved() )
             {
                 if ( record )
@@ -123,7 +154,6 @@ public final class TrustedChecksumsArtifactResolverPostProcessor
     {
         Artifact artifact = artifactResult.getArtifact();
         ArtifactRepository artifactRepository = artifactResult.getRepository();
-
         try
         {
             final Map<String, String> calculatedChecksums = ChecksumAlgorithmHelper.calculate(
@@ -160,7 +190,6 @@ public final class TrustedChecksumsArtifactResolverPostProcessor
     {
         Artifact artifact = artifactResult.getArtifact();
         ArtifactRepository artifactRepository = artifactResult.getRepository();
-
         boolean valid = true;
         boolean validated = false;
         try

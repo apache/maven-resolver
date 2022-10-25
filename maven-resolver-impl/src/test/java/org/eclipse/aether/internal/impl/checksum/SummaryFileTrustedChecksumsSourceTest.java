@@ -19,32 +19,19 @@ package org.eclipse.aether.internal.impl.checksum;
  * under the License.
  */
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 
 public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
-    protected FileTrustedChecksumsSourceSupport prepareSubject( Path basedir ) throws IOException
+    protected FileTrustedChecksumsSourceSupport prepareSubject()
     {
-        // artifact: test:test:2.0 => "foobar"
-        {
-            Path test = basedir.resolve( "checksums." + checksumAlgorithmFactory.getFileExtension() );
-            Files.createDirectories( test.getParent() );
-            Files.write( test,
-                    ( ArtifactIdUtils.toId( ARTIFACT_WITH_CHECKSUM ) + " " + ARTIFACT_TRUSTED_CHECKSUM ).getBytes(
-                            StandardCharsets.UTF_8 ) );
-        }
-
-        return new SummaryFileTrustedChecksumsSource();
+        return new SummaryFileTrustedChecksumsSource( new DefaultLocalPathComposer() );
     }
 
     @Override
-    protected void enableSource()
+    protected void enableSource( DefaultRepositorySystemSession session )
     {
         session.setConfigProperty( "aether.trustedChecksumsSource.summary-file", Boolean.TRUE.toString() );
     }
