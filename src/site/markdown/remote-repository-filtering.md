@@ -77,7 +77,7 @@ implementations for filtering: "prefixes" and "groupId" filters.
 
 Both implementation operate with several files (per remote repository), and they use the term "filter basedir". By
 default, filter basedir is resolved from local repository root and resolves to `${localRepo}/.remoteRepositoryFilters`
-directory.
+directory, and will refer to it in this document with `${filterBasedir}` placeholder.
 
 To explicitly set filter basedir, use following setting: `-Daether.remoteRepositoryFilter.${filterName}.basedir=somePath`, 
 where "somePath" can be relative (then is resolved from local repository root) or absolute (then is used as is).
