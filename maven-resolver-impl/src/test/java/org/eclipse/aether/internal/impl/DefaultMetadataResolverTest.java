@@ -26,11 +26,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
+import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
+import org.eclipse.aether.internal.impl.filter.Filters;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -42,6 +44,7 @@ import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.junit.After;
 import org.junit.Before;
@@ -66,10 +69,17 @@ public class DefaultMetadataResolverTest
 
     private TestLocalRepositoryManager lrm;
 
+    private HashMap<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources;
+
+    private DefaultRemoteRepositoryFilterManager remoteRepositoryFilterManager;
+
     @Before
     public void setup()
         throws Exception
     {
+        remoteRepositoryFilterSources = new HashMap<>();
+        remoteRepositoryFilterManager = new DefaultRemoteRepositoryFilterManager( remoteRepositoryFilterSources );
+
         session = TestUtils.newSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
         connectorProvider = new StubRepositoryConnectorProvider();
@@ -80,6 +90,7 @@ public class DefaultMetadataResolverTest
         resolver.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
         resolver.setOfflineController( new DefaultOfflineController() );
+        resolver.setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
         repository =
             new RemoteRepository.Builder( "test-DMRT", "default",
                                           TestFileUtils.createTempDir().toURI().toURL().toString() ).build();
@@ -250,6 +261,136 @@ public class DefaultMetadataResolverTest
         MetadataResult result = results.get( 0 );
         assertSame( request, result.getRequest() );
         assertNull( String.valueOf( result.getException() ), result.getException() );
+
+        connector.assertSeenExpected();
+    }
+
+    @Test
+    public void testResolveAlwaysAcceptFilter()
+            throws IOException
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.neverAcceptFrom("invalid repo id") );
+        remoteRepositoryFilterSources.put( "filter2", Filters.alwaysAccept() );
+        connector.setExpectGet( metadata );
+
+        // prepare "download"
+        File file =
+                new File( session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository, "" ) );
+
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
+
+        MetadataRequest request = new MetadataRequest( metadata, repository, "" );
+        List<MetadataResult> results = resolver.resolveMetadata( session, Arrays.asList( request ) );
+
+        assertEquals( 1, results.size() );
+
+        MetadataResult result = results.get( 0 );
+        assertSame( request, result.getRequest() );
+        assertNull( result.getException() );
+        assertNotNull( result.getMetadata() );
+        assertNotNull( result.getMetadata().getFile() );
+
+        assertEquals( file, result.getMetadata().getFile() );
+        assertEquals( metadata, result.getMetadata().setFile( null ) );
+
+        connector.assertSeenExpected();
+        Set<Metadata> metadataRegistration =
+                ( (TestLocalRepositoryManager) session.getLocalRepositoryManager() ).getMetadataRegistration();
+        assertTrue( metadataRegistration.contains( metadata ) );
+        assertEquals( 1, metadataRegistration.size() );
+    }
+
+    @Test
+    public void testResolveNeverAcceptFilter()
+            throws IOException
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.neverAcceptFrom("invalid repo id") );
+        remoteRepositoryFilterSources.put( "filter2", Filters.neverAccept() );
+        // connector.setExpectGet( metadata ); // should not see it
+
+        // prepare "download"
+        File file =
+                new File( session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository, "" ) );
+
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
+
+        MetadataRequest request = new MetadataRequest( metadata, repository, "" );
+        List<MetadataResult> results = resolver.resolveMetadata( session, Arrays.asList( request ) );
+
+        assertEquals( 1, results.size() );
+
+        MetadataResult result = results.get( 0 );
+        assertSame( request, result.getRequest() );
+        assertNotNull( result.getException() );
+        assertTrue( result.getException() instanceof MetadataNotFoundException );
+        assertEquals( "never-accept", result.getException().getMessage() );
+        assertNull( result.getMetadata() );
+
+        connector.assertSeenExpected();
+    }
+
+    @Test
+    public void testResolveAlwaysAcceptFromRepoFilter()
+            throws IOException
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.alwaysAcceptFrom( repository.getId() ) );
+        connector.setExpectGet( metadata );
+
+        // prepare "download"
+        File file =
+                new File( session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository, "" ) );
+
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
+
+        MetadataRequest request = new MetadataRequest( metadata, repository, "" );
+        List<MetadataResult> results = resolver.resolveMetadata( session, Arrays.asList( request ) );
+
+        assertEquals( 1, results.size() );
+
+        MetadataResult result = results.get( 0 );
+        assertSame( request, result.getRequest() );
+        assertNull( result.getException() );
+        assertNotNull( result.getMetadata() );
+        assertNotNull( result.getMetadata().getFile() );
+
+        assertEquals( file, result.getMetadata().getFile() );
+        assertEquals( metadata, result.getMetadata().setFile( null ) );
+
+        connector.assertSeenExpected();
+        Set<Metadata> metadataRegistration =
+                ( (TestLocalRepositoryManager) session.getLocalRepositoryManager() ).getMetadataRegistration();
+        assertTrue( metadataRegistration.contains( metadata ) );
+        assertEquals( 1, metadataRegistration.size() );
+    }
+
+    @Test
+    public void testResolveNeverAcceptFromRepoFilter()
+            throws IOException
+    {
+        remoteRepositoryFilterSources.put( "filter1", Filters.neverAcceptFrom( repository.getId() ) );
+        // connector.setExpectGet( metadata ); // should not see it
+
+        // prepare "download"
+        File file =
+                new File( session.getLocalRepository().getBasedir(),
+                        session.getLocalRepositoryManager().getPathForRemoteMetadata( metadata, repository, "" ) );
+
+        TestFileUtils.writeString( file, file.getAbsolutePath() );
+
+        MetadataRequest request = new MetadataRequest( metadata, repository, "" );
+        List<MetadataResult> results = resolver.resolveMetadata( session, Arrays.asList( request ) );
+
+        assertEquals( 1, results.size() );
+
+        MetadataResult result = results.get( 0 );
+        assertSame( request, result.getRequest() );
+        assertNotNull( result.getException() );
+        assertTrue( result.getException() instanceof MetadataNotFoundException );
+        assertEquals( "never-accept-" + repository.getId(), result.getException().getMessage() );
+        assertNull( result.getMetadata() );
 
         connector.assertSeenExpected();
     }

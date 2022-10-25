@@ -44,9 +44,11 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.OfflineController;
+import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
@@ -95,6 +97,8 @@ public class DefaultMetadataResolver
 
     private OfflineController offlineController;
 
+    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
+
     public DefaultMetadataResolver()
     {
         // enables default constructor
@@ -105,7 +109,8 @@ public class DefaultMetadataResolver
                              UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             OfflineController offlineController )
+                             OfflineController offlineController,
+                             RemoteRepositoryFilterManager remoteRepositoryFilterManager )
     {
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setUpdateCheckManager( updateCheckManager );
@@ -113,6 +118,7 @@ public class DefaultMetadataResolver
         setRemoteRepositoryManager( remoteRepositoryManager );
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
+        setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
     }
 
     public void initService( ServiceLocator locator )
@@ -123,6 +129,7 @@ public class DefaultMetadataResolver
         setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
+        setRemoteRepositoryFilterManager( locator.getService( RemoteRepositoryFilterManager.class ) );
     }
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
@@ -165,6 +172,14 @@ public class DefaultMetadataResolver
         return this;
     }
 
+    public DefaultMetadataResolver setRemoteRepositoryFilterManager(
+            RemoteRepositoryFilterManager remoteRepositoryFilterManager )
+    {
+        this.remoteRepositoryFilterManager = requireNonNull( remoteRepositoryFilterManager,
+                "remote repository filter manager cannot be null" );
+        return this;
+    }
+
     public List<MetadataResult> resolveMetadata( RepositorySystemSession session,
                                                  Collection<? extends MetadataRequest> requests )
     {
@@ -193,6 +208,9 @@ public class DefaultMetadataResolver
         List<ResolveTask> tasks = new ArrayList<>( requests.size() );
 
         Map<File, Long> localLastUpdates = new HashMap<>();
+
+        RemoteRepositoryFilter remoteRepositoryFilter = remoteRepositoryFilterManager
+                .getRemoteRepositoryFilter( session );
 
         for ( MetadataRequest request : requests )
         {
@@ -224,6 +242,18 @@ public class DefaultMetadataResolver
 
                 metadataResolved( session, trace, metadata, localRepo, result.getException() );
                 continue;
+            }
+
+            if ( remoteRepositoryFilter != null )
+            {
+                RemoteRepositoryFilter.Result filterResult = remoteRepositoryFilter.acceptMetadata(
+                        repository, metadata );
+                if ( !filterResult.isAccepted() )
+                {
+                    result.setException(
+                            new MetadataNotFoundException( metadata, repository, filterResult.reasoning() ) );
+                    continue;
+                }
             }
 
             List<RemoteRepository> repositories = getEnabledSourceRepositories( repository, metadata.getNature() );

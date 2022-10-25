@@ -30,12 +30,15 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
+import org.eclipse.aether.internal.impl.filter.FilteringRepositoryConnector;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
@@ -54,20 +57,25 @@ public class DefaultRepositoryConnectorProvider
 
     private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<>();
 
+    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
+
     public DefaultRepositoryConnectorProvider()
     {
         // enables default constructor
     }
 
     @Inject
-    DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories )
+    DefaultRepositoryConnectorProvider( Set<RepositoryConnectorFactory> connectorFactories,
+                                        RemoteRepositoryFilterManager remoteRepositoryFilterManager )
     {
         setRepositoryConnectorFactories( connectorFactories );
+        setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
     }
 
     public void initService( ServiceLocator locator )
     {
-        connectorFactories = locator.getServices( RepositoryConnectorFactory.class );
+        setRepositoryConnectorFactories( locator.getServices( RepositoryConnectorFactory.class ) );
+        setRemoteRepositoryFilterManager( locator.getService( RemoteRepositoryFilterManager.class ) );
     }
 
     public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory( RepositoryConnectorFactory factory )
@@ -90,10 +98,18 @@ public class DefaultRepositoryConnectorProvider
         return this;
     }
 
+    public DefaultRepositoryConnectorProvider setRemoteRepositoryFilterManager(
+            RemoteRepositoryFilterManager remoteRepositoryFilterManager )
+    {
+        this.remoteRepositoryFilterManager = requireNonNull( remoteRepositoryFilterManager );
+        return this;
+    }
+
     public RepositoryConnector newRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
         throws NoRepositoryConnectorException
     {
         requireNonNull( repository, "remote repository cannot be null" );
+        RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter( session );
 
         PrioritizedComponents<RepositoryConnectorFactory> factories = new PrioritizedComponents<>( session );
         for ( RepositoryConnectorFactory factory : this.connectorFactories )
@@ -137,7 +153,18 @@ public class DefaultRepositoryConnectorProvider
                     LOGGER.debug( buffer.toString() );
                 }
 
-                return connector;
+                if ( filter != null )
+                {
+                    return new FilteringRepositoryConnector(
+                            repository,
+                            connector,
+                            filter
+                    );
+                }
+                else
+                {
+                    return connector;
+                }
             }
             catch ( NoRepositoryConnectorException e )
             {

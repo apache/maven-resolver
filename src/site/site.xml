@@ -30,6 +30,7 @@ under the License.
       <item name="About Checksums" href="about-checksums.html"/>
       <item name="About Local Repository" href="local-repository.html"/>
       <item name="Included Checksum Strategies" href="included-checksum-strategies.html"/>
+      <item name="Remote Repository Filtering" href="remote-repository-filtering.html"/>
       <item name="Maven 3.8.x" href="maven-3.8.x.html"/>
       <item name="JavaDocs" href="apidocs/index.html"/>
       <item name="Source Xref" href="xref/index.html"/>

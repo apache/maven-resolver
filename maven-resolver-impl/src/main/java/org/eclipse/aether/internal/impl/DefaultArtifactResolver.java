@@ -44,6 +44,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.OfflineController;
+import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
@@ -70,6 +71,7 @@ import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
@@ -90,7 +92,18 @@ public class DefaultArtifactResolver
         implements ArtifactResolver, Service
 {
 
+    /**
+     * Configuration to enable "snapshot normalization", downloaded snapshots from remote with timestamped file names
+     * will have file names converted back to baseVersion. Default: {@code true}.
+     */
     private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
+
+    /**
+     * Configuration to enable "interoperability" with Simple LRM, but this breaks RRF feature, hence this configuration
+     * is IGNORED when RRF is used, and is warmly recommended to leave it disabled even if no RRF is being used.
+     * Default: {@code false}.
+     */
+    private static final String CONFIG_PROP_SIMPLE_LRM_INTEROP = "aether.artifactResolver.simpleLrmInterop";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( DefaultArtifactResolver.class );
 
@@ -112,6 +125,8 @@ public class DefaultArtifactResolver
 
     private Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors;
 
+    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
+
     public DefaultArtifactResolver()
     {
         // enables default constructor
@@ -124,7 +139,8 @@ public class DefaultArtifactResolver
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
                              OfflineController offlineController,
-                             Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors )
+                             Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors,
+                             RemoteRepositoryFilterManager remoteRepositoryFilterManager )
     {
         setFileProcessor( fileProcessor );
         setRepositoryEventDispatcher( repositoryEventDispatcher );
@@ -135,6 +151,7 @@ public class DefaultArtifactResolver
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
         setArtifactResolverPostProcessors( artifactResolverPostProcessors );
+        setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
     }
 
     public void initService( ServiceLocator locator )
@@ -148,6 +165,7 @@ public class DefaultArtifactResolver
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
         setArtifactResolverPostProcessors( Collections.emptyMap() );
+        setRemoteRepositoryFilterManager( locator.getService( RemoteRepositoryFilterManager.class ) );
     }
 
     /**
@@ -220,6 +238,14 @@ public class DefaultArtifactResolver
         return this;
     }
 
+    public DefaultArtifactResolver setRemoteRepositoryFilterManager(
+            RemoteRepositoryFilterManager remoteRepositoryFilterManager )
+    {
+        this.remoteRepositoryFilterManager = requireNonNull( remoteRepositoryFilterManager,
+                "remote repository filter manager cannot be null" );
+        return this;
+    }
+
     public ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
             throws ArtifactResolutionException
     {
@@ -260,11 +286,14 @@ public class DefaultArtifactResolver
     {
         List<ArtifactResult> results = new ArrayList<>( requests.size() );
         boolean failures = false;
+        final boolean simpleLrmInterop = ConfigUtils.getBoolean( session, false, CONFIG_PROP_SIMPLE_LRM_INTEROP );
 
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         WorkspaceReader workspace = session.getWorkspaceReader();
 
         List<ResolutionGroup> groups = new ArrayList<>();
+        // filter != null: means "filtering applied", if null no filtering applied (behave as before)
+        RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter( session );
 
         for ( ArtifactRequest request : requests )
         {
@@ -274,7 +303,6 @@ public class DefaultArtifactResolver
             results.add( result );
 
             Artifact artifact = request.getArtifact();
-            List<RemoteRepository> repos = request.getRepositories();
 
             artifactResolving( session, trace, artifact );
 
@@ -297,10 +325,27 @@ public class DefaultArtifactResolver
                 continue;
             }
 
+            List<RemoteRepository> remoteRepositories = request.getRepositories();
+            List<RemoteRepository> filteredRemoteRepositories = new ArrayList<>( remoteRepositories );
+            if ( filter != null )
+            {
+                for ( RemoteRepository repository : remoteRepositories )
+                {
+                    RemoteRepositoryFilter.Result filterResult = filter.acceptArtifact( repository, artifact );
+                    if ( !filterResult.isAccepted() )
+                    {
+                        result.addException( new ArtifactNotFoundException( artifact, repository,
+                                filterResult.reasoning() ) );
+                        filteredRemoteRepositories.remove( repository );
+                    }
+                }
+            }
+
             VersionResult versionResult;
             try
             {
-                VersionRequest versionRequest = new VersionRequest( artifact, repos, request.getRequestContext() );
+                VersionRequest versionRequest = new VersionRequest(
+                        artifact, filteredRemoteRepositories, request.getRequestContext() );
                 versionRequest.setTrace( trace );
                 versionResult = versionResolver.resolveVersion( session, versionRequest );
             }
@@ -316,11 +361,12 @@ public class DefaultArtifactResolver
             {
                 if ( versionResult.getRepository() instanceof RemoteRepository )
                 {
-                    repos = Collections.singletonList( (RemoteRepository) versionResult.getRepository() );
+                    filteredRemoteRepositories =
+                            Collections.singletonList( (RemoteRepository) versionResult.getRepository() );
                 }
                 else
                 {
-                    repos = Collections.emptyList();
+                    filteredRemoteRepositories = Collections.emptyList();
                 }
             }
 
@@ -337,9 +383,13 @@ public class DefaultArtifactResolver
                 }
             }
 
-            LocalArtifactResult local =
-                    lrm.find( session, new LocalArtifactRequest( artifact, repos, request.getRequestContext() ) );
-            if ( isLocallyInstalled( local, versionResult ) )
+            LocalArtifactResult local = lrm.find( session, new LocalArtifactRequest( artifact,
+                    filteredRemoteRepositories, request.getRequestContext() ) );
+            boolean found = ( filter != null && local.isAvailable() ) || isLocallyInstalled( local, versionResult );
+            // with filtering it is availability that drives logic
+            // without filtering it is simply presence of file that drives the logic
+            // "interop" logic with simple LRM leads to RRF breakage: hence is ignored when filtering in effect
+            if ( found )
             {
                 if ( local.getRepository() != null )
                 {
@@ -349,6 +399,7 @@ public class DefaultArtifactResolver
                 {
                     result.setRepository( lrm.getRepository() );
                 }
+
                 try
                 {
                     artifact = artifact.setFile( getFile( session, artifact, local.getFile() ) );
@@ -359,27 +410,29 @@ public class DefaultArtifactResolver
                 {
                     result.addException( e );
                 }
-                if ( !local.isAvailable() )
+                if ( filter == null && simpleLrmInterop && !local.isAvailable() )
                 {
                     /*
-                     * NOTE: Interop with simple local repository: An artifact installed by a simple local repo manager
-                     * will not show up in the repository tracking file of the enhanced local repository. If however the
-                     * maven-metadata-local.xml tells us the artifact was installed locally, we sync the repository
-                     * tracking file.
+                     * NOTE: Interop with simple local repository: An artifact installed by a simple local repo
+                     * manager will not show up in the repository tracking file of the enhanced local repository.
+                     * If however the maven-metadata-local.xml tells us the artifact was installed locally, we
+                     * sync the repository tracking file.
                      */
                     lrm.add( session, new LocalArtifactRegistration( artifact ) );
                 }
+
                 continue;
             }
-            else if ( local.getFile() != null )
+
+            if ( local.getFile() != null )
             {
-                LOGGER.debug( "Verifying availability of {} from {}", local.getFile(), repos );
+                LOGGER.debug( "Verifying availability of {} from {}", local.getFile(), remoteRepositories );
             }
 
-            LOGGER.debug( "Resolving artifact {} from {}", artifact, repos );
+            LOGGER.debug( "Resolving artifact {} from {}", artifact, remoteRepositories );
             AtomicBoolean resolved = new AtomicBoolean( false );
             Iterator<ResolutionGroup> groupIt = groups.iterator();
-            for ( RemoteRepository repo : repos )
+            for ( RemoteRepository repo : filteredRemoteRepositories )
             {
                 if ( !repo.getPolicy( artifact.isSnapshot() ).isEnabled() )
                 {
@@ -414,7 +467,7 @@ public class DefaultArtifactResolver
                 {
                     group = new ResolutionGroup( repo );
                     groups.add( group );
-                    groupIt = Collections.<ResolutionGroup>emptyList().iterator();
+                    groupIt = Collections.emptyIterator();
                 }
                 group.items.add( new ResolutionItem( trace, artifact, resolved, result, local, repo ) );
             }
