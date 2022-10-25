@@ -128,8 +128,8 @@ To enable groupId filtering, use the following setting: `-Daether.remoteReposito
 The groupId filter will "abstain" from filtering for the given remote repository, if there is no input provided for it.
 
 The GroupId filter allows the "recording" of encountered groupIds as well, that can be used as
-starting point: after the "recording" is done, one can edit, remove or add entries as needed. When
-groupId filter set to "record", it does NOT filter, but instead collects all the encountered
+starting point: after the "recording" is done, one can edit, remove or add entries as needed. When the
+groupId filter is set to "record", it does NOT filter, but instead collects all the encountered
 groupIds per remote repository and saves them into properly placed file(s).
 
 To enable GroupId Filter recording, use following setting: `-Daether.remoteRepositoryFilter.groupId.record=true`.
