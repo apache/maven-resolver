@@ -27,7 +27,7 @@ import java.security.NoSuchAlgorithmException;
  * A simple digester utility for Strings. Uses {@link MessageDigest} for requested algorithm. Supports one-pass or
  * several rounds of updates, and as result emits hex encoded String.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public final class StringDigestUtil
 {

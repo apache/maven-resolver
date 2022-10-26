@@ -52,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * This implementation ensures that implementations have "name" property, used in configuration properties above.
  *
- * @since TBD
+ * @since 1.9.0
  */
 abstract class FileTrustedChecksumsSourceSupport
         implements TrustedChecksumsSource

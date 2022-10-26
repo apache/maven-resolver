@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * This mapper is usable in any scenario, but intent was to produce more "compact" name mapper for file locking.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public class HashingNameMapper implements NameMapper
 {

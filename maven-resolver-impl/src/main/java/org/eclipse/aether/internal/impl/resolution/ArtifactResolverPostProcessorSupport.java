@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Support class to implement {@link ArtifactResolverPostProcessor}.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public abstract class ArtifactResolverPostProcessorSupport
         implements ArtifactResolverPostProcessor

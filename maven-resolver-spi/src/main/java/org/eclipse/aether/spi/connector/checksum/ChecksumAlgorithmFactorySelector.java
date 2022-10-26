@@ -49,7 +49,7 @@ public interface ChecksumAlgorithmFactorySelector
      *
      * @throws IllegalArgumentException if any asked algorithm name is not supported.
      * @throws NullPointerException if passed in list of names is {@code null}.
-     * @since TBD
+     * @since 1.9.0
      */
     default List<ChecksumAlgorithmFactory> selectList( Collection<String> algorithmNames )
     {

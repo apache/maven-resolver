@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  *     repository basedir.</li>
  * </ul>
  *
- * @since TBD
+ * @since 1.9.0
  */
 public abstract class RemoteRepositoryFilterSourceSupport
         implements RemoteRepositoryFilterSource

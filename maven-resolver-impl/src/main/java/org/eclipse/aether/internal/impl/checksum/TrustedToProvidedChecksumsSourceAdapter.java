@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
  * Adapter that adapts {@link TrustedChecksumsSource} to {@link ProvidedChecksumsSource} used by connector. Hence, any
  * "trusted" source exist that is enabled, automatically becomes "provided" source as well.
  *
- * @since TBD
+ * @since 1.9.0
  */
 @Singleton
 @Named( TrustedToProvidedChecksumsSourceAdapter.NAME )

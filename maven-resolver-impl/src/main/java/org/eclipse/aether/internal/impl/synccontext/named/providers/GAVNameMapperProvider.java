@@ -29,7 +29,7 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 /**
  * The "gav" name mapper provider.
  *
- * @since TBD
+ * @since 1.9.0
  */
 @Singleton
 @Named( GAVNameMapperProvider.NAME )

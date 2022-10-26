@@ -278,7 +278,7 @@ public interface RepositorySystemSession extends AutoCloseable
      * that handlers cannot use {@link RepositorySystem} to resolve/collect/and so on, handlers are meant to perform
      * some internal cleanup on session close. Attempt to add handler to closed session will throw.
      *
-     * @since TBD
+     * @since 1.9.0
      */
     void addOnCloseHandler( Consumer<RepositorySystemSession> handler );
 
@@ -286,7 +286,7 @@ public interface RepositorySystemSession extends AutoCloseable
      * Returns {@code true} if this instance was already closed. Closed sessions should NOT be used anymore.
      *
      * @return {@code true} if session was closed.
-     * @since TBD
+     * @since 1.9.0
      */
     boolean isClosed();
 
@@ -320,7 +320,7 @@ public interface RepositorySystemSession extends AutoCloseable
      * }
      * }</pre>
      *
-     * @since TBD
+     * @since 1.9.0
      */
     @Override
     void close();

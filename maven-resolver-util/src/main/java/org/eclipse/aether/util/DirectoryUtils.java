@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @see RepositorySystemSession#getConfigProperties()
  * @see RepositorySystemSession#getLocalRepository()
- * @since TBD
+ * @since 1.9.0
  */
 public final class DirectoryUtils
 {

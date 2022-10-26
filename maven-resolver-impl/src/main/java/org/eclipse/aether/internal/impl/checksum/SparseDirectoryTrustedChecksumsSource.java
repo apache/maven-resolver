@@ -56,7 +56,7 @@ import static java.util.Objects.requireNonNull;
  * The name of this implementation is "sparse-directory".
  *
  * @see LocalPathComposer
- * @since TBD
+ * @since 1.9.0
  */
 @Singleton
 @Named( SparseDirectoryTrustedChecksumsSource.NAME )

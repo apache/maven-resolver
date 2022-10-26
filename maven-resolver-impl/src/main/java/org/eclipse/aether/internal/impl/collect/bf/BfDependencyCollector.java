@@ -111,7 +111,7 @@ public class BfDependencyCollector
     /**
      * The count of threads to be used when collecting POMs in parallel, default value 5.
      *
-     * @since TBD
+     * @since 1.9.0
      */
     static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
 

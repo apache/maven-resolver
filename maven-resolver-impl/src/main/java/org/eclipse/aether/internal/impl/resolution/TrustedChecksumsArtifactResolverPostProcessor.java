@@ -71,7 +71,7 @@ import static java.util.Objects.requireNonNull;
  * implies that if two enabled checksum sources "disagree" about an artifact checksum, the validation failure is
  * inevitable.
  *
- * @since TBD
+ * @since 1.9.0
  */
 @Singleton
 @Named( TrustedChecksumsArtifactResolverPostProcessor.NAME )

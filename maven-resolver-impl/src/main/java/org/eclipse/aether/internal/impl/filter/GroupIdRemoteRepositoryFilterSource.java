@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * The groupId file once loaded are cached in session, so in-flight groupId file change during session are NOT
  * noticed.
  *
- * @since TBD
+ * @since 1.9.0
  */
 @Singleton
 @Named( GroupIdRemoteRepositoryFilterSource.NAME )

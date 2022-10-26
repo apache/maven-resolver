@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A filtering connector that filter transfers using remote repository filter and delegates to another connector.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public final class FilteringRepositoryConnector
         implements RepositoryConnector
