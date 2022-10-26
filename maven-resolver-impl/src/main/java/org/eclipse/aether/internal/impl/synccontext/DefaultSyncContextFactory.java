@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
+import org.eclipse.aether.impl.RepositorySystemSessionLifecycle;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
@@ -69,15 +70,19 @@ public final class DefaultSyncContextFactory
 
     private Map<String, NamedLockFactory> namedLockFactories;
 
+    private RepositorySystemSessionLifecycle repositorySystemSessionLifecycle;
+
     /**
      * Constructor used with DI, where factories are injected and selected based on key.
      */
     @Inject
     public DefaultSyncContextFactory( final Map<String, NameMapper> nameMappers,
-                                      final Map<String, NamedLockFactory> namedLockFactories )
+                                      final Map<String, NamedLockFactory> namedLockFactories,
+                                      final RepositorySystemSessionLifecycle repositorySystemSessionLifecycle )
     {
         this.nameMappers = requireNonNull( nameMappers );
         this.namedLockFactories = requireNonNull( namedLockFactories );
+        this.repositorySystemSessionLifecycle = requireNonNull( repositorySystemSessionLifecycle );
     }
 
     /**
@@ -108,6 +113,8 @@ public final class DefaultSyncContextFactory
         factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
         factories.put( FileLockNamedLockFactory.NAME, new FileLockNamedLockFactory() );
         this.namedLockFactories = factories;
+
+        this.repositorySystemSessionLifecycle = locator.getService( RepositorySystemSessionLifecycle.class );
     }
 
     @Override
@@ -136,7 +143,7 @@ public final class DefaultSyncContextFactory
                 throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + namedLockFactoryName
                         + ", known ones: " + namedLockFactories.keySet() );
             }
-            session.addOnCloseHandler( this::shutDownSessionAdapter );
+            repositorySystemSessionLifecycle.addOnSessionEndHandler( session, this::shutDownSessionAdapter );
             return new NamedLockFactoryAdapter( nameMapper, namedLockFactory );
         } );
     }

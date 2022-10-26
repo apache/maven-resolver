@@ -20,7 +20,6 @@ package org.eclipse.aether;
  */
 
 import java.util.Map;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -49,7 +48,7 @@ import org.eclipse.aether.transform.FileTransformerManager;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RepositorySystemSession extends AutoCloseable
+public interface RepositorySystemSession
 {
 
     /**
@@ -271,58 +270,4 @@ public interface RepositorySystemSession extends AutoCloseable
      */
     @Deprecated
     FileTransformerManager getFileTransformerManager();
-
-    /**
-     * Adds "on close" handler to this session, it must not be {@code null}. Note: when handlers are invoked, the
-     * passed in (this) session is ALREADY CLOSED (the {@link #isClosed()} method returns {@code true}). This implies,
-     * that handlers cannot use {@link RepositorySystem} to resolve/collect/and so on, handlers are meant to perform
-     * some internal cleanup on session close. Attempt to add handler to closed session will throw.
-     *
-     * @since 1.9.0
-     */
-    void addOnCloseHandler( Consumer<RepositorySystemSession> handler );
-
-    /**
-     * Returns {@code true} if this instance was already closed. Closed sessions should NOT be used anymore.
-     *
-     * @return {@code true} if session was closed.
-     * @since 1.9.0
-     */
-    boolean isClosed();
-
-    /**
-     * Closes this session and possibly releases related resources by invoking "on close" handlers added by
-     * {@link #addOnCloseHandler(Consumer<RepositorySystemSession>)} method. This method may be invoked multiple times,
-     * but only first invocation will actually invoke handlers, subsequent invocations will be no-op.
-     * <p>
-     * When close action happens, all the registered handlers will be invoked (even if some throws), and at end
-     * of operation a {@link MultiRuntimeException} may be thrown signaling that some handler(s) failed. This exception
-     * may be ignored, is at the discretion of caller.
-     * <p>
-     * Important: ideally it is the session creator who should be responsible to close the session. The "nested"
-     * (delegating, wrapped) sessions {@link AbstractForwardingRepositorySystemSession} and alike) by default
-     * (without overriding the {@link AbstractForwardingRepositorySystemSession#close()} method) are prevented to close
-     * session, and it is the "recommended" behaviour as well. On the other hand, "nested" session may receive new
-     * "on close" handler registrations, but those registrations are passed to delegated session, and will be invoked
-     * once the "top level" (delegated) session is closed.
-     * <p>
-     * New session "copy" instances created using copy-constructor
-     * {@link DefaultRepositorySystemSession#DefaultRepositorySystemSession(RepositorySystemSession)} result in new,
-     * independent session instances, and they do NOT share states like "read-only", "closed" and "on close handlers"
-     * with the copied session. Hence, they should be treated as "top level" sessions as well.
-     * <p>
-     * The recommended pattern for "top level" sessions is the usual try-with-resource:
-     *
-     * <pre> {@code
-     * try ( RepositorySystemSession session = create session... )
-     * {
-     *   ... use/nest session
-     * }
-     * }</pre>
-     *
-     * @since 1.9.0
-     */
-    @Override
-    void close();
-
 }

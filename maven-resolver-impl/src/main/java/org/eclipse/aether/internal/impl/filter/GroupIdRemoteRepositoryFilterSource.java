@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositorySystemSessionLifecycle;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -50,6 +51,8 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Remote repository filter source filtering on G coordinate. It is backed by a file that lists all allowed groupIds
@@ -96,10 +99,13 @@ public final class GroupIdRemoteRepositoryFilterSource
 
     private static final Logger LOGGER = LoggerFactory.getLogger( GroupIdRemoteRepositoryFilterSource.class );
 
+    private final RepositorySystemSessionLifecycle repositorySystemSessionLifecycle;
+
     @Inject
-    public GroupIdRemoteRepositoryFilterSource()
+    public GroupIdRemoteRepositoryFilterSource( RepositorySystemSessionLifecycle repositorySystemSessionLifecycle )
     {
         super( NAME );
+        this.repositorySystemSessionLifecycle = requireNonNull( repositorySystemSessionLifecycle );
     }
 
     @Override
@@ -122,7 +128,7 @@ public final class GroupIdRemoteRepositoryFilterSource
         {
             if ( onCloseHandlerRegistered( session ).compareAndSet( false, true ) )
             {
-                session.addOnCloseHandler( this::saveSessionRecordedLines );
+                repositorySystemSessionLifecycle.addOnSessionEndHandler( session, this::saveSessionRecordedLines );
             }
             ConcurrentHashMap<String, Set<String>> cache = cache( session );
             for ( ArtifactResult artifactResult : artifactResults )

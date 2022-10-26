@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositorySystemSessionLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -112,11 +113,15 @@ public final class SummaryFileTrustedChecksumsSource
 
     private final LocalPathComposer localPathComposer;
 
+    private final RepositorySystemSessionLifecycle repositorySystemSessionLifecycle;
+
     @Inject
-    public SummaryFileTrustedChecksumsSource( LocalPathComposer localPathComposer )
+    public SummaryFileTrustedChecksumsSource( LocalPathComposer localPathComposer,
+                                              RepositorySystemSessionLifecycle repositorySystemSessionLifecycle )
     {
         super( NAME );
         this.localPathComposer = requireNonNull( localPathComposer );
+        this.repositorySystemSessionLifecycle = requireNonNull( repositorySystemSessionLifecycle );
     }
 
     @Override
@@ -161,7 +166,7 @@ public final class SummaryFileTrustedChecksumsSource
     {
         if ( onCloseHandlerRegistered( session ).compareAndSet( false, true ) )
         {
-            session.addOnCloseHandler( this::saveSessionRecordedLines );
+            repositorySystemSessionLifecycle.addOnSessionEndHandler( session, this::saveSessionRecordedLines );
         }
         return new SummaryFileWriter( session, cache( session ), getBasedir( session, true ),
                 isOriginAware( session ) );

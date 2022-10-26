@@ -19,16 +19,12 @@ package org.eclipse.aether;
  * under the License.
  */
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactType;
@@ -65,8 +61,6 @@ import org.eclipse.aether.transform.FileTransformerManager;
 public final class DefaultRepositorySystemSession
     implements RepositorySystemSession
 {
-
-    private final AtomicBoolean closed;
 
     private boolean readOnly;
 
@@ -133,7 +127,6 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession()
     {
-        closed = new AtomicBoolean( false );
         systemProperties = new HashMap<>();
         systemPropertiesView = Collections.unmodifiableMap( systemProperties );
         userProperties = new HashMap<>();
@@ -160,7 +153,6 @@ public final class DefaultRepositorySystemSession
     {
         requireNonNull( session, "repository system session cannot be null" );
 
-        closed = new AtomicBoolean( false );
         setOffline( session.isOffline() );
         setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );
         setResolutionErrorPolicy( session.getResolutionErrorPolicy() );
@@ -816,10 +808,6 @@ public final class DefaultRepositorySystemSession
         {
             throw new IllegalStateException( "repository system session is read-only" );
         }
-        if ( closed.get() )
-        {
-            throw new IllegalStateException( "repository system session is already closed" );
-        }
     }
 
     static class NullProxySelector
@@ -885,47 +873,6 @@ public final class DefaultRepositorySystemSession
         public Collection<FileTransformer> getTransformersForArtifact( Artifact artifact )
         {
             return Collections.emptyList();
-        }
-    }
-
-    private final CopyOnWriteArrayList<Consumer<RepositorySystemSession>> onCloseHandlers
-            = new CopyOnWriteArrayList<>();
-
-    @Override
-    public void addOnCloseHandler( Consumer<RepositorySystemSession> handler )
-    {
-        requireNonNull( handler, "handler cannot be null" );
-        if ( closed.get() )
-        {
-            throw new IllegalStateException( "repository system session is already closed" );
-        }
-        onCloseHandlers.add( 0, handler );
-    }
-
-    @Override
-    public boolean isClosed()
-    {
-        return closed.get();
-    }
-
-    @Override
-    public void close()
-    {
-        if ( closed.compareAndSet( false, true ) )
-        {
-            ArrayList<Exception> exceptions = new ArrayList<>();
-            for ( Consumer<RepositorySystemSession> onCloseHandler : onCloseHandlers )
-            {
-                try
-                {
-                    onCloseHandler.accept( this );
-                }
-                catch ( Exception e )
-                {
-                    exceptions.add( e );
-                }
-            }
-            MultiRuntimeException.mayThrow( "session on-close handler failures", exceptions );
         }
     }
 }
