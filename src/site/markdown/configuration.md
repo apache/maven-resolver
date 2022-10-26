@@ -21,8 +21,14 @@ under the License.
 Option | Type | Description | Default Value | Supports Repo ID Suffix
 --- | --- | --- | --- | ---
 `aether.artifactResolver.snapshotNormalization` | boolean | It replaces the timestamped snapshot file name with a filename containing the `SNAPSHOT` qualifier only. This only affects resolving/retrieving artifacts but not uploading those. | `true` | no
-`aether.checksums.omitChecksumsForExtensions` | String | Comma separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc` | no
-`aether.checksums.algorithms` | String | Comma separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
+`aether.artifactResolver.simpleLrmInterop` | boolean | Enable interop with Simple LRM. Ignored when RRF used. | `false` | no
+`aether.artifactResolver.postProcessor.trusted-checksums` | boolean | Enable `trusted-checksums` resolver post processor. | `false` | no 
+`aether.artifactResolver.postProcessor.trusted-checksums.checksumAlgorithms` | String | Comma-separated list of checksum algorithms with which `trusted-checksums` should operate (validate or record). | `"SHA-1"` | no 
+`aether.artifactResolver.postProcessor.trusted-checksums.failIfMissing` | boolean | Makes `trusted-checksums` fail validation if a trusted checksum for an artifact is missing. | `false` | no 
+`aether.artifactResolver.postProcessor.trusted-checksums.record` | boolean | Makes `trusted-checksums` calculate and record checksums. | `false` | no 
+`aether.artifactResolver.postProcessor.trusted-checksums.snapshots` | boolean | Enables or disables snapshot processing in `trusted-checksum` post processor. | `false` | no 
+`aether.checksums.omitChecksumsForExtensions` | String | Comma-separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc` | no
+`aether.checksums.algorithms` | String | Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
 `aether.connector.basic.threads` or `maven.artifact.threads` | int | Number of threads to use for uploading/downloading. | `5` | no
 `aether.connector.classpath.loader` | ClassLoader | `ClassLoader` from which resources should be retrieved which start with the `classpath:` protocol. | `Thread.currentThread().getContextClassLoader()` | no
@@ -46,6 +52,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.dependencyCollector.maxExceptions` | int | Only exceptions up to the number given in this configuration property are emitted. Exceptions which exceed that number are swallowed. | `50` | no
 `aether.dependencyCollector.impl` | String | The name of the dependency collector implementation to use: depth-first (original) named `df`, and breadth-first (new in 1.8.0) named `bf`. Both collectors produce equivalent results, but they may differ performance wise, depending on project being applied to. Our experience shows that existing `df` is well suited for smaller to medium size projects, while `bf` may perform better on huge projects with many dependencies. Experiment (and come back to us!) to figure out which one suits you the better. | `"df"` | no
 `aether.dependencyCollector.bf.skipper` | boolean | Flag controlling whether to skip resolving duplicate/conflicting nodes during the breadth-first (`bf`) dependency collection process. | `true` | no
+`aether.dependencyCollector.bf.threads` or `maven.artifact.threads` | int | Number of threads to use for collecting POMs and version ranges in BF collector. | `5` | no
 `aether.dependencyManager.verbose` | boolean | Flag controlling the verbose mode for dependency management. If enabled, the original attributes of a dependency before its update due to dependency managemnent will be recorded in the node's `DependencyNode#getData()` when building a dependency graph. | `false` | no
 `aether.enhancedLocalRepository.localPrefix` | String | The prefix to use for locally installed artifacts. | `"installed"` | no
 `aether.enhancedLocalRepository.snapshotsPrefix` | String | The prefix to use for snapshot artifacts. | `"snapshots"` | no
@@ -63,14 +70,28 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.offline.hosts` | String | Comma-separated list of hosts which are supposed to be resolved offline. | - | no
 `aether.priority.<class>` | float | The priority to use for a certain extension class. `class` can either be the fully qualified name or the simple name stands for fully qualified class name. If the class name ends with `Factory` that suffix could optionally be left out. | - |  no
 `aether.priority.implicit` | boolean | Flag indicating whether the priorities of pluggable extensions are implicitly given by their iteration order such that the first extension has the highest priority. If set, an extension's built-in priority as well as any corresponding `aether.priority.<class>` configuration properties are ignored when searching for a suitable implementation among the available extensions. This priority mode is meant for cases where the application will present/inject extensions in the desired search order. | `false` | no
+`aether.remoteRepositoryFilter.groupId` | boolean | Enable `groupId` remote repository filter. | `false` | no
+`aether.remoteRepositoryFilter.groupId.basedir` | String | The basedir path for `groupId` filter. If relative, resolved against local repository root, if absolute, used as is. | `".remoteRepositoryFilters"` | no 
+`aether.remoteRepositoryFilter.groupId.record` | boolean | Enable recording of `groupId` filter. | `false` | no
+`aether.remoteRepositoryFilter.groupId.truncateOnSave` | boolean | When recoding session done, should `groupId` filter truncate (overwrite) the output file with newly recorded data, or, if file exists, load-merge-save it? | `false` | no
+`aether.remoteRepositoryFilter.prefixes` | boolean | Enable `prefixes` remote repository filter. | `false` | no
+`aether.remoteRepositoryFilter.prefixes.basedir` | String | The basedir path for `prefixes` filter. If relative, resolved against local repository root, if absolute, used as is. | `".remoteRepositoryFilters"` | no 
 `aether.snapshotFilter` | boolean | Flag whether the `ContextualSnapshotVersionFilter` should be forced to ban snapshots. By default, snapshots are only filtered if the root artifact is not a snapshot. | `false` | no
+`aether.syncContext.named.basedir.locksDir` | String | The basedir path for file named locks. If relative, resolved against local repository root, if absolute, used as is. | `".locks"` | no
 `aether.syncContext.named.factory` | String | Name of the named lock factory implementing the `org.eclipse.aether.named.NamedLockFactory` interface. | `"rwlock-local"` | no
+`aether.syncContext.named.hashing.depth` | int | The directory depth to "spread" hashes in git-like fashion, integer between 0 and 4 (inclusive). | 2 | no
 `aether.syncContext.named.nameMapper` | String | Name of name mapper implementing the `org.eclipse.aether.internal.impl.synccontext.named.NameMapper` interface. | `"gav"` | no
 `aether.syncContext.named.time` | long | Amount of time a synchronization context shall wait to obtain a lock. | 30 | no
 `aether.syncContext.named.time.unit` | long | Unit of the lock wait time. | `"SECONDS"` | no
-`aether.syncContext.named.static.name` | String | Lock name for the static name mapper. | `"static"` | no
 `aether.syncContext.named.discriminating.discriminator` | String | A discriminator name prefix identifying a Resolver instance. | `"sha1('${hostname:-localhost}:${maven.repo.local}')"` or `"sha1('')"` if generation fails | no
+`aether.syncContext.named.discriminating.hostname` | String | The hostname to be used with discriminating mapper. | Detected with `InetAddress.getLocalHost().getHostName()` | no
 `aether.syncContext.named.redisson.configFile` | String | Path to a Redisson configuration file in YAML format. Read [official documentation](https://github.com/redisson/redisson/wiki/2.-Configuration) for details. | none or `"${maven.conf}/maven-resolver-redisson.yaml"` if present | no
+`aether.trustedChecksumsSource.sparse-directory` | boolean | Enable `sparse-directory` trusted checksum source. | `false` | no
+`aether.trustedChecksumsSource.sparse-directory.basedir` | String | The basedir path for `sparse-directory` trusted checksum source. If relative, resolved against local repository root, if absolute, used as is. | `".checksums"` | no
+`aether.trustedChecksumsSource.sparse-directory.originAware` | boolean | Is trusted checksum source origin aware (factors in Repository ID into path) or not. | `true` | no
+`aether.trustedChecksumsSource.summary-file` | boolean | Enable `summary-file` trusted checksum source. | `false` | no
+`aether.trustedChecksumsSource.summary-file.basedir` | String | The basedir path for `summary-file` trusted checksum source. If relative, resolved against local repository root, if absolute, used as is. | `".checksums"` | no
+`aether.trustedChecksumsSource.summary-file.originAware` | boolean | Is trusted checksum source origin aware (factors in Repository ID into path) or not. | `true` | no
 `aether.updateCheckManager.sessionState` | String | Manages the session state, i.e. influences if the same download requests to artifacts/metadata will happen multiple times within the same RepositorySystemSession. If `"enabled"` will enable the session state. If `"bypass"` will enable bypassing (i.e. store all artifact ids/metadata ids which have been updates but not evaluating those). All other values lead to disabling the session state completely. | `"enabled"` | no
 
 All properties which have `yes` in the column `Supports Repo ID Suffix` can be optionally configured specifically for a repository id. In that case the configuration property needs to be suffixed with a period followed by the repository id of the repository to configure, e.g. `aether.connector.http.headers.central` for repository with id `central`.
