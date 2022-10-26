@@ -45,7 +45,15 @@ public interface RepositorySystemSessionLifecycle
     void sessionEnded( RepositorySystemSession session );
 
     /**
-     * Registers an "on end" handler. TODO: what happens if session is not registered? Ignore this call?
+     * Returns {@code true} if the passed in session lifecycle is registered with this component.
+     */
+    boolean isManaged( RepositorySystemSession session );
+
+    /**
+     * Registers an "on end" handler. This method may be invoked ONLY with session instances that were registered
+     * beforehand with method {@link #sessionStarted(RepositorySystemSession)} and is to be expected that
+     * {@link #sessionEnded(RepositorySystemSession)} will be invoked once session ended. Otherwise this method
+     * throws.
      */
     void addOnSessionEndHandler( RepositorySystemSession session, Consumer<RepositorySystemSession> handler );
 }

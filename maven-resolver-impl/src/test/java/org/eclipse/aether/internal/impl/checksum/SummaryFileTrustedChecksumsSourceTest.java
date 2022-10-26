@@ -20,14 +20,15 @@ package org.eclipse.aether.internal.impl.checksum;
  */
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.impl.RepositorySystemSessionLifecycle;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 
 public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
 {
     @Override
-    protected FileTrustedChecksumsSourceSupport prepareSubject()
+    protected FileTrustedChecksumsSourceSupport prepareSubject( RepositorySystemSessionLifecycle lifecycle )
     {
-        return new SummaryFileTrustedChecksumsSource( new DefaultLocalPathComposer() );
+        return new SummaryFileTrustedChecksumsSource( new DefaultLocalPathComposer(), lifecycle );
     }
 
     @Override

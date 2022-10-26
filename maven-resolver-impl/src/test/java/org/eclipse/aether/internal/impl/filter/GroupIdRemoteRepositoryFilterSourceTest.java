@@ -27,6 +27,8 @@ import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositorySystemSessionLifecycle;
+import org.eclipse.aether.internal.impl.DefaultRepositorySystemSessionLifecycle;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -36,11 +38,17 @@ import org.eclipse.aether.resolution.ArtifactResult;
  */
 public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFilterSourceTestSupport
 {
+    private RepositorySystemSessionLifecycle repositorySystemSessionLifecycle;
+
+    private GroupIdRemoteRepositoryFilterSource groupIdRemoteRepositoryFilterSource;
+
     @Override
     protected GroupIdRemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository )
     {
-        return new GroupIdRemoteRepositoryFilterSource();
+        this.repositorySystemSessionLifecycle = new DefaultRepositorySystemSessionLifecycle();
+        this.groupIdRemoteRepositoryFilterSource = new GroupIdRemoteRepositoryFilterSource( repositorySystemSessionLifecycle );
+        return groupIdRemoteRepositoryFilterSource;
     }
 
     @Override
@@ -50,11 +58,13 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
                 Boolean.TRUE.toString() );
     }
 
+    @Override
     protected void allowArtifact( DefaultRepositorySystemSession session, RemoteRepository remoteRepository,
                                   Artifact artifact )
     {
-        try ( DefaultRepositorySystemSession newSession = new DefaultRepositorySystemSession( session ) )
+        try
         {
+            DefaultRepositorySystemSession newSession = new DefaultRepositorySystemSession( session );
             Artifact resolvedArtifact = artifact.setFile( Files.createTempFile( "test", "tmp" ).toFile() );
             ArtifactResult artifactResult = new ArtifactResult( new ArtifactRequest( resolvedArtifact,
                     Collections.singletonList( remoteRepository ), "context" ) );
@@ -64,8 +74,9 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
             enableSource( newSession );
             newSession.setConfigProperty( "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME
                     + ".record", Boolean.TRUE.toString() );
-            getRemoteRepositoryFilterSource( newSession, remoteRepository )
-                    .postProcess( newSession, artifactResults );
+            repositorySystemSessionLifecycle.sessionStarted( newSession );
+            groupIdRemoteRepositoryFilterSource.postProcess( newSession, artifactResults );
+            repositorySystemSessionLifecycle.sessionEnded( newSession );
         }
         catch ( IOException e )
         {

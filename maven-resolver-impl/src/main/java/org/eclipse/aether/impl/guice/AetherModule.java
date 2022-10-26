@@ -41,7 +41,9 @@ import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.impl.RepositorySystemSessionLifecycle;
 import org.eclipse.aether.internal.impl.DefaultLocalPathPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.DefaultRepositorySystemSessionLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
@@ -221,6 +223,9 @@ public class AetherModule
                 .to( Sha512ChecksumAlgorithmFactory.class );
         bind( ChecksumAlgorithmFactorySelector.class )
                 .to( DefaultChecksumAlgorithmFactorySelector.class ).in ( Singleton.class );
+
+        bind( RepositorySystemSessionLifecycle.class )
+                .to( DefaultRepositorySystemSessionLifecycle.class ).in( Singleton.class );
 
         bind( SyncContextFactory.class ).to( DefaultSyncContextFactory.class ).in( Singleton.class );
         bind( org.eclipse.aether.impl.SyncContextFactory.class )

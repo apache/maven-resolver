@@ -31,6 +31,7 @@ import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.internal.impl.DefaultRepositorySystemSessionLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
@@ -229,6 +230,7 @@ public final class DefaultServiceLocator
         addService( ChecksumAlgorithmFactorySelector.class, DefaultChecksumAlgorithmFactorySelector.class );
         addService( LocalPathComposer.class, DefaultLocalPathComposer.class );
         addService( RemoteRepositoryFilterManager.class, DefaultRemoteRepositoryFilterManager.class );
+        addService( RepositorySystemSessionLifecycle.class, DefaultRepositorySystemSessionLifecycle.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )
