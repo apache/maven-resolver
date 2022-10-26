@@ -816,9 +816,9 @@ public final class DefaultRepositorySystemSession
         {
             throw new IllegalStateException( "repository system session is read-only" );
         }
-        if ( isClosed() )
+        if ( closed.get() )
         {
-            throw new IllegalStateException( "repository system session is closed" );
+            throw new IllegalStateException( "repository system session is already closed" );
         }
     }
 
@@ -897,7 +897,7 @@ public final class DefaultRepositorySystemSession
         requireNonNull( handler, "handler cannot be null" );
         if ( closed.get() )
         {
-            throw new IllegalStateException( "repository system session is closed" );
+            throw new IllegalStateException( "repository system session is already closed" );
         }
         onCloseHandlers.add( 0, handler );
     }
