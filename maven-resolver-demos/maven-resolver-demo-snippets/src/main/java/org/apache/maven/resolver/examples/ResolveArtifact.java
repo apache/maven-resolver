@@ -45,41 +45,43 @@ public class ResolveArtifact
         System.out.println( "------------------------------------------------------------" );
         System.out.println( ResolveArtifact.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try ( Booter booter = new Booter( args ) )
+        {
+            RepositorySystem system = booter.getRepositorySystem();
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            DefaultRepositorySystemSession session = booter.getSession();
 
-        Artifact artifact;
-        ArtifactRequest artifactRequest;
-        ArtifactResult artifactResult;
+            Artifact artifact;
+            ArtifactRequest artifactRequest;
+            ArtifactResult artifactResult;
 
-        // artifact
-        artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:1.3.3" );
+            // artifact
+            artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:1.3.3" );
 
-        artifactRequest = new ArtifactRequest();
-        artifactRequest.setArtifact( artifact );
-        artifactRequest.setRepositories( Booter.newRepositories( system, session ) );
+            artifactRequest = new ArtifactRequest();
+            artifactRequest.setArtifact( artifact );
+            artifactRequest.setRepositories( Booter.newRepositories( system, session ) );
 
-        artifactResult = system.resolveArtifact( session, artifactRequest );
+            artifactResult = system.resolveArtifact( session, artifactRequest );
 
-        artifact = artifactResult.getArtifact();
+            artifact = artifactResult.getArtifact();
 
-        System.out.println( artifact + " resolved to  " + artifact.getFile() );
+            System.out.println( artifact + " resolved to  " + artifact.getFile() );
 
-        // signature
-        session.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
+            // signature
+            session.setChecksumPolicy( RepositoryPolicy.CHECKSUM_POLICY_FAIL );
 
-        artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:jar.asc:1.3.3" );
+            artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:jar.asc:1.3.3" );
 
-        artifactRequest = new ArtifactRequest();
-        artifactRequest.setArtifact( artifact );
-        artifactRequest.setRepositories( Booter.newRepositories( system, session ) );
+            artifactRequest = new ArtifactRequest();
+            artifactRequest.setArtifact( artifact );
+            artifactRequest.setRepositories( Booter.newRepositories( system, session ) );
 
-        artifactResult = system.resolveArtifact( session, artifactRequest );
+            artifactResult = system.resolveArtifact( session, artifactRequest );
 
-        artifact = artifactResult.getArtifact();
+            artifact = artifactResult.getArtifact();
 
-        System.out.println( artifact + " resolved signature to  " + artifact.getFile() );
+            System.out.println( artifact + " resolved signature to  " + artifact.getFile() );
+        }
     }
-
 }

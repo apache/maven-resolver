@@ -102,7 +102,7 @@ public class DefaultRepositorySystemSessionLifecycle
         {
             throw new IllegalArgumentException( "session not registered" );
         }
-        registeredSession.handlers.add( handler );
+        registeredSession.handlers.add( 0, handler );
     }
 
     private static class RegisteredSession

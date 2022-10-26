@@ -52,7 +52,7 @@ public interface RepositorySystemSessionLifecycle
     /**
      * Registers an "on end" handler. This method may be invoked ONLY with session instances that were registered
      * beforehand with method {@link #sessionStarted(RepositorySystemSession)} and is to be expected that
-     * {@link #sessionEnded(RepositorySystemSession)} will be invoked once session ended. Otherwise this method
+     * {@link #sessionEnded(RepositorySystemSession)} will be invoked once session ended. Otherwise, this method
      * throws.
      */
     void addOnSessionEndHandler( RepositorySystemSession session, Consumer<RepositorySystemSession> handler );

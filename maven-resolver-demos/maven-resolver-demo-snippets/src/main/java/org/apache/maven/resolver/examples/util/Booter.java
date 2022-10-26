@@ -27,13 +27,14 @@ import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.impl.RepositorySystemSessionLifecycle;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * A helper to boot the repository system and a repository system session.
  */
-public class Booter
+public final class Booter implements AutoCloseable
 {
     public static final String SERVICE_LOCATOR = "serviceLocator";
 
@@ -41,7 +42,42 @@ public class Booter
 
     public static final String SISU = "sisu";
 
-    public static String selectFactory( String[] args )
+    private final RepositorySystem repositorySystem;
+
+    private final DefaultRepositorySystemSession session;
+
+    private final RepositorySystemSessionLifecycle lifecycle;
+
+    public Booter( String[] args )
+    {
+        this( selectFactory( args ) );
+    }
+
+    public Booter( String factory )
+    {
+        this.repositorySystem = newRepositorySystem( factory );
+        this.session = newRepositorySystemSession( this.repositorySystem );
+        this.lifecycle = null;
+    }
+
+    public RepositorySystem getRepositorySystem()
+    {
+        return repositorySystem;
+    }
+
+    public DefaultRepositorySystemSession getSession()
+    {
+        lifecycle.sessionStarted( session );
+        return session;
+    }
+
+    @Override
+    public void close()
+    {
+        lifecycle.sessionEnded( session );
+    }
+
+    private static String selectFactory( String[] args )
     {
         if ( args == null || args.length == 0 )
         {
@@ -53,7 +89,7 @@ public class Booter
         }
     }
 
-    public static RepositorySystem newRepositorySystem( final String factory )
+    private static RepositorySystem newRepositorySystem( final String factory )
     {
         switch ( factory ) 
         {
@@ -68,7 +104,7 @@ public class Booter
         }
     }
 
-    public static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )
+    private static DefaultRepositorySystemSession newRepositorySystemSession( RepositorySystem system )
     {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
@@ -93,5 +129,4 @@ public class Booter
     {
         return new RemoteRepository.Builder( "central", "default", "https://repo.maven.apache.org/maven2/" ).build();
     }
-
 }

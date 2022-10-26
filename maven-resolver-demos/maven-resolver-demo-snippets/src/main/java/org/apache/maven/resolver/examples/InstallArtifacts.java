@@ -46,21 +46,23 @@ public class InstallArtifacts
         System.out.println( "------------------------------------------------------------" );
         System.out.println( InstallArtifacts.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try ( Booter booter = new Booter( args ) )
+        {
+            RepositorySystem system = booter.getRepositorySystem();
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            RepositorySystemSession session = booter.getSession();
 
-        Artifact jarArtifact =
-            new DefaultArtifact( "test", "org.apache.maven.resolver.examples", "", "jar", "0.1-SNAPSHOT" );
-        jarArtifact = jarArtifact.setFile( new File( "src/main/data/demo.jar" ) );
+            Artifact jarArtifact =
+                    new DefaultArtifact( "test", "org.apache.maven.resolver.examples", "", "jar", "0.1-SNAPSHOT" );
+            jarArtifact = jarArtifact.setFile( new File( "src/main/data/demo.jar" ) );
 
-        Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );
-        pomArtifact = pomArtifact.setFile( new File( "pom.xml" ) );
+            Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );
+            pomArtifact = pomArtifact.setFile( new File( "pom.xml" ) );
 
-        InstallRequest installRequest = new InstallRequest();
-        installRequest.addArtifact( jarArtifact ).addArtifact( pomArtifact );
+            InstallRequest installRequest = new InstallRequest();
+            installRequest.addArtifact( jarArtifact ).addArtifact( pomArtifact );
 
-        system.install( session, installRequest );
+            system.install( session, installRequest );
+        }
     }
-
 }

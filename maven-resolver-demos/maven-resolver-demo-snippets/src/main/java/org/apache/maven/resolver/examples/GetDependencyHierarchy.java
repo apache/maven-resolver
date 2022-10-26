@@ -40,38 +40,41 @@ public class GetDependencyHierarchy
 
     /**
      * Main.
+     *
      * @param args
      * @throws Exception
      */
     public static void main( String[] args )
-        throws Exception
+            throws Exception
     {
         System.out.println( "------------------------------------------------------------" );
         System.out.println( GetDependencyHierarchy.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try ( Booter booter = new Booter( args ) )
+        {
+            RepositorySystem system = booter.getRepositorySystem();
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            DefaultRepositorySystemSession session = booter.getSession();
 
-        session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, true );
-        session.setConfigProperty( DependencyManagerUtils.CONFIG_PROP_VERBOSE, true );
+            session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, true );
+            session.setConfigProperty( DependencyManagerUtils.CONFIG_PROP_VERBOSE, true );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
+            Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
 
-        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-        descriptorRequest.setArtifact( artifact );
-        descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
-        ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
+            ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+            descriptorRequest.setArtifact( artifact );
+            descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
+            ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
 
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRootArtifact( descriptorResult.getArtifact() );
-        collectRequest.setDependencies( descriptorResult.getDependencies() );
-        collectRequest.setManagedDependencies( descriptorResult.getManagedDependencies() );
-        collectRequest.setRepositories( descriptorRequest.getRepositories() );
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setRootArtifact( descriptorResult.getArtifact() );
+            collectRequest.setDependencies( descriptorResult.getDependencies() );
+            collectRequest.setManagedDependencies( descriptorResult.getManagedDependencies() );
+            collectRequest.setRepositories( descriptorRequest.getRepositories() );
 
-        CollectResult collectResult = system.collectDependencies( session, collectRequest );
+            CollectResult collectResult = system.collectDependencies( session, collectRequest );
 
-        collectResult.getRoot().accept( new ConsoleDependencyGraphDumper() );
+            collectResult.getRoot().accept( new ConsoleDependencyGraphDumper() );
+        }
     }
-
 }

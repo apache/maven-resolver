@@ -46,19 +46,21 @@ public class GetDependencyTree
         System.out.println( "------------------------------------------------------------" );
         System.out.println( GetDependencyTree.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try ( Booter booter = new Booter( args ) )
+        {
+            RepositorySystem system = booter.getRepositorySystem();
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            RepositorySystemSession session = booter.getSession();
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
+            Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
 
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRoot( new Dependency( artifact, "" ) );
-        collectRequest.setRepositories( Booter.newRepositories( system, session ) );
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setRoot( new Dependency( artifact, "" ) );
+            collectRequest.setRepositories( Booter.newRepositories( system, session ) );
 
-        CollectResult collectResult = system.collectDependencies( session, collectRequest );
+            CollectResult collectResult = system.collectDependencies( session, collectRequest );
 
-        collectResult.getRoot().accept( new ConsoleDependencyGraphDumper() );
+            collectResult.getRoot().accept( new ConsoleDependencyGraphDumper() );
+        }
     }
-
 }

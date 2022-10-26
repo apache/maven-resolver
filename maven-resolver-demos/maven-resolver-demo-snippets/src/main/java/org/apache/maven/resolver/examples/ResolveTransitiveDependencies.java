@@ -51,28 +51,30 @@ public class ResolveTransitiveDependencies
         System.out.println( "------------------------------------------------------------" );
         System.out.println( ResolveTransitiveDependencies.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
-
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
-
-        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-impl:1.3.3" );
-
-        DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter( JavaScopes.COMPILE );
-
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRoot( new Dependency( artifact, JavaScopes.COMPILE ) );
-        collectRequest.setRepositories( Booter.newRepositories( system, session ) );
-
-        DependencyRequest dependencyRequest = new DependencyRequest( collectRequest, classpathFlter );
-
-        List<ArtifactResult> artifactResults =
-            system.resolveDependencies( session, dependencyRequest ).getArtifactResults();
-
-        for ( ArtifactResult artifactResult : artifactResults )
+        try ( Booter booter = new Booter( args ) )
         {
-            System.out.println( artifactResult.getArtifact() + " resolved to "
-                + artifactResult.getArtifact().getFile() );
+            RepositorySystem system = booter.getRepositorySystem();
+
+            RepositorySystemSession session = booter.getSession();
+
+            Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-impl:1.3.3" );
+
+            DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter( JavaScopes.COMPILE );
+
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setRoot( new Dependency( artifact, JavaScopes.COMPILE ) );
+            collectRequest.setRepositories( Booter.newRepositories( system, session ) );
+
+            DependencyRequest dependencyRequest = new DependencyRequest( collectRequest, classpathFlter );
+
+            List<ArtifactResult> artifactResults =
+                    system.resolveDependencies( session, dependencyRequest ).getArtifactResults();
+
+            for ( ArtifactResult artifactResult : artifactResults )
+            {
+                System.out.println( artifactResult.getArtifact() + " resolved to "
+                        + artifactResult.getArtifact().getFile() );
+            }
         }
     }
-
 }

@@ -47,26 +47,28 @@ public class DeployArtifacts
         System.out.println( "------------------------------------------------------------" );
         System.out.println( DeployArtifacts.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try ( Booter booter = new Booter( args ) )
+        {
+            RepositorySystem system = booter.getRepositorySystem();
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            RepositorySystemSession session = booter.getSession();
 
-        Artifact jarArtifact = new DefaultArtifact( "test", "org.apache.maven.aether.examples", "", 
-            "jar", "0.1-SNAPSHOT" );
-        jarArtifact = jarArtifact.setFile( new File( "src/main/data/demo.jar" ) );
+            Artifact jarArtifact = new DefaultArtifact( "test", "org.apache.maven.aether.examples", "",
+                    "jar", "0.1-SNAPSHOT" );
+            jarArtifact = jarArtifact.setFile( new File( "src/main/data/demo.jar" ) );
 
-        Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );
-        pomArtifact = pomArtifact.setFile( new File( "pom.xml" ) );
+            Artifact pomArtifact = new SubArtifact( jarArtifact, "", "pom" );
+            pomArtifact = pomArtifact.setFile( new File( "pom.xml" ) );
 
-        RemoteRepository distRepo =
-            new RemoteRepository.Builder( "org.apache.maven.aether.examples", "default",
-                                  new File( "target/dist-repo" ).toURI().toString() ).build();
+            RemoteRepository distRepo =
+                    new RemoteRepository.Builder( "org.apache.maven.aether.examples", "default",
+                            new File( "target/dist-repo" ).toURI().toString() ).build();
 
-        DeployRequest deployRequest = new DeployRequest();
-        deployRequest.addArtifact( jarArtifact ).addArtifact( pomArtifact );
-        deployRequest.setRepository( distRepo );
+            DeployRequest deployRequest = new DeployRequest();
+            deployRequest.addArtifact( jarArtifact ).addArtifact( pomArtifact );
+            deployRequest.setRepository( distRepo );
 
-        system.deploy( session, deployRequest );
+            system.deploy( session, deployRequest );
+        }
     }
-
 }

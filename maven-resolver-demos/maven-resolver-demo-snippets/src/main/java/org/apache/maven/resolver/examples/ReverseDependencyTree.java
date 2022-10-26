@@ -49,35 +49,37 @@ public class ReverseDependencyTree
         System.out.println( "------------------------------------------------------------" );
         System.out.println( ReverseDependencyTree.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try ( Booter booter = new Booter( args ) )
+        {
+            RepositorySystem system = booter.getRepositorySystem();
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            DefaultRepositorySystemSession session = booter.getSession();
 
-        // install the listener into session
-        session.setRepositoryListener( new ChainedRepositoryListener( session.getRepositoryListener(),
-                new ReverseTreeRepositoryListener() ) );
+            // install the listener into session
+            session.setRepositoryListener( new ChainedRepositoryListener( session.getRepositoryListener(),
+                    new ReverseTreeRepositoryListener() ) );
 
-        session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, true );
-        session.setConfigProperty( DependencyManagerUtils.CONFIG_PROP_VERBOSE, true );
+            session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, true );
+            session.setConfigProperty( DependencyManagerUtils.CONFIG_PROP_VERBOSE, true );
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
+            Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
 
-        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-        descriptorRequest.setArtifact( artifact );
-        descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
-        ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
+            ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+            descriptorRequest.setArtifact( artifact );
+            descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
+            ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
 
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRequestContext( "demo" );
-        collectRequest.setRootArtifact( descriptorResult.getArtifact() );
-        collectRequest.setDependencies( descriptorResult.getDependencies() );
-        collectRequest.setManagedDependencies( descriptorResult.getManagedDependencies() );
-        collectRequest.setRepositories( descriptorRequest.getRepositories() );
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setRequestContext( "demo" );
+            collectRequest.setRootArtifact( descriptorResult.getArtifact() );
+            collectRequest.setDependencies( descriptorResult.getDependencies() );
+            collectRequest.setManagedDependencies( descriptorResult.getManagedDependencies() );
+            collectRequest.setRepositories( descriptorRequest.getRepositories() );
 
-        system.collectDependencies( session, collectRequest );
+            system.collectDependencies( session, collectRequest );
 
-        // in this demo we are not interested in collect result,
-        // as all the "demo work" is done by installed ReverseTreeRepositoryListener
+            // in this demo we are not interested in collect result,
+            // as all the "demo work" is done by installed ReverseTreeRepositoryListener
+        }
     }
-
 }

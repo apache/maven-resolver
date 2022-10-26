@@ -44,22 +44,24 @@ public class FindNewestVersion
         System.out.println( "------------------------------------------------------------" );
         System.out.println( FindNewestVersion.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try ( Booter booter = new Booter( args ) )
+        {
+            RepositorySystem system = booter.getRepositorySystem();
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            RepositorySystemSession session = booter.getSession();
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:[0,)" );
+            Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:[0,)" );
 
-        VersionRangeRequest rangeRequest = new VersionRangeRequest();
-        rangeRequest.setArtifact( artifact );
-        rangeRequest.setRepositories( Booter.newRepositories( system, session ) );
+            VersionRangeRequest rangeRequest = new VersionRangeRequest();
+            rangeRequest.setArtifact( artifact );
+            rangeRequest.setRepositories( Booter.newRepositories( system, session ) );
 
-        VersionRangeResult rangeResult = system.resolveVersionRange( session, rangeRequest );
+            VersionRangeResult rangeResult = system.resolveVersionRange( session, rangeRequest );
 
-        Version newestVersion = rangeResult.getHighestVersion();
+            Version newestVersion = rangeResult.getHighestVersion();
 
-        System.out.println( "Newest version " + newestVersion + " from repository "
-            + rangeResult.getRepository( newestVersion ) );
+            System.out.println( "Newest version " + newestVersion + " from repository "
+                    + rangeResult.getRepository( newestVersion ) );
+        }
     }
-
 }

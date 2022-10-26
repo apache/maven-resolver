@@ -45,22 +45,24 @@ public class GetDirectDependencies
         System.out.println( "------------------------------------------------------------" );
         System.out.println( GetDirectDependencies.class.getSimpleName() );
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
-
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
-
-        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-impl:1.3.3" );
-
-        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-        descriptorRequest.setArtifact( artifact );
-        descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
-
-        ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
-
-        for ( Dependency dependency : descriptorResult.getDependencies() )
+        try ( Booter booter = new Booter( args ) )
         {
-            System.out.println( dependency );
+            RepositorySystem system = booter.getRepositorySystem();
+
+            RepositorySystemSession session = booter.getSession();
+
+            Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-impl:1.3.3" );
+
+            ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+            descriptorRequest.setArtifact( artifact );
+            descriptorRequest.setRepositories( Booter.newRepositories( system, session ) );
+
+            ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor( session, descriptorRequest );
+
+            for ( Dependency dependency : descriptorResult.getDependencies() )
+            {
+                System.out.println( dependency );
+            }
         }
     }
-
 }
