@@ -99,14 +99,21 @@ public class BfDependencyCollector
      *
      * @since 1.8.0
      */
-    public static final String CONFIG_PROP_SKIPPER = "aether.dependencyCollector.bf.skipper";
+    static final String CONFIG_PROP_SKIPPER = "aether.dependencyCollector.bf.skipper";
 
     /**
      * The default value for {@link #CONFIG_PROP_SKIPPER}, {@code true}.
      *
      * @since 1.8.0
      */
-    public static final boolean CONFIG_PROP_SKIPPER_DEFAULT = true;
+    static final boolean CONFIG_PROP_SKIPPER_DEFAULT = true;
+
+    /**
+     * The count of threads to be used when collecting POMs in parallel, default value 5.
+     *
+     * @since TBD
+     */
+    static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
 
     /**
      * Default ctor for SL.
@@ -505,9 +512,9 @@ public class BfDependencyCollector
 
         private ExecutorService getExecutorService( RepositorySystemSession session )
         {
-            int nThreads = ConfigUtils.getInteger( session, 5, "maven.artifact.threads" );
+            int nThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
             logger.debug( "Created thread pool with {} threads to resolve descriptors.", nThreads );
-            return new ThreadPoolExecutor( nThreads, nThreads, 3L, TimeUnit.SECONDS, new LinkedBlockingQueue(),
+            return new ThreadPoolExecutor( nThreads, nThreads, 3L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
                     new WorkerThreadFactory( getClass().getSimpleName() ) );
         }
     }
