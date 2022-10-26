@@ -27,7 +27,7 @@ import static java.util.Objects.requireNonNull;
  * Runtime exception to be thrown when multiple actions were executed and one or more failed. To be used when no
  * fallback on resolver side is needed or is possible.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public final class MultiRuntimeException
         extends RuntimeException

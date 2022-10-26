@@ -81,7 +81,7 @@ import static java.util.stream.Collectors.toList;
  * <p>
  * The name of this implementation is "summary-file".
  *
- * @since TBD
+ * @since 1.9.0
  * @see <a href="https://man7.org/linux/man-pages/man1/sha1sum.1.html">sha1sum man page</a>
  * @see <a href="https://www.gnu.org/software/coreutils/manual/coreutils.html#md5sum-invocation">GNU Coreutils: md5sum</a>
  */

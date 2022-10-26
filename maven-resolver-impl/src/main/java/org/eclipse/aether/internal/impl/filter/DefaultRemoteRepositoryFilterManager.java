@@ -44,7 +44,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * The created {@link RemoteRepositoryFilter} instance is created once per session and cached.
  *
- * @since TBD
+ * @since 1.9.0
  */
 @Singleton
 @Named

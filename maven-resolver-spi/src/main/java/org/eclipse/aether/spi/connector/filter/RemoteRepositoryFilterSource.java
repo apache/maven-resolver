@@ -24,7 +24,7 @@ import org.eclipse.aether.RepositorySystemSession;
 /**
  * Remote repository filter source component.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public interface RemoteRepositoryFilterSource
 {

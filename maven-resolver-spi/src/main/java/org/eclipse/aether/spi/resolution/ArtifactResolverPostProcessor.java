@@ -29,7 +29,7 @@ import org.eclipse.aether.resolution.ArtifactResult;
  * artifact results, if needed even produce resolution failure. It will always be invoked (even when failure is about
  * to happen), so detecting these cases are left to post processor implementations.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public interface ArtifactResolverPostProcessor
 {

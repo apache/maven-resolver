@@ -27,7 +27,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  * Remote repository filter that decides should the given artifact or metadata be accepted (for further processing)
  * from remote repository or not.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public interface RemoteRepositoryFilter
 {

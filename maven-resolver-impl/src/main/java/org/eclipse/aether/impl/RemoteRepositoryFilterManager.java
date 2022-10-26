@@ -25,7 +25,7 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 /**
  * Remote repository filter manager.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public interface RemoteRepositoryFilterManager
 {

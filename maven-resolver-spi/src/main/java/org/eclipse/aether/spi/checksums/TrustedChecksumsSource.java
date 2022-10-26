@@ -36,7 +36,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
  * for "trust" (like some crypto magic or what not). It all boils down that the source being used by implementation is
  * "trusted" by user or not.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public interface TrustedChecksumsSource
 {

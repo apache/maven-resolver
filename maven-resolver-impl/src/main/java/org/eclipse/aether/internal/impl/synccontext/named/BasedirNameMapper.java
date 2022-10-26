@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * {@link NameMapper} and resolves the resulting "file system friendly" names against local
  * repository basedir.
  *
- * @since TBD
+ * @since 1.9.0
  */
 public class BasedirNameMapper implements NameMapper
 {

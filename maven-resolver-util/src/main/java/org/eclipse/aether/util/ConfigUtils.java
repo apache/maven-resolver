@@ -402,7 +402,7 @@ public final class ConfigUtils
      * Utility method to parse configuration string that contains comma separated list of names into
      * {@link List<String>}, never returns {@code null}.
      *
-     * @since TBD
+     * @since 1.9.0
      */
     public static List<String> parseCommaSeparatedNames( String commaSeparatedNames )
     {
@@ -419,7 +419,7 @@ public final class ConfigUtils
      * Utility method to parse configuration string that contains comma separated list of names into
      * {@link List<String>} with unique elements (duplicates, if any, are discarded), never returns {@code null}.
      *
-     * @since TBD
+     * @since 1.9.0
      */
     public static List<String> parseCommaSeparatedUniqueNames( String commaSeparatedNames )
     {

@@ -34,7 +34,7 @@ public interface NameMapper
      * Returns {@code true} if lock names returned by this lock name mapper are file system friendly, can be used
      * as file names and paths.
      *
-     * @since TBD
+     * @since 1.9.0
      */
     boolean isFileSystemFriendly();
 

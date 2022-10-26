@@ -71,7 +71,7 @@ import static java.util.stream.Collectors.toList;
  *     <a href="https://repository.apache.org/content/repositories/releases/.meta/prefixes.txt">prefixes.txt</a></li>
  * </ul>
  *
- * @since TBD
+ * @since 1.9.0
  */
 @Singleton
 @Named( PrefixesRemoteRepositoryFilterSource.NAME )

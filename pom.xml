@@ -31,7 +31,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>1.8.3-SNAPSHOT</version>
+  <version>1.9.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -80,7 +80,7 @@
     <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <minimalMavenBuildVersion>3.8.4</minimalMavenBuildVersion>
-    <project.build.outputTimestamp>2022-07-25T16:26:16Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2022-10-26T08:50:47Z</project.build.outputTimestamp>
   </properties>
 
   <modules>
