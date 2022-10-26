@@ -21,12 +21,14 @@ package org.eclipse.aether.internal.impl.collect.bf;
 
 import java.util.List;
 
+import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
@@ -47,6 +49,8 @@ final class DependencyProcessingContext
      * All parents of the dependency in the top > down order.
      */
     final List<DependencyNode> parents;
+    final PremanagedDependency premanagedDependency;
+    final RequestTrace trace;
     Dependency dependency;
 
     @SuppressWarnings( "checkstyle:parameternumber" )
@@ -54,17 +58,21 @@ final class DependencyProcessingContext
                                  DependencyManager depManager,
                                  DependencyTraverser depTraverser,
                                  VersionFilter verFilter,
+                                 RequestTrace trace,
                                  List<RemoteRepository> repositories,
                                  List<Dependency> managedDependencies,
                                  List<DependencyNode> parents,
-                                 Dependency dependency )
+                                 Dependency dependency,
+                                 PremanagedDependency premanagedDependency )
     {
         this.depSelector = depSelector;
         this.depManager = depManager;
         this.depTraverser = depTraverser;
         this.verFilter = verFilter;
+        this.trace = trace;
         this.repositories = repositories;
         this.dependency = dependency;
+        this.premanagedDependency = premanagedDependency;
         this.managedDependencies = managedDependencies;
         this.parents = parents;
     }
@@ -73,6 +81,13 @@ final class DependencyProcessingContext
     {
         this.dependency = dependency;
         return this;
+    }
+
+    DependencyProcessingContext copy()
+    {
+        return new DependencyProcessingContext( depSelector, depManager, depTraverser,
+                verFilter, trace, repositories, managedDependencies, parents, dependency,
+                premanagedDependency );
     }
 
     DependencyNode getParent()
