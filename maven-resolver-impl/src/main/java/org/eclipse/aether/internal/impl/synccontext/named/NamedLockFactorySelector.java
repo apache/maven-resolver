@@ -1,4 +1,4 @@
-package org.eclipse.aether.internal.impl.checksum;
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,21 +19,23 @@ package org.eclipse.aether.internal.impl.checksum;
  * under the License.
  */
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.impl.RepositorySystemLifecycle;
-import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
+import org.eclipse.aether.named.NamedLockFactory;
 
-public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
+/**
+ * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
+ * all the named locks configuration is here. Implementations may use different strategies to perform selection.
+ *
+ * @since 1.7.3
+ */
+public interface NamedLockFactorySelector
 {
-    @Override
-    protected FileTrustedChecksumsSourceSupport prepareSubject( RepositorySystemLifecycle lifecycle )
-    {
-        return new SummaryFileTrustedChecksumsSource( new DefaultLocalPathComposer(), lifecycle );
-    }
+    /**
+     * Returns the selected {@link NamedLockFactory}, never {@code null}.
+     */
+    NamedLockFactory getSelectedNamedLockFactory();
 
-    @Override
-    protected void enableSource( DefaultRepositorySystemSession session )
-    {
-        session.setConfigProperty( "aether.trustedChecksumsSource.summaryFile", Boolean.TRUE.toString() );
-    }
+    /**
+     * Returns the selected {@link NameMapper}, never {@code null}.
+     */
+    NameMapper getSelectedNameMapper();
 }

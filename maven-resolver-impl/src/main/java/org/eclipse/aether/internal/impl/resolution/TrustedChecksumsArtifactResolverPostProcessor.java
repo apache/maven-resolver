@@ -42,6 +42,8 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -53,14 +55,14 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Configuration keys:
  * <ul>
- *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.checksumAlgorithms} - Comma separated
+ *     <li>{@code aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms} - Comma separated
  *       list of {@link ChecksumAlgorithmFactory} names to use (default "SHA-1").</li>
- *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.failIfMissing} - To fail if artifact
+ *     <li>{@code aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing} - To fail if artifact
  *       being validated is missing a trusted checksum (default {@code false}).</li>
- *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.snapshots} - Should snapshot artifacts be
+ *     <li>{@code aether.artifactResolver.postProcessor.trustedChecksums.snapshots} - Should snapshot artifacts be
  *       handled (validated or recorded). Snapshots are by "best practice" in-house produced, hence should be trusted
  *       (default {@code false}).</li>
- *     <li>{@code aether.artifactResolver.postProcessor.trusted-checksums.record} - If this value set to {@code true},
+ *     <li>{@code aether.artifactResolver.postProcessor.trustedChecksums.record} - If this value set to {@code true},
  *       this component with not validate but "record" encountered artifact checksums instead
  *       (default {@code false}).</li>
  * </ul>
@@ -78,7 +80,7 @@ import static java.util.Objects.requireNonNull;
 public final class TrustedChecksumsArtifactResolverPostProcessor
         extends ArtifactResolverPostProcessorSupport
 {
-    public static final String NAME = "trusted-checksums";
+    public static final String NAME = "trustedChecksums";
 
     private static final String CONF_NAME_CHECKSUM_ALGORITHMS = "checksumAlgorithms";
 
@@ -92,6 +94,8 @@ public final class TrustedChecksumsArtifactResolverPostProcessor
 
     private static final String CHECKSUM_ALGORITHMS_CACHE_KEY =
             TrustedChecksumsArtifactResolverPostProcessor.class.getName() + ".checksumAlgorithms";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( TrustedChecksumsArtifactResolverPostProcessor.class );
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
@@ -161,20 +165,26 @@ public final class TrustedChecksumsArtifactResolverPostProcessor
 
             for ( TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values() )
             {
-                try ( TrustedChecksumsSource.Writer writer = trustedChecksumsSource
-                        .getTrustedArtifactChecksumsWriter( session ) )
+                TrustedChecksumsSource.Writer writer = trustedChecksumsSource
+                        .getTrustedArtifactChecksumsWriter( session );
+                if ( writer != null )
                 {
-                    if ( writer != null )
+                    try
                     {
                         writer.addTrustedArtifactChecksums( artifact, artifactRepository, checksumAlgorithmFactories,
                                 calculatedChecksums );
+                    }
+                    catch ( IOException e )
+                    {
+                        throw new UncheckedIOException( "Could not write required checksums for "
+                                + artifact.getFile(), e );
                     }
                 }
             }
         }
         catch ( IOException e )
         {
-            throw new UncheckedIOException( "Could not calculate amd write required checksums for "
+            throw new UncheckedIOException( "Could not calculate required checksums for "
                     + artifact.getFile(), e );
         }
     }

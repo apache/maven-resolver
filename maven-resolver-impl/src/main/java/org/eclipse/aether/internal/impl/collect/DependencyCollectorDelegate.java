@@ -98,8 +98,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     }
 
     protected DependencyCollectorDelegate( RemoteRepositoryManager remoteRepositoryManager,
-                           ArtifactDescriptorReader artifactDescriptorReader,
-                           VersionRangeResolver versionRangeResolver )
+                                           ArtifactDescriptorReader artifactDescriptorReader,
+                                           VersionRangeResolver versionRangeResolver )
     {
         setRemoteRepositoryManager( remoteRepositoryManager );
         setArtifactDescriptorReader( artifactDescriptorReader );

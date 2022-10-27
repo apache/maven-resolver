@@ -8,9 +8,9 @@ package org.eclipse.aether;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,7 +20,6 @@ package org.eclipse.aether;
  */
 
 import java.util.Map;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -41,10 +40,10 @@ import org.eclipse.aether.transform.FileTransformerManager;
 
 /**
  * A special repository system session to enable decorating or proxying another session. To do so, clients have to
- * create a subclass and implement {@link #getSession()}.
+ * create a subclass and implement {@link #getSession()}, and optionally override other methods.
  */
 public abstract class AbstractForwardingRepositorySystemSession
-    implements RepositorySystemSession
+        implements RepositorySystemSession
 {
 
     /**
@@ -58,7 +57,7 @@ public abstract class AbstractForwardingRepositorySystemSession
      * Gets the repository system session to which this instance forwards calls. It's worth noting that this class does
      * not save/cache the returned reference but queries this method before each forwarding. Hence, the session
      * forwarded to may change over time or depending on the context (e.g. calling thread).
-     * 
+     *
      * @return The repository system session to forward calls to, never {@code null}.
      */
     protected abstract RepositorySystemSession getSession();
@@ -212,34 +211,10 @@ public abstract class AbstractForwardingRepositorySystemSession
     {
         return getSession().getCache();
     }
-    
+
     @Override
     public FileTransformerManager getFileTransformerManager()
     {
         return getSession().getFileTransformerManager();
-    }
-
-    @Override
-    public final void addOnCloseHandler( Consumer<RepositorySystemSession> handler )
-    {
-        getSession().addOnCloseHandler( handler );
-    }
-
-    @Override
-    public final boolean isClosed()
-    {
-        return getSession().isClosed();
-    }
-
-    /**
-     * This method is special: by default it throws (nested session should never be closed), the "top level" session
-     * should be closed instead. Still, this method is NOT {@code final}, to allow implementations overriding it,
-     * and in case when needed, handle forwarded session as "top level" session.
-     */
-    @Override
-    public void close()
-    {
-        throw new IllegalStateException( "Forwarding session should not be closed, "
-                + "close the top-level (forwarded) session instead." );
     }
 }

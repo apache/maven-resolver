@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -50,6 +51,8 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Remote repository filter source filtering on G coordinate. It is backed by a file that lists all allowed groupIds
@@ -62,8 +65,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * The groupId file is expected on path "${basedir}/groupId-${repository.id}.txt".
  * <p>
- * The groupId file once loaded are cached in session, so in-flight groupId file change during session are NOT
- * noticed.
+ * The groupId file once loaded are cached in component, so in-flight groupId file change during component existence
+ * are NOT noticed.
  *
  * @since 1.9.0
  */
@@ -77,29 +80,28 @@ public final class GroupIdRemoteRepositoryFilterSource
 
     private static final String CONF_NAME_RECORD = "record";
 
-    private static final String CONF_NAME_TRUNCATE_ON_SAVE = "truncateOnSave";
-
     static final String GROUP_ID_FILE_PREFIX = "groupId-";
 
     static final String GROUP_ID_FILE_SUFFIX = ".txt";
 
-    /**
-     * Key of rules cache in session data as remoteRepository.id -> Set(groupID).
-     */
-    private static final String RULES_KEY = GroupIdRemoteRepositoryFilterSource.class.getName() + ".rules";
-
-    private static final String ON_CLOSE_HANDLER_REG_KEY = GroupIdRemoteRepositoryFilterSource.class.getName()
-            + ".onCloseHandlerReg";
-
-    private static final String NEW_GROUP_ID_RECORDED_KEY = GroupIdRemoteRepositoryFilterSource.class.getName()
-            + ".newGroupIdRecorded";
-
     private static final Logger LOGGER = LoggerFactory.getLogger( GroupIdRemoteRepositoryFilterSource.class );
 
+    private final RepositorySystemLifecycle repositorySystemLifecycle;
+
+    private final ConcurrentHashMap<Path, Set<String>> rules;
+
+    private final ConcurrentHashMap<Path, Boolean> changedRules;
+
+    private final AtomicBoolean onShutdownHandlerRegistered;
+
     @Inject
-    public GroupIdRemoteRepositoryFilterSource()
+    public GroupIdRemoteRepositoryFilterSource( RepositorySystemLifecycle repositorySystemLifecycle )
     {
         super( NAME );
+        this.repositorySystemLifecycle = requireNonNull( repositorySystemLifecycle );
+        this.rules = new ConcurrentHashMap<>();
+        this.changedRules = new ConcurrentHashMap<>();
+        this.onShutdownHandlerRegistered = new AtomicBoolean( false );
     }
 
     @Override
@@ -107,10 +109,7 @@ public final class GroupIdRemoteRepositoryFilterSource
     {
         if ( isEnabled( session ) && !isRecord( session ) )
         {
-            if ( Files.isDirectory( getBasedir( session, false ) ) )
-            {
-                return new GroupIdFilter( session );
-            }
+            return new GroupIdFilter( session );
         }
         return null;
     }
@@ -120,21 +119,22 @@ public final class GroupIdRemoteRepositoryFilterSource
     {
         if ( isEnabled( session ) && isRecord( session ) )
         {
-            if ( onCloseHandlerRegistered( session ).compareAndSet( false, true ) )
+            if ( onShutdownHandlerRegistered.compareAndSet( false, true ) )
             {
-                session.addOnCloseHandler( this::saveSessionRecordedLines );
+                repositorySystemLifecycle.addOnSystemEndedHandler( this::saveRecordedLines );
             }
-            ConcurrentHashMap<String, Set<String>> cache = cache( session );
             for ( ArtifactResult artifactResult : artifactResults )
             {
                 if ( artifactResult.isResolved() && artifactResult.getRepository() instanceof RemoteRepository )
                 {
-                    boolean newGroupId = cache.computeIfAbsent( artifactResult.getRepository().getId(),
-                                    f -> Collections.synchronizedSet( new TreeSet<>() ) )
-                            .add( artifactResult.getArtifact().getGroupId() );
+                    Path filePath = filePath( getBasedir( session, false ),
+                            artifactResult.getRepository().getId() );
+                    boolean newGroupId =
+                            rules.computeIfAbsent( filePath, f -> Collections.synchronizedSet( new TreeSet<>() ) )
+                                    .add( artifactResult.getArtifact().getGroupId() );
                     if ( newGroupId )
                     {
-                        newGroupIdRecorded( session ).set( true );
+                        changedRules.put( filePath, Boolean.TRUE );
                     }
                 }
             }
@@ -150,20 +150,13 @@ public final class GroupIdRemoteRepositoryFilterSource
                 GROUP_ID_FILE_PREFIX + remoteRepositoryId + GROUP_ID_FILE_SUFFIX );
     }
 
-    @SuppressWarnings( "unchecked" )
-    private ConcurrentHashMap<String, Set<String>> cache( RepositorySystemSession session )
-    {
-        return ( (ConcurrentHashMap<String, Set<String>>) session.getData()
-                .computeIfAbsent( RULES_KEY, ConcurrentHashMap::new ) );
-    }
-
     private Set<String> cacheRules( RepositorySystemSession session,
                                     RemoteRepository remoteRepository )
     {
-        return cache( session ).computeIfAbsent( remoteRepository.getId(), id ->
+        Path filePath = filePath( getBasedir( session, false ), remoteRepository.getId() );
+        return rules.computeIfAbsent( filePath, r ->
                 {
-                    Set<String> rules = loadRepositoryRules(
-                            filePath( getBasedir( session, false ), remoteRepository.getId() ) );
+                    Set<String> rules = loadRepositoryRules( filePath );
                     if ( rules != NOT_PRESENT )
                     {
                         LOGGER.info( "Loaded {} groupId for remote repository {}", rules.size(),
@@ -255,58 +248,34 @@ public final class GroupIdRemoteRepositoryFilterSource
     }
 
     /**
-     * Flag to preserve on-close handler registration state.
+     * On-close handler that saves recorded rules, if any.
      */
-    private AtomicBoolean onCloseHandlerRegistered( RepositorySystemSession session )
+    private void saveRecordedLines()
     {
-        return (AtomicBoolean) session.getData().computeIfAbsent( ON_CLOSE_HANDLER_REG_KEY,
-                () -> new AtomicBoolean( false ) );
-    }
-
-    /**
-     * Flag to preserve new groupId recorded state.
-     */
-    private AtomicBoolean newGroupIdRecorded( RepositorySystemSession session )
-    {
-        return (AtomicBoolean) session.getData().computeIfAbsent( NEW_GROUP_ID_RECORDED_KEY,
-                () -> new AtomicBoolean( false ) );
-    }
-
-    /**
-     * Returns {@code true} if truncate requested by session.
-     */
-    private boolean isTruncateOnSave( RepositorySystemSession session )
-    {
-        return ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_TRUNCATE_ON_SAVE ) );
-    }
-
-    private void saveSessionRecordedLines( RepositorySystemSession session )
-    {
-        Map<String, Set<String>> recorded = cache ( session );
-        if ( !newGroupIdRecorded( session ).get() )
+        if ( changedRules.isEmpty() )
         {
             return;
         }
 
-        Path basedir = getBasedir( session, true );
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for ( Map.Entry<String, Set<String>> entry : recorded.entrySet() )
+        for ( Map.Entry<Path, Set<String>> entry : rules.entrySet() )
         {
-            Path groupIdPath = filePath( basedir, entry.getKey() );
+            Path filePath = entry.getKey();
+            if ( changedRules.get( filePath ) != Boolean.TRUE )
+            {
+                continue;
+            }
             Set<String> recordedLines = entry.getValue();
             if ( !recordedLines.isEmpty() )
             {
                 try
                 {
                     TreeSet<String> result = new TreeSet<>();
-                    if ( !isTruncateOnSave( session ) )
-                    {
-                        result.addAll( loadRepositoryRules( groupIdPath ) );
-                    }
+                    result.addAll( loadRepositoryRules( filePath ) );
                     result.addAll( recordedLines );
 
-                    LOGGER.info( "Saving {} groupIds to '{}'", result.size(), groupIdPath );
-                    FileUtils.writeFileWithBackup( groupIdPath, p -> Files.write( p, result ) );
+                    LOGGER.info( "Saving {} groupIds to '{}'", result.size(), filePath );
+                    FileUtils.writeFileWithBackup( filePath, p -> Files.write( p, result ) );
                 }
                 catch ( IOException e )
                 {

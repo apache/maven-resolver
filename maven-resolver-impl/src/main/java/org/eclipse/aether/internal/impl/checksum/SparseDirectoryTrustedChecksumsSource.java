@@ -53,7 +53,7 @@ import static java.util.Objects.requireNonNull;
  * up. This implementation can be simultaneously used to lookup and also write checksums. The written checksums
  * will become visible across all sessions right after the moment they were written.
  * <p>
- * The name of this implementation is "sparse-directory".
+ * The name of this implementation is "sparseDirectory".
  *
  * @see LocalPathComposer
  * @since 1.9.0
@@ -63,7 +63,7 @@ import static java.util.Objects.requireNonNull;
 public final class SparseDirectoryTrustedChecksumsSource
         extends FileTrustedChecksumsSourceSupport
 {
-    public static final String NAME = "sparse-directory";
+    public static final String NAME = "sparseDirectory";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( SparseDirectoryTrustedChecksumsSource.class );
 
@@ -167,11 +167,5 @@ public final class SparseDirectoryTrustedChecksumsSource
                 fileProcessor.writeChecksum( checksumPath.toFile(), checksum );
             }
         }
-
-        @Override
-        public void close()
-        {
-            // nop
-        }
-    }
+   }
 }

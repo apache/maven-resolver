@@ -19,7 +19,6 @@ package org.eclipse.aether.spi.checksums;
  * under the License.
  */
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -58,10 +57,9 @@ public interface TrustedChecksumsSource
                                                      List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
 
     /**
-     * A writer that is able to write/add trusted checksums to this implementation. Should be treated as a resource
-     * as underlying implementation may rely on being closed after not used anymore.
+     * A writer that is able to write/add trusted checksums to this implementation.
      */
-    interface Writer extends Closeable
+    interface Writer
     {
         /**
          * Performs whatever implementation requires to "set" (write/add/append) given map of trusted checksums.

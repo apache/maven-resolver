@@ -61,7 +61,7 @@ import static java.util.stream.Collectors.toList;
  * <p>
  * The prefix file is expected on path "${basedir}/prefixes-${repository.id}.txt".
  * <p>
- * The prefixes file once loaded are cached in session, so in-flight prefixes file change during session are NOT
+ * The prefixes file is once loaded and cached, so in-flight prefixes file change during component existence are not
  * noticed.
  * <p>
  * Examples of published prefix files:
@@ -84,19 +84,21 @@ public final class PrefixesRemoteRepositoryFilterSource
 
     static final String PREFIXES_FILE_SUFFIX = ".txt";
 
-    private static final String LAYOUT_CACHE_KEY = PrefixesRemoteRepositoryFilterSource.class.getName() + ".layouts";
-
-    private static final String NODE_CACHE_KEY = PrefixesRemoteRepositoryFilterSource.class.getName() + ".nodes";
-
     private static final Logger LOGGER = LoggerFactory.getLogger( PrefixesRemoteRepositoryFilterSource.class );
 
     private final RepositoryLayoutProvider repositoryLayoutProvider;
+
+    private final ConcurrentHashMap<RemoteRepository, Node> prefixes;
+
+    private final ConcurrentHashMap<RemoteRepository, RepositoryLayout> layouts;
 
     @Inject
     public PrefixesRemoteRepositoryFilterSource( RepositoryLayoutProvider repositoryLayoutProvider )
     {
         super( NAME );
         this.repositoryLayoutProvider = requireNonNull( repositoryLayoutProvider );
+        this.prefixes = new ConcurrentHashMap<>();
+        this.layouts = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -104,48 +106,36 @@ public final class PrefixesRemoteRepositoryFilterSource
     {
         if ( isEnabled( session ) )
         {
-            final Path basedir = getBasedir( session, false );
-            if ( Files.isDirectory( basedir ) )
-            {
-                return new PrefixesFilter( session, basedir );
-            }
+            return new PrefixesFilter( session, getBasedir( session, false ) );
         }
         return null;
     }
 
     /**
-     * Caches layout instances for remote repository within one session.
+     * Caches layout instances for remote repository.
      */
-    @SuppressWarnings( "unchecked" )
-    private RepositoryLayout cacheLayout( RepositorySystemSession session,
-                                          RemoteRepository remoteRepository )
+    private RepositoryLayout cacheLayout( RepositorySystemSession session, RemoteRepository remoteRepository )
     {
-        return ( (ConcurrentHashMap<String, RepositoryLayout>) session.getData()
-                .computeIfAbsent( LAYOUT_CACHE_KEY, ConcurrentHashMap::new ) )
-                .computeIfAbsent( remoteRepository.getId(), r ->
-                {
-                    try
-                    {
-                        return repositoryLayoutProvider.newRepositoryLayout( session, remoteRepository );
-                    }
-                    catch ( NoRepositoryLayoutException e )
-                    {
-                        throw new RuntimeException( e );
-                    }
-                } );
+        return layouts.computeIfAbsent( remoteRepository, r ->
+        {
+            try
+            {
+                return repositoryLayoutProvider.newRepositoryLayout( session, remoteRepository );
+            }
+            catch ( NoRepositoryLayoutException e )
+            {
+                throw new RuntimeException( e );
+            }
+        } );
     }
 
     /**
-     * Caches prefixes instances for remote repository within one session.
+     * Caches prefixes instances for remote repository.
      */
-    @SuppressWarnings( "unchecked" )
-    private Node cacheNode( RepositorySystemSession session,
-                            Path basedir,
+    private Node cacheNode( Path basedir,
                             RemoteRepository remoteRepository )
     {
-        return ( (ConcurrentHashMap<String, Node>) session.getData()
-                .computeIfAbsent( NODE_CACHE_KEY, ConcurrentHashMap::new ) )
-                .computeIfAbsent( remoteRepository.getId(), r -> loadRepositoryPrefixes( basedir, remoteRepository ) );
+        return prefixes.computeIfAbsent( remoteRepository, r -> loadRepositoryPrefixes( basedir, remoteRepository ) );
     }
 
     /**
@@ -219,7 +209,7 @@ public final class PrefixesRemoteRepositoryFilterSource
 
         private Result acceptPrefix( RemoteRepository remoteRepository, String path )
         {
-            Node root = cacheNode( session, basedir, remoteRepository );
+            Node root = cacheNode( basedir, remoteRepository );
             if ( NOT_PRESENT_NODE == root )
             {
                 return NOT_PRESENT_RESULT;
