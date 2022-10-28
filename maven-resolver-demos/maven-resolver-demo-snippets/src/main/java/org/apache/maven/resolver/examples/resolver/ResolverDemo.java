@@ -22,6 +22,7 @@ package org.apache.maven.resolver.examples.resolver;
 import java.io.File;
 import java.util.List;
 
+import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeploymentException;
@@ -35,6 +36,23 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 @SuppressWarnings( "unused" )
 public class ResolverDemo
 {
+    public static void main( String[] args ) throws Exception
+    {
+        System.out.println( "------------------------------------------------------------" );
+        System.out.println( ResolverDemo.class.getSimpleName() );
+
+        Resolver resolver = new Resolver(
+                Booter.selectFactory( args ),
+                "https://repo.maven.apache.org/maven2/",
+                "target/aether-repo"
+        );
+        ResolverResult result = resolver.resolve( "junit", "junit", "4.13.2" );
+
+        System.out.println( "Result:" );
+        System.out.println( "classpath=" + result.getResolvedClassPath() );
+        System.out.println( "files=" + result.getResolvedFiles() );
+        System.out.println( "root=" + result.getRoot() );
+    }
 
     public void resolve( final String factory )
         throws DependencyResolutionException

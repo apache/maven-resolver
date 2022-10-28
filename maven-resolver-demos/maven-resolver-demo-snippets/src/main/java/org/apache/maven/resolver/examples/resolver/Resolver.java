@@ -65,6 +65,8 @@ public class Resolver
     {
         DefaultRepositorySystemSession session = Booter.newRepositorySystemSession( repositorySystem );
         session.setLocalRepositoryManager( repositorySystem.newLocalRepositoryManager( session, localRepository ) );
+        session.setTransferListener( null );
+        session.setRepositoryListener( null );
         return session;
     }
 
@@ -87,6 +89,8 @@ public class Resolver
 
         StringBuilder dump = new StringBuilder();
         displayTree( rootNode, dump );
+        System.out.println( "Tree:" );
+        System.out.println( dump );
 
         PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
         rootNode.accept( nlg );
