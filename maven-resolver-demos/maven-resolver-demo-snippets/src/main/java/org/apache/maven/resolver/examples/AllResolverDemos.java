@@ -19,6 +19,8 @@ package org.apache.maven.resolver.examples;
  * under the License.
  */
 
+import org.apache.maven.resolver.examples.resolver.ResolverDemo;
+
 /**
  * Runs all demos at once.
  */
@@ -42,6 +44,8 @@ public class AllResolverDemos
         ReverseDependencyTree.main( args );
         InstallArtifacts.main( args );
         DeployArtifacts.main( args );
+
+        ResolverDemo.main( args );
     }
 
 }
