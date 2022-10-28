@@ -22,11 +22,11 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 --- | --- | --- | --- | ---
 `aether.artifactResolver.snapshotNormalization` | boolean | It replaces the timestamped snapshot file name with a filename containing the `SNAPSHOT` qualifier only. This only affects resolving/retrieving artifacts but not uploading those. | `true` | no
 `aether.artifactResolver.simpleLrmInterop` | boolean | Enable interop with Simple LRM. Ignored when RRF used. | `false` | no
-`aether.artifactResolver.postProcessor.trusted-checksums` | boolean | Enable `trusted-checksums` resolver post processor. | `false` | no 
-`aether.artifactResolver.postProcessor.trusted-checksums.checksumAlgorithms` | String | Comma-separated list of checksum algorithms with which `trusted-checksums` should operate (validate or record). | `"SHA-1"` | no 
-`aether.artifactResolver.postProcessor.trusted-checksums.failIfMissing` | boolean | Makes `trusted-checksums` fail validation if a trusted checksum for an artifact is missing. | `false` | no 
-`aether.artifactResolver.postProcessor.trusted-checksums.record` | boolean | Makes `trusted-checksums` calculate and record checksums. | `false` | no 
-`aether.artifactResolver.postProcessor.trusted-checksums.snapshots` | boolean | Enables or disables snapshot processing in `trusted-checksum` post processor. | `false` | no 
+`aether.artifactResolver.postProcessor.trustedChecksums` | boolean | Enable `trustedChecksums` resolver post processor. | `false` | no 
+`aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms` | String | Comma-separated list of checksum algorithms with which `trustedChecksums` should operate (validate or record). | `"SHA-1"` | no 
+`aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing` | boolean | Makes `trustedChecksums` fail validation if a trusted checksum for an artifact is missing. | `false` | no 
+`aether.artifactResolver.postProcessor.trustedChecksums.record` | boolean | Makes `trustedChecksums` calculate and record checksums. | `false` | no 
+`aether.artifactResolver.postProcessor.trustedChecksums.snapshots` | boolean | Enables or disables snapshot processing in `trustedChecksums` post processor. | `false` | no 
 `aether.checksums.omitChecksumsForExtensions` | String | Comma-separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc` | no
 `aether.checksums.algorithms` | String | Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
@@ -86,12 +86,12 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.syncContext.named.discriminating.discriminator` | String | A discriminator name prefix identifying a Resolver instance. | `"sha1('${hostname:-localhost}:${maven.repo.local}')"` or `"sha1('')"` if generation fails | no
 `aether.syncContext.named.discriminating.hostname` | String | The hostname to be used with discriminating mapper. | Detected with `InetAddress.getLocalHost().getHostName()` | no
 `aether.syncContext.named.redisson.configFile` | String | Path to a Redisson configuration file in YAML format. Read [official documentation](https://github.com/redisson/redisson/wiki/2.-Configuration) for details. | none or `"${maven.conf}/maven-resolver-redisson.yaml"` if present | no
-`aether.trustedChecksumsSource.sparse-directory` | boolean | Enable `sparse-directory` trusted checksum source. | `false` | no
-`aether.trustedChecksumsSource.sparse-directory.basedir` | String | The basedir path for `sparse-directory` trusted checksum source. If relative, resolved against local repository root, if absolute, used as is. | `".checksums"` | no
-`aether.trustedChecksumsSource.sparse-directory.originAware` | boolean | Is trusted checksum source origin aware (factors in Repository ID into path) or not. | `true` | no
-`aether.trustedChecksumsSource.summary-file` | boolean | Enable `summary-file` trusted checksum source. | `false` | no
-`aether.trustedChecksumsSource.summary-file.basedir` | String | The basedir path for `summary-file` trusted checksum source. If relative, resolved against local repository root, if absolute, used as is. | `".checksums"` | no
-`aether.trustedChecksumsSource.summary-file.originAware` | boolean | Is trusted checksum source origin aware (factors in Repository ID into path) or not. | `true` | no
+`aether.trustedChecksumsSource.sparseDirectory` | boolean | Enable `sparseDirectory` trusted checksum source. | `false` | no
+`aether.trustedChecksumsSource.sparseDirectory.basedir` | String | The basedir path for `sparseDirectory` trusted checksum source. If relative, resolved against local repository root, if absolute, used as is. | `".checksums"` | no
+`aether.trustedChecksumsSource.sparseDirectory.originAware` | boolean | Is trusted checksum source origin aware (factors in Repository ID into path) or not. | `true` | no
+`aether.trustedChecksumsSource.summaryFile` | boolean | Enable `summaryFile` trusted checksum source. | `false` | no
+`aether.trustedChecksumsSource.summaryFile.basedir` | String | The basedir path for `summaryFile` trusted checksum source. If relative, resolved against local repository root, if absolute, used as is. | `".checksums"` | no
+`aether.trustedChecksumsSource.summaryFile.originAware` | boolean | Is trusted checksum source origin aware (factors in Repository ID into path) or not. | `true` | no
 `aether.updateCheckManager.sessionState` | String | Manages the session state, i.e. influences if the same download requests to artifacts/metadata will happen multiple times within the same RepositorySystemSession. If `"enabled"` will enable the session state. If `"bypass"` will enable bypassing (i.e. store all artifact ids/metadata ids which have been updates but not evaluating those). All other values lead to disabling the session state completely. | `"enabled"` | no
 
 All properties which have `yes` in the column `Supports Repo ID Suffix` can be optionally configured specifically for a repository id. In that case the configuration property needs to be suffixed with a period followed by the repository id of the repository to configure, e.g. `aether.connector.http.headers.central` for repository with id `central`.

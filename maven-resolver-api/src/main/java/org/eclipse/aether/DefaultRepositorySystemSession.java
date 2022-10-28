@@ -8,9 +8,9 @@ package org.eclipse.aether;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,16 +19,10 @@ package org.eclipse.aether;
  * under the License.
  */
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import static java.util.Objects.requireNonNull;
-
-import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactType;
@@ -54,6 +48,8 @@ import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.transform.FileTransformerManager;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A simple repository system session.
  * <p>
@@ -63,10 +59,8 @@ import org.eclipse.aether.transform.FileTransformerManager;
  * accidental manipulation of it afterwards.
  */
 public final class DefaultRepositorySystemSession
-    implements RepositorySystemSession
+        implements RepositorySystemSession
 {
-
-    private final AtomicBoolean closed;
 
     private boolean readOnly;
 
@@ -133,7 +127,6 @@ public final class DefaultRepositorySystemSession
      */
     public DefaultRepositorySystemSession()
     {
-        closed = new AtomicBoolean( false );
         systemProperties = new HashMap<>();
         systemPropertiesView = Collections.unmodifiableMap( systemProperties );
         userProperties = new HashMap<>();
@@ -160,7 +153,6 @@ public final class DefaultRepositorySystemSession
     {
         requireNonNull( session, "repository system session cannot be null" );
 
-        closed = new AtomicBoolean( false );
         setOffline( session.isOffline() );
         setIgnoreArtifactDescriptorRepositories( session.isIgnoreArtifactDescriptorRepositories() );
         setResolutionErrorPolicy( session.getResolutionErrorPolicy() );
@@ -188,6 +180,7 @@ public final class DefaultRepositorySystemSession
         setCache( session.getCache() );
     }
 
+    @Override
     public boolean isOffline()
     {
         return offline;
@@ -196,7 +189,7 @@ public final class DefaultRepositorySystemSession
     /**
      * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
      * repositories.
-     * 
+     *
      * @param offline {@code true} if the repository system is in offline mode, {@code false} otherwise.
      * @return This session for chaining, never {@code null}.
      */
@@ -207,6 +200,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public boolean isIgnoreArtifactDescriptorRepositories()
     {
         return ignoreArtifactDescriptorRepositories;
@@ -215,9 +209,10 @@ public final class DefaultRepositorySystemSession
     /**
      * Controls whether repositories declared in artifact descriptors should be ignored during transitive dependency
      * collection. If enabled, only the repositories originally provided with the collect request will be considered.
-     * 
+     *
      * @param ignoreArtifactDescriptorRepositories {@code true} to ignore additional repositories from artifact
-     *            descriptors, {@code false} to merge those with the originally specified repositories.
+     *                                             descriptors, {@code false} to merge those with the originally
+     *                                             specified repositories.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories(
@@ -228,6 +223,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public ResolutionErrorPolicy getResolutionErrorPolicy()
     {
         return resolutionErrorPolicy;
@@ -235,9 +231,9 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the policy which controls whether resolutions errors from remote repositories should be cached.
-     * 
+     *
      * @param resolutionErrorPolicy The resolution error policy for this session, may be {@code null} if resolution
-     *            errors should generally not be cached.
+     *                              errors should generally not be cached.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setResolutionErrorPolicy( ResolutionErrorPolicy resolutionErrorPolicy )
@@ -247,6 +243,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public ArtifactDescriptorPolicy getArtifactDescriptorPolicy()
     {
         return artifactDescriptorPolicy;
@@ -254,9 +251,9 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the policy which controls how errors related to reading artifact descriptors should be handled.
-     * 
+     *
      * @param artifactDescriptorPolicy The descriptor error policy for this session, may be {@code null} if descriptor
-     *            errors should generally not be tolerated.
+     *                                 errors should generally not be tolerated.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setArtifactDescriptorPolicy(
@@ -267,6 +264,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public String getChecksumPolicy()
     {
         return checksumPolicy;
@@ -275,7 +273,7 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the global checksum policy. If set, the global checksum policy overrides the checksum policies of the remote
      * repositories being used for resolution.
-     * 
+     *
      * @param checksumPolicy The global checksum policy, may be {@code null}/empty to apply the per-repository policies.
      * @return This session for chaining, never {@code null}.
      * @see RepositoryPolicy#CHECKSUM_POLICY_FAIL
@@ -289,6 +287,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public String getUpdatePolicy()
     {
         return updatePolicy;
@@ -297,7 +296,7 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the global update policy. If set, the global update policy overrides the update policies of the remote
      * repositories being used for resolution.
-     * 
+     *
      * @param updatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
      * @return This session for chaining, never {@code null}.
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
@@ -311,6 +310,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public LocalRepository getLocalRepository()
     {
         LocalRepositoryManager lrm = getLocalRepositoryManager();
@@ -325,7 +325,7 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the local repository manager used during this session. <em>Note:</em> Eventually, a valid session must have
      * a local repository manager set.
-     * 
+     *
      * @param localRepositoryManager The local repository manager used during this session, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
@@ -353,6 +353,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public WorkspaceReader getWorkspaceReader()
     {
         return workspaceReader;
@@ -361,7 +362,7 @@ public final class DefaultRepositorySystemSession
     /**
      * Sets the workspace reader used during this session. If set, the workspace reader will usually be consulted first
      * to resolve artifacts.
-     * 
+     *
      * @param workspaceReader The workspace reader for this session, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
@@ -372,6 +373,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public RepositoryListener getRepositoryListener()
     {
         return repositoryListener;
@@ -379,7 +381,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the listener being notified of actions in the repository system.
-     * 
+     *
      * @param repositoryListener The repository listener, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
@@ -390,6 +392,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public TransferListener getTransferListener()
     {
         return transferListener;
@@ -397,7 +400,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the listener being notified of uploads/downloads by the repository system.
-     * 
+     *
      * @param transferListener The transfer listener, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
@@ -435,6 +438,7 @@ public final class DefaultRepositorySystemSession
         return map;
     }
 
+    @Override
     public Map<String, String> getSystemProperties()
     {
         return systemPropertiesView;
@@ -446,7 +450,7 @@ public final class DefaultRepositorySystemSession
      * <p>
      * <em>Note:</em> System properties are of type {@code Map<String, String>} and any key-value pair in the input map
      * that doesn't match this type will be silently ignored.
-     * 
+     *
      * @param systemProperties The system properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
@@ -460,8 +464,8 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the specified system property.
-     * 
-     * @param key The property key, must not be {@code null}.
+     *
+     * @param key   The property key, must not be {@code null}.
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
@@ -479,6 +483,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public Map<String, String> getUserProperties()
     {
         return userPropertiesView;
@@ -491,7 +496,7 @@ public final class DefaultRepositorySystemSession
      * <p>
      * <em>Note:</em> User properties are of type {@code Map<String, String>} and any key-value pair in the input map
      * that doesn't match this type will be silently ignored.
-     * 
+     *
      * @param userProperties The user properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
@@ -505,8 +510,8 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the specified user property.
-     * 
-     * @param key The property key, must not be {@code null}.
+     *
+     * @param key   The property key, must not be {@code null}.
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
@@ -524,6 +529,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public Map<String, Object> getConfigProperties()
     {
         return configPropertiesView;
@@ -535,7 +541,7 @@ public final class DefaultRepositorySystemSession
      * <p>
      * <em>Note:</em> Configuration properties are of type {@code Map<String, Object>} and any key-value pair in the
      * input map that doesn't match this type will be silently ignored.
-     * 
+     *
      * @param configProperties The configuration properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
@@ -549,8 +555,8 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the specified configuration property.
-     * 
-     * @param key The property key, must not be {@code null}.
+     *
+     * @param key   The property key, must not be {@code null}.
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
@@ -568,6 +574,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public MirrorSelector getMirrorSelector()
     {
         return mirrorSelector;
@@ -577,7 +584,7 @@ public final class DefaultRepositorySystemSession
      * Sets the mirror selector to use for repositories discovered in artifact descriptors. Note that this selector is
      * not used for remote repositories which are passed as request parameters to the repository system, those
      * repositories are supposed to denote the effective repositories.
-     * 
+     *
      * @param mirrorSelector The mirror selector to use, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
@@ -592,6 +599,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public ProxySelector getProxySelector()
     {
         return proxySelector;
@@ -601,7 +609,7 @@ public final class DefaultRepositorySystemSession
      * Sets the proxy selector to use for repositories discovered in artifact descriptors. Note that this selector is
      * not used for remote repositories which are passed as request parameters to the repository system, those
      * repositories are supposed to have their proxy (if any) already set.
-     * 
+     *
      * @param proxySelector The proxy selector to use, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getProxy()
@@ -617,6 +625,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public AuthenticationSelector getAuthenticationSelector()
     {
         return authenticationSelector;
@@ -626,7 +635,7 @@ public final class DefaultRepositorySystemSession
      * Sets the authentication selector to use for repositories discovered in artifact descriptors. Note that this
      * selector is not used for remote repositories which are passed as request parameters to the repository system,
      * those repositories are supposed to have their authentication (if any) already set.
-     * 
+     *
      * @param authenticationSelector The authentication selector to use, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getAuthentication()
@@ -642,6 +651,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public ArtifactTypeRegistry getArtifactTypeRegistry()
     {
         return artifactTypeRegistry;
@@ -649,7 +659,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the registry of artifact types recognized by this session.
-     * 
+     *
      * @param artifactTypeRegistry The artifact type registry, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
@@ -664,6 +674,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public DependencyTraverser getDependencyTraverser()
     {
         return dependencyTraverser;
@@ -671,7 +682,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the dependency traverser to use for building dependency graphs.
-     * 
+     *
      * @param dependencyTraverser The dependency traverser to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
@@ -682,6 +693,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public DependencyManager getDependencyManager()
     {
         return dependencyManager;
@@ -689,7 +701,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the dependency manager to use for building dependency graphs.
-     * 
+     *
      * @param dependencyManager The dependency manager to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
@@ -700,6 +712,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public DependencySelector getDependencySelector()
     {
         return dependencySelector;
@@ -707,7 +720,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the dependency selector to use for building dependency graphs.
-     * 
+     *
      * @param dependencySelector The dependency selector to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
@@ -718,6 +731,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public VersionFilter getVersionFilter()
     {
         return versionFilter;
@@ -725,9 +739,9 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the version filter to use for building dependency graphs.
-     * 
+     *
      * @param versionFilter The version filter to use for building dependency graphs, may be {@code null} to not filter
-     *            versions.
+     *                      versions.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setVersionFilter( VersionFilter versionFilter )
@@ -737,6 +751,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public DependencyGraphTransformer getDependencyGraphTransformer()
     {
         return dependencyGraphTransformer;
@@ -744,9 +759,9 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the dependency graph transformer to use for building dependency graphs.
-     * 
+     *
      * @param dependencyGraphTransformer The dependency graph transformer to use for building dependency graphs, may be
-     *            {@code null}.
+     *                                   {@code null}.
      * @return This session for chaining, never {@code null}.
      */
     public DefaultRepositorySystemSession setDependencyGraphTransformer(
@@ -757,6 +772,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public SessionData getData()
     {
         return data;
@@ -764,7 +780,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the custom data associated with this session.
-     * 
+     *
      * @param data The session data, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
@@ -779,6 +795,7 @@ public final class DefaultRepositorySystemSession
         return this;
     }
 
+    @Override
     public RepositoryCache getCache()
     {
         return cache;
@@ -786,7 +803,7 @@ public final class DefaultRepositorySystemSession
 
     /**
      * Sets the cache the repository system may use to save data for future reuse during the session.
-     * 
+     *
      * @param cache The repository cache, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
@@ -816,14 +833,10 @@ public final class DefaultRepositorySystemSession
         {
             throw new IllegalStateException( "repository system session is read-only" );
         }
-        if ( closed.get() )
-        {
-            throw new IllegalStateException( "repository system session is already closed" );
-        }
     }
 
     static class NullProxySelector
-        implements ProxySelector
+            implements ProxySelector
     {
 
         public static final ProxySelector INSTANCE = new NullProxySelector();
@@ -837,7 +850,7 @@ public final class DefaultRepositorySystemSession
     }
 
     static class NullMirrorSelector
-        implements MirrorSelector
+            implements MirrorSelector
     {
 
         public static final MirrorSelector INSTANCE = new NullMirrorSelector();
@@ -851,7 +864,7 @@ public final class DefaultRepositorySystemSession
     }
 
     static class NullAuthenticationSelector
-        implements AuthenticationSelector
+            implements AuthenticationSelector
     {
 
         public static final AuthenticationSelector INSTANCE = new NullAuthenticationSelector();
@@ -865,7 +878,7 @@ public final class DefaultRepositorySystemSession
     }
 
     static final class NullArtifactTypeRegistry
-        implements ArtifactTypeRegistry
+            implements ArtifactTypeRegistry
     {
 
         public static final ArtifactTypeRegistry INSTANCE = new NullArtifactTypeRegistry();
@@ -885,47 +898,6 @@ public final class DefaultRepositorySystemSession
         public Collection<FileTransformer> getTransformersForArtifact( Artifact artifact )
         {
             return Collections.emptyList();
-        }
-    }
-
-    private final CopyOnWriteArrayList<Consumer<RepositorySystemSession>> onCloseHandlers
-            = new CopyOnWriteArrayList<>();
-
-    @Override
-    public void addOnCloseHandler( Consumer<RepositorySystemSession> handler )
-    {
-        requireNonNull( handler, "handler cannot be null" );
-        if ( closed.get() )
-        {
-            throw new IllegalStateException( "repository system session is already closed" );
-        }
-        onCloseHandlers.add( 0, handler );
-    }
-
-    @Override
-    public boolean isClosed()
-    {
-        return closed.get();
-    }
-
-    @Override
-    public void close()
-    {
-        if ( closed.compareAndSet( false, true ) )
-        {
-            ArrayList<Exception> exceptions = new ArrayList<>();
-            for ( Consumer<RepositorySystemSession> onCloseHandler : onCloseHandlers )
-            {
-                try
-                {
-                    onCloseHandler.accept( this );
-                }
-                catch ( Exception e )
-                {
-                    exceptions.add( e );
-                }
-            }
-            MultiRuntimeException.mayThrow( "session on-close handler failures", exceptions );
         }
     }
 }

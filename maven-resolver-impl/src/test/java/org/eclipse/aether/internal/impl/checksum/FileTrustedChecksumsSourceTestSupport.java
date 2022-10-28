@@ -27,6 +27,8 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.impl.RepositorySystemLifecycle;
+import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -54,6 +56,8 @@ public abstract class FileTrustedChecksumsSourceTestSupport
 
     private ChecksumAlgorithmFactory checksumAlgorithmFactory;
 
+    private RepositorySystemLifecycle repositorySystemLifecycle;
+
     private FileTrustedChecksumsSourceSupport subject;
 
     private boolean checksumWritten;
@@ -64,27 +68,24 @@ public abstract class FileTrustedChecksumsSourceTestSupport
         session = TestUtils.newSession();
         // populate local repository
         checksumAlgorithmFactory = new Sha1ChecksumAlgorithmFactory();
-        subject = prepareSubject();
+        repositorySystemLifecycle = new DefaultRepositorySystemLifecycle();
+        subject = prepareSubject( repositorySystemLifecycle );
         checksumWritten = false;
 
-        try ( DefaultRepositorySystemSession prepareSession = new DefaultRepositorySystemSession( session ) )
+        DefaultRepositorySystemSession prepareSession = new DefaultRepositorySystemSession( session );
+        enableSource( prepareSession );
+        TrustedChecksumsSource.Writer writer = subject.getTrustedArtifactChecksumsWriter( prepareSession );
+        if ( writer != null )
         {
-            enableSource( prepareSession );
-            try ( TrustedChecksumsSource.Writer writer = subject.getTrustedArtifactChecksumsWriter( prepareSession ) )
-            {
-                if ( writer != null )
-                {
-                    HashMap<String, String> checksums = new HashMap<>();
-                    checksums.put( checksumAlgorithmFactory.getName(), ARTIFACT_TRUSTED_CHECKSUM );
-                    writer.addTrustedArtifactChecksums( ARTIFACT_WITH_CHECKSUM, prepareSession.getLocalRepository(),
-                            Collections.singletonList( checksumAlgorithmFactory ), checksums );
-                    checksumWritten = true;
-                }
-            }
+            HashMap<String, String> checksums = new HashMap<>();
+            checksums.put( checksumAlgorithmFactory.getName(), ARTIFACT_TRUSTED_CHECKSUM );
+            writer.addTrustedArtifactChecksums( ARTIFACT_WITH_CHECKSUM, prepareSession.getLocalRepository(),
+                    Collections.singletonList( checksumAlgorithmFactory ), checksums );
+            checksumWritten = true;
         }
     }
 
-    protected abstract FileTrustedChecksumsSourceSupport prepareSubject();
+    protected abstract FileTrustedChecksumsSourceSupport prepareSubject( RepositorySystemLifecycle lifecycle );
 
     protected abstract void enableSource( DefaultRepositorySystemSession session );
 

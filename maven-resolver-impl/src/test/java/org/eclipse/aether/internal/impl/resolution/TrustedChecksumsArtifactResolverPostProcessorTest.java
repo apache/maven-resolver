@@ -103,7 +103,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
         subject = new TrustedChecksumsArtifactResolverPostProcessor( selector,
                 Collections.singletonMap( TRUSTED_SOURCE_NAME, this ) );
         trustedChecksumsWriter = null;
-        session.setConfigProperty( "aether.artifactResolver.postProcessor.trusted-checksums", Boolean.TRUE.toString() );
+        session.setConfigProperty( "aether.artifactResolver.postProcessor.trustedChecksums", Boolean.TRUE.toString() );
     }
 
     // -- TrustedChecksumsSource interface BEGIN
@@ -163,7 +163,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     @Test
     public void haveNoChecksumFailIfMissingEnabledFail()
     {
-        session.setConfigProperty( "aether.artifactResolver.postProcessor.trusted-checksums.failIfMissing",
+        session.setConfigProperty( "aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing",
                 Boolean.TRUE.toString() );
         ArtifactResult artifactResult = createArtifactResult( artifactWithoutTrustedChecksum );
         assertThat( artifactResult.isResolved(), equalTo( true ) );
@@ -204,14 +204,8 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
             {
                 recordedChecksum.set( trustedArtifactChecksums.get( checksumAlgorithmFactory.getName() ) );
             }
-
-            @Override
-            public void close()
-            {
-                // nop
-            }
         };
-        session.setConfigProperty( "aether.artifactResolver.postProcessor.trusted-checksums.record",
+        session.setConfigProperty( "aether.artifactResolver.postProcessor.trustedChecksums.record",
                 Boolean.TRUE.toString() );
         ArtifactResult artifactResult = createArtifactResult( artifactWithTrustedChecksum );
         assertThat( artifactResult.isResolved(), equalTo( true ) );

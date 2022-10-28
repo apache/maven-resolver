@@ -23,27 +23,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.FileHashingGAVNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider;
-import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
-import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
-import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactorySelector;
+import org.eclipse.aether.internal.impl.synccontext.named.ParameterizedNamedLockFactorySelector;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -55,29 +43,18 @@ import static java.util.Objects.requireNonNull;
 public final class DefaultSyncContextFactory
         implements SyncContextFactory, Service
 {
-    private static final String ADAPTER_KEY = DefaultSyncContextFactory.class.getName() + ".adapter";
-
-    private static final String NAME_MAPPER_KEY = "aether.syncContext.named.nameMapper";
-
-    private static final String DEFAULT_NAME_MAPPER_NAME = GAVNameMapperProvider.NAME;
-
-    private static final String FACTORY_KEY = "aether.syncContext.named.factory";
-
-    private static final String DEFAULT_FACTORY_NAME = LocalReadWriteLockNamedLockFactory.NAME;
-
-    private Map<String, NameMapper> nameMappers;
-
-    private Map<String, NamedLockFactory> namedLockFactories;
+    private NamedLockFactoryAdapter namedLockFactoryAdapter;
 
     /**
      * Constructor used with DI, where factories are injected and selected based on key.
      */
     @Inject
-    public DefaultSyncContextFactory( final Map<String, NameMapper> nameMappers,
-                                      final Map<String, NamedLockFactory> namedLockFactories )
+    public DefaultSyncContextFactory( final RepositorySystemLifecycle repositorySystemLifecycle,
+                                      final NamedLockFactorySelector selector )
     {
-        this.nameMappers = requireNonNull( nameMappers );
-        this.namedLockFactories = requireNonNull( namedLockFactories );
+        repositorySystemLifecycle.addOnSystemEndedHandler( this::shutDownAdapter );
+        this.namedLockFactoryAdapter =
+                new NamedLockFactoryAdapter( selector.getSelectedNameMapper(), selector.getSelectedNamedLockFactory() );
     }
 
     /**
@@ -94,59 +71,24 @@ public final class DefaultSyncContextFactory
     @Override
     public void initService( final ServiceLocator locator )
     {
-        HashMap<String, NameMapper> mappers = new HashMap<>();
-        mappers.put( StaticNameMapperProvider.NAME, new StaticNameMapperProvider().get() );
-        mappers.put( GAVNameMapperProvider.NAME, new GAVNameMapperProvider().get() );
-        mappers.put( DiscriminatingNameMapperProvider.NAME, new DiscriminatingNameMapperProvider().get() );
-        mappers.put( FileGAVNameMapperProvider.NAME, new FileGAVNameMapperProvider().get() );
-        mappers.put( FileHashingGAVNameMapperProvider.NAME, new FileHashingGAVNameMapperProvider().get() );
-        this.nameMappers = mappers;
-
-        HashMap<String, NamedLockFactory> factories = new HashMap<>();
-        factories.put( NoopNamedLockFactory.NAME, new NoopNamedLockFactory() );
-        factories.put( LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory() );
-        factories.put( LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory() );
-        factories.put( FileLockNamedLockFactory.NAME, new FileLockNamedLockFactory() );
-        this.namedLockFactories = factories;
+        locator.getService( RepositorySystemLifecycle.class ).addOnSystemEndedHandler( this::shutDownAdapter );
+        NamedLockFactorySelector selector = new ParameterizedNamedLockFactorySelector();
+        this.namedLockFactoryAdapter =
+                new NamedLockFactoryAdapter( selector.getSelectedNameMapper(), selector.getSelectedNamedLockFactory() );
     }
 
     @Override
     public SyncContext newInstance( final RepositorySystemSession session, final boolean shared )
     {
         requireNonNull( session, "session cannot be null" );
-        NamedLockFactoryAdapter adapter = getOrCreateSessionAdapter( session );
-        return adapter.newInstance( session, shared );
+        return namedLockFactoryAdapter.newInstance( session, shared );
     }
 
-    private NamedLockFactoryAdapter getOrCreateSessionAdapter( final RepositorySystemSession session )
+    private void shutDownAdapter()
     {
-        return (NamedLockFactoryAdapter) session.getData().computeIfAbsent( ADAPTER_KEY, () ->
+        if ( namedLockFactoryAdapter != null )
         {
-            String nameMapperName = ConfigUtils.getString( session, DEFAULT_NAME_MAPPER_NAME, NAME_MAPPER_KEY );
-            String namedLockFactoryName = ConfigUtils.getString( session, DEFAULT_FACTORY_NAME, FACTORY_KEY );
-            NameMapper nameMapper = nameMappers.get( nameMapperName );
-            if ( nameMapper == null )
-            {
-                throw new IllegalArgumentException( "Unknown NameMapper name: " + nameMapperName
-                        + ", known ones: " + nameMappers.keySet() );
-            }
-            NamedLockFactory namedLockFactory = namedLockFactories.get( namedLockFactoryName );
-            if ( namedLockFactory == null )
-            {
-                throw new IllegalArgumentException( "Unknown NamedLockFactory name: " + namedLockFactoryName
-                        + ", known ones: " + namedLockFactories.keySet() );
-            }
-            session.addOnCloseHandler( this::shutDownSessionAdapter );
-            return new NamedLockFactoryAdapter( nameMapper, namedLockFactory );
-        } );
-    }
-
-    private void shutDownSessionAdapter( RepositorySystemSession session )
-    {
-        NamedLockFactoryAdapter adapter = (NamedLockFactoryAdapter) session.getData().get( ADAPTER_KEY );
-        if ( adapter != null )
-        {
-            adapter.shutdown();
+            namedLockFactoryAdapter.shutdown();
         }
     }
 }
