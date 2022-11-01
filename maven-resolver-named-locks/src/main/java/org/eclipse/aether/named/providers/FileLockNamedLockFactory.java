@@ -70,7 +70,7 @@ public class FileLockNamedLockFactory
                 return FileChannel.open(
                         path,
                         StandardOpenOption.READ, StandardOpenOption.WRITE,
-                        StandardOpenOption.CREATE, StandardOpenOption.DELETE_ON_CLOSE
+                        StandardOpenOption.CREATE
                 );
             }
             catch ( IOException e )
