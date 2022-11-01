@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -81,10 +82,6 @@ final class BasicRepositoryConnector
 
     private static final String CONFIG_PROP_THREADS = "aether.connector.basic.threads";
 
-    private static final String CONFIG_PROP_RESUME = "aether.connector.resumeDownloads";
-
-    private static final String CONFIG_PROP_RESUME_THRESHOLD = "aether.connector.resumeThreshold";
-
     private static final String CONFIG_PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( BasicRepositoryConnector.class );
@@ -102,8 +99,6 @@ final class BasicRepositoryConnector
     private final RepositoryLayout layout;
 
     private final ChecksumPolicyProvider checksumPolicyProvider;
-
-    private final PartialFile.Factory partialFileFactory;
 
     private final int maxThreads;
 
@@ -152,18 +147,6 @@ final class BasicRepositoryConnector
         persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
                         ConfigurationProperties.PERSISTED_CHECKSUMS );
-
-        boolean resumeDownloads =
-                ConfigUtils.getBoolean( session, true, CONFIG_PROP_RESUME + '.' + repository.getId(),
-                        CONFIG_PROP_RESUME );
-        long resumeThreshold =
-                ConfigUtils.getLong( session, 64 * 1024, CONFIG_PROP_RESUME_THRESHOLD + '.' + repository.getId(),
-                        CONFIG_PROP_RESUME_THRESHOLD );
-        int requestTimeout =
-                ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                        ConfigurationProperties.REQUEST_TIMEOUT + '.' + repository.getId(),
-                        ConfigurationProperties.REQUEST_TIMEOUT );
-        partialFileFactory = new PartialFile.Factory( resumeDownloads, resumeThreshold, requestTimeout );
     }
 
     private Executor getExecutor( Collection<?> artifacts, Collection<?> metadatas )
@@ -427,7 +410,7 @@ final class BasicRepositoryConnector
 
     class GetTaskRunner
             extends TaskRunner
-            implements PartialFile.RemoteAccessChecker, ChecksumValidator.ChecksumFetcher
+            implements ChecksumValidator.ChecksumFetcher
     {
 
         private final File file;
@@ -444,13 +427,6 @@ final class BasicRepositoryConnector
             this.file = requireNonNull( file, "destination file cannot be null" );
             checksumValidator = new ChecksumValidator( file, checksumAlgorithmFactories, fileProcessor, this,
                     checksumPolicy, providedChecksums, safe( checksumLocations ) );
-        }
-
-        @Override
-        public void checkRemoteAccess()
-                throws Exception
-        {
-            transporter.peek( new PeekTask( path ) );
         }
 
         @Override
@@ -478,21 +454,16 @@ final class BasicRepositoryConnector
         {
             fileProcessor.mkdirs( file.getParentFile() );
 
-            PartialFile partFile = partialFileFactory.newInstance( file, this );
-            if ( partFile == null )
-            {
-                LOGGER.debug( "Concurrent download of {} just finished, skipping download", file );
-                return;
-            }
+            File tempFile =
+                    File.createTempFile( file.getName() + '-' + UUID.randomUUID().toString().replace( "-", "" ), ".tmp",
+                            file.getParentFile() );
 
             try
             {
-                File tmp = partFile.getFile();
-                listener.setChecksumCalculator( checksumValidator.newChecksumCalculator( tmp ) );
+                listener.setChecksumCalculator( checksumValidator.newChecksumCalculator( tempFile ) );
                 for ( int firstTrial = 0, lastTrial = 1, trial = firstTrial; ; trial++ )
                 {
-                    boolean resume = partFile.isResume() && trial <= firstTrial;
-                    GetTask task = new GetTask( path ).setDataFile( tmp, resume ).setListener( listener );
+                    GetTask task = new GetTask( path ).setDataFile( tempFile, false ).setListener( listener );
                     transporter.get( task );
                     try
                     {
@@ -518,7 +489,7 @@ final class BasicRepositoryConnector
                         }
                     }
                 }
-                fileProcessor.move( tmp, file );
+                fileProcessor.move( tempFile, file );
                 if ( persistedChecksums )
                 {
                     checksumValidator.commit();
@@ -526,7 +497,7 @@ final class BasicRepositoryConnector
             }
             finally
             {
-                partFile.close();
+                tempFile.delete();
                 checksumValidator.close();
             }
         }
