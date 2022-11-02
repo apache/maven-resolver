@@ -42,8 +42,6 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.perms.dirMode` | String | [Octal numerical notation of permissions](https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation) to set for newly created directories. Only considered by certain Wagon providers. | - | no
 `aether.connector.perms.group` | String | Group which should own newly created directories/files. Only considered by certain Wagon providers. | - | no
 `aether.connector.persistedChecksums` | boolean | Flag indicating whether checksums which are retrieved during checksum validation should be persisted in the local filesystem next to the file they provide the checksum for. | `true` | no
-`aether.connector.resumeDownloads` | boolean | Whether to resume partially downloaded files if the download has been interrupted. | `true` | yes
-`aether.connector.resumeThreshold` | long | The size in bytes which a partial download needs to have at least to be resumed. Requires `aether.connector.resumeDownloads` to be `true` to be effective. | `64 * 1024` | yes
 `aether.connector.requestTimeout` | long | Request timeout in milliseconds. | `1800000` | yes
 `aether.connector.smartChecksums` | boolean | Flag indicating that instead of comparing the external checksum fetched from the remote repo with the calculated one, it should try to extract the reference checksum from the actual artifact requests's response headers (several (strategies supported)[included-checksum-strategies.html]). This only works for transport-http transport. | `true` | no
 `aether.connector.userAgent` | String | The user agent that repository connectors should report to servers. |  `"Aether"` | no

@@ -70,7 +70,7 @@ final class ChecksumValidator
 
     private final Collection<ChecksumLocation> checksumLocations;
 
-    private final Map<File, String> checksumFiles;
+    private final Map<File, String> checksumExpectedValues;
 
     ChecksumValidator( File dataFile,
                        Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
@@ -87,7 +87,7 @@ final class ChecksumValidator
         this.checksumPolicy = checksumPolicy;
         this.providedChecksums = providedChecksums;
         this.checksumLocations = checksumLocations;
-        this.checksumFiles = new HashMap<>();
+        this.checksumExpectedValues = new HashMap<>();
     }
 
     public ChecksumCalculator newChecksumCalculator( File targetFile )
@@ -148,7 +148,7 @@ final class ChecksumValidator
 
             String actual = String.valueOf( calculated );
             String expected = entry.getValue().toString();
-            checksumFiles.put( getChecksumFile( checksumAlgorithmFactory ), expected );
+            checksumExpectedValues.put( getChecksumFile( checksumAlgorithmFactory ), expected );
 
             if ( !isEqualChecksum( expected, actual ) )
             {
@@ -202,7 +202,7 @@ final class ChecksumValidator
 
                 String actual = String.valueOf( calculated );
                 String expected = fileProcessor.readChecksum( tmp );
-                checksumFiles.put( checksumFile, expected );
+                checksumExpectedValues.put( checksumFile, expected );
 
                 if ( !isEqualChecksum( expected, actual ) )
                 {
@@ -239,7 +239,7 @@ final class ChecksumValidator
     public void retry()
     {
         checksumPolicy.onTransferRetry();
-        checksumFiles.clear();
+        checksumExpectedValues.clear();
     }
 
     public boolean handle( ChecksumFailureException exception )
@@ -249,7 +249,7 @@ final class ChecksumValidator
 
     public void commit()
     {
-        for ( Map.Entry<File, String> entry : checksumFiles.entrySet() )
+        for ( Map.Entry<File, String> entry : checksumExpectedValues.entrySet() )
         {
             File checksumFile = entry.getKey();
             try
@@ -261,6 +261,6 @@ final class ChecksumValidator
                 LOGGER.debug( "Failed to write checksum file {}", checksumFile, e );
             }
         }
-        checksumFiles.clear();
+        checksumExpectedValues.clear();
     }
 }
