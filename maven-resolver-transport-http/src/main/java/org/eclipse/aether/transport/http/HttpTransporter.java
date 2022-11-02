@@ -613,6 +613,7 @@ final class HttpTransporter
             {
                 try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( dataFile.toPath() ) )
                 {
+                    task.setDataFile( tempFile.getPath().toFile(), resume );
                     if ( resume && Files.isRegularFile( dataFile.toPath() ) )
                     {
                         Files.copy( Files.newInputStream( dataFile.toPath() ), tempFile.getPath(),
@@ -620,7 +621,6 @@ final class HttpTransporter
                     }
                     try ( InputStream is = entity.getContent() )
                     {
-                        task.setDataFile( tempFile.getPath().toFile(), resume );
                         utilGet( task, is, true, length, resume );
                     }
                     Files.move( tempFile.getPath(), dataFile.toPath(), StandardCopyOption.ATOMIC_MOVE );
