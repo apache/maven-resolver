@@ -48,6 +48,29 @@ public final class FileUtils
     }
 
     /**
+     * Creates a {@link TempFile}. It will be in the default temporary-file directory. Returned instance should be
+     * handled in try-with-resource construct and created temp file is removed on close, if exists.
+     */
+    public static TempFile newTempFile() throws IOException
+    {
+        Path tempFile = Files.createTempFile( "resolver", "tmp" );
+        return new TempFile()
+        {
+            @Override
+            public Path getPath()
+            {
+                return tempFile;
+            }
+
+            @Override
+            public void close() throws IOException
+            {
+                Files.deleteIfExists( tempFile );
+            }
+        };
+    }
+
+    /**
      * Creates a {@link TempFile} for given file. It will be in same directory where given file is, and will reuse its
      * name for generated name. Returned instance should be handled in try-with-resource construct and created temp
      * file is removed on close, if exists.

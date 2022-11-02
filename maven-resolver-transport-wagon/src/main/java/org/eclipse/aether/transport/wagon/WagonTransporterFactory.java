@@ -65,6 +65,7 @@ public final class WagonTransporterFactory
         setWagonConfigurator( wagonConfigurator );
     }
 
+    @Override
     public void initService( ServiceLocator locator )
     {
         setWagonProvider( locator.getService( WagonProvider.class ) );
@@ -95,6 +96,7 @@ public final class WagonTransporterFactory
         return this;
     }
 
+    @Override
     public float getPriority()
     {
         return priority;
@@ -112,6 +114,7 @@ public final class WagonTransporterFactory
         return this;
     }
 
+    @Override
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
         throws NoTransporterException
     {

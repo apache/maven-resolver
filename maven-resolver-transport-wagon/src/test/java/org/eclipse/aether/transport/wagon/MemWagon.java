@@ -97,12 +97,14 @@ public class MemWagon
         return data != null;
     }
 
+    @Override
     public void get( String resourceName, File destination )
         throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException
     {
         getIfNewer( resourceName, destination, 0 );
     }
 
+    @Override
     public boolean getIfNewer( String resourceName, File destination, long timestamp )
         throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException
     {
@@ -151,6 +153,7 @@ public class MemWagon
         inputData.setInputStream( new ByteArrayInputStream( bytes ) );
     }
 
+    @Override
     public void put( File source, String resourceName )
         throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException
     {

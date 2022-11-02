@@ -20,19 +20,18 @@ package org.eclipse.aether.transport.wagon;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Queue;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -58,6 +57,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * A transporter using Maven Wagon.
  */
 final class WagonTransporter
-    implements Transporter
+        implements Transporter
 {
 
     private static final String CONFIG_PROP_CONFIG = "aether.connector.wagon.config";
@@ -105,8 +105,8 @@ final class WagonTransporter
     private final AtomicBoolean closed = new AtomicBoolean();
 
     WagonTransporter( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator,
-                             RemoteRepository repository, RepositorySystemSession session )
-        throws NoTransporterException
+                      RemoteRepository repository, RepositorySystemSession session )
+            throws NoTransporterException
     {
         this.wagonProvider = wagonProvider;
         this.wagonConfigurator = wagonConfigurator;
@@ -128,7 +128,7 @@ final class WagonTransporter
         }
         catch ( Exception e )
         {
-            LOGGER.debug( "No transport {}", e );
+            LOGGER.debug( "No transport", e );
             throw new NoTransporterException( repository, e );
         }
 
@@ -140,10 +140,10 @@ final class WagonTransporter
 
         headers = new Properties();
         headers.put( "User-Agent", ConfigUtils.getString( session, ConfigurationProperties.DEFAULT_USER_AGENT,
-                                                          ConfigurationProperties.USER_AGENT ) );
+                ConfigurationProperties.USER_AGENT ) );
         Map<?, ?> headers =
-            ConfigUtils.getMap( session, null, ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
-                                ConfigurationProperties.HTTP_HEADERS );
+                ConfigUtils.getMap( session, null, ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
+                        ConfigurationProperties.HTTP_HEADERS );
         if ( headers != null )
         {
             this.headers.putAll( headers );
@@ -271,7 +271,7 @@ final class WagonTransporter
     }
 
     private Wagon lookupWagon()
-        throws Exception
+            throws Exception
     {
         return wagonProvider.lookup( wagonHint );
     }
@@ -282,7 +282,7 @@ final class WagonTransporter
     }
 
     private void connectWagon( Wagon wagon )
-        throws WagonException
+            throws WagonException
     {
         if ( !headers.isEmpty() )
         {
@@ -302,16 +302,16 @@ final class WagonTransporter
         }
 
         int connectTimeout =
-            ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                                    ConfigurationProperties.CONNECT_TIMEOUT );
+                ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                        ConfigurationProperties.CONNECT_TIMEOUT );
         int requestTimeout =
-            ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                                    ConfigurationProperties.REQUEST_TIMEOUT );
+                ConfigUtils.getInteger( session, ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
+                        ConfigurationProperties.REQUEST_TIMEOUT );
 
         wagon.setTimeout( Math.max( Math.max( connectTimeout, requestTimeout ), 0 ) );
 
         wagon.setInteractive( ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_INTERACTIVE,
-                                                      ConfigurationProperties.INTERACTIVE ) );
+                ConfigurationProperties.INTERACTIVE ) );
 
         Object configuration = ConfigUtils.getObject( session, null, CONFIG_PROP_CONFIG + "." + repository.getId() );
         if ( configuration != null && wagonConfigurator != null )
@@ -346,7 +346,7 @@ final class WagonTransporter
     }
 
     private Wagon pollWagon()
-        throws Exception
+            throws Exception
     {
         Wagon wagon = wagons.poll();
 
@@ -379,6 +379,7 @@ final class WagonTransporter
         return wagon;
     }
 
+    @Override
     public int classify( Throwable error )
     {
         if ( error instanceof ResourceDoesNotExistException )
@@ -388,26 +389,29 @@ final class WagonTransporter
         return ERROR_OTHER;
     }
 
+    @Override
     public void peek( PeekTask task )
-        throws Exception
+            throws Exception
     {
         execute( task, new PeekTaskRunner( task ) );
     }
 
+    @Override
     public void get( GetTask task )
-        throws Exception
+            throws Exception
     {
         execute( task, new GetTaskRunner( task ) );
     }
 
+    @Override
     public void put( PutTask task )
-        throws Exception
+            throws Exception
     {
         execute( task, new PutTaskRunner( task ) );
     }
 
     private void execute( TransportTask task, TaskRunner runner )
-        throws Exception
+            throws Exception
     {
         Objects.requireNonNull( task, "task cannot be null" );
 
@@ -436,31 +440,7 @@ final class WagonTransporter
         }
     }
 
-    private static File newTempFile()
-        throws IOException
-    {
-        return File.createTempFile( "wagon-" + UUID.randomUUID().toString().replace( "-", "" ), ".tmp" );
-    }
-
-    private void delTempFile( File path )
-    {
-        if ( path != null && !path.delete() && path.exists() )
-        {
-            LOGGER.debug( "Could not delete temporary file {}", path );
-            path.deleteOnExit();
-        }
-    }
-
-    private static void copy( OutputStream os, InputStream is )
-        throws IOException
-    {
-        byte[] buffer = new byte[1024 * 32];
-        for ( int read = is.read( buffer ); read >= 0; read = is.read( buffer ) )
-        {
-            os.write( buffer, 0, read );
-        }
-    }
-
+    @Override
     public void close()
     {
         if ( closed.compareAndSet( false, true ) )
@@ -480,12 +460,12 @@ final class WagonTransporter
     {
 
         void run( Wagon wagon )
-            throws IOException, WagonException;
+                throws IOException, WagonException;
 
     }
 
     private static class PeekTaskRunner
-        implements TaskRunner
+            implements TaskRunner
     {
 
         private final PeekTask task;
@@ -497,20 +477,20 @@ final class WagonTransporter
 
         @Override
         public void run( Wagon wagon )
-            throws WagonException
+                throws WagonException
         {
             String src = task.getLocation().toString();
             if ( !wagon.resourceExists( src ) )
             {
                 throw new ResourceDoesNotExistException( "Could not find " + src + " in "
-                    + wagon.getRepository().getUrl() );
+                        + wagon.getRepository().getUrl() );
             }
         }
 
     }
 
-    private class GetTaskRunner
-        implements TaskRunner
+    private static class GetTaskRunner
+            implements TaskRunner
     {
 
         private final GetTask task;
@@ -522,10 +502,10 @@ final class WagonTransporter
 
         @Override
         public void run( Wagon wagon )
-            throws IOException, WagonException
+                throws IOException, WagonException
         {
-            String src = task.getLocation().toString();
-            File file = task.getDataFile();
+            final String src = task.getLocation().toString();
+            final File file = task.getDataFile();
             if ( file == null && wagon instanceof StreamingWagon )
             {
                 try ( OutputStream dst = task.newOutputStream() )
@@ -535,9 +515,11 @@ final class WagonTransporter
             }
             else
             {
-                File dst = ( file != null ) ? file : newTempFile();
-                try
+                // if file == null -> $TMP used, otherwise we place tmp file next to file
+                try ( FileUtils.TempFile tempFile = file == null ? FileUtils.newTempFile()
+                        : FileUtils.newTempFile( file.toPath() ) )
                 {
+                    File dst = tempFile.getPath().toFile();
                     wagon.get( src, dst );
                     /*
                      * NOTE: Wagon (1.0-beta-6) doesn't create the destination file when transferring a 0-byte
@@ -548,35 +530,25 @@ final class WagonTransporter
                     {
                         throw new IOException( String.format( "Failure creating file '%s'.", dst.getAbsolutePath() ) );
                     }
-                    if ( file == null )
+
+                    if ( file != null )
                     {
-                        readTempFile( dst );
+                        Files.move( dst.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE );
                     }
-                }
-                finally
-                {
-                    if ( file == null )
+                    else
                     {
-                        delTempFile( dst );
+                        try ( OutputStream outputStream = task.newOutputStream() )
+                        {
+                            Files.copy( dst.toPath(), outputStream );
+                        }
                     }
                 }
             }
         }
-
-        private void readTempFile( File dst )
-            throws IOException
-        {
-            try ( FileInputStream in = new FileInputStream( dst );
-                    OutputStream out = task.newOutputStream() )
-            {
-                copy( out, in );
-            }
-        }
-
     }
 
-    private class PutTaskRunner
-        implements TaskRunner
+    private static class PutTaskRunner
+            implements TaskRunner
     {
 
         private final PutTask task;
@@ -588,10 +560,10 @@ final class WagonTransporter
 
         @Override
         public void run( Wagon wagon )
-            throws WagonException, IOException
+                throws WagonException, IOException
         {
-            String dst = task.getLocation().toString();
-            File file = task.getDataFile();
+            final String dst = task.getLocation().toString();
+            final File file = task.getDataFile();
             if ( file == null && wagon instanceof StreamingWagon )
             {
                 try ( InputStream src = task.newInputStream() )
@@ -600,42 +572,21 @@ final class WagonTransporter
                     ( (StreamingWagon) wagon ).putFromStream( src, dst, task.getDataLength(), -1 );
                 }
             }
+            else if ( file == null )
+            {
+                try ( FileUtils.TempFile tempFile = FileUtils.newTempFile() )
+                {
+                    try ( InputStream inputStream = task.newInputStream() )
+                    {
+                        Files.copy( inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING );
+                    }
+                    wagon.put( tempFile.getPath().toFile(), dst );
+                }
+            }
             else
             {
-                File src = ( file != null ) ? file : createTempFile();
-                try
-                {
-                    wagon.put( src, dst );
-                }
-                finally
-                {
-                    if ( file == null )
-                    {
-                        delTempFile( src );
-                    }
-                }
+                wagon.put( file, dst );
             }
         }
-
-        private File createTempFile()
-            throws IOException
-        {
-            File tmp = newTempFile();
-
-            try ( InputStream in = task.newInputStream();
-                    OutputStream out = new FileOutputStream( tmp ) )
-            {
-                copy( out, in );
-            }
-            catch ( IOException e )
-            {
-                delTempFile( tmp );
-                throw e;
-            }
-
-            return tmp;
-        }
-
     }
-
 }
