@@ -27,11 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -48,6 +43,7 @@ import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
@@ -73,7 +69,6 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 
 /**
  */
@@ -83,7 +78,15 @@ public class DefaultMetadataResolver
     implements MetadataResolver, Service
 {
 
+    /**
+     * The count of threads to be used when resolving metadata in parallel, default value 4.
+     */
     private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_THREADS}.
+     */
+    private static final int CONFIG_PROP_THREADS_DEFAULT = 4;
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
@@ -99,18 +102,22 @@ public class DefaultMetadataResolver
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    private ResolverExecutorService resolverExecutorService;
+
     public DefaultMetadataResolver()
     {
         // enables default constructor
     }
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     @Inject
     DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
                              UpdateCheckManager updateCheckManager,
                              RepositoryConnectorProvider repositoryConnectorProvider,
                              RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
                              OfflineController offlineController,
-                             RemoteRepositoryFilterManager remoteRepositoryFilterManager )
+                             RemoteRepositoryFilterManager remoteRepositoryFilterManager,
+                             ResolverExecutorService resolverExecutorService )
     {
         setRepositoryEventDispatcher( repositoryEventDispatcher );
         setUpdateCheckManager( updateCheckManager );
@@ -119,6 +126,7 @@ public class DefaultMetadataResolver
         setSyncContextFactory( syncContextFactory );
         setOfflineController( offlineController );
         setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
+        setResolverExecutorService( resolverExecutorService );
     }
 
     public void initService( ServiceLocator locator )
@@ -130,6 +138,7 @@ public class DefaultMetadataResolver
         setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
         setOfflineController( locator.getService( OfflineController.class ) );
         setRemoteRepositoryFilterManager( locator.getService( RemoteRepositoryFilterManager.class ) );
+        setResolverExecutorService( locator.getService( ResolverExecutorService.class ) );
     }
 
     public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
@@ -180,6 +189,14 @@ public class DefaultMetadataResolver
         return this;
     }
 
+    public DefaultMetadataResolver setResolverExecutorService( ResolverExecutorService resolverExecutorService )
+    {
+        this.resolverExecutorService = requireNonNull( resolverExecutorService,
+                "resolver executor service cannot be null" );
+        return this;
+    }
+
+    @Override
     public List<MetadataResult> resolveMetadata( RepositorySystemSession session,
                                                  Collection<? extends MetadataRequest> requests )
     {
@@ -374,41 +391,37 @@ public class DefaultMetadataResolver
 
         if ( !tasks.isEmpty() )
         {
-            int threads = ConfigUtils.getInteger( session, 4, CONFIG_PROP_THREADS );
-            Executor executor = getExecutor( Math.min( tasks.size(), threads ) );
-            try
+            RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
+            ArrayList<Runnable> runnable = new ArrayList<>( tasks.size() );
+            for ( ResolveTask task : tasks )
             {
-                RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
+                runnable.add( errorForwarder.wrap( task ) );
+            }
 
-                for ( ResolveTask task : tasks )
+            resolverExecutorService.getResolverExecutor( session,
+                    resolverExecutorService.getKey( MetadataResolver.class ),
+                    ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT, CONFIG_PROP_THREADS ) )
+                    .submitBatch( runnable );
+            errorForwarder.await();
+
+            for ( ResolveTask task : tasks )
+            {
+                /*
+                 * NOTE: Touch after registration with local repo to ensure concurrent resolution is not
+                 * rejected with "already updated" via session data when actual update to local repo is
+                 * still pending.
+                 */
+                for ( UpdateCheck<Metadata, MetadataTransferException> check : task.checks )
                 {
-                    executor.execute( errorForwarder.wrap( task ) );
+                    updateCheckManager.touchMetadata( task.session, check.setException( task.exception ) );
                 }
 
-                errorForwarder.await();
+                metadataDownloaded( session, task.trace, task.request.getMetadata(), task.request.getRepository(),
+                        task.metadataFile, task.exception );
 
-                for ( ResolveTask task : tasks )
-                {
-                    /*
-                     * NOTE: Touch after registration with local repo to ensure concurrent resolution is not
-                     * rejected with "already updated" via session data when actual update to local repo is
-                     * still pending.
-                     */
-                    for ( UpdateCheck<Metadata, MetadataTransferException> check : task.checks )
-                    {
-                        updateCheckManager.touchMetadata( task.session, check.setException( task.exception ) );
-                    }
-
-                    metadataDownloaded( session, task.trace, task.request.getMetadata(), task.request.getRepository(),
-                            task.metadataFile, task.exception );
-
-                    task.result.setException( task.exception );
-                }
+                task.result.setException( task.exception );
             }
-            finally
-            {
-                shutdown( executor );
-            }
+
             for ( ResolveTask task : tasks )
             {
                 Metadata metadata = task.request.getMetadata();
@@ -531,27 +544,6 @@ public class DefaultMetadataResolver
         repositoryEventDispatcher.dispatch( event.build() );
     }
 
-    private Executor getExecutor( int threads )
-    {
-        if ( threads <= 1 )
-        {
-            return command -> command.run();
-        }
-        else
-        {
-            return new ThreadPoolExecutor( threads, threads, 3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                                           new WorkerThreadFactory( null ) );
-        }
-    }
-
-    private void shutdown( Executor executor )
-    {
-        if ( executor instanceof ExecutorService )
-        {
-            ( (ExecutorService) executor ).shutdown();
-        }
-    }
-
     class ResolveTask
         implements Runnable
     {
@@ -584,6 +576,7 @@ public class DefaultMetadataResolver
             this.checks = checks;
         }
 
+        @Override
         public void run()
         {
             Metadata metadata = request.getMetadata();

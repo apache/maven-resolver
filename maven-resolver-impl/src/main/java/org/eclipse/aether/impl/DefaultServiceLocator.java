@@ -57,9 +57,11 @@ import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
+import org.eclipse.aether.internal.impl.concurrency.DefaultResolverExecutorService;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
+import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
@@ -231,6 +233,7 @@ public final class DefaultServiceLocator
         addService( LocalPathComposer.class, DefaultLocalPathComposer.class );
         addService( RemoteRepositoryFilterManager.class, DefaultRemoteRepositoryFilterManager.class );
         addService( RepositorySystemLifecycle.class, DefaultRepositorySystemLifecycle.class );
+        addService( ResolverExecutorService.class, DefaultResolverExecutorService.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )

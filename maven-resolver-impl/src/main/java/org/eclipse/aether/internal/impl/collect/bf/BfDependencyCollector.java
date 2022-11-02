@@ -34,11 +34,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,6 +53,7 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
+import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.internal.impl.collect.DataPool;
@@ -70,15 +67,16 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.spi.concurrency.ResolverExecutor;
+import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.spi.locator.Service;
+import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
 import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.find;
 
 /**
@@ -96,7 +94,9 @@ public class BfDependencyCollector
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip mode.
-     *
+     * <p>
+     * Visible for testing.
+     * 
      * @since 1.8.0
      */
     static final String CONFIG_PROP_SKIPPER = "aether.dependencyCollector.bf.skipper";
@@ -106,14 +106,23 @@ public class BfDependencyCollector
      *
      * @since 1.8.0
      */
-    static final boolean CONFIG_PROP_SKIPPER_DEFAULT = true;
+    private static final boolean CONFIG_PROP_SKIPPER_DEFAULT = true;
 
     /**
      * The count of threads to be used when collecting POMs in parallel, default value 5.
      *
      * @since 1.9.0
      */
-    static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
+    private static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_THREADS}.
+     *
+     * @since 1.9.0
+     */
+    private static final int CONFIG_PROP_THREADS_DEFAULT = 5;
+
+    private ResolverExecutorService resolverExecutorService;
 
     /**
      * Default ctor for SL.
@@ -129,9 +138,25 @@ public class BfDependencyCollector
     @Inject
     BfDependencyCollector( RemoteRepositoryManager remoteRepositoryManager,
                            ArtifactDescriptorReader artifactDescriptorReader,
-                           VersionRangeResolver versionRangeResolver )
+                           VersionRangeResolver versionRangeResolver,
+                           ResolverExecutorService resolverExecutorService )
     {
         super( remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver );
+        setResolverExecutorService( resolverExecutorService );
+    }
+
+    @Override
+    public void initService( ServiceLocator locator )
+    {
+        super.initService( locator );
+        setResolverExecutorService( locator.getService( ResolverExecutorService.class ) );
+    }
+
+    public DependencyCollector setResolverExecutorService( ResolverExecutorService resolverExecutorService )
+    {
+        this.resolverExecutorService =
+                requireNonNull( resolverExecutorService, "resolver executor service cannot be null" );
+        return this;
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
@@ -155,7 +180,10 @@ public class BfDependencyCollector
                 new Args( session, pool, context, versionContext, request,
                         useSkip ? DependencyResolutionSkipper.defaultSkipper()
                                 : DependencyResolutionSkipper.neverSkipper(),
-                        new ParallelDescriptorResolver( session ) );
+                        new ParallelDescriptorResolver( resolverExecutorService.getResolverExecutor( session,
+                                resolverExecutorService.getKey( DependencyCollector.class ),
+                                ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT,
+                                        CONFIG_PROP_THREADS, "maven.artifact.threads" ) ) ) );
 
         DependencySelector rootDepSelector = session.getDependencySelector() != null
                 ? session.getDependencySelector().deriveChildSelector( context ) : null;
@@ -190,7 +218,6 @@ public class BfDependencyCollector
                     false );
         }
 
-        args.resolver.shutdown();
         args.skipper.report();
     }
 
@@ -475,23 +502,22 @@ public class BfDependencyCollector
 
     static class ParallelDescriptorResolver
     {
-        final ExecutorService executorService;
+        final ResolverExecutor executor;
 
         /**
          * Artifact ID -> Future of DescriptorResolutionResult
          */
         final Map<String, Future<DescriptorResolutionResult>> results = new ConcurrentHashMap<>( 256 );
-        final Logger logger = LoggerFactory.getLogger( getClass() );
 
-        ParallelDescriptorResolver( RepositorySystemSession session )
+        ParallelDescriptorResolver( ResolverExecutor executor )
         {
-            this.executorService = getExecutorService( session );
+            this.executor = executor;
         }
 
         void resolveDescriptors( Artifact artifact, Callable<DescriptorResolutionResult> callable )
         {
             results.computeIfAbsent( ArtifactIdUtils.toId( artifact ),
-                    key -> this.executorService.submit( callable ) );
+                    key -> this.executor.submit( callable ) );
         }
 
         void cacheVersionRangeDescriptor( Artifact artifact, DescriptorResolutionResult resolutionResult )
@@ -503,19 +529,6 @@ public class BfDependencyCollector
         Future<DescriptorResolutionResult> find( Artifact artifact )
         {
             return results.get( ArtifactIdUtils.toId( artifact ) );
-        }
-
-        void shutdown()
-        {
-            executorService.shutdown();
-        }
-
-        private ExecutorService getExecutorService( RepositorySystemSession session )
-        {
-            int nThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
-            logger.debug( "Created thread pool with {} threads to resolve descriptors.", nThreads );
-            return new ThreadPoolExecutor( nThreads, nThreads, 3L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
-                    new WorkerThreadFactory( getClass().getSimpleName() ) );
         }
     }
 

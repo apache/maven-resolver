@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.impl.concurrency.DefaultResolverExecutorService;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.Filters;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
@@ -91,6 +92,7 @@ public class DefaultMetadataResolverTest
         resolver.setSyncContextFactory( new StubSyncContextFactory() );
         resolver.setOfflineController( new DefaultOfflineController() );
         resolver.setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
+        resolver.setResolverExecutorService( new DefaultResolverExecutorService() );
         repository =
             new RemoteRepository.Builder( "test-DMRT", "default",
                                           TestFileUtils.createTempDir().toURI().toURL().toString() ).build();

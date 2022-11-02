@@ -33,6 +33,7 @@ import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.internal.impl.StubRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.StubVersionRangeResolver;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestSupport;
+import org.eclipse.aether.internal.impl.concurrency.DefaultResolverExecutorService;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
@@ -67,6 +68,7 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
         collector.setArtifactDescriptorReader( newReader( "" ) );
         collector.setVersionRangeResolver( new StubVersionRangeResolver() );
         collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
+        ((BfDependencyCollector) collector).setResolverExecutorService( new DefaultResolverExecutorService() );
     }
 
     private Dependency newDep( String coords, String scope, Collection<Exclusion> exclusions )

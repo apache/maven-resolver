@@ -29,6 +29,7 @@ import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
@@ -59,6 +60,8 @@ public final class BasicRepositoryConnectorFactory
 
     private Map<String, ProvidedChecksumsSource> providedChecksumsSources;
 
+    private ResolverExecutorService resolverExecutorService;
+
     private float priority;
 
     /**
@@ -76,13 +79,15 @@ public final class BasicRepositoryConnectorFactory
                                      RepositoryLayoutProvider layoutProvider,
                                      ChecksumPolicyProvider checksumPolicyProvider,
                                      FileProcessor fileProcessor,
-                                     Map<String, ProvidedChecksumsSource> providedChecksumsSources )
+                                     Map<String, ProvidedChecksumsSource> providedChecksumsSources,
+                                     ResolverExecutorService resolverExecutorService )
     {
         setTransporterProvider( transporterProvider );
         setRepositoryLayoutProvider( layoutProvider );
         setChecksumPolicyProvider( checksumPolicyProvider );
         setFileProcessor( fileProcessor );
         setProvidedChecksumSources( providedChecksumsSources );
+        setResolverExecutorService( resolverExecutorService );
     }
 
     public void initService( ServiceLocator locator )
@@ -92,6 +97,7 @@ public final class BasicRepositoryConnectorFactory
         setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
         setFileProcessor( locator.getService( FileProcessor.class ) );
         setProvidedChecksumSources( Collections.emptyMap() );
+        setResolverExecutorService( locator.getService( ResolverExecutorService.class ) );
     }
 
     /**
@@ -159,6 +165,21 @@ public final class BasicRepositoryConnectorFactory
         return this;
     }
 
+    /**
+     * Sets the resolver executor to use for this component.
+     *
+     * @param resolverExecutorService The resolver executor to use, must not be {@code null}.
+     * @return This component for chaining, never {@code null}.
+     * @since 1.9.0
+     */
+    public BasicRepositoryConnectorFactory setResolverExecutorService( ResolverExecutorService resolverExecutorService )
+    {
+        this.resolverExecutorService = requireNonNull(
+                resolverExecutorService, "resolver executor service cannot be null"
+        );
+        return this;
+    }
+
     public float getPriority()
     {
         return priority;
@@ -183,7 +204,7 @@ public final class BasicRepositoryConnectorFactory
         requireNonNull( repository, "repository cannot be null" );
 
         return new BasicRepositoryConnector( session, repository, transporterProvider, layoutProvider,
-                                             checksumPolicyProvider, fileProcessor, providedChecksumsSources );
+                checksumPolicyProvider, fileProcessor, providedChecksumsSources, resolverExecutorService );
     }
 
 }

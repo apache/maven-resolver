@@ -31,17 +31,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.concurrency.ResolverExecutor;
+import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
@@ -70,7 +67,6 @@ import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,13 +77,23 @@ final class BasicRepositoryConnector
         implements RepositoryConnector
 {
 
+    /**
+     * The count of threads to be used when downloading artifacts in parallel, default value 5.
+     */
     private static final String CONFIG_PROP_THREADS = "aether.connector.basic.threads";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_THREADS}.
+     */
+    private static final int CONFIG_PROP_THREADS_DEFAULT = 5;
 
     private static final String CONFIG_PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( BasicRepositoryConnector.class );
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
+
+    private final ResolverExecutor resolverExecutor;
 
     private final FileProcessor fileProcessor;
 
@@ -101,23 +107,21 @@ final class BasicRepositoryConnector
 
     private final ChecksumPolicyProvider checksumPolicyProvider;
 
-    private final int maxThreads;
-
     private final boolean smartChecksums;
 
     private final boolean persistedChecksums;
 
-    private Executor executor;
-
     private final AtomicBoolean closed;
 
+    @SuppressWarnings( "checkstyle:parameternumber" )
     BasicRepositoryConnector( RepositorySystemSession session,
                               RemoteRepository repository,
                               TransporterProvider transporterProvider,
                               RepositoryLayoutProvider layoutProvider,
                               ChecksumPolicyProvider checksumPolicyProvider,
                               FileProcessor fileProcessor,
-                              Map<String, ProvidedChecksumsSource> providedChecksumsSources )
+                              Map<String, ProvidedChecksumsSource> providedChecksumsSources,
+                              ResolverExecutorService resolverExecutorService )
             throws NoRepositoryConnectorException
     {
         try
@@ -143,34 +147,15 @@ final class BasicRepositoryConnector
         this.fileProcessor = fileProcessor;
         this.providedChecksumsSources = providedChecksumsSources;
         this.closed = new AtomicBoolean( false );
+        this.resolverExecutor = resolverExecutorService.getResolverExecutor( session,
+                resolverExecutorService.getKey( RepositoryConnector.class, repository.getId() ),
+                ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT, CONFIG_PROP_THREADS,
+                        "maven.artifact.threads" ) );
 
-        maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
         persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
                         ConfigurationProperties.PERSISTED_CHECKSUMS );
-    }
-
-    private Executor getExecutor( Collection<?> artifacts, Collection<?> metadatas )
-    {
-        if ( maxThreads <= 1 )
-        {
-            return DirectExecutor.INSTANCE;
-        }
-        int tasks = safe( artifacts ).size() + safe( metadatas ).size();
-        if ( tasks <= 1 )
-        {
-            return DirectExecutor.INSTANCE;
-        }
-        if ( executor == null )
-        {
-            executor =
-                    new ThreadPoolExecutor( maxThreads, maxThreads, 3L, TimeUnit.SECONDS,
-                            new LinkedBlockingQueue<>(),
-                            new WorkerThreadFactory( getClass().getSimpleName() + '-'
-                                    + repository.getHost() + '-' ) );
-        }
-        return executor;
     }
 
     @Override
@@ -192,10 +177,6 @@ final class BasicRepositoryConnector
     {
         if ( closed.compareAndSet( false, true ) )
         {
-            if ( executor instanceof ExecutorService )
-            {
-                ( (ExecutorService) executor ).shutdown();
-            }
             transporter.close();
         }
     }
@@ -214,11 +195,13 @@ final class BasicRepositoryConnector
     {
         failIfClosed();
 
-        Executor executor = getExecutor( artifactDownloads, metadataDownloads );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
+        Collection<? extends MetadataDownload> mds = safe( metadataDownloads );
+        Collection<? extends ArtifactDownload> ads = safe( artifactDownloads );
+        ArrayList<Runnable> runnable = new ArrayList<>( mds.size() + ads.size() );
 
-        for ( MetadataDownload transfer : safe( metadataDownloads ) )
+        for ( MetadataDownload transfer : mds )
         {
             URI location = layout.getLocation( transfer.getMetadata(), false );
 
@@ -235,10 +218,10 @@ final class BasicRepositoryConnector
 
             Runnable task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
                     checksumAlgorithmFactories, checksumLocations, null, listener );
-            executor.execute( errorForwarder.wrap( task ) );
+            runnable.add( errorForwarder.wrap( task ) );
         }
 
-        for ( ArtifactDownload transfer : safe( artifactDownloads ) )
+        for ( ArtifactDownload transfer : ads )
         {
             Map<String, String> providedChecksums = Collections.emptyMap();
             for ( ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources.values() )
@@ -276,9 +259,10 @@ final class BasicRepositoryConnector
                 task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
                         checksumAlgorithmFactories, checksumLocations, providedChecksums, listener );
             }
-            executor.execute( errorForwarder.wrap( task ) );
+            runnable.add( errorForwarder.wrap( task ) );
         }
 
+        resolverExecutor.submitBatch( runnable );
         errorForwarder.await();
     }
 
@@ -619,20 +603,6 @@ final class BasicRepositoryConnector
             {
                 LOGGER.warn( "Failed to upload checksum to {}", location, e );
             }
-        }
-
-    }
-
-    private static class DirectExecutor
-            implements Executor
-    {
-
-        static final Executor INSTANCE = new DirectExecutor();
-
-        @Override
-        public void execute( Runnable command )
-        {
-            command.run();
         }
 
     }

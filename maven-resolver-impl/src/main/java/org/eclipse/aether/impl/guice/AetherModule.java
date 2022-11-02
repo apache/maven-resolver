@@ -60,6 +60,7 @@ import org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourc
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
+import org.eclipse.aether.internal.impl.concurrency.DefaultResolverExecutorService;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
@@ -102,6 +103,7 @@ import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
+import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
@@ -228,6 +230,9 @@ public class AetherModule
 
         bind( RepositorySystemLifecycle.class )
                 .to( DefaultRepositorySystemLifecycle.class ).in( Singleton.class );
+
+        bind( ResolverExecutorService.class )
+                .to( DefaultResolverExecutorService.class ).in( Singleton.class );
 
         bind( NamedLockFactorySelector.class ).toInstance( new ParameterizedNamedLockFactorySelector() );
         bind( SyncContextFactory.class ).to( DefaultSyncContextFactory.class ).in( Singleton.class );
