@@ -19,6 +19,7 @@ package org.eclipse.aether.util;
  * under the License.
  */
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +40,39 @@ public final class FileUtils
     }
 
     /**
+     * A temporary file, that is removed when closed.
+     */
+    public interface TempFile extends Closeable
+    {
+        Path getPath();
+    }
+
+    /**
+     * Creates a {@link TempFile} for given file. It will be in same directory where given file is, and will reuse its
+     * name for generated name. Returned instance should be handled in try-with-resource construct and created temp
+     * file is removed on close, if exists.
+     */
+    public static TempFile newTempFile( Path file ) throws IOException
+    {
+        requireNonNull( file.getParent(), "file must have parent" );
+        Path tempFile = Files.createTempFile( file.getParent(), file.getFileName().toString(), "tmp" );
+        return new TempFile()
+        {
+            @Override
+            public Path getPath()
+            {
+                return tempFile;
+            }
+
+            @Override
+            public void close() throws IOException
+            {
+                Files.deleteIfExists( tempFile );
+            }
+        };
+    }
+
+    /**
      * A file writer, that accepts a {@link Path} to write some content to.
      */
     @FunctionalInterface
@@ -50,8 +84,8 @@ public final class FileUtils
     /**
      * Writes file without backup.
      *
-     * @param target   that is the target file (must be file, the path must have parent).
-     * @param writer   the writer that will accept a {@link Path} to write content to.
+     * @param target that is the target file (must be file, the path must have parent).
+     * @param writer the writer that will accept a {@link Path} to write content to.
      * @throws IOException if at any step IO problem occurs.
      */
     public static void writeFile( Path target, FileWriter writer ) throws IOException
@@ -62,8 +96,8 @@ public final class FileUtils
     /**
      * Writes file with backup copy (appends ".bak" extension).
      *
-     * @param target   that is the target file (must be file, the path must have parent).
-     * @param writer   the writer that will accept a {@link Path} to write content to.
+     * @param target that is the target file (must be file, the path must have parent).
+     * @param writer the writer that will accept a {@link Path} to write content to.
      * @throws IOException if at any step IO problem occurs.
      */
     public static void writeFileWithBackup( Path target, FileWriter writer ) throws IOException

@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -68,6 +67,7 @@ import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 import org.slf4j.Logger;
@@ -454,16 +454,13 @@ final class BasicRepositoryConnector
         {
             fileProcessor.mkdirs( file.getParentFile() );
 
-            File tempFile =
-                    File.createTempFile( file.getName() + '-' + UUID.randomUUID().toString().replace( "-", "" ), ".tmp",
-                            file.getParentFile() );
-
-            try
+            try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( file.toPath() ) )
             {
-                listener.setChecksumCalculator( checksumValidator.newChecksumCalculator( tempFile ) );
+                final File tmp = tempFile.getPath().toFile();
+                listener.setChecksumCalculator( checksumValidator.newChecksumCalculator( tmp ) );
                 for ( int firstTrial = 0, lastTrial = 1, trial = firstTrial; ; trial++ )
                 {
-                    GetTask task = new GetTask( path ).setDataFile( tempFile, false ).setListener( listener );
+                    GetTask task = new GetTask( path ).setDataFile( tmp, false ).setListener( listener );
                     transporter.get( task );
                     try
                     {
@@ -489,16 +486,11 @@ final class BasicRepositoryConnector
                         }
                     }
                 }
-                fileProcessor.move( tempFile, file );
+                fileProcessor.move( tmp, file );
                 if ( persistedChecksums )
                 {
                     checksumValidator.commit();
                 }
-            }
-            finally
-            {
-                tempFile.delete();
-                checksumValidator.close();
             }
         }
 

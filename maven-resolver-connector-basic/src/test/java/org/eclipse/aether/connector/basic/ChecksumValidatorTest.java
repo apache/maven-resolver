@@ -426,10 +426,6 @@ public class ChecksumValidatorTest
         validator.validate( checksums( SHA1, "foo" ), null );
         fetcher.assertFetchedFiles( SHA1 );
         assertEquals( 1, fetcher.checksumFiles.size() );
-        for ( File file : fetcher.checksumFiles )
-        {
-            assertTrue( file.getAbsolutePath(), file.isFile() );
-        }
         validator.retry();
         for ( File file : fetcher.checksumFiles )
         {
@@ -446,10 +442,6 @@ public class ChecksumValidatorTest
         fetcher.mock( MD5, "bar" );
         validator.validate( checksums( SHA1, "foo", MD5, "bar" ), checksums( SHA1, "foo" ) );
         assertEquals( 1, fetcher.checksumFiles.size() );
-        for ( File file : fetcher.checksumFiles )
-        {
-            assertTrue( file.getAbsolutePath(), file.isFile() );
-        }
         validator.commit();
         File checksumFile = new File( dataFile.getPath() + ".sha1" );
         assertTrue( checksumFile.getAbsolutePath(), checksumFile.isFile() );
@@ -464,7 +456,7 @@ public class ChecksumValidatorTest
     }
 
     @Test
-    public void testClose_RemoveTempFiles()
+    public void testNoCommit_NoTempFiles()
         throws Exception
     {
         ChecksumValidator validator = newValidator( SHA1 );
@@ -472,11 +464,6 @@ public class ChecksumValidatorTest
         validator.validate( checksums( SHA1, "foo" ), null );
         fetcher.assertFetchedFiles( SHA1 );
         assertEquals( 1, fetcher.checksumFiles.size() );
-        for ( File file : fetcher.checksumFiles )
-        {
-            assertTrue( file.getAbsolutePath(), file.isFile() );
-        }
-        validator.close();
         for ( File file : fetcher.checksumFiles )
         {
             assertFalse( file.getAbsolutePath(), file.exists() );
