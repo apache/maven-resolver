@@ -69,6 +69,7 @@ import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -598,18 +599,38 @@ final class HttpTransporter
                 }
             }
 
-            try ( FileUtils.TempFile tempFile = FileUtils.newTempFile() )
+            final boolean resume = offset > 0L;
+            final File dataFile = task.getDataFile();
+            if ( dataFile == null )
             {
                 try ( InputStream is = entity.getContent() )
                 {
-                    Files.copy( is, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING );
-                }
-                try ( InputStream is = Files.newInputStream( tempFile.getPath() ) )
-                {
-                    utilGet( task, is, true, length, offset > 0L );
+                    utilGet( task, is, true, length, resume );
                     extractChecksums( response );
                 }
             }
+            else
+            {
+                try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( dataFile.toPath() ) )
+                {
+                    if ( resume && Files.isRegularFile( dataFile.toPath() ) )
+                    {
+                        Files.copy( Files.newInputStream( dataFile.toPath() ), tempFile.getPath(),
+                                StandardCopyOption.REPLACE_EXISTING );
+                    }
+                    try ( InputStream is = entity.getContent() )
+                    {
+                        task.setDataFile( tempFile.getPath().toFile(), resume );
+                        utilGet( task, is, true, length, resume );
+                    }
+                    Files.move( tempFile.getPath(), dataFile.toPath(), StandardCopyOption.ATOMIC_MOVE );
+                }
+                finally
+                {
+                    task.setDataFile( dataFile );
+                }
+            }
+            extractChecksums( response );
         }
 
         private void extractChecksums( CloseableHttpResponse response )
