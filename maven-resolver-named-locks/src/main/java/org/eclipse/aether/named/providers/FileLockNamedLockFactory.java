@@ -22,6 +22,7 @@ package org.eclipse.aether.named.providers;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +37,7 @@ import org.eclipse.aether.named.support.FileLockNamedLock;
 import org.eclipse.aether.named.support.FileSystemFriendly;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
+import org.eclipse.aether.named.support.Retry;
 
 /**
  * Named locks factory of {@link FileLockNamedLock}s. This is a bit special implementation, as it
@@ -50,6 +52,12 @@ public class FileLockNamedLockFactory
     implements FileSystemFriendly
 {
     public static final String NAME = "file-lock";
+
+    private static final int ATTEMPTS = Integer.parseInt(
+            System.getProperty( "resolver.file-lock.attempts", "5" ) );
+
+    private static final long SLEEP_MILLIS = Long.parseLong(
+            System.getProperty( "resolver.file-lock.sleepMillis", "50" ) );
 
     private final ConcurrentMap<String, FileChannel> fileChannels;
 
@@ -67,11 +75,36 @@ public class FileLockNamedLockFactory
             try
             {
                 Files.createDirectories( path.getParent() );
-                return FileChannel.open(
-                        path,
-                        StandardOpenOption.READ, StandardOpenOption.WRITE,
-                        StandardOpenOption.CREATE, StandardOpenOption.DELETE_ON_CLOSE
-                );
+
+                // Hack for Windows: retry multiple times and hope the best
+                FileChannel channel = Retry.retry( ATTEMPTS, SLEEP_MILLIS, () ->
+                {
+                    try
+                    {
+                        return FileChannel.open(
+                                path,
+                                StandardOpenOption.READ, StandardOpenOption.WRITE,
+                                StandardOpenOption.CREATE, StandardOpenOption.DELETE_ON_CLOSE
+                        );
+                    }
+                    catch ( AccessDeniedException e )
+                    {
+                        return null;
+                    }
+                }, null, null );
+
+                if ( channel == null )
+                {
+                    throw new IllegalStateException( "Could not open file channel for '"
+                            + name + "' after " + ATTEMPTS + " attempts, giving up" );
+                }
+                return channel;
+            }
+            catch ( InterruptedException e )
+            {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException( "Interrupted during open file channel for '"
+                        + name + "'", e );
             }
             catch ( IOException e )
             {
