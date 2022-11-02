@@ -616,8 +616,10 @@ final class HttpTransporter
                     task.setDataFile( tempFile.getPath().toFile(), resume );
                     if ( resume && Files.isRegularFile( dataFile.toPath() ) )
                     {
-                        Files.copy( Files.newInputStream( dataFile.toPath() ), tempFile.getPath(),
-                                StandardCopyOption.REPLACE_EXISTING );
+                        try ( InputStream inputStream = Files.newInputStream( dataFile.toPath() ) )
+                        {
+                            Files.copy( inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING );
+                        }
                     }
                     try ( InputStream is = entity.getContent() )
                     {
