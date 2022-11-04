@@ -22,6 +22,7 @@ package org.eclipse.aether.named.providers;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +37,8 @@ import org.eclipse.aether.named.support.FileLockNamedLock;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 
+import static org.eclipse.aether.named.support.Retry.retry;
+
 /**
  * Named locks factory of {@link FileLockNamedLock}s. This is a bit special implementation, as it
  * expects locks names to be fully qualified absolute file system paths.
@@ -48,6 +51,32 @@ public class FileLockNamedLockFactory
     extends NamedLockFactorySupport
 {
     public static final String NAME = "file-lock";
+
+    /**
+     * Tweak: on Windows, the presence of {@link StandardOpenOption#DELETE_ON_CLOSE} causes concurrency issues. This
+     * flag allows to have it removed from effective flags, at the cost that lockfile directory becomes crowded
+     * with 0 byte sized lock files that are never cleaned up.
+     *
+     * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
+     */
+    private static final boolean DELETE_LOCK_FILES = Boolean.parseBoolean(
+            System.getProperty( "aether.named.file-lock.deleteLockFiles", Boolean.TRUE.toString() ) );
+
+    /**
+     * Tweak: on Windows, the presence of {@link StandardOpenOption#DELETE_ON_CLOSE} causes concurrency issues. This
+     * flag allows to implement similar fix as referenced JDK bug report: retry and hope the best. Default value is
+     * 5 attempts (will retry 4 times).
+     *
+     * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
+     */
+    private static final int ATTEMPTS = Integer.parseInt(
+            System.getProperty( "aether.named.file-lock.attempts", "5" ) );
+
+    /**
+     * Tweak: When {@link #ATTEMPTS} used, the amount of milliseconds to sleep between subsequent retries.
+     */
+    private static final long SLEEP_MILLIS = Long.parseLong(
+            System.getProperty( "aether.named.file-lock.sleepMillis", "50" ) );
 
     private final ConcurrentMap<String, FileChannel> fileChannels;
 
@@ -65,11 +94,45 @@ public class FileLockNamedLockFactory
             try
             {
                 Files.createDirectories( path.getParent() );
-                return FileChannel.open(
-                        path,
-                        StandardOpenOption.READ, StandardOpenOption.WRITE,
-                        StandardOpenOption.CREATE, StandardOpenOption.DELETE_ON_CLOSE
-                );
+                FileChannel channel = retry( ATTEMPTS, SLEEP_MILLIS, () ->
+                {
+                    try
+                    {
+                        if ( DELETE_LOCK_FILES )
+                        {
+                            return FileChannel.open(
+                                    path,
+                                    StandardOpenOption.READ, StandardOpenOption.WRITE,
+                                    StandardOpenOption.CREATE, StandardOpenOption.DELETE_ON_CLOSE
+                            );
+                        }
+                        else
+                        {
+                            return FileChannel.open(
+                                    path,
+                                    StandardOpenOption.READ, StandardOpenOption.WRITE,
+                                    StandardOpenOption.CREATE
+                            );
+                        }
+                    }
+                    catch ( AccessDeniedException e )
+                    {
+                        return null;
+                    }
+                }, null, null );
+
+                if ( channel == null )
+                {
+                    throw new IllegalStateException( "Could not open file channel for '"
+                            + name + "' after " + ATTEMPTS + " attempts; giving up" );
+                }
+                return channel;
+            }
+            catch ( InterruptedException e )
+            {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException( "Interrupted during open file channel for '"
+                        + name + "'", e );
             }
             catch ( IOException e )
             {

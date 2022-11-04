@@ -60,11 +60,38 @@ public class RetryTest
     }
 
     @Test
-    public void happyOnSomeAttempt() throws InterruptedException
+    public void happyAfterSomeTime() throws InterruptedException
     {
         LongAdder retries = new LongAdder();
         String result = retry( 1L, TimeUnit.SECONDS, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return retries.sum() == 2 ? "got it" : null; }, null, "notHappy" );
         assertThat( result, equalTo( "got it" ) );
         assertThat( retries.sum(), equalTo( 2L ) );
+    }
+
+    @Test
+    public void happyFirstAttempt() throws InterruptedException
+    {
+        LongAdder retries = new LongAdder();
+        String result = retry( 5, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return "happy"; }, null, "notHappy" );
+        assertThat( result, equalTo( "happy" ) );
+        assertThat( retries.sum(), equalTo( 1L ) );
+    }
+
+    @Test
+    public void notHappyAnyAttempt() throws InterruptedException
+    {
+        LongAdder retries = new LongAdder();
+        String result = retry( 5, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return null; }, null, "notHappy" );
+        assertThat( result, equalTo( "notHappy" ) );
+        assertThat( retries.sum(), equalTo( 5L ) );
+    }
+
+    @Test
+    public void happyAfterSomeAttempt() throws InterruptedException
+    {
+        LongAdder retries = new LongAdder();
+        String result = retry( 5, RETRY_SLEEP_MILLIS, () -> { retries.increment(); return retries.sum() == 3 ? "got it" : null; }, null, "notHappy" );
+        assertThat( result, equalTo( "got it" ) );
+        assertThat( retries.sum(), equalTo( 3L ) );
     }
 }
