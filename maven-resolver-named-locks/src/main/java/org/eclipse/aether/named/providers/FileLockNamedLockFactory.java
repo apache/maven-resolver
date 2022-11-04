@@ -55,7 +55,7 @@ public class FileLockNamedLockFactory
     /**
      * Tweak: on Windows, the presence of {@link StandardOpenOption#DELETE_ON_CLOSE} causes concurrency issues. This
      * flag allows to have it removed from effective flags, at the cost that lockfile directory becomes crowded
-     * with 0 byte sized lock files that are never cleaned up.
+     * with 0 byte sized lock files that are never cleaned up. Default value is {@code true}.
      *
      * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
      */
@@ -73,7 +73,8 @@ public class FileLockNamedLockFactory
             System.getProperty( "aether.named.file-lock.attempts", "5" ) );
 
     /**
-     * Tweak: When {@link #ATTEMPTS} used, the amount of milliseconds to sleep between subsequent retries.
+     * Tweak: When {@link #ATTEMPTS} used, the amount of milliseconds to sleep between subsequent retries. Default
+     * value is 50 milliseconds.
      */
     private static final long SLEEP_MILLIS = Long.parseLong(
             System.getProperty( "aether.named.file-lock.sleepMillis", "50" ) );
