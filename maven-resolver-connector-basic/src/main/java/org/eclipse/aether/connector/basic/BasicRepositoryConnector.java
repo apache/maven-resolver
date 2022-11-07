@@ -221,7 +221,7 @@ final class BasicRepositoryConnector
     {
         if ( closed.get() )
         {
-            throw new IllegalStateException( "connector closed" );
+            throw new IllegalStateException( "connector already closed" );
         }
     }
 
