@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -113,7 +114,7 @@ final class BasicRepositoryConnector
 
     private Executor executor;
 
-    private boolean closed;
+    private final AtomicBoolean closed;
 
     BasicRepositoryConnector( RepositorySystemSession session,
                               RemoteRepository repository,
@@ -146,6 +147,7 @@ final class BasicRepositoryConnector
         this.repository = repository;
         this.fileProcessor = fileProcessor;
         this.providedChecksumsSources = providedChecksumsSources;
+        this.closed = new AtomicBoolean( false );
 
         maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
@@ -205,9 +207,8 @@ final class BasicRepositoryConnector
     @Override
     public void close()
     {
-        if ( !closed )
+        if ( closed.compareAndSet( false, true ) )
         {
-            closed = true;
             if ( executor instanceof ExecutorService )
             {
                 ( (ExecutorService) executor ).shutdown();
@@ -216,14 +217,19 @@ final class BasicRepositoryConnector
         }
     }
 
+    private void failIfClosed()
+    {
+        if ( closed.get() )
+        {
+            throw new IllegalStateException( "connector already closed" );
+        }
+    }
+
     @Override
     public void get( Collection<? extends ArtifactDownload> artifactDownloads,
                      Collection<? extends MetadataDownload> metadataDownloads )
     {
-        if ( closed )
-        {
-            throw new IllegalStateException( "connector closed" );
-        }
+        failIfClosed();
 
         Executor executor = getExecutor( artifactDownloads, metadataDownloads );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
@@ -297,10 +303,7 @@ final class BasicRepositoryConnector
     public void put( Collection<? extends ArtifactUpload> artifactUploads,
                      Collection<? extends MetadataUpload> metadataUploads )
     {
-        if ( closed )
-        {
-            throw new IllegalStateException( "connector closed" );
-        }
+        failIfClosed();
 
         for ( ArtifactUpload transfer : safe( artifactUploads ) )
         {
