@@ -132,7 +132,7 @@ public class FileLockNamedLockFactory
             catch ( InterruptedException e )
             {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException( "Interrupted during open file channel for '"
+                throw new RuntimeException( "Interrupted while opening file channel for '"
                         + name + "'", e );
             }
             catch ( IOException e )
