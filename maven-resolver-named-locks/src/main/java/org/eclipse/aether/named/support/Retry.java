@@ -90,4 +90,50 @@ public final class Retry
         }
         return result == null ? defaultResult : result;
     }
+
+    /**
+     * Retries attempting max given times the passed in operation, sleeping given
+     * {@code sleepMills} between retries. In case operation returns {@code null}, it is assumed
+     * "is not done yet" state, so retry will happen (if attempt count allows). If all attempts
+     * used, and still {@code null} ("is not done yet") is returned from operation, the
+     * {@code defaultResult} is returned.
+     * <p>
+     * Just to clear things up: 5 attempts is really 4 retries (once do it and retry 4 times). 0 attempts means
+     * "do not even try it", and this method returns without doing anything.
+     */
+    public static  <R> R retry( final int attempts,
+                                final long sleepMillis,
+                                final Callable<R> operation,
+                                final Predicate<Exception> retryPredicate,
+                                final R defaultResult ) throws InterruptedException
+    {
+        int attempt = 1;
+        R result = null;
+        while ( attempt <= attempts && result == null )
+        {
+            try
+            {
+                result = operation.call();
+                if ( result == null )
+                {
+                    LOGGER.trace( "Retry attempt {}: no result", attempt );
+                    Thread.sleep( sleepMillis );
+                }
+            }
+            catch ( InterruptedException e )
+            {
+                throw e;
+            }
+            catch ( Exception e )
+            {
+                LOGGER.trace( "Retry attempt {}: operation failure", attempt, e );
+                if ( retryPredicate != null && !retryPredicate.test( e ) )
+                {
+                    throw new IllegalStateException( e );
+                }
+            }
+            attempt++;
+        }
+        return result == null ? defaultResult : result;
+    }
 }

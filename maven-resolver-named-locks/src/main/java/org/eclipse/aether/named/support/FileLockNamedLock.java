@@ -112,8 +112,6 @@ public final class FileLockNamedLock
                 {
                     if ( obtainedLock.isShared() )
                     {
-                        // TODO No counterpart in other lock impls, drop or make consistent?
-                        logger.trace( "{} lock (shared={})", name(), true );
                         steps.push( Boolean.TRUE );
                         return true;
                     }
@@ -123,8 +121,6 @@ public final class FileLockNamedLock
                         boolean weOwnExclusive = steps.contains( Boolean.FALSE );
                         if ( weOwnExclusive )
                         {
-                            // TODO No counterpart in other lock impls, drop or make consistent?
-                            logger.trace( "{} lock (shared={})", name(), true );
                             steps.push( Boolean.TRUE );
                             return true;
                         }
@@ -136,8 +132,6 @@ public final class FileLockNamedLock
                     }
                 }
 
-                // TODO No counterpart in other lock impls, drop or make consistent?
-                logger.trace( "{} no obtained lock: obtain shared file lock", name() );
                 FileLock fileLock = obtainFileLock( true );
                 if ( fileLock != null )
                 {
@@ -170,10 +164,6 @@ public final class FileLockNamedLock
                         boolean weOwnShared = steps.contains( Boolean.TRUE );
                         if ( weOwnShared )
                         {
-                            // TODO No counterpart in other lock impls, drop or make consistent?
-                            logger.trace(
-                                    "{} steps not empty, has not exclusive lock: lock-upgrade not supported", name()
-                            );
                             return false; // Lock upgrade not supported
                         }
                         else
@@ -188,8 +178,6 @@ public final class FileLockNamedLock
                         boolean weOwnExclusive = steps.contains( Boolean.FALSE );
                         if ( weOwnExclusive )
                         {
-                            // TODO No counterpart in other lock impls, drop or make consistent?
-                            logger.trace( "{} lock (shared={})", name(), false );
                             steps.push( Boolean.FALSE );
                             return true;
                         }
@@ -201,8 +189,6 @@ public final class FileLockNamedLock
                     }
                 }
 
-                // TODO No counterpart in other lock impls, drop or make consistent?
-                logger.trace( "{} no obtained lock: obtain exclusive file lock", name() );
                 FileLock fileLock = obtainFileLock( false );
                 if ( fileLock != null )
                 {
@@ -230,9 +216,7 @@ public final class FileLockNamedLock
             {
                 throw new IllegalStateException( "Wrong API usage: unlock without lock" );
             }
-            Boolean shared = steps.pop();
-            // TODO No counterpart in other lock impls, drop or make consistent?
-            logger.trace( "{} unlock (shared = {})", name(), shared );
+            steps.pop();
             if ( steps.isEmpty() && !anyOtherThreadHasSteps() )
             {
                 try
