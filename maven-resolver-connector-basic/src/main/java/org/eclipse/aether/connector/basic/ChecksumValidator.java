@@ -24,9 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.UUID;
 
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
@@ -34,6 +32,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.transfer.ChecksumFailureException;
+import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +60,6 @@ final class ChecksumValidator
 
     private final Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
 
-    private final Collection<File> tempFiles;
-
     private final FileProcessor fileProcessor;
 
     private final ChecksumFetcher checksumFetcher;
@@ -73,7 +70,7 @@ final class ChecksumValidator
 
     private final Collection<ChecksumLocation> checksumLocations;
 
-    private final Map<File, Object> checksumFiles;
+    private final Map<File, String> checksumExpectedValues;
 
     ChecksumValidator( File dataFile,
                        Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
@@ -85,13 +82,12 @@ final class ChecksumValidator
     {
         this.dataFile = dataFile;
         this.checksumAlgorithmFactories = checksumAlgorithmFactories;
-        this.tempFiles = new HashSet<>();
         this.fileProcessor = fileProcessor;
         this.checksumFetcher = checksumFetcher;
         this.checksumPolicy = checksumPolicy;
         this.providedChecksums = providedChecksums;
         this.checksumLocations = checksumLocations;
-        this.checksumFiles = new HashMap<>();
+        this.checksumExpectedValues = new HashMap<>();
     }
 
     public ChecksumCalculator newChecksumCalculator( File targetFile )
@@ -152,7 +148,7 @@ final class ChecksumValidator
 
             String actual = String.valueOf( calculated );
             String expected = entry.getValue().toString();
-            checksumFiles.put( getChecksumFile( checksumAlgorithmFactory ), expected );
+            checksumExpectedValues.put( getChecksumFile( checksumAlgorithmFactory ), expected );
 
             if ( !isEqualChecksum( expected, actual ) )
             {
@@ -183,10 +179,10 @@ final class ChecksumValidator
                 );
                 continue;
             }
-            try
+            File checksumFile = getChecksumFile( checksumLocation.getChecksumAlgorithmFactory() );
+            try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( checksumFile.toPath() ) )
             {
-                File checksumFile = getChecksumFile( checksumLocation.getChecksumAlgorithmFactory() );
-                File tmp = createTempFile( checksumFile );
+                File tmp = tempFile.getPath().toFile();
                 try
                 {
                     if ( !checksumFetcher.fetchChecksum(
@@ -206,7 +202,7 @@ final class ChecksumValidator
 
                 String actual = String.valueOf( calculated );
                 String expected = fileProcessor.readChecksum( tmp );
-                checksumFiles.put( checksumFile, tmp );
+                checksumExpectedValues.put( checksumFile, expected );
 
                 if ( !isEqualChecksum( expected, actual ) )
                 {
@@ -240,33 +236,10 @@ final class ChecksumValidator
         return new File( dataFile.getPath() + '.' + factory.getFileExtension() );
     }
 
-    private File createTempFile( File path )
-        throws IOException
-    {
-        File file =
-            File.createTempFile( path.getName() + "-"
-                + UUID.randomUUID().toString().replace( "-", "" ).substring( 0, 8 ), ".tmp", path.getParentFile() );
-        tempFiles.add( file );
-        return file;
-    }
-
-    private void clearTempFiles()
-    {
-        for ( File file : tempFiles )
-        {
-            if ( !file.delete() && file.exists() )
-            {
-                LOGGER.debug( "Could not delete temporary file {}", file );
-            }
-        }
-        tempFiles.clear();
-    }
-
     public void retry()
     {
         checksumPolicy.onTransferRetry();
-        checksumFiles.clear();
-        clearTempFiles();
+        checksumExpectedValues.clear();
     }
 
     public boolean handle( ChecksumFailureException exception )
@@ -276,33 +249,18 @@ final class ChecksumValidator
 
     public void commit()
     {
-        for ( Map.Entry<File, Object> entry : checksumFiles.entrySet() )
+        for ( Map.Entry<File, String> entry : checksumExpectedValues.entrySet() )
         {
             File checksumFile = entry.getKey();
-            Object tmp = entry.getValue();
             try
             {
-                if ( tmp instanceof File )
-                {
-                    fileProcessor.move( (File) tmp, checksumFile );
-                    tempFiles.remove( tmp );
-                }
-                else
-                {
-                    fileProcessor.writeChecksum( checksumFile, String.valueOf( tmp ) );
-                }
+                fileProcessor.writeChecksum( checksumFile, entry.getValue() );
             }
             catch ( IOException e )
             {
                 LOGGER.debug( "Failed to write checksum file {}", checksumFile, e );
             }
         }
-        checksumFiles.clear();
+        checksumExpectedValues.clear();
     }
-
-    public void close()
-    {
-        clearTempFiles();
-    }
-
 }

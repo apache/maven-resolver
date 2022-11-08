@@ -100,47 +100,16 @@ public abstract class AbstractTransporter
     protected void utilGet( GetTask task, InputStream is, boolean close, long length, boolean resume )
         throws IOException, TransferCancelledException
     {
-        OutputStream os = null;
-        try
+        try ( OutputStream os = task.newOutputStream( resume ) )
         {
-            os = task.newOutputStream( resume );
             task.getListener().transportStarted( resume ? task.getResumeOffset() : 0L, length );
             copy( os, is, task.getListener() );
-            os.close();
-            os = null;
-
-            if ( close )
-            {
-                is.close();
-                is = null;
-            }
         }
         finally
         {
-            try
+            if ( close )
             {
-                if ( os != null )
-                {
-                    os.close();
-                }
-            }
-            catch ( final IOException e )
-            {
-                // Suppressed due to an exception already thrown in the try block.
-            }
-            finally
-            {
-                try
-                {
-                    if ( close && is != null )
-                    {
-                        is.close();
-                    }
-                }
-                catch ( final IOException e )
-                {
-                    // Suppressed due to an exception already thrown in the try block.
-                }
+                is.close();
             }
         }
     }
@@ -178,13 +147,13 @@ public abstract class AbstractTransporter
     protected void utilPut( PutTask task, OutputStream os, boolean close )
         throws IOException, TransferCancelledException
     {
-        InputStream is = null;
-        try
+        try ( InputStream is = task.newInputStream() )
         {
             task.getListener().transportStarted( 0, task.getDataLength() );
-            is = task.newInputStream();
             copy( os, is, task.getListener() );
-
+        }
+        finally
+        {
             if ( close )
             {
                 os.close();
@@ -192,39 +161,6 @@ public abstract class AbstractTransporter
             else
             {
                 os.flush();
-            }
-
-            os = null;
-
-            is.close();
-            is = null;
-        }
-        finally
-        {
-            try
-            {
-                if ( close && os != null )
-                {
-                    os.close();
-                }
-            }
-            catch ( final IOException e )
-            {
-                // Suppressed due to an exception already thrown in the try block.
-            }
-            finally
-            {
-                try
-                {
-                    if ( is != null )
-                    {
-                        is.close();
-                    }
-                }
-                catch ( final IOException e )
-                {
-                    // Suppressed due to an exception already thrown in the try block.
-                }
             }
         }
     }

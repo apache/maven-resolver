@@ -24,7 +24,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
@@ -32,6 +31,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
@@ -65,9 +65,11 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -76,6 +78,8 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -356,19 +360,21 @@ final class HttpTransporter
         {
             SharingHttpContext context = new SharingHttpContext( state );
             prepare( request, context );
-            HttpResponse response = client.execute( server, request, context );
-            try
+            try ( CloseableHttpResponse response = client.execute( server, request, context ) )
             {
-                context.close();
-                handleStatus( response );
-                if ( getter != null )
+                try
                 {
-                    getter.handle( response );
+                    context.close();
+                    handleStatus( response );
+                    if ( getter != null )
+                    {
+                        getter.handle( response );
+                    }
                 }
-            }
-            finally
-            {
-                EntityUtils.consumeQuietly( response.getEntity() );
+                finally
+                {
+                    EntityUtils.consumeQuietly( response.getEntity() );
+                }
             }
         }
         catch ( IOException e )
@@ -386,10 +392,9 @@ final class HttpTransporter
         boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase( request.getMethod() );
         if ( state.getWebDav() == null && ( put || isPayloadPresent( request ) ) )
         {
-            try
+            HttpOptions req = commonHeaders( new HttpOptions( request.getURI() ) );
+            try ( CloseableHttpResponse response = client.execute( server, req, context ) )
             {
-                HttpOptions req = commonHeaders( new HttpOptions( request.getURI() ) );
-                HttpResponse response = client.execute( server, req, context );
                 state.setWebDav( isWebDav( response ) );
                 EntityUtils.consumeQuietly( response.getEntity() );
             }
@@ -404,7 +409,7 @@ final class HttpTransporter
         }
     }
 
-    private boolean isWebDav( HttpResponse response )
+    private boolean isWebDav( CloseableHttpResponse response )
     {
         return response.containsHeader( HttpHeaders.DAV );
     }
@@ -416,10 +421,9 @@ final class HttpTransporter
         int index = 0;
         for ( ; index < dirs.size(); index++ )
         {
-            try
+            try ( CloseableHttpResponse response =
+                          client.execute( server, commonHeaders( new HttpMkCol( dirs.get( index ) ) ), context ) )
             {
-                HttpResponse response =
-                    client.execute( server, commonHeaders( new HttpMkCol( dirs.get( index ) ) ), context );
                 try
                 {
                     int status = response.getStatusLine().getStatusCode();
@@ -446,10 +450,9 @@ final class HttpTransporter
         }
         for ( index--; index >= 0; index-- )
         {
-            try
+            try ( CloseableHttpResponse response =
+                          client.execute( server, commonHeaders( new HttpMkCol( dirs.get( index ) ) ), context ) )
             {
-                HttpResponse response =
-                    client.execute( server, commonHeaders( new HttpMkCol( dirs.get( index ) ) ), context );
                 try
                 {
                     handleStatus( response );
@@ -532,7 +535,7 @@ final class HttpTransporter
     }
 
     @SuppressWarnings( "checkstyle:magicnumber" )
-    private void handleStatus( HttpResponse response )
+    private void handleStatus( CloseableHttpResponse response )
         throws HttpResponseException
     {
         int status = response.getStatusLine().getStatusCode();
@@ -568,7 +571,7 @@ final class HttpTransporter
             this.task = task;
         }
 
-        public void handle( HttpResponse response )
+        public void handle( CloseableHttpResponse response )
             throws IOException, TransferCancelledException
         {
             HttpEntity entity = response.getEntity();
@@ -592,16 +595,47 @@ final class HttpTransporter
                 if ( offset < 0L || offset >= length || ( offset > 0L && offset != task.getResumeOffset() ) )
                 {
                     throw new IOException( "Invalid Content-Range header for partial download from offset "
-                        + task.getResumeOffset() + ": " + range );
+                            + task.getResumeOffset() + ": " + range );
                 }
             }
 
-            InputStream is = entity.getContent();
-            utilGet( task, is, true, length, offset > 0L );
+            final boolean resume = offset > 0L;
+            final File dataFile = task.getDataFile();
+            if ( dataFile == null )
+            {
+                try ( InputStream is = entity.getContent() )
+                {
+                    utilGet( task, is, true, length, resume );
+                    extractChecksums( response );
+                }
+            }
+            else
+            {
+                try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( dataFile.toPath() ) )
+                {
+                    task.setDataFile( tempFile.getPath().toFile(), resume );
+                    if ( resume && Files.isRegularFile( dataFile.toPath() ) )
+                    {
+                        try ( InputStream inputStream = Files.newInputStream( dataFile.toPath() ) )
+                        {
+                            Files.copy( inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING );
+                        }
+                    }
+                    try ( InputStream is = entity.getContent() )
+                    {
+                        utilGet( task, is, true, length, resume );
+                    }
+                    Files.move( tempFile.getPath(), dataFile.toPath(), StandardCopyOption.ATOMIC_MOVE );
+                }
+                finally
+                {
+                    task.setDataFile( dataFile );
+                }
+            }
             extractChecksums( response );
         }
 
-        private void extractChecksums( HttpResponse response )
+        private void extractChecksums( CloseableHttpResponse response )
         {
             for ( Map.Entry<String, ChecksumExtractor> extractorEntry : checksumExtractors.entrySet() )
             {
