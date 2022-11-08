@@ -19,8 +19,6 @@ package org.eclipse.aether.spi.concurrency;
  * under the License.
  */
 
-import org.eclipse.aether.RepositorySystemSession;
-
 /**
  * Component providing {@link ResolverExecutor} instances on demand.
  *
@@ -29,33 +27,26 @@ import org.eclipse.aether.RepositorySystemSession;
 public interface ResolverExecutorService
 {
     /**
-     * A hierarchical key to identify use cases for executors. Same {@link Key} designates same
-     * {@link ResolverExecutor}.
+     * A hierarchical name to name threads for executors.
      */
-    interface Key
+    interface Name
     {
         String asString();
     }
 
     /**
-     * Creates service key with given parameters.
+     * Creates {@link Name} with given parameters.
      *
      * @param service        The service that is to use executor, never {@code null}.
      * @param discriminators Potential (sub) discriminators, if needed.
      */
-    Key getKey( Class<?> service, String... discriminators );
+    Name getName( Class<?> service, String... discriminators );
 
     /**
-     * Returns a resolver executor for requester service. The {@code service} parameter is used as "key", meaning
-     * multiple services using same "key" will share the executor as well. The very first invocation of this method
-     * may create thread pool as well (using {@code maxThreads} parameter), and subsequent calls with different
-     * parameter will reuse it, hence the parameter may be neglected.
-     * <p>
-     * None of parameters may be {@code null}.
+     * Returns a new resolver executor for requester service.
      *
-     * @param session    The session.
-     * @param key        A key for service, multiple components using same key will share same executor.
+     * @param name        A key for service, multiple components using same key will share same executor.
      * @param maxThreads The count of configured threads (must be bigger than zero).
      */
-    ResolverExecutor getResolverExecutor( RepositorySystemSession session, Key key, int maxThreads );
+    ResolverExecutor getResolverExecutor( Name name, int maxThreads );
 }

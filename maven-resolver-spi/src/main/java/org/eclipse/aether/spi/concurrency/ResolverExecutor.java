@@ -19,20 +19,22 @@ package org.eclipse.aether.spi.concurrency;
  * under the License.
  */
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 /**
- * Component providing shared {@link java.util.concurrent.Executor}-like service across resolver.
+ * Component providing {@link java.util.concurrent.Executor}-like service across resolver. Instances are to be treated
+ * like resources, best in try-with-resource constructs.
  *
  * @since 1.9.0
  */
-public interface ResolverExecutor
+public interface ResolverExecutor extends Closeable
 {
     /**
      * Submits a batch of {@link Runnable} tasks for execution. If collection has size greater than 1, this method
-     * will submit all tasks just like {@link #submit(Runnable)} does. Otherwise, "direct", on caller thread execution
+     * will submit all tasks just like {@link #submit(Callable)} does. Otherwise, "direct", on caller thread execution
      * happens. Several resolver components may deal "sequentially" with tasks and rely on this behaviour for
      * performance purposes.
      * <p>
@@ -42,19 +44,16 @@ public interface ResolverExecutor
     void submitBatch( Collection<Runnable> batch );
 
     /**
-     * Submits a {@link Runnable} task for execution. This call may block if thread pool is full. In certain
-     * circumstances this method may choose to directly invoke task (on caller thread) instead to submit it.
-     * <p>
-     * Error handling: this method will never throw. If you are interested in possible outcome of submitted
-     * {@link Runnable} use some helper like the {@code RunnableErrorForwarder} in resolver utilities module.
-     */
-    void submit( Runnable task );
-
-    /**
      * Submits a {@link Callable} task for execution. This call may block if thread pool is full. In certain
      * circumstances this method may choose to directly invoke task (on caller thread) instead to submit it.
      * <p>
      * Error handling: this method will never throw.
      */
     <T> Future<T> submit( Callable<T> task );
+
+    /**
+     * Caller notifies that is not using this instance anymore, it is up to implementation to shut it down, or do
+     * whatever is needed.
+     */
+    void close();
 }

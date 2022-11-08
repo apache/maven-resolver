@@ -147,13 +147,13 @@ final class BasicRepositoryConnector
         this.fileProcessor = fileProcessor;
         this.providedChecksumsSources = providedChecksumsSources;
         this.closed = new AtomicBoolean( false );
-        this.resolverExecutor = resolverExecutorService.getResolverExecutor( session,
-                resolverExecutorService.getKey( RepositoryConnector.class, repository.getId() ),
+        this.resolverExecutor = resolverExecutorService.getResolverExecutor(
+                resolverExecutorService.getName( BasicRepositoryConnector.class, repository.getId() ),
                 ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT, CONFIG_PROP_THREADS,
                         "maven.artifact.threads" ) );
 
-        smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
-        persistedChecksums =
+        this.smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
+        this.persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
                         ConfigurationProperties.PERSISTED_CHECKSUMS );
     }
@@ -177,6 +177,7 @@ final class BasicRepositoryConnector
     {
         if ( closed.compareAndSet( false, true ) )
         {
+            resolverExecutor.close();
             transporter.close();
         }
     }

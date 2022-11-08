@@ -63,17 +63,16 @@ final class DefaultResolverExecutor implements ResolverExecutor
     }
 
     @Override
-    public void submit( Runnable task )
-    {
-        requireNonNull( task );
-        submit( Executors.callable( task ) );
-    }
-
-    @Override
     public <T> Future<T> submit( Callable<T> task )
     {
         requireNonNull( task );
         return executorService == null ? directlyExecute( task ) : executorService.submit( task );
+    }
+
+    @Override
+    public void close()
+    {
+        executorService.shutdown();
     }
 
     private static <T> Future<T> directlyExecute( Callable<T> task )

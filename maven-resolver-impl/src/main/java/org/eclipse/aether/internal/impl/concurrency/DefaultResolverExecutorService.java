@@ -27,7 +27,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.concurrency.ResolverExecutor;
 import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
@@ -37,30 +36,24 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Default implementation of {@link ResolverExecutor}.
- * <p>
- * This implementation uses {@link RepositorySystemSession#getData()} to store created {@link ExecutorService}
- * instances. It creates instances that may be eventually garbage collected, so no explicit shutdown happens on
- * them. When {@code maxThreads} parameter is 1 (accepted values are greater than zero), this implementation assumes
- * caller wants "direct execution" (on caller thread) and creates {@link ResolverExecutor} instances accordingly.
  */
 @Singleton
 @Named
 public final class DefaultResolverExecutorService implements ResolverExecutorService
 {
     @Override
-    public Key getKey( Class<?> service, String... discriminators )
+    public Name getName( Class<?> service, String... discriminators )
     {
         requireNonNull( service );
-        return new KeyImpl( DefaultResolverExecutorService.class.getName()
+        return new NameImpl( DefaultResolverExecutorService.class.getName()
                 + "-" + service.getSimpleName()
                 + String.join( "-", discriminators ) );
     }
 
     @Override
-    public ResolverExecutor getResolverExecutor( RepositorySystemSession session, Key key, int maxThreads )
+    public ResolverExecutor getResolverExecutor( Name name, int maxThreads )
     {
-        requireNonNull( session );
-        requireNonNull( key );
+        requireNonNull( name );
         if ( maxThreads < 1 )
         {
             throw new IllegalArgumentException( "maxThreads must be greater than zero" );
@@ -73,8 +66,7 @@ public final class DefaultResolverExecutorService implements ResolverExecutorSer
         }
         else // shared && pooled
         {
-            executorService = (ExecutorService) session.getData()
-                    .computeIfAbsent( key, () -> createExecutorService( key, maxThreads ) );
+            executorService = createExecutorService( name, maxThreads );
         }
         return new DefaultResolverExecutor( executorService );
     }
@@ -84,32 +76,32 @@ public final class DefaultResolverExecutorService implements ResolverExecutorSer
      * for proper garbage collection. This is important detail, as these instances are kept within session data, and
      * currently there is no way to shut down them.
      */
-    private ExecutorService createExecutorService( Key key, int maxThreads )
+    private ExecutorService createExecutorService( Name name, int maxThreads )
     {
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
                 maxThreads,
                 maxThreads,
                 3L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(),
-                new WorkerThreadFactory( key.asString() + "-" )
+                new WorkerThreadFactory( name.asString() + "-" )
         );
         threadPoolExecutor.allowCoreThreadTimeOut( true );
         return threadPoolExecutor;
     }
 
-    private static class KeyImpl implements Key
+    private static class NameImpl implements Name
     {
-        private final String keyString;
+        private final String nameString;
 
-        private KeyImpl( String keyString )
+        private NameImpl( String nameString )
         {
-            this.keyString = keyString;
+            this.nameString = nameString;
         }
 
         @Override
         public String asString()
         {
-            return keyString;
+            return nameString;
         }
 
         @Override
@@ -123,14 +115,14 @@ public final class DefaultResolverExecutorService implements ResolverExecutorSer
             {
                 return false;
             }
-            KeyImpl key = (KeyImpl) o;
-            return keyString.equals( key.keyString );
+            NameImpl other = (NameImpl) o;
+            return nameString.equals( other.nameString );
         }
 
         @Override
         public int hashCode()
         {
-            return hash( keyString );
+            return hash( nameString );
         }
     }
 }

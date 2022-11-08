@@ -176,49 +176,52 @@ public class BfDependencyCollector
             logger.debug( "Collector skip mode enabled" );
         }
 
-        Args args =
-                new Args( session, pool, context, versionContext, request,
-                        useSkip ? DependencyResolutionSkipper.defaultSkipper()
-                                : DependencyResolutionSkipper.neverSkipper(),
-                        new ParallelDescriptorResolver( resolverExecutorService.getResolverExecutor( session,
-                                resolverExecutorService.getKey( DependencyCollector.class ),
-                                ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT,
-                                        CONFIG_PROP_THREADS, "maven.artifact.threads" ) ) ) );
-
-        DependencySelector rootDepSelector = session.getDependencySelector() != null
-                ? session.getDependencySelector().deriveChildSelector( context ) : null;
-        DependencyManager rootDepManager = session.getDependencyManager() != null
-                ? session.getDependencyManager().deriveChildManager( context ) : null;
-        DependencyTraverser rootDepTraverser = session.getDependencyTraverser() != null
-                ? session.getDependencyTraverser().deriveChildTraverser( context ) : null;
-        VersionFilter rootVerFilter = session.getVersionFilter() != null
-                ? session.getVersionFilter().deriveChildFilter( context ) : null;
-
-        List<DependencyNode> parents = Collections.singletonList( node );
-        for ( Dependency dependency : dependencies )
+        try ( ResolverExecutor resolverExecutor =  resolverExecutorService.getResolverExecutor(
+                resolverExecutorService.getName( BfDependencyCollector.class ),
+                ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT,
+                        CONFIG_PROP_THREADS, "maven.artifact.threads" ) ) )
         {
-            RequestTrace childTrace = collectStepTrace( trace, args.request.getRequestContext(), parents,
-                    dependency );
-            DependencyProcessingContext processingContext =
-                    new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
-                            rootVerFilter, childTrace, repositories, managedDependencies, parents, dependency,
-                            PremanagedDependency.create( rootDepManager, dependency,
-                                    false, args.premanagedState ) );
-            if ( !filter( processingContext ) )
+            Args args =
+                    new Args( session, pool, context, versionContext, request,
+                            useSkip ? DependencyResolutionSkipper.defaultSkipper()
+                                    : DependencyResolutionSkipper.neverSkipper(),
+                            new ParallelDescriptorResolver( resolverExecutor ) );
+
+            DependencySelector rootDepSelector = session.getDependencySelector() != null
+                    ? session.getDependencySelector().deriveChildSelector( context ) : null;
+            DependencyManager rootDepManager = session.getDependencyManager() != null
+                    ? session.getDependencyManager().deriveChildManager( context ) : null;
+            DependencyTraverser rootDepTraverser = session.getDependencyTraverser() != null
+                    ? session.getDependencyTraverser().deriveChildTraverser( context ) : null;
+            VersionFilter rootVerFilter = session.getVersionFilter() != null
+                    ? session.getVersionFilter().deriveChildFilter( context ) : null;
+
+            List<DependencyNode> parents = Collections.singletonList( node );
+            for ( Dependency dependency : dependencies )
             {
-                processingContext.withDependency( processingContext.premanagedDependency.getManagedDependency() );
-                resolveArtifactDescriptorAsync( args, processingContext, results );
-                args.dependencyProcessingQueue.add( processingContext );
+                RequestTrace childTrace = collectStepTrace( trace, args.request.getRequestContext(), parents,
+                        dependency );
+                DependencyProcessingContext processingContext =
+                        new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
+                                rootVerFilter, childTrace, repositories, managedDependencies, parents, dependency,
+                                PremanagedDependency.create( rootDepManager, dependency,
+                                        false, args.premanagedState ) );
+                if ( !filter( processingContext ) )
+                {
+                    processingContext.withDependency( processingContext.premanagedDependency.getManagedDependency() );
+                    resolveArtifactDescriptorAsync( args, processingContext, results );
+                    args.dependencyProcessingQueue.add( processingContext );
+                }
             }
-        }
 
-        while ( !args.dependencyProcessingQueue.isEmpty() )
-        {
-            processDependency( args, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(),
-                    false );
-        }
+            while ( !args.dependencyProcessingQueue.isEmpty() )
+            {
+                processDependency( args, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(),
+                        false );
+            }
 
-        args.skipper.report();
+            args.skipper.report();
+        }
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )

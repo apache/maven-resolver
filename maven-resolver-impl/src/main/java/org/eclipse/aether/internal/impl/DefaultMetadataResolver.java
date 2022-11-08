@@ -43,6 +43,7 @@ import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
+import org.eclipse.aether.spi.concurrency.ResolverExecutor;
 import org.eclipse.aether.spi.concurrency.ResolverExecutorService;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
@@ -398,11 +399,13 @@ public class DefaultMetadataResolver
                 runnable.add( errorForwarder.wrap( task ) );
             }
 
-            resolverExecutorService.getResolverExecutor( session,
-                    resolverExecutorService.getKey( MetadataResolver.class ),
-                    ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT, CONFIG_PROP_THREADS ) )
-                    .submitBatch( runnable );
-            errorForwarder.await();
+            try ( ResolverExecutor resolverExecutor = resolverExecutorService.getResolverExecutor(
+                    resolverExecutorService.getName( DefaultMetadataResolver.class ),
+                    ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT, CONFIG_PROP_THREADS ) ) )
+            {
+                resolverExecutor.submitBatch( runnable );
+                errorForwarder.await();
+            }
 
             for ( ResolveTask task : tasks )
             {
