@@ -200,7 +200,7 @@ final class BasicRepositoryConnector
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
         Collection<? extends MetadataDownload> mds = safe( metadataDownloads );
         Collection<? extends ArtifactDownload> ads = safe( artifactDownloads );
-        ArrayList<Runnable> runnable = new ArrayList<>( mds.size() + ads.size() );
+        ArrayList<Runnable> runnables = new ArrayList<>( mds.size() + ads.size() );
 
         for ( MetadataDownload transfer : mds )
         {
@@ -219,7 +219,7 @@ final class BasicRepositoryConnector
 
             Runnable task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
                     checksumAlgorithmFactories, checksumLocations, null, listener );
-            runnable.add( errorForwarder.wrap( task ) );
+            runnables.add( errorForwarder.wrap( task ) );
         }
 
         for ( ArtifactDownload transfer : ads )
@@ -260,10 +260,10 @@ final class BasicRepositoryConnector
                 task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
                         checksumAlgorithmFactories, checksumLocations, providedChecksums, listener );
             }
-            runnable.add( errorForwarder.wrap( task ) );
+            runnables.add( errorForwarder.wrap( task ) );
         }
 
-        resolverExecutor.submitBatch( runnable );
+        resolverExecutor.submitBatch( runnables );
         errorForwarder.await();
     }
 

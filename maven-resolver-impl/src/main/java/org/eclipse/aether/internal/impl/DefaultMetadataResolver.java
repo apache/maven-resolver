@@ -393,17 +393,17 @@ public class DefaultMetadataResolver
         if ( !tasks.isEmpty() )
         {
             RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
-            ArrayList<Runnable> runnable = new ArrayList<>( tasks.size() );
+            ArrayList<Runnable> runnables = new ArrayList<>( tasks.size() );
             for ( ResolveTask task : tasks )
             {
-                runnable.add( errorForwarder.wrap( task ) );
+                runnables.add( errorForwarder.wrap( task ) );
             }
 
             try ( ResolverExecutor resolverExecutor = resolverExecutorService.getResolverExecutor(
                     resolverExecutorService.getName( DefaultMetadataResolver.class ),
                     ConfigUtils.getInteger( session, CONFIG_PROP_THREADS_DEFAULT, CONFIG_PROP_THREADS ) ) )
             {
-                resolverExecutor.submitBatch( runnable );
+                resolverExecutor.submitBatch( runnables );
                 errorForwarder.await();
             }
 
