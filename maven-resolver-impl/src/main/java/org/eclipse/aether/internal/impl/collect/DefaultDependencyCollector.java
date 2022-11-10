@@ -47,7 +47,7 @@ import static java.util.Objects.requireNonNull;
 public class DefaultDependencyCollector
         implements DependencyCollector, Service
 {
-    private static final String CONFIG_PROP_COLLECTOR_IMPL = "aether.collector.impl";
+    private static final String CONFIG_PROP_COLLECTOR_IMPL = "aether.dependencyCollector.impl";
 
     private static final String DEFAULT_COLLECTOR_IMPL = DfDependencyCollector.NAME;
 
