@@ -19,23 +19,21 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * under the License.
  */
 
-import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.RepositorySystemSession;
 
 /**
- * Selector for {@link NamedLockFactory} and {@link NameMapper} that selects and exposes selected ones. Essentially
- * all the named locks configuration is here. Implementations may use different strategies to perform selection.
+ * Factory for {@link NamedLockFactoryAdapter}.
  *
- * @since 1.7.3
+ * @since 1.9.1
  */
-public interface NamedLockFactorySelector
+public interface NamedLockFactoryAdapterFactory
 {
     /**
-     * Returns the selected {@link NamedLockFactory}, never {@code null}.
+     * Creates or returns pre-created {@link NamedLockFactoryAdapter}, never {@code null}.
+     * <p>
+     * It is left at discretion of implementation what happens on this method call, it may create always new
+     * instance, or return the same instance. One thing MUST for implementation: to properly shut down
+     * any name lock factory it used to create adapter instance.
      */
-    NamedLockFactory getSelectedNamedLockFactory();
-
-    /**
-     * Returns the selected {@link NameMapper}, never {@code null}.
-     */
-    NameMapper getSelectedNameMapper();
+    NamedLockFactoryAdapter getAdapter( RepositorySystemSession session );
 }

@@ -77,7 +77,7 @@ public abstract class NamedLockFactoryAdapterTestSupport
     @AfterClass
     public static void cleanupAdapter() {
         if (adapter != null) {
-            adapter.shutdown();
+            adapter.getNamedLockFactory().shutdown();
         }
     }
 
