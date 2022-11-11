@@ -21,11 +21,11 @@ package org.eclipse.aether.connector.basic;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -126,11 +126,11 @@ final class ChecksumCalculator
             return;
         }
 
-        try ( InputStream in = new BufferedInputStream( new FileInputStream( targetFile ) ) )
+        try ( InputStream in = new BufferedInputStream( Files.newInputStream( targetFile.toPath() ) ) )
         {
             long total = 0;
             final byte[] buffer = new byte[ 1024 * 32 ];
-            for ( ; total < dataOffset; )
+            while ( total < dataOffset )
             {
                 int read = in.read( buffer );
                 if ( read < 0 )

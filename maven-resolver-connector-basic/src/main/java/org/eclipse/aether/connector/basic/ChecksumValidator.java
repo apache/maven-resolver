@@ -21,6 +21,7 @@ package org.eclipse.aether.connector.basic;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
@@ -259,6 +260,7 @@ final class ChecksumValidator
             catch ( IOException e )
             {
                 LOGGER.debug( "Failed to write checksum file {}", checksumFile, e );
+                throw new UncheckedIOException( e );
             }
         }
         checksumExpectedValues.clear();

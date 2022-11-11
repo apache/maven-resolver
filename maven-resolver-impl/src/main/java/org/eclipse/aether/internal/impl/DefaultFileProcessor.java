@@ -19,20 +19,23 @@ package org.eclipse.aether.internal.impl;
  * under the License.
  */
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.util.ChecksumUtils;
+import org.eclipse.aether.util.FileUtils;
 
 /**
  * A utility class helping with file-based operations.
@@ -40,7 +43,7 @@ import org.eclipse.aether.util.ChecksumUtils;
 @Singleton
 @Named
 public class DefaultFileProcessor
-    implements FileProcessor
+        implements FileProcessor
 {
 
     /**
@@ -50,7 +53,7 @@ public class DefaultFileProcessor
      *
      * @param directory The directory to create, may be {@code null}.
      * @return {@code true} if and only if the directory was created, along with all necessary parent directories;
-     *         {@code false} otherwise
+     * {@code false} otherwise
      */
     public boolean mkdirs( File directory )
     {
@@ -75,7 +78,7 @@ public class DefaultFileProcessor
         }
         catch ( IOException e )
         {
-            return false;
+            throw new UncheckedIOException( e );
         }
 
         File parentDir = canonDir.getParentFile();
@@ -83,136 +86,41 @@ public class DefaultFileProcessor
     }
 
     public void write( File target, String data )
-        throws IOException
+            throws IOException
     {
-        mkdirs( target.getAbsoluteFile().getParentFile() );
-
-        OutputStream out = null;
-        try
-        {
-            out = new FileOutputStream( target );
-
-            if ( data != null )
-            {
-                out.write( data.getBytes( StandardCharsets.UTF_8 ) );
-            }
-
-            out.close();
-            out = null;
-        }
-        finally
-        {
-            try
-            {
-                if ( out != null )
-                {
-                    out.close();
-                }
-            }
-            catch ( final IOException e )
-            {
-                // Suppressed due to an exception already thrown in the try block.
-            }
-        }
+        FileUtils.writeFile( target.toPath(), p -> Files.write( p, data.getBytes( StandardCharsets.UTF_8 ) ) );
     }
 
     public void write( File target, InputStream source )
-        throws IOException
+            throws IOException
     {
-        mkdirs( target.getAbsoluteFile().getParentFile() );
-
-        OutputStream out = null;
-        try
-        {
-            out = new FileOutputStream( target );
-
-            copy( out, source, null );
-
-            out.close();
-            out = null;
-        }
-        finally
-        {
-            try
-            {
-                if ( out != null )
-                {
-                    out.close();
-                }
-            }
-            catch ( final IOException e )
-            {
-                // Suppressed due to an exception already thrown in the try block.
-            }
-        }
+        FileUtils.writeFile( target.toPath(), p -> Files.copy( source, p ) );
     }
 
     public void copy( File source, File target )
-        throws IOException
+            throws IOException
     {
         copy( source, target, null );
     }
 
     public long copy( File source, File target, ProgressListener listener )
-        throws IOException
+            throws IOException
     {
-        long total = 0L;
-
-        InputStream in = null;
-        OutputStream out = null;
-        try
+        try ( InputStream in = new BufferedInputStream( Files.newInputStream( source.toPath() ) );
+              FileUtils.CollocatedTempFile tempTarget = FileUtils.newTempFile( target.toPath() );
+              OutputStream out = new BufferedOutputStream( Files.newOutputStream( tempTarget.getPath() ) ) )
         {
-            in = new FileInputStream( source );
-
-            mkdirs( target.getAbsoluteFile().getParentFile() );
-
-            out = new FileOutputStream( target );
-
-            total = copy( out, in, listener );
-
-            out.close();
-            out = null;
-
-            in.close();
-            in = null;
+            long result = copy( out, in, listener );
+            tempTarget.move();
+            return result;
         }
-        finally
-        {
-            try
-            {
-                if ( out != null )
-                {
-                    out.close();
-                }
-            }
-            catch ( final IOException e )
-            {
-                // Suppressed due to an exception already thrown in the try block.
-            }
-            finally
-            {
-                try
-                {
-                    if ( in != null )
-                    {
-                        in.close();
-                    }
-                }
-                catch ( final IOException e )
-                {
-                    // Suppressed due to an exception already thrown in the try block.
-                }
-            }
-        }
-
-        return total;
     }
 
     private long copy( OutputStream os, InputStream is, ProgressListener listener )
-        throws IOException
+            throws IOException
     {
         long total = 0L;
-        byte[] buffer = new byte[ 1024 * 32 ];
+        byte[] buffer = new byte[1024 * 32];
         while ( true )
         {
             int bytes = is.read( buffer );
@@ -242,7 +150,7 @@ public class DefaultFileProcessor
     }
 
     public void move( File source, File target )
-        throws IOException
+            throws IOException
     {
         if ( !source.renameTo( target ) )
         {

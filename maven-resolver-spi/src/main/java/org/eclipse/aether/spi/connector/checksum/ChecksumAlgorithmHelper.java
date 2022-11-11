@@ -22,10 +22,10 @@ package org.eclipse.aether.spi.connector.checksum;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +72,7 @@ public final class ChecksumAlgorithmHelper
     public static Map<String, String> calculate( File file, List<ChecksumAlgorithmFactory> factories )
             throws IOException
     {
-        try ( InputStream inputStream = new BufferedInputStream( new FileInputStream( file ) ) )
+        try ( InputStream inputStream = new BufferedInputStream( Files.newInputStream( file.toPath() ) ) )
         {
             return calculate( inputStream, factories );
         }

@@ -533,7 +533,7 @@ final class WagonTransporter
 
                     if ( file != null )
                     {
-                        Files.move( dst.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE );
+                        ( (FileUtils.CollocatedTempFile) tempFile ).move();
                     }
                     else
                     {
