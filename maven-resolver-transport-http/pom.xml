@@ -38,7 +38,7 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.transport.http</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-    <jettyVersion>9.4.46.v20220331</jettyVersion>
+    <jettyVersion>9.4.49.v20220914</jettyVersion>
   </properties>
 
   <dependencies>
@@ -67,6 +67,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.15</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
       <version>4.4.15</version>
@@ -86,7 +91,6 @@
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
-      <classifier>no_aop</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
