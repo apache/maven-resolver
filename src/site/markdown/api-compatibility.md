@@ -95,11 +95,11 @@ of API, SPI, Impl or Connector. Given Resolver had API "frozen" for too long tim
 not a problem, but still weird.
 
 This changes in Maven 3.9+: Maven starting with version 3.9.0 will provide API, SPI, Impl 
-**and Util, Connector**. Reason for this change is that Impl and Connector bundled in Maven 
+**and Util and Connector**. Reason for this change is that Impl and Connector bundled in Maven 
 implements things from both, API and SPI, and there was a binary incompatible change between 
-Resolver 1.8 and previous versions. This implies, that in the simplest case (a Maven plugin), 
-where you'd resolver something using API nothing changes for you. Most Resolver users should 
-not be affected by this change.
+Resolver 1.8.0 and previous versions.
+
+Most Resolver users should not be affected by this change.
 
 The binary incompatible change happened in SPI class `RepositoryLayout` as part of work done for 
 [MRESOLVER-230](https://issues.apache.org/jira/browse/MRESOLVER-230), and affects both, Connector
