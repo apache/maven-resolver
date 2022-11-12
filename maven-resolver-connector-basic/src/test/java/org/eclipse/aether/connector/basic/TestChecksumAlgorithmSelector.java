@@ -22,7 +22,9 @@ package org.eclipse.aether.connector.basic;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -31,6 +33,8 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySupport;
 import org.eclipse.aether.util.ChecksumUtils;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Test implementation of {@link ChecksumAlgorithmFactorySelector}.
@@ -84,6 +88,14 @@ public class TestChecksumAlgorithmSelector
             };
         }
         return new MessageDigestChecksumAlgorithmFactory( algorithm );
+    }
+
+    @Override
+    public List<ChecksumAlgorithmFactory> selectList( Collection<String> algorithmNames )
+    {
+        return algorithmNames.stream()
+                .map( this::select )
+                .collect( toList() );
     }
 
     private static class MessageDigestChecksumAlgorithmFactory

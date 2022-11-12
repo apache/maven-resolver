@@ -330,22 +330,19 @@
                     <exclude>org.eclipse.aether.collection.CollectStepData</exclude>
                     <exclude>org.eclipse.aether.collection.DependencyCollectionContext</exclude>
                     <exclude>org.eclipse.aether.collection.DependencyGraphTransformationContext</exclude>
-                    <exclude>org.eclipse.aether.collection.VersionFilter</exclude>
+                    <exclude>org.eclipse.aether.collection.VersionFilter.VersionFilterContext</exclude>
                     <exclude>org.eclipse.aether.graph.DependencyCycle</exclude>
                     <exclude>org.eclipse.aether.graph.DependencyNode</exclude>
                     <exclude>org.eclipse.aether.metadata.Metadata</exclude>
                     <exclude>org.eclipse.aether.repository.ArtifactRepository</exclude>
                     <exclude>org.eclipse.aether.transfer.TransferListener</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.transport.TransporterProvider</exclude>
                   </excludes>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
                   <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
-                  <overrideCompatibilityChangeParameters>
-                    <overrideCompatibilityChangeParameter>
-                      <compatibilityChange>METHOD_NEW_DEFAULT</compatibilityChange>
-                      <binaryCompatible>true</binaryCompatible>
-                      <sourceCompatible>true</sourceCompatible>
-                    </overrideCompatibilityChangeParameter>
-                  </overrideCompatibilityChangeParameters>
                 </parameter>
               </configuration>
             </execution>
@@ -359,13 +356,6 @@
                 <parameter>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
                   <breakBuildOnSourceIncompatibleModifications>false</breakBuildOnSourceIncompatibleModifications>
-                  <overrideCompatibilityChangeParameters>
-                    <overrideCompatibilityChangeParameter>
-                      <compatibilityChange>METHOD_NEW_DEFAULT</compatibilityChange>
-                      <binaryCompatible>true</binaryCompatible>
-                      <sourceCompatible>true</sourceCompatible>
-                    </overrideCompatibilityChangeParameter>
-                  </overrideCompatibilityChangeParameters>
                 </parameter>
               </configuration>
             </execution>

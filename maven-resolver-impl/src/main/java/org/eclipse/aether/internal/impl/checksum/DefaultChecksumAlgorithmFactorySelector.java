@@ -24,6 +24,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,14 @@ public class DefaultChecksumAlgorithmFactorySelector
             );
         }
         return factory;
+    }
+
+    @Override
+    public List<ChecksumAlgorithmFactory> selectList( Collection<String> algorithmNames )
+    {
+        return algorithmNames.stream()
+                .map( this::select )
+                .collect( toList() );
     }
 
     @Override
