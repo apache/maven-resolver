@@ -41,6 +41,17 @@
     <jettyVersion>9.4.49.v20220914</jettyVersion>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <!-- HttpClient pulls in 1.11 that has CVE. Is not used directly in code -->
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.15</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
@@ -65,11 +76,6 @@
           <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.15</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
