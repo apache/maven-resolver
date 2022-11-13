@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Maven Resolver exposes 3 modules for clients and those extending Maven Resolver:
+Maven Resolver exposes three modules for clients and those extending Maven Resolver:
 * maven-resolver-api (in short API) -- for clients and those extending it
 * maven-resolver-spi (in short SPI) -- for those extending it
 * maven-resolver-util (in short Util) -- for client and those extending it
