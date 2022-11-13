@@ -312,24 +312,54 @@
                 <type>${project.packaging}</type>
               </dependency>
             </oldVersion>
-            <parameter>
-              <onlyBinaryIncompatible>true</onlyBinaryIncompatible>
-              <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
-              <overrideCompatibilityChangeParameters>
-                <overrideCompatibilityChangeParameter>
-                  <compatibilityChange>METHOD_NEW_DEFAULT</compatibilityChange>
-                  <binaryCompatible>true</binaryCompatible>
-                  <sourceCompatible>false</sourceCompatible>
-                </overrideCompatibilityChangeParameter>
-              </overrideCompatibilityChangeParameters>
-            </parameter>
           </configuration>
           <executions>
             <execution>
+              <id>default-source-cmp</id>
               <phase>verify</phase>
               <goals>
                 <goal>cmp</goal>
               </goals>
+              <configuration>
+                <parameter>
+                  <excludes>
+                    <exclude>org.eclipse.aether.RepositoryListener</exclude>
+                    <exclude>org.eclipse.aether.RepositorySystem</exclude>
+                    <exclude>org.eclipse.aether.RepositorySystemSession</exclude>
+                    <exclude>org.eclipse.aether.SessionData</exclude>
+                    <exclude>org.eclipse.aether.artifact.Artifact</exclude>
+                    <exclude>org.eclipse.aether.artifact.ArtifactType</exclude>
+                    <exclude>org.eclipse.aether.collection.CollectStepData</exclude>
+                    <exclude>org.eclipse.aether.collection.DependencyCollectionContext</exclude>
+                    <exclude>org.eclipse.aether.collection.DependencyGraphTransformationContext</exclude>
+                    <exclude>org.eclipse.aether.collection.VersionFilter.VersionFilterContext</exclude>
+                    <exclude>org.eclipse.aether.graph.DependencyCycle</exclude>
+                    <exclude>org.eclipse.aether.graph.DependencyNode</exclude>
+                    <exclude>org.eclipse.aether.metadata.Metadata</exclude>
+                    <exclude>org.eclipse.aether.repository.ArtifactRepository</exclude>
+                    <exclude>org.eclipse.aether.transfer.TransferListener</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.transport.TransporterProvider</exclude>
+                  </excludes>
+                  <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
+                  <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+                </parameter>
+              </configuration>
+            </execution>
+            <execution>
+              <id>default-binary-cmp</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>cmp</goal>
+              </goals>
+              <configuration>
+                <parameter>
+                  <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+                  <breakBuildOnSourceIncompatibleModifications>false</breakBuildOnSourceIncompatibleModifications>
+                </parameter>
+              </configuration>
             </execution>
           </executions>
         </plugin>

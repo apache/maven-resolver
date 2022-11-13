@@ -26,6 +26,7 @@ under the License.
   <body>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
+      <item name="API Compatibility" href="api-compatibility.html"/>
       <item name="Configuration" href="configuration.html"/>
       <item name="About Checksums" href="about-checksums.html"/>
       <item name="About Local Repository" href="local-repository.html"/>

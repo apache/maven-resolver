@@ -44,6 +44,7 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
@@ -92,6 +93,14 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
                     return checksumAlgorithmFactory;
                 }
                 throw new IllegalArgumentException("no alg factory for " + algorithmName);
+            }
+
+            @Override
+            public List<ChecksumAlgorithmFactory> selectList( Collection<String> algorithmNames )
+            {
+                return algorithmNames.stream()
+                        .map( this::select )
+                        .collect( toList() );
             }
 
             @Override
