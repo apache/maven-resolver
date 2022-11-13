@@ -46,10 +46,10 @@ To use this implementation within your project, depending on how you integrate, 
 
 ${esc.hash}${esc.hash} Installation/Testing
 
-#set( $jacksonVersion = "2.13.3" )
+#set( $jacksonVersion = "2.13.4" )
 #set( $jbossMarshallingVersion = "2.0.11.Final" )
-#set( $nettyVersion = "4.1.79.Final" )
-#set( $snakeyamlVersion = "1.30" )
+#set( $nettyVersion = "4.1.82.Final" )
+#set( $snakeyamlVersion = "1.31" )
 
 - Create the directory `${maven.home}/lib/ext/redisson/`.
 - Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/redisson/*.jar`

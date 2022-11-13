@@ -39,7 +39,7 @@
     <Automatic-Module-Name>org.apache.maven.resolver.named.redisson</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
     <!-- Used in site also -->
-    <redissonVersion>3.17.5</redissonVersion>
+    <redissonVersion>3.17.7</redissonVersion>
   </properties>
 
   <dependencies>
