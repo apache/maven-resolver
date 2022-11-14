@@ -50,13 +50,14 @@ import org.slf4j.LoggerFactory;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Default implementation of {@link NamedLockFactoryAdapterFactory}. By default, this implementation creates
- * instance of adapter for each call. In turn, on shutdown it cleanly invokes shutdown method of all existing named
- * lock factories. If different behavior needed, override the {@link #getAdapter(RepositorySystemSession)} method.
+ * Default implementation of {@link NamedLockFactoryAdapterFactory}. This implementation creates new instances of the
+ * adapter on every call. In turn, on shutdown, it will shut down all existing named lock factories. This is merely for
+ * simplicity, to not have to track "used" named lock factories, while it exposes all available named lock factories to
+ * callers.
  * <p>
- * This class most members and methods are protected, and is meant to be extended if needed to customize its behavior.
- * Exception from this are private static constants and initializers, mostly meant to provide out of the box
- * defaults and to be used when no Eclipse Sisu component container used.
+ * Most members and methods of this class are protected. It is meant to be extended in case of need to customize its
+ * behavior. An exception from this are private static methods, mostly meant to provide out of the box
+ * defaults and to be used when no Eclipse Sisu component container is used.
  *
  * @since 1.9.1
  */

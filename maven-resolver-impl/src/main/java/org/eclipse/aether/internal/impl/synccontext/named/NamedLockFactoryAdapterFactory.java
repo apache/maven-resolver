@@ -31,9 +31,9 @@ public interface NamedLockFactoryAdapterFactory
     /**
      * Creates or returns pre-created {@link NamedLockFactoryAdapter}, never {@code null}.
      * <p>
-     * It is left at discretion of implementation what happens on this method call, it may create always new
-     * instance, or return the same instance. One thing MUST for implementation: to properly shut down
-     * any name lock factory it used to create adapter instance.
+     * It is left at the discretion of the implementation what happens on this method call: it may create always new
+     * instances, or return the same instance. One thing is required for the implementation: to shut down any name
+     * lock factory it used during any invocation of this method.
      */
     NamedLockFactoryAdapter getAdapter( RepositorySystemSession session );
 }
