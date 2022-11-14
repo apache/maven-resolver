@@ -75,7 +75,7 @@ public abstract class NamedLockFactoryAdapterTestSupport
     {
         if ( adapter != null )
         {
-            adapter.shutdown();
+            adapter.getNamedLockFactory().shutdown();
         }
 
         utils.cleanup();

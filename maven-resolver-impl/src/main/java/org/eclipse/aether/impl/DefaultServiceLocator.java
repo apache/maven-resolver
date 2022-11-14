@@ -60,6 +60,8 @@ import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactoryImpl;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
@@ -231,6 +233,7 @@ public final class DefaultServiceLocator
         addService( LocalPathComposer.class, DefaultLocalPathComposer.class );
         addService( RemoteRepositoryFilterManager.class, DefaultRemoteRepositoryFilterManager.class );
         addService( RepositorySystemLifecycle.class, DefaultRepositorySystemLifecycle.class );
+        addService( NamedLockFactoryAdapterFactory.class, NamedLockFactoryAdapterFactoryImpl.class );
     }
 
     private <T> Entry<T> getEntry( Class<T> type, boolean create )

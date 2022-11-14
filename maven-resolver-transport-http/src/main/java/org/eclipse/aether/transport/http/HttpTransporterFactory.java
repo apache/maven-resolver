@@ -42,14 +42,12 @@ import static java.util.Objects.requireNonNull;
 public final class HttpTransporterFactory
     implements TransporterFactory
 {
-    private static final Map<String, ChecksumExtractor> EXTRACTORS;
-
-    static
+    private static Map<String, ChecksumExtractor> getManuallyCreatedExtractors()
     {
         HashMap<String, ChecksumExtractor> map = new HashMap<>();
         map.put( Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor() );
         map.put( XChecksumChecksumExtractor.NAME, new XChecksumChecksumExtractor() );
-        EXTRACTORS = Collections.unmodifiableMap( map );
+        return Collections.unmodifiableMap( map );
     }
 
     private float priority = 5.0f;
@@ -62,7 +60,7 @@ public final class HttpTransporterFactory
     @Deprecated
     public HttpTransporterFactory()
     {
-        this( EXTRACTORS );
+        this( getManuallyCreatedExtractors() );
     }
 
     /**
