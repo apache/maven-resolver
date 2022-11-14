@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -455,9 +456,7 @@ final class BasicRepositoryConnector
         protected void runTask()
                 throws Exception
         {
-            fileProcessor.mkdirs( file.getParentFile() );
-
-            try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( file.toPath() ) )
+            try ( FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile( file.toPath() ) )
             {
                 final File tmp = tempFile.getPath().toFile();
                 listener.setChecksumCalculator( checksumValidator.newChecksumCalculator( tmp ) );
@@ -489,7 +488,7 @@ final class BasicRepositoryConnector
                         }
                     }
                 }
-                fileProcessor.move( tmp, file );
+                tempFile.move();
                 if ( persistedChecksums )
                 {
                     checksumValidator.commit();
@@ -602,6 +601,7 @@ final class BasicRepositoryConnector
             catch ( IOException e )
             {
                 LOGGER.warn( "Failed to upload checksums for {}", file, e );
+                throw new UncheckedIOException( e );
             }
         }
 

@@ -24,6 +24,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -111,9 +112,10 @@ public final class SparseDirectoryTrustedChecksumsSource
                 }
                 catch ( IOException e )
                 {
-                    // unexpected, log, skip
+                    // unexpected, log
                     LOGGER.warn( "Could not read artifact '{}' trusted checksum on path '{}'", artifact, checksumPath,
                             e );
+                    throw new UncheckedIOException( e );
                 }
             }
         }

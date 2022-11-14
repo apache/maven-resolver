@@ -20,8 +20,7 @@ package org.eclipse.aether.transport.file;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.nio.file.Files;
 
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
@@ -80,7 +79,7 @@ final class FileTransporter
         throws Exception
     {
         File file = getFile( task, true );
-        utilGet( task, new FileInputStream( file ), true, file.length(), false );
+        utilGet( task, Files.newInputStream( file.toPath() ), true, file.length(), false );
     }
 
     @Override
@@ -91,7 +90,7 @@ final class FileTransporter
         file.getParentFile().mkdirs();
         try
         {
-            utilPut( task, new FileOutputStream( file ), true );
+            utilPut( task, Files.newOutputStream( file.toPath() ), true );
         }
         catch ( Exception e )
         {

@@ -21,11 +21,11 @@ package org.eclipse.aether.spi.connector.transport;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 /**
  * A task to upload a resource to the remote repository.
@@ -62,7 +62,7 @@ public final class PutTask
     {
         if ( dataFile != null )
         {
-            return new FileInputStream( dataFile );
+            return Files.newInputStream( dataFile.toPath() );
         }
         return new ByteArrayInputStream( dataBytes );
     }

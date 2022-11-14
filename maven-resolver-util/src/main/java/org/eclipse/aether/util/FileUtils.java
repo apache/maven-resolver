@@ -44,7 +44,21 @@ public final class FileUtils
      */
     public interface TempFile extends Closeable
     {
+        /**
+         * Returns the path of the created temp file.
+         */
         Path getPath();
+    }
+
+    /**
+     * A collocated temporary file, that resides next to a "target" file, and is removed when closed.
+     */
+    public interface CollocatedTempFile extends TempFile
+    {
+        /**
+         * Atomically moves temp file to target file it is collocated with.
+         */
+        void move() throws IOException;
     }
 
     /**
@@ -73,18 +87,27 @@ public final class FileUtils
     /**
      * Creates a {@link TempFile} for given file. It will be in same directory where given file is, and will reuse its
      * name for generated name. Returned instance should be handled in try-with-resource construct and created temp
-     * file is removed on close, if exists.
+     * file once ready can be moved to passed in {@code file} parameter place.
+     * <p>
+     * The {@code file} nor it's parent directories have to exist. The parent directories are created if needed.
      */
-    public static TempFile newTempFile( Path file ) throws IOException
+    public static CollocatedTempFile newTempFile( Path file ) throws IOException
     {
-        requireNonNull( file.getParent(), "file must have parent" );
-        Path tempFile = Files.createTempFile( file.getParent(), file.getFileName().toString(), "tmp" );
-        return new TempFile()
+        Path parent = requireNonNull( file.getParent(), "file must have parent" );
+        Files.createDirectories( parent );
+        Path tempFile = Files.createTempFile( parent, file.getFileName().toString(), "tmp" );
+        return new CollocatedTempFile()
         {
             @Override
             public Path getPath()
             {
                 return tempFile;
+            }
+
+            @Override
+            public void move() throws IOException
+            {
+                Files.move( tempFile, file, StandardCopyOption.ATOMIC_MOVE );
             }
 
             @Override
@@ -144,26 +167,16 @@ public final class FileUtils
         requireNonNull( target, "target is null" );
         requireNonNull( writer, "writer is null" );
         Path parent = requireNonNull( target.getParent(), "target must have parent" );
-        Path temp = null;
 
-        Files.createDirectories( parent );
-        try
+        try ( CollocatedTempFile tempFile = newTempFile( target ) )
         {
-            temp = Files.createTempFile( parent, "writer", "tmp" );
-            writer.write( temp );
+            writer.write( tempFile.getPath() );
             if ( doBackup && Files.isRegularFile( target ) )
             {
                 Files.copy( target, parent.resolve( target.getFileName() + ".bak" ),
                         StandardCopyOption.REPLACE_EXISTING );
             }
-            Files.move( temp, target, StandardCopyOption.ATOMIC_MOVE );
-        }
-        finally
-        {
-            if ( temp != null )
-            {
-                Files.deleteIfExists( temp );
-            }
+            tempFile.move();
         }
     }
 }

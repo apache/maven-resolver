@@ -28,7 +28,14 @@ import java.util.Properties;
  */
 public interface TrackingFileManager
 {
+    /**
+     * Reads up the specified properties file into {@link Properties}, if exists, otherwise {@code null} is returned.
+     */
     Properties read( File file );
 
+    /**
+     * Applies updates to specified properties file and returns resulting {@link Properties} with contents same
+     * as in updated file, never {@code null}.
+     */
     Properties update( File file, Map<String, String> updates );
 }

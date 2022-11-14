@@ -611,7 +611,7 @@ final class HttpTransporter
             }
             else
             {
-                try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( dataFile.toPath() ) )
+                try ( FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile( dataFile.toPath() ) )
                 {
                     task.setDataFile( tempFile.getPath().toFile(), resume );
                     if ( resume && Files.isRegularFile( dataFile.toPath() ) )
@@ -625,7 +625,7 @@ final class HttpTransporter
                     {
                         utilGet( task, is, true, length, resume );
                     }
-                    Files.move( tempFile.getPath(), dataFile.toPath(), StandardCopyOption.ATOMIC_MOVE );
+                    tempFile.move();
                 }
                 finally
                 {
