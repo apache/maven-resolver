@@ -21,9 +21,11 @@ package org.eclipse.aether.internal.impl;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.internal.impl.DefaultFileProcessor;
@@ -121,6 +123,37 @@ public class DefaultFileProcessorTest
         assertTrue( "file was not created", target.isFile() );
         assertEquals( "file was not fully copied", 4L, target.length() );
         assertEquals( "listener not called", 4, progressed.intValue() );
+        target.delete();
+    }
+
+    @Test
+    public void testWrite()
+            throws IOException
+    {
+        String data = "testCopy\nasdf";
+        File target = new File( targetDir, "testWrite.txt" );
+
+        fileProcessor.write( target, data );
+
+        assertEquals( data, TestFileUtils.readString( target ) );
+
+        target.delete();
+    }
+
+    /**
+     * Used ONLY when FileProcessor present, never otherwise.
+     */
+    @Test
+    public void testWriteStream()
+            throws IOException
+    {
+        String data = "testCopy\nasdf";
+        File target = new File( targetDir, "testWriteStream.txt" );
+
+        fileProcessor.write( target, new ByteArrayInputStream( data.getBytes( StandardCharsets.UTF_8 ) ) );
+
+        assertEquals( data, TestFileUtils.readString( target ) );
+
         target.delete();
     }
 
