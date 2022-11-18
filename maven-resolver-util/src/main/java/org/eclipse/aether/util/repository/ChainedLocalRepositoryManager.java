@@ -179,7 +179,7 @@ public final class ChainedLocalRepositoryManager
         }
 
         Path file = new File( head.getRepository().getBasedir(), metadataPath ).toPath();
-        if ( Files.isDirectory( file ) )
+        if ( Files.isRegularFile( file ) )
         {
             head.add( session, request );
         }
