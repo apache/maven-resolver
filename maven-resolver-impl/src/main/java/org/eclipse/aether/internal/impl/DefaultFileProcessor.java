@@ -32,6 +32,7 @@ import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.util.ChecksumUtils;
@@ -94,7 +95,7 @@ public class DefaultFileProcessor
     public void write( File target, InputStream source )
             throws IOException
     {
-        FileUtils.writeFile( target.toPath(), p -> Files.copy( source, p ) );
+        FileUtils.writeFile( target.toPath(), p -> Files.copy( source, p, StandardCopyOption.REPLACE_EXISTING ) );
     }
 
     public void copy( File source, File target )

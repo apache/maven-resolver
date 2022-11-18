@@ -119,7 +119,9 @@ public final class FileUtils
     }
 
     /**
-     * A file writer, that accepts a {@link Path} to write some content to.
+     * A file writer, that accepts a {@link Path} to write some content to. Note: the file denoted by path may exist,
+     * hence implementation have to ensure it is able to achieve its goal ("replace existing" option or equivalent
+     * should be used).
      */
     @FunctionalInterface
     public interface FileWriter
