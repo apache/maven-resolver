@@ -41,9 +41,10 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 /**
- * A local repository manager that chains multiple local repository managers: it writes only to chain head, while uses
- * tail for {@link #find(RepositorySystemSession, LocalArtifactRequest)} and
- * {@link #find(RepositorySystemSession, LocalMetadataRequest)} method.
+ * A local repository manager that chains multiple local repository managers: it directs all the write operations
+ * to chain head, while uses tail for {@link #find(RepositorySystemSession, LocalArtifactRequest)} and
+ * {@link #find(RepositorySystemSession, LocalMetadataRequest)} methods only. Hence,
+ * tail is used in resolving artifacts with or without (configurable) artifact availability tracking only.
  * <p>
  * Implementation represents itself using the head local repository manager.
  *
