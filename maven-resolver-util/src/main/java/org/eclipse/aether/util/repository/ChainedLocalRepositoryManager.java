@@ -48,7 +48,7 @@ import static java.util.stream.Collectors.toList;
  * <p>
  * Implementation represents itself using the head local repository manager.
  *
- * @since TBD
+ * @since 1.9.2
  */
 public final class ChainedLocalRepositoryManager
         implements LocalRepositoryManager
