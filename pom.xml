@@ -97,6 +97,7 @@
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-http</module>
+    <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-demos</module>
   </modules>
