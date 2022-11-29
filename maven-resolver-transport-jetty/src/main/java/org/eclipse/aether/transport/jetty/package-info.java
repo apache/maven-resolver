@@ -18,8 +18,7 @@
  * under the License.
  */
 /**
- * Support for downloads/uploads via the HTTP and HTTPS protocols. The current implementation is backed by
- * <a href="http://hc.apache.org/httpcomponents-client-ga/" target="_blank">Apache HttpClient</a>.
+ * Support for downloads/uploads via the HTTP and HTTPS protocols using Jetty Client.
  */
 package org.eclipse.aether.transport.jetty;
 

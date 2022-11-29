@@ -8,9 +8,9 @@ package org.eclipse.aether.transport.jetty;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,20 +19,19 @@ package org.eclipse.aether.transport.jetty;
  * under the License.
  */
 
-import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.eclipse.jetty.client.api.ContentResponse;
-
 import javax.inject.Named;
 import javax.inject.Singleton;
+
 import java.util.Collections;
 import java.util.Map;
+
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.http.HttpHeader;
 
 /**
  * A component extracting Nexus2 ETag "shielded" style-checksums from response headers.
  *
- * @since 1.8.0
+ * @since 1.9.3
  */
 @Singleton
 @Named( Nexus2ChecksumExtractor.NAME )
@@ -42,11 +41,10 @@ public class Nexus2ChecksumExtractor
     public static final String NAME = "nexus2";
 
     @Override
-    public Map<String, String> extractChecksums( ContentResponse response )
+    public Map<String, String> extractChecksums( Response response )
     {
         // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
-        Header header = response.getFirstHeader( HttpHeaders.ETAG );
-        String etag = header != null ? header.getValue() : null;
+        String etag = response.getHeaders().get( HttpHeader.ETAG );
         if ( etag != null )
         {
             int start = etag.indexOf( "SHA1{" ), end = etag.indexOf( "}", start + 5 );

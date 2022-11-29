@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
  * support uploads to WebDAV servers and resumable downloads.
  */
 @Named( "jetty" )
-public final class HttpTransporterFactory
+public final class JettyTransporterFactory
     implements TransporterFactory
 {
     private static Map<String, ChecksumExtractor> getManuallyCreatedExtractors()
@@ -58,7 +58,7 @@ public final class HttpTransporterFactory
      * Ctor for ServiceLocator.
      */
     @Deprecated
-    public HttpTransporterFactory()
+    public JettyTransporterFactory()
     {
         this( getManuallyCreatedExtractors() );
     }
@@ -69,7 +69,7 @@ public final class HttpTransporterFactory
      * will occur.
      */
     @Inject
-    public HttpTransporterFactory( Map<String, ChecksumExtractor> extractors )
+    public JettyTransporterFactory( Map<String, ChecksumExtractor> extractors )
     {
         this.extractors = requireNonNull( extractors );
     }
@@ -86,7 +86,7 @@ public final class HttpTransporterFactory
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */
-    public HttpTransporterFactory setPriority( float priority )
+    public JettyTransporterFactory setPriority( float priority )
     {
         this.priority = priority;
         return this;
@@ -99,7 +99,7 @@ public final class HttpTransporterFactory
         requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
 
-        return new HttpTransporter( extractors, repository, session );
+        return new JettyTransporter( extractors, repository, session );
     }
 
 }

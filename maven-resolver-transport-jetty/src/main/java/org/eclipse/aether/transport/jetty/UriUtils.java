@@ -8,9 +8,9 @@ package org.eclipse.aether.transport.jetty;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,8 +23,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.http.client.utils.URIUtils;
 
 /**
  * Helps to deal with URIs.
@@ -50,7 +48,7 @@ final class UriUtils
                 }
             }
         }
-        return URIUtils.resolve( base, ref );
+        return base.resolve( ref );
     }
 
     public static List<URI> getDirectories( URI base, URI uri )

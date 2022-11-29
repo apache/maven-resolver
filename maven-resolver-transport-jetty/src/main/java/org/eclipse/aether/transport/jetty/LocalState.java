@@ -8,9 +8,9 @@ package org.eclipse.aether.transport.jetty;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,13 +19,8 @@ package org.eclipse.aether.transport.jetty;
  * under the License.
  */
 
-import java.io.Closeable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScheme;
-import org.apache.http.conn.HttpClientConnectionManager;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -34,128 +29,41 @@ import org.eclipse.aether.repository.RemoteRepository;
  * communication with server.
  */
 final class LocalState
-    implements Closeable
 {
-    private final GlobalState global;
+    private static final String EXPECT_CONTINUE_KEY = LocalState.class.getName() + ".expectContinue.";
 
-    private final HttpClientConnectionManager connMgr;
+    private static final String WEBDAV_KEY = LocalState.class.getName() + ".webDav.";
 
-    private final GlobalState.CompoundKey userTokenKey;
+    private final AtomicReference<Boolean> expectContinue;
 
-    private volatile Object userToken;
+    private final AtomicReference<Boolean> webDav;
 
-    private final GlobalState.CompoundKey expectContinueKey;
-
-    private volatile Boolean expectContinue;
-
-    private volatile Boolean webDav;
-
-    private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
-
-    LocalState( RepositorySystemSession session, RemoteRepository repo, SslConfig sslConfig )
+    @SuppressWarnings( "unchecked" )
+    LocalState( RepositorySystemSession session, RemoteRepository repo )
     {
-        global = GlobalState.get( session );
-        userToken = this;
-        if ( global == null )
-        {
-            connMgr = GlobalState.newConnectionManager( sslConfig );
-            userTokenKey = null;
-            expectContinueKey = null;
-            authSchemePools = new ConcurrentHashMap<>();
-        }
-        else
-        {
-            connMgr = global.getConnectionManager( sslConfig );
-            userTokenKey = new GlobalState.CompoundKey( repo.getId(), repo.getUrl(), repo.getAuthentication(), repo.getProxy() );
-            expectContinueKey = new GlobalState.CompoundKey( repo.getUrl(), repo.getProxy() );
-            authSchemePools = global.getAuthSchemePools();
-        }
-    }
-
-    public HttpClientConnectionManager getConnectionManager()
-    {
-        return connMgr;
-    }
-
-    public Object getUserToken()
-    {
-        if ( userToken == this )
-        {
-            userToken = ( global != null ) ? global.getUserToken( userTokenKey ) : null;
-        }
-        return userToken;
-    }
-
-    public void setUserToken( Object userToken )
-    {
-        this.userToken = userToken;
-        if ( global != null )
-        {
-            global.setUserToken( userTokenKey, userToken );
-        }
+        this.expectContinue = (AtomicReference<Boolean>) session.getData()
+                .computeIfAbsent( EXPECT_CONTINUE_KEY + repo.getId(), () -> new AtomicReference<>( null ) );
+        this.webDav = (AtomicReference<Boolean>) session.getData()
+                .computeIfAbsent( WEBDAV_KEY + repo.getId(), () -> new AtomicReference<>( null ) );
     }
 
     public boolean isExpectContinue()
     {
-        if ( expectContinue == null )
-        {
-            expectContinue =
-                !Boolean.FALSE.equals( ( global != null ) ? global.getExpectContinue( expectContinueKey ) : null );
-        }
-        return expectContinue;
+        return !Boolean.FALSE.equals( this.expectContinue.get() );
     }
 
     public void setExpectContinue( boolean enabled )
     {
-        expectContinue = enabled;
-        if ( global != null )
-        {
-            global.setExpectContinue( expectContinueKey, enabled );
-        }
+        this.expectContinue.set( enabled );
     }
 
     public Boolean getWebDav()
     {
-        return webDav;
+        return webDav.get();
     }
 
     public void setWebDav( boolean webDav )
     {
-        this.webDav = webDav;
+        this.webDav.set( webDav );
     }
-
-    public AuthScheme getAuthScheme( HttpHost host )
-    {
-        AuthSchemePool pool = authSchemePools.get( host );
-        if ( pool != null )
-        {
-            return pool.get();
-        }
-        return null;
-    }
-
-    public void setAuthScheme( HttpHost host, AuthScheme authScheme )
-    {
-        AuthSchemePool pool = authSchemePools.get( host );
-        if ( pool == null )
-        {
-            AuthSchemePool p = new AuthSchemePool();
-            pool = authSchemePools.putIfAbsent( host, p );
-            if ( pool == null )
-            {
-                pool = p;
-            }
-        }
-        pool.put( authScheme );
-    }
-
-    @Override
-    public void close()
-    {
-        if ( global == null )
-        {
-            connMgr.shutdown();
-        }
-    }
-
 }
