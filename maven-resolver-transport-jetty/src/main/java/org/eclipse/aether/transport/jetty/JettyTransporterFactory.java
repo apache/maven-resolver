@@ -35,16 +35,10 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
-import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http2.client.HTTP2Client;
-import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.http3.client.HTTP3Client;
-import org.eclipse.jetty.http3.client.http.ClientConnectionFactoryOverHTTP3;
-import org.eclipse.jetty.io.ClientConnectionFactory;
-import org.eclipse.jetty.io.ClientConnector;
+import org.eclipse.jetty.http3.client.http.HttpClientTransportOverHTTP3;
 
 import static java.util.Objects.requireNonNull;
 
@@ -139,18 +133,19 @@ public final class JettyTransporterFactory
                             ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
                             ConfigurationProperties.CONNECT_TIMEOUT );
 
-                    ClientConnector connector = new ClientConnector();
-                    ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
-                    HTTP2Client http2Client = new HTTP2Client( connector );
-                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 =
-                            new ClientConnectionFactoryOverHTTP2.HTTP2( http2Client );
+//                    ClientConnector connector = new ClientConnector();
+//                    ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
+//                    HTTP2Client http2Client = new HTTP2Client( connector );
+//                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 =
+//                            new ClientConnectionFactoryOverHTTP2.HTTP2( http2Client );
                     HTTP3Client h3Client = new HTTP3Client();
-                    ClientConnectionFactoryOverHTTP3.HTTP3 http3 =
-                            new ClientConnectionFactoryOverHTTP3.HTTP3( h3Client );
-                    HttpClientTransportDynamic transport =
-                            new HttpClientTransportDynamic( connector, http3, http2, http1 );
+                    h3Client.getQuicConfiguration().setSessionRecvWindow( 64 * 1024 * 1024 );
+                    HttpClientTransportOverHTTP3 http3 =
+                            new HttpClientTransportOverHTTP3( h3Client );
+//                    HttpClientTransportDynamic transport =
+//                            new HttpClientTransportDynamic( connector, http3, http2, http1 );
 
-                    HttpClient client = new HttpClient( transport );
+                    HttpClient client = new HttpClient( http3 );
                     client.setConnectTimeout( connectTimeout );
                     client.setUserAgentField( new HttpField( HttpHeader.USER_AGENT, userAgent ) );
                     client.setFollowRedirects( false );
