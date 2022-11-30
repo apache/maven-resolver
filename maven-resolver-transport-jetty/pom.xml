@@ -37,9 +37,11 @@
 
   <properties>
     <javaVersion>11</javaVersion>
+    <maven.compiler.release>${javaVersion}</maven.compiler.release>
+    <maven.compiler.source>${javaVersion}</maven.compiler.source>
     <minimalMavenBuildVersion>3.8.6</minimalMavenBuildVersion>
     <!-- Must build with Java11 (otherwise Jetty QUIC profile triggers and pulls in Java17 dep) -->
-    <minimalJavaBuildVersion>[11,)</minimalJavaBuildVersion>
+    <minimalJavaBuildVersion>[11,12)</minimalJavaBuildVersion>
 
     <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>

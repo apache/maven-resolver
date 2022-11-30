@@ -26,11 +26,25 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.StringDigestUtil;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
+import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http2.client.HTTP2Client;
+import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
+import org.eclipse.jetty.http3.client.HTTP3Client;
+import org.eclipse.jetty.http3.client.http.ClientConnectionFactoryOverHTTP3;
+import org.eclipse.jetty.io.ClientConnectionFactory;
+import org.eclipse.jetty.io.ClientConnector;
 
 import static java.util.Objects.requireNonNull;
 
@@ -40,8 +54,10 @@ import static java.util.Objects.requireNonNull;
  */
 @Named( "jetty" )
 public final class JettyTransporterFactory
-    implements TransporterFactory
+        implements TransporterFactory
 {
+    private static final String CLIENT_KEY_PREFIX = JettyTransporterFactory.class.getName() + ".client.";
+
     private static Map<String, ChecksumExtractor> getManuallyCreatedExtractors()
     {
         HashMap<String, ChecksumExtractor> map = new HashMap<>();
@@ -94,12 +110,68 @@ public final class JettyTransporterFactory
 
     @Override
     public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
-        throws NoTransporterException
+            throws NoTransporterException
     {
         requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
 
-        return new JettyTransporter( extractors, repository, session );
-    }
+        if ( !"http".equalsIgnoreCase( repository.getProtocol() )
+                && !"https".equalsIgnoreCase( repository.getProtocol() ) )
+        {
+            throw new NoTransporterException( repository );
+        }
 
+        final String clientKey = CLIENT_KEY_PREFIX
+                + StringDigestUtil.sha1( repository.getId() + repository.getUrl() );
+
+        try
+        {
+            HttpClient httpClient = (HttpClient) session.getData().computeIfAbsent( clientKey, () ->
+            {
+                try
+                {
+                    String userAgent = ConfigUtils.getString( session,
+                            ConfigurationProperties.DEFAULT_USER_AGENT,
+                            ConfigurationProperties.USER_AGENT );
+
+                    int connectTimeout = ConfigUtils.getInteger( session,
+                            ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                            ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                            ConfigurationProperties.CONNECT_TIMEOUT );
+
+                    ClientConnector connector = new ClientConnector();
+                    ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
+                    HTTP2Client http2Client = new HTTP2Client( connector );
+                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 =
+                            new ClientConnectionFactoryOverHTTP2.HTTP2( http2Client );
+                    HTTP3Client h3Client = new HTTP3Client();
+                    ClientConnectionFactoryOverHTTP3.HTTP3 http3 =
+                            new ClientConnectionFactoryOverHTTP3.HTTP3( h3Client );
+                    HttpClientTransportDynamic transport =
+                            new HttpClientTransportDynamic( connector, http3, http2, http1 );
+
+                    HttpClient client = new HttpClient( transport );
+                    client.setConnectTimeout( connectTimeout );
+                    client.setUserAgentField( new HttpField( HttpHeader.USER_AGENT, userAgent ) );
+                    client.setFollowRedirects( false );
+
+                    client.start();
+
+                    return client;
+                }
+                catch ( Exception e )
+                {
+                    throw new IllegalStateException( e );
+                }
+            } );
+
+            return new JettyTransporter( extractors, httpClient, repository, session );
+        }
+        catch ( IllegalStateException e )
+        {
+            throw new NoTransporterException( repository, e );
+        }
+
+        // TODO: cleanly stop clients
+    }
 }

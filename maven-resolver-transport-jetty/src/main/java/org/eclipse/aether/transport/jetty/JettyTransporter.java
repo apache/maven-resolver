@@ -51,24 +51,14 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
-import org.eclipse.jetty.client.api.AuthenticationStore;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
-import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
 import org.eclipse.jetty.client.util.InputStreamRequestContent;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.http.DateGenerator;
-import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.http2.client.HTTP2Client;
-import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
-import org.eclipse.jetty.http3.client.HTTP3Client;
-import org.eclipse.jetty.http3.client.http.ClientConnectionFactoryOverHTTP3;
-import org.eclipse.jetty.io.ClientConnectionFactory;
-import org.eclipse.jetty.io.ClientConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,15 +97,11 @@ final class JettyTransporter
     private final LocalState state;
 
     JettyTransporter( Map<String, ChecksumExtractor> checksumExtractors,
+                      HttpClient httpClient,
                       RemoteRepository repository,
                       RepositorySystemSession session )
             throws NoTransporterException
     {
-        if ( !"http".equalsIgnoreCase( repository.getProtocol() )
-                && !"https".equalsIgnoreCase( repository.getProtocol() ) )
-        {
-            throw new NoTransporterException( repository );
-        }
         this.checksumExtractors = requireNonNull( checksumExtractors, "checksum extractors must not be null" );
         try
         {
@@ -149,19 +135,14 @@ final class JettyTransporter
                 ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
                 ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
                 ConfigurationProperties.HTTP_CREDENTIAL_ENCODING );
-        int connectTimeout = ConfigUtils.getInteger( session,
-                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.CONNECT_TIMEOUT );
         this.requestTimeout = ConfigUtils.getLong( session,
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                 ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
                 ConfigurationProperties.REQUEST_TIMEOUT );
-        String userAgent = ConfigUtils.getString( session,
-                ConfigurationProperties.DEFAULT_USER_AGENT,
-                ConfigurationProperties.USER_AGENT );
 
         Charset credentialsCharset = Charset.forName( credentialEncoding );
+
+        this.client = requireNonNull( httpClient );
 
         //        Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
         //                .register( AuthSchemes.BASIC, new BasicSchemeFactory( credentialsCharset ) )
@@ -178,30 +159,6 @@ final class JettyTransporter
         //                .setConnectTimeout( connectTimeout )
         //                .setConnectionRequestTimeout( connectTimeout )
         //                .setSocketTimeout( requestTimeout ).build();
-
-        ClientConnector connector = new ClientConnector();
-        ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
-        HTTP2Client http2Client = new HTTP2Client( connector );
-        ClientConnectionFactoryOverHTTP2.HTTP2 http2 = new ClientConnectionFactoryOverHTTP2.HTTP2( http2Client );
-        HTTP3Client h3Client = new HTTP3Client();
-        ClientConnectionFactoryOverHTTP3.HTTP3 http3 = new ClientConnectionFactoryOverHTTP3.HTTP3( h3Client );
-        HttpClientTransportDynamic transport = new HttpClientTransportDynamic( connector, http3, http2, http1 );
-
-        client = new HttpClient( transport );
-        client.setConnectTimeout( connectTimeout );
-        client.setUserAgentField( new HttpField( HttpHeader.USER_AGENT, userAgent ) );
-        client.setFollowRedirects( false );
-
-        AuthenticationStore authenticationStore = client.getAuthenticationStore();
-
-        try
-        {
-            client.start();
-        }
-        catch ( Exception e )
-        {
-            throw new NoTransporterException( repository, e.getMessage(), e );
-        }
         //
         //        HttpClient client = new HttpClient(transport);
         //
@@ -569,14 +526,6 @@ final class JettyTransporter
     @Override
     protected void implClose()
     {
-        try
-        {
-            client.stop();
-        }
-        catch ( Exception e )
-        {
-            throw new RuntimeException( e );
-        }
         AuthenticationContext.close( repoAuthContext );
         AuthenticationContext.close( proxyAuthContext );
     }
