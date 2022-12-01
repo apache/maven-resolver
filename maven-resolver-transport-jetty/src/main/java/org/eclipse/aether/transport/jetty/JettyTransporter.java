@@ -19,12 +19,14 @@ package org.eclipse.aether.transport.jetty;
  * under the License.
  */
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
@@ -354,7 +356,7 @@ final class JettyTransporter
             }
             try
             {
-                handleStatus( response );
+                handleStatus( response, getter );
             }
             catch ( Exception e )
             {
@@ -431,7 +433,7 @@ final class JettyTransporter
                 {
                     continue;
                 }
-                handleStatus( response );
+                handleStatus( response, null );
             }
             catch ( Exception e )
             {
@@ -445,7 +447,7 @@ final class JettyTransporter
             {
                 Response response = commonHeaders(
                         client.newRequest( dirs.get( index ) ).method( HttpMethod.MKCOL ) ).send();
-                handleStatus( response );
+                handleStatus( response, null );
             }
             catch ( Exception e )
             {
@@ -466,7 +468,6 @@ final class JettyTransporter
         request.headers( h ->
         {
             h.add( HttpHeader.CACHE_CONTROL, "no-cache, no-store" );
-            h.add( HttpHeader.PRAGMA, "no-cache" );
 
             if ( state.isExpectContinue() && isPayloadPresent( request ) )
             {
@@ -513,12 +514,28 @@ final class JettyTransporter
         }
     }
 
-    private void handleStatus( Response response )
+    private void handleStatus( Response response, ResponseProcessor getter )
             throws HttpResponseException
     {
         int status = response.getStatus();
         if ( status >= HttpStatus.MULTIPLE_CHOICES_300 )
         {
+            if ( getter != null )
+            {
+                try
+                {
+                    try ( InputStream inputStream = getter.listener.getInputStream() )
+                    {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        inputStream.transferTo( baos );
+                        LOGGER.info( "Response: {}", new String( baos.toByteArray(), StandardCharsets.UTF_8 ) );
+                    }
+                }
+                catch ( IOException e )
+                {
+                    LOGGER.warn( "Count not consume body", e );
+                }
+            }
             throw new HttpResponseException( response, response.getReason() + " (" + status + ")" );
         }
     }
