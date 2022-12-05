@@ -36,6 +36,7 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transform.ArtifactTransformerManager;
 import org.eclipse.aether.transform.FileTransformerManager;
 
 /**
@@ -216,5 +217,11 @@ public abstract class AbstractForwardingRepositorySystemSession
     public FileTransformerManager getFileTransformerManager()
     {
         return getSession().getFileTransformerManager();
+    }
+
+    @Override
+    public ArtifactTransformerManager getArtifactTransformerManager()
+    {
+        return getSession().getArtifactTransformerManager();
     }
 }

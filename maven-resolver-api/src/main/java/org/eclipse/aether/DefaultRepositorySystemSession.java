@@ -45,8 +45,10 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transform.ArtifactTransformerManager;
 import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.transform.FileTransformerManager;
+import org.eclipse.aether.transform.Identity;
 
 import static java.util.Objects.requireNonNull;
 
@@ -79,6 +81,8 @@ public final class DefaultRepositorySystemSession
     private LocalRepositoryManager localRepositoryManager;
 
     private FileTransformerManager fileTransformerManager;
+
+    private ArtifactTransformerManager artifactTransformerManager;
 
     private WorkspaceReader workspaceReader;
 
@@ -138,6 +142,7 @@ public final class DefaultRepositorySystemSession
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
         fileTransformerManager = NullFileTransformerManager.INSTANCE;
+        artifactTransformerManager = Identity.MANAGER;
         data = new DefaultSessionData();
     }
 
@@ -176,6 +181,7 @@ public final class DefaultRepositorySystemSession
         setVersionFilter( session.getVersionFilter() );
         setDependencyGraphTransformer( session.getDependencyGraphTransformer() );
         setFileTransformerManager( session.getFileTransformerManager() );
+        setArtifactTransformerManager( session.getArtifactTransformerManager() );
         setData( session.getData() );
         setCache( session.getCache() );
     }
@@ -349,6 +355,24 @@ public final class DefaultRepositorySystemSession
         if ( this.fileTransformerManager == null )
         {
             this.fileTransformerManager = NullFileTransformerManager.INSTANCE;
+        }
+        return this;
+    }
+
+    @Override
+    public ArtifactTransformerManager getArtifactTransformerManager()
+    {
+        return artifactTransformerManager;
+    }
+
+    public DefaultRepositorySystemSession setArtifactTransformerManager(
+            ArtifactTransformerManager artifactTransformerManager )
+    {
+        verifyStateForMutation();
+        this.artifactTransformerManager = artifactTransformerManager;
+        if ( this.artifactTransformerManager == null )
+        {
+            this.artifactTransformerManager = Identity.MANAGER;
         }
         return this;
     }

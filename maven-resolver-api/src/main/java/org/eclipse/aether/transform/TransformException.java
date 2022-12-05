@@ -22,10 +22,9 @@ package org.eclipse.aether.transform;
 /**
  * Thrown when transformation failed.
  *
- * @deprecated Without any direct replacement for now. This API is OOM-prone, and also lacks a lot of context about
- * transforming.
+ *  @author Robert Scholte et al.
+ *  @since 1.3.0
  */
-@Deprecated
 public class TransformException
     extends Exception
 {

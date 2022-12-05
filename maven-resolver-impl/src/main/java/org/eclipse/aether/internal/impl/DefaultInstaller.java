@@ -22,6 +22,7 @@ package org.eclipse.aether.internal.impl;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -56,7 +58,10 @@ import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.transform.ArtifactTransformer;
 import org.eclipse.aether.transform.FileTransformer;
+import org.eclipse.aether.transform.TransformException;
+import org.eclipse.aether.transform.TransformedArtifact;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -237,19 +242,53 @@ public class DefaultInstaller
     {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
 
-        File srcFile = artifact.getFile();
+        //File srcFile = artifact.getFile();
 
         Collection<FileTransformer> fileTransformers = session.getFileTransformerManager()
                 .getTransformersForArtifact( artifact );
         if ( fileTransformers.isEmpty() )
         {
-            install( session, trace, artifact, lrm, srcFile, null );
+            Collection<ArtifactTransformer> artifactTransformers = session.getArtifactTransformerManager()
+                    .getTransformersForArtifact( artifact );
+            List<TransformedArtifact> transformedArtifacts = new ArrayList<>();
+            for ( ArtifactTransformer artifactTransformer : artifactTransformers )
+            {
+                try
+                {
+                    TransformedArtifact handle = artifactTransformer.transformInstallArtifact( session, artifact );
+                    transformedArtifacts.add( handle );
+                    Artifact transformed = handle.getTransformedArtifact();
+                    install( session, trace, transformed, lrm, transformed.getFile(), null );
+                }
+                catch ( TransformException e )
+                {
+                    throw new InstallationException( "Failed to transform artifact: " + artifact
+                            + ": " + e.getMessage(), e );
+                }
+                catch ( IOException e )
+                {
+                    throw new InstallationException( "IO problems during transform of artifact: " + artifact, e );
+                }
+            }
+            List<Exception> exceptions = new ArrayList<>();
+            for ( TransformedArtifact transformedArtifact : transformedArtifacts )
+            {
+                try
+                {
+                    transformedArtifact.close();
+                }
+                catch ( IOException e )
+                {
+                    exceptions.add( e );
+                }
+            }
+            MultiRuntimeException.mayThrow( "TransformedArtifact close failures", exceptions );
         }
         else
         {
             for ( FileTransformer fileTransformer : fileTransformers )
             {
-                install( session, trace, artifact, lrm, srcFile, fileTransformer );
+                install( session, trace, artifact, lrm, artifact.getFile(), fileTransformer );
             }
         }
     }

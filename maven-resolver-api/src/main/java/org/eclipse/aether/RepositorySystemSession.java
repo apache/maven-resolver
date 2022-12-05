@@ -37,6 +37,7 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transform.ArtifactTransformerManager;
 import org.eclipse.aether.transform.FileTransformerManager;
 
 /**
@@ -270,4 +271,12 @@ public interface RepositorySystemSession
      */
     @Deprecated
     FileTransformerManager getFileTransformerManager();
+
+    /**
+     * Get the artifact transformer manager.
+     *
+     * @since 1.9.3
+     * @return the manager, never {@code null}.
+     */
+    ArtifactTransformerManager getArtifactTransformerManager();
 }
