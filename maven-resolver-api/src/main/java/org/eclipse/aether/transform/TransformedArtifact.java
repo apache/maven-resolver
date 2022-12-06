@@ -29,17 +29,21 @@ import org.eclipse.aether.artifact.Artifact;
  * 
  * @since 1.9.3
  */
-public interface TransformedArtifact extends Closeable
+public abstract class TransformedArtifact implements Closeable
 {
     /**
      * The transformed artifact.
      *
      * @return the transformed artifact, never {@code null}.
      */
-    Artifact getTransformedArtifact();
+    public abstract Artifact getTransformedArtifact();
 
     /**
-     * Closes the instance, allowing it to perform any necessary cleanup.
+     * Closes the instance, allowing it to perform any necessary cleanup. By default, it is no-np, override if needed.
      */
-    void close() throws IOException;
+    @Override
+    public void close() throws IOException
+    {
+        // no-op
+    }
 }

@@ -37,7 +37,7 @@ public final class Identity
     /**
      * Identity {@link TransformedArtifact}.
      */
-    public static final class IdentityTransformedArtifact implements TransformedArtifact
+    public static final class IdentityTransformedArtifact extends TransformedArtifact
     {
         private final Artifact artifact;
 
@@ -50,12 +50,6 @@ public final class Identity
         public Artifact getTransformedArtifact()
         {
             return artifact;
-        }
-
-        @Override
-        public void close()
-        {
-            // nop
         }
     }
 
