@@ -35,7 +35,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositoryException;
@@ -81,6 +80,7 @@ import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.transform.FileTransformerManager;
 import org.eclipse.aether.transform.TransformException;
 import org.eclipse.aether.transform.TransformedArtifact;
+import org.eclipse.aether.util.MultiProcessor;
 
 /**
  */
@@ -270,79 +270,73 @@ public class DefaultDeployer
                 processedMetadata.put( metadata, null );
             }
 
-            List<TransformedArtifact> transformedArtifacts = new ArrayList<>();
-            for ( ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); )
+            MultiProcessor<TransformedArtifact> multiProcessor = new MultiProcessor<>( TransformedArtifact::close );
+            try
             {
-                Artifact artifact = iterator.next();
-
-                for ( MetadataGenerator generator : generators )
+                for ( ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); )
                 {
-                    artifact = generator.transformArtifact( artifact );
-                }
+                    Artifact artifact = iterator.next();
 
-                iterator.set( artifact );
-
-                Collection<FileTransformer> fileTransformers =
-                        fileTransformerManager.getTransformersForArtifact( artifact );
-                if ( !fileTransformers.isEmpty() )
-                {
-                    for ( FileTransformer fileTransformer : fileTransformers )
+                    for ( MetadataGenerator generator : generators )
                     {
-                        Artifact targetArtifact = fileTransformer.transformArtifact( artifact );
-
-                        ArtifactUpload upload = new ArtifactUpload( targetArtifact, artifact.getFile(),
-                                fileTransformer );
-                        upload.setTrace( trace );
-                        upload.setListener( new ArtifactUploadListener( catapult, upload ) );
-                        artifactUploads.add( upload );
+                        artifact = generator.transformArtifact( artifact );
                     }
-                }
-                else
-                {
-                    Collection<ArtifactTransformer> artifactTransformers =
-                            artifactTransformerManager.getTransformersForArtifact( artifact );
-                    for ( ArtifactTransformer artifactTransformer : artifactTransformers )
+
+                    iterator.set( artifact );
+
+                    Collection<FileTransformer> fileTransformers =
+                            fileTransformerManager.getTransformersForArtifact( artifact );
+                    if ( !fileTransformers.isEmpty() )
                     {
-                        try
+                        for ( FileTransformer fileTransformer : fileTransformers )
                         {
-                            TransformedArtifact handle =
-                                    artifactTransformer.transformDeployArtifact( session, artifact );
-                            transformedArtifacts.add( handle );
-                            Artifact transformed = handle.getTransformedArtifact();
-                            ArtifactUpload upload = new ArtifactUpload( transformed, transformed.getFile() );
+                            Artifact targetArtifact = fileTransformer.transformArtifact( artifact );
+
+                            ArtifactUpload upload = new ArtifactUpload( targetArtifact, artifact.getFile(),
+                                    fileTransformer );
                             upload.setTrace( trace );
                             upload.setListener( new ArtifactUploadListener( catapult, upload ) );
                             artifactUploads.add( upload );
                         }
-                        catch ( TransformException e )
-                        {
-                            throw new DeploymentException( "Failed to transform artifact: " + artifact
-                                    + ": " + e.getMessage(), e );
-                        }
-                        catch ( IOException e )
-                        {
-                            throw new DeploymentException( "IO problems during transform of artifact: " + artifact, e );
-                        }
                     }
-                    result.addArtifact( artifact );
+                    else
+                    {
+                        Collection<ArtifactTransformer> artifactTransformers =
+                                artifactTransformerManager.getTransformersForArtifact( session, artifact );
+                        for ( ArtifactTransformer artifactTransformer : artifactTransformers )
+                        {
+                            try
+                            {
+                                TransformedArtifact handle =
+                                        artifactTransformer.transformDeployArtifact( session, artifact );
+                                multiProcessor.addElement( handle );
+                                Artifact transformed = handle.getTransformedArtifact();
+                                ArtifactUpload upload = new ArtifactUpload( transformed, transformed.getFile() );
+                                upload.setTrace( trace );
+                                upload.setListener( new ArtifactUploadListener( catapult, upload ) );
+                                artifactUploads.add( upload );
+                            }
+                            catch ( TransformException e )
+                            {
+                                throw new DeploymentException( "Failed to transform artifact: " + artifact
+                                        + ": " + e.getMessage(), e );
+                            }
+                            catch ( IOException e )
+                            {
+                                throw new DeploymentException( "IO problems during transform of artifact: "
+                                        + artifact, e );
+                            }
+                        }
+                        result.addArtifact( artifact );
+                    }
                 }
+
+                connector.put( artifactUploads, null );
             }
-
-            connector.put( artifactUploads, null );
-
-            List<Exception> exceptions = new ArrayList<>();
-            for ( TransformedArtifact transformedArtifact : transformedArtifacts )
+            finally
             {
-                try
-                {
-                    transformedArtifact.close();
-                }
-                catch ( IOException e )
-                {
-                    exceptions.add( e );
-                }
+                multiProcessor.processAll( "TransformedArtifact close failures" );
             }
-            MultiRuntimeException.mayThrow( "TransformedArtifact close failures", exceptions );
 
             for ( ArtifactUpload upload : artifactUploads )
             {

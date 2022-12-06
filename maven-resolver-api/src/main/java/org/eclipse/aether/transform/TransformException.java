@@ -22,8 +22,8 @@ package org.eclipse.aether.transform;
 /**
  * Thrown when transformation failed.
  *
- *  @author Robert Scholte et al.
- *  @since 1.3.0
+ * @author Robert Scholte et al.
+ * @since 1.3.0
  */
 public class TransformException
     extends Exception

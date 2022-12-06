@@ -19,10 +19,8 @@ package org.eclipse.aether.transform;
  * under the License.
  */
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -59,84 +57,6 @@ public final class Identity
         {
             // nop
         }
-
-        @Override
-        public String getGroupId()
-        {
-            return artifact.getGroupId();
-        }
-
-        @Override
-        public String getArtifactId()
-        {
-            return artifact.getArtifactId();
-        }
-
-        @Override
-        public String getVersion()
-        {
-            return artifact.getVersion();
-        }
-
-        @Override
-        public Artifact setVersion( String version )
-        {
-            return artifact.setVersion( version );
-        }
-
-        @Override
-        public String getBaseVersion()
-        {
-            return artifact.getBaseVersion();
-        }
-
-        @Override
-        public boolean isSnapshot()
-        {
-            return artifact.isSnapshot();
-        }
-
-        @Override
-        public String getClassifier()
-        {
-            return artifact.getClassifier();
-        }
-
-        @Override
-        public String getExtension()
-        {
-            return artifact.getExtension();
-        }
-
-        @Override
-        public File getFile()
-        {
-            return artifact.getFile();
-        }
-
-        @Override
-        public Artifact setFile( File file )
-        {
-            return artifact.setFile( file );
-        }
-
-        @Override
-        public String getProperty( String key, String defaultValue )
-        {
-            return artifact.getProperty( key, defaultValue );
-        }
-
-        @Override
-        public Map<String, String> getProperties()
-        {
-            return artifact.getProperties();
-        }
-
-        @Override
-        public Artifact setProperties( Map<String, String> properties )
-        {
-            return artifact.setProperties( properties );
-        }
     }
 
     public static final ArtifactTransformer TRANSFORMER = new IdentityArtifactTransformer();
@@ -165,7 +85,8 @@ public final class Identity
         private final Collection<ArtifactTransformer> identity = Collections.singletonList( TRANSFORMER );
 
         @Override
-        public Collection<ArtifactTransformer> getTransformersForArtifact( Artifact artifact )
+        public Collection<ArtifactTransformer> getTransformersForArtifact( RepositorySystemSession session,
+                                                                           Artifact artifact )
         {
             return identity;
         }

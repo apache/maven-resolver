@@ -25,11 +25,11 @@ import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * The transformed artifact.
+ * The transformed artifact handle.
  * 
  * @since 1.9.3
  */
-public interface TransformedArtifact extends Artifact, Closeable
+public interface TransformedArtifact extends Closeable
 {
     /**
      * The transformed artifact.
@@ -39,7 +39,7 @@ public interface TransformedArtifact extends Artifact, Closeable
     Artifact getTransformedArtifact();
 
     /**
-     * Closes the handle instance, allowing it to perform any necessary cleanup.
+     * Closes the instance, allowing it to perform any necessary cleanup.
      */
     void close() throws IOException;
 }

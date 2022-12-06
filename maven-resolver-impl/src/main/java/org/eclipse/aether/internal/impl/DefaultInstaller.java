@@ -35,7 +35,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -62,6 +61,7 @@ import org.eclipse.aether.transform.ArtifactTransformer;
 import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.transform.TransformException;
 import org.eclipse.aether.transform.TransformedArtifact;
+import org.eclipse.aether.util.MultiProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -242,47 +242,39 @@ public class DefaultInstaller
     {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
 
-        //File srcFile = artifact.getFile();
-
         Collection<FileTransformer> fileTransformers = session.getFileTransformerManager()
                 .getTransformersForArtifact( artifact );
         if ( fileTransformers.isEmpty() )
         {
             Collection<ArtifactTransformer> artifactTransformers = session.getArtifactTransformerManager()
-                    .getTransformersForArtifact( artifact );
-            List<TransformedArtifact> transformedArtifacts = new ArrayList<>();
-            for ( ArtifactTransformer artifactTransformer : artifactTransformers )
+                    .getTransformersForArtifact( session, artifact );
+            MultiProcessor<TransformedArtifact> multiProcessor = new MultiProcessor<>( TransformedArtifact::close );
+            try
             {
-                try
+                for ( ArtifactTransformer artifactTransformer : artifactTransformers )
                 {
-                    TransformedArtifact handle = artifactTransformer.transformInstallArtifact( session, artifact );
-                    transformedArtifacts.add( handle );
-                    Artifact transformed = handle.getTransformedArtifact();
-                    install( session, trace, transformed, lrm, transformed.getFile(), null );
-                }
-                catch ( TransformException e )
-                {
-                    throw new InstallationException( "Failed to transform artifact: " + artifact
-                            + ": " + e.getMessage(), e );
-                }
-                catch ( IOException e )
-                {
-                    throw new InstallationException( "IO problems during transform of artifact: " + artifact, e );
+                    try
+                    {
+                        TransformedArtifact handle = artifactTransformer.transformInstallArtifact( session, artifact );
+                        multiProcessor.addElement( handle );
+                        Artifact transformed = handle.getTransformedArtifact();
+                        install( session, trace, transformed, lrm, transformed.getFile(), null );
+                    }
+                    catch ( TransformException e )
+                    {
+                        throw new InstallationException( "Failed to transform artifact: " + artifact
+                                + ": " + e.getMessage(), e );
+                    }
+                    catch ( IOException e )
+                    {
+                        throw new InstallationException( "IO problems during transform of artifact: " + artifact, e );
+                    }
                 }
             }
-            List<Exception> exceptions = new ArrayList<>();
-            for ( TransformedArtifact transformedArtifact : transformedArtifacts )
+            finally
             {
-                try
-                {
-                    transformedArtifact.close();
-                }
-                catch ( IOException e )
-                {
-                    exceptions.add( e );
-                }
+                multiProcessor.processAll( "TransformedArtifact close failures" );
             }
-            MultiRuntimeException.mayThrow( "TransformedArtifact close failures", exceptions );
         }
         else
         {
