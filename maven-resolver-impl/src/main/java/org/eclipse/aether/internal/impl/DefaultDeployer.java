@@ -302,7 +302,7 @@ public class DefaultDeployer
                     else
                     {
                         Collection<ArtifactTransformer> artifactTransformers =
-                                artifactTransformerManager.getTransformersForArtifact( session, artifact );
+                                artifactTransformerManager.getTransformersForArtifact( artifact );
                         for ( ArtifactTransformer artifactTransformer : artifactTransformers )
                         {
                             try

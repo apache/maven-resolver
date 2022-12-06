@@ -21,7 +21,6 @@ package org.eclipse.aether.transform;
 
 import java.util.Collection;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
@@ -45,6 +44,5 @@ public interface ArtifactTransformerManager
      * @param artifact the artifact.
      * @return a collection of {@link ArtifactTransformer}s to apply on the artifact, never {@code null}.
      */
-    Collection<ArtifactTransformer> getTransformersForArtifact( RepositorySystemSession session,
-                                                                Artifact artifact );
+    Collection<ArtifactTransformer> getTransformersForArtifact( Artifact artifact );
 }

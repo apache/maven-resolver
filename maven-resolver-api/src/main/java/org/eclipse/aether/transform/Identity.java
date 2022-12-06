@@ -79,8 +79,7 @@ public final class Identity
         private final Collection<ArtifactTransformer> identity = Collections.singletonList( TRANSFORMER );
 
         @Override
-        public Collection<ArtifactTransformer> getTransformersForArtifact( RepositorySystemSession session,
-                                                                           Artifact artifact )
+        public Collection<ArtifactTransformer> getTransformersForArtifact( Artifact artifact )
         {
             return identity;
         }

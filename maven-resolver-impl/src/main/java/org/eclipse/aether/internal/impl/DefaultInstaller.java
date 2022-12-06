@@ -247,7 +247,7 @@ public class DefaultInstaller
         if ( fileTransformers.isEmpty() )
         {
             Collection<ArtifactTransformer> artifactTransformers = session.getArtifactTransformerManager()
-                    .getTransformersForArtifact( session, artifact );
+                    .getTransformersForArtifact( artifact );
             MultiProcessor<TransformedArtifact> multiProcessor = new MultiProcessor<>( TransformedArtifact::close );
             try
             {
