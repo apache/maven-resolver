@@ -98,4 +98,18 @@ public class DefaultChecksumAlgorithmFactorySelector
     {
         return new ArrayList<>( factories.values() );
     }
+
+    @Override
+    public boolean isChecksum( String extension )
+    {
+        requireNonNull( extension );
+        if ( extension.contains( "." ) )
+        {
+            return factories.values().stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
+        }
+        else
+        {
+            return factories.values().stream().anyMatch( a -> extension.equals( a.getFileExtension() ) );
+        }
+    }
 }
