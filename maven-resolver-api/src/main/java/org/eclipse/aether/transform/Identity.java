@@ -35,13 +35,18 @@ import static java.util.Objects.requireNonNull;
 public final class Identity
 {
     /**
-     * Identity {@link TransformedArtifact}.
+     * Returns "identity" transform artifact, in essence the same {@link Artifact} that was passed to this method.
      */
-    public static final class IdentityTransformedArtifact extends TransformedArtifact
+    public static TransformedArtifact identity( Artifact artifact )
+    {
+        return new IdentityTransformedArtifact( artifact );
+    }
+
+    private static final class IdentityTransformedArtifact extends TransformedArtifact
     {
         private final Artifact artifact;
 
-        public IdentityTransformedArtifact( Artifact artifact )
+        private IdentityTransformedArtifact( Artifact artifact )
         {
             this.artifact = requireNonNull( artifact );
         }
@@ -53,6 +58,9 @@ public final class Identity
         }
     }
 
+    /**
+     * The "identity" transformer.
+     */
     public static final ArtifactTransformer TRANSFORMER = new IdentityArtifactTransformer();
 
     private static class IdentityArtifactTransformer implements ArtifactTransformer
@@ -61,17 +69,20 @@ public final class Identity
         public TransformedArtifact transformInstallArtifact( RepositorySystemSession session, Artifact artifact )
         {
             requireNonNull( session );
-            return new IdentityTransformedArtifact( artifact );
+            return identity( artifact );
         }
 
         @Override
         public TransformedArtifact transformDeployArtifact( RepositorySystemSession session, Artifact artifact )
         {
             requireNonNull( session );
-            return new IdentityTransformedArtifact( artifact );
+            return identity( artifact );
         }
     }
 
+    /**
+     * The "identity" transformer manager.
+     */
     public static final ArtifactTransformerManager MANAGER = new IdentityArtifactTransformerManager();
 
     private static class IdentityArtifactTransformerManager implements ArtifactTransformerManager
