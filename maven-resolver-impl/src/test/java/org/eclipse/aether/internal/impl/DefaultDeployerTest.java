@@ -23,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
@@ -30,6 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +43,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
@@ -58,7 +62,11 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
+import org.eclipse.aether.transform.ArtifactTransformer;
 import org.eclipse.aether.transform.FileTransformer;
+import org.eclipse.aether.transform.Identity;
+import org.eclipse.aether.transform.TransformException;
+import org.eclipse.aether.transform.TransformedArtifact;
 import org.eclipse.aether.util.artifact.SubArtifact;
 import org.junit.After;
 import org.junit.Before;
@@ -403,24 +411,114 @@ public class DefaultDeployerTest
             {
                 return new ByteArrayInputStream( "transformed data".getBytes( StandardCharsets.UTF_8 ) );
             }
-            
+
             @Override
             public Artifact transformArtifact( Artifact artifact )
             {
                 return transformedArtifact;
             }
         };
-        
+
         StubFileTransformerManager fileTransformerManager = new StubFileTransformerManager();
         fileTransformerManager.addFileTransformer( "jar", transformer );
         session.setFileTransformerManager( fileTransformerManager );
-        
+
         request = new DeployRequest();
         request.addArtifact( artifact );
         deployer.deploy( session, request );
-        
+
         Artifact putArtifact = connector.getActualArtifactPutRequests().get( 0 );
         assertEquals( transformedArtifact, putArtifact );
+    }
+
+    @Test
+    public void testArtifactTransformerReplace() throws Exception
+    {
+        Path transformedContent = Files.createTempFile("testArtifactTransformer", "tmp");
+        Files.write( transformedContent, "transformed data".getBytes( StandardCharsets.UTF_8 ) );
+        Artifact transformedArtifact = new SubArtifact( artifact, null, "raj", transformedContent.toFile() );
+
+        ArtifactTransformer transformer = new ArtifactTransformer()
+        {
+            @Override
+            public TransformedArtifact transformInstallArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                throw new RuntimeException( "method should not be invoked" );
+            }
+
+            @Override
+            public TransformedArtifact transformDeployArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                return Identity.identity( transformedArtifact );
+            }
+        };
+
+        StubArtifactTransformerManager artifactTransformerManager = new StubArtifactTransformerManager();
+        artifactTransformerManager.addFileTransformer( "jar", transformer );
+        session.setArtifactTransformerManager( artifactTransformerManager );
+
+        request = new DeployRequest();
+        request.addArtifact( artifact );
+        deployer.deploy( session, request );
+
+        Artifact putArtifact = connector.getActualArtifactPutRequests().get( 0 );
+        assertEquals( transformedArtifact, putArtifact );
+    }
+
+    @Test
+    public void testArtifactTransformerDecorate() throws Exception
+    {
+        Path decoratedContent = Files.createTempFile("testArtifactTransformer", "tmp");
+        Files.write( decoratedContent, "transformed data".getBytes( StandardCharsets.UTF_8 ) );
+        Artifact decoratedArtifact = new SubArtifact( artifact, null, "raj", decoratedContent.toFile() );
+
+        ArtifactTransformer transformer = new ArtifactTransformer()
+        {
+            @Override
+            public TransformedArtifact transformInstallArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                throw new RuntimeException( "method should not be invoked" );
+            }
+
+            @Override
+            public TransformedArtifact transformDeployArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                return Identity.identity( decoratedArtifact );
+            }
+        };
+
+        StubArtifactTransformerManager artifactTransformerManager = new StubArtifactTransformerManager();
+        artifactTransformerManager.addFileTransformer( "jar", Identity.TRANSFORMER );
+        artifactTransformerManager.addFileTransformer( "jar", transformer );
+        session.setArtifactTransformerManager( artifactTransformerManager );
+
+        request = new DeployRequest();
+        request.addArtifact( artifact );
+        deployer.deploy( session, request );
+
+        assertEquals( connector.getActualArtifactPutRequests().size(), 2 );
+        Artifact putArtifact1 = connector.getActualArtifactPutRequests().get( 0 );
+        assertEquals( artifact, putArtifact1 );
+        Artifact putArtifact2 = connector.getActualArtifactPutRequests().get( 1 );
+        assertEquals( decoratedArtifact, putArtifact2 );
+    }
+
+    @Test
+    public void testArtifactTransformerInhibit() throws Exception
+    {
+        StubArtifactTransformerManager artifactTransformerManager = new StubArtifactTransformerManager();
+        artifactTransformerManager.inhibitTransformer( "jar" );
+        session.setArtifactTransformerManager( artifactTransformerManager );
+
+        request = new DeployRequest();
+        request.addArtifact( artifact );
+        deployer.deploy( session, request );
+
+        assertTrue( connector.getActualArtifactPutRequests().isEmpty() );
     }
 
 }
