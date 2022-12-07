@@ -33,11 +33,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
@@ -50,7 +53,11 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
+import org.eclipse.aether.transform.ArtifactTransformer;
 import org.eclipse.aether.transform.FileTransformer;
+import org.eclipse.aether.transform.Identity;
+import org.eclipse.aether.transform.TransformException;
+import org.eclipse.aether.transform.TransformedArtifact;
 import org.eclipse.aether.util.artifact.SubArtifact;
 import org.junit.After;
 import org.junit.Before;
@@ -459,4 +466,112 @@ public class DefaultInstallerTest
             assertEquals( "transformed data", r.readLine() );
         }
     }
+
+    @Test
+    public void testArtifactTransformerReplace() throws Exception
+    {
+        Path transformedContent = Files.createTempFile("testArtifactTransformer", "tmp");
+        Files.write( transformedContent, "transformed data".getBytes( StandardCharsets.UTF_8 ) );
+        Artifact transformedArtifact = new SubArtifact( artifact, null, "raj", transformedContent.toFile() );
+        ArtifactTransformer transformer = new ArtifactTransformer()
+        {
+            @Override
+            public TransformedArtifact transformInstallArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                return Identity.identity( transformedArtifact );
+            }
+
+            @Override
+            public TransformedArtifact transformDeployArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                throw new RuntimeException( "method should not be invoked" );
+            }
+        };
+
+        StubArtifactTransformerManager artifactTransformerManager = new StubArtifactTransformerManager();
+        artifactTransformerManager.addFileTransformer( "jar", transformer );
+        session.setArtifactTransformerManager( artifactTransformerManager );
+
+        request = new InstallRequest();
+        request.addArtifact( artifact );
+        installer.install( session, request );
+
+        String originalArtifactPath = session.getLocalRepositoryManager().getPathForLocalArtifact( artifact );
+        File originalArtifactFile = new File( session.getLocalRepository().getBasedir(), originalArtifactPath );
+        assertFalse( originalArtifactFile.exists() );
+
+        String transformedArtifactPath = session.getLocalRepositoryManager().getPathForLocalArtifact( transformedArtifact );
+        File transformedArtifactFile = new File( session.getLocalRepository().getBasedir(), transformedArtifactPath );
+        assertTrue( transformedArtifactFile.exists() );
+
+        try ( BufferedReader r = new BufferedReader( new FileReader( transformedArtifactFile ) ) )
+        {
+            assertEquals( "transformed data", r.readLine() );
+        }
+    }
+
+    @Test
+    public void testArtifactTransformerDecorate() throws Exception
+    {
+        Path transformedContent = Files.createTempFile("testArtifactTransformer", "tmp");
+        Files.write( transformedContent, "transformed data".getBytes( StandardCharsets.UTF_8 ) );
+        Artifact transformedArtifact = new SubArtifact( artifact, null, "raj", transformedContent.toFile() );
+        ArtifactTransformer transformer = new ArtifactTransformer()
+        {
+            @Override
+            public TransformedArtifact transformInstallArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                return Identity.identity( transformedArtifact );
+            }
+
+            @Override
+            public TransformedArtifact transformDeployArtifact( RepositorySystemSession session, Artifact artifact )
+                    throws TransformException, IOException
+            {
+                throw new RuntimeException( "method should not be invoked" );
+            }
+        };
+
+        StubArtifactTransformerManager artifactTransformerManager = new StubArtifactTransformerManager();
+        artifactTransformerManager.addFileTransformer( "jar", Identity.TRANSFORMER );
+        artifactTransformerManager.addFileTransformer( "jar", transformer );
+        session.setArtifactTransformerManager( artifactTransformerManager );
+
+        request = new InstallRequest();
+        request.addArtifact( artifact );
+        installer.install( session, request );
+
+        String originalArtifactPath = session.getLocalRepositoryManager().getPathForLocalArtifact( artifact );
+        File originalArtifactFile = new File( session.getLocalRepository().getBasedir(), originalArtifactPath );
+        assertTrue( originalArtifactFile.exists() );
+
+        String transformedArtifactPath = session.getLocalRepositoryManager().getPathForLocalArtifact( transformedArtifact );
+        File transformedArtifactFile = new File( session.getLocalRepository().getBasedir(), transformedArtifactPath );
+        assertTrue( transformedArtifactFile.exists() );
+
+        try ( BufferedReader r = new BufferedReader( new FileReader( transformedArtifactFile ) ) )
+        {
+            assertEquals( "transformed data", r.readLine() );
+        }
+    }
+
+    @Test
+    public void testArtifactTransformerInhibit() throws Exception
+    {
+        StubArtifactTransformerManager artifactTransformerManager = new StubArtifactTransformerManager();
+        artifactTransformerManager.inhibitTransformer( "jar" );
+        session.setArtifactTransformerManager( artifactTransformerManager );
+
+        request = new InstallRequest();
+        request.addArtifact( artifact );
+        installer.install( session, request );
+
+        String originalArtifactPath = session.getLocalRepositoryManager().getPathForLocalArtifact( artifact );
+        File originalArtifactFile = new File( session.getLocalRepository().getBasedir(), originalArtifactPath );
+        assertFalse( originalArtifactFile.exists() );
+    }
+
 }
