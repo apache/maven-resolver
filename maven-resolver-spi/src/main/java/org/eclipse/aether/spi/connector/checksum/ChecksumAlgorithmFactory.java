@@ -37,7 +37,6 @@ public interface ChecksumAlgorithmFactory
     /**
      * Returns the file extension to be used for given checksum file (without leading dot), never {@code null}. The
      * extension should be file and URL path friendly, and may differ from value returned by {@link #getName()}.
-     * The checksum extension SHOULD NOT contain dot (".") character.
      * Example: "sha1".
      */
     String getFileExtension();
