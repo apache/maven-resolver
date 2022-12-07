@@ -58,13 +58,4 @@ public interface ChecksumAlgorithmFactorySelector
      * of it).
      */
     Collection<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
-
-    /**
-     * Returns {@code true} if passed in extension matches any known checksum extension. The extension string may
-     * start or contain dot ("."), but does not have to. In former case "ends with" is checked (i.e. "jar.sha1" -> true;
-     * ".sha1" -> true) while in latter equality (i.e. "sha1" -> true).
-     *
-     * @since 1.9.3
-     */
-    boolean isChecksum( String extension );
 }

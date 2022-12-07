@@ -98,12 +98,6 @@ public class TestChecksumAlgorithmSelector
                 .collect( toList() );
     }
 
-    @Override
-    public boolean isChecksum( String extension )
-    {
-        throw new RuntimeException( "not used in test" );
-    }
-
     private static class MessageDigestChecksumAlgorithmFactory
             extends ChecksumAlgorithmFactorySupport
     {

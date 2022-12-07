@@ -134,7 +134,7 @@ public final class Maven2RepositoryLayoutFactory
         }
 
         return new Maven2RepositoryLayout(
-                checksumAlgorithmFactorySelector,
+                new ArrayList<>( checksumAlgorithmFactorySelector.getChecksumAlgorithmFactories() ),
                 checksumsAlgorithms,
                 omitChecksumsForExtensions
         );
@@ -143,17 +143,17 @@ public final class Maven2RepositoryLayoutFactory
     private static class Maven2RepositoryLayout
             implements RepositoryLayout
     {
-        private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
+        private final List<ChecksumAlgorithmFactory> allChecksumAlgorithms;
 
         private final List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms;
 
         private final Set<String> extensionsWithoutChecksums;
 
-        private Maven2RepositoryLayout( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
+        private Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> allChecksumAlgorithms,
                                         List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms,
                                         Set<String> extensionsWithoutChecksums )
         {
-            this.checksumAlgorithmFactorySelector = requireNonNull( checksumAlgorithmFactorySelector );
+            this.allChecksumAlgorithms = Collections.unmodifiableList( allChecksumAlgorithms );
             this.configuredChecksumAlgorithms = Collections.unmodifiableList( configuredChecksumAlgorithms );
             this.extensionsWithoutChecksums = requireNonNull( extensionsWithoutChecksums );
         }
@@ -269,7 +269,7 @@ public final class Maven2RepositoryLayoutFactory
 
         private boolean isChecksum( String extension )
         {
-            return checksumAlgorithmFactorySelector.isChecksum( extension );
+            return allChecksumAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
         }
     }
 }
