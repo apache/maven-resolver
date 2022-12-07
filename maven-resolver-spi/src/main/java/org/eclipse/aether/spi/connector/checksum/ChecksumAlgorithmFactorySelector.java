@@ -22,6 +22,8 @@ package org.eclipse.aether.spi.connector.checksum;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.aether.artifact.Artifact;
+
 /**
  * Component performing selection of {@link ChecksumAlgorithmFactory} based on known factory names.
  * Note: this component is NOT meant to be implemented or extended by client, is exposed ONLY to make clients
@@ -66,5 +68,12 @@ public interface ChecksumAlgorithmFactorySelector
      *
      * @since 1.9.3
      */
-    boolean isChecksum( String extension );
+    boolean isChecksumExtension( String extension );
+
+    /**
+     * Returns {@code true} if passed in artifact matches any known checksum artifact.
+     *
+     * @since 1.9.3
+     */
+    boolean isChecksumArtifact( Artifact artifact );
 }

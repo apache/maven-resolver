@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
@@ -99,9 +100,15 @@ public class TestChecksumAlgorithmSelector
     }
 
     @Override
-    public boolean isChecksum( String extension )
+    public boolean isChecksumExtension( String extension )
     {
-        throw new RuntimeException( "not used in test" );
+        throw new RuntimeException( "not implemented" );
+    }
+
+    @Override
+    public boolean isChecksumArtifact( Artifact artifact )
+    {
+        throw new RuntimeException( "not implemented" );
     }
 
     private static class MessageDigestChecksumAlgorithmFactory

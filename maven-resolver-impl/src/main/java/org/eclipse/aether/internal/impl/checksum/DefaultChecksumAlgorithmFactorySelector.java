@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
@@ -100,7 +101,7 @@ public class DefaultChecksumAlgorithmFactorySelector
     }
 
     @Override
-    public boolean isChecksum( String extension )
+    public boolean isChecksumExtension( String extension )
     {
         requireNonNull( extension );
         if ( extension.contains( "." ) )
@@ -111,5 +112,11 @@ public class DefaultChecksumAlgorithmFactorySelector
         {
             return factories.values().stream().anyMatch( a -> extension.equals( a.getFileExtension() ) );
         }
+    }
+
+    @Override
+    public boolean isChecksumArtifact( Artifact artifact )
+    {
+        return isChecksumExtension( artifact.getExtension() );
     }
 }

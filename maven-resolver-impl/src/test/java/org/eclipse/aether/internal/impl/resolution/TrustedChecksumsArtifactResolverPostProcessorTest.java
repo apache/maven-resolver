@@ -110,7 +110,13 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
             }
 
             @Override
-            public boolean isChecksum( String extension )
+            public boolean isChecksumExtension( String extension )
+            {
+                throw new RuntimeException( "not implemented" );
+            }
+
+            @Override
+            public boolean isChecksumArtifact( Artifact artifact )
             {
                 throw new RuntimeException( "not implemented" );
             }
