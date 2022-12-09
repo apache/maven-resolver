@@ -244,7 +244,7 @@ public final class Maven2RepositoryLayoutFactory
         @Override
         public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
         {
-            if ( !hasChecksums( artifact ) || isChecksum( artifact ) )
+            if ( !hasChecksums( artifact ) || isChecksum( artifact.getExtension() ) )
             {
                 return Collections.emptyList();
             }
@@ -267,9 +267,9 @@ public final class Maven2RepositoryLayoutFactory
             return checksumLocations;
         }
 
-        private boolean isChecksum( Artifact artifact )
+        private boolean isChecksum( String extension )
         {
-            return checksumAlgorithmFactorySelector.isChecksumArtifact( artifact );
+            return checksumAlgorithmFactorySelector.isChecksumExtension( extension );
         }
     }
 }

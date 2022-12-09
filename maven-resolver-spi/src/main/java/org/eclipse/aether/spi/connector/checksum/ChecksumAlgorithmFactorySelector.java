@@ -22,8 +22,6 @@ package org.eclipse.aether.spi.connector.checksum;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.aether.artifact.Artifact;
-
 /**
  * Component performing selection of {@link ChecksumAlgorithmFactory} based on known factory names.
  * Note: this component is NOT meant to be implemented or extended by client, is exposed ONLY to make clients
@@ -43,7 +41,7 @@ public interface ChecksumAlgorithmFactorySelector
     ChecksumAlgorithmFactory select( String algorithmName );
 
     /**
-     * Returns a list of factories for given algorithm names in order as collection is ordered, or throws if any of the
+     * Returns a list of factories in same order as algorithm names are ordered, or throws if any of the
      * algorithm name is not supported. The returned list has equal count of elements as passed in collection of names,
      * and if names contains duplicated elements, the returned list of algorithms will have duplicates as well.
      *
@@ -54,8 +52,8 @@ public interface ChecksumAlgorithmFactorySelector
     List<ChecksumAlgorithmFactory> selectList( Collection<String> algorithmNames );
 
     /**
-     * Returns a collection of supported algorithms. This set represents ALL the algorithms supported by Resolver,
-     * and is NOT in any relation to given repository layout used checksums, returned by method {@link
+     * Returns immutable collection of all supported algorithms. This set represents ALL the algorithms supported by
+     * Resolver, and is NOT in any relation to given repository layout used checksums, returned by method {@link
      * org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()} (in fact, is super set
      * of it).
      */
@@ -69,11 +67,4 @@ public interface ChecksumAlgorithmFactorySelector
      * @since 1.9.3
      */
     boolean isChecksumExtension( String extension );
-
-    /**
-     * Returns {@code true} if passed in artifact matches any known checksum artifact.
-     *
-     * @since 1.9.3
-     */
-    boolean isChecksumArtifact( Artifact artifact );
 }

@@ -23,13 +23,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 
@@ -95,9 +94,9 @@ public class DefaultChecksumAlgorithmFactorySelector
     }
 
     @Override
-    public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
+    public Collection<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
     {
-        return new ArrayList<>( factories.values() );
+        return Collections.unmodifiableCollection( factories.values() );
     }
 
     @Override
@@ -112,11 +111,5 @@ public class DefaultChecksumAlgorithmFactorySelector
         {
             return factories.values().stream().anyMatch( a -> extension.equals( a.getFileExtension() ) );
         }
-    }
-
-    @Override
-    public boolean isChecksumArtifact( Artifact artifact )
-    {
-        return isChecksumExtension( artifact.getExtension() );
     }
 }

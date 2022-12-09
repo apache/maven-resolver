@@ -114,12 +114,6 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
             {
                 throw new RuntimeException( "not implemented" );
             }
-
-            @Override
-            public boolean isChecksumArtifact( Artifact artifact )
-            {
-                throw new RuntimeException( "not implemented" );
-            }
         };
         subject = new TrustedChecksumsArtifactResolverPostProcessor( selector,
                 Collections.singletonMap( TRUSTED_SOURCE_NAME, this ) );
