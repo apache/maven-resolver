@@ -23,12 +23,17 @@
  * The deprecated {@link org.eclipse.aether.transform.FileTransformer} is able to alter install/deploy artifact
  * coordinates and/or its content. Still, the API is OOM prone, and is deprecated.
  * <p>
- * The new {@link org.eclipse.aether.transform.ArtifactTransformer} serves similar purpose, but adds several
+ * The {@link org.eclipse.aether.transform.ArtifactTransformer} serves similar purpose, but adds several
  * benefits: it is able to distinguish install/deploy operation, is able to inhibit (prevent) install or deploy,
  * is able to completely replace artifact and/or its content as well.
  * <p>
+ * Important note: given transformation happens within resolver boundaries, any transformation (aside of "identity")
+ * may change artifact coordinates and/or artifact content, hence if there was some computation involved BEFORE
+ * transformation (typically, signing artifact or checksum/hash calculation for artifact) the transformation may render
+ * all those invalid, UNLESS the transformation transform all the subordinates of transformed artifact as well.
+ * <p>
  * Note: if {@link org.eclipse.aether.transform.FileTransformer} is present, it overrides the
- * {@link org.eclipse.aether.transform.ArtifactTransformer}, so please use either this or that. In future, the
+ * {@link org.eclipse.aether.transform.ArtifactTransformer}, so please use either this or that. In the future, the
  * deprecated transformer will be removed.
  */
 package org.eclipse.aether.transform;

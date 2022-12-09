@@ -26,6 +26,11 @@ import org.eclipse.aether.artifact.Artifact;
 
 /**
  * Can transform am artifact while installing/deploying.
+ * <p>
+ * Important note: given transformation happens within resolver boundaries, any transformation (aside of "identity")
+ * may change artifact coordinates and/or artifact content, hence if there was some computation involved BEFORE
+ * transformation (typically, signing artifact or checksum/hash calculation for artifact) the transformation may render
+ * all those invalid, UNLESS the transformation transform all the subordinates of transformed artifact as well.
  * 
  * @author Robert Scholte et al.
  * @since 1.9.3
