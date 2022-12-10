@@ -22,7 +22,6 @@ package org.eclipse.aether.internal.impl;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -56,7 +55,6 @@ import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.transform.FileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -235,42 +233,12 @@ public class DefaultInstaller
     private void install( RepositorySystemSession session, RequestTrace trace, Artifact artifact )
         throws InstallationException
     {
-        LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+        final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+        final File srcFile = artifact.getFile();
 
-        File srcFile = artifact.getFile();
+        File dstFile = new File( lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact( artifact ) );
 
-        Collection<FileTransformer> fileTransformers = session.getFileTransformerManager()
-                .getTransformersForArtifact( artifact );
-        if ( fileTransformers.isEmpty() )
-        {
-            install( session, trace, artifact, lrm, srcFile, null );
-        }
-        else
-        {
-            for ( FileTransformer fileTransformer : fileTransformers )
-            {
-                install( session, trace, artifact, lrm, srcFile, fileTransformer );
-            }
-        }
-    }
-
-    private void install( RepositorySystemSession session, RequestTrace trace, Artifact artifact,
-                          LocalRepositoryManager lrm, File srcFile, FileTransformer fileTransformer )
-        throws InstallationException
-    {
-        final Artifact targetArtifact;
-        if ( fileTransformer != null )
-        {
-            targetArtifact = fileTransformer.transformArtifact( artifact );
-        }
-        else
-        {
-            targetArtifact = artifact;
-        }
-
-        File dstFile = new File( lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact( targetArtifact ) );
-
-        artifactInstalling( session, trace, targetArtifact, dstFile );
+        artifactInstalling( session, trace, artifact, dstFile );
 
         Exception exception = null;
         try
@@ -281,20 +249,12 @@ public class DefaultInstaller
             }
 
             boolean copy =
-                "pom".equals( targetArtifact.getExtension() ) || srcFile.lastModified() != dstFile.lastModified()
+                "pom".equals( artifact.getExtension() ) || srcFile.lastModified() != dstFile.lastModified()
                     || srcFile.length() != dstFile.length() || !srcFile.exists();
 
             if ( !copy )
             {
                 LOGGER.debug( "Skipped re-installing {} to {}, seems unchanged", srcFile, dstFile );
-            }
-            else if ( fileTransformer != null ) 
-            {
-                try ( InputStream is = fileTransformer.transformData( srcFile ) )
-                {
-                    fileProcessor.write( dstFile, is );
-                    dstFile.setLastModified( srcFile.lastModified() );
-                }
             }
             else
             {
@@ -302,17 +262,17 @@ public class DefaultInstaller
                 dstFile.setLastModified( srcFile.lastModified() );
             }
 
-            lrm.add( session, new LocalArtifactRegistration( targetArtifact ) );
+            lrm.add( session, new LocalArtifactRegistration( artifact ) );
         }
         catch ( Exception e )
         {
             exception = e;
-            throw new InstallationException( "Failed to install artifact " + targetArtifact + ": " + e.getMessage(),
+            throw new InstallationException( "Failed to install artifact " + artifact + ": " + e.getMessage(),
                     e );
         }
         finally
         {
-            artifactInstalled( session, trace, targetArtifact, dstFile, exception );
+            artifactInstalled( session, trace, artifact, dstFile, exception );
         }
     }
 
