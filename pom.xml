@@ -342,6 +342,7 @@
                     <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.transport.TransporterProvider</exclude>
+                    <exclude>org.eclipse.aether.repository.WorkspaceReader</exclude>
                   </excludes>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
                   <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>

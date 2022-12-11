@@ -18,8 +18,13 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,8 +37,8 @@ import java.util.Map;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent.EventType;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -46,6 +51,7 @@ import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.AbstractWorkspaceReader;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -57,7 +63,6 @@ import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
-import org.eclipse.aether.repository.WorkspaceRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -453,20 +458,17 @@ public class DefaultArtifactResolverTest
     public void testResolveFromWorkspace()
         throws IOException, ArtifactResolutionException
     {
-        WorkspaceReader workspace = new WorkspaceReader()
+		WorkspaceReader workspace = new AbstractWorkspaceReader("default")
         {
 
-            public WorkspaceRepository getRepository()
-            {
-                return new WorkspaceRepository( "default" );
-            }
-
-            public List<String> findVersions( Artifact artifact )
+            @Override
+			public List<String> findVersions( Artifact artifact )
             {
                 return Arrays.asList( artifact.getVersion() );
             }
 
-            public File findArtifact( Artifact artifact )
+            @Override
+			public File findArtifact( Artifact artifact )
             {
                 try
                 {
@@ -502,23 +504,15 @@ public class DefaultArtifactResolverTest
     public void testResolveFromWorkspaceFallbackToRepository()
         throws ArtifactResolutionException
     {
-        WorkspaceReader workspace = new WorkspaceReader()
+		WorkspaceReader workspace = new AbstractWorkspaceReader("default")
         {
 
-            public WorkspaceRepository getRepository()
-            {
-                return new WorkspaceRepository( "default" );
-            }
-
-            public List<String> findVersions( Artifact artifact )
+            @Override
+			public List<String> findVersions( Artifact artifact )
             {
                 return Arrays.asList( artifact.getVersion() );
             }
 
-            public File findArtifact( Artifact artifact )
-            {
-                return null;
-            }
         };
         session.setWorkspaceReader( workspace );
 
@@ -704,7 +698,8 @@ public class DefaultArtifactResolverTest
         resolver.setVersionResolver( new VersionResolver()
         {
 
-            public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
+            @Override
+			public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
                 throws VersionResolutionException
             {
                 throw new VersionResolutionException( new VersionResult( request ) );
@@ -741,7 +736,8 @@ public class DefaultArtifactResolverTest
         resolver.setVersionResolver( new VersionResolver()
         {
 
-            public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
+            @Override
+			public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
                 throws VersionResolutionException
             {
                 throw new VersionResolutionException( new VersionResult( request ) );
@@ -782,32 +778,38 @@ public class DefaultArtifactResolverTest
         session.setLocalRepositoryManager( new LocalRepositoryManager()
         {
 
-            public LocalRepository getRepository()
+            @Override
+			public LocalRepository getRepository()
             {
                 return null;
             }
 
-            public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+            @Override
+			public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
             {
                 return null;
             }
 
-            public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+            @Override
+			public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
             {
                 return null;
             }
 
-            public String getPathForLocalMetadata( Metadata metadata )
+            @Override
+			public String getPathForLocalMetadata( Metadata metadata )
             {
                 return null;
             }
 
-            public String getPathForLocalArtifact( Artifact artifact )
+            @Override
+			public String getPathForLocalArtifact( Artifact artifact )
             {
                 return null;
             }
 
-            public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
+            @Override
+			public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
             {
 
                 LocalArtifactResult result = new LocalArtifactResult( request );
@@ -823,11 +825,13 @@ public class DefaultArtifactResolverTest
                 return result;
             }
 
-            public void add( RepositorySystemSession session, LocalArtifactRegistration request )
+            @Override
+			public void add( RepositorySystemSession session, LocalArtifactRegistration request )
             {
             }
 
-            public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
+            @Override
+			public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
             {
                 LocalMetadataResult result = new LocalMetadataResult( request );
                 try
@@ -841,7 +845,8 @@ public class DefaultArtifactResolverTest
                 return result;
             }
 
-            public void add( RepositorySystemSession session, LocalMetadataRegistration request )
+            @Override
+			public void add( RepositorySystemSession session, LocalMetadataRegistration request )
             {
             }
         } );
@@ -868,32 +873,38 @@ public class DefaultArtifactResolverTest
         session.setLocalRepositoryManager( new LocalRepositoryManager()
         {
 
-            public LocalRepository getRepository()
+            @Override
+			public LocalRepository getRepository()
             {
                 return new LocalRepository( new File("") );
             }
 
-            public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+            @Override
+			public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
             {
                 return null;
             }
 
-            public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+            @Override
+			public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
             {
                 return null;
             }
 
-            public String getPathForLocalMetadata( Metadata metadata )
+            @Override
+			public String getPathForLocalMetadata( Metadata metadata )
             {
                 return null;
             }
 
-            public String getPathForLocalArtifact( Artifact artifact )
+            @Override
+			public String getPathForLocalArtifact( Artifact artifact )
             {
                 return null;
             }
 
-            public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
+            @Override
+			public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
             {
 
                 LocalArtifactResult result = new LocalArtifactResult( request );
@@ -909,16 +920,19 @@ public class DefaultArtifactResolverTest
                 return result;
             }
 
-            public void add( RepositorySystemSession session, LocalArtifactRegistration request )
+            @Override
+			public void add( RepositorySystemSession session, LocalArtifactRegistration request )
             {
             }
 
-            public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
+            @Override
+			public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
             {
                 return new LocalMetadataResult( request );
             }
 
-            public void add( RepositorySystemSession session, LocalMetadataRegistration request )
+            @Override
+			public void add( RepositorySystemSession session, LocalMetadataRegistration request )
             {
             }
         } );
@@ -928,7 +942,8 @@ public class DefaultArtifactResolverTest
         resolver.setVersionResolver( new VersionResolver()
         {
 
-            public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
+            @Override
+			public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
             {
                 return new VersionResult( request ).setRepository( new LocalRepository( "id" ) ).setVersion( request.getArtifact().getVersion() );
             }
@@ -951,32 +966,38 @@ public class DefaultArtifactResolverTest
         session.setLocalRepositoryManager( new LocalRepositoryManager()
         {
 
-            public LocalRepository getRepository()
+            @Override
+			public LocalRepository getRepository()
             {
                 return new LocalRepository( new File( "" ) );
             }
 
-            public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
+            @Override
+			public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
             {
                 return null;
             }
 
-            public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
+            @Override
+			public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
             {
                 return null;
             }
 
-            public String getPathForLocalMetadata( Metadata metadata )
+            @Override
+			public String getPathForLocalMetadata( Metadata metadata )
             {
                 return null;
             }
 
-            public String getPathForLocalArtifact( Artifact artifact )
+            @Override
+			public String getPathForLocalArtifact( Artifact artifact )
             {
                 return null;
             }
 
-            public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
+            @Override
+			public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
             {
 
                 LocalArtifactResult result = new LocalArtifactResult( request );
@@ -992,16 +1013,19 @@ public class DefaultArtifactResolverTest
                 return result;
             }
 
-            public void add( RepositorySystemSession session, LocalArtifactRegistration request )
+            @Override
+			public void add( RepositorySystemSession session, LocalArtifactRegistration request )
             {
             }
 
-            public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
+            @Override
+			public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
             {
                 return new LocalMetadataResult( request );
             }
 
-            public void add( RepositorySystemSession session, LocalMetadataRegistration request )
+            @Override
+			public void add( RepositorySystemSession session, LocalMetadataRegistration request )
             {
             }
 
@@ -1011,7 +1035,8 @@ public class DefaultArtifactResolverTest
         resolver.setVersionResolver( new VersionResolver()
         {
 
-            public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
+            @Override
+			public VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
             {
                 return new VersionResult( request ).setVersion( request.getArtifact().getVersion() );
             }

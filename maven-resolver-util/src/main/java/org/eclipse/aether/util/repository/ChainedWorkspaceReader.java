@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.WorkspaceReader;
@@ -90,6 +91,7 @@ public final class ChainedWorkspaceReader
         return new ChainedWorkspaceReader( reader1, reader2 );
     }
 
+    @Override
     public File findArtifact( Artifact artifact )
     {
         requireNonNull( artifact, "artifact cannot be null" );
@@ -107,6 +109,7 @@ public final class ChainedWorkspaceReader
         return file;
     }
 
+    @Override
     public List<String> findVersions( Artifact artifact )
     {
         requireNonNull( artifact, "artifact cannot be null" );
@@ -120,6 +123,13 @@ public final class ChainedWorkspaceReader
         return Collections.unmodifiableList( new ArrayList<>( versions ) );
     }
 
+    @Override
+    public Stream<Artifact> listArtifacts()
+    {
+        return readers.stream().flatMap( WorkspaceReader::listArtifacts );
+    }
+
+    @Override
     public WorkspaceRepository getRepository()
     {
         Key key = new Key( readers );

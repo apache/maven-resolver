@@ -21,13 +21,18 @@ package org.eclipse.aether.repository;
 
 import java.io.File;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.eclipse.aether.artifact.Artifact;
 
 /**
  * Manages a repository backed by the IDE workspace, a build session or a similar ad-hoc collection of artifacts.
+ * <em>Note:</em> Implementors are strongly advised to inherit from {@link AbstractWorkspaceReader} instead of directly
+ * implementing this interface.
  * 
  * @see org.eclipse.aether.RepositorySystemSession#getWorkspaceReader()
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface WorkspaceReader
 {
@@ -54,5 +59,12 @@ public interface WorkspaceReader
      * @return The available versions of the artifact, must not be {@code null}.
      */
     List<String> findVersions( Artifact artifact );
+
+    /**
+     * List all available artifacts this workspace repository manages.
+     * 
+     * @return a stream of artifacts in no particular order
+     */
+    Stream<Artifact> listArtifacts();
 
 }
