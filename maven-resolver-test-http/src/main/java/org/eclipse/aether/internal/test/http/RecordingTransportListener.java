@@ -1,4 +1,4 @@
-package org.eclipse.aether.transport.http;
+package org.eclipse.aether.internal.test.http;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,8 +26,14 @@ import java.nio.ByteBuffer;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 
-class RecordingTransportListener
-    extends TransportListener
+/**
+ * Listener used in {@link HttpTransporterTestSupport}.
+ * <p>
+ * This class is utility for testing, hence for simplicity it has some checkstyle rules relaxed.
+ */
+@SuppressWarnings( "checkstyle:visibilitymodifier" )
+public class RecordingTransportListener
+        extends TransportListener
 {
 
     public final ByteArrayOutputStream baos = new ByteArrayOutputStream( 1024 );
@@ -46,7 +52,7 @@ class RecordingTransportListener
 
     @Override
     public void transportStarted( long dataOffset, long dataLength )
-        throws TransferCancelledException
+            throws TransferCancelledException
     {
         startedCount++;
         progressedCount = 0;
@@ -61,7 +67,7 @@ class RecordingTransportListener
 
     @Override
     public void transportProgressed( ByteBuffer data )
-        throws TransferCancelledException
+            throws TransferCancelledException
     {
         progressedCount++;
         baos.write( data.array(), data.arrayOffset() + ( (Buffer) data ).position(), data.remaining() );

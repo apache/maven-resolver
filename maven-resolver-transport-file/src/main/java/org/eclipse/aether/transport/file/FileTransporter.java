@@ -29,8 +29,6 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.transfer.NoTransporterException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A transporter using {@link java.io.File}.
@@ -38,8 +36,6 @@ import org.slf4j.LoggerFactory;
 final class FileTransporter
     extends AbstractTransporter
 {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger( FileTransporter.class );
 
     private final File basedir;
 
@@ -94,10 +90,7 @@ final class FileTransporter
         }
         catch ( Exception e )
         {
-            if ( !file.delete() && file.exists() )
-            {
-                LOGGER.debug( "Could not delete partial file {}", file );
-            }
+            file.delete();
             throw e;
         }
     }

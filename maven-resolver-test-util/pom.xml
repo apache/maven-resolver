@@ -36,7 +36,7 @@
   </description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.testutil</Automatic-Module-Name>
+    <Automatic-Module-Name>org.apache.maven.resolver.test.util</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
   </properties>
 

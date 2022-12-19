@@ -70,6 +70,11 @@
 
   <properties>
     <javaVersion>8</javaVersion>
+    <maven.compiler.release>${javaVersion}</maven.compiler.release>
+    <maven.compiler.source>${javaVersion}</maven.compiler.source>
+    <maven.compiler.target>${javaVersion}</maven.compiler.target>
+    <minimalJavaBuildVersion>11</minimalJavaBuildVersion>
+
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
@@ -93,10 +98,14 @@
     <module>maven-resolver-named-locks-redisson</module>
     <module>maven-resolver-impl</module>
     <module>maven-resolver-test-util</module>
+    <module>maven-resolver-test-http</module>
     <module>maven-resolver-connector-basic</module>
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-http</module>
+    <module>maven-resolver-transport-java11</module>
+    <module>maven-resolver-transport-jetty</module>
+    <module>maven-resolver-transport-okhttp</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-demos</module>
   </modules>
@@ -156,6 +165,12 @@
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-test-util</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-test-http</artifactId>
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
@@ -550,23 +565,24 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.22</version>
-        <configuration>
-          <signature>
-            <groupId>org.codehaus.mojo.signature</groupId>
-            <artifactId>java18</artifactId>
-            <version>1.0</version>
-          </signature>
-        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
-            <id>check-java-compat</id>
-            <phase>process-classes</phase>
+            <id>enforce-bytecode-version</id>
             <goals>
-              <goal>check</goal>
+              <goal>enforce</goal>
             </goals>
+            <configuration>
+              <rules>
+                <!-- https://issues.apache.org/jira/browse/MPOM-387 -->
+                <enforceBytecodeVersion>
+                  <maxJdkVersion>${maven.compiler.target}</maxJdkVersion>
+                  <ignoredScopes>test,provided</ignoredScopes>
+                </enforceBytecodeVersion>
+              </rules>
+              <fail>true</fail>
+            </configuration>
           </execution>
         </executions>
       </plugin>

@@ -28,28 +28,20 @@
     <version>1.9.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-http</artifactId>
+  <artifactId>maven-resolver-transport-jetty</artifactId>
 
-  <name>Maven Artifact Resolver Transport HTTP</name>
+  <name>Maven Artifact Resolver Transport Jetty</name>
   <description>
-      A transport implementation for repositories using http:// and https:// URLs.
+    A transport implementation for repositories using http:// and https:// URLs using Jetty Client.
   </description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.http</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
+    <javaVersion>11</javaVersion>
 
-  <dependencyManagement>
-    <dependencies>
-      <!-- HttpClient pulls in 1.11 that has CVE. Is not used directly in code -->
-      <dependency>
-        <groupId>commons-codec</groupId>
-        <artifactId>commons-codec</artifactId>
-        <version>1.15</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+    <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty</Automatic-Module-Name>
+    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+    <jettyVersion>10.0.13</jettyVersion>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -70,33 +62,21 @@
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.13</version>
-      <exclusions>
-        <exclusion>
-          <!-- using jcl-over-slf4j instead -->
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+      <version>${jettyVersion}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>4.4.15</version>
+      <groupId>org.eclipse.jetty.http2</groupId>
+      <artifactId>http2-client</artifactId>
+      <version>${jettyVersion}</version>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>${slf4jVersion}</version>
-      <scope>runtime</scope>
+      <groupId>org.eclipse.jetty.http2</groupId>
+      <artifactId>http2-http-client-transport</artifactId>
+      <version>${jettyVersion}</version>
     </dependency>
 
     <dependency>
@@ -117,6 +97,11 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -160,6 +145,24 @@
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>pkg</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/pkg.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

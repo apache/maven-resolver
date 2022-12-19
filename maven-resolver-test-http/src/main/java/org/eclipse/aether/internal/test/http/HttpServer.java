@@ -1,4 +1,4 @@
-package org.eclipse.aether.transport.http;
+package org.eclipse.aether.internal.test.http;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package org.eclipse.aether.transport.http;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,11 +19,15 @@ package org.eclipse.aether.transport.http;
  * under the License.
  */
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -32,28 +36,40 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.eclipse.aether.util.ChecksumUtils;
+import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.util.B64Code;
 import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HttpServer
+import static java.util.Objects.requireNonNull;
+
+/**
+ * A real HTTP server used as target for transport testing. Is able to mimic various conditions. When HTTPS enabled,
+ * it will support both HTTP/1.1 and HTTP/2 protocols.
+ * <p>
+ * This class is utility for testing, hence for simplicity it has some checkstyle rules relaxed.
+ */
+@SuppressWarnings( "checkstyle:visibilitymodifier" )
+public final class HttpServer
 {
 
+    /**
+     * In memory server log entries.
+     */
     public static class LogEntry
     {
 
@@ -78,12 +94,18 @@ public class HttpServer
 
     }
 
+    /**
+     * Behaviour of Expect.
+     */
     public enum ExpectContinue
     {
         FAIL, PROPER, BROKEN
     }
 
-    public enum ChecksumHeader
+    /**
+     * Checksum modes.
+     */
+    public enum ChecksumMode
     {
         NEXUS, XCHECKSUM
     }
@@ -98,7 +120,9 @@ public class HttpServer
 
     private ExpectContinue expectContinue = ExpectContinue.PROPER;
 
-    private ChecksumHeader checksumHeader;
+    private ChecksumMode checksumMode;
+
+    private String sha1Checksums;
 
     private Server server;
 
@@ -114,7 +138,15 @@ public class HttpServer
 
     private String proxyPassword;
 
-    private List<LogEntry> logEntries = Collections.synchronizedList( new ArrayList<LogEntry>() );
+    private String keyStorePath;
+
+    private String keyStorePassword;
+
+    private String trustStorePath;
+
+    private String trustStorePassword;
+
+    private final List<LogEntry> logEntries = Collections.synchronizedList( new ArrayList<>() );
 
     public String getHost()
     {
@@ -145,13 +177,37 @@ public class HttpServer
     {
         if ( httpsConnector == null )
         {
+            HttpConfiguration httpConfig = new HttpConfiguration();
+            httpConfig.addCustomizer( new SecureRequestCustomizer() );
+            HttpConnectionFactory http11 = new HttpConnectionFactory( httpConfig );
+            HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory( httpConfig );
+            ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
+            alpn.setDefaultProtocol( http11.getProtocol() );
+
             SslContextFactory.Server ssl = new SslContextFactory.Server();
             ssl.setNeedClientAuth( true );
-            ssl.setKeyStorePath( new File( "src/test/resources/ssl/server-store" ).getAbsolutePath() );
-            ssl.setKeyStorePassword( "server-pwd" );
-            ssl.setTrustStorePath( new File( "src/test/resources/ssl/client-store" ).getAbsolutePath() );
-            ssl.setTrustStorePassword( "client-pwd" );
-            httpsConnector = new ServerConnector( server, ssl );
+            if ( keyStorePath != null )
+            {
+                ssl.setKeyStorePath( keyStorePath );
+                if ( keyStorePassword != null )
+                {
+                    ssl.setKeyStorePassword( keyStorePassword );
+                }
+
+            }
+            if ( trustStorePath != null )
+            {
+                ssl.setTrustStorePath( trustStorePath );
+                if ( trustStorePassword != null )
+                {
+                    ssl.setTrustStorePassword( trustStorePassword );
+                }
+            }
+
+            SslConnectionFactory tls = new SslConnectionFactory( ssl, alpn.getProtocol() );
+
+            httpsConnector = new ServerConnector( server, tls, alpn, h2, http11 );
+
             server.addConnector( httpsConnector );
             try
             {
@@ -194,9 +250,18 @@ public class HttpServer
         return this;
     }
 
-    public HttpServer setChecksumHeader( ChecksumHeader checksumHeader )
+    public HttpServer setChecksumHeader( ChecksumMode checksumMode, String sha1Checksums )
     {
-        this.checksumHeader = checksumHeader;
+        if ( checksumMode == null )
+        {
+            this.checksumMode = null;
+            this.sha1Checksums = null;
+        }
+        else
+        {
+            this.checksumMode = checksumMode;
+            this.sha1Checksums = requireNonNull( sha1Checksums );
+        }
         return this;
     }
 
@@ -214,8 +279,38 @@ public class HttpServer
         return this;
     }
 
+    public HttpServer setKeyStore( String keyStorePath, String keyStorePassword )
+    {
+        if ( keyStorePath == null )
+        {
+            this.keyStorePath = null;
+            this.keyStorePassword = null;
+        }
+        else
+        {
+            this.keyStorePath = keyStorePath;
+            this.keyStorePassword = keyStorePassword;
+        }
+        return this;
+    }
+
+    public HttpServer setTrustStore( String trustStorePath, String trustStorePassword )
+    {
+        if ( trustStorePath == null )
+        {
+            this.trustStorePath = null;
+            this.trustStorePassword = null;
+        }
+        else
+        {
+            this.trustStorePath = trustStorePath;
+            this.trustStorePassword = trustStorePassword;
+        }
+        return this;
+    }
+
     public HttpServer start()
-        throws Exception
+            throws Exception
     {
         if ( server != null )
         {
@@ -239,7 +334,7 @@ public class HttpServer
     }
 
     public void stop()
-        throws Exception
+            throws Exception
     {
         if ( server != null )
         {
@@ -251,13 +346,13 @@ public class HttpServer
     }
 
     private class LogHandler
-        extends AbstractHandler
+            extends AbstractHandler
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
         {
             LOGGER.info( "{} {}{}", req.getMethod(), req.getRequestURL(),
-                    req.getQueryString() != null ? "?" + req.getQueryString() : "");
+                    req.getQueryString() != null ? "?" + req.getQueryString() : "" );
 
             Map<String, String> headers = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
             for ( Enumeration<String> en = req.getHeaderNames(); en.hasMoreElements(); )
@@ -274,19 +369,21 @@ public class HttpServer
                 }
                 headers.put( name, buffer.toString() );
             }
-            logEntries.add( new LogEntry( req.getMethod(), req.getPathInfo(), Collections.unmodifiableMap( headers ) ) );
+            logEntries.add(
+                    new LogEntry( req.getMethod(), req.getPathInfo(), Collections.unmodifiableMap( headers ) ) );
         }
 
     }
 
+    private static final Pattern SIMPLE_RANGE = Pattern.compile( "bytes=([0-9])+-" );
+
     private class RepoHandler
-        extends AbstractHandler
+            extends AbstractHandler
     {
 
-        private final Pattern SIMPLE_RANGE = Pattern.compile( "bytes=([0-9])+-" );
-
+        @SuppressWarnings( "checkstyle:methodlength" )
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
+                throws IOException
         {
             String path = req.getPathInfo().substring( 1 );
 
@@ -296,7 +393,8 @@ public class HttpServer
             }
             req.setHandled( true );
 
-            if ( ExpectContinue.FAIL.equals( expectContinue ) && request.getHeader( HttpHeader.EXPECT.asString() ) != null )
+            if ( ExpectContinue.FAIL.equals( expectContinue )
+                    && request.getHeader( HttpHeader.EXPECT.asString() ) != null )
             {
                 response.setStatus( HttpServletResponse.SC_EXPECTATION_FAILED );
                 return;
@@ -337,24 +435,25 @@ public class HttpServer
                         return;
                     }
                 }
-                response.setStatus( ( offset > 0L ) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK );
+                response.setStatus(
+                        ( offset > 0L ) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK );
                 response.setDateHeader( HttpHeader.LAST_MODIFIED.asString(), file.lastModified() );
                 response.setHeader( HttpHeader.CONTENT_LENGTH.asString(), Long.toString( file.length() - offset ) );
                 if ( offset > 0L )
                 {
-                    response.setHeader( HttpHeader.CONTENT_RANGE.asString(), "bytes " + offset + "-" + ( file.length() - 1L )
-                        + "/" + file.length() );
+                    response.setHeader( HttpHeader.CONTENT_RANGE.asString(),
+                            "bytes " + offset + "-" + ( file.length() - 1L )
+                                    + "/" + file.length() );
                 }
-                if ( checksumHeader != null )
+                if ( checksumMode != null )
                 {
-                    Map<String, Object> checksums = ChecksumUtils.calc( file, Collections.singleton( "SHA-1" ) );
-                    if ( checksumHeader == ChecksumHeader.NEXUS )
+                    if ( checksumMode == ChecksumMode.NEXUS )
                     {
-                        response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get( "SHA-1" ) + "}}" );
+                        response.setHeader( HttpHeader.ETAG.asString(), "{SHA1{" + sha1Checksums + "}}" );
                     }
-                    else if ( checksumHeader == ChecksumHeader.XCHECKSUM )
+                    else if ( checksumMode == ChecksumMode.XCHECKSUM )
                     {
-                        response.setHeader( "x-checksum-sha1", checksums.get( "SHA-1" ).toString() );
+                        response.setHeader( "x-checksum-sha1", sha1Checksums );
                     }
                 }
                 if ( HttpMethod.HEAD.is( req.getMethod() ) )
@@ -470,7 +569,7 @@ public class HttpServer
     }
 
     private class RedirectHandler
-        extends AbstractHandler
+            extends AbstractHandler
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
@@ -507,14 +606,14 @@ public class HttpServer
     }
 
     private class AuthHandler
-        extends AbstractHandler
+            extends AbstractHandler
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
-            throws IOException
+                throws IOException
         {
             if ( ExpectContinue.BROKEN.equals( expectContinue )
-                && "100-continue".equalsIgnoreCase( request.getHeader( HttpHeader.EXPECT.asString() ) ) )
+                    && "100-continue".equalsIgnoreCase( request.getHeader( HttpHeader.EXPECT.asString() ) ) )
             {
                 request.getInputStream();
             }
@@ -534,14 +633,15 @@ public class HttpServer
     }
 
     private class ProxyAuthHandler
-        extends AbstractHandler
+            extends AbstractHandler
     {
 
         public void handle( String target, Request req, HttpServletRequest request, HttpServletResponse response )
         {
             if ( proxyUsername != null && proxyPassword != null )
             {
-                if ( checkBasicAuth( request.getHeader( HttpHeader.PROXY_AUTHORIZATION.asString() ), proxyUsername, proxyPassword ) )
+                if ( checkBasicAuth( request.getHeader( HttpHeader.PROXY_AUTHORIZATION.asString() ), proxyUsername,
+                        proxyPassword ) )
                 {
                     return;
                 }
@@ -564,16 +664,13 @@ public class HttpServer
                 if ( "basic".equalsIgnoreCase( method ) )
                 {
                     credentials = credentials.substring( space + 1 );
-                    credentials = B64Code.decode( credentials, StringUtil.__ISO_8859_1 );
+                    credentials = new String( Base64.getDecoder().decode( credentials ) );
                     int i = credentials.indexOf( ':' );
                     if ( i > 0 )
                     {
                         String user = credentials.substring( 0, i );
                         String pass = credentials.substring( i + 1 );
-                        if ( username.equals( user ) && password.equals( pass ) )
-                        {
-                            return true;
-                        }
+                        return username.equals( user ) && password.equals( pass );
                     }
                 }
             }
