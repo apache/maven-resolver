@@ -109,6 +109,20 @@ public class DefaultRepositoryConnectorProvider
         throws NoRepositoryConnectorException
     {
         requireNonNull( repository, "remote repository cannot be null" );
+
+        if ( repository.isBlocked() )
+        {
+            if ( repository.getMirroredRepositories().isEmpty() )
+            {
+                throw new NoRepositoryConnectorException( repository, "Blocked repository: " + repository );
+            }
+            else
+            {
+                throw new NoRepositoryConnectorException( repository, "Blocked mirror for repositories: "
+                        + repository.getMirroredRepositories() );
+            }
+        }
+
         RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter( session );
 
         PrioritizedComponents<RepositoryConnectorFactory> factories = new PrioritizedComponents<>( session );
