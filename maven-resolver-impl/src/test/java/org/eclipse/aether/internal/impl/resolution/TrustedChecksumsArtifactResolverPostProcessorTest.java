@@ -108,6 +108,12 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
             {
                 return Collections.singletonList( checksumAlgorithmFactory );
             }
+
+            @Override
+            public boolean isChecksumExtension( String extension )
+            {
+                throw new RuntimeException( "not implemented" );
+            }
         };
         subject = new TrustedChecksumsArtifactResolverPostProcessor( selector,
                 Collections.singletonMap( TRUSTED_SOURCE_NAME, this ) );

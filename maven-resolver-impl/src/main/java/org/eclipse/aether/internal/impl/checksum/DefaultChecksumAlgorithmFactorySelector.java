@@ -23,8 +23,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,8 +94,22 @@ public class DefaultChecksumAlgorithmFactorySelector
     }
 
     @Override
-    public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
+    public Collection<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
     {
-        return new ArrayList<>( factories.values() );
+        return Collections.unmodifiableCollection( factories.values() );
+    }
+
+    @Override
+    public boolean isChecksumExtension( String extension )
+    {
+        requireNonNull( extension );
+        if ( extension.contains( "." ) )
+        {
+            return factories.values().stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
+        }
+        else
+        {
+            return factories.values().stream().anyMatch( a -> extension.equals( a.getFileExtension() ) );
+        }
     }
 }

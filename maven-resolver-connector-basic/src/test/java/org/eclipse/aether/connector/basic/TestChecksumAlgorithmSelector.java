@@ -98,6 +98,12 @@ public class TestChecksumAlgorithmSelector
                 .collect( toList() );
     }
 
+    @Override
+    public boolean isChecksumExtension( String extension )
+    {
+        throw new RuntimeException( "not implemented" );
+    }
+
     private static class MessageDigestChecksumAlgorithmFactory
             extends ChecksumAlgorithmFactorySupport
     {

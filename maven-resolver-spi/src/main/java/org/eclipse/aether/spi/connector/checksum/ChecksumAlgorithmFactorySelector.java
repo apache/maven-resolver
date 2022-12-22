@@ -41,7 +41,7 @@ public interface ChecksumAlgorithmFactorySelector
     ChecksumAlgorithmFactory select( String algorithmName );
 
     /**
-     * Returns a list of factories for given algorithm names in order as collection is ordered, or throws if any of the
+     * Returns a list of factories in same order as algorithm names are ordered, or throws if any of the
      * algorithm name is not supported. The returned list has equal count of elements as passed in collection of names,
      * and if names contains duplicated elements, the returned list of algorithms will have duplicates as well.
      *
@@ -52,10 +52,19 @@ public interface ChecksumAlgorithmFactorySelector
     List<ChecksumAlgorithmFactory> selectList( Collection<String> algorithmNames );
 
     /**
-     * Returns a collection of supported algorithms. This set represents ALL the algorithms supported by Resolver,
-     * and is NOT in any relation to given repository layout used checksums, returned by method {@link
+     * Returns immutable collection of all supported algorithms. This set represents ALL the algorithms supported by
+     * Resolver, and is NOT in any relation to given repository layout used checksums, returned by method {@link
      * org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()} (in fact, is super set
      * of it).
      */
     Collection<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
+
+    /**
+     * Returns {@code true} if passed in extension matches any known checksum extension. The extension string may
+     * start or contain dot ("."), but does not have to. In former case "ends with" is checked (i.e. "jar.sha1" -> true;
+     * ".sha1" -> true) while in latter equality (i.e. "sha1" -> true).
+     *
+     * @since 1.9.3
+     */
+    boolean isChecksumExtension( String extension );
 }
