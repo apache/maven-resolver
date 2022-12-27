@@ -503,6 +503,27 @@ public class DefaultRepositorySystem
         }
     }
 
+    @Override
+    public void sessionStarted( RepositorySystemSession session )
+    {
+        validateSession( session );
+        repositorySystemLifecycle.sessionStarted( session );
+    }
+
+    @Override
+    public void sessionEnded( RepositorySystemSession session )
+    {
+        validateSession( session );
+        repositorySystemLifecycle.sessionEnded( session );
+    }
+
+    @Override
+    public void addOnSessionEndedHandle( RepositorySystemSession session, Runnable handler )
+    {
+        validateSession( session );
+        repositorySystemLifecycle.addOnSessionEndedHandle( session, handler );
+    }
+
     private void validateSession( RepositorySystemSession session )
     {
         requireNonNull( session, "repository system session cannot be null" );

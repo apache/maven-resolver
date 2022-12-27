@@ -302,4 +302,39 @@ public interface RepositorySystem
      * @since 1.9.0
      */
     void shutdown();
+
+    /**
+     * Registers the session for lifecycle tracking: it marks that the passed in session instance is about to start.
+     * After this call it is possible to register "on close" handlers using
+     * {@link #addOnSessionEndedHandle(RepositorySystemSession, Runnable)} method that will execute once
+     * {@link #sessionEnded(RepositorySystemSession)} method was invoked.
+     * <p>
+     * <en>Same session instance can be started only once.</em>
+     *
+     * @param session the session that is about to start, never {@code null}.
+     * @since TBD
+     */
+    void sessionStarted( RepositorySystemSession session );
+
+    /**
+     * Registers a handler to execute when this session ends. This method throws, if the passed in session instance
+     * was not passed to method {@link #sessionStarted(RepositorySystemSession)} beforehand.
+     *
+     * @param session the session for which the handler needs  to be registered, never {@code null}.
+     * @param handler the handler, never {@code null}.
+     * @since TBD
+     */
+    void addOnSessionEndedHandle( RepositorySystemSession session, Runnable handler );
+
+    /**
+     * Signals to repository system that passed in session ended, it will not be used anymore. Repository system
+     * will invoke the registered handlers for this session, if any. This method throws if the passed in session
+     * instance was not passed to method {@link #sessionStarted(RepositorySystemSession)} beforehand.
+     * <p>
+     * <en>Same session instance can be ended only once.</em>
+     *
+     * @param session the session that just ended, never {@code null}.
+     * @since TBD
+     */
+    void sessionEnded( RepositorySystemSession session );
 }
