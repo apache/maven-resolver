@@ -47,7 +47,7 @@ public interface RepositorySystemLifecycle
     /**
      * Registers the session for lifecycle tracking: it marks that the passed in session instance is about to start.
      * <p>
-     * <en>Same session instance can be started only once.</em>
+     * <em>Same session instance can be started only once.</em>
      *
      * @since TBD
      */
@@ -58,7 +58,7 @@ public interface RepositorySystemLifecycle
      * will invoke the registered handlers for this session, if any. This method throws if the passed in session
      * instance was not passed to method {@link #sessionStarted(RepositorySystemSession)} beforehand.
      * <p>
-     * <en>Same session instance can be ended only once.</em>
+     * <em>Same session instance can be ended only once.</em>
      *
      * @since TBD
      */

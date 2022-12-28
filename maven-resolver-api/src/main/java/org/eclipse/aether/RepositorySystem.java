@@ -309,7 +309,7 @@ public interface RepositorySystem
      * {@link #addOnSessionEndedHandle(RepositorySystemSession, Runnable)} method that will execute once
      * {@link #sessionEnded(RepositorySystemSession)} method was invoked.
      * <p>
-     * <en>Same session instance can be started only once.</em>
+     * <em>Same session instance can be started only once.</em>
      *
      * @param session the session that is about to start, never {@code null}.
      * @since TBD
@@ -331,7 +331,7 @@ public interface RepositorySystem
      * will invoke the registered handlers for this session, if any. This method throws if the passed in session
      * instance was not passed to method {@link #sessionStarted(RepositorySystemSession)} beforehand.
      * <p>
-     * <en>Same session instance can be ended only once.</em>
+     * <em>Same session instance can be ended only once.</em>
      *
      * @param session the session that just ended, never {@code null}.
      * @since TBD
