@@ -105,7 +105,6 @@
     <module>maven-resolver-transport-http</module>
     <module>maven-resolver-transport-java11</module>
     <module>maven-resolver-transport-jetty</module>
-    <module>maven-resolver-transport-okhttp</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-demos</module>
   </modules>
