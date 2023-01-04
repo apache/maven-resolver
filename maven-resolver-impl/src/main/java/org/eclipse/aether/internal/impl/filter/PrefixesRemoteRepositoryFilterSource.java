@@ -112,7 +112,9 @@ public final class PrefixesRemoteRepositoryFilterSource
     }
 
     /**
-     * Caches layout instances for remote repository.
+     * Caches layout instances for remote repository. In case of unknown layout it returns {@code null}.
+     *
+     * @return the layout instance of {@code null} if layout not supported.
      */
     private RepositoryLayout cacheLayout( RepositorySystemSession session, RemoteRepository remoteRepository )
     {
@@ -124,7 +126,7 @@ public final class PrefixesRemoteRepositoryFilterSource
             }
             catch ( NoRepositoryLayoutException e )
             {
-                throw new RuntimeException( e );
+                return null;
             }
         } );
     }
@@ -196,15 +198,25 @@ public final class PrefixesRemoteRepositoryFilterSource
         @Override
         public Result acceptArtifact( RemoteRepository remoteRepository, Artifact artifact )
         {
+            RepositoryLayout repositoryLayout = cacheLayout( session, remoteRepository );
+            if ( repositoryLayout == null )
+            {
+                return new SimpleResult( true, "Unsupported layout: " + remoteRepository );
+            }
             return acceptPrefix( remoteRepository,
-                    cacheLayout( session, remoteRepository ).getLocation( artifact, false ).getPath() );
+                    repositoryLayout.getLocation( artifact, false ).getPath() );
         }
 
         @Override
         public Result acceptMetadata( RemoteRepository remoteRepository, Metadata metadata )
         {
+            RepositoryLayout repositoryLayout = cacheLayout( session, remoteRepository );
+            if ( repositoryLayout == null )
+            {
+                return new SimpleResult( true, "Unsupported layout: " + remoteRepository );
+            }
             return acceptPrefix( remoteRepository,
-                    cacheLayout( session, remoteRepository ).getLocation( metadata, false ).getPath() );
+                    repositoryLayout.getLocation( metadata, false ).getPath() );
         }
 
         private Result acceptPrefix( RemoteRepository remoteRepository, String path )
