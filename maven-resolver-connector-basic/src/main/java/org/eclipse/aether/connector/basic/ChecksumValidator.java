@@ -181,7 +181,7 @@ final class ChecksumValidator
                 continue;
             }
             File checksumFile = getChecksumFile( checksumLocation.getChecksumAlgorithmFactory() );
-            try ( FileUtils.TempFile tempFile = FileUtils.newTempFile( checksumFile.toPath() ) )
+            try ( FileUtils.TempFile tempFile = FileUtils.newTempFile() )
             {
                 File tmp = tempFile.getPath().toFile();
                 try
