@@ -108,7 +108,7 @@ public final class FileUtils
         Path parent = requireNonNull( file.getParent(), "file must have parent" );
         Files.createDirectories( parent );
         Path tempFile = parent.resolve(
-                file.getFileName().toString() + Long.toUnsignedString( RANDOM.nextLong() ) + ".tmp" );
+                file.getFileName() + "." + Long.toUnsignedString( RANDOM.nextLong() ) + ".tmp" );
         return new CollocatedTempFile()
         {
             @Override
