@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.SecureRandom;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Objects.requireNonNull;
 
@@ -35,8 +35,6 @@ import static java.util.Objects.requireNonNull;
  */
 public final class FileUtils
 {
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     private FileUtils()
     {
         // hide constructor
@@ -107,8 +105,8 @@ public final class FileUtils
     {
         Path parent = requireNonNull( file.getParent(), "file must have parent" );
         Files.createDirectories( parent );
-        Path tempFile = parent.resolve(
-                file.getFileName() + "." + Long.toUnsignedString( RANDOM.nextLong() ) + ".tmp" );
+        Path tempFile = parent.resolve( file.getFileName() + "."
+                + Long.toUnsignedString( ThreadLocalRandom.current().nextLong() ) + ".tmp" );
         return new CollocatedTempFile()
         {
             @Override
