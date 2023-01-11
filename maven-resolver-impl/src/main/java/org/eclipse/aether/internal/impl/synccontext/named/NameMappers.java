@@ -20,8 +20,9 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  */
 
 /**
- * As end-user "mappers" are actually configurations/compositions, are constructed from several NameMapper
- * implementations, this helper class provides and are constructing them.
+ * As end-user "mappers" are actually configurations/compositions and are constructed from several NameMapper
+ * implementations, this helper class constructing them. This class also holds "names" used by service locator and
+ * Guice/Sisu as well.
  *
  * @since 1.9.4
  */
