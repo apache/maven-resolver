@@ -23,9 +23,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 
 /**
  * The "discriminating" name mapper provider.
@@ -33,16 +32,14 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
  * @since 1.9.0
  */
 @Singleton
-@Named( DiscriminatingNameMapperProvider.NAME )
+@Named( NameMappers.DISCRIMINATING_NAME )
 public class DiscriminatingNameMapperProvider implements Provider<NameMapper>
 {
-    public static final String NAME = "discriminating";
-
     private final NameMapper mapper;
 
     public DiscriminatingNameMapperProvider()
     {
-        this.mapper = new DiscriminatingNameMapper( GAVNameMapper.gav() );
+        this.mapper = NameMappers.discriminatingNameMapper();
     }
 
     @Override

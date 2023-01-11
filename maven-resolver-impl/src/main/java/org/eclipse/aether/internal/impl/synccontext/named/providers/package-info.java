@@ -19,7 +19,9 @@
  */
 /**
  * As end-user "mappers" are actually configurations, constructed from several NameMapper implementations, this
- * package is holding providers that are constructing them, as no NameMapper is a component anymore.
+ * package is holding providers exposing name mappers constructed by
+ * {@link org.eclipse.aether.internal.impl.synccontext.named.NameMappers} helper class, as no NameMapper is a component
+ * anymore. These classes are used when Guice/Sisu used, so javax.inject.Provider class is present.
  */
 package org.eclipse.aether.internal.impl.synccontext.named.providers;
 

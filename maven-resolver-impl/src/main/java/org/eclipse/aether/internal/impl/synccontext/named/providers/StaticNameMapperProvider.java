@@ -24,7 +24,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 
 /**
  * The "static" name mapper provider.
@@ -32,16 +32,14 @@ import org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper;
  * @since 1.9.0
  */
 @Singleton
-@Named( StaticNameMapperProvider.NAME )
+@Named( NameMappers.STATIC_NAME )
 public class StaticNameMapperProvider implements Provider<NameMapper>
 {
-    public static final String NAME = "static";
-
     private final NameMapper mapper;
 
     public StaticNameMapperProvider()
     {
-        this.mapper = new StaticNameMapper();
+        this.mapper = NameMappers.staticNameMapper();
     }
 
     @Override
