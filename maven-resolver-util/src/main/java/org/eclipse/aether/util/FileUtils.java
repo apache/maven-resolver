@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Objects.requireNonNull;
 
@@ -62,8 +63,12 @@ public final class FileUtils
     }
 
     /**
-     * Creates a {@link TempFile}. It will be in the default temporary-file directory. Returned instance should be
-     * handled in try-with-resource construct and created temp file is removed on close, if exists.
+     * Creates a {@link TempFile} instance and backing temporary file on file system. It will be located in the default
+     * temporary-file directory. Returned instance should be handled in try-with-resource construct and created
+     * temp file is removed (if exists) when returned instance is closed.
+     * <p>
+     * This method uses {@link Files#createTempFile(String, String, java.nio.file.attribute.FileAttribute[])} to create
+     * the temporary file on file system.
      */
     public static TempFile newTempFile() throws IOException
     {
@@ -85,17 +90,23 @@ public final class FileUtils
     }
 
     /**
-     * Creates a {@link TempFile} for given file. It will be in same directory where given file is, and will reuse its
-     * name for generated name. Returned instance should be handled in try-with-resource construct and created temp
-     * file once ready can be moved to passed in {@code file} parameter place.
+     * Creates a {@link CollocatedTempFile} instance for given file without backing file. The path will be located in
+     * same directory where given file is, and will reuse its name for generated (randomized) name. Returned instance
+     * should be handled in try-with-resource and created temp path is removed (if exists) when returned instance is
+     * closed. The {@link CollocatedTempFile#move()} makes possible to atomically replace passed in file with the
+     * processed content written into a file backing the {@link CollocatedTempFile} instance.
      * <p>
      * The {@code file} nor it's parent directories have to exist. The parent directories are created if needed.
+     * <p>
+     * This method uses {@link Path#resolve(String)} to create the temporary file path in passed in file parent
+     * directory, but it does NOT create backing file on file system.
      */
     public static CollocatedTempFile newTempFile( Path file ) throws IOException
     {
         Path parent = requireNonNull( file.getParent(), "file must have parent" );
         Files.createDirectories( parent );
-        Path tempFile = Files.createTempFile( parent, file.getFileName().toString(), "tmp" );
+        Path tempFile = parent.resolve( file.getFileName() + "."
+                + Long.toUnsignedString( ThreadLocalRandom.current().nextLong() ) + ".tmp" );
         return new CollocatedTempFile()
         {
             @Override
