@@ -23,9 +23,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 
 /**
  * The "file-gav" name mapper provider.
@@ -33,16 +32,14 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
  * @since 1.9.0
  */
 @Singleton
-@Named( FileGAVNameMapperProvider.NAME )
+@Named( NameMappers.FILE_GAV_NAME )
 public class FileGAVNameMapperProvider implements Provider<NameMapper>
 {
-    public static final String NAME = "file-gav";
-
     private final NameMapper mapper;
 
     public FileGAVNameMapperProvider()
     {
-        this.mapper = new BasedirNameMapper( GAVNameMapper.fileGav() );
+        this.mapper = NameMappers.fileGavNameMapper();
     }
 
     @Override

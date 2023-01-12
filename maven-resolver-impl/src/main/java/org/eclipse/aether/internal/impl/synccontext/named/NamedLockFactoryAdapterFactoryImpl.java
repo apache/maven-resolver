@@ -31,11 +31,6 @@ import java.util.Map;
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.FileHashingGAVNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider;
-import org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
@@ -67,7 +62,7 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
 {
     private static final String DEFAULT_FACTORY_NAME = LocalReadWriteLockNamedLockFactory.NAME;
 
-    private static final String DEFAULT_NAME_MAPPER_NAME = GAVNameMapperProvider.NAME;
+    private static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.GAV_NAME;
 
     private static Map<String, NamedLockFactory> getManuallyCreatedFactories()
     {
@@ -82,11 +77,11 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     private static Map<String, NameMapper> getManuallyCreatedNameMappers()
     {
         HashMap<String, NameMapper> mappers = new HashMap<>();
-        mappers.put( StaticNameMapperProvider.NAME, new StaticNameMapperProvider().get() );
-        mappers.put( GAVNameMapperProvider.NAME, new GAVNameMapperProvider().get() );
-        mappers.put( DiscriminatingNameMapperProvider.NAME, new DiscriminatingNameMapperProvider().get() );
-        mappers.put( FileGAVNameMapperProvider.NAME, new FileGAVNameMapperProvider().get() );
-        mappers.put( FileHashingGAVNameMapperProvider.NAME, new FileHashingGAVNameMapperProvider().get() );
+        mappers.put( NameMappers.STATIC_NAME, NameMappers.staticNameMapper() );
+        mappers.put( NameMappers.GAV_NAME, NameMappers.gavNameMapper() );
+        mappers.put( NameMappers.DISCRIMINATING_NAME, NameMappers.discriminatingNameMapper() );
+        mappers.put( NameMappers.FILE_GAV_NAME, NameMappers.fileGavNameMapper() );
+        mappers.put( NameMappers.FILE_HGAV_NAME, NameMappers.fileHashingGavNameMapper() );
         return Collections.unmodifiableMap( mappers );
     }
 

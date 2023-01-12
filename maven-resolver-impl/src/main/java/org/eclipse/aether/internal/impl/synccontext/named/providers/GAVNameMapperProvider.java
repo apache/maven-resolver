@@ -23,8 +23,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 
 /**
  * The "gav" name mapper provider.
@@ -32,16 +32,14 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
  * @since 1.9.0
  */
 @Singleton
-@Named( GAVNameMapperProvider.NAME )
+@Named( NameMappers.GAV_NAME )
 public class GAVNameMapperProvider implements Provider<NameMapper>
 {
-    public static final String NAME = "gav";
-
     private final NameMapper mapper;
 
     public GAVNameMapperProvider()
     {
-        this.mapper = GAVNameMapper.gav();
+        this.mapper = NameMappers.gavNameMapper();
     }
 
     @Override
