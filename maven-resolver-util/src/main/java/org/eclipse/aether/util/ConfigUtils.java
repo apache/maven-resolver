@@ -8,9 +8,9 @@ package org.eclipse.aether.util;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -32,7 +32,7 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * A utility class to read configuration properties from a repository system session.
- * 
+ *
  * @see RepositorySystemSession#getConfigProperties()
  */
 public final class ConfigUtils
@@ -45,7 +45,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys are set, may be {@code null}.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
@@ -69,7 +69,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys are set, may be {@code null}.
@@ -84,7 +84,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a string, may be
      *            {@code null}.
@@ -109,7 +109,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a string, may be
@@ -125,7 +125,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a number.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
@@ -160,7 +160,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a number.
@@ -175,7 +175,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a number.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
@@ -210,7 +210,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a number.
@@ -225,7 +225,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a number.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
@@ -260,7 +260,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a number.
@@ -275,7 +275,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a boolean.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
@@ -303,7 +303,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a boolean.
@@ -318,7 +318,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a collection.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
@@ -346,7 +346,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a collection.
@@ -361,7 +361,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a map.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
@@ -385,7 +385,7 @@ public final class ConfigUtils
 
     /**
      * Gets the specified configuration property.
-     * 
+     *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a map.
@@ -400,7 +400,7 @@ public final class ConfigUtils
 
     /**
      * Utility method to parse configuration string that contains comma separated list of names into
-     * {@link List<String>}, never returns {@code null}.
+     * {@code List<String>}, never returns {@code null}.
      *
      * @since 1.9.0
      */
@@ -417,7 +417,7 @@ public final class ConfigUtils
 
     /**
      * Utility method to parse configuration string that contains comma separated list of names into
-     * {@link List<String>} with unique elements (duplicates, if any, are discarded), never returns {@code null}.
+     * {@code List<String>} with unique elements (duplicates, if any, are discarded), never returns {@code null}.
      *
      * @since 1.9.0
      */
