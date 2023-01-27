@@ -145,6 +145,9 @@ public class DfDependencyCollector
                                     VersionFilter verFilter, Dependency dependency, List<Artifact> relocations,
                                     boolean disableVersionManagement )
     {
+        if (Thread.currentThread().isInterrupted()) {
+            return;
+        }
         if ( depSelector != null && !depSelector.selectDependency( dependency ) )
         {
             return;
