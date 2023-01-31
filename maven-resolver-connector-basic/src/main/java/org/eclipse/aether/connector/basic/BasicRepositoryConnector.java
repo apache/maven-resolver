@@ -289,6 +289,9 @@ final class BasicRepositoryConnector
     {
         failIfClosed();
 
+        Executor executor = getExecutor( artifactUploads, metadataUploads );
+        RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
+
         for ( ArtifactUpload transfer : safe( artifactUploads ) )
         {
             URI location = layout.getLocation( transfer.getArtifact(), true );
@@ -302,7 +305,8 @@ final class BasicRepositoryConnector
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(),
                     checksumLocations, listener );
-            task.run();
+
+            executor.execute( errorForwarder.wrap( task ) );
         }
 
         for ( MetadataUpload transfer : safe( metadataUploads ) )
@@ -317,8 +321,11 @@ final class BasicRepositoryConnector
                     layout.getChecksumLocations( transfer.getMetadata(), true, location );
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), checksumLocations, listener );
-            task.run();
+
+            executor.execute( errorForwarder.wrap( task ) );
         }
+
+        errorForwarder.await();
     }
 
     private static <T> Collection<T> safe( Collection<T> items )
