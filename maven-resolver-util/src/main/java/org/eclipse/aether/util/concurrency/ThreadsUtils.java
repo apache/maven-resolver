@@ -29,7 +29,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * Utilities for handling threads.
+ * Utilities for handling threads and pools.
  *
  * @since 1.9.5
  */
@@ -86,10 +86,12 @@ public final class ThreadsUtils
 
     /**
      * Calculates requested thread count based on user configuration, or if none provided, the provided default value.
+     *
+     * @throws IllegalArgumentException if default value is less than 1.
      */
     public static int threadCount( RepositorySystemSession session, int defaultValue, String... keys )
     {
-        if ( defaultValue <= 0 )
+        if ( defaultValue < 1 )
         {
             throw new IllegalArgumentException(
                     "Invalid defaultValue: " + defaultValue + ". Must be positive." );
@@ -106,11 +108,30 @@ public final class ThreadsUtils
     }
 
     /**
+     * Calculates requested thread count based on user configuration, or if none provided, the provided default value.
+     * The default value is string and supports expressions like "1C".
+     *
+     * @throws IllegalArgumentException if default value is invalid.
+     */
+    public static int threadCount( RepositorySystemSession session, String defaultValue, String... keys )
+    {
+        return threadCount( session, calculateDegreeOfConcurrency( defaultValue ), keys );
+    }
+
+    /**
+     * Calculates "degree of concurrency" (count of threads to be used) based on non-null input string. String may
+     * be string representation of integer or a string representation of float followed by "C" character
+     * (case-sensitive) in which case the float is interpreted as multiplier for core count as reported by Java.
+     *
      * Blatantly copied (and simplified) from maven-embedder
      * {@code org.apache.maven.cli.MavenCli#calculateDegreeOfConcurrency} class.
      */
     private static int calculateDegreeOfConcurrency( String threadConfiguration )
     {
+        if ( threadConfiguration == null )
+        {
+            throw new IllegalArgumentException( "Thread configuration must not be null." );
+        }
         if ( threadConfiguration.endsWith( "C" ) )
         {
             threadConfiguration = threadConfiguration.substring( 0, threadConfiguration.length() - 1 );
