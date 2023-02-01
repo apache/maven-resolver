@@ -25,6 +25,7 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @since 1.8.0
  */
-abstract class DependencyResolutionSkipper
+abstract class DependencyResolutionSkipper implements Closeable
 {
     /**
      * Check whether the resolution of current node can be skipped before resolving.
@@ -58,9 +59,10 @@ abstract class DependencyResolutionSkipper
     abstract void cache( DependencyNode node, List<DependencyNode> parents );
 
     /**
-     * Print the skip/resolve status report for all nodes.
+     * Close: Print the skip/resolve status report for all nodes.
      */
-    abstract void report();
+    @Override
+    public abstract void close();
 
     /**
      * Returns new instance of "default" skipper.
@@ -99,7 +101,7 @@ abstract class DependencyResolutionSkipper
         }
 
         @Override
-        public void report()
+        public void close()
         {
         }
     }
@@ -205,7 +207,7 @@ abstract class DependencyResolutionSkipper
         }
 
         @Override
-        public void report()
+        public void close()
         {
             if ( LOGGER.isTraceEnabled() )
             {

@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.Closeable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,8 +74,6 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.concurrency.ThreadsUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.find;
 
@@ -143,52 +142,55 @@ public class BfDependencyCollector
         boolean useSkip = ConfigUtils.getBoolean(
                 session, CONFIG_PROP_SKIPPER_DEFAULT, CONFIG_PROP_SKIPPER
         );
+        int nThreads = ThreadsUtils.threadCount(
+                session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
+        logger.debug( "Using thread pool with {} threads to resolve descriptors.", nThreads );
+
         if ( useSkip )
         {
             logger.debug( "Collector skip mode enabled" );
         }
 
-        Args args =
-                new Args( session, pool, context, versionContext, request,
-                        useSkip ? DependencyResolutionSkipper.defaultSkipper()
-                                : DependencyResolutionSkipper.neverSkipper(),
-                        new ParallelDescriptorResolver( session ) );
-
-        DependencySelector rootDepSelector = session.getDependencySelector() != null
-                ? session.getDependencySelector().deriveChildSelector( context ) : null;
-        DependencyManager rootDepManager = session.getDependencyManager() != null
-                ? session.getDependencyManager().deriveChildManager( context ) : null;
-        DependencyTraverser rootDepTraverser = session.getDependencyTraverser() != null
-                ? session.getDependencyTraverser().deriveChildTraverser( context ) : null;
-        VersionFilter rootVerFilter = session.getVersionFilter() != null
-                ? session.getVersionFilter().deriveChildFilter( context ) : null;
-
-        List<DependencyNode> parents = Collections.singletonList( node );
-        for ( Dependency dependency : dependencies )
+        try ( DependencyResolutionSkipper skipper = useSkip
+                ? DependencyResolutionSkipper.defaultSkipper() : DependencyResolutionSkipper.neverSkipper();
+              ParallelDescriptorResolver parallelDescriptorResolver = new ParallelDescriptorResolver( nThreads ) )
         {
-            RequestTrace childTrace = collectStepTrace( trace, args.request.getRequestContext(), parents,
-                    dependency );
-            DependencyProcessingContext processingContext =
-                    new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
-                            rootVerFilter, childTrace, repositories, managedDependencies, parents, dependency,
-                            PremanagedDependency.create( rootDepManager, dependency,
-                                    false, args.premanagedState ) );
-            if ( !filter( processingContext ) )
+            Args args = new Args(
+                    session, pool, context, versionContext, request, skipper, parallelDescriptorResolver );
+
+            DependencySelector rootDepSelector = session.getDependencySelector() != null
+                    ? session.getDependencySelector().deriveChildSelector( context ) : null;
+            DependencyManager rootDepManager = session.getDependencyManager() != null
+                    ? session.getDependencyManager().deriveChildManager( context ) : null;
+            DependencyTraverser rootDepTraverser = session.getDependencyTraverser() != null
+                    ? session.getDependencyTraverser().deriveChildTraverser( context ) : null;
+            VersionFilter rootVerFilter = session.getVersionFilter() != null
+                    ? session.getVersionFilter().deriveChildFilter( context ) : null;
+
+            List<DependencyNode> parents = Collections.singletonList( node );
+            for ( Dependency dependency : dependencies )
             {
-                processingContext.withDependency( processingContext.premanagedDependency.getManagedDependency() );
-                resolveArtifactDescriptorAsync( args, processingContext, results );
-                args.dependencyProcessingQueue.add( processingContext );
+                RequestTrace childTrace = collectStepTrace( trace, args.request.getRequestContext(), parents,
+                        dependency );
+                DependencyProcessingContext processingContext =
+                        new DependencyProcessingContext( rootDepSelector, rootDepManager, rootDepTraverser,
+                                rootVerFilter, childTrace, repositories, managedDependencies, parents, dependency,
+                                PremanagedDependency.create( rootDepManager, dependency,
+                                        false, args.premanagedState ) );
+                if ( !filter( processingContext ) )
+                {
+                    processingContext.withDependency( processingContext.premanagedDependency.getManagedDependency() );
+                    resolveArtifactDescriptorAsync( args, processingContext, results );
+                    args.dependencyProcessingQueue.add( processingContext );
+                }
+            }
+
+            while ( !args.dependencyProcessingQueue.isEmpty() )
+            {
+                processDependency( args, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(),
+                        false );
             }
         }
-
-        while ( !args.dependencyProcessingQueue.isEmpty() )
-        {
-            processDependency( args, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(),
-                    false );
-        }
-
-        args.resolver.shutdown();
-        args.skipper.report();
     }
 
     @SuppressWarnings( "checkstyle:parameternumber" )
@@ -470,19 +472,18 @@ public class BfDependencyCollector
         return descriptorResult;
     }
 
-    static class ParallelDescriptorResolver
+    static class ParallelDescriptorResolver implements Closeable
     {
         private final ExecutorService executorService;
 
         /**
          * Artifact ID -> Future of DescriptorResolutionResult
          */
-        final Map<String, Future<DescriptorResolutionResult>> results = new ConcurrentHashMap<>( 256 );
-        final Logger logger = LoggerFactory.getLogger( getClass() );
+        private final Map<String, Future<DescriptorResolutionResult>> results = new ConcurrentHashMap<>( 256 );
 
-        ParallelDescriptorResolver( RepositorySystemSession session )
+        ParallelDescriptorResolver( int threads )
         {
-            this.executorService = getExecutorService( session );
+            this.executorService = ThreadsUtils.threadPool( threads, getClass().getSimpleName() + "-" );
         }
 
         void resolveDescriptors( Artifact artifact, Callable<DescriptorResolutionResult> callable )
@@ -502,17 +503,10 @@ public class BfDependencyCollector
             return results.get( ArtifactIdUtils.toId( artifact ) );
         }
 
-        void shutdown()
+        @Override
+        public void close()
         {
             executorService.shutdown();
-        }
-
-        private ExecutorService getExecutorService( RepositorySystemSession session )
-        {
-            int nThreads = ThreadsUtils.threadCount(
-                    session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
-            logger.debug( "Created thread pool with {} threads to resolve descriptors.", nThreads );
-            return ThreadsUtils.threadPool( nThreads, getClass().getSimpleName() + "-" );
         }
     }
 
