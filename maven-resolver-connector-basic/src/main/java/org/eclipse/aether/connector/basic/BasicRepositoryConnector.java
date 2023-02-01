@@ -80,6 +80,8 @@ final class BasicRepositoryConnector
 
     private static final String CONFIG_PROP_THREADS = "aether.connector.basic.threads";
 
+    private static final String CONFIG_PROP_PARALLEL_PUT = "aether.connector.basic.parallelPut";
+
     private static final String CONFIG_PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger( BasicRepositoryConnector.class );
@@ -99,6 +101,8 @@ final class BasicRepositoryConnector
     private final ChecksumPolicyProvider checksumPolicyProvider;
 
     private final int maxThreads;
+
+    private final boolean parallelPut;
 
     private final boolean smartChecksums;
 
@@ -142,6 +146,7 @@ final class BasicRepositoryConnector
         this.closed = new AtomicBoolean( false );
 
         maxThreads = ThreadsUtils.threadCount( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
+        parallelPut = ConfigUtils.getBoolean( session, false, CONFIG_PROP_PARALLEL_PUT );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
         persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
@@ -284,7 +289,7 @@ final class BasicRepositoryConnector
         Collection<? extends ArtifactUpload> safeArtifactUploads = safe( artifactUploads );
         Collection<? extends MetadataUpload> safeMetadataUploads = safe( metadataUploads );
 
-        Executor executor = getExecutor( safeArtifactUploads.size() + safeMetadataUploads.size() );
+        Executor executor = getExecutor( parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1 );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
         for ( ArtifactUpload transfer : safeArtifactUploads )

@@ -31,6 +31,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.checksums.algorithms` | String | Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
 `aether.connector.basic.threads` or `maven.artifact.threads` | String | Number of threads to use for uploading/downloading. Accepts "dynamic" expressions like `1.5C` as well, or plain integer. | `5` | no
+`aether.connector.basic.parallelPut` | boolean | Enables parallel PUT processing (parallel deploys) on basic connector. | `false` | no
 `aether.connector.classpath.loader` | ClassLoader | `ClassLoader` from which resources should be retrieved which start with the `classpath:` protocol. | `Thread.currentThread().getContextClassLoader()` | no
 `aether.connector.connectTimeout` | long | Connect timeout in milliseconds. | `10000` | yes
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
