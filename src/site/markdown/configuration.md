@@ -30,7 +30,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.checksums.omitChecksumsForExtensions` | String | Comma-separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc` | no
 `aether.checksums.algorithms` | String | Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
-`aether.connector.basic.threads` or `maven.artifact.threads` | int | Number of threads to use for uploading/downloading. | `5` | no
+`aether.connector.basic.threads` or `maven.artifact.threads` | String | Number of threads to use for uploading/downloading. Accepts "dynamic" expressions like `1.5C` as well, or plain integer. | `5` | no
 `aether.connector.classpath.loader` | ClassLoader | `ClassLoader` from which resources should be retrieved which start with the `classpath:` protocol. | `Thread.currentThread().getContextClassLoader()` | no
 `aether.connector.connectTimeout` | long | Connect timeout in milliseconds. | `10000` | yes
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
@@ -50,7 +50,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.dependencyCollector.maxExceptions` | int | Only exceptions up to the number given in this configuration property are emitted. Exceptions which exceed that number are swallowed. | `50` | no
 `aether.dependencyCollector.impl` | String | The name of the dependency collector implementation to use: depth-first (original) named `df`, and breadth-first (new in 1.8.0) named `bf`. Both collectors produce equivalent results, but they may differ performance wise, depending on project being applied to. Our experience shows that existing `df` is well suited for smaller to medium size projects, while `bf` may perform better on huge projects with many dependencies. Experiment (and come back to us!) to figure out which one suits you the better. | `"df"` | no
 `aether.dependencyCollector.bf.skipper` | boolean | Flag controlling whether to skip resolving duplicate/conflicting nodes during the breadth-first (`bf`) dependency collection process. | `true` | no
-`aether.dependencyCollector.bf.threads` or `maven.artifact.threads` | int | Number of threads to use for collecting POMs and version ranges in BF collector. | `5` | no
+`aether.dependencyCollector.bf.threads` or `maven.artifact.threads` | String | Number of threads to use for collecting POMs and version ranges in BF collector. Accepts "dynamic" expressions like `1.5C` as well, or plain integer. | `5` | no
 `aether.dependencyManager.verbose` | boolean | Flag controlling the verbose mode for dependency management. If enabled, the original attributes of a dependency before its update due to dependency managemnent will be recorded in the node's `DependencyNode#getData()` when building a dependency graph. | `false` | no
 `aether.enhancedLocalRepository.localPrefix` | String | The prefix to use for locally installed artifacts. | `"installed"` | no
 `aether.enhancedLocalRepository.snapshotsPrefix` | String | The prefix to use for snapshot artifacts. | `"snapshots"` | no
@@ -63,7 +63,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.enhancedLocalRepository.releasesPrefix` | String | The prefix to use for release artifacts. | `"releases"` | no
 `aether.enhancedLocalRepository.trackingFilename` | String | Filename of the file in which to track the remote repositories. | `"_remote.repositories"` | no
 `aether.interactive` | boolean | A flag indicating whether interaction with the user is allowed. | `false` | no
-`aether.metadataResolver.threads` | int | Number of threads to use in parallel for resolving metadata. | `4` | no
+`aether.metadataResolver.threads` | String | Number of threads to use in parallel for resolving metadata. Accepts "dynamic" expressions like `1.5C` as well, or plain integer. | `4` | no
 `aether.offline.protocols` | String | Comma-separated list of protocols which are supposed to be resolved offline. | - | no
 `aether.offline.hosts` | String | Comma-separated list of hosts which are supposed to be resolved offline. | - | no
 `aether.priority.<class>` | float | The priority to use for a certain extension class. `class` can either be the fully qualified name or the simple name stands for fully qualified class name. If the class name ends with `Factory` that suffix could optionally be left out. | - |  no
