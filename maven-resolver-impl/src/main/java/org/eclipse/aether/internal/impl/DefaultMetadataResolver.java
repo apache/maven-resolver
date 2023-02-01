@@ -370,7 +370,8 @@ public class DefaultMetadataResolver
         if ( !tasks.isEmpty() )
         {
             int threads = ThreadsUtils.threadCount( session, 4, CONFIG_PROP_THREADS );
-            Executor executor =  ThreadsUtils.executor( Math.min( tasks.size(), threads ), getClass().getSimpleName() );
+            Executor executor =  ThreadsUtils.executor(
+                    Math.min( tasks.size(), threads ), getClass().getSimpleName() + '-' );
             try
             {
                 RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();

@@ -472,7 +472,7 @@ public class BfDependencyCollector
 
     static class ParallelDescriptorResolver
     {
-        final ExecutorService executorService;
+        private final ExecutorService executorService;
 
         /**
          * Artifact ID -> Future of DescriptorResolutionResult
@@ -512,7 +512,7 @@ public class BfDependencyCollector
             int nThreads = ThreadsUtils.threadCount(
                     session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
             logger.debug( "Created thread pool with {} threads to resolve descriptors.", nThreads );
-            return ThreadsUtils.threadPool( nThreads, getClass().getSimpleName() );
+            return ThreadsUtils.threadPool( nThreads, getClass().getSimpleName() + "-" );
         }
     }
 

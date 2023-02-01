@@ -148,13 +148,12 @@ final class BasicRepositoryConnector
                         ConfigurationProperties.PERSISTED_CHECKSUMS );
     }
 
-    private Executor getExecutor( Collection<?> artifacts, Collection<?> metadatas )
+    private Executor getExecutor( int tasks )
     {
         if ( maxThreads <= 1 )
         {
             return ThreadsUtils.DIRECT_EXECUTOR;
         }
-        int tasks = safe( artifacts ).size() + safe( metadatas ).size();
         if ( tasks <= 1 )
         {
             return ThreadsUtils.DIRECT_EXECUTOR;
@@ -205,11 +204,14 @@ final class BasicRepositoryConnector
     {
         failIfClosed();
 
-        Executor executor = getExecutor( artifactDownloads, metadataDownloads );
+        Collection<? extends ArtifactDownload> safeArtifactDownloads = safe( artifactDownloads );
+        Collection<? extends MetadataDownload> safeMetadataDownloads = safe( metadataDownloads );
+
+        Executor executor = getExecutor( safeMetadataDownloads.size() + safeMetadataDownloads.size() );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
-        for ( MetadataDownload transfer : safe( metadataDownloads ) )
+        for ( MetadataDownload transfer : safeMetadataDownloads )
         {
             URI location = layout.getLocation( transfer.getMetadata(), false );
 
@@ -229,7 +231,7 @@ final class BasicRepositoryConnector
             executor.execute( errorForwarder.wrap( task ) );
         }
 
-        for ( ArtifactDownload transfer : safe( artifactDownloads ) )
+        for ( ArtifactDownload transfer : safeArtifactDownloads )
         {
             Map<String, String> providedChecksums = Collections.emptyMap();
             for ( ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources.values() )
@@ -279,10 +281,13 @@ final class BasicRepositoryConnector
     {
         failIfClosed();
 
-        Executor executor = getExecutor( artifactUploads, metadataUploads );
+        Collection<? extends ArtifactUpload> safeArtifactUploads = safe( artifactUploads );
+        Collection<? extends MetadataUpload> safeMetadataUploads = safe( metadataUploads );
+
+        Executor executor = getExecutor( safeArtifactUploads.size() + safeMetadataUploads.size() );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
-        for ( ArtifactUpload transfer : safe( artifactUploads ) )
+        for ( ArtifactUpload transfer : safeArtifactUploads )
         {
             URI location = layout.getLocation( transfer.getArtifact(), true );
 
@@ -301,7 +306,7 @@ final class BasicRepositoryConnector
 
         errorForwarder.await();
 
-        for ( MetadataUpload transfer : safe( metadataUploads ) )
+        for ( MetadataUpload transfer : safeMetadataUploads )
         {
             URI location = layout.getLocation( transfer.getMetadata(), true );
 
