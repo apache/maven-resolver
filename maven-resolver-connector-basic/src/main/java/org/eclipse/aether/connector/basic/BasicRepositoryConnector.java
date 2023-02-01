@@ -207,7 +207,7 @@ final class BasicRepositoryConnector
         Collection<? extends ArtifactDownload> safeArtifactDownloads = safe( artifactDownloads );
         Collection<? extends MetadataDownload> safeMetadataDownloads = safe( metadataDownloads );
 
-        Executor executor = getExecutor( safeMetadataDownloads.size() + safeMetadataDownloads.size() );
+        Executor executor = getExecutor( safeArtifactDownloads.size() + safeMetadataDownloads.size() );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
