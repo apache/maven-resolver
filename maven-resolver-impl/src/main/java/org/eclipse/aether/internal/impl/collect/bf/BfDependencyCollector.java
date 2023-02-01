@@ -36,9 +36,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,7 +70,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
+import org.eclipse.aether.util.concurrency.ThreadsUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
 import org.slf4j.Logger;
@@ -512,10 +509,10 @@ public class BfDependencyCollector
 
         private ExecutorService getExecutorService( RepositorySystemSession session )
         {
-            int nThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
+            int nThreads = ThreadsUtils.threadCount(
+                    session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
             logger.debug( "Created thread pool with {} threads to resolve descriptors.", nThreads );
-            return new ThreadPoolExecutor( nThreads, nThreads, 3L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
-                    new WorkerThreadFactory( getClass().getSimpleName() ) );
+            return ThreadsUtils.threadPool( nThreads, getClass().getSimpleName() );
         }
     }
 

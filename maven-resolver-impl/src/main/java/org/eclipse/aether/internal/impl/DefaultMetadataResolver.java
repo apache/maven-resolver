@@ -28,10 +28,6 @@ import java.util.List;
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -71,9 +67,8 @@ import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
-import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
+import org.eclipse.aether.util.concurrency.ThreadsUtils;
 
 /**
  */
@@ -374,8 +369,8 @@ public class DefaultMetadataResolver
 
         if ( !tasks.isEmpty() )
         {
-            int threads = ConfigUtils.getInteger( session, 4, CONFIG_PROP_THREADS );
-            Executor executor = getExecutor( Math.min( tasks.size(), threads ) );
+            int threads = ThreadsUtils.threadCount( session, 4, CONFIG_PROP_THREADS );
+            Executor executor =  ThreadsUtils.executor( Math.min( tasks.size(), threads ), getClass().getSimpleName() );
             try
             {
                 RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
@@ -407,7 +402,7 @@ public class DefaultMetadataResolver
             }
             finally
             {
-                shutdown( executor );
+                ThreadsUtils.shutdown( executor );
             }
             for ( ResolveTask task : tasks )
             {
@@ -529,27 +524,6 @@ public class DefaultMetadataResolver
         event.setFile( file );
 
         repositoryEventDispatcher.dispatch( event.build() );
-    }
-
-    private Executor getExecutor( int threads )
-    {
-        if ( threads <= 1 )
-        {
-            return command -> command.run();
-        }
-        else
-        {
-            return new ThreadPoolExecutor( threads, threads, 3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                                           new WorkerThreadFactory( null ) );
-        }
-    }
-
-    private void shutdown( Executor executor )
-    {
-        if ( executor instanceof ExecutorService )
-        {
-            ( (ExecutorService) executor ).shutdown();
-        }
     }
 
     class ResolveTask

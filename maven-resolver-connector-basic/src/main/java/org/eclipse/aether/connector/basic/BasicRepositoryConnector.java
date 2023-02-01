@@ -33,10 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -71,7 +67,7 @@ import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
+import org.eclipse.aether.util.concurrency.ThreadsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,7 +141,7 @@ final class BasicRepositoryConnector
         this.providedChecksumsSources = providedChecksumsSources;
         this.closed = new AtomicBoolean( false );
 
-        maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
+        maxThreads = ThreadsUtils.threadCount( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
         persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
@@ -156,20 +152,17 @@ final class BasicRepositoryConnector
     {
         if ( maxThreads <= 1 )
         {
-            return DirectExecutor.INSTANCE;
+            return ThreadsUtils.DIRECT_EXECUTOR;
         }
         int tasks = safe( artifacts ).size() + safe( metadatas ).size();
         if ( tasks <= 1 )
         {
-            return DirectExecutor.INSTANCE;
+            return ThreadsUtils.DIRECT_EXECUTOR;
         }
         if ( executor == null )
         {
-            executor =
-                    new ThreadPoolExecutor( maxThreads, maxThreads, 3L, TimeUnit.SECONDS,
-                            new LinkedBlockingQueue<>(),
-                            new WorkerThreadFactory( getClass().getSimpleName() + '-'
-                                    + repository.getHost() + '-' ) );
+            executor = ThreadsUtils.threadPool( maxThreads,
+                    getClass().getSimpleName() + '-' + repository.getHost() + '-' );
         }
         return executor;
     }
@@ -193,10 +186,7 @@ final class BasicRepositoryConnector
     {
         if ( closed.compareAndSet( false, true ) )
         {
-            if ( executor instanceof ExecutorService )
-            {
-                ( (ExecutorService) executor ).shutdown();
-            }
+            ThreadsUtils.shutdown( executor );
             transporter.close();
         }
     }
@@ -308,6 +298,8 @@ final class BasicRepositoryConnector
 
             executor.execute( errorForwarder.wrap( task ) );
         }
+
+        errorForwarder.await();
 
         for ( MetadataUpload transfer : safe( metadataUploads ) )
         {
@@ -626,20 +618,6 @@ final class BasicRepositoryConnector
             {
                 LOGGER.warn( "Failed to upload checksum to {}", location, e );
             }
-        }
-
-    }
-
-    private static class DirectExecutor
-            implements Executor
-    {
-
-        static final Executor INSTANCE = new DirectExecutor();
-
-        @Override
-        public void execute( Runnable command )
-        {
-            command.run();
         }
 
     }
