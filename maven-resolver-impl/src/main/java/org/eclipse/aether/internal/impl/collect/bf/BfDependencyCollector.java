@@ -37,9 +37,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -74,7 +71,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
+import org.eclipse.aether.util.concurrency.ExecutorUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
 
@@ -145,7 +142,8 @@ public class BfDependencyCollector
         boolean useSkip = ConfigUtils.getBoolean(
                 session, CONFIG_PROP_SKIPPER_DEFAULT, CONFIG_PROP_SKIPPER
         );
-        int nThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
+        int nThreads = ExecutorUtils.threadCount(
+                session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         logger.debug( "Using thread pool with {} threads to resolve descriptors.", nThreads );
 
         if ( useSkip )
@@ -485,8 +483,7 @@ public class BfDependencyCollector
 
         ParallelDescriptorResolver( int threads )
         {
-            this.executorService = new ThreadPoolExecutor( threads, threads, 3L, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(), new WorkerThreadFactory( getClass().getSimpleName() + "-" ) );
+            this.executorService = ExecutorUtils.threadPool( threads, getClass().getSimpleName() + "-" );
         }
 
         void resolveDescriptors( Artifact artifact, Callable<DescriptorResolutionResult> callable )
