@@ -130,7 +130,7 @@ public final class ExecutorUtils
     {
         if ( threadConfiguration == null )
         {
-            throw new IllegalArgumentException( "Thread configuration must not be null." );
+            throw new NullPointerException( "Thread configuration must not be null." );
         }
         if ( threadConfiguration.endsWith( "C" ) )
         {
