@@ -33,10 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -70,8 +66,8 @@ import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.transform.FileTransformer;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
+import org.eclipse.aether.util.concurrency.ExecutorUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,31 +141,27 @@ final class BasicRepositoryConnector
         this.providedChecksumsSources = providedChecksumsSources;
         this.closed = new AtomicBoolean( false );
 
-        maxThreads = ConfigUtils.getInteger( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
+        maxThreads = ExecutorUtils.threadCount( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
         persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
                         ConfigurationProperties.PERSISTED_CHECKSUMS );
     }
 
-    private Executor getExecutor( Collection<?> artifacts, Collection<?> metadatas )
+    private Executor getExecutor( int tasks )
     {
         if ( maxThreads <= 1 )
         {
-            return DirectExecutor.INSTANCE;
+            return ExecutorUtils.DIRECT_EXECUTOR;
         }
-        int tasks = safe( artifacts ).size() + safe( metadatas ).size();
         if ( tasks <= 1 )
         {
-            return DirectExecutor.INSTANCE;
+            return ExecutorUtils.DIRECT_EXECUTOR;
         }
         if ( executor == null )
         {
-            executor =
-                    new ThreadPoolExecutor( maxThreads, maxThreads, 3L, TimeUnit.SECONDS,
-                            new LinkedBlockingQueue<>(),
-                            new WorkerThreadFactory( getClass().getSimpleName() + '-'
-                                    + repository.getHost() + '-' ) );
+            executor = ExecutorUtils.threadPool( maxThreads,
+                    getClass().getSimpleName() + '-' + repository.getHost() + '-' );
         }
         return executor;
     }
@@ -193,10 +185,7 @@ final class BasicRepositoryConnector
     {
         if ( closed.compareAndSet( false, true ) )
         {
-            if ( executor instanceof ExecutorService )
-            {
-                ( (ExecutorService) executor ).shutdown();
-            }
+            ExecutorUtils.shutdown( executor );
             transporter.close();
         }
     }
@@ -215,11 +204,14 @@ final class BasicRepositoryConnector
     {
         failIfClosed();
 
-        Executor executor = getExecutor( artifactDownloads, metadataDownloads );
+        Collection<? extends ArtifactDownload> safeArtifactDownloads = safe( artifactDownloads );
+        Collection<? extends MetadataDownload> safeMetadataDownloads = safe( metadataDownloads );
+
+        Executor executor = getExecutor( safeArtifactDownloads.size() + safeMetadataDownloads.size() );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
-        for ( MetadataDownload transfer : safe( metadataDownloads ) )
+        for ( MetadataDownload transfer : safeMetadataDownloads )
         {
             URI location = layout.getLocation( transfer.getMetadata(), false );
 
@@ -239,7 +231,7 @@ final class BasicRepositoryConnector
             executor.execute( errorForwarder.wrap( task ) );
         }
 
-        for ( ArtifactDownload transfer : safe( artifactDownloads ) )
+        for ( ArtifactDownload transfer : safeArtifactDownloads )
         {
             Map<String, String> providedChecksums = Collections.emptyMap();
             for ( ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources.values() )
@@ -289,7 +281,10 @@ final class BasicRepositoryConnector
     {
         failIfClosed();
 
-        for ( ArtifactUpload transfer : safe( artifactUploads ) )
+        Collection<? extends ArtifactUpload> safeArtifactUploads = safe( artifactUploads );
+        Collection<? extends MetadataUpload> safeMetadataUploads = safe( metadataUploads );
+
+        for ( ArtifactUpload transfer : safeArtifactUploads )
         {
             URI location = layout.getLocation( transfer.getArtifact(), true );
 
@@ -302,10 +297,11 @@ final class BasicRepositoryConnector
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(),
                     checksumLocations, listener );
+
             task.run();
         }
 
-        for ( MetadataUpload transfer : safe( metadataUploads ) )
+        for ( MetadataUpload transfer : safeMetadataUploads )
         {
             URI location = layout.getLocation( transfer.getMetadata(), true );
 
@@ -317,6 +313,7 @@ final class BasicRepositoryConnector
                     layout.getChecksumLocations( transfer.getMetadata(), true, location );
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), checksumLocations, listener );
+
             task.run();
         }
     }
@@ -619,20 +616,6 @@ final class BasicRepositoryConnector
             {
                 LOGGER.warn( "Failed to upload checksum to {}", location, e );
             }
-        }
-
-    }
-
-    private static class DirectExecutor
-            implements Executor
-    {
-
-        static final Executor INSTANCE = new DirectExecutor();
-
-        @Override
-        public void execute( Runnable command )
-        {
-            command.run();
         }
 
     }
