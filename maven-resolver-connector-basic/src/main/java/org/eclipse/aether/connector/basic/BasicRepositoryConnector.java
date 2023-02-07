@@ -82,6 +82,8 @@ final class BasicRepositoryConnector
 
     private static final String CONFIG_PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
 
+    private static final String CONFIG_PROP_PARALLEL_PUT = "aether.connector.basic.parallelPut";
+
     private static final Logger LOGGER = LoggerFactory.getLogger( BasicRepositoryConnector.class );
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
@@ -101,6 +103,8 @@ final class BasicRepositoryConnector
     private final int maxThreads;
 
     private final boolean smartChecksums;
+
+    private final boolean parallelPut;
 
     private final boolean persistedChecksums;
 
@@ -143,6 +147,7 @@ final class BasicRepositoryConnector
 
         maxThreads = ExecutorUtils.threadCount( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
+        parallelPut = ConfigUtils.getBoolean( session, true, CONFIG_PROP_PARALLEL_PUT );
         persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
                         ConfigurationProperties.PERSISTED_CHECKSUMS );
@@ -284,6 +289,9 @@ final class BasicRepositoryConnector
         Collection<? extends ArtifactUpload> safeArtifactUploads = safe( artifactUploads );
         Collection<? extends MetadataUpload> safeMetadataUploads = safe( metadataUploads );
 
+        Executor executor = getExecutor( parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1 );
+        RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
+
         for ( ArtifactUpload transfer : safeArtifactUploads )
         {
             URI location = layout.getLocation( transfer.getArtifact(), true );
@@ -298,8 +306,10 @@ final class BasicRepositoryConnector
             Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(),
                     checksumLocations, listener );
 
-            task.run();
+            executor.execute( errorForwarder.wrap( task ) );
         }
+
+        errorForwarder.await(); // make sure all artifacts are PUT before we go with Metadata
 
         for ( MetadataUpload transfer : safeMetadataUploads )
         {
@@ -314,8 +324,10 @@ final class BasicRepositoryConnector
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), checksumLocations, listener );
 
-            task.run();
+            executor.execute( errorForwarder.wrap( task ) );
         }
+
+        errorForwarder.await();
     }
 
     private static <T> Collection<T> safe( Collection<T> items )
