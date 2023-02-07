@@ -147,7 +147,8 @@ final class BasicRepositoryConnector
 
         maxThreads = ExecutorUtils.threadCount( session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads" );
         smartChecksums = ConfigUtils.getBoolean( session, true, CONFIG_PROP_SMART_CHECKSUMS );
-        parallelPut = ConfigUtils.getBoolean( session, true, CONFIG_PROP_PARALLEL_PUT );
+        parallelPut = ConfigUtils.getBoolean( session, true,
+                CONFIG_PROP_PARALLEL_PUT + "." + repository.getId(),  CONFIG_PROP_PARALLEL_PUT );
         persistedChecksums =
                 ConfigUtils.getBoolean( session, ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
                         ConfigurationProperties.PERSISTED_CHECKSUMS );
