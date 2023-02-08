@@ -19,15 +19,11 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
-import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
@@ -63,15 +59,15 @@ public final class DataPool
     public static final ArtifactDescriptorResult NO_DESCRIPTOR =
         new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
 
-    private ObjectPool<Artifact> artifacts;
+    private ConcurrentHashMap<Artifact, Artifact> artifacts;
 
-    private ObjectPool<Dependency> dependencies;
+    private ConcurrentHashMap<Dependency, Dependency> dependencies;
 
-    private Map<Object, WeakReference<Descriptor>> descriptors;
+    private ConcurrentHashMap<Object, Descriptor> descriptors;
 
-    private final Map<Object, Constraint> constraints = new HashMap<>();
+    private final ConcurrentHashMap<Object, Constraint> constraints = new ConcurrentHashMap<>();
 
-    private final Map<Object, List<DependencyNode>> nodes = new HashMap<>( 256 );
+    private final ConcurrentHashMap<Object, List<DependencyNode>> nodes = new ConcurrentHashMap<>( 256 );
 
     @SuppressWarnings( "unchecked" )
     public DataPool( RepositorySystemSession session )
@@ -80,14 +76,14 @@ public final class DataPool
 
         if ( cache != null )
         {
-            artifacts = (ObjectPool<Artifact>) cache.get( session, ARTIFACT_POOL );
-            dependencies = (ObjectPool<Dependency>) cache.get( session, DEPENDENCY_POOL );
-            descriptors = (Map<Object, WeakReference<Descriptor>>) cache.get( session, DESCRIPTORS );
+            artifacts = (ConcurrentHashMap<Artifact, Artifact>) cache.get( session, ARTIFACT_POOL );
+            dependencies = (ConcurrentHashMap<Dependency, Dependency>) cache.get( session, DEPENDENCY_POOL );
+            descriptors = (ConcurrentHashMap<Object, Descriptor>) cache.get( session, DESCRIPTORS );
         }
 
         if ( artifacts == null )
         {
-            artifacts = new ObjectPool<>();
+            artifacts = new ConcurrentHashMap<>();
             if ( cache != null )
             {
                 cache.put( session, ARTIFACT_POOL, artifacts );
@@ -96,7 +92,7 @@ public final class DataPool
 
         if ( dependencies == null )
         {
-            dependencies = new ObjectPool<>();
+            dependencies = new ConcurrentHashMap<>();
             if ( cache != null )
             {
                 cache.put( session, DEPENDENCY_POOL, dependencies );
@@ -105,7 +101,7 @@ public final class DataPool
 
         if ( descriptors == null )
         {
-            descriptors = Collections.synchronizedMap( new WeakHashMap<>( 256 ) );
+            descriptors = new ConcurrentHashMap<>( 256 );
             if ( cache != null )
             {
                 cache.put( session, DESCRIPTORS, descriptors );
@@ -115,12 +111,12 @@ public final class DataPool
 
     public Artifact intern( Artifact artifact )
     {
-        return artifacts.intern( artifact );
+        return artifacts.computeIfAbsent( artifact, k -> artifact );
     }
 
     public Dependency intern( Dependency dependency )
     {
-        return dependencies.intern( dependency );
+        return dependencies.computeIfAbsent( dependency, k -> dependency );
     }
 
     public Object toKey( ArtifactDescriptorRequest request )
@@ -130,8 +126,7 @@ public final class DataPool
 
     public ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
     {
-        WeakReference<Descriptor> descriptorRef = descriptors.get( key );
-        Descriptor descriptor = descriptorRef != null ? descriptorRef.get() : null;
+        Descriptor descriptor = descriptors.get( key );
         if ( descriptor != null )
         {
             return descriptor.toResult( request );
@@ -141,12 +136,12 @@ public final class DataPool
 
     public void putDescriptor( Object key, ArtifactDescriptorResult result )
     {
-        descriptors.put( key, new WeakReference<>( new GoodDescriptor( result ) ) );
+        descriptors.put( key, new GoodDescriptor( result ) );
     }
 
     public void putDescriptor( Object key, ArtifactDescriptorException e )
     {
-        descriptors.put( key, new WeakReference<>( BadDescriptor.INSTANCE ) );
+        descriptors.put( key, BadDescriptor.INSTANCE );
     }
 
     public Object toKey( VersionRangeRequest request )
