@@ -20,7 +20,6 @@ package org.eclipse.aether.util.version;
  */
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
