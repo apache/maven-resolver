@@ -55,6 +55,26 @@ final class GenericVersion
         hash = Arrays.hashCode( items );
     }
 
+    /**
+     * Returns this instance backing string representation.
+     *
+     * @since 1.9.5
+     */
+    String asString()
+    {
+        return version;
+    }
+
+    /**
+     * Returns this instance tokenized representation.
+     *
+     * @since 1.9.5
+     */
+    Item[] asItems()
+    {
+        return items;
+    }
+
     private static Item[] parse( String version )
     {
         List<Item> items = new ArrayList<>();

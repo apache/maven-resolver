@@ -20,6 +20,7 @@ package org.eclipse.aether.util.version;
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
@@ -149,6 +150,45 @@ public final class GenericVersionScheme
     public int hashCode()
     {
         return getClass().hashCode();
+    }
+
+    // CHECKSTYLE_OFF: LineLength
+    /**
+     * A handy main method that behaves similarly like maven-artifact ComparableVersion is, to make possible test
+     * and possibly compare differences between the two.
+     * <p>
+     * To check how "1.2.7" compares to "1.2-SNAPSHOT", for example, you can issue
+     * <pre>java -cp ${maven.repo.local}/org/apache/maven/resolver/maven-resolver-api/${resolver.version}/maven-resolver-api-${resolver.version}.jar:${maven.repo.local}/org/apache/maven/resolver/maven-resolver-util/${resolver.version}/maven-resolver-util-${resolver.version}.jar org.eclipse.aether.util.version.GenericVersionScheme "1.2.7" "1.2-SNAPSHOT"</pre>
+     * command to command line, output is very similar to that of ComparableVersion on purpose.
+     */
+    // CHECKSTYLE_ON: LineLength
+    public static void main( String... args )
+    {
+        System.out.println( "Display parameters as parsed by Maven Resolver (in canonical form and as a list of tokens)"
+                + " and comparison result:" );
+        if ( args.length == 0 )
+        {
+            return;
+        }
+
+        GenericVersion prev = null;
+        int i = 1;
+        for ( String version : args )
+        {
+            GenericVersion c = new GenericVersion( version );
+
+            if ( prev != null )
+            {
+                int compare = prev.compareTo( c );
+                System.out.println( "   " + prev + ' ' + ( ( compare == 0 ) ? "==" : ( ( compare < 0 ) ? "<" : ">" ) )
+                        + ' ' + version );
+            }
+
+            System.out.println(
+                    ( i++ ) + ". " + version + " -> " + c.asString() + "; tokens: " + Arrays.asList( c.asItems() ) );
+
+            prev = c;
+        }
     }
 
 }
