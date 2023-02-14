@@ -23,9 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
-import org.eclipse.aether.version.Version;
-import org.eclipse.aether.version.VersionConstraint;
-import org.eclipse.aether.version.VersionRange;
 import org.eclipse.aether.version.VersionScheme;
 
 import static java.util.Objects.requireNonNull;
@@ -66,27 +63,27 @@ public final class GenericVersionScheme
     {
     }
 
-    public Version parseVersion( final String version )
+    @Override
+    public GenericVersion parseVersion( final String version )
         throws InvalidVersionSpecificationException
     {
-        requireNonNull( version, "version cannot be null" );
         return new GenericVersion( version );
     }
 
-    public VersionRange parseVersionRange( final String range )
+    @Override
+    public GenericVersionRange parseVersionRange( final String range )
         throws InvalidVersionSpecificationException
     {
-        requireNonNull( range, "range cannot be null" );
         return new GenericVersionRange( range );
     }
 
-    public VersionConstraint parseVersionConstraint( final String constraint )
+    @Override
+    public GenericVersionConstraint parseVersionConstraint( final String constraint )
         throws InvalidVersionSpecificationException
     {
-        requireNonNull( constraint, "constraint cannot be null" );
-        Collection<VersionRange> ranges = new ArrayList<>();
+        String process = requireNonNull( constraint, "constraint cannot be null" );
 
-        String process = constraint;
+        Collection<GenericVersionRange> ranges = new ArrayList<>();
 
         while ( process.startsWith( "[" ) || process.startsWith( "(" ) )
         {
@@ -104,12 +101,12 @@ public final class GenericVersionScheme
                 throw new InvalidVersionSpecificationException( constraint, "Unbounded version range " + constraint );
             }
 
-            VersionRange range = parseVersionRange( process.substring( 0, index + 1 ) );
+            GenericVersionRange range = parseVersionRange( process.substring( 0, index + 1 ) );
             ranges.add( range );
 
             process = process.substring( index + 1 ).trim();
 
-            if ( process.length() > 0 && process.startsWith( "," ) )
+            if ( process.startsWith( "," ) )
             {
                 process = process.substring( 1 ).trim();
             }
@@ -121,7 +118,7 @@ public final class GenericVersionScheme
                 + ", expected [ or ( but got " + process );
         }
 
-        VersionConstraint result;
+        GenericVersionConstraint result;
         if ( ranges.isEmpty() )
         {
             result = new GenericVersionConstraint( parseVersion( constraint ) );
@@ -149,6 +146,44 @@ public final class GenericVersionScheme
     public int hashCode()
     {
         return getClass().hashCode();
+    }
+
+    // CHECKSTYLE_OFF: LineLength
+    /**
+     * A handy main method that behaves similarly like maven-artifact ComparableVersion is, to make possible test
+     * and possibly compare differences between the two.
+     * <p>
+     * To check how "1.2.7" compares to "1.2-SNAPSHOT", for example, you can issue
+     * <pre>java -cp ${maven.repo.local}/org/apache/maven/resolver/maven-resolver-api/${resolver.version}/maven-resolver-api-${resolver.version}.jar:${maven.repo.local}/org/apache/maven/resolver/maven-resolver-util/${resolver.version}/maven-resolver-util-${resolver.version}.jar org.eclipse.aether.util.version.GenericVersionScheme "1.2.7" "1.2-SNAPSHOT"</pre>
+     * command to command line, output is very similar to that of ComparableVersion on purpose.
+     */
+    // CHECKSTYLE_ON: LineLength
+    public static void main( String... args )
+    {
+        System.out.println( "Display parameters as parsed by Maven Resolver (in canonical form and as a list of tokens)"
+                + " and comparison result:" );
+        if ( args.length == 0 )
+        {
+            return;
+        }
+
+        GenericVersion prev = null;
+        int i = 1;
+        for ( String version : args )
+        {
+            GenericVersion c = new GenericVersion( version );
+
+            if ( prev != null )
+            {
+                int compare = prev.compareTo( c );
+                System.out.println( "   " + prev + ' ' + ( ( compare == 0 ) ? "==" : ( ( compare < 0 ) ? "<" : ">" ) )
+                        + ' ' + version );
+            }
+
+            System.out.println( ( i++ ) + ". " + version + " -> " + c.asString() + "; tokens: " + c.asItems() );
+
+            prev = c;
+        }
     }
 
 }

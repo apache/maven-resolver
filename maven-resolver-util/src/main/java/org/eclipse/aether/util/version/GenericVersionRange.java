@@ -25,6 +25,8 @@ import org.eclipse.aether.version.VersionRange;
 
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A version range inspired by mathematical range syntax. For example, "[1.0,2.0)", "[1.0,)" or "[1.0]".
  */
@@ -45,7 +47,7 @@ final class GenericVersionRange
     GenericVersionRange( String range )
         throws InvalidVersionSpecificationException
     {
-        String process = range;
+        String process = requireNonNull( range, "version range cannot be null" );
 
         boolean lowerBoundInclusive, upperBoundInclusive;
         Version lowerBound, upperBound;
@@ -137,16 +139,19 @@ final class GenericVersionRange
         return new GenericVersion( version );
     }
 
+    @Override
     public Bound getLowerBound()
     {
         return lowerBound;
     }
 
+    @Override
     public Bound getUpperBound()
     {
         return upperBound;
     }
 
+    @Override
     public boolean containsVersion( Version version )
     {
         if ( lowerBound != null )
