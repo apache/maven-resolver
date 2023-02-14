@@ -111,8 +111,7 @@ public final class DataPool
 
         if ( artifactsPool == null )
         {
-            final String artifactPoolType = ConfigUtils.getString( session, WEAK,
-                    CONFIG_PROP_COLLECTOR_POOL_ARTIFACT );
+            String artifactPoolType = ConfigUtils.getString( session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT );
 
             artifactsPool = createPool( artifactPoolType );
             if ( cache != null )
@@ -123,8 +122,7 @@ public final class DataPool
 
         if ( dependenciesPool == null )
         {
-            final String dependencyPoolType = ConfigUtils.getString( session, WEAK,
-                    CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY );
+            String dependencyPoolType = ConfigUtils.getString( session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY );
 
             dependenciesPool = createPool( dependencyPoolType );
             if ( cache != null )
@@ -135,8 +133,7 @@ public final class DataPool
 
         if ( descriptorsPool == null )
         {
-            final String descriptorPoolType = ConfigUtils.getString( session, HARD,
-                    CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR );
+            String descriptorPoolType = ConfigUtils.getString( session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR );
 
             descriptorsPool = createPool( descriptorPoolType );
             if ( cache != null )
