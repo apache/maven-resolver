@@ -18,7 +18,13 @@
  * under the License.
  */
 /**
- * Ready-to-use version schemes for parsing/comparing versions.
+ * Ready-to-use version scheme for parsing/comparing versions and utility classes.
+ * <p>
+ * Contains the "generic" scheme {@link org.eclipse.aether.util.version.GenericVersionScheme}
+ * that serves the purpose of "factory" (and/or parser) for all corresponding elements (all those are package private).
+ * <p>
+ * On the other hand, the {@link org.eclipse.aether.util.version.UnionVersionRange} is universal implementation of
+ * "unions" of various {@link org.eclipse.aether.version.VersionRange} instances.
  */
 package org.eclipse.aether.util.version;
 

@@ -21,13 +21,15 @@ package org.eclipse.aether.util.version;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.eclipse.aether.version.Version;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A generic version, that is a version that accepts any input string and tries to apply common sense sorting. See
@@ -39,7 +41,7 @@ final class GenericVersion
 
     private final String version;
 
-    private final Item[] items;
+    private final List<Item> items;
 
     private final int hash;
 
@@ -50,12 +52,32 @@ final class GenericVersion
      */
     GenericVersion( String version )
     {
-        this.version = version;
+        this.version = requireNonNull( version, "version cannot be null" );
         items = parse( version );
-        hash = Arrays.hashCode( items );
+        hash = items.hashCode();
     }
 
-    private static Item[] parse( String version )
+    /**
+     * Returns this instance backing string representation.
+     *
+     * @since 1.9.5
+     */
+    public String asString()
+    {
+        return version;
+    }
+
+    /**
+     * Returns this instance tokenized representation as unmodifiable list.
+     *
+     * @since 1.9.5
+     */
+    public List<Item> asItems()
+    {
+        return items;
+    }
+
+    private static List<Item> parse( String version )
     {
         List<Item> items = new ArrayList<>();
 
@@ -67,7 +89,7 @@ final class GenericVersion
 
         trimPadding( items );
 
-        return items.toArray( new Item[0] );
+        return Collections.unmodifiableList( items );
     }
 
     private static void trimPadding( List<Item> items )
@@ -91,30 +113,31 @@ final class GenericVersion
         }
     }
 
+    @Override
     public int compareTo( Version obj )
     {
-        final Item[] these = items;
-        final Item[] those = ( (GenericVersion) obj ).items;
+        final List<Item> these = items;
+        final List<Item> those = ( (GenericVersion) obj ).items;
 
         boolean number = true;
 
         for ( int index = 0;; index++ )
         {
-            if ( index >= these.length && index >= those.length )
+            if ( index >= these.size() && index >= those.size() )
             {
                 return 0;
             }
-            else if ( index >= these.length )
+            else if ( index >= these.size() )
             {
                 return -comparePadding( those, index, null );
             }
-            else if ( index >= those.length )
+            else if ( index >= those.size() )
             {
                 return comparePadding( these, index, null );
             }
 
-            Item thisItem = these[index];
-            Item thatItem = those[index];
+            Item thisItem = these.get( index );
+            Item thatItem = those.get( index );
 
             if ( thisItem.isNumber() != thatItem.isNumber() )
             {
@@ -139,12 +162,12 @@ final class GenericVersion
         }
     }
 
-    private static int comparePadding( Item[] items, int index, Boolean number )
+    private static int comparePadding( List<Item> items, int index, Boolean number )
     {
         int rel = 0;
-        for ( int i = index; i < items.length; i++ )
+        for ( int i = index; i < items.size(); i++ )
         {
-            Item item = items[i];
+            Item item = items.get( i );
             if ( number != null && number != item.isNumber() )
             {
                 break;

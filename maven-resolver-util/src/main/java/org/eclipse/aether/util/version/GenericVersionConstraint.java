@@ -19,13 +19,13 @@ package org.eclipse.aether.util.version;
  * under the License.
  */
 
-import static java.util.Objects.requireNonNull;
-
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionRange;
 
 import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A constraint on versions for a dependency.
@@ -60,16 +60,19 @@ final class GenericVersionConstraint
         this.range = null;
     }
 
+    @Override
     public VersionRange getRange()
     {
         return range;
     }
 
+    @Override
     public Version getVersion()
     {
         return version;
     }
 
+    @Override
     public boolean containsVersion( Version version )
     {
         if ( range == null )
