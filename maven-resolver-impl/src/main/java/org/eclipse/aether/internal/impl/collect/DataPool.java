@@ -54,7 +54,11 @@ import org.eclipse.aether.version.VersionConstraint;
  */
 public final class DataPool
 {
-    private static final String CONFIG_PROP_COLLECTOR_POOL = "aether.dependencyCollector.pool";
+    private static final String CONFIG_PROP_COLLECTOR_POOL_ARTIFACT = "aether.dependencyCollector.pool.artifact";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY = "aether.dependencyCollector.pool.dependency";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR = "aether.dependencyCollector.pool.descriptor";
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 
@@ -94,7 +98,6 @@ public final class DataPool
     public DataPool( RepositorySystemSession session )
     {
         final RepositoryCache cache = session.getCache();
-        final String poolType = ConfigUtils.getString( session, HARD, CONFIG_PROP_COLLECTOR_POOL );
 
         InternPool<Artifact, Artifact> artifactsPool = null;
         InternPool<Dependency, Dependency> dependenciesPool = null;
@@ -108,7 +111,10 @@ public final class DataPool
 
         if ( artifactsPool == null )
         {
-            artifactsPool = createPool( poolType );
+            final String artifactPoolType = ConfigUtils.getString( session, WEAK,
+                    CONFIG_PROP_COLLECTOR_POOL_ARTIFACT );
+
+            artifactsPool = createPool( artifactPoolType );
             if ( cache != null )
             {
                 cache.put( session, ARTIFACT_POOL, artifactsPool );
@@ -117,7 +123,10 @@ public final class DataPool
 
         if ( dependenciesPool == null )
         {
-            dependenciesPool = createPool( poolType );
+            final String dependencyPoolType = ConfigUtils.getString( session, WEAK,
+                    CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY );
+
+            dependenciesPool = createPool( dependencyPoolType );
             if ( cache != null )
             {
                 cache.put( session, DEPENDENCY_POOL, dependenciesPool );
@@ -126,7 +135,10 @@ public final class DataPool
 
         if ( descriptorsPool == null )
         {
-            descriptorsPool = createPool( poolType );
+            final String descriptorPoolType = ConfigUtils.getString( session, HARD,
+                    CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR );
+
+            descriptorsPool = createPool( descriptorPoolType );
             if ( cache != null )
             {
                 cache.put( session, DESCRIPTORS, descriptorsPool );
