@@ -19,10 +19,12 @@ package org.eclipse.aether.internal.impl.collect;
  * under the License.
  */
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositoryCache;
@@ -41,6 +43,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -49,6 +52,7 @@ import org.eclipse.aether.version.VersionConstraint;
  */
 public final class DataPool
 {
+    private static final String CONFIG_PROP_COLLECTOR_POOL_WEAK = "aether.dependencyCollector.pool.weak";
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 
@@ -59,64 +63,90 @@ public final class DataPool
     public static final ArtifactDescriptorResult NO_DESCRIPTOR =
         new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
 
-    private ConcurrentHashMap<Artifact, Artifact> artifacts;
+    /**
+     * Artifact interning pool, lives across session.
+     */
+    private final InternPool<Artifact, Artifact> artifacts;
 
-    private ConcurrentHashMap<Dependency, Dependency> dependencies;
+    /**
+     * Dependency interning pool, lives across session.
+     */
+    private final InternPool<Dependency, Dependency> dependencies;
 
-    private ConcurrentHashMap<Object, Descriptor> descriptors;
+    /**
+     * Descriptor interning pool, lives across session.
+     */
+    private final InternPool<Object, Descriptor> descriptors;
 
-    private final ConcurrentHashMap<Object, Constraint> constraints = new ConcurrentHashMap<>();
+    /**
+     * Constraint cache, lives during single collection invocation (same as DataPool instance).
+     */
+    private final ConcurrentHashMap<Object, Constraint> constraints;
 
-    private final ConcurrentHashMap<Object, List<DependencyNode>> nodes = new ConcurrentHashMap<>( 256 );
+    /**
+     * DependencyNode cache, lives during single collection invocation (same as DataPool instance).
+     */
+    private final ConcurrentHashMap<Object, List<DependencyNode>> nodes;
 
     @SuppressWarnings( "unchecked" )
     public DataPool( RepositorySystemSession session )
     {
-        RepositoryCache cache = session.getCache();
+        final RepositoryCache cache = session.getCache();
+        final boolean weak = ConfigUtils.getBoolean( session, false, CONFIG_PROP_COLLECTOR_POOL_WEAK );
 
+        InternPool<Artifact, Artifact> artifactsPool = null;
+        InternPool<Dependency, Dependency> dependenciesPool = null;
+        InternPool<Object, Descriptor> descriptorsPool = null;
         if ( cache != null )
         {
-            artifacts = (ConcurrentHashMap<Artifact, Artifact>) cache.get( session, ARTIFACT_POOL );
-            dependencies = (ConcurrentHashMap<Dependency, Dependency>) cache.get( session, DEPENDENCY_POOL );
-            descriptors = (ConcurrentHashMap<Object, Descriptor>) cache.get( session, DESCRIPTORS );
+            artifactsPool = (InternPool<Artifact, Artifact>) cache.get( session, ARTIFACT_POOL );
+            dependenciesPool = (InternPool<Dependency, Dependency>) cache.get( session, DEPENDENCY_POOL );
+            descriptorsPool = (InternPool<Object, Descriptor>) cache.get( session, DESCRIPTORS );
         }
 
-        if ( artifacts == null )
+        if ( artifactsPool == null )
         {
-            artifacts = new ConcurrentHashMap<>();
+            artifactsPool = weak ? new WeakInternPool<>() : new HardInternPool<>();
             if ( cache != null )
             {
-                cache.put( session, ARTIFACT_POOL, artifacts );
+                cache.put( session, ARTIFACT_POOL, artifactsPool );
             }
         }
 
-        if ( dependencies == null )
+        if ( dependenciesPool == null )
         {
-            dependencies = new ConcurrentHashMap<>();
+            dependenciesPool = weak ? new WeakInternPool<>() : new HardInternPool<>();
             if ( cache != null )
             {
-                cache.put( session, DEPENDENCY_POOL, dependencies );
+                cache.put( session, DEPENDENCY_POOL, dependenciesPool );
             }
         }
 
-        if ( descriptors == null )
+        if ( descriptorsPool == null )
         {
-            descriptors = new ConcurrentHashMap<>( 256 );
+            descriptorsPool = weak ? new WeakInternPool<>() : new HardInternPool<>();
             if ( cache != null )
             {
-                cache.put( session, DESCRIPTORS, descriptors );
+                cache.put( session, DESCRIPTORS, descriptorsPool );
             }
         }
+
+        this.artifacts = artifactsPool;
+        this.dependencies = dependenciesPool;
+        this.descriptors = descriptorsPool;
+
+        this.constraints = new ConcurrentHashMap<>( 256 );
+        this.nodes = new ConcurrentHashMap<>( 256 );
     }
 
     public Artifact intern( Artifact artifact )
     {
-        return artifacts.computeIfAbsent( artifact, k -> artifact );
+        return artifacts.intern( artifact, artifact );
     }
 
     public Dependency intern( Dependency dependency )
     {
-        return dependencies.computeIfAbsent( dependency, k -> dependency );
+        return dependencies.intern( dependency, dependency );
     }
 
     public Object toKey( ArtifactDescriptorRequest request )
@@ -136,12 +166,12 @@ public final class DataPool
 
     public void putDescriptor( Object key, ArtifactDescriptorResult result )
     {
-        descriptors.put( key, new GoodDescriptor( result ) );
+        descriptors.intern( key, new GoodDescriptor( result ) );
     }
 
     public void putDescriptor( Object key, ArtifactDescriptorException e )
     {
-        descriptors.put( key, BadDescriptor.INSTANCE );
+        descriptors.intern( key, BadDescriptor.INSTANCE );
     }
 
     public Object toKey( VersionRangeRequest request )
@@ -408,6 +438,48 @@ public final class DataPool
         public int hashCode()
         {
             return hashCode;
+        }
+    }
+
+    private interface InternPool<K, V>
+    {
+        V get( K key );
+
+        V intern( K key, V value );
+    }
+
+    private static class HardInternPool<K, V> implements InternPool<K, V>
+    {
+        private final ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>( 256 );
+
+        @Override
+        public V get( K key )
+        {
+            return map.get( key );
+        }
+
+        @Override
+        public V intern( K key, V value )
+        {
+            return map.computeIfAbsent( key, k -> value );
+        }
+    }
+
+    private static class WeakInternPool<K, V> implements InternPool<K, V>
+    {
+        private final WeakHashMap<K, WeakReference<V>> map = new WeakHashMap<>( 256 );
+
+        @Override
+        public V get( K key )
+        {
+            WeakReference<V> ref = map.get( key );
+            return ref != null ? ref.get() : null;
+        }
+
+        @Override
+        public synchronized V intern( K key, V value )
+        {
+            return map.computeIfAbsent( key, k -> new WeakReference<>( value ) ).get();
         }
     }
 }
