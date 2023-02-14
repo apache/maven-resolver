@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionRange;
@@ -31,7 +32,7 @@ import org.eclipse.aether.version.VersionRange;
 /**
  * A union of version ranges.
  */
-final class UnionVersionRange
+public final class UnionVersionRange
     implements VersionRange
 {
 
@@ -41,15 +42,25 @@ final class UnionVersionRange
 
     private final Bound upperBound;
 
+    /**
+     * Creates union {@link VersionRange}s out of passed in {@link VersionRange} instances.
+     *
+     * @param ranges The ranges, may be empty array or even {@code null}.
+     */
     public static VersionRange from( VersionRange... ranges )
     {
-        if ( ranges == null )
+        if ( ranges == null || ranges.length == 0 )
         {
-            return from( Collections.<VersionRange>emptySet() );
+            return from( Collections.emptySet() );
         }
         return from( Arrays.asList( ranges ) );
     }
 
+    /**
+     * Creates union {@link VersionRange}s out of passed in {@link VersionRange} collection.
+     *
+     * @param ranges The ranges, may be empty collection or even {@code null}.
+     */
     public static VersionRange from( Collection<? extends VersionRange> ranges )
     {
         if ( ranges != null && ranges.size() == 1 )
@@ -118,6 +129,7 @@ final class UnionVersionRange
         }
     }
 
+    @Override
     public boolean containsVersion( Version version )
     {
         for ( VersionRange range : ranges )
@@ -130,11 +142,13 @@ final class UnionVersionRange
         return false;
     }
 
+    @Override
     public Bound getLowerBound()
     {
         return lowerBound;
     }
 
+    @Override
     public Bound getUpperBound()
     {
         return upperBound;
@@ -167,16 +181,7 @@ final class UnionVersionRange
     @Override
     public String toString()
     {
-        StringBuilder buffer = new StringBuilder( 128 );
-        for ( VersionRange range : ranges )
-        {
-            if ( buffer.length() > 0 )
-            {
-                buffer.append( ", " );
-            }
-            buffer.append( range );
-        }
-        return buffer.toString();
+        return ranges.stream().map( VersionRange::toString ).collect( Collectors.joining( ", " ) );
     }
 
 }

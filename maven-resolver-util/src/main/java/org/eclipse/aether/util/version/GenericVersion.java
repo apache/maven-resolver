@@ -29,6 +29,8 @@ import java.util.TreeMap;
 
 import org.eclipse.aether.version.Version;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A generic version, that is a version that accepts any input string and tries to apply common sense sorting. See
  * {@link GenericVersionScheme} for details.
@@ -50,7 +52,7 @@ final class GenericVersion
      */
     GenericVersion( String version )
     {
-        this.version = version;
+        this.version = requireNonNull( version, "version cannot be null" );
         items = parse( version );
         hash = items.hashCode();
     }

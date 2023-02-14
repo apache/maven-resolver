@@ -23,9 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
-import org.eclipse.aether.version.Version;
-import org.eclipse.aether.version.VersionConstraint;
-import org.eclipse.aether.version.VersionRange;
 import org.eclipse.aether.version.VersionScheme;
 
 import static java.util.Objects.requireNonNull;
@@ -66,27 +63,27 @@ public final class GenericVersionScheme
     {
     }
 
-    public Version parseVersion( final String version )
+    @Override
+    public GenericVersion parseVersion( final String version )
         throws InvalidVersionSpecificationException
     {
-        requireNonNull( version, "version cannot be null" );
         return new GenericVersion( version );
     }
 
-    public VersionRange parseVersionRange( final String range )
+    @Override
+    public GenericVersionRange parseVersionRange( final String range )
         throws InvalidVersionSpecificationException
     {
-        requireNonNull( range, "range cannot be null" );
         return new GenericVersionRange( range );
     }
 
-    public VersionConstraint parseVersionConstraint( final String constraint )
+    @Override
+    public GenericVersionConstraint parseVersionConstraint( final String constraint )
         throws InvalidVersionSpecificationException
     {
-        requireNonNull( constraint, "constraint cannot be null" );
-        Collection<VersionRange> ranges = new ArrayList<>();
+        String process = requireNonNull( constraint, "constraint cannot be null" );
 
-        String process = constraint;
+        Collection<GenericVersionRange> ranges = new ArrayList<>();
 
         while ( process.startsWith( "[" ) || process.startsWith( "(" ) )
         {
@@ -104,12 +101,12 @@ public final class GenericVersionScheme
                 throw new InvalidVersionSpecificationException( constraint, "Unbounded version range " + constraint );
             }
 
-            VersionRange range = parseVersionRange( process.substring( 0, index + 1 ) );
+            GenericVersionRange range = parseVersionRange( process.substring( 0, index + 1 ) );
             ranges.add( range );
 
             process = process.substring( index + 1 ).trim();
 
-            if ( process.length() > 0 && process.startsWith( "," ) )
+            if ( process.startsWith( "," ) )
             {
                 process = process.substring( 1 ).trim();
             }
@@ -121,7 +118,7 @@ public final class GenericVersionScheme
                 + ", expected [ or ( but got " + process );
         }
 
-        VersionConstraint result;
+        GenericVersionConstraint result;
         if ( ranges.isEmpty() )
         {
             result = new GenericVersionConstraint( parseVersion( constraint ) );
