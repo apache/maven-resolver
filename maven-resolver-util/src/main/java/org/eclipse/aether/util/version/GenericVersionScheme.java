@@ -184,8 +184,7 @@ public final class GenericVersionScheme
                         + ' ' + version );
             }
 
-            System.out.println(
-                    ( i++ ) + ". " + version + " -> " + c.asString() + "; tokens: " + Arrays.asList( c.asItems() ) );
+            System.out.println( ( i++ ) + ". " + version + " -> " + c.asString() + "; tokens: " + c.asItems() );
 
             prev = c;
         }
