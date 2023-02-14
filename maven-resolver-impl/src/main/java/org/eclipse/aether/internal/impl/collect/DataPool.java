@@ -66,27 +66,27 @@ public final class DataPool
         new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
 
     /**
-     * Artifact interning pool, lives across session.
+     * Artifact interning pool, lives across session (if session carries non-null {@link RepositoryCache}).
      */
     private final InternPool<Artifact, Artifact> artifacts;
 
     /**
-     * Dependency interning pool, lives across session.
+     * Dependency interning pool, lives across session (if session carries non-null {@link RepositoryCache}).
      */
     private final InternPool<Dependency, Dependency> dependencies;
 
     /**
-     * Descriptor interning pool, lives across session.
+     * Descriptor interning pool, lives across session (if session carries non-null {@link RepositoryCache}).
      */
     private final InternPool<Object, Descriptor> descriptors;
 
     /**
-     * Constraint cache, lives during single collection invocation (same as DataPool instance).
+     * Constraint cache, lives during single collection invocation (same as this DataPool instance).
      */
     private final ConcurrentHashMap<Object, Constraint> constraints;
 
     /**
-     * DependencyNode cache, lives during single collection invocation (same as DataPool instance).
+     * DependencyNode cache, lives during single collection invocation (same as this DataPool instance).
      */
     private final ConcurrentHashMap<Object, List<DependencyNode>> nodes;
 
