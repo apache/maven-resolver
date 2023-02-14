@@ -21,8 +21,10 @@ package org.eclipse.aether.internal.impl.collect;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +54,7 @@ import org.eclipse.aether.version.VersionConstraint;
  */
 public final class DataPool
 {
-    private static final String CONFIG_PROP_COLLECTOR_POOL_WEAK = "aether.dependencyCollector.pool.weak";
+    private static final String CONFIG_PROP_COLLECTOR_POOL = "aether.dependencyCollector.pool";
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 
@@ -92,7 +94,7 @@ public final class DataPool
     public DataPool( RepositorySystemSession session )
     {
         final RepositoryCache cache = session.getCache();
-        final boolean weak = ConfigUtils.getBoolean( session, false, CONFIG_PROP_COLLECTOR_POOL_WEAK );
+        final String poolType = ConfigUtils.getString( session, HARD, CONFIG_PROP_COLLECTOR_POOL );
 
         InternPool<Artifact, Artifact> artifactsPool = null;
         InternPool<Dependency, Dependency> dependenciesPool = null;
@@ -106,7 +108,7 @@ public final class DataPool
 
         if ( artifactsPool == null )
         {
-            artifactsPool = weak ? new WeakInternPool<>() : new HardInternPool<>();
+            artifactsPool = createPool( poolType );
             if ( cache != null )
             {
                 cache.put( session, ARTIFACT_POOL, artifactsPool );
@@ -115,7 +117,7 @@ public final class DataPool
 
         if ( dependenciesPool == null )
         {
-            dependenciesPool = weak ? new WeakInternPool<>() : new HardInternPool<>();
+            dependenciesPool = createPool( poolType );
             if ( cache != null )
             {
                 cache.put( session, DEPENDENCY_POOL, dependenciesPool );
@@ -124,7 +126,7 @@ public final class DataPool
 
         if ( descriptorsPool == null )
         {
-            descriptorsPool = weak ? new WeakInternPool<>() : new HardInternPool<>();
+            descriptorsPool = createPool( poolType );
             if ( cache != null )
             {
                 cache.put( session, DESCRIPTORS, descriptorsPool );
@@ -441,6 +443,32 @@ public final class DataPool
         }
     }
 
+    private static <K, V> InternPool<K, V> createPool( String type )
+    {
+        if ( HARD.equals( type ) )
+        {
+            return new HardInternPool<>();
+        }
+        else if ( WEAK.equals( type ) )
+        {
+            return new WeakInternPool<>();
+        }
+        else if ( NONE.equals( type ) )
+        {
+            return new NoneInternPool<>();
+        }
+        else
+        {
+            throw new IllegalArgumentException( "Unknown object pool type: '" + type + "'" );
+        }
+    }
+
+    private static final String HARD = "hard";
+
+    private static final String WEAK = "weak";
+
+    private static final String NONE = "none";
+
     private interface InternPool<K, V>
     {
         V get( K key );
@@ -467,7 +495,7 @@ public final class DataPool
 
     private static class WeakInternPool<K, V> implements InternPool<K, V>
     {
-        private final WeakHashMap<K, WeakReference<V>> map = new WeakHashMap<>( 256 );
+        private final Map<K, WeakReference<V>> map = Collections.synchronizedMap( new WeakHashMap<>( 256 ) );
 
         @Override
         public V get( K key )
@@ -477,9 +505,25 @@ public final class DataPool
         }
 
         @Override
-        public synchronized V intern( K key, V value )
+        public V intern( K key, V value )
         {
             return map.computeIfAbsent( key, k -> new WeakReference<>( value ) ).get();
         }
     }
+
+    private static class NoneInternPool<K, V> implements InternPool<K, V>
+    {
+        @Override
+        public V get( K key )
+        {
+            return null;
+        }
+
+        @Override
+        public V intern( K key, V value )
+        {
+            return value;
+        }
+    }
+
 }
