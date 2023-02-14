@@ -21,7 +21,7 @@ package org.eclipse.aether.util.version;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,7 +39,7 @@ final class GenericVersion
 
     private final String version;
 
-    private final Item[] items;
+    private final List<Item> items;
 
     private final int hash;
 
@@ -52,7 +52,7 @@ final class GenericVersion
     {
         this.version = version;
         items = parse( version );
-        hash = Arrays.hashCode( items );
+        hash = items.hashCode();
     }
 
     /**
@@ -60,22 +60,22 @@ final class GenericVersion
      *
      * @since 1.9.5
      */
-    String asString()
+    public String asString()
     {
         return version;
     }
 
     /**
-     * Returns this instance tokenized representation.
+     * Returns this instance tokenized representation as unmodifiable list.
      *
      * @since 1.9.5
      */
-    Item[] asItems()
+    public List<Item> asItems()
     {
         return items;
     }
 
-    private static Item[] parse( String version )
+    private static List<Item> parse( String version )
     {
         List<Item> items = new ArrayList<>();
 
@@ -87,7 +87,7 @@ final class GenericVersion
 
         trimPadding( items );
 
-        return items.toArray( new Item[0] );
+        return Collections.unmodifiableList( items );
     }
 
     private static void trimPadding( List<Item> items )
@@ -111,30 +111,31 @@ final class GenericVersion
         }
     }
 
+    @Override
     public int compareTo( Version obj )
     {
-        final Item[] these = items;
-        final Item[] those = ( (GenericVersion) obj ).items;
+        final List<Item> these = items;
+        final List<Item> those = ( (GenericVersion) obj ).items;
 
         boolean number = true;
 
         for ( int index = 0;; index++ )
         {
-            if ( index >= these.length && index >= those.length )
+            if ( index >= these.size() && index >= those.size() )
             {
                 return 0;
             }
-            else if ( index >= these.length )
+            else if ( index >= these.size() )
             {
                 return -comparePadding( those, index, null );
             }
-            else if ( index >= those.length )
+            else if ( index >= those.size() )
             {
                 return comparePadding( these, index, null );
             }
 
-            Item thisItem = these[index];
-            Item thatItem = those[index];
+            Item thisItem = these.get( index );
+            Item thatItem = those.get( index );
 
             if ( thisItem.isNumber() != thatItem.isNumber() )
             {
@@ -159,12 +160,12 @@ final class GenericVersion
         }
     }
 
-    private static int comparePadding( Item[] items, int index, Boolean number )
+    private static int comparePadding( List<Item> items, int index, Boolean number )
     {
         int rel = 0;
-        for ( int i = index; i < items.length; i++ )
+        for ( int i = index; i < items.size(); i++ )
         {
-            Item item = items[i];
+            Item item = items.get( i );
             if ( number != null && number != item.isNumber() )
             {
                 break;
