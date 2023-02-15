@@ -462,10 +462,6 @@ public final class DataPool
         {
             return new WeakInternPool<>();
         }
-        else if ( NONE.equals( type ) )
-        {
-            return new NoneInternPool<>();
-        }
         else
         {
             throw new IllegalArgumentException( "Unknown object pool type: '" + type + "'" );
@@ -475,8 +471,6 @@ public final class DataPool
     private static final String HARD = "hard";
 
     private static final String WEAK = "weak";
-
-    private static final String NONE = "none";
 
     private interface InternPool<K, V>
     {
@@ -529,20 +523,4 @@ public final class DataPool
             return value;
         }
     }
-
-    private static class NoneInternPool<K, V> implements InternPool<K, V>
-    {
-        @Override
-        public V get( K key )
-        {
-            return null;
-        }
-
-        @Override
-        public V intern( K key, V value )
-        {
-            return value;
-        }
-    }
-
 }
