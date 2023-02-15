@@ -54,7 +54,11 @@ import org.eclipse.aether.version.VersionConstraint;
  */
 public final class DataPool
 {
-    private static final String CONFIG_PROP_COLLECTOR_POOL = "aether.dependencyCollector.pool";
+    private static final String CONFIG_PROP_COLLECTOR_POOL_ARTIFACT = "aether.dependencyCollector.pool.artifact";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY = "aether.dependencyCollector.pool.dependency";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR = "aether.dependencyCollector.pool.descriptor";
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 
@@ -94,7 +98,6 @@ public final class DataPool
     public DataPool( RepositorySystemSession session )
     {
         final RepositoryCache cache = session.getCache();
-        final String poolType = ConfigUtils.getString( session, HARD, CONFIG_PROP_COLLECTOR_POOL );
 
         InternPool<Artifact, Artifact> artifactsPool = null;
         InternPool<Dependency, Dependency> dependenciesPool = null;
@@ -108,7 +111,9 @@ public final class DataPool
 
         if ( artifactsPool == null )
         {
-            artifactsPool = createPool( poolType );
+            String artifactPoolType = ConfigUtils.getString( session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT );
+
+            artifactsPool = createPool( artifactPoolType );
             if ( cache != null )
             {
                 cache.put( session, ARTIFACT_POOL, artifactsPool );
@@ -117,7 +122,9 @@ public final class DataPool
 
         if ( dependenciesPool == null )
         {
-            dependenciesPool = createPool( poolType );
+            String dependencyPoolType = ConfigUtils.getString( session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY );
+
+            dependenciesPool = createPool( dependencyPoolType );
             if ( cache != null )
             {
                 cache.put( session, DEPENDENCY_POOL, dependenciesPool );
@@ -126,7 +133,9 @@ public final class DataPool
 
         if ( descriptorsPool == null )
         {
-            descriptorsPool = createPool( poolType );
+            String descriptorPoolType = ConfigUtils.getString( session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR );
+
+            descriptorsPool = createPool( descriptorPoolType );
             if ( cache != null )
             {
                 cache.put( session, DESCRIPTORS, descriptorsPool );
@@ -453,10 +462,6 @@ public final class DataPool
         {
             return new WeakInternPool<>();
         }
-        else if ( NONE.equals( type ) )
-        {
-            return new NoneInternPool<>();
-        }
         else
         {
             throw new IllegalArgumentException( "Unknown object pool type: '" + type + "'" );
@@ -466,8 +471,6 @@ public final class DataPool
     private static final String HARD = "hard";
 
     private static final String WEAK = "weak";
-
-    private static final String NONE = "none";
 
     private interface InternPool<K, V>
     {
@@ -507,23 +510,17 @@ public final class DataPool
         @Override
         public V intern( K key, V value )
         {
-            return map.computeIfAbsent( key, k -> new WeakReference<>( value ) ).get();
-        }
-    }
-
-    private static class NoneInternPool<K, V> implements InternPool<K, V>
-    {
-        @Override
-        public V get( K key )
-        {
-            return null;
-        }
-
-        @Override
-        public V intern( K key, V value )
-        {
+            WeakReference<V> pooledRef = map.get( key );
+            if ( pooledRef != null )
+            {
+                V pooled = pooledRef.get();
+                if ( pooled != null )
+                {
+                    return pooled;
+                }
+            }
+            map.put( key, new WeakReference<>( value ) );
             return value;
         }
     }
-
 }
