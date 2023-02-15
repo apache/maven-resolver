@@ -32,6 +32,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictContex
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictItem;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.VersionSelector;
 import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
+import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -155,7 +156,7 @@ public final class NearestVersionSelector
             return context.isIncluded( node );
         };
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor( filter );
-        context.getRoot().accept( visitor );
+        context.getRoot().accept( new TreeDependencyVisitor( visitor ) );
         return new UnsolvableVersionConflictException( visitor.getPaths() );
     }
 
