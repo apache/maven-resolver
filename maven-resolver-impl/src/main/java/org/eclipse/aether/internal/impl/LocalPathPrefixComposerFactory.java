@@ -31,8 +31,10 @@ public interface LocalPathPrefixComposerFactory
     /**
      * Creates {@link LocalPathPrefixComposer} instance out of whatever configuration it finds in passed in session.
      *
-     * @param session The repository session, never {@code null}.
+     * @param session          The repository session, never {@code null}.
+     * @param repositoryConfig The locla repository configuration
      * @return The created instance, never {@code null}.
      */
-    LocalPathPrefixComposer createComposer( RepositorySystemSession session );
+    LocalPathPrefixComposer createComposer( RepositorySystemSession session,
+                                            EnhancedLocalRepositoryConfig repositoryConfig );
 }

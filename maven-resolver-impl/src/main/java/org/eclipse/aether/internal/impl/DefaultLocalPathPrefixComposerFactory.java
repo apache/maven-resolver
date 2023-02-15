@@ -35,9 +35,10 @@ import org.eclipse.aether.RepositorySystemSession;
 public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefixComposerFactorySupport
 {
     @Override
-    public LocalPathPrefixComposer createComposer( RepositorySystemSession session )
+    public LocalPathPrefixComposer createComposer( RepositorySystemSession session,
+                                                   EnhancedLocalRepositoryConfig repositoryConfig )
     {
-        return new DefaultLocalPathPrefixComposer( isSplit( session ), getLocalPrefix( session ),
+        return new DefaultLocalPathPrefixComposer( repositoryConfig.isSplit(), getLocalPrefix( session ),
                 isSplitLocal( session ), getRemotePrefix( session ), isSplitRemote( session ),
                 isSplitRemoteRepository( session ), isSplitRemoteRepositoryLast( session ),
                 getReleasesPrefix( session ), getSnapshotsPrefix( session ) );

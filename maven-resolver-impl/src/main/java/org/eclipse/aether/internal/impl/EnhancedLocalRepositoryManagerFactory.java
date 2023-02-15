@@ -30,7 +30,6 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -88,7 +87,10 @@ public class EnhancedLocalRepositoryManagerFactory
         requireNonNull( session, "session cannot be null" );
         requireNonNull( repository, "repository cannot be null" );
 
-        String trackingFilename = ConfigUtils.getString( session, "", CONFIG_PROP_TRACKING_FILENAME );
+        EnhancedLocalRepositoryConfig repositoryConfig =
+            new EnhancedLocalRepositoryConfig( session, repository.getBasedir() );
+
+        String trackingFilename = repositoryConfig.getTrackingFilename();
         if ( trackingFilename.isEmpty() || trackingFilename.contains( "/" ) || trackingFilename.contains( "\\" )
                 || trackingFilename.contains( ".." ) )
         {
@@ -102,7 +104,7 @@ public class EnhancedLocalRepositoryManagerFactory
                     localPathComposer,
                     trackingFilename,
                     trackingFileManager,
-                    localPathPrefixComposerFactory.createComposer( session )
+                    localPathPrefixComposerFactory.createComposer( session, repositoryConfig )
             );
         }
         else

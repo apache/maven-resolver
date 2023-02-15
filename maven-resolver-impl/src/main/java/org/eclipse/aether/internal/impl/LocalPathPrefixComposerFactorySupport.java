@@ -38,10 +38,6 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory
 {
-    protected static final String CONF_PROP_SPLIT = "aether.enhancedLocalRepository.split";
-
-    protected static final boolean DEFAULT_SPLIT = false;
-
     protected static final String CONF_PROP_LOCAL_PREFIX = "aether.enhancedLocalRepository.localPrefix";
 
     protected static final String DEFAULT_LOCAL_PREFIX = "installed";
@@ -75,12 +71,6 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
     protected static final String CONF_PROP_SNAPSHOTS_PREFIX = "aether.enhancedLocalRepository.snapshotsPrefix";
 
     protected static final String DEFAULT_SNAPSHOTS_PREFIX = "snapshots";
-
-    protected boolean isSplit( RepositorySystemSession session )
-    {
-        return ConfigUtils.getBoolean(
-                session, DEFAULT_SPLIT, CONF_PROP_SPLIT );
-    }
 
     protected String getLocalPrefix( RepositorySystemSession session )
     {
