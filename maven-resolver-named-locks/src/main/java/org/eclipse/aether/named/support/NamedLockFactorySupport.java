@@ -76,24 +76,6 @@ public abstract class NamedLockFactorySupport
         } );
     }
 
-
-    @Override
-    protected void finalize() throws Throwable
-    {
-        try
-        {
-            if ( !locks.isEmpty() )
-            {
-                // report leak
-                logger.warn( "Lock leak, referenced locks still exist {}", locks );
-            }
-        }
-        finally
-        {
-            super.finalize();
-        }
-    }
-
     /**
      * Implementations shall create and return {@link NamedLockSupport} for given {@code name}, this method must never
      * return {@code null}.
