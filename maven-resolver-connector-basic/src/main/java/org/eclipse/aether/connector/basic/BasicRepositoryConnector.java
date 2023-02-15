@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
@@ -217,6 +218,8 @@ final class BasicRepositoryConnector
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
+        boolean first = true;
+
         for ( MetadataDownload transfer : safeMetadataDownloads )
         {
             URI location = layout.getLocation( transfer.getMetadata(), false );
@@ -234,7 +237,15 @@ final class BasicRepositoryConnector
 
             Runnable task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
                     checksumAlgorithmFactories, checksumLocations, null, listener );
-            executor.execute( errorForwarder.wrap( task ) );
+            if ( first )
+            {
+                task.run();
+                first = false;
+            }
+            else
+            {
+                executor.execute( errorForwarder.wrap( task ) );
+            }
         }
 
         for ( ArtifactDownload transfer : safeArtifactDownloads )
@@ -275,7 +286,15 @@ final class BasicRepositoryConnector
                 task = new GetTaskRunner( location, transfer.getFile(), checksumPolicy,
                         checksumAlgorithmFactories, checksumLocations, providedChecksums, listener );
             }
-            executor.execute( errorForwarder.wrap( task ) );
+            if ( first )
+            {
+                task.run();
+                first = false;
+            }
+            else
+            {
+                executor.execute( errorForwarder.wrap( task ) );
+            }
         }
 
         errorForwarder.await();
@@ -293,6 +312,8 @@ final class BasicRepositoryConnector
         Executor executor = getExecutor( parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1 );
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
+        boolean first = true;
+
         for ( ArtifactUpload transfer : safeArtifactUploads )
         {
             URI location = layout.getLocation( transfer.getArtifact(), true );
@@ -306,29 +327,99 @@ final class BasicRepositoryConnector
 
             Runnable task = new PutTaskRunner( location, transfer.getFile(), transfer.getFileTransformer(),
                     checksumLocations, listener );
-
-            executor.execute( errorForwarder.wrap( task ) );
+            if ( first )
+            {
+                task.run();
+                first = false;
+            }
+            else
+            {
+                executor.execute( errorForwarder.wrap( task ) );
+            }
         }
 
         errorForwarder.await(); // make sure all artifacts are PUT before we go with Metadata
 
-        for ( MetadataUpload transfer : safeMetadataUploads )
+        for ( List<? extends MetadataUpload> transferGroup : groupUploads( safeMetadataUploads ) )
         {
-            URI location = layout.getLocation( transfer.getMetadata(), true );
+            for ( MetadataUpload transfer : transferGroup )
+            {
+                URI location = layout.getLocation( transfer.getMetadata(), true );
 
-            TransferResource resource = newTransferResource( location, transfer.getFile(), transfer.getTrace() );
-            TransferEvent.Builder builder = newEventBuilder( resource, true, false );
-            MetadataTransportListener listener = new MetadataTransportListener( transfer, repository, builder );
+                TransferResource resource = newTransferResource( location, transfer.getFile(), transfer.getTrace() );
+                TransferEvent.Builder builder = newEventBuilder( resource, true, false );
+                MetadataTransportListener listener = new MetadataTransportListener( transfer, repository, builder );
 
-            List<RepositoryLayout.ChecksumLocation> checksumLocations =
-                    layout.getChecksumLocations( transfer.getMetadata(), true, location );
+                List<RepositoryLayout.ChecksumLocation> checksumLocations =
+                        layout.getChecksumLocations( transfer.getMetadata(), true, location );
 
-            Runnable task = new PutTaskRunner( location, transfer.getFile(), checksumLocations, listener );
+                Runnable task = new PutTaskRunner( location, transfer.getFile(), checksumLocations, listener );
+                if ( first )
+                {
+                    task.run();
+                    first = false;
+                }
+                else
+                {
+                    executor.execute( errorForwarder.wrap( task ) );
+                }
+            }
 
-            executor.execute( errorForwarder.wrap( task ) );
+            errorForwarder.await(); // make sure each group is done before starting next group
+        }
+    }
+
+    /**
+     * This method "groups" the Metadata to be uploaded by their level (version, artifact, group and root). This is MUST
+     * as clients consume metadata in opposite order (root, group, artifact, version), and hence, we must deploy and
+     * ensure (in case of parallel deploy) that all V level metadata is deployed before we start deploying A level, etc.
+     */
+    private static List<List<MetadataUpload>> groupUploads( Collection<? extends MetadataUpload> metadataUploads )
+    {
+        ArrayList<MetadataUpload> v = new ArrayList<>();
+        ArrayList<MetadataUpload> a = new ArrayList<>();
+        ArrayList<MetadataUpload> g = new ArrayList<>();
+        ArrayList<MetadataUpload> r = new ArrayList<>();
+
+        for ( MetadataUpload transfer : metadataUploads )
+        {
+            Metadata metadata = transfer.getMetadata();
+            if ( !"".equals( metadata.getVersion() ) )
+            {
+                v.add( transfer );
+            }
+            else if ( !"".equals( metadata.getArtifactId() ) )
+            {
+                a.add( transfer );
+            }
+            else if ( !"".equals( metadata.getGroupId() ) )
+            {
+                g.add( transfer );
+            }
+            else
+            {
+                r.add( transfer );
+            }
         }
 
-        errorForwarder.await();
+        List<List<MetadataUpload>> result = new ArrayList<>( 4 );
+        if ( !v.isEmpty() )
+        {
+            result.add( v );
+        }
+        if ( !a.isEmpty() )
+        {
+            result.add( a );
+        }
+        if ( !g.isEmpty() )
+        {
+            result.add( g );
+        }
+        if ( !r.isEmpty() )
+        {
+            result.add( r );
+        }
+        return result;
     }
 
     private static <T> Collection<T> safe( Collection<T> items )
