@@ -516,7 +516,17 @@ public final class DataPool
         @Override
         public V intern( K key, V value )
         {
-            return map.computeIfAbsent( key, k -> new WeakReference<>( value ) ).get();
+            WeakReference<V> pooledRef = map.get( key );
+            if ( pooledRef != null )
+            {
+                V pooled = pooledRef.get();
+                if ( pooled != null )
+                {
+                    return pooled;
+                }
+            }
+            map.put( key, new WeakReference<>( value ) );
+            return value;
         }
     }
 
