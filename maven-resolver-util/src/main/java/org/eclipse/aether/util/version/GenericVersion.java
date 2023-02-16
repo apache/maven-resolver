@@ -244,7 +244,7 @@ final class GenericVersion
 
             if ( firstSegmentMayBeHex( adjustedVersion ) )
             {
-                adjustedVersion = "$" + adjustedVersion;
+                adjustedVersion = "*" + adjustedVersion;
             }
 
             this.version = adjustedVersion;
