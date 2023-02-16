@@ -230,8 +230,6 @@ final class GenericVersion
 
         private final int versionLength;
 
-        private final boolean mayBeHex;
-
         private int index;
 
         private String token;
@@ -244,24 +242,6 @@ final class GenericVersion
         {
             this.version = ( version.length() > 0 ) ? version : "0";
             this.versionLength = this.version.length();
-
-            // fast lookahead: may be hex/sha1/etc
-            boolean onlyHexChars = true;
-            int counted = 0;
-            for ( char c : this.version.toLowerCase( Locale.ENGLISH ).toCharArray() )
-            {
-                if ( c == '.' || c == '-' || c == '_' )
-                {
-                    continue;
-                }
-                if ( !Character.isDigit( c ) && ( c < 'a' || c > 'f' ) )
-                {
-                    onlyHexChars = false;
-                    break;
-                }
-                counted++;
-            }
-            this.mayBeHex = onlyHexChars &&  counted > 0 && ( counted % 2 == 0 );
         }
 
         public boolean next()
@@ -289,7 +269,7 @@ final class GenericVersion
                 }
                 else
                 {
-                    int digit = Character.digit( c, mayBeHex ? 16 : 10 );
+                    int digit = Character.digit( c, 10 );
                     if ( digit >= 0 )
                     {
                         if ( state == -1 )
@@ -344,22 +324,13 @@ final class GenericVersion
             {
                 try
                 {
-                    if ( token.length() < 10 && !mayBeHex )
+                    if ( token.length() < 10 )
                     {
                         return new Item( Item.KIND_INT, Integer.parseInt( token ) );
                     }
                     else
                     {
-                        BigInteger result = new BigInteger( token, mayBeHex ? 16 : 10 );
-                        try
-                        {
-                            int candidate = result.intValueExact();
-                            return new Item( Item.KIND_INT, candidate );
-                        }
-                        catch ( ArithmeticException e )
-                        {
-                            return new Item( Item.KIND_BIGINT, new BigInteger( token, mayBeHex ? 16 : 10 ) );
-                        }
+                        return new Item( Item.KIND_BIGINT, new BigInteger( token ) );
                     }
                 }
                 catch ( NumberFormatException e )
