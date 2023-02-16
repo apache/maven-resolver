@@ -272,7 +272,7 @@ final class GenericVersion
                 }
                 countedChars++;
             }
-            return countedChars > 2 && countedChars % 2 == 0 && hasHexCandidates;
+            return hasHexCandidates && countedChars > 3 && countedChars % 2 == 0;
         }
 
         public boolean next()
