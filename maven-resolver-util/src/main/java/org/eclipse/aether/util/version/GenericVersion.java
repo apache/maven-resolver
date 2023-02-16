@@ -241,9 +241,8 @@ final class GenericVersion
 
         Tokenizer( String version )
         {
-            String adjustedVersion = ( version.length() > 0 ) ? version : "0";
-            this.version = adjustedVersion;
-            this.versionLength = adjustedVersion.length();
+            this.version = ( version.length() > 0 ) ? version : "0";;
+            this.versionLength = this.version.length();
         }
 
         public boolean next()
