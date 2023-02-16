@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -154,7 +155,7 @@ public class TestFileUtils
         throws IOException
     {
         mkdirs( TMP );
-        File tmpFile = File.createTempFile( "tmpfile-", ".data", TMP );
+        File tmpFile = Files.createTempFile( TMP.toPath(), "tmpfile-", ".data" ).toFile();
         writeBytes( tmpFile, pattern, repeat );
         return tmpFile;
     }
@@ -169,7 +170,7 @@ public class TestFileUtils
         throws IOException
     {
         mkdirs( TMP );
-        File tmpFile = File.createTempFile( "tmpdir-", suffix, TMP );
+        File tmpFile = Files.createTempFile( TMP.toPath(), "tmpdir-", suffix ).toFile();
         deleteFile( tmpFile );
         mkdirs( tmpFile );
         return tmpFile;
