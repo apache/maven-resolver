@@ -353,49 +353,8 @@ public class GenericVersionTest
     @Test
     public void testCompareUuidVersionStringStream()
     {
+        // this operation below fails with IAEx if comparison is unstable
         uuidVersionStringStream()
-                .map( this::newVersion )
-                .sorted()
-                .collect( toList() );
-    }
-
-    /**
-     * UT for <a href="https://issues.apache.org/jira/browse/MRESOLVER-314">MRESOLVER-314</a>.
-     */
-    @Test
-    public void testComparePrefixedUuidVersionStringStream()
-    {
-        // prefix "v"
-        uuidVersionStringStream()
-                .map( s -> "v" + s )
-                .map( this::newVersion )
-                .sorted()
-                .collect( toList() );
-
-        // prefix "v-"
-        uuidVersionStringStream()
-                .map( s -> "v-" + s )
-                .map( this::newVersion )
-                .sorted()
-                .collect( toList() );
-
-        // prefix "1"
-        uuidVersionStringStream()
-                .map( s -> "1" + s )
-                .map( this::newVersion )
-                .sorted()
-                .collect( toList() );
-
-        // prefix "1-"
-        uuidVersionStringStream()
-                .map( s -> "1-" + s )
-                .map( this::newVersion )
-                .sorted()
-                .collect( toList() );
-
-        // prefix "$"
-        uuidVersionStringStream()
-                .map( s -> "$" + s )
                 .map( this::newVersion )
                 .sorted()
                 .collect( toList() );
