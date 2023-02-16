@@ -21,6 +21,7 @@ package org.eclipse.aether.util.version;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -240,8 +241,39 @@ final class GenericVersion
 
         Tokenizer( String version )
         {
-            this.version = ( version.length() > 0 ) ? version : "0";
-            this.versionLength = this.version.length();
+            String adjustedVersion = ( version.length() > 0 ) ? version : "0";
+
+            if ( firstSegmentMayBeHex( adjustedVersion ) )
+            {
+                adjustedVersion = "$" + adjustedVersion;
+            }
+
+            this.version = adjustedVersion;
+            this.versionLength = adjustedVersion.length();
+        }
+
+        private boolean firstSegmentMayBeHex( String adjustedVersion )
+        {
+            boolean hasHexCandidates = false;
+            int countedChars = 0;
+            for ( char c : adjustedVersion.toLowerCase( Locale.ENGLISH ).toCharArray() )
+            {
+                if ( c == '.' || c == '-' || c == '_' )
+                {
+                    break;
+                }
+                if ( !Character.isDigit( c ) && ( c < 'a' || c > 'f' ) )
+                {
+                    hasHexCandidates = false;
+                    break;
+                }
+                if ( c > 'a' && c < 'f' )
+                {
+                    hasHexCandidates = true;
+                }
+                countedChars++;
+            }
+            return countedChars % 2 == 0 && hasHexCandidates;
         }
 
         public boolean next()

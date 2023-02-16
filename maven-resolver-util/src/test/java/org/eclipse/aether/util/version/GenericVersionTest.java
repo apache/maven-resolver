@@ -365,8 +365,37 @@ public class GenericVersionTest
     @Test
     public void testComparePrefixedUuidVersionStringStream()
     {
+        // prefix "v"
         uuidVersionStringStream()
                 .map( s -> "v" + s )
+                .map( this::newVersion )
+                .sorted()
+                .collect( toList() );
+
+        // prefix "v-"
+        uuidVersionStringStream()
+                .map( s -> "v-" + s )
+                .map( this::newVersion )
+                .sorted()
+                .collect( toList() );
+
+        // prefix "1"
+        uuidVersionStringStream()
+                .map( s -> "1" + s )
+                .map( this::newVersion )
+                .sorted()
+                .collect( toList() );
+
+        // prefix "1-"
+        uuidVersionStringStream()
+                .map( s -> "1-" + s )
+                .map( this::newVersion )
+                .sorted()
+                .collect( toList() );
+
+        // prefix "$"
+        uuidVersionStringStream()
+                .map( s -> "$" + s )
                 .map( this::newVersion )
                 .sorted()
                 .collect( toList() );
