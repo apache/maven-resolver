@@ -31,6 +31,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * UT for {@link DefaultLocalPathPrefixComposerFactory}.
@@ -51,13 +53,15 @@ public class DefaultLocalPathPrefixComposerFactoryTest
 
     private final RemoteRepository repository = new RemoteRepository.Builder( "my-repo", "default", "https://repo.maven.apache.org/maven2/" ).build();
 
+    private final EnhancedLocalRepositoryConfig repositoryConfig = mock( EnhancedLocalRepositoryConfig.class );
+
     @Test
     public void defaultConfigNoSplitAllNulls()
     {
         DefaultRepositorySystemSession session = TestUtils.newSession();
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
-        LocalPathPrefixComposer composer = factory.createComposer( session );
+        LocalPathPrefixComposer composer = factory.createComposer( session, repositoryConfig );
         assertNotNull( composer );
 
         String prefix;
@@ -78,10 +82,10 @@ public class DefaultLocalPathPrefixComposerFactoryTest
     public void splitEnabled()
     {
         DefaultRepositorySystemSession session = TestUtils.newSession();
-        session.setConfigProperty( "aether.enhancedLocalRepository.split", Boolean.TRUE.toString() );
+        when( repositoryConfig.isSplit() ).thenReturn( true );
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
-        LocalPathPrefixComposer composer = factory.createComposer( session );
+        LocalPathPrefixComposer composer = factory.createComposer( session, repositoryConfig );
         assertNotNull( composer );
 
         String prefix;
@@ -106,12 +110,12 @@ public class DefaultLocalPathPrefixComposerFactoryTest
     public void saneConfig()
     {
         DefaultRepositorySystemSession session = TestUtils.newSession();
-        session.setConfigProperty( "aether.enhancedLocalRepository.split", Boolean.TRUE.toString() );
+        when( repositoryConfig.isSplit() ).thenReturn( true );
         session.setConfigProperty( "aether.enhancedLocalRepository.splitLocal", Boolean.TRUE.toString() );
         session.setConfigProperty( "aether.enhancedLocalRepository.splitRemoteRepository", Boolean.TRUE.toString() );
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
-        LocalPathPrefixComposer composer = factory.createComposer( session );
+        LocalPathPrefixComposer composer = factory.createComposer( session, repositoryConfig );
         assertNotNull( composer );
 
         String prefix;
@@ -168,13 +172,13 @@ public class DefaultLocalPathPrefixComposerFactoryTest
     public void fullConfig()
     {
         DefaultRepositorySystemSession session = TestUtils.newSession();
-        session.setConfigProperty( "aether.enhancedLocalRepository.split", Boolean.TRUE.toString() );
+        when( repositoryConfig.isSplit() ).thenReturn( true );
         session.setConfigProperty( "aether.enhancedLocalRepository.splitLocal", Boolean.TRUE.toString() );
         session.setConfigProperty( "aether.enhancedLocalRepository.splitRemote", Boolean.TRUE.toString() );
         session.setConfigProperty( "aether.enhancedLocalRepository.splitRemoteRepository", Boolean.TRUE.toString() );
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
-        LocalPathPrefixComposer composer = factory.createComposer( session );
+        LocalPathPrefixComposer composer = factory.createComposer( session, repositoryConfig );
         assertNotNull( composer );
 
         String prefix;

@@ -25,20 +25,25 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalRepositoryManagerTest
 {
 
+    private final EnhancedLocalRepositoryConfig repositoryConfig = mock( EnhancedLocalRepositoryConfig.class );
+
     @Override
     protected EnhancedLocalRepositoryManager getManager()
     {
-        session.setConfigProperty( "aether.enhancedLocalRepository.split", Boolean.TRUE.toString() );
+        when( repositoryConfig.isSplit() ).thenReturn( true );
+
         return new EnhancedLocalRepositoryManager(
                 basedir,
                 new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,
-                new DefaultLocalPathPrefixComposerFactory().createComposer( session )
+                new DefaultLocalPathPrefixComposerFactory().createComposer( session, repositoryConfig )
         );
     }
 

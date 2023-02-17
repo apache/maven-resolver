@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
  */
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,6 +72,8 @@ public class EnhancedLocalRepositoryManagerTest
 
     private Metadata noVerMetadata;
 
+    private final EnhancedLocalRepositoryConfig repositoryConfig = mock( EnhancedLocalRepositoryConfig.class );
+
     @Before
     public void setup()
         throws Exception
@@ -110,7 +113,7 @@ public class EnhancedLocalRepositoryManagerTest
                 new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,
-                new DefaultLocalPathPrefixComposerFactory().createComposer( session )
+                new DefaultLocalPathPrefixComposerFactory().createComposer( session, repositoryConfig )
         );
     }
 
