@@ -170,7 +170,8 @@ final class GenericVersion
             Item item = items.get( i );
             if ( number != null && number != item.isNumber() )
             {
-                break;
+                // do not stop here, but continue, skipping non-number members
+                continue;
             }
             rel = item.compareTo( null );
             if ( rel != 0 )
@@ -228,6 +229,8 @@ final class GenericVersion
 
         private final String version;
 
+        private final int versionLength;
+
         private int index;
 
         private String token;
@@ -239,12 +242,12 @@ final class GenericVersion
         Tokenizer( String version )
         {
             this.version = ( version.length() > 0 ) ? version : "0";
+            this.versionLength = this.version.length();
         }
 
         public boolean next()
         {
-            final int n = version.length();
-            if ( index >= n )
+            if ( index >= versionLength )
             {
                 return false;
             }
@@ -252,10 +255,10 @@ final class GenericVersion
             int state = -2;
 
             int start = index;
-            int end = n;
+            int end = versionLength;
             terminatedByNumber = false;
 
-            for ( ; index < n; index++ )
+            for ( ; index < versionLength; index++ )
             {
                 char c = version.charAt( index );
 
