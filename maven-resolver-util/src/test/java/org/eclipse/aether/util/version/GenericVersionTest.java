@@ -19,13 +19,18 @@ package org.eclipse.aether.util.version;
  * under the License.
  */
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Locale;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.version.Version;
 import org.junit.Test;
 
 import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.fail;
 
 /**
  */
@@ -349,6 +354,39 @@ public class GenericVersionTest
 
     /**
      * UT for <a href="https://issues.apache.org/jira/browse/MRESOLVER-314">MRESOLVER-314</a>.
+     *
+     * Generates random UUID string based versions and tries to sort them. While this test is not as reliable
+     * as {@link #testCompareUuidVersionStringStream()}, it covers broader range and in case it fails it records
+     * the failed array, so we can investigate more.
+     */
+    @Test
+    public void testCompareUuidRandom() {
+            for ( int j = 0; j < 32; j++ )
+            {
+                ArrayList<Version> versions = new ArrayList<>();
+                for ( int i = 0; i < 64; i++ )
+                {
+                    versions.add( newVersion( UUID.randomUUID().toString() ) );
+                }
+                try
+                {
+                    Collections.sort( versions );
+                }
+                catch ( Exception e )
+                {
+                    e.printStackTrace( System.err );
+                    System.err.println( "The UUIDs used" );
+                    System.err.println(
+                            versions.stream().map( Version::toString ).collect( Collectors.joining( "\n" ) ) );
+                    fail( "unexpected exception" );
+                }
+            }
+    }
+
+    /**
+     * UT for <a href="https://issues.apache.org/jira/browse/MRESOLVER-314">MRESOLVER-314</a>.
+     *
+     * Works on known set that failed before fix, provided by {@link #uuidVersionStringStream()}.
      */
     @Test
     public void testCompareUuidVersionStringStream()
