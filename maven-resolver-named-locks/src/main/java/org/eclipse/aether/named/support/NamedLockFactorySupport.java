@@ -70,7 +70,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
      * Implementations shall create and return {@link NamedLockSupport} for given {@code name}, this method must never
      * return {@code null}.
      */
-    protected abstract NamedLockSupport createLock(final String name);
+    protected abstract NamedLockSupport createLock(String name);
 
     /**
      * Implementation may override this (empty) method to perform some sort of implementation specific cleanup for

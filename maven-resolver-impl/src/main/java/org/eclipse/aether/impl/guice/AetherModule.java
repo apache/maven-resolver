@@ -140,6 +140,7 @@ public class AetherModule extends AbstractModule {
     /**
      * Configures Guice with bindings for Aether components provided by this library.
      */
+    // CHECKSTYLE_OFF: MethodLength
     @Override
     protected void configure() {
         bind(RepositorySystem.class) //
