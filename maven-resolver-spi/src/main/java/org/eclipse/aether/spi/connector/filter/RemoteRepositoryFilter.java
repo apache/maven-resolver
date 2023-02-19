@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.connector.filter;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.connector.filter;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.connector.filter;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.connector.filter;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -29,13 +28,11 @@ import org.eclipse.aether.repository.RemoteRepository;
  *
  * @since 1.9.0
  */
-public interface RemoteRepositoryFilter
-{
+public interface RemoteRepositoryFilter {
     /**
      * The check result, is immutable.
      */
-    interface Result
-    {
+    interface Result {
         /**
          * Returns {@code true} if accepted.
          */
@@ -54,7 +51,7 @@ public interface RemoteRepositoryFilter
      * @param artifact         The artifact, not {@code null}.
      * @return the result, never {@code null}.
      */
-    Result acceptArtifact( RemoteRepository remoteRepository, Artifact artifact );
+    Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact);
 
     /**
      * Decides should metadata be accepted from given remote repository.
@@ -63,5 +60,5 @@ public interface RemoteRepositoryFilter
      * @param metadata         The artifact, not {@code null}.
      * @return the result, never {@code null}.
      */
-    Result acceptMetadata( RemoteRepository remoteRepository, Metadata metadata );
+    Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata);
 }

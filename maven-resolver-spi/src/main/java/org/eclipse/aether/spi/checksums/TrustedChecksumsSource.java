@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.checksums;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.checksums;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.checksums;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.checksums;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,8 +36,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
  *
  * @since 1.9.0
  */
-public interface TrustedChecksumsSource
-{
+public interface TrustedChecksumsSource {
     /**
      * May return the trusted checksums (for given artifact) from trusted source, or {@code null} if not enabled.
      * Enabled trusted checksum source SHOULD return non-null (empty map) result, when it has no data for given
@@ -51,30 +49,32 @@ public interface TrustedChecksumsSource
      * @param checksumAlgorithmFactories The checksum algorithms that are expected, never {@code null}.
      * @return Map of expected checksums, or {@code null} if not enabled.
      */
-    Map<String, String> getTrustedArtifactChecksums( RepositorySystemSession session,
-                                                     Artifact artifact,
-                                                     ArtifactRepository artifactRepository,
-                                                     List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
+    Map<String, String> getTrustedArtifactChecksums(
+            RepositorySystemSession session,
+            Artifact artifact,
+            ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories);
 
     /**
      * A writer that is able to write/add trusted checksums to this implementation.
      */
-    interface Writer
-    {
+    interface Writer {
         /**
          * Performs whatever implementation requires to "set" (write/add/append) given map of trusted checksums.
          * The passed in list of checksum algorithm factories and the map must have equal size and mapping must
          * contain all algorithm names in list.
          */
-        void addTrustedArtifactChecksums( Artifact artifact,
-                                          ArtifactRepository artifactRepository,
-                                          List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
-                                          Map<String, String> trustedArtifactChecksums ) throws IOException;
+        void addTrustedArtifactChecksums(
+                Artifact artifact,
+                ArtifactRepository artifactRepository,
+                List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+                Map<String, String> trustedArtifactChecksums)
+                throws IOException;
     }
 
     /**
      * Some trusted checksums sources may implement this optional method: ability to write/add checksums to them.
      * If source does not support this feature, method should return {@code null}.
      */
-    Writer getTrustedArtifactChecksumsWriter( RepositorySystemSession session );
+    Writer getTrustedArtifactChecksumsWriter(RepositorySystemSession session);
 }

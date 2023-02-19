@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.visitor;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.visitor;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,8 +16,7 @@ package org.eclipse.aether.util.graph.visitor;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+package org.eclipse.aether.util.graph.visitor;
 
 import java.util.List;
 
@@ -27,47 +24,42 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.Test;
 
-public class PostorderNodeListGeneratorTest
-{
+import static org.junit.Assert.*;
 
-    private DependencyNode parse( String resource )
-        throws Exception
-    {
-        return new DependencyGraphParser( "visitor/ordered-list/" ).parseResource( resource );
+public class PostorderNodeListGeneratorTest {
+
+    private DependencyNode parse(String resource) throws Exception {
+        return new DependencyGraphParser("visitor/ordered-list/").parseResource(resource);
     }
 
-    private void assertSequence( List<DependencyNode> actual, String... expected )
-    {
-        assertEquals( actual.toString(), expected.length, actual.size() );
-        for ( int i = 0; i < expected.length; i++ )
-        {
-            DependencyNode node = actual.get( i );
-            assertEquals( actual.toString(), expected[i], node.getDependency().getArtifact().getArtifactId() );
+    private void assertSequence(List<DependencyNode> actual, String... expected) {
+        assertEquals(actual.toString(), expected.length, actual.size());
+        for (int i = 0; i < expected.length; i++) {
+            DependencyNode node = actual.get(i);
+            assertEquals(
+                    actual.toString(),
+                    expected[i],
+                    node.getDependency().getArtifact().getArtifactId());
         }
     }
 
     @Test
-    public void testOrdering()
-        throws Exception
-    {
-        DependencyNode root = parse( "simple.txt" );
+    public void testOrdering() throws Exception {
+        DependencyNode root = parse("simple.txt");
 
         PostorderNodeListGenerator visitor = new PostorderNodeListGenerator();
-        root.accept( visitor );
+        root.accept(visitor);
 
-        assertSequence( visitor.getNodes(), "c", "b", "e", "d", "a" );
+        assertSequence(visitor.getNodes(), "c", "b", "e", "d", "a");
     }
 
     @Test
-    public void testDuplicateSuppression()
-        throws Exception
-    {
-        DependencyNode root = parse( "cycles.txt" );
+    public void testDuplicateSuppression() throws Exception {
+        DependencyNode root = parse("cycles.txt");
 
         PostorderNodeListGenerator visitor = new PostorderNodeListGenerator();
-        root.accept( visitor );
+        root.accept(visitor);
 
-        assertSequence( visitor.getNodes(), "c", "b", "e", "d", "a" );
+        assertSequence(visitor.getNodes(), "c", "b", "e", "d", "a");
     }
-
 }

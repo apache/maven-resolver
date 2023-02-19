@@ -1,5 +1,3 @@
-package org.eclipse.aether.connector.basic;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.connector.basic;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.connector.basic;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.connector.basic;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -42,137 +41,107 @@ import static java.util.Objects.requireNonNull;
 /**
  * Calculates checksums for a downloaded file.
  */
-final class ChecksumCalculator
-{
+final class ChecksumCalculator {
 
-    static class Checksum
-    {
+    static class Checksum {
         final ChecksumAlgorithmFactory checksumAlgorithmFactory;
 
         ChecksumAlgorithm algorithm;
 
         Exception error;
 
-        Checksum( ChecksumAlgorithmFactory checksumAlgorithmFactory )
-        {
-            this.checksumAlgorithmFactory = requireNonNull( checksumAlgorithmFactory );
+        Checksum(ChecksumAlgorithmFactory checksumAlgorithmFactory) {
+            this.checksumAlgorithmFactory = requireNonNull(checksumAlgorithmFactory);
             this.algorithm = checksumAlgorithmFactory.getAlgorithm();
         }
 
-        public void reset()
-        {
+        public void reset() {
             this.algorithm = checksumAlgorithmFactory.getAlgorithm();
             this.error = null;
         }
 
-        public void update( ByteBuffer buffer )
-        {
-            this.algorithm.update( buffer );
+        public void update(ByteBuffer buffer) {
+            this.algorithm.update(buffer);
         }
 
-        public void error( Exception error )
-        {
+        public void error(Exception error) {
             this.error = error;
         }
 
-        public Object get()
-        {
-            if ( error != null )
-            {
+        public Object get() {
+            if (error != null) {
                 return error;
             }
             return algorithm.checksum();
         }
-
     }
 
     private final List<Checksum> checksums;
 
     private final File targetFile;
 
-    public static ChecksumCalculator newInstance( File targetFile,
-                                                  Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
-    {
-        if ( checksumAlgorithmFactories == null || checksumAlgorithmFactories.isEmpty() )
-        {
+    public static ChecksumCalculator newInstance(
+            File targetFile, Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        if (checksumAlgorithmFactories == null || checksumAlgorithmFactories.isEmpty()) {
             return null;
         }
-        return new ChecksumCalculator( targetFile, checksumAlgorithmFactories );
+        return new ChecksumCalculator(targetFile, checksumAlgorithmFactories);
     }
 
-    private ChecksumCalculator( File targetFile,
-                                Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
-    {
+    private ChecksumCalculator(File targetFile, Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         this.checksums = new ArrayList<>();
         Set<String> algos = new HashSet<>();
-        for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories )
-        {
-            if ( algos.add( checksumAlgorithmFactory.getName() ) )
-            {
-                this.checksums.add( new Checksum( checksumAlgorithmFactory ) );
+        for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
+            if (algos.add(checksumAlgorithmFactory.getName())) {
+                this.checksums.add(new Checksum(checksumAlgorithmFactory));
             }
         }
         this.targetFile = targetFile;
     }
 
-    public void init( long dataOffset )
-    {
-        for ( Checksum checksum : checksums )
-        {
+    public void init(long dataOffset) {
+        for (Checksum checksum : checksums) {
             checksum.reset();
         }
-        if ( dataOffset <= 0L )
-        {
+        if (dataOffset <= 0L) {
             return;
         }
 
-        try ( InputStream in = new BufferedInputStream( Files.newInputStream( targetFile.toPath() ) ) )
-        {
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(targetFile.toPath()))) {
             long total = 0;
-            final byte[] buffer = new byte[ 1024 * 32 ];
-            while ( total < dataOffset )
-            {
-                int read = in.read( buffer );
-                if ( read < 0 )
-                {
-                    throw new IOException( targetFile + " contains only " + total
-                            + " bytes, cannot resume download from offset " + dataOffset );
+            final byte[] buffer = new byte[1024 * 32];
+            while (total < dataOffset) {
+                int read = in.read(buffer);
+                if (read < 0) {
+                    throw new IOException(targetFile + " contains only " + total
+                            + " bytes, cannot resume download from offset " + dataOffset);
                 }
                 total += read;
-                if ( total > dataOffset )
-                {
+                if (total > dataOffset) {
                     read -= total - dataOffset;
                 }
-                update( ByteBuffer.wrap( buffer, 0, read ) );
+                update(ByteBuffer.wrap(buffer, 0, read));
             }
-        }
-        catch ( IOException e )
-        {
-            for ( Checksum checksum : checksums )
-            {
-                checksum.error( e );
+        } catch (IOException e) {
+            for (Checksum checksum : checksums) {
+                checksum.error(e);
             }
         }
     }
 
-    public void update( ByteBuffer data )
-    {
-        for ( Checksum checksum : checksums )
-        {
-            ( (Buffer) data ).mark();
-            checksum.update( data );
-            ( (Buffer) data ).reset();
+    public void update(ByteBuffer data) {
+        for (Checksum checksum : checksums) {
+            ((Buffer) data).mark();
+            checksum.update(data);
+            ((Buffer) data).reset();
         }
     }
 
-    public Map<String, Object> get()
-    {
+    public Map<String, Object> get() {
         Map<String, Object> results = new HashMap<>();
-        for ( Checksum checksum : checksums )
-        {
-            results.put( checksum.checksumAlgorithmFactory.getName(), checksum.get() );
+        for (Checksum checksum : checksums) {
+            results.put(checksum.checksumAlgorithmFactory.getName(), checksum.get());
         }
         return results;
     }
-
 }

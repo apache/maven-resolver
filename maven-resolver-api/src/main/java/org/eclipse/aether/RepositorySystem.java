@@ -1,5 +1,3 @@
-package org.eclipse.aether;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether;
 
 import java.util.Collection;
 import java.util.List;
@@ -65,8 +64,7 @@ import org.eclipse.aether.resolution.VersionResult;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RepositorySystem
-{
+public interface RepositorySystem {
 
     /**
      * Expands a version range to a list of matching versions, in ascending order. For example, resolves "[3.8,4.0)" to
@@ -84,7 +82,7 @@ public interface RepositorySystem
      *                                         not raise an exception.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
+    VersionRangeResult resolveVersionRange(RepositorySystemSession session, VersionRangeRequest request)
             throws VersionRangeResolutionException;
 
     /**
@@ -97,7 +95,7 @@ public interface RepositorySystem
      * @throws VersionResolutionException If the metaversion could not be resolved.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
+    VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
             throws VersionResolutionException;
 
     /**
@@ -110,8 +108,7 @@ public interface RepositorySystem
      * @see RepositorySystemSession#getArtifactDescriptorPolicy()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
-                                                     ArtifactDescriptorRequest request )
+    ArtifactDescriptorResult readArtifactDescriptor(RepositorySystemSession session, ArtifactDescriptorRequest request)
             throws ArtifactDescriptorException;
 
     /**
@@ -130,7 +127,7 @@ public interface RepositorySystem
      * @see RepositorySystemSession#getDependencyGraphTransformer()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
+    CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)
             throws DependencyCollectionException;
 
     /**
@@ -145,7 +142,7 @@ public interface RepositorySystem
      *                                       not be resolved.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    DependencyResult resolveDependencies( RepositorySystemSession session, DependencyRequest request )
+    DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)
             throws DependencyResolutionException;
 
     /**
@@ -161,7 +158,7 @@ public interface RepositorySystem
      * @see Artifact#getFile()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
+    ArtifactResult resolveArtifact(RepositorySystemSession session, ArtifactRequest request)
             throws ArtifactResolutionException;
 
     /**
@@ -177,8 +174,8 @@ public interface RepositorySystem
      * @see Artifact#getFile()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    List<ArtifactResult> resolveArtifacts( RepositorySystemSession session,
-                                           Collection<? extends ArtifactRequest> requests )
+    List<ArtifactResult> resolveArtifacts(
+            RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException;
 
     /**
@@ -191,8 +188,8 @@ public interface RepositorySystem
      * @see Metadata#getFile()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    List<MetadataResult> resolveMetadata( RepositorySystemSession session,
-                                          Collection<? extends MetadataRequest> requests );
+    List<MetadataResult> resolveMetadata(
+            RepositorySystemSession session, Collection<? extends MetadataRequest> requests);
 
     /**
      * Installs a collection of artifacts and their accompanying metadata to the local repository.
@@ -202,8 +199,7 @@ public interface RepositorySystem
      * @return The installation result, never {@code null}.
      * @throws InstallationException If any artifact/metadata from the request could not be installed.
      */
-    InstallResult install( RepositorySystemSession session, InstallRequest request )
-            throws InstallationException;
+    InstallResult install(RepositorySystemSession session, InstallRequest request) throws InstallationException;
 
     /**
      * Uploads a collection of artifacts and their accompanying metadata to a remote repository.
@@ -214,8 +210,7 @@ public interface RepositorySystem
      * @throws DeploymentException If any artifact/metadata from the request could not be deployed.
      * @see #newDeploymentRepository(RepositorySystemSession, RemoteRepository)
      */
-    DeployResult deploy( RepositorySystemSession session, DeployRequest request )
-            throws DeploymentException;
+    DeployResult deploy(RepositorySystemSession session, DeployRequest request) throws DeploymentException;
 
     /**
      * Creates a new manager for the specified local repository. If the specified local repository has no type, the
@@ -230,8 +225,7 @@ public interface RepositorySystem
      * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
      *                                  given.
      */
-    LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
-                                                      LocalRepository localRepository );
+    LocalRepositoryManager newLocalRepositoryManager(RepositorySystemSession session, LocalRepository localRepository);
 
     /**
      * Creates a new synchronization context.
@@ -241,7 +235,7 @@ public interface RepositorySystem
      *                shared among concurrent readers or whether access needs to be exclusive to the calling thread.
      * @return The synchronization context, never {@code null}.
      */
-    SyncContext newSyncContext( RepositorySystemSession session, boolean shared );
+    SyncContext newSyncContext(RepositorySystemSession session, boolean shared);
 
     /**
      * Forms remote repositories suitable for artifact resolution by applying the session's authentication selector and
@@ -261,8 +255,8 @@ public interface RepositorySystem
      * repositories.
      * @see #newDeploymentRepository(RepositorySystemSession, RemoteRepository)
      */
-    List<RemoteRepository> newResolutionRepositories( RepositorySystemSession session,
-                                                      List<RemoteRepository> repositories );
+    List<RemoteRepository> newResolutionRepositories(
+            RepositorySystemSession session, List<RemoteRepository> repositories);
 
     /**
      * Forms a remote repository suitable for artifact deployment by applying the session's authentication selector and
@@ -279,7 +273,7 @@ public interface RepositorySystem
      * @return The deployment repository, never {@code null}.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    RemoteRepository newDeploymentRepository( RepositorySystemSession session, RemoteRepository repository );
+    RemoteRepository newDeploymentRepository(RepositorySystemSession session, RemoteRepository repository);
 
     /**
      * Registers an "on repository system end" handler, executed after repository system is shut down.
@@ -287,7 +281,7 @@ public interface RepositorySystem
      * @param handler The handler, must not be {@code null}.
      * @since 1.9.0
      */
-    void addOnSystemEndedHandler( Runnable handler );
+    void addOnSystemEndedHandler(Runnable handler);
 
     /**
      * Signals to repository system to shut down. Shut down instance is not usable anymore.

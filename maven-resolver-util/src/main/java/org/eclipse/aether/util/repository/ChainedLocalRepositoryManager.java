@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.repository;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.util.repository;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.repository;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.repository;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -50,146 +49,115 @@ import static java.util.stream.Collectors.toList;
  *
  * @since 1.9.2
  */
-public final class ChainedLocalRepositoryManager
-        implements LocalRepositoryManager
-{
+public final class ChainedLocalRepositoryManager implements LocalRepositoryManager {
     private final LocalRepositoryManager head;
 
     private final List<LocalRepositoryManager> tail;
 
     private final boolean ignoreTailAvailability;
 
-    public ChainedLocalRepositoryManager( LocalRepositoryManager head,
-                                          List<LocalRepositoryManager> tail,
-                                          boolean ignoreTailAvailability )
-    {
-        this.head = requireNonNull( head, "head cannot be null" );
-        this.tail = requireNonNull( tail, "tail cannot be null" );
+    public ChainedLocalRepositoryManager(
+            LocalRepositoryManager head, List<LocalRepositoryManager> tail, boolean ignoreTailAvailability) {
+        this.head = requireNonNull(head, "head cannot be null");
+        this.tail = requireNonNull(tail, "tail cannot be null");
         this.ignoreTailAvailability = ignoreTailAvailability;
     }
 
     @Override
-    public LocalRepository getRepository()
-    {
+    public LocalRepository getRepository() {
         return head.getRepository();
     }
 
     @Override
-    public String getPathForLocalArtifact( Artifact artifact )
-    {
-        return head.getPathForLocalArtifact( artifact );
+    public String getPathForLocalArtifact(Artifact artifact) {
+        return head.getPathForLocalArtifact(artifact);
     }
 
     @Override
-    public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
-    {
-        return head.getPathForRemoteArtifact( artifact, repository, context );
+    public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
+        return head.getPathForRemoteArtifact(artifact, repository, context);
     }
 
     @Override
-    public String getPathForLocalMetadata( Metadata metadata )
-    {
-        return head.getPathForLocalMetadata( metadata );
+    public String getPathForLocalMetadata(Metadata metadata) {
+        return head.getPathForLocalMetadata(metadata);
     }
 
     @Override
-    public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
-    {
-        return head.getPathForRemoteMetadata( metadata, repository, context );
+    public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
+        return head.getPathForRemoteMetadata(metadata, repository, context);
     }
 
     @Override
-    public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
-    {
-        LocalArtifactResult result = head.find( session, request );
-        if ( result.isAvailable() )
-        {
+    public LocalArtifactResult find(RepositorySystemSession session, LocalArtifactRequest request) {
+        LocalArtifactResult result = head.find(session, request);
+        if (result.isAvailable()) {
             return result;
         }
 
-        for ( LocalRepositoryManager lrm : tail )
-        {
-            result = lrm.find( session, request );
-            if ( result.getFile() != null )
-            {
-                if ( ignoreTailAvailability )
-                {
-                    result.setAvailable( true );
+        for (LocalRepositoryManager lrm : tail) {
+            result = lrm.find(session, request);
+            if (result.getFile() != null) {
+                if (ignoreTailAvailability) {
+                    result.setAvailable(true);
                     return result;
-                }
-                else if ( result.isAvailable() )
-                {
+                } else if (result.isAvailable()) {
                     return result;
                 }
             }
         }
-        return new LocalArtifactResult( request );
+        return new LocalArtifactResult(request);
     }
 
     @Override
-    public void add( RepositorySystemSession session, LocalArtifactRegistration request )
-    {
+    public void add(RepositorySystemSession session, LocalArtifactRegistration request) {
         String artifactPath;
-        if ( request.getRepository() != null )
-        {
-            artifactPath = getPathForRemoteArtifact( request.getArtifact(), request.getRepository(), "check" );
-        }
-        else
-        {
-            artifactPath = getPathForLocalArtifact( request.getArtifact() );
+        if (request.getRepository() != null) {
+            artifactPath = getPathForRemoteArtifact(request.getArtifact(), request.getRepository(), "check");
+        } else {
+            artifactPath = getPathForLocalArtifact(request.getArtifact());
         }
 
-        Path file = new File( head.getRepository().getBasedir(), artifactPath ).toPath();
-        if ( Files.isRegularFile( file ) )
-        {
-            head.add( session, request );
+        Path file = new File(head.getRepository().getBasedir(), artifactPath).toPath();
+        if (Files.isRegularFile(file)) {
+            head.add(session, request);
         }
     }
 
     @Override
-    public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
-    {
-        LocalMetadataResult result = head.find( session, request );
-        if ( result.getFile() != null )
-        {
+    public LocalMetadataResult find(RepositorySystemSession session, LocalMetadataRequest request) {
+        LocalMetadataResult result = head.find(session, request);
+        if (result.getFile() != null) {
             return result;
         }
 
-        for ( LocalRepositoryManager lrm : tail )
-        {
-            result = lrm.find( session, request );
-            if ( result.getFile() != null )
-            {
+        for (LocalRepositoryManager lrm : tail) {
+            result = lrm.find(session, request);
+            if (result.getFile() != null) {
                 return result;
             }
         }
-        return new LocalMetadataResult( request );
+        return new LocalMetadataResult(request);
     }
 
     @Override
-    public void add( RepositorySystemSession session, LocalMetadataRegistration request )
-    {
+    public void add(RepositorySystemSession session, LocalMetadataRegistration request) {
         String metadataPath;
-        if ( request.getRepository() != null )
-        {
-            metadataPath = getPathForRemoteMetadata( request.getMetadata(), request.getRepository(), "check" );
-        }
-        else
-        {
-            metadataPath = getPathForLocalMetadata( request.getMetadata() );
+        if (request.getRepository() != null) {
+            metadataPath = getPathForRemoteMetadata(request.getMetadata(), request.getRepository(), "check");
+        } else {
+            metadataPath = getPathForLocalMetadata(request.getMetadata());
         }
 
-        Path file = new File( head.getRepository().getBasedir(), metadataPath ).toPath();
-        if ( Files.isRegularFile( file ) )
-        {
-            head.add( session, request );
+        Path file = new File(head.getRepository().getBasedir(), metadataPath).toPath();
+        if (Files.isRegularFile(file)) {
+            head.add(session, request);
         }
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return head.getRepository().toString()
-                + tail.stream().map( LocalRepositoryManager::getRepository ).collect( toList() );
+                + tail.stream().map(LocalRepositoryManager::getRepository).collect(toList());
     }
 }

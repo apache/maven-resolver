@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.Collection;
 
@@ -28,8 +27,7 @@ import org.eclipse.aether.metadata.Metadata;
 /**
  * Component mapping lock names to passed in artifacts and metadata as required.
  */
-public interface NameMapper
-{
+public interface NameMapper {
     /**
      * Returns {@code true} if lock names returned by this lock name mapper are file system friendly, can be used
      * as file names and paths.
@@ -50,7 +48,8 @@ public interface NameMapper
      * size). If returned collection is empty, no locking will happen, if single element, one lock will be used, if two
      * then two named locks will be used etc.
      */
-    Collection<String> nameLocks( RepositorySystemSession session,
-                                  Collection<? extends Artifact> artifacts,
-                                  Collection<? extends Metadata> metadatas );
+    Collection<String> nameLocks(
+            RepositorySystemSession session,
+            Collection<? extends Artifact> artifacts,
+            Collection<? extends Metadata> metadatas);
 }

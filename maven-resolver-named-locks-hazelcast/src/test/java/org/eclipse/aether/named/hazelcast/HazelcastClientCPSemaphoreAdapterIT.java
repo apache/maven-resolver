@@ -1,5 +1,3 @@
-package org.eclipse.aether.named.hazelcast;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named.hazelcast;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,18 +16,15 @@ package org.eclipse.aether.named.hazelcast;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.named.hazelcast;
 
 import org.junit.BeforeClass;
 
-public class HazelcastClientCPSemaphoreAdapterIT
-        extends NamedLockFactoryAdapterTestSupport
-{
+public class HazelcastClientCPSemaphoreAdapterIT extends NamedLockFactoryAdapterTestSupport {
     @BeforeClass
-    public static void createNamedLockFactory()
-    {
-        String clusterName = utils.clusterName( HazelcastClientCPSemaphoreAdapterIT.class );
-        utils.createMember( clusterName );
-        setNamedLockFactory(
-                new HazelcastClientCPSemaphoreNamedLockFactory( utils.createClient( clusterName ), true ) );
+    public static void createNamedLockFactory() {
+        String clusterName = utils.clusterName(HazelcastClientCPSemaphoreAdapterIT.class);
+        utils.createMember(clusterName);
+        setNamedLockFactory(new HazelcastClientCPSemaphoreNamedLockFactory(utils.createClient(clusterName), true));
     }
 }

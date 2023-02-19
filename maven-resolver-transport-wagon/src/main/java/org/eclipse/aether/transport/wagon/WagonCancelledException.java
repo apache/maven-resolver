@@ -1,5 +1,3 @@
-package org.eclipse.aether.transport.wagon;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.transport.wagon;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,28 +16,23 @@ package org.eclipse.aether.transport.wagon;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.wagon;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
 
 /**
  * Unchecked exception to allow the checked {@link TransferCancelledException} to bubble up from a wagon.
  */
-class WagonCancelledException
-    extends RuntimeException
-{
+class WagonCancelledException extends RuntimeException {
 
-    WagonCancelledException( TransferCancelledException cause )
-    {
-        super( cause );
+    WagonCancelledException(TransferCancelledException cause) {
+        super(cause);
     }
 
-    public static Exception unwrap( Exception e )
-    {
-        if ( e instanceof WagonCancelledException )
-        {
+    public static Exception unwrap(Exception e) {
+        if (e instanceof WagonCancelledException) {
             e = (Exception) e.getCause();
         }
         return e;
     }
-
 }

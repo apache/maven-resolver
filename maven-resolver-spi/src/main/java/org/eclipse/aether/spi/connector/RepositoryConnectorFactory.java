@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.connector;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.spi.connector;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.connector;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.connector;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -30,14 +29,13 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
  * {@link #newInstance(RepositorySystemSession, RemoteRepository)} on them. The first connector returned by a factory
  * will then be used for the transfer.
  */
-public interface RepositoryConnectorFactory
-{
+public interface RepositoryConnectorFactory {
 
     /**
      * Tries to create a repository connector for the specified remote repository. Typically, a factory will inspect
      * {@link RemoteRepository#getProtocol()} and {@link RemoteRepository#getContentType()} to determine whether it can
      * handle a repository.
-     * 
+     *
      * @param session The repository system session from which to configure the connector, must not be {@code null}. In
      *            particular, a connector must notify any {@link RepositorySystemSession#getTransferListener()} set for
      *            the session and should obey the timeouts configured for the session.
@@ -46,15 +44,14 @@ public interface RepositoryConnectorFactory
      * @throws NoRepositoryConnectorException If the factory cannot create a connector for the specified remote
      *             repository.
      */
-    RepositoryConnector newInstance( RepositorySystemSession session, RemoteRepository repository )
-        throws NoRepositoryConnectorException;
+    RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
+            throws NoRepositoryConnectorException;
 
     /**
      * The priority of this factory. When multiple factories can handle a given repository, factories with higher
      * priority are preferred over those with lower priority.
-     * 
+     *
      * @return The priority of this factory.
      */
     float getPriority();
-
 }

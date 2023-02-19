@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.manager;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.manager;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,8 +16,7 @@ package org.eclipse.aether.util.graph.manager;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+package org.eclipse.aether.util.graph.manager;
 
 import java.util.Arrays;
 
@@ -34,49 +31,45 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ClassicDependencyManagerTest
-{
+import static org.junit.Assert.*;
 
-    private final Artifact A = new DefaultArtifact( "test", "a", "", "" );
+public class ClassicDependencyManagerTest {
 
-    private final Artifact A1 = new DefaultArtifact( "test", "a", "", "1" );
+    private final Artifact A = new DefaultArtifact("test", "a", "", "");
 
-    private final Artifact B = new DefaultArtifact( "test", "b", "", "" );
+    private final Artifact A1 = new DefaultArtifact("test", "a", "", "1");
 
-    private final Artifact B1 = new DefaultArtifact( "test", "b", "", "1" );
+    private final Artifact B = new DefaultArtifact("test", "b", "", "");
+
+    private final Artifact B1 = new DefaultArtifact("test", "b", "", "1");
 
     private RepositorySystemSession session;
 
-    private DependencyCollectionContext newContext( Dependency... managedDependencies )
-    {
-        return TestUtils.newCollectionContext( session, null, Arrays.asList( managedDependencies ) );
+    private DependencyCollectionContext newContext(Dependency... managedDependencies) {
+        return TestUtils.newCollectionContext(session, null, Arrays.asList(managedDependencies));
     }
 
     @Before
-    public void setUp()
-    {
+    public void setUp() {
         session = TestUtils.newSession();
     }
 
     @Test
-    public void testManageOptional()
-    {
+    public void testManageOptional() {
         DependencyManager manager = new ClassicDependencyManager();
 
-        manager =
-            manager.deriveChildManager( newContext( new Dependency( A, null, null ), new Dependency( B, null, true ) ) );
+        manager = manager.deriveChildManager(newContext(new Dependency(A, null, null), new Dependency(B, null, true)));
         DependencyManagement mngt;
-        mngt = manager.manageDependency( new Dependency( A1, null ) );
-        assertNull( mngt );
-        mngt = manager.manageDependency( new Dependency( B1, null ) );
-        assertNull( mngt );
+        mngt = manager.manageDependency(new Dependency(A1, null));
+        assertNull(mngt);
+        mngt = manager.manageDependency(new Dependency(B1, null));
+        assertNull(mngt);
 
-        manager = manager.deriveChildManager( newContext() );
-        mngt = manager.manageDependency( new Dependency( A1, null ) );
-        assertNull( mngt );
-        mngt = manager.manageDependency( new Dependency( B1, null ) );
-        assertNotNull( mngt );
-        assertEquals( Boolean.TRUE, mngt.getOptional() );
+        manager = manager.deriveChildManager(newContext());
+        mngt = manager.manageDependency(new Dependency(A1, null));
+        assertNull(mngt);
+        mngt = manager.manageDependency(new Dependency(B1, null));
+        assertNotNull(mngt);
+        assertEquals(Boolean.TRUE, mngt.getOptional());
     }
-
 }

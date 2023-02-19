@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.transformer;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.transformer;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,10 +16,10 @@ package org.eclipse.aether.util.graph.transformer;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.transformer;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
-import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -30,53 +28,46 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Set "groupId:artId:classifier:extension" as conflict marker for every node.
  */
-class SimpleConflictMarker
-    implements DependencyGraphTransformer
-{
+class SimpleConflictMarker implements DependencyGraphTransformer {
 
-    public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
-        throws RepositoryException
-    {
-        requireNonNull( node, "node cannot be null" );
-        requireNonNull( context, "context cannot be null" );
-        @SuppressWarnings( "unchecked" )
+    public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
+            throws RepositoryException {
+        requireNonNull(node, "node cannot be null");
+        requireNonNull(context, "context cannot be null");
+        @SuppressWarnings("unchecked")
         Map<DependencyNode, Object> conflictIds =
-            (Map<DependencyNode, Object>) context.get( TransformationContextKeys.CONFLICT_IDS );
-        if ( conflictIds == null )
-        {
+                (Map<DependencyNode, Object>) context.get(TransformationContextKeys.CONFLICT_IDS);
+        if (conflictIds == null) {
             conflictIds = new IdentityHashMap<>();
-            context.put( TransformationContextKeys.CONFLICT_IDS, conflictIds );
+            context.put(TransformationContextKeys.CONFLICT_IDS, conflictIds);
         }
 
-        mark( node, conflictIds );
+        mark(node, conflictIds);
 
         return node;
     }
 
-    private void mark( DependencyNode node, Map<DependencyNode, Object> conflictIds )
-    {
+    private void mark(DependencyNode node, Map<DependencyNode, Object> conflictIds) {
         Dependency dependency = node.getDependency();
-        if ( dependency != null )
-        {
+        if (dependency != null) {
             Artifact artifact = dependency.getArtifact();
 
-            String key =
-                String.format( "%s:%s:%s:%s", artifact.getGroupId(), artifact.getArtifactId(),
-                               artifact.getClassifier(), artifact.getExtension() );
+            String key = String.format(
+                    "%s:%s:%s:%s",
+                    artifact.getGroupId(), artifact.getArtifactId(), artifact.getClassifier(), artifact.getExtension());
 
-            if ( conflictIds.put( node, key ) != null )
-            {
+            if (conflictIds.put(node, key) != null) {
                 return;
             }
         }
 
-        for ( DependencyNode child : node.getChildren() )
-        {
-            mark( child, conflictIds );
+        for (DependencyNode child : node.getChildren()) {
+            mark(child, conflictIds);
         }
     }
-
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.connector.basic;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.connector.basic;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,14 +16,13 @@ package org.eclipse.aether.connector.basic;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.Collections;
-import java.util.Map;
+package org.eclipse.aether.connector.basic;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import static java.util.Objects.requireNonNull;
+import java.util.Collections;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -40,15 +37,15 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A repository connector factory that employs pluggable
  * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory transporters} and
  * {@link org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory repository layouts} for the transfers.
  */
-@Named( "basic" )
-public final class BasicRepositoryConnectorFactory
-    implements RepositoryConnectorFactory, Service
-{
+@Named("basic")
+public final class BasicRepositoryConnectorFactory implements RepositoryConnectorFactory, Service {
     private TransporterProvider transporterProvider;
 
     private RepositoryLayoutProvider layoutProvider;
@@ -66,32 +63,30 @@ public final class BasicRepositoryConnectorFactory
      * clients, the new factory needs to be configured via its various mutators before first use or runtime errors will
      * occur.
      */
-    public BasicRepositoryConnectorFactory()
-    {
+    public BasicRepositoryConnectorFactory() {
         // enables default constructor
     }
 
     @Inject
-    BasicRepositoryConnectorFactory( TransporterProvider transporterProvider,
-                                     RepositoryLayoutProvider layoutProvider,
-                                     ChecksumPolicyProvider checksumPolicyProvider,
-                                     FileProcessor fileProcessor,
-                                     Map<String, ProvidedChecksumsSource> providedChecksumsSources )
-    {
-        setTransporterProvider( transporterProvider );
-        setRepositoryLayoutProvider( layoutProvider );
-        setChecksumPolicyProvider( checksumPolicyProvider );
-        setFileProcessor( fileProcessor );
-        setProvidedChecksumSources( providedChecksumsSources );
+    BasicRepositoryConnectorFactory(
+            TransporterProvider transporterProvider,
+            RepositoryLayoutProvider layoutProvider,
+            ChecksumPolicyProvider checksumPolicyProvider,
+            FileProcessor fileProcessor,
+            Map<String, ProvidedChecksumsSource> providedChecksumsSources) {
+        setTransporterProvider(transporterProvider);
+        setRepositoryLayoutProvider(layoutProvider);
+        setChecksumPolicyProvider(checksumPolicyProvider);
+        setFileProcessor(fileProcessor);
+        setProvidedChecksumSources(providedChecksumsSources);
     }
 
-    public void initService( ServiceLocator locator )
-    {
-        setTransporterProvider( locator.getService( TransporterProvider.class ) );
-        setRepositoryLayoutProvider( locator.getService( RepositoryLayoutProvider.class ) );
-        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
-        setFileProcessor( locator.getService( FileProcessor.class ) );
-        setProvidedChecksumSources( Collections.emptyMap() );
+    public void initService(ServiceLocator locator) {
+        setTransporterProvider(locator.getService(TransporterProvider.class));
+        setRepositoryLayoutProvider(locator.getService(RepositoryLayoutProvider.class));
+        setChecksumPolicyProvider(locator.getService(ChecksumPolicyProvider.class));
+        setFileProcessor(locator.getService(FileProcessor.class));
+        setProvidedChecksumSources(Collections.emptyMap());
     }
 
     /**
@@ -100,9 +95,8 @@ public final class BasicRepositoryConnectorFactory
      * @param transporterProvider The transporter provider to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
-    public BasicRepositoryConnectorFactory setTransporterProvider( TransporterProvider transporterProvider )
-    {
-        this.transporterProvider = requireNonNull( transporterProvider, "transporter provider cannot be null" );
+    public BasicRepositoryConnectorFactory setTransporterProvider(TransporterProvider transporterProvider) {
+        this.transporterProvider = requireNonNull(transporterProvider, "transporter provider cannot be null");
         return this;
     }
 
@@ -112,9 +106,8 @@ public final class BasicRepositoryConnectorFactory
      * @param layoutProvider The repository layout provider to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
-    public BasicRepositoryConnectorFactory setRepositoryLayoutProvider( RepositoryLayoutProvider layoutProvider )
-    {
-        this.layoutProvider =  requireNonNull( layoutProvider, "repository layout provider cannot be null" );
+    public BasicRepositoryConnectorFactory setRepositoryLayoutProvider(RepositoryLayoutProvider layoutProvider) {
+        this.layoutProvider = requireNonNull(layoutProvider, "repository layout provider cannot be null");
         return this;
     }
 
@@ -124,10 +117,8 @@ public final class BasicRepositoryConnectorFactory
      * @param checksumPolicyProvider The checksum policy provider to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
-    public BasicRepositoryConnectorFactory setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
-    {
-        this.checksumPolicyProvider = requireNonNull(
-                checksumPolicyProvider, "checksum policy provider cannot be null" );
+    public BasicRepositoryConnectorFactory setChecksumPolicyProvider(ChecksumPolicyProvider checksumPolicyProvider) {
+        this.checksumPolicyProvider = requireNonNull(checksumPolicyProvider, "checksum policy provider cannot be null");
         return this;
     }
 
@@ -137,9 +128,8 @@ public final class BasicRepositoryConnectorFactory
      * @param fileProcessor The file processor to use, must not be {@code null}.
      * @return This component for chaining, never {@code null}.
      */
-    public BasicRepositoryConnectorFactory setFileProcessor( FileProcessor fileProcessor )
-    {
-        this.fileProcessor = requireNonNull( fileProcessor, "file processor cannot be null" );
+    public BasicRepositoryConnectorFactory setFileProcessor(FileProcessor fileProcessor) {
+        this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
         return this;
     }
 
@@ -151,16 +141,13 @@ public final class BasicRepositoryConnectorFactory
      * @since 1.8.0
      */
     public BasicRepositoryConnectorFactory setProvidedChecksumSources(
-        Map<String, ProvidedChecksumsSource> providedChecksumsSources )
-    {
-        this.providedChecksumsSources = requireNonNull(
-            providedChecksumsSources, "provided checksum sources cannot be null"
-        );
+            Map<String, ProvidedChecksumsSource> providedChecksumsSources) {
+        this.providedChecksumsSources =
+                requireNonNull(providedChecksumsSources, "provided checksum sources cannot be null");
         return this;
     }
 
-    public float getPriority()
-    {
+    public float getPriority() {
         return priority;
     }
 
@@ -170,20 +157,23 @@ public final class BasicRepositoryConnectorFactory
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */
-    public BasicRepositoryConnectorFactory setPriority( float priority )
-    {
+    public BasicRepositoryConnectorFactory setPriority(float priority) {
         this.priority = priority;
         return this;
     }
 
-    public RepositoryConnector newInstance( RepositorySystemSession session, RemoteRepository repository )
-        throws NoRepositoryConnectorException
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
+    public RepositoryConnector newInstance(RepositorySystemSession session, RemoteRepository repository)
+            throws NoRepositoryConnectorException {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
 
-        return new BasicRepositoryConnector( session, repository, transporterProvider, layoutProvider,
-                                             checksumPolicyProvider, fileProcessor, providedChecksumsSources );
+        return new BasicRepositoryConnector(
+                session,
+                repository,
+                transporterProvider,
+                layoutProvider,
+                checksumPolicyProvider,
+                fileProcessor,
+                providedChecksumsSources);
     }
-
 }

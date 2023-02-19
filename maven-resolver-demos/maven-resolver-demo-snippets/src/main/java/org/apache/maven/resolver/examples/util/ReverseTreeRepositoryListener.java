@@ -1,5 +1,3 @@
-package org.apache.maven.resolver.examples.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.apache.maven.resolver.examples.util;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.apache.maven.resolver.examples.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.resolver.examples.util;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -41,61 +40,56 @@ import static java.util.Objects.requireNonNull;
  * A demo class building reverse tree using {@link CollectStepData} trace data provided in {@link RepositoryEvent}
  * events fired during collection.
  */
-public class ReverseTreeRepositoryListener
-        extends AbstractRepositoryListener
-{
+public class ReverseTreeRepositoryListener extends AbstractRepositoryListener {
     private static final String EOL = System.lineSeparator();
 
     @Override
-    public void artifactResolved( RepositoryEvent event )
-    {
-        requireNonNull( event, "event cannot be null" );
+    public void artifactResolved(RepositoryEvent event) {
+        requireNonNull(event, "event cannot be null");
 
         RequestTrace trace = event.getTrace();
         CollectStepData collectStepTrace = null;
-        while ( trace != null )
-        {
-            if ( trace.getData() instanceof CollectStepData )
-            {
+        while (trace != null) {
+            if (trace.getData() instanceof CollectStepData) {
                 collectStepTrace = (CollectStepData) trace.getData();
                 break;
             }
             trace = trace.getParent();
         }
 
-        if ( collectStepTrace == null )
-        {
+        if (collectStepTrace == null) {
             return;
         }
 
         Artifact resolvedArtifact = event.getArtifact();
         Artifact nodeArtifact = collectStepTrace.getNode().getArtifact();
 
-        if ( isInScope( resolvedArtifact, nodeArtifact ) )
-        {
+        if (isInScope(resolvedArtifact, nodeArtifact)) {
             Dependency node = collectStepTrace.getNode();
             String trackingData = node + " (" + collectStepTrace.getContext() + ")" + EOL;
             String indent = "";
-            ListIterator<DependencyNode> iter = collectStepTrace.getPath()
-                    .listIterator( collectStepTrace.getPath().size() );
-            while ( iter.hasPrevious() )
-            {
+            ListIterator<DependencyNode> iter = collectStepTrace
+                    .getPath()
+                    .listIterator(collectStepTrace.getPath().size());
+            while (iter.hasPrevious()) {
                 DependencyNode curr = iter.previous();
                 indent += "  ";
                 trackingData += indent + curr + " (" + collectStepTrace.getContext() + ")" + EOL;
             }
-            try
-            {
-                Path trackingDir = resolvedArtifact.getFile().getParentFile().toPath().resolve( ".tracking" );
-                Files.createDirectories( trackingDir );
-                Path trackingFile = trackingDir.resolve( collectStepTrace.getPath().get( 0 )
-                        .getArtifact().toString().replace( ":", "_" ) );
-                Files.write( trackingFile, trackingData.getBytes( StandardCharsets.UTF_8 ) );
-                System.out.println( trackingData );
-            }
-            catch ( IOException e )
-            {
-                throw new UncheckedIOException( e );
+            try {
+                Path trackingDir =
+                        resolvedArtifact.getFile().getParentFile().toPath().resolve(".tracking");
+                Files.createDirectories(trackingDir);
+                Path trackingFile = trackingDir.resolve(collectStepTrace
+                        .getPath()
+                        .get(0)
+                        .getArtifact()
+                        .toString()
+                        .replace(":", "_"));
+                Files.write(trackingFile, trackingData.getBytes(StandardCharsets.UTF_8));
+                System.out.println(trackingData);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
         }
     }
@@ -106,10 +100,9 @@ public class ReverseTreeRepositoryListener
      * method "filters" out in WHICH artifact are we interested in, but it intentionally neglects extension as
      * ArtifactDescriptorReader modifies extension to "pom" during collect. So all we have to rely on is GAV only.
      */
-    private boolean isInScope( Artifact artifact, Artifact nodeArtifact )
-    {
-        return Objects.equals( artifact.getGroupId(), nodeArtifact.getGroupId() )
-                && Objects.equals( artifact.getArtifactId(), nodeArtifact.getArtifactId() )
-                && Objects.equals( artifact.getVersion(), nodeArtifact.getVersion() );
+    private boolean isInScope(Artifact artifact, Artifact nodeArtifact) {
+        return Objects.equals(artifact.getGroupId(), nodeArtifact.getGroupId())
+                && Objects.equals(artifact.getArtifactId(), nodeArtifact.getArtifactId())
+                && Objects.equals(artifact.getVersion(), nodeArtifact.getVersion());
     }
 }

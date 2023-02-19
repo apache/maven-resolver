@@ -7,9 +7,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,10 +21,9 @@
  * The contract to access artifacts/metadata in remote repositories. By implementing a
  * {@link org.eclipse.aether.spi.connector.RepositoryConnectorFactory} and registering it with the repository system,
  * an application can enable access to arbitrary remote repositories. It should be noted that a repository connector is
- * powerful yet burdensome to implement. In many cases, implementing a 
- * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory} or 
+ * powerful yet burdensome to implement. In many cases, implementing a
+ * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory} or
  * {@link org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory} will be sufficient and easier to access a
  * custom remote repository.
  */
 package org.eclipse.aether.spi.connector;
-

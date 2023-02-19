@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.collect;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl.collect;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.collect;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.collect;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -52,8 +51,7 @@ import org.eclipse.aether.version.VersionConstraint;
 /**
  * Internal helper class for collector implementations.
  */
-public final class DataPool
-{
+public final class DataPool {
     private static final String CONFIG_PROP_COLLECTOR_POOL_ARTIFACT = "aether.dependencyCollector.pool.artifact";
 
     private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY = "aether.dependencyCollector.pool.dependency";
@@ -67,7 +65,7 @@ public final class DataPool
     private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
 
     public static final ArtifactDescriptorResult NO_DESCRIPTOR =
-        new ArtifactDescriptorResult( new ArtifactDescriptorRequest() );
+            new ArtifactDescriptorResult(new ArtifactDescriptorRequest());
 
     /**
      * Artifact interning pool, lives across session (if session carries non-null {@link RepositoryCache}).
@@ -94,51 +92,43 @@ public final class DataPool
      */
     private final ConcurrentHashMap<Object, List<DependencyNode>> nodes;
 
-    @SuppressWarnings( "unchecked" )
-    public DataPool( RepositorySystemSession session )
-    {
+    @SuppressWarnings("unchecked")
+    public DataPool(RepositorySystemSession session) {
         final RepositoryCache cache = session.getCache();
 
         InternPool<Artifact, Artifact> artifactsPool = null;
         InternPool<Dependency, Dependency> dependenciesPool = null;
         InternPool<Object, Descriptor> descriptorsPool = null;
-        if ( cache != null )
-        {
-            artifactsPool = (InternPool<Artifact, Artifact>) cache.get( session, ARTIFACT_POOL );
-            dependenciesPool = (InternPool<Dependency, Dependency>) cache.get( session, DEPENDENCY_POOL );
-            descriptorsPool = (InternPool<Object, Descriptor>) cache.get( session, DESCRIPTORS );
+        if (cache != null) {
+            artifactsPool = (InternPool<Artifact, Artifact>) cache.get(session, ARTIFACT_POOL);
+            dependenciesPool = (InternPool<Dependency, Dependency>) cache.get(session, DEPENDENCY_POOL);
+            descriptorsPool = (InternPool<Object, Descriptor>) cache.get(session, DESCRIPTORS);
         }
 
-        if ( artifactsPool == null )
-        {
-            String artifactPoolType = ConfigUtils.getString( session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT );
+        if (artifactsPool == null) {
+            String artifactPoolType = ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT);
 
-            artifactsPool = createPool( artifactPoolType );
-            if ( cache != null )
-            {
-                cache.put( session, ARTIFACT_POOL, artifactsPool );
+            artifactsPool = createPool(artifactPoolType);
+            if (cache != null) {
+                cache.put(session, ARTIFACT_POOL, artifactsPool);
             }
         }
 
-        if ( dependenciesPool == null )
-        {
-            String dependencyPoolType = ConfigUtils.getString( session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY );
+        if (dependenciesPool == null) {
+            String dependencyPoolType = ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY);
 
-            dependenciesPool = createPool( dependencyPoolType );
-            if ( cache != null )
-            {
-                cache.put( session, DEPENDENCY_POOL, dependenciesPool );
+            dependenciesPool = createPool(dependencyPoolType);
+            if (cache != null) {
+                cache.put(session, DEPENDENCY_POOL, dependenciesPool);
             }
         }
 
-        if ( descriptorsPool == null )
-        {
-            String descriptorPoolType = ConfigUtils.getString( session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR );
+        if (descriptorsPool == null) {
+            String descriptorPoolType = ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR);
 
-            descriptorsPool = createPool( descriptorPoolType );
-            if ( cache != null )
-            {
-                cache.put( session, DESCRIPTORS, descriptorsPool );
+            descriptorsPool = createPool(descriptorPoolType);
+            if (cache != null) {
+                cache.put(session, DESCRIPTORS, descriptorsPool);
             }
         }
 
@@ -146,91 +136,78 @@ public final class DataPool
         this.dependencies = dependenciesPool;
         this.descriptors = descriptorsPool;
 
-        this.constraints = new ConcurrentHashMap<>( 256 );
-        this.nodes = new ConcurrentHashMap<>( 256 );
+        this.constraints = new ConcurrentHashMap<>(256);
+        this.nodes = new ConcurrentHashMap<>(256);
     }
 
-    public Artifact intern( Artifact artifact )
-    {
-        return artifacts.intern( artifact, artifact );
+    public Artifact intern(Artifact artifact) {
+        return artifacts.intern(artifact, artifact);
     }
 
-    public Dependency intern( Dependency dependency )
-    {
-        return dependencies.intern( dependency, dependency );
+    public Dependency intern(Dependency dependency) {
+        return dependencies.intern(dependency, dependency);
     }
 
-    public Object toKey( ArtifactDescriptorRequest request )
-    {
+    public Object toKey(ArtifactDescriptorRequest request) {
         return request.getArtifact();
     }
 
-    public ArtifactDescriptorResult getDescriptor( Object key, ArtifactDescriptorRequest request )
-    {
-        Descriptor descriptor = descriptors.get( key );
-        if ( descriptor != null )
-        {
-            return descriptor.toResult( request );
+    public ArtifactDescriptorResult getDescriptor(Object key, ArtifactDescriptorRequest request) {
+        Descriptor descriptor = descriptors.get(key);
+        if (descriptor != null) {
+            return descriptor.toResult(request);
         }
         return null;
     }
 
-    public void putDescriptor( Object key, ArtifactDescriptorResult result )
-    {
-        descriptors.intern( key, new GoodDescriptor( result ) );
+    public void putDescriptor(Object key, ArtifactDescriptorResult result) {
+        descriptors.intern(key, new GoodDescriptor(result));
     }
 
-    public void putDescriptor( Object key, ArtifactDescriptorException e )
-    {
-        descriptors.intern( key, BadDescriptor.INSTANCE );
+    public void putDescriptor(Object key, ArtifactDescriptorException e) {
+        descriptors.intern(key, BadDescriptor.INSTANCE);
     }
 
-    public Object toKey( VersionRangeRequest request )
-    {
-        return new ConstraintKey( request );
+    public Object toKey(VersionRangeRequest request) {
+        return new ConstraintKey(request);
     }
 
-    public VersionRangeResult getConstraint( Object key, VersionRangeRequest request )
-    {
-        Constraint constraint = constraints.get( key );
-        if ( constraint != null )
-        {
-            return constraint.toResult( request );
+    public VersionRangeResult getConstraint(Object key, VersionRangeRequest request) {
+        Constraint constraint = constraints.get(key);
+        if (constraint != null) {
+            return constraint.toResult(request);
         }
         return null;
     }
 
-    public void putConstraint( Object key, VersionRangeResult result )
-    {
-        constraints.put( key, new Constraint( result ) );
+    public void putConstraint(Object key, VersionRangeResult result) {
+        constraints.put(key, new Constraint(result));
     }
 
-    public Object toKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
-                         DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
-    {
-        return new GraphKey( artifact, repositories, selector, manager, traverser, filter );
+    public Object toKey(
+            Artifact artifact,
+            List<RemoteRepository> repositories,
+            DependencySelector selector,
+            DependencyManager manager,
+            DependencyTraverser traverser,
+            VersionFilter filter) {
+        return new GraphKey(artifact, repositories, selector, manager, traverser, filter);
     }
 
-    public List<DependencyNode> getChildren( Object key )
-    {
-        return nodes.get( key );
+    public List<DependencyNode> getChildren(Object key) {
+        return nodes.get(key);
     }
 
-    public void putChildren( Object key, List<DependencyNode> children )
-    {
-        nodes.put( key, children );
+    public void putChildren(Object key, List<DependencyNode> children) {
+        nodes.put(key, children);
     }
 
-    abstract static class Descriptor
-    {
+    abstract static class Descriptor {
 
-        public abstract ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request );
-
+        public abstract ArtifactDescriptorResult toResult(ArtifactDescriptorRequest request);
     }
 
-    static final class GoodDescriptor
-        extends Descriptor
-    {
+    static final class GoodDescriptor extends Descriptor {
 
         final Artifact artifact;
 
@@ -244,8 +221,7 @@ public final class DataPool
 
         final List<Dependency> managedDependencies;
 
-        GoodDescriptor( ArtifactDescriptorResult result )
-        {
+        GoodDescriptor(ArtifactDescriptorResult result) {
             artifact = result.getArtifact();
             relocations = result.getRelocations();
             aliases = result.getAliases();
@@ -254,138 +230,110 @@ public final class DataPool
             repositories = result.getRepositories();
         }
 
-        public ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request )
-        {
-            ArtifactDescriptorResult result = new ArtifactDescriptorResult( request );
-            result.setArtifact( artifact );
-            result.setRelocations( relocations );
-            result.setAliases( aliases );
-            result.setDependencies( dependencies );
-            result.setManagedDependencies( managedDependencies );
-            result.setRepositories( repositories );
+        public ArtifactDescriptorResult toResult(ArtifactDescriptorRequest request) {
+            ArtifactDescriptorResult result = new ArtifactDescriptorResult(request);
+            result.setArtifact(artifact);
+            result.setRelocations(relocations);
+            result.setAliases(aliases);
+            result.setDependencies(dependencies);
+            result.setManagedDependencies(managedDependencies);
+            result.setRepositories(repositories);
             return result;
         }
-
     }
 
-    static final class BadDescriptor
-        extends Descriptor
-    {
+    static final class BadDescriptor extends Descriptor {
 
         static final BadDescriptor INSTANCE = new BadDescriptor();
 
-        public ArtifactDescriptorResult toResult( ArtifactDescriptorRequest request )
-        {
+        public ArtifactDescriptorResult toResult(ArtifactDescriptorRequest request) {
             return NO_DESCRIPTOR;
         }
     }
 
-    private static final class Constraint
-    {
+    private static final class Constraint {
         final VersionRepo[] repositories;
 
         final VersionConstraint versionConstraint;
 
-        Constraint( VersionRangeResult result )
-        {
+        Constraint(VersionRangeResult result) {
             versionConstraint = result.getVersionConstraint();
             List<Version> versions = result.getVersions();
             repositories = new VersionRepo[versions.size()];
             int i = 0;
-            for ( Version version : versions )
-            {
-                repositories[i++] = new VersionRepo( version, result.getRepository( version ) );
+            for (Version version : versions) {
+                repositories[i++] = new VersionRepo(version, result.getRepository(version));
             }
         }
 
-        VersionRangeResult toResult( VersionRangeRequest request )
-        {
-            VersionRangeResult result = new VersionRangeResult( request );
-            for ( VersionRepo vr : repositories )
-            {
-                result.addVersion( vr.version );
-                result.setRepository( vr.version, vr.repo );
+        VersionRangeResult toResult(VersionRangeRequest request) {
+            VersionRangeResult result = new VersionRangeResult(request);
+            for (VersionRepo vr : repositories) {
+                result.addVersion(vr.version);
+                result.setRepository(vr.version, vr.repo);
             }
-            result.setVersionConstraint( versionConstraint );
+            result.setVersionConstraint(versionConstraint);
             return result;
         }
 
-        static final class VersionRepo
-        {
+        static final class VersionRepo {
             final Version version;
 
             final ArtifactRepository repo;
 
-            VersionRepo( Version version, ArtifactRepository repo )
-            {
+            VersionRepo(Version version, ArtifactRepository repo) {
                 this.version = version;
                 this.repo = repo;
             }
         }
     }
 
-    static final class ConstraintKey
-    {
+    static final class ConstraintKey {
         private final Artifact artifact;
 
         private final List<RemoteRepository> repositories;
 
         private final int hashCode;
 
-        ConstraintKey( VersionRangeRequest request )
-        {
+        ConstraintKey(VersionRangeRequest request) {
             artifact = request.getArtifact();
             repositories = request.getRepositories();
             hashCode = artifact.hashCode();
         }
 
         @Override
-        public boolean equals( Object obj )
-        {
-            if ( obj == this )
-            {
+        public boolean equals(Object obj) {
+            if (obj == this) {
                 return true;
-            }
-            else if ( !( obj instanceof ConstraintKey ) )
-            {
+            } else if (!(obj instanceof ConstraintKey)) {
                 return false;
             }
             ConstraintKey that = (ConstraintKey) obj;
-            return artifact.equals( that.artifact ) && equals( repositories, that.repositories );
+            return artifact.equals(that.artifact) && equals(repositories, that.repositories);
         }
 
-        private static boolean equals( List<RemoteRepository> repos1, List<RemoteRepository> repos2 )
-        {
-            if ( repos1.size() != repos2.size() )
-            {
+        private static boolean equals(List<RemoteRepository> repos1, List<RemoteRepository> repos2) {
+            if (repos1.size() != repos2.size()) {
                 return false;
             }
-            for ( Iterator<RemoteRepository> it1 = repos1.iterator(), it2 = repos2.iterator();
-                  it1.hasNext() && it2.hasNext(); )
-            {
+            for (Iterator<RemoteRepository> it1 = repos1.iterator(), it2 = repos2.iterator();
+                    it1.hasNext() && it2.hasNext(); ) {
                 RemoteRepository repo1 = it1.next();
                 RemoteRepository repo2 = it2.next();
-                if ( repo1.isRepositoryManager() != repo2.isRepositoryManager() )
-                {
+                if (repo1.isRepositoryManager() != repo2.isRepositoryManager()) {
                     return false;
                 }
-                if ( repo1.isRepositoryManager() )
-                {
-                    if ( !equals( repo1.getMirroredRepositories(), repo2.getMirroredRepositories() ) )
-                    {
+                if (repo1.isRepositoryManager()) {
+                    if (!equals(repo1.getMirroredRepositories(), repo2.getMirroredRepositories())) {
                         return false;
                     }
-                }
-                else if ( !repo1.getUrl().equals( repo2.getUrl() ) )
-                {
+                } else if (!repo1.getUrl().equals(repo2.getUrl())) {
                     return false;
-                }
-                else if ( repo1.getPolicy( true ).isEnabled() != repo2.getPolicy( true ).isEnabled() )
-                {
+                } else if (repo1.getPolicy(true).isEnabled()
+                        != repo2.getPolicy(true).isEnabled()) {
                     return false;
-                }
-                else if ( repo1.getPolicy( false ).isEnabled() != repo2.getPolicy( false ).isEnabled() )
-                {
+                } else if (repo1.getPolicy(false).isEnabled()
+                        != repo2.getPolicy(false).isEnabled()) {
                     return false;
                 }
             }
@@ -393,14 +341,12 @@ public final class DataPool
         }
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
             return hashCode;
         }
     }
 
-    static final class GraphKey
-    {
+    static final class GraphKey {
         private final Artifact artifact;
 
         private final List<RemoteRepository> repositories;
@@ -415,9 +361,13 @@ public final class DataPool
 
         private final int hashCode;
 
-        GraphKey( Artifact artifact, List<RemoteRepository> repositories, DependencySelector selector,
-                  DependencyManager manager, DependencyTraverser traverser, VersionFilter filter )
-        {
+        GraphKey(
+                Artifact artifact,
+                List<RemoteRepository> repositories,
+                DependencySelector selector,
+                DependencyManager manager,
+                DependencyTraverser traverser,
+                VersionFilter filter) {
             this.artifact = artifact;
             this.repositories = repositories;
             this.selector = selector;
@@ -425,46 +375,38 @@ public final class DataPool
             this.traverser = traverser;
             this.filter = filter;
 
-            hashCode = Objects.hash( artifact, repositories, selector, manager, traverser, filter );
+            hashCode = Objects.hash(artifact, repositories, selector, manager, traverser, filter);
         }
 
         @Override
-        public boolean equals( Object obj )
-        {
-            if ( obj == this )
-            {
+        public boolean equals(Object obj) {
+            if (obj == this) {
                 return true;
-            }
-            else if ( !( obj instanceof GraphKey ) )
-            {
+            } else if (!(obj instanceof GraphKey)) {
                 return false;
             }
             GraphKey that = (GraphKey) obj;
-            return Objects.equals( artifact, that.artifact ) && Objects.equals( repositories, that.repositories )
-                && Objects.equals( selector, that.selector ) && Objects.equals( manager, that.manager )
-                && Objects.equals( traverser, that.traverser ) && Objects.equals( filter, that.filter );
+            return Objects.equals(artifact, that.artifact)
+                    && Objects.equals(repositories, that.repositories)
+                    && Objects.equals(selector, that.selector)
+                    && Objects.equals(manager, that.manager)
+                    && Objects.equals(traverser, that.traverser)
+                    && Objects.equals(filter, that.filter);
         }
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
             return hashCode;
         }
     }
 
-    private static <K, V> InternPool<K, V> createPool( String type )
-    {
-        if ( HARD.equals( type ) )
-        {
+    private static <K, V> InternPool<K, V> createPool(String type) {
+        if (HARD.equals(type)) {
             return new HardInternPool<>();
-        }
-        else if ( WEAK.equals( type ) )
-        {
+        } else if (WEAK.equals(type)) {
             return new WeakInternPool<>();
-        }
-        else
-        {
-            throw new IllegalArgumentException( "Unknown object pool type: '" + type + "'" );
+        } else {
+            throw new IllegalArgumentException("Unknown object pool type: '" + type + "'");
         }
     }
 
@@ -472,54 +414,45 @@ public final class DataPool
 
     private static final String WEAK = "weak";
 
-    private interface InternPool<K, V>
-    {
-        V get( K key );
+    private interface InternPool<K, V> {
+        V get(K key);
 
-        V intern( K key, V value );
+        V intern(K key, V value);
     }
 
-    private static class HardInternPool<K, V> implements InternPool<K, V>
-    {
-        private final ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>( 256 );
+    private static class HardInternPool<K, V> implements InternPool<K, V> {
+        private final ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>(256);
 
         @Override
-        public V get( K key )
-        {
-            return map.get( key );
+        public V get(K key) {
+            return map.get(key);
         }
 
         @Override
-        public V intern( K key, V value )
-        {
-            return map.computeIfAbsent( key, k -> value );
+        public V intern(K key, V value) {
+            return map.computeIfAbsent(key, k -> value);
         }
     }
 
-    private static class WeakInternPool<K, V> implements InternPool<K, V>
-    {
-        private final Map<K, WeakReference<V>> map = Collections.synchronizedMap( new WeakHashMap<>( 256 ) );
+    private static class WeakInternPool<K, V> implements InternPool<K, V> {
+        private final Map<K, WeakReference<V>> map = Collections.synchronizedMap(new WeakHashMap<>(256));
 
         @Override
-        public V get( K key )
-        {
-            WeakReference<V> ref = map.get( key );
+        public V get(K key) {
+            WeakReference<V> ref = map.get(key);
             return ref != null ? ref.get() : null;
         }
 
         @Override
-        public V intern( K key, V value )
-        {
-            WeakReference<V> pooledRef = map.get( key );
-            if ( pooledRef != null )
-            {
+        public V intern(K key, V value) {
+            WeakReference<V> pooledRef = map.get(key);
+            if (pooledRef != null) {
                 V pooled = pooledRef.get();
-                if ( pooled != null )
-                {
+                if (pooled != null) {
                     return pooled;
                 }
             }
-            map.put( key, new WeakReference<>( value ) );
+            map.put(key, new WeakReference<>(value));
             return value;
         }
     }

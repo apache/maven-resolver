@@ -1,5 +1,3 @@
-package org.eclipse.aether.transform;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.transform;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.transform;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transform;
 
 /**
  * Thrown when transformation failed.
@@ -26,16 +25,13 @@ package org.eclipse.aether.transform;
  * transforming.
  */
 @Deprecated
-public class TransformException
-    extends Exception
-{
+public class TransformException extends Exception {
 
     /**
      * Creates a new exception with default detail message.
      */
-    public TransformException()
-    {
-        super( "Transformation failed" );
+    public TransformException() {
+        super("Transformation failed");
     }
 
     /**
@@ -43,9 +39,8 @@ public class TransformException
      *
      * @param message The detail message, may be {@code null}.
      */
-    public TransformException( String message )
-    {
-        super( message );
+    public TransformException(String message) {
+        super(message);
     }
 
     /**
@@ -53,9 +48,8 @@ public class TransformException
      *
      * @param cause The exception that caused this one, may be {@code null}.
      */
-    public TransformException( Throwable cause )
-    {
-        super( cause );
+    public TransformException(Throwable cause) {
+        super(cause);
     }
 
     /**
@@ -64,9 +58,7 @@ public class TransformException
      * @param message The detail message, may be {@code null}.
      * @param cause   The exception that caused this one, may be {@code null}.
      */
-    public TransformException( String message, Throwable cause )
-    {
-        super( message, cause );
+    public TransformException(String message, Throwable cause) {
+        super(message, cause);
     }
-
 }

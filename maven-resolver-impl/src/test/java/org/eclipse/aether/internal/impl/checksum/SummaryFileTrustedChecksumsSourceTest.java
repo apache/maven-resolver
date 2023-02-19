@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.checksum;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.checksum;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,22 +16,20 @@ package org.eclipse.aether.internal.impl.checksum;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.checksum;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
 
-public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
-{
+public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport {
     @Override
-    protected FileTrustedChecksumsSourceSupport prepareSubject( RepositorySystemLifecycle lifecycle )
-    {
-        return new SummaryFileTrustedChecksumsSource( new DefaultLocalPathComposer(), lifecycle );
+    protected FileTrustedChecksumsSourceSupport prepareSubject(RepositorySystemLifecycle lifecycle) {
+        return new SummaryFileTrustedChecksumsSource(new DefaultLocalPathComposer(), lifecycle);
     }
 
     @Override
-    protected void enableSource( DefaultRepositorySystemSession session )
-    {
-        session.setConfigProperty( "aether.trustedChecksumsSource.summaryFile", Boolean.TRUE.toString() );
+    protected void enableSource(DefaultRepositorySystemSession session) {
+        session.setConfigProperty("aether.trustedChecksumsSource.summaryFile", Boolean.TRUE.toString());
     }
 }

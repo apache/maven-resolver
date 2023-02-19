@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -40,52 +39,45 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 1.9.0
  */
-public class HashingNameMapper implements NameMapper
-{
+public class HashingNameMapper implements NameMapper {
     private static final String CONFIG_PROP_DEPTH = "aether.syncContext.named.hashing.depth";
 
     private final NameMapper delegate;
 
-    public HashingNameMapper( final NameMapper delegate )
-    {
-        this.delegate = requireNonNull( delegate );
+    public HashingNameMapper(final NameMapper delegate) {
+        this.delegate = requireNonNull(delegate);
     }
 
     @Override
-    public boolean isFileSystemFriendly()
-    {
+    public boolean isFileSystemFriendly() {
         return true; // hashes delegated strings, so whatever it wrapped, it does not come through
     }
 
     @Override
-    public Collection<String> nameLocks( RepositorySystemSession session,
-                                         Collection<? extends Artifact> artifacts,
-                                         Collection<? extends Metadata> metadatas )
-    {
-        final int depth = ConfigUtils.getInteger( session, 2, CONFIG_PROP_DEPTH );
-        if ( depth < 0 || depth > 4 )
-        {
-            throw new IllegalArgumentException( "allowed depth value is between 0 and 4 (inclusive)" );
+    public Collection<String> nameLocks(
+            RepositorySystemSession session,
+            Collection<? extends Artifact> artifacts,
+            Collection<? extends Metadata> metadatas) {
+        final int depth = ConfigUtils.getInteger(session, 2, CONFIG_PROP_DEPTH);
+        if (depth < 0 || depth > 4) {
+            throw new IllegalArgumentException("allowed depth value is between 0 and 4 (inclusive)");
         }
-        return delegate.nameLocks( session, artifacts, metadatas ).stream()
-                .map( n -> hashName( n, depth ) )
-                .collect( Collectors.toList() );
+        return delegate.nameLocks(session, artifacts, metadatas).stream()
+                .map(n -> hashName(n, depth))
+                .collect(Collectors.toList());
     }
 
-    private String hashName( final String name, final int depth )
-    {
-        String hashedName = StringDigestUtil.sha1( name );
-        if ( depth == 0 )
-        {
+    private String hashName(final String name, final int depth) {
+        String hashedName = StringDigestUtil.sha1(name);
+        if (depth == 0) {
             return hashedName;
         }
-        StringBuilder prefix = new StringBuilder( "" );
+        StringBuilder prefix = new StringBuilder("");
         int i = 0;
-        while ( i < hashedName.length() && i / 2 < depth )
-        {
-            prefix.append( hashedName, i, i + 2 ).append( "/" );
+        while (i < hashedName.length() && i / 2 < depth) {
+            prefix.append(hashedName, i, i + 2).append("/");
             i += 2;
         }
-        return prefix.append( hashedName ).toString();
+        return prefix.append(hashedName).toString();
     }
 }

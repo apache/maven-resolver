@@ -1,5 +1,3 @@
-package org.apache.maven.resolver.examples;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.apache.maven.resolver.examples;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.apache.maven.resolver.examples;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.resolver.examples;
 
 import java.util.List;
 
@@ -33,35 +32,31 @@ import org.eclipse.aether.version.Version;
 /**
  * Determines all available versions of an artifact.
  */
-public class FindAvailableVersions
-{
+public class FindAvailableVersions {
 
     /**
      * Main.
      * @param args
      * @throws Exception
      */
-    public static void main( String[] args )
-        throws Exception
-    {
-        System.out.println( "------------------------------------------------------------" );
-        System.out.println( FindAvailableVersions.class.getSimpleName() );
+    public static void main(String[] args) throws Exception {
+        System.out.println("------------------------------------------------------------");
+        System.out.println(FindAvailableVersions.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
+        RepositorySystemSession session = Booter.newRepositorySystemSession(system);
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven.resolver:maven-resolver-util:[0,)" );
+        Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:[0,)");
 
         VersionRangeRequest rangeRequest = new VersionRangeRequest();
-        rangeRequest.setArtifact( artifact );
-        rangeRequest.setRepositories( Booter.newRepositories( system, session ) );
+        rangeRequest.setArtifact(artifact);
+        rangeRequest.setRepositories(Booter.newRepositories(system, session));
 
-        VersionRangeResult rangeResult = system.resolveVersionRange( session, rangeRequest );
+        VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest);
 
         List<Version> versions = rangeResult.getVersions();
 
-        System.out.println( "Available versions " + versions );
+        System.out.println("Available versions " + versions);
     }
-
 }

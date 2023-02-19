@@ -1,5 +1,3 @@
-package org.eclipse.aether.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.impl;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
@@ -27,12 +26,11 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
  *
  * @since 1.9.0
  */
-public interface RemoteRepositoryFilterManager
-{
+public interface RemoteRepositoryFilterManager {
     /**
      * Provides the filter instance for given session, or {@code null} if no filtering applied.
      *
      * @return The session bound filter or {@code null} if no filtering applied.
      */
-    RemoteRepositoryFilter getRemoteRepositoryFilter( RepositorySystemSession session );
+    RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session);
 }
