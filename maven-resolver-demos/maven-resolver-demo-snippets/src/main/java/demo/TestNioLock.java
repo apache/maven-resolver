@@ -1,4 +1,4 @@
-// CHECKSTYLE_OFF: RegexpHeader
+package demo;// CHECKSTYLE_OFF: RegexpHeader
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -35,8 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A simple tool to check file locking on your OS/FS/Java combo. To use this tool, just copy it to basedir on
  * the volume you plan to use as local repository and compile and run it:
  * <ul>
- *   <li><pre>javac TestNioLock.java</pre></li>
- *   <li><pre>java TestNioLock test someFile 1000</pre></li>
+ *   <li><pre>javac demo.TestNioLock.java</pre></li>
+ *   <li><pre>java demo.TestNioLock test someFile 1000</pre></li>
  * </ul>
  */
 public class TestNioLock
@@ -53,7 +53,7 @@ public class TestNioLock
     {
         if ( args.length != 3 )
         {
-            System.out.println( "TestNioLock <test|perform> <file> <sleepMs>" );
+            System.out.println( "demo.TestNioLock <test|perform> <file> <sleepMs>" );
             System.exit( EC_ERROR );
         }
 
