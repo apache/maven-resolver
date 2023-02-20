@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 /**
  * As end-user "mappers" are actually configurations/compositions and are constructed from several NameMapper
@@ -26,8 +25,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  *
  * @since 1.9.4
  */
-public final class NameMappers
-{
+public final class NameMappers {
     public static final String STATIC_NAME = "static";
 
     public static final String GAV_NAME = "gav";
@@ -38,28 +36,23 @@ public final class NameMappers
 
     public static final String DISCRIMINATING_NAME = "discriminating";
 
-    public static NameMapper staticNameMapper()
-    {
+    public static NameMapper staticNameMapper() {
         return new StaticNameMapper();
     }
 
-    public static NameMapper gavNameMapper()
-    {
+    public static NameMapper gavNameMapper() {
         return GAVNameMapper.gav();
     }
 
-    public static NameMapper fileGavNameMapper()
-    {
-        return new BasedirNameMapper( GAVNameMapper.fileGav() );
+    public static NameMapper fileGavNameMapper() {
+        return new BasedirNameMapper(GAVNameMapper.fileGav());
     }
 
-    public static NameMapper fileHashingGavNameMapper()
-    {
-        return new BasedirNameMapper( new HashingNameMapper( GAVNameMapper.gav() ) );
+    public static NameMapper fileHashingGavNameMapper() {
+        return new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
     }
 
-    public static NameMapper discriminatingNameMapper()
-    {
-        return new DiscriminatingNameMapper( GAVNameMapper.gav() );
+    public static NameMapper discriminatingNameMapper() {
+        return new DiscriminatingNameMapper(GAVNameMapper.gav());
     }
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.checksum;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.checksum;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.checksum;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.checksum;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,34 +42,28 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 @Singleton
-@Named( TrustedToProvidedChecksumsSourceAdapter.NAME )
-public final class TrustedToProvidedChecksumsSourceAdapter
-        implements ProvidedChecksumsSource
-{
+@Named(TrustedToProvidedChecksumsSourceAdapter.NAME)
+public final class TrustedToProvidedChecksumsSourceAdapter implements ProvidedChecksumsSource {
     public static final String NAME = "trusted2provided";
 
     private final Map<String, TrustedChecksumsSource> trustedChecksumsSources;
 
     @Inject
-    public TrustedToProvidedChecksumsSourceAdapter( Map<String, TrustedChecksumsSource> trustedChecksumsSources )
-    {
-        this.trustedChecksumsSources = requireNonNull( trustedChecksumsSources );
+    public TrustedToProvidedChecksumsSourceAdapter(Map<String, TrustedChecksumsSource> trustedChecksumsSources) {
+        this.trustedChecksumsSources = requireNonNull(trustedChecksumsSources);
     }
 
     @Override
-    public Map<String, String> getProvidedArtifactChecksums( RepositorySystemSession session,
-                                                             ArtifactDownload transfer,
-                                                             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories )
-    {
+    public Map<String, String> getProvidedArtifactChecksums(
+            RepositorySystemSession session,
+            ArtifactDownload transfer,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         Artifact artifact = transfer.getArtifact();
-        for ( RemoteRepository remoteRepository : transfer.getRepositories() )
-        {
-            for ( TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values() )
-            {
-                Map<String, String> trustedChecksums = trustedChecksumsSource
-                        .getTrustedArtifactChecksums( session, artifact, remoteRepository, checksumAlgorithmFactories );
-                if ( trustedChecksums != null && !trustedChecksums.isEmpty() )
-                {
+        for (RemoteRepository remoteRepository : transfer.getRepositories()) {
+            for (TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values()) {
+                Map<String, String> trustedChecksums = trustedChecksumsSource.getTrustedArtifactChecksums(
+                        session, artifact, remoteRepository, checksumAlgorithmFactories);
+                if (trustedChecksums != null && !trustedChecksums.isEmpty()) {
                     return trustedChecksums;
                 }
             }

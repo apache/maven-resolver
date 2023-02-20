@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.selector;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.util.graph.selector;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,19 +16,15 @@ package org.eclipse.aether.util.graph.selector;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+package org.eclipse.aether.util.graph.selector;
 
 import org.junit.Test;
 
-public class OptionalDependencySelectorTest
-{
+import static org.junit.Assert.*;
+
+public class OptionalDependencySelectorTest {
     @Test
-    public void testToString()
-    {
-        assertEquals(
-            "OptionalDependencySelector(depth: 0)",
-            new OptionalDependencySelector().toString()
-        );
+    public void testToString() {
+        assertEquals("OptionalDependencySelector(depth: 0)", new OptionalDependencySelector().toString());
     }
 }

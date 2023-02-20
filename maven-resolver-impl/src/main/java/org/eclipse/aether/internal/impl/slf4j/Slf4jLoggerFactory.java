@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.slf4j;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.slf4j;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.slf4j;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.slf4j;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,31 +36,24 @@ import org.slf4j.spi.LocationAwareLogger;
  * @deprecated Use SLF4J instead
  */
 @Singleton
-@Named( "slf4j" )
+@Named("slf4j")
 @Deprecated
-public class Slf4jLoggerFactory
-    implements LoggerFactory, Service
-{
+public class Slf4jLoggerFactory implements LoggerFactory, Service {
 
     private static final boolean AVAILABLE;
 
-    static
-    {
+    static {
         boolean available;
-        try
-        {
-            Slf4jLoggerFactory.class.getClassLoader().loadClass( "org.slf4j.ILoggerFactory" );
+        try {
+            Slf4jLoggerFactory.class.getClassLoader().loadClass("org.slf4j.ILoggerFactory");
             available = true;
-        }
-        catch ( Exception | LinkageError e )
-        {
+        } catch (Exception | LinkageError e) {
             available = false;
         }
         AVAILABLE = available;
     }
 
-    public static boolean isSlf4jAvailable()
-    {
+    public static boolean isSlf4jAvailable() {
         return AVAILABLE;
     }
 
@@ -70,133 +62,104 @@ public class Slf4jLoggerFactory
     /**
      * Creates an instance of this logger factory.
      */
-    public Slf4jLoggerFactory()
-    {
+    public Slf4jLoggerFactory() {
         // enables no-arg constructor
     }
 
     @Inject
-    Slf4jLoggerFactory( @Nullable ILoggerFactory factory )
-    {
-        setLoggerFactory( factory );
+    Slf4jLoggerFactory(@Nullable ILoggerFactory factory) {
+        setLoggerFactory(factory);
     }
 
-    public void initService( ServiceLocator locator )
-    {
-        setLoggerFactory( locator.getService( ILoggerFactory.class ) );
+    public void initService(ServiceLocator locator) {
+        setLoggerFactory(locator.getService(ILoggerFactory.class));
     }
 
-    public Slf4jLoggerFactory setLoggerFactory( ILoggerFactory factory )
-    {
+    public Slf4jLoggerFactory setLoggerFactory(ILoggerFactory factory) {
         this.factory = factory;
         return this;
     }
 
-    public Logger getLogger( String name )
-    {
-        org.slf4j.Logger logger = getFactory().getLogger( name );
-        if ( logger instanceof LocationAwareLogger )
-        {
-            return new Slf4jLoggerEx( (LocationAwareLogger) logger );
+    public Logger getLogger(String name) {
+        org.slf4j.Logger logger = getFactory().getLogger(name);
+        if (logger instanceof LocationAwareLogger) {
+            return new Slf4jLoggerEx((LocationAwareLogger) logger);
         }
-        return new Slf4jLogger( logger );
+        return new Slf4jLogger(logger);
     }
 
-    private ILoggerFactory getFactory()
-    {
-        if ( factory == null )
-        {
+    private ILoggerFactory getFactory() {
+        if (factory == null) {
             factory = org.slf4j.LoggerFactory.getILoggerFactory();
         }
         return factory;
     }
 
-    private static final class Slf4jLogger
-        implements Logger
-    {
+    private static final class Slf4jLogger implements Logger {
 
         private final org.slf4j.Logger logger;
 
-        Slf4jLogger( org.slf4j.Logger logger )
-        {
+        Slf4jLogger(org.slf4j.Logger logger) {
             this.logger = logger;
         }
 
-        public boolean isDebugEnabled()
-        {
+        public boolean isDebugEnabled() {
             return logger.isDebugEnabled();
         }
 
-        public void debug( String msg )
-        {
-            logger.debug( msg );
+        public void debug(String msg) {
+            logger.debug(msg);
         }
 
-        public void debug( String msg, Throwable error )
-        {
-            logger.debug( msg, error );
+        public void debug(String msg, Throwable error) {
+            logger.debug(msg, error);
         }
 
-        public boolean isWarnEnabled()
-        {
+        public boolean isWarnEnabled() {
             return logger.isWarnEnabled();
         }
 
-        public void warn( String msg )
-        {
-            logger.warn( msg );
+        public void warn(String msg) {
+            logger.warn(msg);
         }
 
-        public void warn( String msg, Throwable error )
-        {
-            logger.warn( msg, error );
+        public void warn(String msg, Throwable error) {
+            logger.warn(msg, error);
         }
-
     }
 
-    private static final class Slf4jLoggerEx
-        implements Logger
-    {
+    private static final class Slf4jLoggerEx implements Logger {
 
         private static final String FQCN = Slf4jLoggerEx.class.getName();
 
         private final LocationAwareLogger logger;
 
-        Slf4jLoggerEx( LocationAwareLogger logger )
-        {
+        Slf4jLoggerEx(LocationAwareLogger logger) {
             this.logger = logger;
         }
 
-        public boolean isDebugEnabled()
-        {
+        public boolean isDebugEnabled() {
             return logger.isDebugEnabled();
         }
 
-        public void debug( String msg )
-        {
-            logger.log( null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, null );
+        public void debug(String msg) {
+            logger.log(null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, null);
         }
 
-        public void debug( String msg, Throwable error )
-        {
-            logger.log( null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, error );
+        public void debug(String msg, Throwable error) {
+            logger.log(null, FQCN, LocationAwareLogger.DEBUG_INT, msg, null, error);
         }
 
-        public boolean isWarnEnabled()
-        {
+        public boolean isWarnEnabled() {
             return logger.isWarnEnabled();
         }
 
-        public void warn( String msg )
-        {
-            logger.log( null, FQCN, LocationAwareLogger.WARN_INT, msg, null, null );
+        public void warn(String msg) {
+            logger.log(null, FQCN, LocationAwareLogger.WARN_INT, msg, null, null);
         }
 
-        public void warn( String msg, Throwable error )
-        {
-            logger.log( null, FQCN, LocationAwareLogger.WARN_INT, msg, null, error );
+        public void warn(String msg, Throwable error) {
+            logger.log(null, FQCN, LocationAwareLogger.WARN_INT, msg, null, error);
         }
-
     }
-
 }

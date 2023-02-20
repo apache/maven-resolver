@@ -1,5 +1,3 @@
-package org.eclipse.aether.artifact;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.artifact;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,18 +16,18 @@ package org.eclipse.aether.artifact;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.artifact;
 
 /**
  * The keys for common properties of artifacts.
- * 
+ *
  * @see Artifact#getProperties()
  */
-public final class ArtifactProperties
-{
+public final class ArtifactProperties {
 
     /**
      * A high-level characterization of the artifact, e.g. "maven-plugin" or "test-jar".
-     * 
+     *
      * @see ArtifactType#getId()
      */
     public static final String TYPE = "type";
@@ -66,9 +64,7 @@ public final class ArtifactProperties
      */
     public static final String DOWNLOAD_URL = "downloadUrl";
 
-    private ArtifactProperties()
-    {
+    private ArtifactProperties() {
         // hide constructor
     }
-
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.listener;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.listener;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,29 +16,24 @@ package org.eclipse.aether.util.listener;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+package org.eclipse.aether.util.listener;
 
 import java.lang.reflect.Method;
 
 import org.eclipse.aether.RepositoryListener;
-import org.eclipse.aether.util.listener.ChainedRepositoryListener;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  */
-public class ChainedRepositoryListenerTest
-{
+public class ChainedRepositoryListenerTest {
 
     @Test
-    public void testAllEventTypesHandled()
-        throws Exception
-    {
-        for ( Method method : RepositoryListener.class.getMethods() )
-        {
-            assertNotNull( ChainedRepositoryListener.class.getDeclaredMethod( method.getName(),
-                                                                              method.getParameterTypes() ) );
+    public void testAllEventTypesHandled() throws Exception {
+        for (Method method : RepositoryListener.class.getMethods()) {
+            assertNotNull(
+                    ChainedRepositoryListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));
         }
     }
-
 }

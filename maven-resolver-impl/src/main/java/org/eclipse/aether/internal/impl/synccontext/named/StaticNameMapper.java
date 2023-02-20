@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,25 +29,20 @@ import org.eclipse.aether.metadata.Metadata;
  * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context:
  * always maps ANY input to same name.
  */
-public class StaticNameMapper implements NameMapper
-{
+public class StaticNameMapper implements NameMapper {
     @Override
-    public boolean isFileSystemFriendly()
-    {
+    public boolean isFileSystemFriendly() {
         return true;
     }
 
     @Override
-    public Collection<String> nameLocks( final RepositorySystemSession session,
-                                         final Collection<? extends Artifact> artifacts,
-                                         final Collection<? extends Metadata> metadatas )
-    {
-        if ( ( artifacts != null && !artifacts.isEmpty() ) || ( metadatas != null && !metadatas.isEmpty() ) )
-        {
-            return Collections.singletonList( "static" );
-        }
-        else
-        {
+    public Collection<String> nameLocks(
+            final RepositorySystemSession session,
+            final Collection<? extends Artifact> artifacts,
+            final Collection<? extends Metadata> metadatas) {
+        if ((artifacts != null && !artifacts.isEmpty()) || (metadatas != null && !metadatas.isEmpty())) {
+            return Collections.singletonList("static");
+        } else {
             return Collections.emptyList();
         }
     }

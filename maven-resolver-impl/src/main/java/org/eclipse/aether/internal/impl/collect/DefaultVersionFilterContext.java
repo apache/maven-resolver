@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.collect;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl.collect;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.collect;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.collect;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,9 +36,7 @@ import org.eclipse.aether.version.VersionConstraint;
  * Default implementation of {@link VersionFilter.VersionFilterContext}.
  * Internal helper class for collector implementations.
  */
-public final class DefaultVersionFilterContext
-    implements VersionFilter.VersionFilterContext
-{
+public final class DefaultVersionFilterContext implements VersionFilter.VersionFilterContext {
     private final RepositorySystemSession session;
 
     private Dependency dependency;
@@ -48,68 +45,57 @@ public final class DefaultVersionFilterContext
 
     private List<Version> versions;
 
-    public DefaultVersionFilterContext( RepositorySystemSession session )
-    {
+    public DefaultVersionFilterContext(RepositorySystemSession session) {
         this.session = session;
     }
 
-    public void set( Dependency dependency, VersionRangeResult result )
-    {
+    public void set(Dependency dependency, VersionRangeResult result) {
         this.dependency = dependency;
         this.result = result;
-        this.versions = new ArrayList<>( result.getVersions() );
+        this.versions = new ArrayList<>(result.getVersions());
     }
 
-    public List<Version> get()
-    {
-        return new ArrayList<>( versions );
+    public List<Version> get() {
+        return new ArrayList<>(versions);
     }
 
     @Override
-    public RepositorySystemSession getSession()
-    {
+    public RepositorySystemSession getSession() {
         return session;
     }
 
     @Override
-    public Dependency getDependency()
-    {
+    public Dependency getDependency() {
         return dependency;
     }
 
     @Override
-    public VersionConstraint getVersionConstraint()
-    {
+    public VersionConstraint getVersionConstraint() {
         return result.getVersionConstraint();
     }
 
     @Override
-    public int getCount()
-    {
+    public int getCount() {
         return versions.size();
     }
 
     @Override
-    public ArtifactRepository getRepository( Version version )
-    {
-        return result.getRepository( version );
+    public ArtifactRepository getRepository(Version version) {
+        return result.getRepository(version);
     }
 
     @Override
-    public List<RemoteRepository> getRepositories()
-    {
-        return Collections.unmodifiableList( result.getRequest().getRepositories() );
+    public List<RemoteRepository> getRepositories() {
+        return Collections.unmodifiableList(result.getRequest().getRepositories());
     }
 
     @Override
-    public Iterator<Version> iterator()
-    {
+    public Iterator<Version> iterator() {
         return versions.iterator();
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return dependency + " " + result.getVersions();
     }
 }

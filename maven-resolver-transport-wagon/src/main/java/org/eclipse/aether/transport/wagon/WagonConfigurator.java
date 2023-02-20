@@ -1,5 +1,3 @@
-package org.eclipse.aether.transport.wagon;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.transport.wagon;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,23 +16,21 @@ package org.eclipse.aether.transport.wagon;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.wagon;
 
 import org.apache.maven.wagon.Wagon;
 
 /**
  * A component to configure wagon instances with provider-specific parameters.
  */
-public interface WagonConfigurator
-{
+public interface WagonConfigurator {
 
     /**
      * Configures the specified wagon instance with the given configuration.
-     * 
+     *
      * @param wagon The wagon instance to configure, must not be {@code null}.
      * @param configuration The configuration to apply to the wagon instance, must not be {@code null}.
      * @throws Exception If the configuration could not be applied to the wagon.
      */
-    void configure( Wagon wagon, Object configuration )
-        throws Exception;
-
+    void configure(Wagon wagon, Object configuration) throws Exception;
 }

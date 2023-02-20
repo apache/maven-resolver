@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.version;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.version;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.graph.version;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.version;
 
 import java.util.Iterator;
 
@@ -29,52 +28,38 @@ import org.eclipse.aether.version.Version;
  * A version filter that (unconditionally) blocks "*-SNAPSHOT" versions. For practical purposes,
  * {@link ContextualSnapshotVersionFilter} is usually more desirable.
  */
-public final class SnapshotVersionFilter
-    implements VersionFilter
-{
+public final class SnapshotVersionFilter implements VersionFilter {
 
     /**
      * Creates a new instance of this version filter.
      */
-    public SnapshotVersionFilter()
-    {
-    }
+    public SnapshotVersionFilter() {}
 
-    public void filterVersions( VersionFilterContext context )
-    {
-        for ( Iterator<Version> it = context.iterator(); it.hasNext(); )
-        {
+    public void filterVersions(VersionFilterContext context) {
+        for (Iterator<Version> it = context.iterator(); it.hasNext(); ) {
             String version = it.next().toString();
-            if ( version.endsWith( "SNAPSHOT" ) )
-            {
+            if (version.endsWith("SNAPSHOT")) {
                 it.remove();
             }
         }
     }
 
-    public VersionFilter deriveChildFilter( DependencyCollectionContext context )
-    {
+    public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
         return this;
     }
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
-        }
-        else if ( null == obj || !getClass().equals( obj.getClass() ) )
-        {
+        } else if (null == obj || !getClass().equals(obj.getClass())) {
             return false;
         }
         return true;
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return getClass().hashCode();
     }
-
 }

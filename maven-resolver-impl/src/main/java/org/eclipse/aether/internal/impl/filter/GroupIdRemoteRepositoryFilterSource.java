@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.filter;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.filter;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.filter;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.filter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -71,11 +70,9 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 @Singleton
-@Named( GroupIdRemoteRepositoryFilterSource.NAME )
-public final class GroupIdRemoteRepositoryFilterSource
-        extends RemoteRepositoryFilterSourceSupport
-        implements ArtifactResolverPostProcessor
-{
+@Named(GroupIdRemoteRepositoryFilterSource.NAME)
+public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryFilterSourceSupport
+        implements ArtifactResolverPostProcessor {
     public static final String NAME = "groupId";
 
     private static final String CONF_NAME_RECORD = "record";
@@ -84,7 +81,7 @@ public final class GroupIdRemoteRepositoryFilterSource
 
     static final String GROUP_ID_FILE_SUFFIX = ".txt";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( GroupIdRemoteRepositoryFilterSource.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger(GroupIdRemoteRepositoryFilterSource.class);
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
@@ -95,46 +92,38 @@ public final class GroupIdRemoteRepositoryFilterSource
     private final AtomicBoolean onShutdownHandlerRegistered;
 
     @Inject
-    public GroupIdRemoteRepositoryFilterSource( RepositorySystemLifecycle repositorySystemLifecycle )
-    {
-        super( NAME );
-        this.repositorySystemLifecycle = requireNonNull( repositorySystemLifecycle );
+    public GroupIdRemoteRepositoryFilterSource(RepositorySystemLifecycle repositorySystemLifecycle) {
+        super(NAME);
+        this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.rules = new ConcurrentHashMap<>();
         this.changedRules = new ConcurrentHashMap<>();
-        this.onShutdownHandlerRegistered = new AtomicBoolean( false );
+        this.onShutdownHandlerRegistered = new AtomicBoolean(false);
     }
 
     @Override
-    public RemoteRepositoryFilter getRemoteRepositoryFilter( RepositorySystemSession session )
-    {
-        if ( isEnabled( session ) && !isRecord( session ) )
-        {
-            return new GroupIdFilter( session );
+    public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
+        if (isEnabled(session) && !isRecord(session)) {
+            return new GroupIdFilter(session);
         }
         return null;
     }
 
     @Override
-    public void postProcess( RepositorySystemSession session, List<ArtifactResult> artifactResults )
-    {
-        if ( isEnabled( session ) && isRecord( session ) )
-        {
-            if ( onShutdownHandlerRegistered.compareAndSet( false, true ) )
-            {
-                repositorySystemLifecycle.addOnSystemEndedHandler( this::saveRecordedLines );
+    public void postProcess(RepositorySystemSession session, List<ArtifactResult> artifactResults) {
+        if (isEnabled(session) && isRecord(session)) {
+            if (onShutdownHandlerRegistered.compareAndSet(false, true)) {
+                repositorySystemLifecycle.addOnSystemEndedHandler(this::saveRecordedLines);
             }
-            for ( ArtifactResult artifactResult : artifactResults )
-            {
-                if ( artifactResult.isResolved() && artifactResult.getRepository() instanceof RemoteRepository )
-                {
-                    Path filePath = filePath( getBasedir( session, false ),
-                            artifactResult.getRepository().getId() );
-                    boolean newGroupId =
-                            rules.computeIfAbsent( filePath, f -> Collections.synchronizedSet( new TreeSet<>() ) )
-                                    .add( artifactResult.getArtifact().getGroupId() );
-                    if ( newGroupId )
-                    {
-                        changedRules.put( filePath, Boolean.TRUE );
+            for (ArtifactResult artifactResult : artifactResults) {
+                if (artifactResult.isResolved() && artifactResult.getRepository() instanceof RemoteRepository) {
+                    Path filePath = filePath(
+                            getBasedir(session, false),
+                            artifactResult.getRepository().getId());
+                    boolean newGroupId = rules.computeIfAbsent(
+                                    filePath, f -> Collections.synchronizedSet(new TreeSet<>()))
+                            .add(artifactResult.getArtifact().getGroupId());
+                    if (newGroupId) {
+                        changedRules.put(filePath, Boolean.TRUE);
                     }
                 }
             }
@@ -144,49 +133,34 @@ public final class GroupIdRemoteRepositoryFilterSource
     /**
      * Returns the groupId path. The file and parents may not exist, this method merely calculate the path.
      */
-    private Path filePath( Path basedir, String remoteRepositoryId )
-    {
-        return basedir.resolve(
-                GROUP_ID_FILE_PREFIX + remoteRepositoryId + GROUP_ID_FILE_SUFFIX );
+    private Path filePath(Path basedir, String remoteRepositoryId) {
+        return basedir.resolve(GROUP_ID_FILE_PREFIX + remoteRepositoryId + GROUP_ID_FILE_SUFFIX);
     }
 
-    private Set<String> cacheRules( RepositorySystemSession session,
-                                    RemoteRepository remoteRepository )
-    {
-        Path filePath = filePath( getBasedir( session, false ), remoteRepository.getId() );
-        return rules.computeIfAbsent( filePath, r ->
-                {
-                    Set<String> rules = loadRepositoryRules( filePath );
-                    if ( rules != NOT_PRESENT )
-                    {
-                        LOGGER.info( "Loaded {} groupId for remote repository {}", rules.size(),
-                                remoteRepository.getId() );
-                    }
-                    return rules;
-                }
-        );
+    private Set<String> cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
+        Path filePath = filePath(getBasedir(session, false), remoteRepository.getId());
+        return rules.computeIfAbsent(filePath, r -> {
+            Set<String> rules = loadRepositoryRules(filePath);
+            if (rules != NOT_PRESENT) {
+                LOGGER.info("Loaded {} groupId for remote repository {}", rules.size(), remoteRepository.getId());
+            }
+            return rules;
+        });
     }
 
-    private Set<String> loadRepositoryRules( Path filePath )
-    {
-        if ( Files.isReadable( filePath ) )
-        {
-            try ( BufferedReader reader = Files.newBufferedReader( filePath, StandardCharsets.UTF_8 ) )
-            {
+    private Set<String> loadRepositoryRules(Path filePath) {
+        if (Files.isReadable(filePath)) {
+            try (BufferedReader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
                 TreeSet<String> result = new TreeSet<>();
                 String groupId;
-                while ( ( groupId = reader.readLine() ) != null )
-                {
-                    if ( !groupId.startsWith( "#" ) && !groupId.trim().isEmpty() )
-                    {
-                        result.add( groupId );
+                while ((groupId = reader.readLine()) != null) {
+                    if (!groupId.startsWith("#") && !groupId.trim().isEmpty()) {
+                        result.add(groupId);
                     }
                 }
-                return Collections.unmodifiableSet( result );
-            }
-            catch ( IOException e )
-            {
-                throw new UncheckedIOException( e );
+                return Collections.unmodifiableSet(result);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
         }
         return NOT_PRESENT;
@@ -194,95 +168,75 @@ public final class GroupIdRemoteRepositoryFilterSource
 
     private static final TreeSet<String> NOT_PRESENT = new TreeSet<>();
 
-    private class GroupIdFilter implements RemoteRepositoryFilter
-    {
+    private class GroupIdFilter implements RemoteRepositoryFilter {
         private final RepositorySystemSession session;
 
-        private GroupIdFilter( RepositorySystemSession session )
-        {
+        private GroupIdFilter(RepositorySystemSession session) {
             this.session = session;
         }
 
         @Override
-        public Result acceptArtifact( RemoteRepository remoteRepository, Artifact artifact )
-        {
-            return acceptGroupId( remoteRepository, artifact.getGroupId() );
+        public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
+            return acceptGroupId(remoteRepository, artifact.getGroupId());
         }
 
         @Override
-        public Result acceptMetadata( RemoteRepository remoteRepository, Metadata metadata )
-        {
-            return acceptGroupId( remoteRepository, metadata.getGroupId() );
+        public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
+            return acceptGroupId(remoteRepository, metadata.getGroupId());
         }
 
-        private Result acceptGroupId( RemoteRepository remoteRepository, String groupId )
-        {
-            Set<String> groupIds = cacheRules( session, remoteRepository );
-            if ( NOT_PRESENT == groupIds )
-            {
+        private Result acceptGroupId(RemoteRepository remoteRepository, String groupId) {
+            Set<String> groupIds = cacheRules(session, remoteRepository);
+            if (NOT_PRESENT == groupIds) {
                 return NOT_PRESENT_RESULT;
             }
 
-            if ( groupIds.contains( groupId ) )
-            {
-                return new SimpleResult( true,
-                        "G:" + groupId + " allowed from " + remoteRepository );
-            }
-            else
-            {
-                return new SimpleResult( false,
-                        "G:" + groupId + " NOT allowed from " + remoteRepository );
+            if (groupIds.contains(groupId)) {
+                return new SimpleResult(true, "G:" + groupId + " allowed from " + remoteRepository);
+            } else {
+                return new SimpleResult(false, "G:" + groupId + " NOT allowed from " + remoteRepository);
             }
         }
     }
 
-    private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT = new SimpleResult(
-            true, "GroupId file not present" );
+    private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT =
+            new SimpleResult(true, "GroupId file not present");
 
     /**
      * Returns {@code true} if given session is recording.
      */
-    private boolean isRecord( RepositorySystemSession session )
-    {
-        return ConfigUtils.getBoolean( session, false, configPropKey( CONF_NAME_RECORD ) );
+    private boolean isRecord(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_RECORD));
     }
 
     /**
      * On-close handler that saves recorded rules, if any.
      */
-    private void saveRecordedLines()
-    {
-        if ( changedRules.isEmpty() )
-        {
+    private void saveRecordedLines() {
+        if (changedRules.isEmpty()) {
             return;
         }
 
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for ( Map.Entry<Path, Set<String>> entry : rules.entrySet() )
-        {
+        for (Map.Entry<Path, Set<String>> entry : rules.entrySet()) {
             Path filePath = entry.getKey();
-            if ( changedRules.get( filePath ) != Boolean.TRUE )
-            {
+            if (changedRules.get(filePath) != Boolean.TRUE) {
                 continue;
             }
             Set<String> recordedLines = entry.getValue();
-            if ( !recordedLines.isEmpty() )
-            {
-                try
-                {
+            if (!recordedLines.isEmpty()) {
+                try {
                     TreeSet<String> result = new TreeSet<>();
-                    result.addAll( loadRepositoryRules( filePath ) );
-                    result.addAll( recordedLines );
+                    result.addAll(loadRepositoryRules(filePath));
+                    result.addAll(recordedLines);
 
-                    LOGGER.info( "Saving {} groupIds to '{}'", result.size(), filePath );
-                    FileUtils.writeFileWithBackup( filePath, p -> Files.write( p, result ) );
-                }
-                catch ( IOException e )
-                {
-                    exceptions.add( e );
+                    LOGGER.info("Saving {} groupIds to '{}'", result.size(), filePath);
+                    FileUtils.writeFileWithBackup(filePath, p -> Files.write(p, result));
+                } catch (IOException e) {
+                    exceptions.add(e);
                 }
             }
         }
-        MultiRuntimeException.mayThrow( "session save groupIds failure", exceptions );
+        MultiRuntimeException.mayThrow("session save groupIds failure", exceptions);
     }
 }

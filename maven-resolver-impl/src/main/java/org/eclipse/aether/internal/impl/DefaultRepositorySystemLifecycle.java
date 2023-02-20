@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,54 +36,42 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultRepositorySystemLifecycle
-        implements RepositorySystemLifecycle
-{
+public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecycle {
     private final AtomicBoolean shutdown;
 
     private final CopyOnWriteArrayList<Runnable> onSystemEndedHandlers;
 
     @Inject
-    public DefaultRepositorySystemLifecycle()
-    {
-        this.shutdown = new AtomicBoolean( false );
+    public DefaultRepositorySystemLifecycle() {
+        this.shutdown = new AtomicBoolean(false);
         this.onSystemEndedHandlers = new CopyOnWriteArrayList<>();
     }
 
     @Override
-    public void systemEnded()
-    {
-        if ( shutdown.compareAndSet( false, true ) )
-        {
+    public void systemEnded() {
+        if (shutdown.compareAndSet(false, true)) {
             final ArrayList<Exception> exceptions = new ArrayList<>();
-            for ( Runnable onCloseHandler : onSystemEndedHandlers )
-            {
-                try
-                {
+            for (Runnable onCloseHandler : onSystemEndedHandlers) {
+                try {
                     onCloseHandler.run();
-                }
-                catch ( Exception e )
-                {
-                    exceptions.add( e );
+                } catch (Exception e) {
+                    exceptions.add(e);
                 }
             }
-            MultiRuntimeException.mayThrow( "system on-close handler failures", exceptions );
+            MultiRuntimeException.mayThrow("system on-close handler failures", exceptions);
         }
     }
 
     @Override
-    public void addOnSystemEndedHandler( Runnable handler )
-    {
-        requireNonNull( handler, "handler cannot be null" );
+    public void addOnSystemEndedHandler(Runnable handler) {
+        requireNonNull(handler, "handler cannot be null");
         requireNotShutdown();
-        onSystemEndedHandlers.add( 0, handler );
+        onSystemEndedHandlers.add(0, handler);
     }
 
-    private void requireNotShutdown()
-    {
-        if ( shutdown.get() )
-        {
-            throw new IllegalStateException( "repository system is already shut down" );
+    private void requireNotShutdown() {
+        if (shutdown.get()) {
+            throw new IllegalStateException("repository system is already shut down");
         }
     }
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.named.hazelcast;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named.hazelcast;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.named.hazelcast;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.named.hazelcast;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,9 +35,7 @@ import static java.util.Objects.requireNonNull;
  * most the work to {@link HazelcastSemaphoreProvider} and this class just adapts the returned semaphore to named lock
  * and caches {@link ISemaphore} instances, as recommended by Hazelcast.
  */
-public class HazelcastSemaphoreNamedLockFactory
-        extends NamedLockFactorySupport
-{
+public class HazelcastSemaphoreNamedLockFactory extends NamedLockFactorySupport {
     protected final HazelcastInstance hazelcastInstance;
 
     protected final boolean manageHazelcast;
@@ -50,58 +47,47 @@ public class HazelcastSemaphoreNamedLockFactory
     public HazelcastSemaphoreNamedLockFactory(
             final HazelcastInstance hazelcastInstance,
             final boolean manageHazelcast,
-            final HazelcastSemaphoreProvider hazelcastSemaphoreProvider
-    )
-    {
-        this.hazelcastInstance = requireNonNull( hazelcastInstance );
+            final HazelcastSemaphoreProvider hazelcastSemaphoreProvider) {
+        this.hazelcastInstance = requireNonNull(hazelcastInstance);
         this.manageHazelcast = manageHazelcast;
-        this.hazelcastSemaphoreProvider = requireNonNull( hazelcastSemaphoreProvider );
+        this.hazelcastSemaphoreProvider = requireNonNull(hazelcastSemaphoreProvider);
         this.semaphores = new ConcurrentHashMap<>();
     }
 
     @Override
-    protected AdaptedSemaphoreNamedLock createLock( final String name )
-    {
-        ISemaphore semaphore = semaphores.computeIfAbsent( name,
-                k -> hazelcastSemaphoreProvider.acquireSemaphore( hazelcastInstance, name ) );
-        return new AdaptedSemaphoreNamedLock( name, this, new HazelcastSemaphore( semaphore ) );
+    protected AdaptedSemaphoreNamedLock createLock(final String name) {
+        ISemaphore semaphore = semaphores.computeIfAbsent(
+                name, k -> hazelcastSemaphoreProvider.acquireSemaphore(hazelcastInstance, name));
+        return new AdaptedSemaphoreNamedLock(name, this, new HazelcastSemaphore(semaphore));
     }
 
     @Override
-    protected void destroyLock( final String name )
-    {
-        hazelcastSemaphoreProvider.releaseSemaphore( hazelcastInstance, name, semaphores.remove( name ) );
+    protected void destroyLock(final String name) {
+        hazelcastSemaphoreProvider.releaseSemaphore(hazelcastInstance, name, semaphores.remove(name));
     }
 
     @Override
-    public void shutdown()
-    {
-        if ( manageHazelcast )
-        {
+    public void shutdown() {
+        if (manageHazelcast) {
             hazelcastInstance.shutdown();
         }
     }
 
-    private static final class HazelcastSemaphore implements AdaptedSemaphore
-    {
+    private static final class HazelcastSemaphore implements AdaptedSemaphore {
         private final ISemaphore semaphore;
 
-        private HazelcastSemaphore( final ISemaphore semaphore )
-        {
+        private HazelcastSemaphore(final ISemaphore semaphore) {
             this.semaphore = semaphore;
         }
 
         @Override
-        public boolean tryAcquire( final int perms, final long time, final TimeUnit unit )
-                throws InterruptedException
-        {
-            return semaphore.tryAcquire( perms, time, unit );
+        public boolean tryAcquire(final int perms, final long time, final TimeUnit unit) throws InterruptedException {
+            return semaphore.tryAcquire(perms, time, unit);
         }
 
         @Override
-        public void release( final int perms )
-        {
-            semaphore.release( perms );
+        public void release(final int perms) {
+            semaphore.release(perms);
         }
     }
 }

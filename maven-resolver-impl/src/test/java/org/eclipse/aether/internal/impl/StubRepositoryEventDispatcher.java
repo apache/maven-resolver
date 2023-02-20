@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
@@ -27,81 +26,75 @@ import static java.util.Objects.requireNonNull;
 
 /**
  */
-public class StubRepositoryEventDispatcher
-    implements RepositoryEventDispatcher
-{
+public class StubRepositoryEventDispatcher implements RepositoryEventDispatcher {
 
-    public void dispatch( RepositoryEvent event )
-    {
-        requireNonNull( event, "event cannot be null" );
+    public void dispatch(RepositoryEvent event) {
+        requireNonNull(event, "event cannot be null");
         RepositoryListener listener = event.getSession().getRepositoryListener();
-        if ( listener == null )
-        {
+        if (listener == null) {
             return;
         }
 
-        switch ( event.getType() )
-        {
+        switch (event.getType()) {
             case ARTIFACT_DEPLOYED:
-                listener.artifactDeployed( event );
+                listener.artifactDeployed(event);
                 break;
             case ARTIFACT_DEPLOYING:
-                listener.artifactDeploying( event );
+                listener.artifactDeploying(event);
                 break;
             case ARTIFACT_DESCRIPTOR_INVALID:
-                listener.artifactDescriptorInvalid( event );
+                listener.artifactDescriptorInvalid(event);
                 break;
             case ARTIFACT_DESCRIPTOR_MISSING:
-                listener.artifactDescriptorMissing( event );
+                listener.artifactDescriptorMissing(event);
                 break;
             case ARTIFACT_DOWNLOADED:
-                listener.artifactDownloaded( event );
+                listener.artifactDownloaded(event);
                 break;
             case ARTIFACT_DOWNLOADING:
-                listener.artifactDownloading( event );
+                listener.artifactDownloading(event);
                 break;
             case ARTIFACT_INSTALLED:
-                listener.artifactInstalled( event );
+                listener.artifactInstalled(event);
                 break;
             case ARTIFACT_INSTALLING:
-                listener.artifactInstalling( event );
+                listener.artifactInstalling(event);
                 break;
             case ARTIFACT_RESOLVED:
-                listener.artifactResolved( event );
+                listener.artifactResolved(event);
                 break;
             case ARTIFACT_RESOLVING:
-                listener.artifactResolving( event );
+                listener.artifactResolving(event);
                 break;
             case METADATA_DEPLOYED:
-                listener.metadataDeployed( event );
+                listener.metadataDeployed(event);
                 break;
             case METADATA_DEPLOYING:
-                listener.metadataDeploying( event );
+                listener.metadataDeploying(event);
                 break;
             case METADATA_DOWNLOADED:
-                listener.metadataDownloaded( event );
+                listener.metadataDownloaded(event);
                 break;
             case METADATA_DOWNLOADING:
-                listener.metadataDownloading( event );
+                listener.metadataDownloading(event);
                 break;
             case METADATA_INSTALLED:
-                listener.metadataInstalled( event );
+                listener.metadataInstalled(event);
                 break;
             case METADATA_INSTALLING:
-                listener.metadataInstalling( event );
+                listener.metadataInstalling(event);
                 break;
             case METADATA_INVALID:
-                listener.metadataInvalid( event );
+                listener.metadataInvalid(event);
                 break;
             case METADATA_RESOLVED:
-                listener.metadataResolved( event );
+                listener.metadataResolved(event);
                 break;
             case METADATA_RESOLVING:
-                listener.metadataResolving( event );
+                listener.metadataResolving(event);
                 break;
             default:
-                throw new IllegalStateException( "unknown repository event type " + event.getType() );
+                throw new IllegalStateException("unknown repository event type " + event.getType());
         }
     }
-
 }

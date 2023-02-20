@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.transformer;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.transformer;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,8 +16,7 @@ package org.eclipse.aether.util.graph.transformer;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+package org.eclipse.aether.util.graph.transformer;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,10 +30,11 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.After;
 import org.junit.Before;
 
+import static org.junit.Assert.*;
+
 /**
  */
-public abstract class AbstractDependencyGraphTransformerTest
-{
+public abstract class AbstractDependencyGraphTransformerTest {
 
     protected DependencyGraphTransformer transformer;
 
@@ -50,49 +48,38 @@ public abstract class AbstractDependencyGraphTransformerTest
 
     protected abstract DependencyGraphParser newParser();
 
-    protected DependencyNode transform( DependencyNode root )
-        throws Exception
-    {
-        context = TestUtils.newTransformationContext( session );
-        root = transformer.transformGraph( root, context );
-        assertNotNull( root );
+    protected DependencyNode transform(DependencyNode root) throws Exception {
+        context = TestUtils.newTransformationContext(session);
+        root = transformer.transformGraph(root, context);
+        assertNotNull(root);
         return root;
     }
 
-    protected DependencyNode parseResource( String resource, String... substitutions )
-        throws Exception
-    {
-        parser.setSubstitutions( substitutions );
-        return parser.parseResource( resource );
+    protected DependencyNode parseResource(String resource, String... substitutions) throws Exception {
+        parser.setSubstitutions(substitutions);
+        return parser.parseResource(resource);
     }
 
-    protected DependencyNode parseLiteral( String literal, String... substitutions )
-        throws Exception
-    {
-        parser.setSubstitutions( substitutions );
-        return parser.parseLiteral( literal );
+    protected DependencyNode parseLiteral(String literal, String... substitutions) throws Exception {
+        parser.setSubstitutions(substitutions);
+        return parser.parseLiteral(literal);
     }
 
-    protected List<DependencyNode> find( DependencyNode node, String id )
-    {
+    protected List<DependencyNode> find(DependencyNode node, String id) {
         LinkedList<DependencyNode> trail = new LinkedList<>();
-        find( trail, node, id );
+        find(trail, node, id);
         return trail;
     }
 
-    private boolean find( LinkedList<DependencyNode> trail, DependencyNode node, String id )
-    {
-        trail.addFirst( node );
+    private boolean find(LinkedList<DependencyNode> trail, DependencyNode node, String id) {
+        trail.addFirst(node);
 
-        if ( isMatch( node, id ) )
-        {
+        if (isMatch(node, id)) {
             return true;
         }
 
-        for ( DependencyNode child : node.getChildren() )
-        {
-            if ( find( trail, child, id ) )
-            {
+        for (DependencyNode child : node.getChildren()) {
+            if (find(trail, child, id)) {
                 return true;
             }
         }
@@ -102,30 +89,25 @@ public abstract class AbstractDependencyGraphTransformerTest
         return false;
     }
 
-    private boolean isMatch( DependencyNode node, String id )
-    {
-        if ( node.getDependency() == null )
-        {
+    private boolean isMatch(DependencyNode node, String id) {
+        if (node.getDependency() == null) {
             return false;
         }
-        return id.equals( node.getDependency().getArtifact().getArtifactId() );
+        return id.equals(node.getDependency().getArtifact().getArtifactId());
     }
 
     @Before
-    public void setUp()
-    {
+    public void setUp() {
         transformer = newTransformer();
         parser = newParser();
         session = new DefaultRepositorySystemSession();
     }
 
     @After
-    public void tearDown()
-    {
+    public void tearDown() {
         transformer = null;
         parser = null;
         session = null;
         context = null;
     }
-
 }

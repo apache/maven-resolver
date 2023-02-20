@@ -1,5 +1,3 @@
-package org.eclipse.aether.repository;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.repository;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,21 +16,20 @@ package org.eclipse.aether.repository;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.repository;
 
 /**
  * Selects authentication for a given remote repository.
- * 
+ *
  * @see org.eclipse.aether.RepositorySystemSession#getAuthenticationSelector()
  */
-public interface AuthenticationSelector
-{
+public interface AuthenticationSelector {
 
     /**
      * Selects authentication for the specified remote repository.
-     * 
+     *
      * @param repository The repository for which to select authentication, must not be {@code null}.
      * @return The selected authentication or {@code null} if none.
      */
-    Authentication getAuthentication( RemoteRepository repository );
-
+    Authentication getAuthentication(RemoteRepository repository);
 }

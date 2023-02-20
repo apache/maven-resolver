@@ -1,5 +1,3 @@
-package org.eclipse.aether.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.util;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,18 +32,15 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 1.9.0
  */
-public final class FileUtils
-{
-    private FileUtils()
-    {
+public final class FileUtils {
+    private FileUtils() {
         // hide constructor
     }
 
     /**
      * A temporary file, that is removed when closed.
      */
-    public interface TempFile extends Closeable
-    {
+    public interface TempFile extends Closeable {
         /**
          * Returns the path of the created temp file.
          */
@@ -54,8 +50,7 @@ public final class FileUtils
     /**
      * A collocated temporary file, that resides next to a "target" file, and is removed when closed.
      */
-    public interface CollocatedTempFile extends TempFile
-    {
+    public interface CollocatedTempFile extends TempFile {
         /**
          * Atomically moves temp file to target file it is collocated with.
          */
@@ -70,21 +65,17 @@ public final class FileUtils
      * This method uses {@link Files#createTempFile(String, String, java.nio.file.attribute.FileAttribute[])} to create
      * the temporary file on file system.
      */
-    public static TempFile newTempFile() throws IOException
-    {
-        Path tempFile = Files.createTempFile( "resolver", "tmp" );
-        return new TempFile()
-        {
+    public static TempFile newTempFile() throws IOException {
+        Path tempFile = Files.createTempFile("resolver", "tmp");
+        return new TempFile() {
             @Override
-            public Path getPath()
-            {
+            public Path getPath() {
                 return tempFile;
             }
 
             @Override
-            public void close() throws IOException
-            {
-                Files.deleteIfExists( tempFile );
+            public void close() throws IOException {
+                Files.deleteIfExists(tempFile);
             }
         };
     }
@@ -101,30 +92,25 @@ public final class FileUtils
      * This method uses {@link Path#resolve(String)} to create the temporary file path in passed in file parent
      * directory, but it does NOT create backing file on file system.
      */
-    public static CollocatedTempFile newTempFile( Path file ) throws IOException
-    {
-        Path parent = requireNonNull( file.getParent(), "file must have parent" );
-        Files.createDirectories( parent );
-        Path tempFile = parent.resolve( file.getFileName() + "."
-                + Long.toUnsignedString( ThreadLocalRandom.current().nextLong() ) + ".tmp" );
-        return new CollocatedTempFile()
-        {
+    public static CollocatedTempFile newTempFile(Path file) throws IOException {
+        Path parent = requireNonNull(file.getParent(), "file must have parent");
+        Files.createDirectories(parent);
+        Path tempFile = parent.resolve(file.getFileName() + "."
+                + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
+        return new CollocatedTempFile() {
             @Override
-            public Path getPath()
-            {
+            public Path getPath() {
                 return tempFile;
             }
 
             @Override
-            public void move() throws IOException
-            {
-                Files.move( tempFile, file, StandardCopyOption.ATOMIC_MOVE );
+            public void move() throws IOException {
+                Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
             }
 
             @Override
-            public void close() throws IOException
-            {
-                Files.deleteIfExists( tempFile );
+            public void close() throws IOException {
+                Files.deleteIfExists(tempFile);
             }
         };
     }
@@ -135,9 +121,8 @@ public final class FileUtils
      * should be used).
      */
     @FunctionalInterface
-    public interface FileWriter
-    {
-        void write( Path path ) throws IOException;
+    public interface FileWriter {
+        void write(Path path) throws IOException;
     }
 
     /**
@@ -147,9 +132,8 @@ public final class FileUtils
      * @param writer the writer that will accept a {@link Path} to write content to.
      * @throws IOException if at any step IO problem occurs.
      */
-    public static void writeFile( Path target, FileWriter writer ) throws IOException
-    {
-        writeFile( target, writer, false );
+    public static void writeFile(Path target, FileWriter writer) throws IOException {
+        writeFile(target, writer, false);
     }
 
     /**
@@ -159,9 +143,8 @@ public final class FileUtils
      * @param writer the writer that will accept a {@link Path} to write content to.
      * @throws IOException if at any step IO problem occurs.
      */
-    public static void writeFileWithBackup( Path target, FileWriter writer ) throws IOException
-    {
-        writeFile( target, writer, true );
+    public static void writeFileWithBackup(Path target, FileWriter writer) throws IOException {
+        writeFile(target, writer, true);
     }
 
     /**
@@ -175,19 +158,15 @@ public final class FileUtils
      *                 be created/overwritten.
      * @throws IOException if at any step IO problem occurs.
      */
-    private static void writeFile( Path target, FileWriter writer, boolean doBackup ) throws IOException
-    {
-        requireNonNull( target, "target is null" );
-        requireNonNull( writer, "writer is null" );
-        Path parent = requireNonNull( target.getParent(), "target must have parent" );
+    private static void writeFile(Path target, FileWriter writer, boolean doBackup) throws IOException {
+        requireNonNull(target, "target is null");
+        requireNonNull(writer, "writer is null");
+        Path parent = requireNonNull(target.getParent(), "target must have parent");
 
-        try ( CollocatedTempFile tempFile = newTempFile( target ) )
-        {
-            writer.write( tempFile.getPath() );
-            if ( doBackup && Files.isRegularFile( target ) )
-            {
-                Files.copy( target, parent.resolve( target.getFileName() + ".bak" ),
-                        StandardCopyOption.REPLACE_EXISTING );
+        try (CollocatedTempFile tempFile = newTempFile(target)) {
+            writer.write(tempFile.getPath());
+            if (doBackup && Files.isRegularFile(target)) {
+                Files.copy(target, parent.resolve(target.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
             }
             tempFile.move();
         }

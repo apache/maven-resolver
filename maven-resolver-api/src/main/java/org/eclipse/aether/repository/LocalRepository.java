@@ -1,5 +1,3 @@
-package org.eclipse.aether.repository;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.repository;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.repository;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.repository;
 
 import java.io.File;
 import java.util.Objects;
@@ -28,9 +27,7 @@ import java.util.Objects;
  * handled by a {@link LocalRepositoryManager} which is usually determined from the {@link #getContentType() type} of
  * the repository.
  */
-public final class LocalRepository
-    implements ArtifactRepository
-{
+public final class LocalRepository implements ArtifactRepository {
 
     private final File basedir;
 
@@ -38,91 +35,78 @@ public final class LocalRepository
 
     /**
      * Creates a new local repository with the specified base directory and unknown type.
-     * 
+     *
      * @param basedir The base directory of the repository, may be {@code null}.
      */
-    public LocalRepository( String basedir )
-    {
-        this( ( basedir != null ) ? new File( basedir ) : null, "" );
+    public LocalRepository(String basedir) {
+        this((basedir != null) ? new File(basedir) : null, "");
     }
 
     /**
      * Creates a new local repository with the specified base directory and unknown type.
-     * 
+     *
      * @param basedir The base directory of the repository, may be {@code null}.
      */
-    public LocalRepository( File basedir )
-    {
-        this( basedir, "" );
+    public LocalRepository(File basedir) {
+        this(basedir, "");
     }
 
     /**
      * Creates a new local repository with the specified properties.
-     * 
+     *
      * @param basedir The base directory of the repository, may be {@code null}.
      * @param type The type of the repository, may be {@code null}.
      */
-    public LocalRepository( File basedir, String type )
-    {
+    public LocalRepository(File basedir, String type) {
         this.basedir = basedir;
-        this.type = ( type != null ) ? type : "";
+        this.type = (type != null) ? type : "";
     }
 
-    public String getContentType()
-    {
+    public String getContentType() {
         return type;
     }
 
-    public String getId()
-    {
+    public String getId() {
         return "local";
     }
 
     /**
      * Gets the base directory of the repository.
-     * 
+     *
      * @return The base directory or {@code null} if none.
      */
-    public File getBasedir()
-    {
+    public File getBasedir() {
         return basedir;
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return getBasedir() + " (" + getContentType() + ")";
     }
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if ( obj == null || !getClass().equals( obj.getClass() ) )
-        {
+        if (obj == null || !getClass().equals(obj.getClass())) {
             return false;
         }
 
         LocalRepository that = (LocalRepository) obj;
 
-        return Objects.equals( basedir, that.basedir ) && Objects.equals( type, that.type );
+        return Objects.equals(basedir, that.basedir) && Objects.equals(type, that.type);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int hash = 17;
-        hash = hash * 31 + hash( basedir );
-        hash = hash * 31 + hash( type );
+        hash = hash * 31 + hash(basedir);
+        hash = hash * 31 + hash(type);
         return hash;
     }
 
-    private static int hash( Object obj )
-    {
+    private static int hash(Object obj) {
         return obj != null ? obj.hashCode() : 0;
     }
-
 }

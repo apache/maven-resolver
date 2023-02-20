@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.manager;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.manager;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.graph.manager;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.manager;
 
 import java.util.Collection;
 import java.util.Map;
@@ -28,8 +27,7 @@ import org.eclipse.aether.graph.Exclusion;
 /**
  * A utility class assisting in analyzing the effects of dependency management.
  */
-public final class DependencyManagerUtils
-{
+public final class DependencyManagerUtils {
 
     /**
      * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
@@ -82,13 +80,11 @@ public final class DependencyManagerUtils
      * @return The node's dependency version before dependency management or {@code null} if the version was not managed
      *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
-    public static String getPremanagedVersion( DependencyNode node )
-    {
-        if ( ( node.getManagedBits() & DependencyNode.MANAGED_VERSION ) == 0 )
-        {
+    public static String getPremanagedVersion(DependencyNode node) {
+        if ((node.getManagedBits() & DependencyNode.MANAGED_VERSION) == 0) {
             return null;
         }
-        return cast( node.getData().get( NODE_DATA_PREMANAGED_VERSION ), String.class );
+        return cast(node.getData().get(NODE_DATA_PREMANAGED_VERSION), String.class);
     }
 
     /**
@@ -99,13 +95,11 @@ public final class DependencyManagerUtils
      * @return The node's dependency scope before dependency management or {@code null} if the scope was not managed or
      *         if {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
-    public static String getPremanagedScope( DependencyNode node )
-    {
-        if ( ( node.getManagedBits() & DependencyNode.MANAGED_SCOPE ) == 0 )
-        {
+    public static String getPremanagedScope(DependencyNode node) {
+        if ((node.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
             return null;
         }
-        return cast( node.getData().get( NODE_DATA_PREMANAGED_SCOPE ), String.class );
+        return cast(node.getData().get(NODE_DATA_PREMANAGED_SCOPE), String.class);
     }
 
     /**
@@ -116,13 +110,11 @@ public final class DependencyManagerUtils
      * @return The node's optional flag before dependency management or {@code null} if the flag was not managed or if
      *         {@link #CONFIG_PROP_VERBOSE} was not enabled.
      */
-    public static Boolean getPremanagedOptional( DependencyNode node )
-    {
-        if ( ( node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL ) == 0 )
-        {
+    public static Boolean getPremanagedOptional(DependencyNode node) {
+        if ((node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
             return null;
         }
-        return cast( node.getData().get( NODE_DATA_PREMANAGED_OPTIONAL ), Boolean.class );
+        return cast(node.getData().get(NODE_DATA_PREMANAGED_OPTIONAL), Boolean.class);
     }
 
     /**
@@ -135,14 +127,12 @@ public final class DependencyManagerUtils
      *
      * @since 1.1.0
      */
-    @SuppressWarnings( "unchecked" )
-    public static Collection<Exclusion> getPremanagedExclusions( DependencyNode node )
-    {
-        if ( ( node.getManagedBits() & DependencyNode.MANAGED_EXCLUSIONS ) == 0 )
-        {
+    @SuppressWarnings("unchecked")
+    public static Collection<Exclusion> getPremanagedExclusions(DependencyNode node) {
+        if ((node.getManagedBits() & DependencyNode.MANAGED_EXCLUSIONS) == 0) {
             return null;
         }
-        return cast( node.getData().get( NODE_DATA_PREMANAGED_EXCLUSIONS ), Collection.class );
+        return cast(node.getData().get(NODE_DATA_PREMANAGED_EXCLUSIONS), Collection.class);
     }
 
     /**
@@ -155,19 +145,15 @@ public final class DependencyManagerUtils
      *
      * @since 1.1.0
      */
-    @SuppressWarnings( "unchecked" )
-    public static Map<String, String> getPremanagedProperties( DependencyNode node )
-    {
-        if ( ( node.getManagedBits() & DependencyNode.MANAGED_PROPERTIES ) == 0 )
-        {
+    @SuppressWarnings("unchecked")
+    public static Map<String, String> getPremanagedProperties(DependencyNode node) {
+        if ((node.getManagedBits() & DependencyNode.MANAGED_PROPERTIES) == 0) {
             return null;
         }
-        return cast( node.getData().get( NODE_DATA_PREMANAGED_PROPERTIES ), Map.class );
+        return cast(node.getData().get(NODE_DATA_PREMANAGED_PROPERTIES), Map.class);
     }
 
-    private static <T> T cast( Object obj, Class<T> type )
-    {
-        return type.isInstance( obj ) ? type.cast( obj ) : null;
+    private static <T> T cast(Object obj, Class<T> type) {
+        return type.isInstance(obj) ? type.cast(obj) : null;
     }
-
 }

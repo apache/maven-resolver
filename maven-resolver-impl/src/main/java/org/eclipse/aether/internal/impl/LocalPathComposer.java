@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -28,8 +27,7 @@ import org.eclipse.aether.metadata.Metadata;
  *
  * @since 1.8.1
  */
-public interface LocalPathComposer
-{
+public interface LocalPathComposer {
     /**
      * Gets the relative path for a locally installed (local=true) or remotely cached (local=false) artifact.
      *
@@ -37,7 +35,7 @@ public interface LocalPathComposer
      * @param local    {@code true} if artifact is locally installed or {@code false} if artifact is remotely cached.
      * @return A relative path representing artifact path.
      */
-    String getPathForArtifact( Artifact artifact, boolean local );
+    String getPathForArtifact(Artifact artifact, boolean local);
 
     /**
      * Gets the relative path for locally installed (repositoryKey=local) or remotely cached metadata. The
@@ -49,5 +47,5 @@ public interface LocalPathComposer
      * @param repositoryKey The repository key, never {@code null}.
      * @return A relative path representing metadata path.
      */
-    String getPathForMetadata( Metadata metadata, String repositoryKey );
+    String getPathForMetadata(Metadata metadata, String repositoryKey);
 }

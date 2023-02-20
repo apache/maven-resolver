@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -39,40 +38,33 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 1.9.0
  */
-public class BasedirNameMapper implements NameMapper
-{
+public class BasedirNameMapper implements NameMapper {
     private static final String CONFIG_PROP_LOCKS_DIR = "aether.syncContext.named.basedir.locksDir";
 
     private final NameMapper delegate;
 
-    public BasedirNameMapper( final NameMapper delegate )
-    {
-        this.delegate = requireNonNull( delegate );
+    public BasedirNameMapper(final NameMapper delegate) {
+        this.delegate = requireNonNull(delegate);
     }
 
     @Override
-    public boolean isFileSystemFriendly()
-    {
+    public boolean isFileSystemFriendly() {
         return delegate.isFileSystemFriendly();
     }
 
     @Override
-    public Collection<String> nameLocks( final RepositorySystemSession session,
-                                         final Collection<? extends Artifact> artifacts,
-                                         final Collection<? extends Metadata> metadatas )
-    {
-        try
-        {
-            final Path basedir = DirectoryUtils.resolveDirectory(
-                    session, ".locks", CONFIG_PROP_LOCKS_DIR, false );
+    public Collection<String> nameLocks(
+            final RepositorySystemSession session,
+            final Collection<? extends Artifact> artifacts,
+            final Collection<? extends Metadata> metadatas) {
+        try {
+            final Path basedir = DirectoryUtils.resolveDirectory(session, ".locks", CONFIG_PROP_LOCKS_DIR, false);
 
-            return delegate.nameLocks( session, artifacts, metadatas ).stream()
-                    .map( name -> basedir.resolve( name ).toAbsolutePath().toString() )
-                    .collect( Collectors.toList() );
-        }
-        catch ( IOException e )
-        {
-            throw new UncheckedIOException( e );
+            return delegate.nameLocks(session, artifacts, metadatas).stream()
+                    .map(name -> basedir.resolve(name).toAbsolutePath().toString())
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 }

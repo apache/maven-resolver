@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import java.util.List;
 
@@ -29,46 +28,38 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 
 import static java.util.Objects.requireNonNull;
 
-public class StubRemoteRepositoryManager
-    implements RemoteRepositoryManager
-{
+public class StubRemoteRepositoryManager implements RemoteRepositoryManager {
 
-    public StubRemoteRepositoryManager()
-    {
-    }
+    public StubRemoteRepositoryManager() {}
 
-    public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
-                                                         List<RemoteRepository> dominantRepositories,
-                                                         List<RemoteRepository> recessiveRepositories,
-                                                         boolean recessiveIsRaw )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( dominantRepositories, "dominantRepositories cannot be null" );
-        requireNonNull( recessiveRepositories, "recessiveRepositories cannot be null" );
+    public List<RemoteRepository> aggregateRepositories(
+            RepositorySystemSession session,
+            List<RemoteRepository> dominantRepositories,
+            List<RemoteRepository> recessiveRepositories,
+            boolean recessiveIsRaw) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(dominantRepositories, "dominantRepositories cannot be null");
+        requireNonNull(recessiveRepositories, "recessiveRepositories cannot be null");
         return dominantRepositories;
     }
 
-    public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
-                                       boolean snapshots )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
-        RepositoryPolicy policy = repository.getPolicy( snapshots );
+    public RepositoryPolicy getPolicy(
+            RepositorySystemSession session, RemoteRepository repository, boolean releases, boolean snapshots) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
+        RepositoryPolicy policy = repository.getPolicy(snapshots);
 
         String checksums = session.getChecksumPolicy();
-        if ( StringUtils.isEmpty( checksums ) )
-        {
+        if (StringUtils.isEmpty(checksums)) {
             checksums = policy.getChecksumPolicy();
         }
         String updates = session.getUpdatePolicy();
-        if ( StringUtils.isEmpty( updates ) )
-        {
+        if (StringUtils.isEmpty(updates)) {
             updates = policy.getUpdatePolicy();
         }
 
-        policy = new RepositoryPolicy( policy.isEnabled(), updates, checksums );
+        policy = new RepositoryPolicy(policy.isEnabled(), updates, checksums);
 
         return policy;
     }
-
 }

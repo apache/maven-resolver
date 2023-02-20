@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.log;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.log;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.log;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.log;
 
 /**
  * A simple logger to facilitate emission of diagnostic messages. In general, unrecoverable errors should be reported
@@ -27,8 +26,7 @@ package org.eclipse.aether.spi.log;
  * @deprecated Use SLF4J instead
  */
 @Deprecated
-public interface Logger
-{
+public interface Logger {
 
     /**
      * Indicates whether debug logging is enabled.
@@ -42,7 +40,7 @@ public interface Logger
      *
      * @param msg The message to log, must not be {@code null}.
      */
-    void debug( String msg );
+    void debug(String msg);
 
     /**
      * Emits the specified message along with a stack trace of the given exception.
@@ -50,7 +48,7 @@ public interface Logger
      * @param msg The message to log, must not be {@code null}.
      * @param error The exception to log, may be {@code null}.
      */
-    void debug( String msg, Throwable error );
+    void debug(String msg, Throwable error);
 
     /**
      * Indicates whether warn logging is enabled.
@@ -64,7 +62,7 @@ public interface Logger
      *
      * @param msg The message to log, must not be {@code null}.
      */
-    void warn( String msg );
+    void warn(String msg);
 
     /**
      * Emits the specified message along with a stack trace of the given exception.
@@ -72,6 +70,5 @@ public interface Logger
      * @param msg The message to log, must not be {@code null}.
      * @param error The exception to log, may be {@code null}.
      */
-    void warn( String msg, Throwable error );
-
+    void warn(String msg, Throwable error);
 }

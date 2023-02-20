@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.transformer;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.transformer;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,8 +16,7 @@ package org.eclipse.aether.util.graph.transformer;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+package org.eclipse.aether.util.graph.transformer;
 
 import java.util.List;
 
@@ -28,217 +25,186 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 /**
  */
-public class NearestVersionSelectorTest
-    extends AbstractDependencyGraphTransformerTest
-{
+public class NearestVersionSelectorTest extends AbstractDependencyGraphTransformerTest {
 
     @Override
-    protected ConflictResolver newTransformer()
-    {
-        return new ConflictResolver( new NearestVersionSelector(), new JavaScopeSelector(),
-                                     new SimpleOptionalitySelector(), new JavaScopeDeriver() );
+    protected ConflictResolver newTransformer() {
+        return new ConflictResolver(
+                new NearestVersionSelector(), new JavaScopeSelector(),
+                new SimpleOptionalitySelector(), new JavaScopeDeriver());
     }
 
     @Override
-    protected DependencyGraphParser newParser()
-    {
-        return new DependencyGraphParser( "transformer/version-resolver/" );
+    protected DependencyGraphParser newParser() {
+        return new DependencyGraphParser("transformer/version-resolver/");
     }
 
     @Test
-    public void testSelectHighestVersionFromMultipleVersionsAtSameLevel()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "sibling-versions.txt" );
-        assertSame( root, transform( root ) );
+    public void testSelectHighestVersionFromMultipleVersionsAtSameLevel() throws Exception {
+        DependencyNode root = parseResource("sibling-versions.txt");
+        assertSame(root, transform(root));
 
-        assertEquals( 1, root.getChildren().size() );
-        assertEquals( "3", root.getChildren().get( 0 ).getArtifact().getVersion() );
+        assertEquals(1, root.getChildren().size());
+        assertEquals("3", root.getChildren().get(0).getArtifact().getVersion());
     }
 
     @Test
-    public void testSelectedVersionAtDeeperLevelThanOriginallySeen()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "nearest-underneath-loser-a.txt" );
+    public void testSelectedVersionAtDeeperLevelThanOriginallySeen() throws Exception {
+        DependencyNode root = parseResource("nearest-underneath-loser-a.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        List<DependencyNode> trail = find( root, "j" );
-        assertEquals( 5, trail.size() );
+        List<DependencyNode> trail = find(root, "j");
+        assertEquals(5, trail.size());
     }
 
     @Test
-    public void testNearestDirtyVersionUnderneathRemovedNode()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "nearest-underneath-loser-b.txt" );
+    public void testNearestDirtyVersionUnderneathRemovedNode() throws Exception {
+        DependencyNode root = parseResource("nearest-underneath-loser-b.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        List<DependencyNode> trail = find( root, "j" );
-        assertEquals( 5, trail.size() );
+        List<DependencyNode> trail = find(root, "j");
+        assertEquals(5, trail.size());
     }
 
     @Test
-    public void testViolationOfHardConstraintFallsBackToNearestSeenNotFirstSeen()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "range-backtracking.txt" );
+    public void testViolationOfHardConstraintFallsBackToNearestSeenNotFirstSeen() throws Exception {
+        DependencyNode root = parseResource("range-backtracking.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        List<DependencyNode> trail = find( root, "x" );
-        assertEquals( 3, trail.size() );
-        assertEquals( "2", trail.get( 0 ).getArtifact().getVersion() );
+        List<DependencyNode> trail = find(root, "x");
+        assertEquals(3, trail.size());
+        assertEquals("2", trail.get(0).getArtifact().getVersion());
     }
 
     @Test
-    public void testCyclicConflictIdGraph()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "conflict-id-cycle.txt" );
+    public void testCyclicConflictIdGraph() throws Exception {
+        DependencyNode root = parseResource("conflict-id-cycle.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        assertEquals( 2, root.getChildren().size() );
-        assertEquals( "a", root.getChildren().get( 0 ).getArtifact().getArtifactId() );
-        assertEquals( "b", root.getChildren().get( 1 ).getArtifact().getArtifactId() );
-        assertTrue( root.getChildren().get( 0 ).getChildren().isEmpty() );
-        assertTrue( root.getChildren().get( 1 ).getChildren().isEmpty() );
+        assertEquals(2, root.getChildren().size());
+        assertEquals("a", root.getChildren().get(0).getArtifact().getArtifactId());
+        assertEquals("b", root.getChildren().get(1).getArtifact().getArtifactId());
+        assertTrue(root.getChildren().get(0).getChildren().isEmpty());
+        assertTrue(root.getChildren().get(1).getChildren().isEmpty());
     }
 
-    @Test( expected = UnsolvableVersionConflictException.class )
-    public void testUnsolvableRangeConflictBetweenHardConstraints()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "unsolvable.txt" );
+    @Test(expected = UnsolvableVersionConflictException.class)
+    public void testUnsolvableRangeConflictBetweenHardConstraints() throws Exception {
+        DependencyNode root = parseResource("unsolvable.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
     }
 
-    @Test( expected = UnsolvableVersionConflictException.class )
-    public void testUnsolvableRangeConflictWithUnrelatedCycle()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "unsolvable-with-cycle.txt" );
+    @Test(expected = UnsolvableVersionConflictException.class)
+    public void testUnsolvableRangeConflictWithUnrelatedCycle() throws Exception {
+        DependencyNode root = parseResource("unsolvable-with-cycle.txt");
 
-        transform( root );
+        transform(root);
     }
 
     @Test
-    public void testSolvableConflictBetweenHardConstraints()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "ranges.txt" );
+    public void testSolvableConflictBetweenHardConstraints() throws Exception {
+        DependencyNode root = parseResource("ranges.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
     }
 
     @Test
-    public void testConflictGroupCompletelyDroppedFromResolvedTree()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "dead-conflict-group.txt" );
+    public void testConflictGroupCompletelyDroppedFromResolvedTree() throws Exception {
+        DependencyNode root = parseResource("dead-conflict-group.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        assertEquals( 2, root.getChildren().size() );
-        assertEquals( "a", root.getChildren().get( 0 ).getArtifact().getArtifactId() );
-        assertEquals( "b", root.getChildren().get( 1 ).getArtifact().getArtifactId() );
-        assertTrue( root.getChildren().get( 0 ).getChildren().isEmpty() );
-        assertTrue( root.getChildren().get( 1 ).getChildren().isEmpty() );
+        assertEquals(2, root.getChildren().size());
+        assertEquals("a", root.getChildren().get(0).getArtifact().getArtifactId());
+        assertEquals("b", root.getChildren().get(1).getArtifact().getArtifactId());
+        assertTrue(root.getChildren().get(0).getChildren().isEmpty());
+        assertTrue(root.getChildren().get(1).getChildren().isEmpty());
     }
 
     @Test
-    public void testNearestSoftVersionPrunedByFartherRange()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "soft-vs-range.txt" );
+    public void testNearestSoftVersionPrunedByFartherRange() throws Exception {
+        DependencyNode root = parseResource("soft-vs-range.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        assertEquals( 2, root.getChildren().size() );
-        assertEquals( "a", root.getChildren().get( 0 ).getArtifact().getArtifactId() );
-        assertEquals( 0, root.getChildren().get( 0 ).getChildren().size() );
-        assertEquals( "b", root.getChildren().get( 1 ).getArtifact().getArtifactId() );
-        assertEquals( 1, root.getChildren().get( 1 ).getChildren().size() );
+        assertEquals(2, root.getChildren().size());
+        assertEquals("a", root.getChildren().get(0).getArtifact().getArtifactId());
+        assertEquals(0, root.getChildren().get(0).getChildren().size());
+        assertEquals("b", root.getChildren().get(1).getArtifact().getArtifactId());
+        assertEquals(1, root.getChildren().get(1).getChildren().size());
     }
 
     @Test
-    public void testCyclicGraph()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "cycle.txt" );
+    public void testCyclicGraph() throws Exception {
+        DependencyNode root = parseResource("cycle.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        assertEquals( 2, root.getChildren().size() );
-        assertEquals( 1, root.getChildren().get( 0 ).getChildren().size() );
-        assertEquals( 0, root.getChildren().get( 0 ).getChildren().get( 0 ).getChildren().size() );
-        assertEquals( 0, root.getChildren().get( 1 ).getChildren().size() );
+        assertEquals(2, root.getChildren().size());
+        assertEquals(1, root.getChildren().get(0).getChildren().size());
+        assertEquals(
+                0, root.getChildren().get(0).getChildren().get(0).getChildren().size());
+        assertEquals(0, root.getChildren().get(1).getChildren().size());
     }
 
     @Test
-    public void testLoop()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "loop.txt" );
+    public void testLoop() throws Exception {
+        DependencyNode root = parseResource("loop.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        assertEquals( 0, root.getChildren().size() );
+        assertEquals(0, root.getChildren().size());
     }
 
     @Test
-    public void testOverlappingCycles()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "overlapping-cycles.txt" );
+    public void testOverlappingCycles() throws Exception {
+        DependencyNode root = parseResource("overlapping-cycles.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        assertEquals( 2, root.getChildren().size() );
+        assertEquals(2, root.getChildren().size());
     }
 
     @Test
-    public void testScopeDerivationAndConflictResolutionCantHappenForAllNodesBeforeVersionSelection()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "scope-vs-version.txt" );
+    public void testScopeDerivationAndConflictResolutionCantHappenForAllNodesBeforeVersionSelection() throws Exception {
+        DependencyNode root = parseResource("scope-vs-version.txt");
 
-        assertSame( root, transform( root ) );
+        assertSame(root, transform(root));
 
-        DependencyNode[] nodes = find( root, "y" ).toArray( new DependencyNode[0] );
-        assertEquals( 3, nodes.length );
-        assertEquals( "test", nodes[1].getDependency().getScope() );
-        assertEquals( "test", nodes[0].getDependency().getScope() );
+        DependencyNode[] nodes = find(root, "y").toArray(new DependencyNode[0]);
+        assertEquals(3, nodes.length);
+        assertEquals("test", nodes[1].getDependency().getScope());
+        assertEquals("test", nodes[0].getDependency().getScope());
     }
 
     @Test
-    public void testVerboseMode()
-        throws Exception
-    {
-        DependencyNode root = parseResource( "verbose.txt" );
+    public void testVerboseMode() throws Exception {
+        DependencyNode root = parseResource("verbose.txt");
 
-        session.setConfigProperty( ConflictResolver.CONFIG_PROP_VERBOSE, Boolean.TRUE );
-        assertSame( root, transform( root ) );
+        session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, Boolean.TRUE);
+        assertSame(root, transform(root));
 
-        assertEquals( 2, root.getChildren().size() );
-        assertEquals( 1, root.getChildren().get( 0 ).getChildren().size() );
-        DependencyNode winner = root.getChildren().get( 0 ).getChildren().get( 0 );
-        assertEquals( "test", winner.getDependency().getScope() );
-        assertEquals( "compile", winner.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_SCOPE ) );
-        assertEquals( false, winner.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY) );
-        assertEquals( 1, root.getChildren().get( 1 ).getChildren().size() );
-        DependencyNode loser = root.getChildren().get( 1 ).getChildren().get( 0 );
-        assertEquals( "test", loser.getDependency().getScope() );
-        assertEquals( 0, loser.getChildren().size() );
-        assertSame( winner, loser.getData().get( ConflictResolver.NODE_DATA_WINNER ) );
-        assertEquals( "compile", loser.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_SCOPE ) );
-        assertEquals( false, loser.getData().get( ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY ) );
+        assertEquals(2, root.getChildren().size());
+        assertEquals(1, root.getChildren().get(0).getChildren().size());
+        DependencyNode winner = root.getChildren().get(0).getChildren().get(0);
+        assertEquals("test", winner.getDependency().getScope());
+        assertEquals("compile", winner.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_SCOPE));
+        assertEquals(false, winner.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY));
+        assertEquals(1, root.getChildren().get(1).getChildren().size());
+        DependencyNode loser = root.getChildren().get(1).getChildren().get(0);
+        assertEquals("test", loser.getDependency().getScope());
+        assertEquals(0, loser.getChildren().size());
+        assertSame(winner, loser.getData().get(ConflictResolver.NODE_DATA_WINNER));
+        assertEquals("compile", loser.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_SCOPE));
+        assertEquals(false, loser.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY));
     }
-
 }

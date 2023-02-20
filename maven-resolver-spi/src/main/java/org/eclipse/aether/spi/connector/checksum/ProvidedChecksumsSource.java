@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.connector.checksum;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.connector.checksum;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.connector.checksum;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.connector.checksum;
 
 import java.util.List;
 import java.util.Map;
@@ -31,8 +30,7 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
  *
  * @since 1.8.0
  */
-public interface ProvidedChecksumsSource
-{
+public interface ProvidedChecksumsSource {
     /**
      * May return the provided checksums (for given artifact transfer) from source other than remote repository, or
      * {@code null} if it have no checksums available for given transfer. Provided checksums are "opt-in" for
@@ -47,7 +45,8 @@ public interface ProvidedChecksumsSource
      * @param checksumAlgorithmFactories The checksum algorithms that are expected.
      * @return Map of expected checksums, or {@code null}.
      */
-    Map<String, String> getProvidedArtifactChecksums( RepositorySystemSession session,
-                                                      ArtifactDownload transfer,
-                                                      List<ChecksumAlgorithmFactory> checksumAlgorithmFactories );
+    Map<String, String> getProvidedArtifactChecksums(
+            RepositorySystemSession session,
+            ArtifactDownload transfer,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories);
 }

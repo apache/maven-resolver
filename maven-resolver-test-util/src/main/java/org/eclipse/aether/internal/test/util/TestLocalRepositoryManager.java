@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.test.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.test.util;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.test.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.test.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,9 +41,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A simplistic local repository manager that uses a temporary base directory.
  */
-public class TestLocalRepositoryManager
-    implements LocalRepositoryManager
-{
+public class TestLocalRepositoryManager implements LocalRepositoryManager {
 
     private LocalRepository localRepository;
 
@@ -54,26 +51,20 @@ public class TestLocalRepositoryManager
 
     private final Set<Metadata> metadataRegistrations = new HashSet<>();
 
-    public TestLocalRepositoryManager()
-    {
-        try
-        {
-            localRepository = new LocalRepository( TestFileUtils.createTempDir( "test-local-repo" ) );
-        }
-        catch ( IOException e )
-        {
-            throw new IllegalStateException( e );
+    public TestLocalRepositoryManager() {
+        try {
+            localRepository = new LocalRepository(TestFileUtils.createTempDir("test-local-repo"));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
     }
 
-    public LocalRepository getRepository()
-    {
+    public LocalRepository getRepository() {
         return localRepository;
     }
 
-    public String getPathForLocalArtifact( Artifact artifact )
-    {
-        requireNonNull( artifact, "artifact cannot be null" );
+    public String getPathForLocalArtifact(Artifact artifact) {
+        requireNonNull(artifact, "artifact cannot be null");
 
         String artifactId = artifact.getArtifactId();
         String groupId = artifact.getGroupId();
@@ -81,101 +72,88 @@ public class TestLocalRepositoryManager
         String version = artifact.getVersion();
         String classifier = artifact.getClassifier();
 
-        return String.format( "%s/%s/%s/%s-%s-%s%s.%s", groupId, artifactId, version, groupId, artifactId, version,
-                       classifier, extension );
+        return String.format(
+                "%s/%s/%s/%s-%s-%s%s.%s",
+                groupId, artifactId, version, groupId, artifactId, version, classifier, extension);
     }
 
-    public String getPathForRemoteArtifact( Artifact artifact, RemoteRepository repository, String context )
-    {
-        requireNonNull( artifact, "artifact cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
+    public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
+        requireNonNull(artifact, "artifact cannot be null");
+        requireNonNull(repository, "repository cannot be null");
 
-        return getPathForLocalArtifact( artifact );
+        return getPathForLocalArtifact(artifact);
     }
 
-    public String getPathForLocalMetadata( Metadata metadata )
-    {
-        requireNonNull( metadata, "metadata cannot be null" );
+    public String getPathForLocalMetadata(Metadata metadata) {
+        requireNonNull(metadata, "metadata cannot be null");
 
         String artifactId = metadata.getArtifactId();
         String groupId = metadata.getGroupId();
         String version = metadata.getVersion();
-        return String.format( "%s/%s/%s/%s-%s-%s.xml", groupId, artifactId, version, groupId, artifactId, version );
+        return String.format("%s/%s/%s/%s-%s-%s.xml", groupId, artifactId, version, groupId, artifactId, version);
     }
 
-    public String getPathForRemoteMetadata( Metadata metadata, RemoteRepository repository, String context )
-    {
-        requireNonNull( metadata, "metadata cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
+    public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
+        requireNonNull(metadata, "metadata cannot be null");
+        requireNonNull(repository, "repository cannot be null");
 
-        return getPathForLocalMetadata( metadata );
+        return getPathForLocalMetadata(metadata);
     }
 
-    public LocalArtifactResult find( RepositorySystemSession session, LocalArtifactRequest request )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( request, "request cannot be null" );
+    public LocalArtifactResult find(RepositorySystemSession session, LocalArtifactRequest request) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(request, "request cannot be null");
 
         Artifact artifact = request.getArtifact();
 
-        LocalArtifactResult result = new LocalArtifactResult( request );
-        File file = new File( localRepository.getBasedir(), getPathForLocalArtifact( artifact ) );
-        result.setFile( file.isFile() ? file : null );
-        result.setAvailable( file.isFile() && !unavailableArtifacts.contains( artifact ) );
+        LocalArtifactResult result = new LocalArtifactResult(request);
+        File file = new File(localRepository.getBasedir(), getPathForLocalArtifact(artifact));
+        result.setFile(file.isFile() ? file : null);
+        result.setAvailable(file.isFile() && !unavailableArtifacts.contains(artifact));
 
         return result;
     }
 
-    public void add( RepositorySystemSession session, LocalArtifactRegistration request )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( request, "request cannot be null" );
+    public void add(RepositorySystemSession session, LocalArtifactRegistration request) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(request, "request cannot be null");
 
-        artifactRegistrations.add( request.getArtifact() );
+        artifactRegistrations.add(request.getArtifact());
     }
 
-    public LocalMetadataResult find( RepositorySystemSession session, LocalMetadataRequest request )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( request, "request cannot be null" );
+    public LocalMetadataResult find(RepositorySystemSession session, LocalMetadataRequest request) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(request, "request cannot be null");
 
         Metadata metadata = request.getMetadata();
 
-        LocalMetadataResult result = new LocalMetadataResult( request );
-        File file = new File( localRepository.getBasedir(), getPathForLocalMetadata( metadata ) );
-        result.setFile( file.isFile() ? file : null );
+        LocalMetadataResult result = new LocalMetadataResult(request);
+        File file = new File(localRepository.getBasedir(), getPathForLocalMetadata(metadata));
+        result.setFile(file.isFile() ? file : null);
 
         return result;
     }
 
-    public void add( RepositorySystemSession session, LocalMetadataRegistration request )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( request, "request cannot be null" );
+    public void add(RepositorySystemSession session, LocalMetadataRegistration request) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(request, "request cannot be null");
 
-        metadataRegistrations.add( request.getMetadata() );
+        metadataRegistrations.add(request.getMetadata());
     }
 
-    public Set<Artifact> getArtifactRegistration()
-    {
+    public Set<Artifact> getArtifactRegistration() {
         return artifactRegistrations;
     }
 
-    public Set<Metadata> getMetadataRegistration()
-    {
+    public Set<Metadata> getMetadataRegistration() {
         return metadataRegistrations;
     }
 
-    public void setArtifactAvailability( Artifact artifact, boolean available )
-    {
-        if ( available )
-        {
-            unavailableArtifacts.remove( artifact );
-        }
-        else
-        {
-            unavailableArtifacts.add( artifact );
+    public void setArtifactAvailability(Artifact artifact, boolean available) {
+        if (available) {
+            unavailableArtifacts.remove(artifact);
+        } else {
+            unavailableArtifacts.add(artifact);
         }
     }
-
 }

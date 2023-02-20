@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.connector.layout;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.connector.layout;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,30 +16,29 @@ package org.eclipse.aether.spi.connector.layout;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.connector.layout;
 
 import java.net.URI;
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The layout for a remote repository whose artifacts/metadata can be addressed via URIs.
  * <p>
  * <strong>Note:</strong> Implementations must be stateless.
  */
-public interface RepositoryLayout
-{
+public interface RepositoryLayout {
 
     /**
      * A descriptor for a checksum location. This descriptor simply associates the location of a checksum file with the
      * underlying checksum algorithm used to calculate/verify it.
      */
-    final class ChecksumLocation
-    {
+    final class ChecksumLocation {
         private final URI location;
 
         private final ChecksumAlgorithmFactory checksumAlgorithmFactory;
@@ -54,9 +51,8 @@ public interface RepositoryLayout
          *                                 null}.
          * @param checksumAlgorithmFactory The checksum type used to calculate the checksum, must not be {@code null}.
          */
-        public ChecksumLocation( URI location, ChecksumAlgorithmFactory checksumAlgorithmFactory )
-        {
-            verify( location, checksumAlgorithmFactory );
+        public ChecksumLocation(URI location, ChecksumAlgorithmFactory checksumAlgorithmFactory) {
+            verify(location, checksumAlgorithmFactory);
             this.location = location;
             this.checksumAlgorithmFactory = checksumAlgorithmFactory;
         }
@@ -72,29 +68,24 @@ public interface RepositoryLayout
          * @param checksumAlgorithmFactory The algorithm used to calculate the checksum, must not be {@code null}.
          * @return The checksum file descriptor, never {@code null}.
          */
-        public static ChecksumLocation forLocation( URI location, ChecksumAlgorithmFactory checksumAlgorithmFactory )
-        {
-            verify( location, checksumAlgorithmFactory );
-            if ( location.getRawQuery() != null )
-            {
-                throw new IllegalArgumentException( "resource location must not have query parameters: " + location );
+        public static ChecksumLocation forLocation(URI location, ChecksumAlgorithmFactory checksumAlgorithmFactory) {
+            verify(location, checksumAlgorithmFactory);
+            if (location.getRawQuery() != null) {
+                throw new IllegalArgumentException("resource location must not have query parameters: " + location);
             }
-            if ( location.getRawFragment() != null )
-            {
-                throw new IllegalArgumentException( "resource location must not have a fragment: " + location );
+            if (location.getRawFragment() != null) {
+                throw new IllegalArgumentException("resource location must not have a fragment: " + location);
             }
-            return new ChecksumLocation( URI.create( location + "." + checksumAlgorithmFactory.getFileExtension() ),
-                    checksumAlgorithmFactory );
+            return new ChecksumLocation(
+                    URI.create(location + "." + checksumAlgorithmFactory.getFileExtension()), checksumAlgorithmFactory);
         }
 
-        private static void verify( URI location, ChecksumAlgorithmFactory checksumAlgorithmFactory )
-        {
-            requireNonNull( location, "checksum location cannot be null" );
-            if ( location.isAbsolute() )
-            {
-                throw new IllegalArgumentException( "checksum location must be relative" );
+        private static void verify(URI location, ChecksumAlgorithmFactory checksumAlgorithmFactory) {
+            requireNonNull(location, "checksum location cannot be null");
+            if (location.isAbsolute()) {
+                throw new IllegalArgumentException("checksum location must be relative");
             }
-            requireNonNull( checksumAlgorithmFactory, "checksum algorithm factory cannot be null" );
+            requireNonNull(checksumAlgorithmFactory, "checksum algorithm factory cannot be null");
         }
 
         /**
@@ -102,8 +93,7 @@ public interface RepositoryLayout
          *
          * @return The checksum factory, never {@code null}.
          */
-        public ChecksumAlgorithmFactory getChecksumAlgorithmFactory()
-        {
+        public ChecksumAlgorithmFactory getChecksumAlgorithmFactory() {
             return checksumAlgorithmFactory;
         }
 
@@ -113,14 +103,12 @@ public interface RepositoryLayout
          *
          * @return The relative URI to the checksum file, never {@code null}.
          */
-        public URI getLocation()
-        {
+        public URI getLocation() {
             return location;
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return location + " (" + checksumAlgorithmFactory.getName() + ")";
         }
     }
@@ -154,7 +142,7 @@ public interface RepositoryLayout
      * @see #getChecksumAlgorithmFactories()
      * @since 1.8.0
      */
-    boolean hasChecksums( Artifact artifact );
+    boolean hasChecksums(Artifact artifact);
 
     /**
      * Gets the location within a remote repository where the specified artifact resides. The URI is relative to the
@@ -165,7 +153,7 @@ public interface RepositoryLayout
      *                 uploaded.
      * @return The relative URI to the artifact, never {@code null}.
      */
-    URI getLocation( Artifact artifact, boolean upload );
+    URI getLocation(Artifact artifact, boolean upload);
 
     /**
      * Gets the location within a remote repository where the specified metadata resides. The URI is relative to the
@@ -176,7 +164,7 @@ public interface RepositoryLayout
      *                 uploaded.
      * @return The relative URI to the metadata, never {@code null}.
      */
-    URI getLocation( Metadata metadata, boolean upload );
+    URI getLocation(Metadata metadata, boolean upload);
 
     /**
      * Gets the checksums files that a remote repository keeps to help detect data corruption during transfers of the
@@ -190,7 +178,7 @@ public interface RepositoryLayout
      * @return The checksum files for the given artifact, possibly empty but never {@code null}. If empty, that means
      * that this layout does not provide checksums for given artifact.
      */
-    List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location );
+    List<ChecksumLocation> getChecksumLocations(Artifact artifact, boolean upload, URI location);
 
     /**
      * Gets the checksums files that a remote repository keeps to help detect data corruption during transfers of the
@@ -204,6 +192,5 @@ public interface RepositoryLayout
      * @return The checksum files for the given metadata, possibly empty but never {@code null}. If empty, that means
      * that this layout does not provide checksums for given artifact.
      */
-    List<ChecksumLocation> getChecksumLocations( Metadata metadata, boolean upload, URI location );
-
+    List<ChecksumLocation> getChecksumLocations(Metadata metadata, boolean upload, URI location);
 }

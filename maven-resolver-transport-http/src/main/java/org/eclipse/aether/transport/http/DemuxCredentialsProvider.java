@@ -1,5 +1,3 @@
-package org.eclipse.aether.transport.http;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.transport.http;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.transport.http;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.http;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -30,9 +29,7 @@ import org.apache.http.client.CredentialsProvider;
  * to redirects, we use an auth scope for server credentials that's not specific enough to not be mistaken for proxy
  * auth. This provider helps to maintain the proper isolation.
  */
-final class DemuxCredentialsProvider
-    implements CredentialsProvider
-{
+final class DemuxCredentialsProvider implements CredentialsProvider {
 
     private final CredentialsProvider serverCredentialsProvider;
 
@@ -40,40 +37,35 @@ final class DemuxCredentialsProvider
 
     private final HttpHost proxy;
 
-    DemuxCredentialsProvider( CredentialsProvider serverCredentialsProvider,
-                                     CredentialsProvider proxyCredentialsProvider, HttpHost proxy )
-    {
+    DemuxCredentialsProvider(
+            CredentialsProvider serverCredentialsProvider,
+            CredentialsProvider proxyCredentialsProvider,
+            HttpHost proxy) {
         this.serverCredentialsProvider = serverCredentialsProvider;
         this.proxyCredentialsProvider = proxyCredentialsProvider;
         this.proxy = proxy;
     }
 
-    private CredentialsProvider getDelegate( AuthScope authScope )
-    {
-        if ( proxy.getPort() == authScope.getPort() && proxy.getHostName().equalsIgnoreCase( authScope.getHost() ) )
-        {
+    private CredentialsProvider getDelegate(AuthScope authScope) {
+        if (proxy.getPort() == authScope.getPort() && proxy.getHostName().equalsIgnoreCase(authScope.getHost())) {
             return proxyCredentialsProvider;
         }
         return serverCredentialsProvider;
     }
 
     @Override
-    public Credentials getCredentials( AuthScope authScope )
-    {
-        return getDelegate( authScope ).getCredentials( authScope );
+    public Credentials getCredentials(AuthScope authScope) {
+        return getDelegate(authScope).getCredentials(authScope);
     }
 
     @Override
-    public void setCredentials( AuthScope authScope, Credentials credentials )
-    {
-        getDelegate( authScope ).setCredentials( authScope, credentials );
+    public void setCredentials(AuthScope authScope, Credentials credentials) {
+        getDelegate(authScope).setCredentials(authScope, credentials);
     }
 
     @Override
-    public void clear()
-    {
+    public void clear() {
         serverCredentialsProvider.clear();
         proxyCredentialsProvider.clear();
     }
-
 }

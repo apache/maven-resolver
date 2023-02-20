@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.checksum;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.checksum;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,54 +16,45 @@ package org.eclipse.aether.internal.impl.checksum;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.checksum;
+
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySupport;
 import org.eclipse.aether.util.ChecksumUtils;
 
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 /**
  * Support class to implement {@link ChecksumAlgorithmFactory} based on Java {@link MessageDigest}.
  *
  * @since 1.8.0
  */
-public abstract class MessageDigestChecksumAlgorithmFactorySupport
-        extends ChecksumAlgorithmFactorySupport
-{
-    public MessageDigestChecksumAlgorithmFactorySupport( String name, String extension )
-    {
-        super( name, extension );
+public abstract class MessageDigestChecksumAlgorithmFactorySupport extends ChecksumAlgorithmFactorySupport {
+    public MessageDigestChecksumAlgorithmFactorySupport(String name, String extension) {
+        super(name, extension);
     }
 
     @Override
-    public ChecksumAlgorithm getAlgorithm()
-    {
-        try
-        {
-            MessageDigest messageDigest = MessageDigest.getInstance( getName() );
-            return new ChecksumAlgorithm()
-            {
+    public ChecksumAlgorithm getAlgorithm() {
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance(getName());
+            return new ChecksumAlgorithm() {
                 @Override
-                public void update( final ByteBuffer input )
-                {
-                    messageDigest.update( input );
+                public void update(final ByteBuffer input) {
+                    messageDigest.update(input);
                 }
 
                 @Override
-                public String checksum()
-                {
-                    return ChecksumUtils.toHexString( messageDigest.digest() );
+                public String checksum() {
+                    return ChecksumUtils.toHexString(messageDigest.digest());
                 }
             };
-        }
-        catch ( NoSuchAlgorithmException e )
-        {
+        } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(
-                    "MessageDigest algorithm " + getName() + " not supported, but is required by resolver.", e );
+                    "MessageDigest algorithm " + getName() + " not supported, but is required by resolver.", e);
         }
     }
 }
