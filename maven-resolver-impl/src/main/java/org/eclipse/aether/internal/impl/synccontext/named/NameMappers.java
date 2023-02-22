@@ -54,6 +54,9 @@ public final class NameMappers {
         return new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
     }
 
+    /**
+     * @since 1.9.5
+     */
     public static NameMapper fileStaticNameMapper() {
         return new BasedirNameMapper(new StaticNameMapper());
     }
