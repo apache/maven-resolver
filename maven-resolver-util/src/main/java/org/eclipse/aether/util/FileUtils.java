@@ -20,10 +20,12 @@ package org.eclipse.aether.util;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
 
@@ -103,9 +105,14 @@ public final class FileUtils {
                 return tempFile;
             }
 
+            @SuppressWarnings("checkstyle:magicnumber")
             @Override
             public void move() throws IOException {
-                Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+                retry(
+                        3,
+                        50,
+                        () -> Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE),
+                        e -> e instanceof AccessDeniedException);
             }
 
             @Override
@@ -169,6 +176,52 @@ public final class FileUtils {
                 Files.copy(target, parent.resolve(target.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
             }
             tempFile.move();
+        }
+    }
+
+    // ==
+
+    @FunctionalInterface
+    private interface IORunnable {
+        void run() throws IOException;
+    }
+
+    /**
+     * Retries operation attempting max given times the passed in operation, sleeping given
+     * {@code sleepMills} between retries.
+     * <p>
+     * Just to clear things up: 5 attempts is really 4 retries (once do it and retry 4 times). 0 attempts means
+     * "do not even try it", and this method returns without doing anything.
+     * <p>
+     * This method is copied and simplified from {@code org.eclipse.aether.named.support.Retry} to not introduce
+     * inter module dependency between maven-resolver-util and maven-resolver-named-locks.
+     */
+    private static void retry(
+            final int attempts,
+            final long sleepMillis,
+            final IORunnable operation,
+            final Predicate<Exception> retryPredicate)
+            throws IOException {
+        int attempt = 0;
+        try {
+            while (attempt < attempts) {
+                attempt++;
+                try {
+                    operation.run();
+                    return;
+                } catch (IOException e) {
+                    if (retryPredicate != null && !retryPredicate.test(e)) {
+                        throw e;
+                    }
+                    if (attempt == attempts) {
+                        throw e;
+                    }
+                }
+                Thread.sleep(sleepMillis);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
         }
     }
 }

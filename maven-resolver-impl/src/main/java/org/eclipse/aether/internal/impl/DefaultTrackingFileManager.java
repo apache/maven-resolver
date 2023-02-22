@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
@@ -75,6 +76,8 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
             if (Files.isReadable(filePath)) {
                 try (InputStream stream = Files.newInputStream(filePath)) {
                     props.load(stream);
+                } catch (NoSuchFileException e) {
+                    // ignore
                 }
             }
 
