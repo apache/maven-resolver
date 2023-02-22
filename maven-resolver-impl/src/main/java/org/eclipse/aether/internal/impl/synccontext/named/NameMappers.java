@@ -34,6 +34,8 @@ public final class NameMappers {
 
     public static final String FILE_HGAV_NAME = "file-hgav";
 
+    public static final String FILE_STATIC_NAME = "file-static";
+
     public static final String DISCRIMINATING_NAME = "discriminating";
 
     public static NameMapper staticNameMapper() {
@@ -50,6 +52,10 @@ public final class NameMappers {
 
     public static NameMapper fileHashingGavNameMapper() {
         return new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
+    }
+
+    public static NameMapper fileStaticNameMapper() {
+        return new BasedirNameMapper(new StaticNameMapper());
     }
 
     public static NameMapper discriminatingNameMapper() {
