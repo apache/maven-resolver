@@ -28,7 +28,7 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 /**
  * The "file static" name mapper provider.
  *
- * @since 1.9.5
+ * @since 1.9.6
  */
 @Singleton
 @Named(NameMappers.FILE_STATIC_NAME)
