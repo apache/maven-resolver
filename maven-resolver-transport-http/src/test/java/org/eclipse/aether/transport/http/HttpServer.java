@@ -38,6 +38,7 @@ import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -108,6 +109,8 @@ public class HttpServer {
     private String proxyUsername;
 
     private String proxyPassword;
+
+    private int connectionsToClose = 0;
 
     private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<LogEntry>());
 
@@ -191,12 +194,18 @@ public class HttpServer {
         return this;
     }
 
+    public HttpServer setConnectionsToClose(int connectionsToClose) {
+        this.connectionsToClose = connectionsToClose;
+        return this;
+    }
+
     public HttpServer start() throws Exception {
         if (server != null) {
             return this;
         }
 
         HandlerList handlers = new HandlerList();
+        handlers.addHandler(new ConnectionClosingHandler());
         handlers.addHandler(new LogHandler());
         handlers.addHandler(new ProxyAuthHandler());
         handlers.addHandler(new AuthHandler());
@@ -218,6 +227,16 @@ public class HttpServer {
             server = null;
             httpConnector = null;
             httpsConnector = null;
+        }
+    }
+
+    private class ConnectionClosingHandler extends AbstractHandler {
+        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) throws IOException {
+            if (connectionsToClose > 0) {
+                connectionsToClose--;
+                Response jettyResponse = (Response) response;
+                jettyResponse.getHttpChannel().getConnection().close();
+            }
         }
     }
 

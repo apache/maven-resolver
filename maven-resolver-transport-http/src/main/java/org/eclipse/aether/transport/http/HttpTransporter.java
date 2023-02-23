@@ -67,6 +67,7 @@ import org.apache.http.impl.auth.KerberosSchemeFactory;
 import org.apache.http.impl.auth.NTLMSchemeFactory;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.ConfigurationProperties;
@@ -165,6 +166,11 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                 ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
                 ConfigurationProperties.REQUEST_TIMEOUT);
+        int retryCount = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_COUNT,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT);
         String userAgent = ConfigUtils.getString(
                 session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
 
@@ -187,10 +193,13 @@ final class HttpTransporter extends AbstractTransporter {
                 .setSocketTimeout(requestTimeout)
                 .build();
 
+        DefaultHttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(retryCount, false);
+
         this.client = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
+                .setRetryHandler(retryHandler)
                 .setDefaultAuthSchemeRegistry(authSchemeRegistry)
                 .setConnectionManager(state.getConnectionManager())
                 .setConnectionManagerShared(true)

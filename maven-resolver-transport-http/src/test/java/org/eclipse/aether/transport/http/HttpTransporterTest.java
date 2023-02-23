@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.pool.ConnPoolControl;
@@ -142,6 +143,39 @@ public class HttpTransporterTest {
     @Test
     public void testPeek() throws Exception {
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+    }
+
+    @Test
+    public void testRetryHandler_defaultCount_positive() throws Exception {
+        httpServer.setConnectionsToClose(3);
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+    }
+
+    @Test
+    public void testRetryHandler_defaultCount_negative() throws Exception {
+        httpServer.setConnectionsToClose(4);
+        try {
+            transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+            fail("Expected error");
+        } catch (NoHttpResponseException expected) { }
+    }
+
+    @Test
+    public void testRetryHandler_explicitCount_positive() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 10);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setConnectionsToClose(10);
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+    }
+
+    @Test
+    public void testRetryHandler_disabled() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 0);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setConnectionsToClose(1);
+        try {
+            transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+        } catch (NoHttpResponseException expected) { }
     }
 
     @Test

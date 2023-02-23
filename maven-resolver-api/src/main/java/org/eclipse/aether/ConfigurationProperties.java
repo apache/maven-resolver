@@ -130,6 +130,18 @@ public final class ConfigurationProperties {
     public static final String DEFAULT_HTTP_CREDENTIAL_ENCODING = "ISO-8859-1";
 
     /**
+     * The maximum number of times a request to a remote server should be retried in case of an error.
+     *
+     * @see #DEFAULT_HTTP_RETRY_HANDLER_COUNT
+     */
+    public static final String HTTP_RETRY_HANDLER_COUNT = PREFIX_CONNECTOR + "http.retryHandler.count";
+
+    /**
+     * The default number of retries to use if {@link #HTTP_RETRY_HANDLER_COUNT} isn't set.
+     */
+    public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
+
+    /**
      * A flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
      * local filesystem next to the file they provide the checksum for.
      *
