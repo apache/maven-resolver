@@ -31,6 +31,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -110,7 +111,7 @@ public class HttpServer {
 
     private String proxyPassword;
 
-    private int connectionsToClose = 0;
+    private final AtomicInteger connectionsToClose = new AtomicInteger(0);
 
     private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<LogEntry>());
 
@@ -195,7 +196,7 @@ public class HttpServer {
     }
 
     public HttpServer setConnectionsToClose(int connectionsToClose) {
-        this.connectionsToClose = connectionsToClose;
+        this.connectionsToClose.set(connectionsToClose);
         return this;
     }
 
@@ -232,8 +233,7 @@ public class HttpServer {
 
     private class ConnectionClosingHandler extends AbstractHandler {
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) throws IOException {
-            if (connectionsToClose > 0) {
-                connectionsToClose--;
+            if (connectionsToClose.getAndDecrement() > 0) {
                 Response jettyResponse = (Response) response;
                 jettyResponse.getHttpChannel().getConnection().close();
             }
