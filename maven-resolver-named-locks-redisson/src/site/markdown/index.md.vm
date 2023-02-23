@@ -52,8 +52,6 @@ ${esc.hash}${esc.hash} Installation/Testing
 #set( $snakeyamlVersion = "1.31" )
 
 - Create the directory `${maven.home}/lib/ext/redisson/`.
-- Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/redisson/*.jar`
-  right after the `${maven.conf}/logging` line.
 - Copy the following dependencies from Maven Central to `${maven.home}/lib/ext/redisson/`:
   <pre class="source">
   ├── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
