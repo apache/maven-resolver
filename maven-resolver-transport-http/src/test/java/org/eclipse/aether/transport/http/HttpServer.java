@@ -232,7 +232,7 @@ public class HttpServer {
     }
 
     private class ConnectionClosingHandler extends AbstractHandler {
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             if (connectionsToClose.getAndDecrement() > 0) {
                 Response jettyResponse = (Response) response;
                 jettyResponse.getHttpChannel().getConnection().close();

@@ -157,7 +157,8 @@ public class HttpTransporterTest {
         try {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));
             fail("Expected error");
-        } catch (NoHttpResponseException expected) { }
+        } catch (NoHttpResponseException expected) {
+        }
     }
 
     @Test
@@ -175,7 +176,8 @@ public class HttpTransporterTest {
         httpServer.setConnectionsToClose(1);
         try {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));
-        } catch (NoHttpResponseException expected) { }
+        } catch (NoHttpResponseException expected) {
+        }
     }
 
     @Test
