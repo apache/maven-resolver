@@ -33,8 +33,11 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLInitializationException;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.util.ConfigUtils;
@@ -153,6 +156,25 @@ final class GlobalState implements Closeable {
 
         if (sslConfig == null) {
             registryBuilder.register("https", SSLConnectionSocketFactory.getSystemSocketFactory());
+        } else if (sslConfig.insecure) {
+            try {
+                SSLSocketFactory sslSocketFactory = (sslConfig.context != null)
+                        ? sslConfig.context.getSocketFactory()
+                        : new SSLContextBuilder()
+                                .loadTrustMaterial(null, (chain, auth) -> true)
+                                .build()
+                                .getSocketFactory();
+
+                HostnameVerifier hostnameVerifier =
+                        (sslConfig.verifier != null) ? sslConfig.verifier : NoopHostnameVerifier.INSTANCE;
+
+                registryBuilder.register(
+                        "https",
+                        new SSLConnectionSocketFactory(
+                                sslSocketFactory, sslConfig.protocols, sslConfig.cipherSuites, hostnameVerifier));
+            } catch (Exception e) {
+                throw new SSLInitializationException("Could not configure 'insecure' SSL", e);
+            }
         } else {
             SSLSocketFactory sslSocketFactory = (sslConfig.context != null)
                     ? sslConfig.context.getSocketFactory()

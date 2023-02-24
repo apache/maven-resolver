@@ -396,6 +396,27 @@ public class HttpTransporterTest {
     }
 
     @Test
+    public void testGet_SelfSigned_SSL() throws Exception {
+        // client gets all the material removed (and later recreated)
+        System.clearProperty("javax.net.ssl.trustStore");
+        System.clearProperty("javax.net.ssl.trustStorePassword");
+        System.clearProperty("javax.net.ssl.keyStore");
+        System.clearProperty("javax.net.ssl.keyStorePassword");
+        session.setConfigProperty("aether.connector.http.ssl.insecure", true);
+        httpServer.addSelfSignedSslConnector();
+        newTransporter(httpServer.getHttpsUrl());
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        assertEquals(0L, listener.dataOffset);
+        assertEquals(4L, listener.dataLength);
+        assertEquals(1, listener.startedCount);
+        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    @Test
     public void testGet_WebDav() throws Exception {
         httpServer.setWebDav(true);
         RecordingTransportListener listener = new RecordingTransportListener();

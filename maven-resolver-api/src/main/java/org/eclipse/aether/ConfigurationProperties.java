@@ -145,6 +145,22 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
+     * The flag that makes HTTPS transport ignore any kind of SSL errors (certificate validity checks,
+     * hostname verification).
+     *
+     * @see #DEFAULT_HTTP_SSL_INSECURE
+     * @since 1.9.6
+     */
+    public static final String HTTP_SSL_INSECURE = PREFIX_CONNECTOR + "http.ssl.insecure";
+
+    /**
+     * The default value of SSL-insecure to use if {@link #HTTP_SSL_INSECURE} isn't set (false).
+     *
+     * @since 1.9.6
+     */
+    public static final boolean DEFAULT_HTTP_SSL_INSECURE = false;
+
+    /**
      * A flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
      * local filesystem next to the file they provide the checksum for.
      *
