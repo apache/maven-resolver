@@ -156,17 +156,23 @@ final class GlobalState implements Closeable {
 
         if (sslConfig == null) {
             registryBuilder.register("https", SSLConnectionSocketFactory.getSystemSocketFactory());
-        } else if (sslConfig.insecure) {
+        } else {
+            // config present: use provided, if any, or defaults (depending on insecure)
             try {
                 SSLSocketFactory sslSocketFactory = (sslConfig.context != null)
                         ? sslConfig.context.getSocketFactory()
-                        : new SSLContextBuilder()
-                                .loadTrustMaterial(null, (chain, auth) -> true)
-                                .build()
-                                .getSocketFactory();
+                        : sslConfig.insecure
+                                ? new SSLContextBuilder()
+                                        .loadTrustMaterial(null, (chain, auth) -> true)
+                                        .build()
+                                        .getSocketFactory()
+                                : (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-                HostnameVerifier hostnameVerifier =
-                        (sslConfig.verifier != null) ? sslConfig.verifier : NoopHostnameVerifier.INSTANCE;
+                HostnameVerifier hostnameVerifier = (sslConfig.verifier != null)
+                        ? sslConfig.verifier
+                        : sslConfig.insecure
+                                ? NoopHostnameVerifier.INSTANCE
+                                : SSLConnectionSocketFactory.getDefaultHostnameVerifier();
 
                 registryBuilder.register(
                         "https",
@@ -175,19 +181,6 @@ final class GlobalState implements Closeable {
             } catch (Exception e) {
                 throw new SSLInitializationException("Could not configure 'insecure' SSL", e);
             }
-        } else {
-            SSLSocketFactory sslSocketFactory = (sslConfig.context != null)
-                    ? sslConfig.context.getSocketFactory()
-                    : (SSLSocketFactory) SSLSocketFactory.getDefault();
-
-            HostnameVerifier hostnameVerifier = (sslConfig.verifier != null)
-                    ? sslConfig.verifier
-                    : SSLConnectionSocketFactory.getDefaultHostnameVerifier();
-
-            registryBuilder.register(
-                    "https",
-                    new SSLConnectionSocketFactory(
-                            sslSocketFactory, sslConfig.protocols, sslConfig.cipherSuites, hostnameVerifier));
         }
         PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(registryBuilder.build());
         connMgr.setMaxTotal(100);
