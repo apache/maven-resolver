@@ -133,11 +133,14 @@ public final class ConfigurationProperties {
      * The maximum number of times a request to a remote server should be retried in case of an error.
      *
      * @see #DEFAULT_HTTP_RETRY_HANDLER_COUNT
+     * @since 1.9.6
      */
     public static final String HTTP_RETRY_HANDLER_COUNT = PREFIX_CONNECTOR + "http.retryHandler.count";
 
     /**
      * The default number of retries to use if {@link #HTTP_RETRY_HANDLER_COUNT} isn't set.
+     *
+     * @since 1.9.6
      */
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
