@@ -26,7 +26,7 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 
 /**
- * The "static" name mapper provider.
+ * The "file-static" name mapper provider.
  *
  * @since 1.9.6
  */
