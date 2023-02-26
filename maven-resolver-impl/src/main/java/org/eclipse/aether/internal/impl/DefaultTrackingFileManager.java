@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
 
-import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +45,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     @Override
     public Properties read(File file) {
         Path filePath = file.toPath();
-        if (Files.isRegularFile(filePath)) {
+        if (Files.isReadable(filePath)) {
             try (InputStream stream = Files.newInputStream(filePath)) {
                 Properties props = new Properties();
                 props.load(stream);
@@ -86,15 +85,13 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 }
             }
 
-            FileUtils.writeFile(filePath, p -> {
-                try (OutputStream stream = Files.newOutputStream(p)) {
-                    LOGGER.debug("Writing tracking file '{}'", file);
-                    props.store(
-                            stream,
-                            "NOTE: This is a Maven Resolver internal implementation file"
-                                    + ", its format can be changed without prior notice.");
-                }
-            });
+            try (OutputStream stream = Files.newOutputStream(filePath)) {
+                LOGGER.debug("Writing tracking file '{}'", file);
+                props.store(
+                        stream,
+                        "NOTE: This is a Maven Resolver internal implementation file"
+                                + ", its format can be changed without prior notice.");
+            }
         } catch (IOException e) {
             LOGGER.warn("Failed to write tracking file '{}'", file, e);
             throw new UncheckedIOException(e);
