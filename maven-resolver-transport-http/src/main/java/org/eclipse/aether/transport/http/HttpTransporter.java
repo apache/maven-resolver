@@ -145,9 +145,9 @@ final class HttpTransporter extends AbstractTransporter {
 
         boolean sslInsecure = ConfigUtils.getBoolean(
                 session,
-                ConfigurationProperties.DEFAULT_HTTP_SSL_INSECURE,
-                ConfigurationProperties.HTTP_SSL_INSECURE + "." + repository.getId(),
-                ConfigurationProperties.HTTP_SSL_INSECURE);
+                ConfigurationProperties.DEFAULT_HTTPS_INSECURE,
+                ConfigurationProperties.HTTPS_INSECURE + "." + repository.getId(),
+                ConfigurationProperties.HTTPS_INSECURE);
         this.state = new LocalState(session, repository, new SslConfig(session, repoAuthContext, sslInsecure));
 
         this.headers = ConfigUtils.getMap(
