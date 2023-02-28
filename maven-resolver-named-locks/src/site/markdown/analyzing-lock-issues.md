@@ -28,7 +28,7 @@ Make sure that the following applies:
 - Bash or Bash-compatible installed
 - BSD or GNU userland installed
 - SQLite installed
-- At least Maven 4.0.0-alpha-1 and Maven Resolver 1.7.1 installed
+- At least Maven 3.9.0
 
 Prepare your environment:
 
