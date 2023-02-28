@@ -118,12 +118,7 @@ public class ArtifactResolutionException extends RepositoryException {
 
         Throwable cause = getCause(results);
         if (cause != null) {
-            if (unresolved == 1) {
-                buffer.setLength(0);
-                buffer.append(cause.getMessage());
-            } else {
-                buffer.append(": ").append(cause.getMessage());
-            }
+            buffer.append(": ").append(cause.getMessage());
         }
 
         return buffer.toString();
