@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 
@@ -96,9 +97,21 @@ public class ArtifactResolutionException extends RepositoryException {
         for (ArtifactResult result : results) {
             if (!result.isResolved()) {
                 unresolved++;
-
                 buffer.append(sep);
                 buffer.append(result.getRequest().getArtifact());
+                LocalArtifactResult localResult = result.getLocalArtifactResult();
+                if (localResult != null) {
+                    buffer.append(" (");
+                    if (localResult.getFile() != null) {
+                        buffer.append("present");
+                        if (!localResult.isAvailable()) {
+                            buffer.append(", but unavailable");
+                        }
+                    } else {
+                        buffer.append("absent");
+                    }
+                    buffer.append(")");
+                }
                 sep = ", ";
             }
         }
