@@ -384,7 +384,7 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
 
             if (local.getFile() != null) {
                 LOGGER.info(
-                        "Artifact {} is present in local repository, but cached from a repository ID that is unavailable in current build context, verifying that is downloadable from {}",
+                        "Artifact {} is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from {}",
                         artifact,
                         remoteRepositories);
             }
