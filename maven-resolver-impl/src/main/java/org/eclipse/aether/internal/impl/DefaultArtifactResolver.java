@@ -350,6 +350,7 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             LocalArtifactResult local = lrm.find(
                     session,
                     new LocalArtifactRequest(artifact, filteredRemoteRepositories, request.getRequestContext()));
+            result.setLocalArtifactResult(local);
             boolean found = (filter != null && local.isAvailable()) || isLocallyInstalled(local, versionResult);
             // with filtering it is availability that drives logic
             // without filtering it is simply presence of file that drives the logic
@@ -382,7 +383,10 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             }
 
             if (local.getFile() != null) {
-                LOGGER.debug("Verifying availability of {} from {}", local.getFile(), remoteRepositories);
+                LOGGER.info(
+                        "Artifact {} is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from {}",
+                        artifact,
+                        remoteRepositories);
             }
 
             LOGGER.debug("Resolving artifact {} from {}", artifact, remoteRepositories);
