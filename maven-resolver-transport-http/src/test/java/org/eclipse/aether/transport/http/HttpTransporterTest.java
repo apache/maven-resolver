@@ -397,11 +397,6 @@ public class HttpTransporterTest {
 
     @Test
     public void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
-        // client gets all the material removed (and later recreated)
-        System.clearProperty("javax.net.ssl.trustStore");
-        System.clearProperty("javax.net.ssl.trustStorePassword");
-        System.clearProperty("javax.net.ssl.keyStore");
-        System.clearProperty("javax.net.ssl.keyStorePassword");
         session.setConfigProperty("aether.connector.https.securityMode", "unknown");
         httpServer.addSelfSignedSslConnector();
         try {
