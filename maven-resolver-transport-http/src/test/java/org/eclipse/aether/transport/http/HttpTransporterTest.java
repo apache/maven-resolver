@@ -1058,6 +1058,34 @@ public class HttpTransporterTest {
     }
 
     @Test
+    public void testAuthSchemePreemptive() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        session.setCache(new DefaultRepositoryCache());
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_PREEMPTIVE_AUTH, false);
+        newTransporter(httpServer.getHttpUrl());
+        GetTask task = new GetTask(URI.create("repo/file.txt"));
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        // there ARE challenge round-trips
+        assertEquals(2, httpServer.getLogEntries().size());
+
+        httpServer.getLogEntries().clear();
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_PREEMPTIVE_AUTH, true);
+        newTransporter(httpServer.getHttpUrl());
+        task = new GetTask(URI.create("repo/file.txt"));
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        // there are NO challenge round-trips, all goes through at first
+        assertEquals(1, httpServer.getLogEntries().size());
+    }
+
+    @Test
     public void testConnectionReuse() throws Exception {
         httpServer.addSslConnector();
         session.setCache(new DefaultRepositoryCache());

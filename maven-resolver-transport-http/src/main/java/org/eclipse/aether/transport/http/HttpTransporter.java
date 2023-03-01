@@ -61,6 +61,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.BasicSchemeFactory;
 import org.apache.http.impl.auth.DigestSchemeFactory;
 import org.apache.http.impl.auth.KerberosSchemeFactory;
@@ -117,6 +118,8 @@ final class HttpTransporter extends AbstractTransporter {
 
     private final LocalState state;
 
+    private final boolean preemptiveAuth;
+
     HttpTransporter(
             Map<String, ChecksumExtractor> checksumExtractors,
             RemoteRepository repository,
@@ -156,6 +159,11 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
                 ConfigurationProperties.HTTP_HEADERS);
 
+        this.preemptiveAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
         String credentialEncoding = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
@@ -353,6 +361,9 @@ final class HttpTransporter extends AbstractTransporter {
     }
 
     private void prepare(HttpUriRequest request, SharingHttpContext context) {
+        if (preemptiveAuth) {
+            state.setAuthScheme(server, new BasicScheme());
+        }
         boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
             HttpOptions req = commonHeaders(new HttpOptions(request.getURI()));

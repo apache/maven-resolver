@@ -145,6 +145,21 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
+     * Should HTTP client use preemptive auth (w/ BASIC) or not?
+     *
+     * @see #DEFAULT_HTTP_PREEMPTIVE_AUTH
+     * @since 1.9.6
+     */
+    public static final String HTTP_PREEMPTIVE_AUTH = PREFIX_CONNECTOR + "http.preemptiveAuth";
+
+    /**
+     * The default value to use if {@link #HTTP_PREEMPTIVE_AUTH} isn't set (false).
+     *
+     * @since 1.9.6
+     */
+    public static final boolean DEFAULT_HTTP_PREEMPTIVE_AUTH = false;
+
+    /**
      * The flag that makes HTTPS transport ignore any kind of SSL errors (certificate validity checks,
      * hostname verification).
      *

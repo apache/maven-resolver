@@ -25,6 +25,7 @@ import java.util.List;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 
 import static java.util.Objects.requireNonNull;
@@ -44,6 +45,8 @@ public final class ArtifactResult {
     private Artifact artifact;
 
     private ArtifactRepository repository;
+
+    private LocalArtifactResult localArtifactResult;
 
     /**
      * Creates a new result for the specified request.
@@ -132,6 +135,26 @@ public final class ArtifactResult {
     public ArtifactResult setRepository(ArtifactRepository repository) {
         this.repository = repository;
         return this;
+    }
+
+    /**
+     * Gets the {@link LocalArtifactResult} received during artifact resolution.
+     *
+     * @return The {@link LocalArtifactResult} or {@code null}.
+     * @since 1.9.6
+     */
+    public LocalArtifactResult getLocalArtifactResult() {
+        return localArtifactResult;
+    }
+
+    /**
+     * Sets the {@link LocalArtifactResult} that is received during artifact resolution.
+     *
+     * @param localArtifactResult The local artifact result.
+     * @since 1.9.6
+     */
+    public void setLocalArtifactResult(LocalArtifactResult localArtifactResult) {
+        this.localArtifactResult = localArtifactResult;
     }
 
     /**
