@@ -146,12 +146,12 @@ final class HttpTransporter extends AbstractTransporter {
         this.repoAuthContext = AuthenticationContext.forRepository(session, repository);
         this.proxyAuthContext = AuthenticationContext.forProxy(session, repository);
 
-        boolean sslInsecure = ConfigUtils.getBoolean(
+        String httpsSecurityMode = ConfigUtils.getString(
                 session,
-                ConfigurationProperties.DEFAULT_HTTPS_INSECURE,
-                ConfigurationProperties.HTTPS_INSECURE + "." + repository.getId(),
-                ConfigurationProperties.HTTPS_INSECURE);
-        this.state = new LocalState(session, repository, new SslConfig(session, repoAuthContext, sslInsecure));
+                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
+                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
+                ConfigurationProperties.HTTPS_SECURITY_MODE);
+        this.state = new LocalState(session, repository, new SslConfig(session, repoAuthContext, httpsSecurityMode));
 
         this.headers = ConfigUtils.getMap(
                 session,

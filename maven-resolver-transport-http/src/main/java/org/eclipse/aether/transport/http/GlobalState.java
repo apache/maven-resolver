@@ -38,6 +38,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLInitializationException;
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.util.ConfigUtils;
@@ -158,30 +159,41 @@ final class GlobalState implements Closeable {
             registryBuilder.register("https", SSLConnectionSocketFactory.getSystemSocketFactory());
         } else {
             // config present: use provided, if any, or defaults (depending on insecure)
-            try {
-                SSLSocketFactory sslSocketFactory = (sslConfig.context != null)
-                        ? sslConfig.context.getSocketFactory()
-                        : sslConfig.insecure
-                                ? new SSLContextBuilder()
-                                        .loadTrustMaterial(null, (chain, auth) -> true)
-                                        .build()
-                                        .getSocketFactory()
-                                : (SSLSocketFactory) SSLSocketFactory.getDefault();
-
-                HostnameVerifier hostnameVerifier = (sslConfig.verifier != null)
-                        ? sslConfig.verifier
-                        : sslConfig.insecure
-                                ? NoopHostnameVerifier.INSTANCE
-                                : SSLConnectionSocketFactory.getDefaultHostnameVerifier();
-
-                registryBuilder.register(
-                        "https",
-                        new SSLConnectionSocketFactory(
-                                sslSocketFactory, sslConfig.protocols, sslConfig.cipherSuites, hostnameVerifier));
-            } catch (Exception e) {
-                throw new SSLInitializationException("Could not configure 'insecure' SSL", e);
+            SSLSocketFactory sslSocketFactory = sslConfig.context != null ? sslConfig.context.getSocketFactory() : null;
+            HostnameVerifier hostnameVerifier = sslConfig.verifier;
+            if (ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(sslConfig.httpsSecurityMode)) {
+                if (sslSocketFactory == null) {
+                    sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+                }
+                if (hostnameVerifier == null) {
+                    hostnameVerifier = SSLConnectionSocketFactory.getDefaultHostnameVerifier();
+                }
+            } else if (ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(sslConfig.httpsSecurityMode)) {
+                if (sslSocketFactory == null) {
+                    try {
+                        sslSocketFactory = new SSLContextBuilder()
+                                .loadTrustMaterial(null, (chain, auth) -> true)
+                                .build()
+                                .getSocketFactory();
+                    } catch (Exception e) {
+                        throw new SSLInitializationException(
+                                "Could not configure '" + sslConfig.httpsSecurityMode + "' HTTPS security mode", e);
+                    }
+                }
+                if (hostnameVerifier == null) {
+                    hostnameVerifier = NoopHostnameVerifier.INSTANCE;
+                }
+            } else {
+                throw new IllegalArgumentException(
+                        "Unsupported '" + sslConfig.httpsSecurityMode + "' HTTPS security mode.");
             }
+
+            registryBuilder.register(
+                    "https",
+                    new SSLConnectionSocketFactory(
+                            sslSocketFactory, sslConfig.protocols, sslConfig.cipherSuites, hostnameVerifier));
         }
+
         PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(registryBuilder.build());
         connMgr.setMaxTotal(100);
         connMgr.setDefaultMaxPerRoute(50);

@@ -45,9 +45,9 @@ final class SslConfig {
 
     final String[] protocols;
 
-    final boolean insecure;
+    final String httpsSecurityMode;
 
-    SslConfig(RepositorySystemSession session, AuthenticationContext authContext, boolean insecure) {
+    SslConfig(RepositorySystemSession session, AuthenticationContext authContext, String httpsSecurityMode) {
         context = (authContext != null) ? authContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class) : null;
         verifier = (authContext != null)
                 ? authContext.get(AuthenticationContext.SSL_HOSTNAME_VERIFIER, HostnameVerifier.class)
@@ -55,7 +55,7 @@ final class SslConfig {
 
         cipherSuites = split(get(session, CIPHER_SUITES));
         protocols = split(get(session, PROTOCOLS));
-        this.insecure = insecure;
+        this.httpsSecurityMode = httpsSecurityMode;
     }
 
     private static String get(RepositorySystemSession session, String key) {
