@@ -75,6 +75,7 @@ import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
+import org.eclipse.aether.transfer.RepositoryFilteredException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
@@ -308,7 +309,7 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                     RemoteRepositoryFilter.Result filterResult = filter.acceptArtifact(repository, artifact);
                     if (!filterResult.isAccepted()) {
                         result.addException(
-                                new ArtifactNotFoundException(artifact, repository, filterResult.reasoning()));
+                                new RepositoryFilteredException(artifact, repository, filterResult.reasoning()));
                         filteredRemoteRepositories.remove(repository);
                     }
                 }
