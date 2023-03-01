@@ -158,7 +158,7 @@ final class GlobalState implements Closeable {
         if (sslConfig == null) {
             registryBuilder.register("https", SSLConnectionSocketFactory.getSystemSocketFactory());
         } else {
-            // config present: use provided, if any, or defaults (depending on insecure)
+            // config present: use provided, if any, or create (depending on httpsSecurityMode)
             SSLSocketFactory sslSocketFactory = sslConfig.context != null ? sslConfig.context.getSocketFactory() : null;
             HostnameVerifier hostnameVerifier = sslConfig.verifier;
             if (ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(sslConfig.httpsSecurityMode)) {
