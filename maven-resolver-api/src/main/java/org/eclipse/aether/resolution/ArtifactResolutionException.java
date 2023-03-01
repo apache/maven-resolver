@@ -91,12 +91,9 @@ public class ArtifactResolutionException extends RepositoryException {
 
         buffer.append("The following artifacts could not be resolved: ");
 
-        int unresolved = 0;
-
         String sep = "";
         for (ArtifactResult result : results) {
             if (!result.isResolved()) {
-                unresolved++;
                 buffer.append(sep);
                 buffer.append(result.getRequest().getArtifact());
                 LocalArtifactResult localResult = result.getLocalArtifactResult();
