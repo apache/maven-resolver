@@ -146,11 +146,17 @@ public class HttpServer {
     private HttpServer addSslConnector(boolean needClientAuth) {
         if (httpsConnector == null) {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
-            ssl.setNeedClientAuth(needClientAuth);
-            ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store").getAbsolutePath());
-            ssl.setKeyStorePassword("server-pwd");
-            ssl.setTrustStorePath(new File("src/test/resources/ssl/client-store").getAbsolutePath());
-            ssl.setTrustStorePassword("client-pwd");
+            if (needClientAuth) {
+                ssl.setNeedClientAuth(true);
+                ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store").getAbsolutePath());
+                ssl.setKeyStorePassword("server-pwd");
+                ssl.setTrustStorePath(new File("src/test/resources/ssl/client-store").getAbsolutePath());
+                ssl.setTrustStorePassword("client-pwd");
+            } else {
+                ssl.setNeedClientAuth(false);
+                ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store-selfsigned").getAbsolutePath());
+                ssl.setKeyStorePassword("server-pwd");
+            }
             httpsConnector = new ServerConnector(server, ssl);
             server.addConnector(httpsConnector);
             try {

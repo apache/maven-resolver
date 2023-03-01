@@ -396,13 +396,28 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_SelfSigned_SSL() throws Exception {
+    public void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
         // client gets all the material removed (and later recreated)
         System.clearProperty("javax.net.ssl.trustStore");
         System.clearProperty("javax.net.ssl.trustStorePassword");
         System.clearProperty("javax.net.ssl.keyStore");
         System.clearProperty("javax.net.ssl.keyStorePassword");
-        session.setConfigProperty("aether.connector.http.ssl.insecure", true);
+        session.setConfigProperty("aether.connector.https.securityMode", "unknown");
+        httpServer.addSelfSignedSslConnector();
+        try {
+            newTransporter(httpServer.getHttpsUrl());
+            fail("Unsupported security mode");
+        } catch (IllegalArgumentException a) {
+            // good
+        }
+    }
+
+    @Test
+    public void testGet_HTTPS_Insecure_SecurityMode() throws Exception {
+        // here we use alternate server-store-selfigned key (as the key set it static initalizer is probably already
+        // used to init SSLContext/SSLSocketFactory/etc
+        session.setConfigProperty(
+                "aether.connector.https.securityMode", ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
         httpServer.addSelfSignedSslConnector();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
