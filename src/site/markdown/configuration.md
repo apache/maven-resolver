@@ -40,7 +40,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.http.preemptiveAuth` | boolean | Should HTTP client use preemptive-authentication (works only w/ BASIC) or not. | `false` | yes
 `aether.connector.http.retryHandler.count` | int | The maximum number of times a request to a remote HTTP server should be retried in case of an error. | `3` | yes
 `aether.connector.https.cipherSuites` | String | Comma-separated list of [Cipher Suites](https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#ciphersuites) which are enabled for HTTPS connections. | - (no restriction) | no
-`aether.connector.https.insecure` | boolean | Using this flag resolver will ignore any kind of certificate validation errors and hostname validation. | `false` | yes
+`aether.connector.https.insecure` | boolean | Using this flag resolver will ignore any kind of certificate validation errors and hostname validation. This mode is NOT MEANT for production, as it is inherently not secure. | `false` | yes
 `aether.connector.https.protocols` | String | Comma-separated list of [Protocols](https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#jssenames) which are enabled for HTTPS connections. | - (no restriction) | no
 `aether.connector.perms.fileMode` | String | [Octal numerical notation of permissions](https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation) to set for newly created files. Only considered by certain Wagon providers. | - | no
 `aether.connector.perms.dirMode` | String | [Octal numerical notation of permissions](https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation) to set for newly created directories. Only considered by certain Wagon providers. | - | no
