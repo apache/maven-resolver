@@ -160,6 +160,30 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_HTTP_PREEMPTIVE_AUTH = false;
 
     /**
+     * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
+     * hostname verification). The default value is {@link #HTTPS_SECURITY_MODE_DEFAULT}.
+     *
+     * @see #HTTPS_SECURITY_MODE_DEFAULT
+     * @see #HTTPS_SECURITY_MODE_INSECURE
+     * @since 1.9.6
+     */
+    public static final String HTTPS_SECURITY_MODE = PREFIX_CONNECTOR + "https.securityMode";
+
+    /**
+     * The default HTTPS security mode.
+     *
+     * @since 1.9.6
+     */
+    public static final String HTTPS_SECURITY_MODE_DEFAULT = "default";
+
+    /**
+     * The insecure HTTPS security mode (certificate validation, hostname verification are all ignored).
+     *
+     * @since 1.9.6
+     */
+    public static final String HTTPS_SECURITY_MODE_INSECURE = "insecure";
+
+    /**
      * A flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
      * local filesystem next to the file they provide the checksum for.
      *

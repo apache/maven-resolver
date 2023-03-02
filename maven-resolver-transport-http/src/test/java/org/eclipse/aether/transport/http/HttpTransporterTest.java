@@ -396,6 +396,37 @@ public class HttpTransporterTest {
     }
 
     @Test
+    public void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
+        session.setConfigProperty("aether.connector.https.securityMode", "unknown");
+        httpServer.addSelfSignedSslConnector();
+        try {
+            newTransporter(httpServer.getHttpsUrl());
+            fail("Unsupported security mode");
+        } catch (IllegalArgumentException a) {
+            // good
+        }
+    }
+
+    @Test
+    public void testGet_HTTPS_Insecure_SecurityMode() throws Exception {
+        // here we use alternate server-store-selfigned key (as the key set it static initalizer is probably already
+        // used to init SSLContext/SSLSocketFactory/etc
+        session.setConfigProperty(
+                "aether.connector.https.securityMode", ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
+        httpServer.addSelfSignedSslConnector();
+        newTransporter(httpServer.getHttpsUrl());
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        assertEquals(0L, listener.dataOffset);
+        assertEquals(4L, listener.dataLength);
+        assertEquals(1, listener.startedCount);
+        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    @Test
     public void testGet_WebDav() throws Exception {
         httpServer.setWebDav(true);
         RecordingTransportListener listener = new RecordingTransportListener();
