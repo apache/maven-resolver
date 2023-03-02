@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.repository.LocalArtifactResult;
+import org.eclipse.aether.transfer.ArtifactFilteredOutException;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
-import org.eclipse.aether.transfer.RepositoryFilteredException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 
 /**
@@ -128,7 +128,7 @@ public class ArtifactResolutionException extends RepositoryException {
                 Throwable notFound = null, offline = null;
                 for (Throwable t : result.getExceptions()) {
                     if (t instanceof ArtifactNotFoundException) {
-                        if (notFound == null || notFound instanceof RepositoryFilteredException) {
+                        if (notFound == null || notFound instanceof ArtifactFilteredOutException) {
                             notFound = t;
                         }
                         if (offline == null && t.getCause() instanceof RepositoryOfflineException) {

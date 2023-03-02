@@ -26,7 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  *
  * @since 1.9.6
  */
-public class RepositoryFilteredException extends ArtifactNotFoundException {
+public class ArtifactFilteredOutException extends ArtifactNotFoundException {
 
     /**
      * Creates a new exception with the specified artifact, repository and detail message.
@@ -35,7 +35,7 @@ public class RepositoryFilteredException extends ArtifactNotFoundException {
      * @param repository The involved remote repository, may be {@code null}.
      * @param message The detail message, may be {@code null}.
      */
-    public RepositoryFilteredException(Artifact artifact, RemoteRepository repository, String message) {
+    public ArtifactFilteredOutException(Artifact artifact, RemoteRepository repository, String message) {
         super(artifact, repository, message);
     }
 }
