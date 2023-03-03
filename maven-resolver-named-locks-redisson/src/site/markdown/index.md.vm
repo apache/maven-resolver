@@ -25,24 +25,20 @@ Redisson distributed objects feature.
 Out of the box "redisson" (distributed) named lock implementations are the following:
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`
-  that uses Redisson backed `org.redisson.api.RReadWriteLock`.
+  that uses Redisson-backed `org.redisson.api.RReadWriteLock`.
 - `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`
-  that uses Redisson backed `org.redisson.api.RSemaphore`.
+  that uses Redisson-backed `org.redisson.api.RSemaphore`.
 
 ${esc.hash}${esc.hash} Open Issues/Notes
 
-- Usage from plugins has not been tested yet.
-- The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
-  of dependency injection.
+- Usage from plugins and extensions hasn't been fully tested yet.
 
 ${esc.hash}${esc.hash} Open Issues/Notes for Maven Resolver integrators
 
 To use this implementation within your project, depending on how you integrate, you have following options:
 - If you use Sisu DI, then all you need is to provide this module (and its dependencies) on classpath and you are done.
 - If you use Guice, you need to add this module (and its dependencies) upfront, and bind them explicitly.
-- If you use ServiceLocator, be aware it is deprecated, and you should move away from it. In this case, simplest is
-  to roll your own "bootstrap" class that does pretty much same thing as ServiceLocator was, and extend it to
-  instantiate these components as well.
+- If you use ServiceLocator, this module will not work.
 
 ${esc.hash}${esc.hash} Installation/Testing
 
@@ -72,4 +68,5 @@ ${esc.hash}${esc.hash} Installation/Testing
   ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/${nettyVersion}/netty-transport-${nettyVersion}.jar">netty-transport-${nettyVersion}.jar</a>
   └── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/${snakeyamlVersion}/snakeyaml-${snakeyamlVersion}.jar">snakeyaml-${snakeyamlVersion}.jar</a></pre>
 - Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
-- Now start a multithreaded Maven build on your project.
+- Now start a multithreaded Maven build or multiple builds (e.g., CI server) on your project.
+

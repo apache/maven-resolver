@@ -20,7 +20,7 @@ under the License.
 
 Since version 1.7.0, Maven Resolver requires Java 8 to run and a brand new default sync context
 factory has been implemented. Both are not compatible with Maven 3.8.x anymore which still requires
-Java 7 to run. Maven 3.8.x will continue to use version 1.6.x which you will find
+Java 7 to run. Maven 3.8.x will continue to use version 1.6.x which you can find
 [here](/resolver-archives/resolver-1.6.3/).
 This also means that you cannot make use of the features provided by version 1.7.0 and later.
 If you require the changes from this version, but must use Maven 3.8.x, you can build yourself an adapted version
