@@ -67,6 +67,10 @@ final class SharingHttpContext extends BasicHttpContext implements Closeable {
         return super.removeAttribute(id);
     }
 
+    public SharingAuthCache getAuthCache() {
+        return authCache;
+    }
+
     @Override
     public void close() {
         authCache.clear();
