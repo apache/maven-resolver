@@ -21,7 +21,6 @@ package org.eclipse.aether.transport.http;
 import java.io.Closeable;
 
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.protocol.BasicHttpContext;
 
 /**
  * HTTP context that shares certain attributes among requests to optimize the communication with the server.
@@ -29,7 +28,7 @@ import org.apache.http.protocol.BasicHttpContext;
  * @see <a href="http://hc.apache.org/httpcomponents-client-ga/tutorial/html/advanced.html#stateful_conn">Stateful HTTP
  *      connections</a>
  */
-final class SharingHttpContext extends BasicHttpContext implements Closeable {
+final class SharingHttpContext extends HttpClientContext implements Closeable {
 
     private final LocalState state;
 
@@ -65,10 +64,6 @@ final class SharingHttpContext extends BasicHttpContext implements Closeable {
             return null;
         }
         return super.removeAttribute(id);
-    }
-
-    public SharingAuthCache getAuthCache() {
-        return authCache;
     }
 
     @Override
