@@ -911,7 +911,21 @@ public class HttpTransporterTest {
     }
 
     @Test
+    public void testPut_PreemptiveIsDefault() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        newTransporter(httpServer.getHttpUrl());
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+    }
+
+    @Test
     public void testPut_AuthCache() throws Exception {
+        session.setConfigProperty(HttpTransporter.PREEMPTIVE_PUT_AUTH, false);
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")

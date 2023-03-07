@@ -374,12 +374,11 @@ final class HttpTransporter extends AbstractTransporter {
     }
 
     private void prepare(HttpUriRequest request, SharingHttpContext context) {
-        boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
+        final boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (preemptiveAuth || (preemptivePutAuth && put)) {
             state.setAuthScheme(server, new BasicScheme());
         }
         if (supportWebDav) {
-            boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
             if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
                 HttpOptions req = commonHeaders(new HttpOptions(request.getURI()));
                 try (CloseableHttpResponse response = client.execute(server, req, context)) {
