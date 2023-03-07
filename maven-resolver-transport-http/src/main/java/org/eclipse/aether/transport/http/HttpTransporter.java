@@ -95,6 +95,8 @@ import static java.util.Objects.requireNonNull;
  */
 final class HttpTransporter extends AbstractTransporter {
 
+    static final String PREEMPTIVE_PUT_AUTH = "aether.connector.http.preemptivePutAuth";
+
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
 
@@ -119,6 +121,8 @@ final class HttpTransporter extends AbstractTransporter {
     private final LocalState state;
 
     private final boolean preemptiveAuth;
+
+    private final boolean preemptivePutAuth;
 
     HttpTransporter(
             Map<String, ChecksumExtractor> checksumExtractors,
@@ -164,6 +168,11 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
                 ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
                 ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
+        this.preemptivePutAuth = ConfigUtils.getBoolean(
+                session,
+                false,
+                PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
+                PREEMPTIVE_PUT_AUTH );
         String credentialEncoding = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
@@ -361,10 +370,10 @@ final class HttpTransporter extends AbstractTransporter {
     }
 
     private void prepare(HttpUriRequest request, SharingHttpContext context) {
-        if (preemptiveAuth) {
+        boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
+        if (preemptiveAuth || (preemptivePutAuth && put)) {
             state.setAuthScheme(server, new BasicScheme());
         }
-        boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
             HttpOptions req = commonHeaders(new HttpOptions(request.getURI()));
             try (CloseableHttpResponse response = client.execute(server, req, context)) {
