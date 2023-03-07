@@ -99,6 +99,8 @@ final class HttpTransporter extends AbstractTransporter {
 
     static final String PREEMPTIVE_PUT_AUTH = "aether.connector.http.preemptivePutAuth";
 
+    static final String USE_SYSTEM_PROPERTIES = "aether.connector.http.useSystemProperties";
+
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
 
@@ -221,7 +223,7 @@ final class HttpTransporter extends AbstractTransporter {
 
         DefaultHttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(retryCount, false);
 
-        this.client = HttpClientBuilder.create()
+        HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
@@ -230,8 +232,18 @@ final class HttpTransporter extends AbstractTransporter {
                 .setConnectionManager(state.getConnectionManager())
                 .setConnectionManagerShared(true)
                 .setDefaultCredentialsProvider(toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext))
-                .setProxy(proxy)
-                .build();
+                .setProxy(proxy);
+
+        final boolean useSystemProperties = ConfigUtils.getBoolean(
+                session, false, USE_SYSTEM_PROPERTIES + "." + repository.getId(), USE_SYSTEM_PROPERTIES);
+        if (useSystemProperties) {
+            LOGGER.warn(
+                    "Transport used Apache HttpClient is instructed to use system properties: this may yield in unwanted side-effects!");
+            LOGGER.warn("Please use documented means to configure resolver transport.");
+            builder.useSystemProperties();
+        }
+
+        this.client = builder.build();
     }
 
     private static HttpHost toHost(Proxy proxy) {
