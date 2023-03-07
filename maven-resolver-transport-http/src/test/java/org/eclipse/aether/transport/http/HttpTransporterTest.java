@@ -668,6 +668,8 @@ public class HttpTransporterTest {
 
     @Test
     public void testPut_Authenticated_ExpectContinueBroken() throws Exception {
+        // this makes OPTIONS recover, and have only 1 PUT (startedCount=1 as OPTIONS is not counted)
+        session.setConfigProperty(HttpTransporter.SUPPORT_WEBDAV, true);
         httpServer.setAuthentication("testuser", "testpass");
         httpServer.setExpectSupport(HttpServer.ExpectContinue.BROKEN);
         auth = new AuthenticationBuilder()
@@ -808,6 +810,9 @@ public class HttpTransporterTest {
     @Test
     public void testPut_WebDav() throws Exception {
         httpServer.setWebDav(true);
+        session.setConfigProperty(HttpTransporter.SUPPORT_WEBDAV, true);
+        newTransporter(httpServer.getHttpUrl());
+
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("repo/dir1/dir2/file.txt"))
                 .setListener(listener)
@@ -903,6 +908,41 @@ public class HttpTransporterTest {
                 new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataString("upload");
         transporter.put(task);
         assertEquals(1, listener.startedCount);
+    }
+
+    @Test
+    public void testPut_AuthCache() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        newTransporter(httpServer.getHttpUrl());
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(2, httpServer.getLogEntries().size()); // put (challenged) + put w/ auth
+        httpServer.getLogEntries().clear();
+        task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+    }
+
+    @Test
+    public void testPut_AuthCache_Preemptive() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        session.setConfigProperty(ConfigurationProperties.HTTP_PREEMPTIVE_AUTH, true);
+        newTransporter(httpServer.getHttpUrl());
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+        httpServer.getLogEntries().clear();
+        task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
     }
 
     @Test(timeout = 20000L)
