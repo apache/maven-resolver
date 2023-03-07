@@ -920,7 +920,7 @@ public class HttpTransporterTest {
         newTransporter(httpServer.getHttpUrl());
         PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
-        assertEquals(3, httpServer.getLogEntries().size()); // options (challenged) + options w/ auth + put w/ auth
+        assertEquals(2, httpServer.getLogEntries().size()); // put (challenged) + put w/ auth
         httpServer.getLogEntries().clear();
         task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
@@ -938,7 +938,7 @@ public class HttpTransporterTest {
         newTransporter(httpServer.getHttpUrl());
         PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
-        assertEquals(2, httpServer.getLogEntries().size()); // options w/ auth + put w/ auth
+        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
         httpServer.getLogEntries().clear();
         task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
