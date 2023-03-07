@@ -95,6 +95,8 @@ import static java.util.Objects.requireNonNull;
  */
 final class HttpTransporter extends AbstractTransporter {
 
+    static final String SUPPORT_WEBDAV = "aether.connector.http.supportWebDav";
+
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
 
@@ -119,6 +121,8 @@ final class HttpTransporter extends AbstractTransporter {
     private final LocalState state;
 
     private final boolean preemptiveAuth;
+
+    private final boolean supportWebDav;
 
     HttpTransporter(
             Map<String, ChecksumExtractor> checksumExtractors,
@@ -164,6 +168,8 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
                 ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
                 ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
+        this.supportWebDav =
+                ConfigUtils.getBoolean(session, false, SUPPORT_WEBDAV + "." + repository.getId(), SUPPORT_WEBDAV);
         String credentialEncoding = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
@@ -364,23 +370,21 @@ final class HttpTransporter extends AbstractTransporter {
         if (preemptiveAuth) {
             context.getAuthCache().put(server, new BasicScheme());
         }
-        boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
-        if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
-            HttpOptions req = commonHeaders(new HttpOptions(request.getURI()));
-            try (CloseableHttpResponse response = client.execute(server, req, context)) {
-                state.setWebDav(isWebDav(response));
-                EntityUtils.consumeQuietly(response.getEntity());
-            } catch (IOException e) {
-                LOGGER.debug("Failed to prepare HTTP context", e);
+        if (supportWebDav) {
+            boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
+            if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
+                HttpOptions req = commonHeaders(new HttpOptions(request.getURI()));
+                try (CloseableHttpResponse response = client.execute(server, req, context)) {
+                    state.setWebDav(response.containsHeader(HttpHeaders.DAV));
+                    EntityUtils.consumeQuietly(response.getEntity());
+                } catch (IOException e) {
+                    LOGGER.debug("Failed to prepare HTTP context", e);
+                }
+            }
+            if (put && Boolean.TRUE.equals(state.getWebDav())) {
+                mkdirs(request.getURI(), context);
             }
         }
-        if (put && Boolean.TRUE.equals(state.getWebDav())) {
-            mkdirs(request.getURI(), context);
-        }
-    }
-
-    private boolean isWebDav(CloseableHttpResponse response) {
-        return response.containsHeader(HttpHeaders.DAV);
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
