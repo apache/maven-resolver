@@ -239,9 +239,13 @@ final class HttpTransporter extends AbstractTransporter {
         if (useSystemProperties) {
             LOGGER.warn(
                     "Transport used Apache HttpClient is instructed to use system properties: this may yield in unwanted side-effects. Please use documented means to configure transport.");
-            LOGGER.warn(
-                    "Please use documented means to configure resolver transport!");
-            builder.useSystemProperties();
+            LOGGER.warn("Please use documented means to configure resolver transport!");
+            if (proxy == null) {
+                builder.useSystemProperties();
+            } else {
+                throw new IllegalStateException(
+                        "Maven transport-http misconfigured: Maven settings.xml contains HTTP Proxy configuration, but transport-http instructed to obey system properties. Use one or another configuration, not both.");
+            }
         }
 
         this.client = builder.build();
