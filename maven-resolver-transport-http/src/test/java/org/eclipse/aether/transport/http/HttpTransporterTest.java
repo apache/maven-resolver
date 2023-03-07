@@ -910,6 +910,41 @@ public class HttpTransporterTest {
         assertEquals(1, listener.startedCount);
     }
 
+    @Test
+    public void testPut_AuthCache() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        newTransporter(httpServer.getHttpUrl());
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(3, httpServer.getLogEntries().size()); // options (challenged) + options w/ auth + put w/ auth
+        httpServer.getLogEntries().clear();
+        task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+    }
+
+    @Test
+    public void testPut_AuthCache_Preemptive() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        session.setConfigProperty(ConfigurationProperties.HTTP_PREEMPTIVE_AUTH, true);
+        newTransporter(httpServer.getHttpUrl());
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(2, httpServer.getLogEntries().size()); // options w/ auth + put w/ auth
+        httpServer.getLogEntries().clear();
+        task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+    }
+
     @Test(timeout = 20000L)
     public void testConcurrency() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
