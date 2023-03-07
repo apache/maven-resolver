@@ -37,7 +37,8 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
 `aether.connector.http.credentialEncoding` | String | The encoding/charset to use when exchanging credentials with HTTP servers. | `"ISO-8859-1"` | yes
 `aether.connector.http.headers` | `Map<String, String>` | The request headers to use for HTTP-based repository connectors. The headers are specified using a map of strings mapping a header name to its value. The repository-specific headers map is supposed to be complete, i.e. is not merged with the general headers map. | - | yes
-`aether.connector.http.preemptiveAuth` | boolean | Should HTTP client use preemptive-authentication (works only w/ BASIC) or not. | `false` | yes
+`aether.connector.http.preemptiveAuth` | boolean | Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default is disabled, as it is considered less secure. | `false` | yes
+`aether.connector.http.preemptivePutAuth` | boolean | Should HTTP client use preemptive-authentication for HTTP PUTs only (works only w/ BASIC). By default is enabled (same as Wagon). | `true` | yes
 `aether.connector.http.retryHandler.count` | int | The maximum number of times a request to a remote HTTP server should be retried in case of an error. | `3` | yes
 `aether.connector.http.supportWebDav` | boolean | If enabled, transport makes best effort to deploy to WebDAV server. This mode is not recommended, better use real Maven Repository Manager instead. | `false` | yes
 `aether.connector.https.cipherSuites` | String | Comma-separated list of [Cipher Suites](https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#ciphersuites) which are enabled for HTTPS connections. | - (no restriction) | no
