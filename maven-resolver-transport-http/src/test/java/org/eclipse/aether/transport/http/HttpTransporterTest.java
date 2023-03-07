@@ -668,6 +668,8 @@ public class HttpTransporterTest {
 
     @Test
     public void testPut_Authenticated_ExpectContinueBroken() throws Exception {
+        // this makes OPTIONS recover, and have only 1 PUT (startedCount=1 as OPTIONS is not counted)
+        session.setConfigProperty(HttpTransporter.SUPPORT_WEBDAV, true);
         httpServer.setAuthentication("testuser", "testpass");
         httpServer.setExpectSupport(HttpServer.ExpectContinue.BROKEN);
         auth = new AuthenticationBuilder()
@@ -808,6 +810,9 @@ public class HttpTransporterTest {
     @Test
     public void testPut_WebDav() throws Exception {
         httpServer.setWebDav(true);
+        session.setConfigProperty(HttpTransporter.SUPPORT_WEBDAV, true);
+        newTransporter(httpServer.getHttpUrl());
+
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("repo/dir1/dir2/file.txt"))
                 .setListener(listener)
