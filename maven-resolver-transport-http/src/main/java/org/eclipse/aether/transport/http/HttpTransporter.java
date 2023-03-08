@@ -388,7 +388,7 @@ final class HttpTransporter extends AbstractTransporter {
     private void prepare(HttpUriRequest request, SharingHttpContext context) {
         final boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (preemptiveAuth || (preemptivePutAuth && put)) {
-            state.setAuthScheme(server, new BasicScheme());
+            context.getAuthCache().put(server, new BasicScheme());
         }
         if (supportWebDav) {
             if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
