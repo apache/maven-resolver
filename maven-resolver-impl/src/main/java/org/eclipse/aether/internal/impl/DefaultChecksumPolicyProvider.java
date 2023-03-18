@@ -21,14 +21,14 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.Objects;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.transfer.TransferResource;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  */
@@ -48,9 +48,9 @@ public final class DefaultChecksumPolicyProvider implements ChecksumPolicyProvid
 
     public ChecksumPolicy newChecksumPolicy(
             RepositorySystemSession session, RemoteRepository repository, TransferResource resource, String policy) {
-        Objects.requireNonNull(session, "session cannot be null");
-        Objects.requireNonNull(repository, "repository cannot be null");
-        Objects.requireNonNull(resource, "resource cannot be null");
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
+        requireNonNull(resource, "resource cannot be null");
         validatePolicy("policy", policy);
 
         switch (policy) {
@@ -66,7 +66,7 @@ public final class DefaultChecksumPolicyProvider implements ChecksumPolicyProvid
     }
 
     public String getEffectiveChecksumPolicy(RepositorySystemSession session, String policy1, String policy2) {
-        Objects.requireNonNull(session, "session cannot be null");
+        requireNonNull(session, "session cannot be null");
         validatePolicy("policy1", policy1);
         validatePolicy("policy2", policy2);
 
@@ -96,7 +96,7 @@ public final class DefaultChecksumPolicyProvider implements ChecksumPolicyProvid
     }
 
     private static void validatePolicy(String paramName, String policy) {
-        Objects.requireNonNull(policy, paramName + "cannot be null");
+        requireNonNull(policy, paramName + "cannot be null");
 
         switch (policy) {
             case RepositoryPolicy.CHECKSUM_POLICY_IGNORE:

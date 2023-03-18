@@ -21,8 +21,6 @@ package org.eclipse.aether.transport.wagon;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import java.util.Objects;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
@@ -30,6 +28,8 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoTransporterException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter factory using <a href="http://maven.apache.org/wagon/" target="_blank">Apache Maven Wagon</a>. Note
@@ -107,8 +107,8 @@ public final class WagonTransporterFactory implements TransporterFactory, Servic
     @Override
     public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
-        Objects.requireNonNull(session, "session cannot be null");
-        Objects.requireNonNull(repository, "repository cannot be null");
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
 
         return new WagonTransporter(wagonProvider, wagonConfigurator, repository, session);
     }

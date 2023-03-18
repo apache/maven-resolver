@@ -272,7 +272,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
     public ArtifactResult resolveArtifact(RepositorySystemSession session, ArtifactRequest request)
             throws ArtifactResolutionException {
         validateSession(session);
-        requireNonNull(session, "session cannot be null");
+        requireNonNull(request, "request cannot be null");
 
         return artifactResolver.resolveArtifact(session, request);
     }
