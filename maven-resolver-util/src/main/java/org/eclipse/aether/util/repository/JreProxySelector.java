@@ -99,7 +99,7 @@ public final class JreProxySelector implements ProxySelector {
         public static final Authentication INSTANCE = new JreProxyAuthentication();
 
         public void fill(AuthenticationContext context, String key, Map<String, String> data) {
-            requireNonNull(context, "digest cannot be null");
+            requireNonNull(context, "context cannot be null");
             Proxy proxy = context.getProxy();
             if (proxy == null) {
                 return;

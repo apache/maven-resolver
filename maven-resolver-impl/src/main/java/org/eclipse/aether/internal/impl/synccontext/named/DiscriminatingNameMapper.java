@@ -22,7 +22,6 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -32,6 +31,7 @@ import org.eclipse.aether.util.StringDigestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -65,7 +65,7 @@ public class DiscriminatingNameMapper implements NameMapper {
     private final String hostname;
 
     public DiscriminatingNameMapper(final NameMapper delegate) {
-        this.delegate = Objects.requireNonNull(delegate);
+        this.delegate = requireNonNull(delegate);
         this.hostname = getHostname();
     }
 

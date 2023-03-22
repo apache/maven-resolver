@@ -22,10 +22,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A skeleton implementation for custom transporters.
@@ -42,7 +43,7 @@ public abstract class AbstractTransporter implements Transporter {
     }
 
     public void peek(PeekTask task) throws Exception {
-        Objects.requireNonNull(task, "task cannot be null");
+        requireNonNull(task, "task cannot be null");
 
         failIfClosed(task);
         implPeek(task);
@@ -57,7 +58,7 @@ public abstract class AbstractTransporter implements Transporter {
     protected abstract void implPeek(PeekTask task) throws Exception;
 
     public void get(GetTask task) throws Exception {
-        Objects.requireNonNull(task, "task cannot be null");
+        requireNonNull(task, "task cannot be null");
 
         failIfClosed(task);
         implGet(task);
@@ -100,7 +101,7 @@ public abstract class AbstractTransporter implements Transporter {
     }
 
     public void put(PutTask task) throws Exception {
-        Objects.requireNonNull(task, "task cannot be null");
+        requireNonNull(task, "task cannot be null");
 
         failIfClosed(task);
         implPut(task);

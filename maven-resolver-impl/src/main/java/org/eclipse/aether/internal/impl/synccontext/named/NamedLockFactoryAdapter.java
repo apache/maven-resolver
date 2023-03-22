@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -34,6 +33,8 @@ import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Adapter to adapt {@link NamedLockFactory} and {@link NamedLock} to {@link SyncContext}.
@@ -52,8 +53,8 @@ public final class NamedLockFactoryAdapter {
     private final NamedLockFactory namedLockFactory;
 
     public NamedLockFactoryAdapter(final NameMapper nameMapper, final NamedLockFactory namedLockFactory) {
-        this.nameMapper = Objects.requireNonNull(nameMapper);
-        this.namedLockFactory = Objects.requireNonNull(namedLockFactory);
+        this.nameMapper = requireNonNull(nameMapper);
+        this.namedLockFactory = requireNonNull(namedLockFactory);
         // TODO: this is ad-hoc "validation", experimental and likely to change
         if (this.namedLockFactory instanceof FileLockNamedLockFactory && !this.nameMapper.isFileSystemFriendly()) {
             throw new IllegalArgumentException(
