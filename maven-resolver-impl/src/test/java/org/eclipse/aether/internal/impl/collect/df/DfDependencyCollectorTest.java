@@ -28,9 +28,7 @@ import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestS
 public class DfDependencyCollectorTest extends DependencyCollectorDelegateTestSupport {
     @Override
     protected void setupCollector() {
-        collector = new DfDependencyCollector();
-        collector.setArtifactDescriptorReader(newReader(""));
-        collector.setVersionRangeResolver(new StubVersionRangeResolver());
-        collector.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
+        collector = new DfDependencyCollector(
+                new StubRemoteRepositoryManager(), newReader(""), new StubVersionRangeResolver());
     }
 }

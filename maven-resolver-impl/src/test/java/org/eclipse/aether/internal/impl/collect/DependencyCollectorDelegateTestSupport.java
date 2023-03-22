@@ -497,6 +497,16 @@ public abstract class DependencyCollectorDelegateTestSupport {
         assertEqualSubtree(expectedTree, toDependencyResult(result.getRoot(), "compile", null));
     }
 
+    @Test
+    public void testMenforcer426case() throws DependencyCollectionException, IOException {
+        DependencyNode root = parser.parseResource("menforcer426Result.txt");
+        Dependency dependency = root.getDependency();
+        CollectRequest request = new CollectRequest(dependency, singletonList(repository));
+
+        CollectResult result = collector.collectDependencies(session, request);
+        assertEqualSubtree(root, result.getRoot());
+    }
+
     private DependencyNode toDependencyResult(
             final DependencyNode root, final String rootScope, final Boolean optional) {
         // Make the root artifact resultion result a dependency resolution result for the subtree check.
