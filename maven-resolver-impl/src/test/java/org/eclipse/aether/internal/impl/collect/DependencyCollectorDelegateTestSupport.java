@@ -498,8 +498,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testMenforcer426case() throws DependencyCollectionException, IOException {
-        DependencyNode root = parser.parseResource("menforcer426Result.txt");
+    public void testTransitiveDepsUseRangesDirtyTree() throws DependencyCollectionException, IOException {
+        DependencyNode root = parser.parseResource("transitiveDepsUseRangesDirtyTreeResult.txt");
         Dependency dependency = root.getDependency();
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
 
