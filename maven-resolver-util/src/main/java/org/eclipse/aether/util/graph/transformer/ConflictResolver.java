@@ -341,7 +341,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         }
 
         // 2nd pass to apply "standard" verbosity: leaving only 1 loser, but with care
-        if (Verbosity.STANDARD == state.verbosity) {
+        if (Verbosity.STANDARD == state.verbosity && !toRemoveIds.isEmpty()) {
             for (ConflictItem item : state.items) {
                 if (item == winner) {
                     continue;
