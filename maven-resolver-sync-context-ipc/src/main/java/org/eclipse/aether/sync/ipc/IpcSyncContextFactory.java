@@ -36,10 +36,12 @@ import org.eclipse.sisu.Priority;
 /**
  * The SyncContextFactory implementation.
  */
-@Named
-@Priority(10)
+@Named(IpcSyncContextFactory.NAME)
+@Priority(-1)
 @Singleton
 public class IpcSyncContextFactory implements SyncContextFactory {
+
+    public static final String NAME = "ipc";
 
     private final Map<Path, IpcClient> clients = new ConcurrentHashMap<>();
 

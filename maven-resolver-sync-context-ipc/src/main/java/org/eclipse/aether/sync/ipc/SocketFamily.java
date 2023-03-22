@@ -23,47 +23,18 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.StandardProtocolFamily;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Locale;
 
 public enum SocketFamily {
-    inet,
-    unix;
-
-    public SocketChannel openSocket() throws IOException {
-        switch (this) {
-            case inet:
-                return SocketChannel.open();
-            case unix:
-                return SocketHelper.openUnixSocket();
-            default:
-                throw new IllegalStateException();
-        }
-    }
+    inet;
 
     public ServerSocketChannel openServerSocket() throws IOException {
         switch (this) {
             case inet:
                 return ServerSocketChannel.open().bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-            case unix:
-                return SocketHelper.openUnixServerSocket();
             default:
                 throw new IllegalStateException();
-        }
-    }
-
-    private StandardProtocolFamily getStandardProtocolFamily() {
-        return StandardProtocolFamily.valueOf(name().toUpperCase(Locale.ROOT));
-    }
-
-    private SocketAddress getLoopbackAddress() {
-        if (this == inet) {
-            return new InetSocketAddress(InetAddress.getLoopbackAddress(), 0);
-        } else {
-            return null;
         }
     }
 
@@ -99,43 +70,35 @@ public enum SocketFamily {
                 }
                 return new InetSocketAddress(addr, Integer.parseInt(p));
             }
-        } else if (str.startsWith("unix:")) {
-            return SocketHelper.unixSocketAddressOf(str.substring("unix:".length()));
         } else {
             throw new IllegalArgumentException("Unsupported socket address: '" + str + "'");
         }
     }
 
     public static String toString(SocketAddress address) {
-        switch (familyOf(address)) {
-            case inet:
-                InetSocketAddress isa = (InetSocketAddress) address;
-                String host = isa.getHostString();
-                InetAddress addr = isa.getAddress();
-                int port = isa.getPort();
-                String formatted;
-                if (addr == null) {
-                    formatted = host + "/<unresolved>";
-                } else {
-                    formatted = addr.toString();
-                    if (addr instanceof Inet6Address) {
-                        int i = formatted.lastIndexOf("/");
-                        formatted = formatted.substring(0, i + 1) + "[" + formatted.substring(i + 1) + "]";
-                    }
+        if (familyOf(address) == SocketFamily.inet) {
+            InetSocketAddress isa = (InetSocketAddress) address;
+            String host = isa.getHostString();
+            InetAddress addr = isa.getAddress();
+            int port = isa.getPort();
+            String formatted;
+            if (addr == null) {
+                formatted = host + "/<unresolved>";
+            } else {
+                formatted = addr.toString();
+                if (addr instanceof Inet6Address) {
+                    int i = formatted.lastIndexOf("/");
+                    formatted = formatted.substring(0, i + 1) + "[" + formatted.substring(i + 1) + "]";
                 }
-                return "inet:" + formatted + ":" + port;
-            case unix:
-                return "unix:" + address;
-            default:
-                throw new IllegalArgumentException("Unsupported socket address: '" + address + "'");
+            }
+            return "inet:" + formatted + ":" + port;
         }
+        throw new IllegalArgumentException("Unsupported socket address: '" + address + "'");
     }
 
     public static SocketFamily familyOf(SocketAddress address) {
         if (address instanceof InetSocketAddress) {
             return SocketFamily.inet;
-        } else if ("java.net.UnixDomainSocketAddress".equals(address.getClass().getName())) {
-            return SocketFamily.unix;
         } else {
             throw new IllegalArgumentException("Unsupported socket address '" + address + "'");
         }

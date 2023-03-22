@@ -105,9 +105,7 @@ public class IpcClient {
 
     SocketChannel createClient() throws IOException {
         String familyProp = System.getProperty(IpcServer.FAMILY_PROP);
-        SocketFamily family = familyProp != null
-                ? SocketFamily.valueOf(familyProp)
-                : JavaVersion.getJavaSpec() >= 16.0f ? SocketFamily.unix : SocketFamily.inet;
+        SocketFamily family = familyProp != null ? SocketFamily.valueOf(familyProp) : SocketFamily.inet;
 
         Path lockPath = this.lockPath.toAbsolutePath().normalize();
         Path lockFile =
@@ -158,7 +156,7 @@ public class IpcClient {
                                 .toAbsolutePath()
                                 .toString();
                         args.add(java);
-                        String classpath = getJarPath(getClass()) + File.pathSeparator + getJarPath(SocketFamily.class);
+                        String classpath = getJarPath(getClass()) + File.pathSeparator + getJarPath(IpcServer.class);
                         args.add("-cp");
                         args.add(classpath);
                         String timeout = System.getProperty(IpcServer.IDLE_TIMEOUT_PROP);

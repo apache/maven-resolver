@@ -90,6 +90,7 @@ import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSou
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
+import org.eclipse.aether.internal.impl.synccontext.NamedLockSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactory;
@@ -270,6 +271,10 @@ public class AetherModule extends AbstractModule {
         bind(org.eclipse.aether.impl.SyncContextFactory.class)
                 .to(org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class)
                 .in(Singleton.class);
+        bind(SyncContextFactory.class)
+                .annotatedWith(Names.named(NamedLockSyncContextFactory.NAME))
+                .to(NamedLockSyncContextFactory.class)
+                .in(Singleton.class);
 
         bind(NameMapper.class)
                 .annotatedWith(Names.named(NameMappers.STATIC_NAME))
@@ -388,6 +393,15 @@ public class AetherModule extends AbstractModule {
         result.put(Sha1ChecksumAlgorithmFactory.NAME, sha1);
         result.put(Md5ChecksumAlgorithmFactory.NAME, md5);
         return Collections.unmodifiableMap(result);
+    }
+
+    @Provides
+    @Singleton
+    Map<String, SyncContextFactory> provideSyncContextFactories(
+            @Named(NamedLockSyncContextFactory.NAME) SyncContextFactory namedLockSyncContextFactory) {
+        Map<String, SyncContextFactory> result = new HashMap<>();
+        result.put(NamedLockSyncContextFactory.NAME, namedLockSyncContextFactory);
+        return result;
     }
 
     @Provides
