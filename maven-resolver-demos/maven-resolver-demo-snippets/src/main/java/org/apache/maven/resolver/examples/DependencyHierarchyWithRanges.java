@@ -60,7 +60,7 @@ public class DependencyHierarchyWithRanges {
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
         session.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
 
-        // this artifact is in "remote" repository in src/main/resources/remote-repository
+        // this artifact is in "remote" repository in src/main/remote-repository
         Artifact artifact = new DefaultArtifact("org.apache.maven.resolver.demo.mresolver345:a:1.0");
 
         File remoteRepoBasedir = new File("src/main/remote-repository");

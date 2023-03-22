@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
@@ -30,6 +31,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
+import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -75,6 +77,106 @@ public class ConflictResolverTest {
         assertSame(barNode, fooNode.getChildren().get(0));
         assertTrue(barNode.getChildren().isEmpty());
         assertSame(baz1Node, fooNode.getChildren().get(1));
+    }
+
+    @Test
+    public void versionRangeClashAscOrderVerbose() throws RepositoryException {
+        ConflictResolver resolver = makeDefaultResolver();
+
+        //  A -> B -> C[1..2]
+        //  \--> C[1..2]
+        DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
+        DependencyNode b = makeDependencyNode("some-group", "b", "1.0");
+        DependencyNode c1 = makeDependencyNode("some-group", "c", "1.0");
+        DependencyNode c2 = makeDependencyNode("some-group", "c", "2.0");
+        a.setChildren(mutableList(b, c1, c2));
+        b.setChildren(mutableList(c1, c2));
+
+        DependencyNode ta = versionRangeClash(a);
+
+        assertSame(a, ta);
+        assertEquals(2, a.getChildren().size());
+        assertSame(b, a.getChildren().get(0));
+        assertSame(c2, a.getChildren().get(1));
+        assertEquals(1, b.getChildren().size());
+        assertEqualsDependencyNode(c2, b.getChildren().get(0));
+    }
+
+    @Test
+    public void versionRangeClashDescOrderVerbose() throws RepositoryException {
+        ConflictResolver resolver = makeDefaultResolver();
+
+        //  A -> B -> C[1..2]
+        //  \--> C[1..2]
+        DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
+        DependencyNode b = makeDependencyNode("some-group", "b", "1.0");
+        DependencyNode c1 = makeDependencyNode("some-group", "c", "1.0");
+        DependencyNode c2 = makeDependencyNode("some-group", "c", "2.0");
+        a.setChildren(mutableList(b, c2, c1));
+        b.setChildren(mutableList(c2, c1));
+
+        DependencyNode ta = versionRangeClash(a);
+
+        assertSame(a, ta);
+        assertEquals(2, a.getChildren().size());
+        assertSame(b, a.getChildren().get(0));
+        assertSame(c2, a.getChildren().get(1));
+        assertEquals(1, b.getChildren().size());
+        assertEqualsDependencyNode(c2, b.getChildren().get(0));
+    }
+
+    @Test
+    public void versionRangeClashMixedOrderVerbose() throws RepositoryException {
+        ConflictResolver resolver = makeDefaultResolver();
+
+        //  A -> B -> C[1..2]
+        //  \--> C[1..2]
+        DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
+        DependencyNode b = makeDependencyNode("some-group", "b", "1.0");
+        DependencyNode c1 = makeDependencyNode("some-group", "c", "1.0");
+        DependencyNode c2 = makeDependencyNode("some-group", "c", "2.0");
+        a.setChildren(mutableList(b, c2, c1));
+        b.setChildren(mutableList(c1, c2));
+
+        DependencyNode ta = versionRangeClash(a);
+
+        assertSame(a, ta);
+        assertEquals(2, a.getChildren().size());
+        assertSame(b, a.getChildren().get(0));
+        assertSame(c2, a.getChildren().get(1));
+        assertEquals(1, b.getChildren().size());
+        assertEqualsDependencyNode(c2, b.getChildren().get(0));
+    }
+
+    /**
+     * Conflict resolution may replace {@link DependencyNode} instances with copies to keep them stateful on different
+     * levels of graph, hence here we merely assert that node IS what we expect.
+     */
+    private void assertEqualsDependencyNode(DependencyNode node1, DependencyNode node2) {
+        assertEquals(node1.getDependency().getArtifact(), node2.getDependency().getArtifact());
+        assertEquals(node1.getDependency().getScope(), node2.getDependency().getScope());
+        assertEquals(node1.getDependency().getOptional(), node2.getDependency().getOptional());
+    }
+
+    /**
+     * Performs a verbose conflict resolution on passed in root.
+     */
+    private DependencyNode versionRangeClash(DependencyNode root) throws RepositoryException {
+        ConflictResolver resolver = makeDefaultResolver();
+
+        System.out.println();
+        System.out.println("Input node:");
+        root.accept(new DependencyGraphDumper(System.out::println)); // TODO: remove
+
+        DefaultRepositorySystemSession session = TestUtils.newSession();
+        session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
+        DependencyNode transformedRoot = resolver.transformGraph(root, TestUtils.newTransformationContext(session));
+
+        System.out.println();
+        System.out.println("Transformed node:");
+        transformedRoot.accept(new DependencyGraphDumper(System.out::println));
+
+        return transformedRoot;
     }
 
     @Test

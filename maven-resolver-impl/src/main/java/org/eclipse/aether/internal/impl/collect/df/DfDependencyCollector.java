@@ -207,9 +207,6 @@ public class DfDependencyCollector extends DependencyCollectorDelegate implement
             return;
         }
 
-        // resolve newer version first (to align with BF, with this the two produce same dirty tree)
-        Collections.reverse(versions);
-
         for (Version version : versions) {
             Artifact originalArtifact = dependency.getArtifact().setVersion(version.toString());
             Dependency d = dependency.setArtifact(originalArtifact);
