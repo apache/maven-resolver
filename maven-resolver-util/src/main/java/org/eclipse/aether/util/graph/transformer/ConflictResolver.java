@@ -78,7 +78,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         /**
          * Verbosity level to be used in "analyze" resolving use cases (ie. dependency convergence calculations). The
          * {@link ConflictResolver} in this mode will remove any redundant collected nodes, in turn it will leave one
-         * with recorded conflicting information. This mode corresponds tp "classic verbose" mode when
+         * with recorded conflicting information. This mode corresponds to "classic verbose" mode when
          * {@link #CONFIG_PROP_VERBOSE} was set to {@code true}. Obviously, the resulting dependency tree is not
          * suitable for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
          */
@@ -285,7 +285,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         String winnerId = ArtifactIdUtils.toId(winner.node.getArtifact());
         List<DependencyNode> previousParent = null;
         ListIterator<DependencyNode> childIt = null;
-        ArrayList<String> toRemoveIds = new ArrayList<>();
+        HashSet<String> toRemoveIds = new HashSet<>();
         for (ConflictItem item : state.items) {
             if (item == winner) {
                 continue;
@@ -297,18 +297,34 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             while (childIt.hasNext()) {
                 DependencyNode child = childIt.next();
                 if (child == item.node) {
+                    // NONE: just remove it and done
                     if (Verbosity.NONE == state.verbosity) {
                         childIt.remove();
                         break;
                     }
 
+                    // STANDARD: doing extra bookkeeping to select "which nodes to remove"
                     if (Verbosity.STANDARD == state.verbosity) {
                         String childId = ArtifactIdUtils.toId(child.getArtifact());
+                        // if two IDs are equal, it means "there is nearest", not conflict per se.
+                        // In that case we do NOT allow this child to be removed (but remove others)
+                        // and this keeps us safe from iteration (and in general, version) ordering
+                        // as we explicitly leave out ID that is "nearest found" state.
+                        //
+                        // This tackles version ranges mostly, where ranges are turned into list of
+                        // several nodes in collector (as many were discovered, ie. from metadata), and
+                        // old code would just "mark" the first hit as conflict, and remove the rest,
+                        // even if rest could contain "more suitable" version, that is not conflicting/diverging.
+                        // This resulted in verbose mode transformed tree, that was misrepresenting things
+                        // for dependency convergence calculations: it represented state like parent node
+                        // depends on "wrong" version (diverge), while "right" version was present (but removed)
+                        // as well, as it was contained in parents version range.
                         if (!Objects.equals(winnerId, childId)) {
                             toRemoveIds.add(childId);
                         }
                     }
 
+                    // FULL: just record the facts
                     DependencyNode loser = new DefaultDependencyNode(child);
                     loser.setData(NODE_DATA_WINNER, winner.node);
                     loser.setData(
