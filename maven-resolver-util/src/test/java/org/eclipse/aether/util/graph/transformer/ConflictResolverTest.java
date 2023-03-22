@@ -281,6 +281,8 @@ public class ConflictResolverTest {
         assertEquals(node1.getDependency().getOptional(), node2.getDependency().getOptional());
     }
 
+    private static final DependencyGraphDumper DUMPER_SOUT = new DependencyGraphDumper(System.out::println);
+
     /**
      * Performs a verbose conflict resolution on passed in root.
      */
@@ -290,7 +292,7 @@ public class ConflictResolverTest {
 
         System.out.println();
         System.out.println("Input node:");
-        root.accept(new DependencyGraphDumper(System.out::println)); // TODO: remove
+        root.accept(DUMPER_SOUT);
 
         DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, verbosity);
@@ -298,7 +300,7 @@ public class ConflictResolverTest {
 
         System.out.println();
         System.out.println("Transformed node:");
-        transformedRoot.accept(new DependencyGraphDumper(System.out::println));
+        transformedRoot.accept(DUMPER_SOUT);
 
         return transformedRoot;
     }

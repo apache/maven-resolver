@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.Collections;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.apache.maven.resolver.examples.util.ConsoleDependencyGraphDumper;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
@@ -80,6 +79,6 @@ public class DependencyHierarchyWithRanges {
 
         CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
-        collectResult.getRoot().accept(new ConsoleDependencyGraphDumper());
+        collectResult.getRoot().accept(Booter.DUMPER_SOUT);
     }
 }

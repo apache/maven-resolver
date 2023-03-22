@@ -28,6 +28,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 
 /**
  * A helper to boot the repository system and a repository system session.
@@ -38,6 +39,8 @@ public class Booter {
     public static final String GUICE = "guice";
 
     public static final String SISU = "sisu";
+
+    public static final DependencyGraphDumper DUMPER_SOUT = new DependencyGraphDumper(System.out::println);
 
     public static String selectFactory(String[] args) {
         if (args == null || args.length == 0) {

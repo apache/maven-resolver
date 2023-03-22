@@ -88,7 +88,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          * Verbosity level to be used in "analyze" resolving use cases (ie. dependency convergence calculations). The
          * {@link ConflictResolver} in this mode will not remove any collected node, in turn it will record on all
          * eliminated nodes the conflicting information. Obviously, the resulting dependency tree is not suitable
-         *  * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
+         * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
          */
         FULL
     }
