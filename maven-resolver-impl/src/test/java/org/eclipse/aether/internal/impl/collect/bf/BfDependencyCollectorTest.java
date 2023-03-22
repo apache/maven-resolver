@@ -63,6 +63,11 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
                 new StubRemoteRepositoryManager(), newReader(""), new StubVersionRangeResolver());
     }
 
+    @Override
+    protected String getTransitiveDepsUseRangesDirtyTreeResource() {
+        return "transitiveDepsUseRangesDirtyTreeResult_BF.txt";
+    }
+
     private Dependency newDep(String coords, String scope, Collection<Exclusion> exclusions) {
         Dependency d = new Dependency(new DefaultArtifact(coords), scope);
         return d.setExclusions(exclusions);

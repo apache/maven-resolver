@@ -1,0 +1,8 @@
+transitiveDepsUseRangesDirtyTree:aid:ext:1 compile
++- transitiveDepsUseRangesDirtyTree:bid:ext:1 compile
+|  +- transitiveDepsUseRangesDirtyTree:cid:ext:1 compile
+|  +- transitiveDepsUseRangesDirtyTree:cid:ext:2 compile
+|  \- transitiveDepsUseRangesDirtyTree:cid:ext:3 compile
++- transitiveDepsUseRangesDirtyTree:cid:ext:1 compile
++- transitiveDepsUseRangesDirtyTree:cid:ext:2 compile
+\- transitiveDepsUseRangesDirtyTree:cid:ext:3 compile

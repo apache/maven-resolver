@@ -86,19 +86,24 @@ public class DependencyGraphDumper implements DependencyVisitor {
             buffer.append(" (scope managed from ").append(premanaged).append(")");
         }
         DependencyNode winner = (DependencyNode) node.getData().get(ConflictResolver.NODE_DATA_WINNER);
-        if (winner != null && !ArtifactIdUtils.equalsId(a, winner.getArtifact())) {
-            Artifact w = winner.getArtifact();
-            buffer.append(" (conflicts with ");
-            if (ArtifactIdUtils.toVersionlessId(a).equals(ArtifactIdUtils.toVersionlessId(w))) {
-                buffer.append(w.getVersion());
+        if (winner != null) {
+            if (ArtifactIdUtils.equalsId(a, winner.getArtifact())) {
+                buffer.append(" (nearer exists)");
             } else {
-                buffer.append(w);
+                Artifact w = winner.getArtifact();
+                buffer.append(" (conflicts with ");
+                if (ArtifactIdUtils.toVersionlessId(a).equals(ArtifactIdUtils.toVersionlessId(w))) {
+                    buffer.append(w.getVersion());
+                } else {
+                    buffer.append(w);
+                }
+                buffer.append(")");
             }
-            buffer.append(")");
         }
         return buffer.toString();
     }
 
+    @Override
     public boolean visitLeave(DependencyNode node) {
         if (!childInfos.isEmpty()) {
             childInfos.remove(childInfos.size() - 1);

@@ -66,6 +66,7 @@ public class CloningDependencyVisitor implements DependencyVisitor {
         return new DefaultDependencyNode(node);
     }
 
+    @Override
     public final boolean visitEnter(DependencyNode node) {
         boolean recurse = true;
 
@@ -90,6 +91,7 @@ public class CloningDependencyVisitor implements DependencyVisitor {
         return recurse;
     }
 
+    @Override
     public final boolean visitLeave(DependencyNode node) {
         parents.pop();
 

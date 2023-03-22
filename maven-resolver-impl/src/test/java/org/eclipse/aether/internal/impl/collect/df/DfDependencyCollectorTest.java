@@ -31,4 +31,9 @@ public class DfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
         collector = new DfDependencyCollector(
                 new StubRemoteRepositoryManager(), newReader(""), new StubVersionRangeResolver());
     }
+
+    @Override
+    protected String getTransitiveDepsUseRangesDirtyTreeResource() {
+        return "transitiveDepsUseRangesDirtyTreeResult_DF.txt";
+    }
 }
