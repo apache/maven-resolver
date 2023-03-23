@@ -19,6 +19,7 @@
 package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +48,14 @@ public final class NamedLockFactoryAdapter {
     public static final String TIME_UNIT_KEY = "aether.syncContext.named.time.unit";
 
     public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.SECONDS;
+
+    public static final String RETRIES_KEY = "aether.syncContext.named.retries";
+
+    public static final int DEFAULT_RETRIES = 2;
+
+    public static final String RETRY_SLEEP_KEY = "aether.syncContext.named.retrySleep";
+
+    public static final long DEFAULT_RETRY_SLEEP = 200L;
 
     private final NameMapper nameMapper;
 
@@ -102,6 +111,10 @@ public final class NamedLockFactoryAdapter {
 
         private final TimeUnit timeUnit;
 
+        private final int retries;
+
+        private final long retrySleep;
+
         private final Deque<NamedLock> locks;
 
         private AdaptedLockSyncContext(
@@ -115,6 +128,8 @@ public final class NamedLockFactoryAdapter {
             this.namedLockFactory = namedLockFactory;
             this.time = getTime(session);
             this.timeUnit = getTimeUnit(session);
+            this.retries = getRetries(session);
+            this.retrySleep = getRetrySleep(session);
             this.locks = new ArrayDeque<>();
 
             if (time < 0L) {
@@ -130,6 +145,14 @@ public final class NamedLockFactoryAdapter {
             return TimeUnit.valueOf(ConfigUtils.getString(session, DEFAULT_TIME_UNIT.name(), TIME_UNIT_KEY));
         }
 
+        private int getRetries(final RepositorySystemSession session) {
+            return ConfigUtils.getInteger(session, DEFAULT_RETRIES, RETRIES_KEY);
+        }
+
+        private long getRetrySleep(final RepositorySystemSession session) {
+            return ConfigUtils.getLong(session, DEFAULT_RETRY_SLEEP, RETRY_SLEEP_KEY);
+        }
+
         @Override
         public void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {
             Collection<String> keys = lockNaming.nameLocks(session, artifacts, metadatas);
@@ -137,40 +160,58 @@ public final class NamedLockFactoryAdapter {
                 return;
             }
 
-            LOGGER.trace("Need {} {} lock(s) for {}", keys.size(), shared ? "read" : "write", keys);
-            int acquiredLockCount = 0;
-            for (String key : keys) {
-                NamedLock namedLock = namedLockFactory.getLock(key);
-                try {
-                    LOGGER.trace("Acquiring {} lock for '{}'", shared ? "read" : "write", key);
+            final ArrayList<IllegalStateException> illegalStateExceptions = new ArrayList<>();
+            for (int retry = 0; retry <= retries; retry++) {
+                LOGGER.trace(
+                        "Attempt {}: Need {} {} lock(s) for {}", retry, keys.size(), shared ? "read" : "write", keys);
+                int acquiredLockCount = 0;
+                for (String key : keys) {
+                    NamedLock namedLock = namedLockFactory.getLock(key);
+                    try {
+                        if (retry > 0) {
+                            Thread.sleep(retrySleep);
+                        }
+                        LOGGER.trace("Acquiring {} lock for '{}'", shared ? "read" : "write", key);
 
-                    boolean locked;
-                    if (shared) {
-                        locked = namedLock.lockShared(time, timeUnit);
-                    } else {
-                        locked = namedLock.lockExclusively(time, timeUnit);
+                        boolean locked;
+                        if (shared) {
+                            locked = namedLock.lockShared(time, timeUnit);
+                        } else {
+                            locked = namedLock.lockExclusively(time, timeUnit);
+                        }
+
+                        if (!locked) {
+                            LOGGER.trace("Failed to acquire {} lock for '{}'", shared ? "read" : "write", key);
+
+                            namedLock.close();
+                            closeAll();
+                            illegalStateExceptions.add(
+                                    new IllegalStateException("Attempt: " + retry + ": Could not acquire "
+                                            + (shared ? "read" : "write") + " lock for '" + namedLock.name() + "'"));
+                            break;
+                        } else {
+                            locks.push(namedLock);
+                            acquiredLockCount++;
+                        }
+
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
                     }
-
-                    if (!locked) {
-                        LOGGER.trace("Failed to acquire {} lock for '{}'", shared ? "read" : "write", key);
-
-                        namedLock.close();
-                        throw new IllegalStateException("Could not acquire " + (shared ? "read" : "write")
-                                + " lock for '" + namedLock.name() + "'");
-                    }
-
-                    locks.push(namedLock);
-                    acquiredLockCount++;
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException(e);
+                }
+                LOGGER.trace("Attempt {}: Total locks acquired: {}", retry, acquiredLockCount);
+                if (acquiredLockCount == keys.size()) {
+                    break;
                 }
             }
-            LOGGER.trace("Total locks acquired: {}", acquiredLockCount);
+            if (!illegalStateExceptions.isEmpty()) {
+                IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
+                illegalStateExceptions.forEach(ex::addSuppressed);
+                throw ex;
+            }
         }
 
-        @Override
-        public void close() {
+        private void closeAll() {
             if (locks.isEmpty()) {
                 return;
             }
@@ -185,6 +226,11 @@ public final class NamedLockFactoryAdapter {
                 }
             }
             LOGGER.trace("Total locks released: {}", released);
+        }
+
+        @Override
+        public void close() {
+            closeAll();
         }
     }
 }
