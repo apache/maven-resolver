@@ -35,6 +35,9 @@ import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -103,7 +106,7 @@ public class ConflictResolverTest {
         assertEquals(1, impl1.getChildren().size());
         assertSame(api1, impl1.getChildren().get(0));
         assertEquals(1, impl2.getChildren().size());
-        assertEqualsDependencyNode(api2, impl2.getChildren().get(0));
+        assertConflictedButSameAsOriginal(api2, impl2.getChildren().get(0));
     }
 
     @Test
@@ -142,9 +145,9 @@ public class ConflictResolverTest {
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
-        assertEqualsDependencyNode(c2, a.getChildren().get(1));
+        assertSame(c2, a.getChildren().get(1));
         assertEquals(1, b.getChildren().size());
-        assertEqualsDependencyNode(c2, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
     @Test
@@ -163,11 +166,11 @@ public class ConflictResolverTest {
         assertSame(a, ta);
         assertEquals(3, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
-        assertEqualsDependencyNode(c1, a.getChildren().get(1));
+        assertConflictedButSameAsOriginal(c1, a.getChildren().get(1));
         assertSame(c2, a.getChildren().get(2));
         assertEquals(2, b.getChildren().size());
-        assertEqualsDependencyNode(c1, b.getChildren().get(0));
-        assertEqualsDependencyNode(c2, b.getChildren().get(1));
+        assertConflictedButSameAsOriginal(c1, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(1));
     }
 
     @Test
@@ -206,9 +209,9 @@ public class ConflictResolverTest {
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
-        assertEqualsDependencyNode(c2, a.getChildren().get(1));
+        assertSame(c2, a.getChildren().get(1));
         assertEquals(1, b.getChildren().size());
-        assertEqualsDependencyNode(c2, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
     @Test
@@ -228,10 +231,10 @@ public class ConflictResolverTest {
         assertEquals(3, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
         assertSame(c2, a.getChildren().get(1));
-        assertEqualsDependencyNode(c1, a.getChildren().get(2));
+        assertConflictedButSameAsOriginal(c1, a.getChildren().get(2));
         assertEquals(2, b.getChildren().size());
-        assertEqualsDependencyNode(c2, b.getChildren().get(0));
-        assertEqualsDependencyNode(c1, b.getChildren().get(1));
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(c1, b.getChildren().get(1));
     }
 
     @Test
@@ -270,9 +273,9 @@ public class ConflictResolverTest {
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
-        assertEqualsDependencyNode(c2, a.getChildren().get(1));
+        assertSame(c2, a.getChildren().get(1));
         assertEquals(1, b.getChildren().size());
-        assertEqualsDependencyNode(c2, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
     @Test
@@ -292,20 +295,27 @@ public class ConflictResolverTest {
         assertEquals(3, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
         assertSame(c2, a.getChildren().get(1));
-        assertEqualsDependencyNode(c1, a.getChildren().get(2));
+        assertConflictedButSameAsOriginal(c1, a.getChildren().get(2));
         assertEquals(2, b.getChildren().size());
-        assertEqualsDependencyNode(c1, b.getChildren().get(0));
-        assertEqualsDependencyNode(c2, b.getChildren().get(1));
+        assertConflictedButSameAsOriginal(c1, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(1));
     }
 
     /**
-     * Conflict resolution may replace {@link DependencyNode} instances with copies to keep them stateful on different
-     * levels of graph, hence here we merely assert that node IS what we expect.
+     * Conflict resolver in case of conflict replaces {@link DependencyNode} instances with copies to keep them
+     * stateful on different levels of graph and records conflict data. This method assert that two nodes do represent
+     * same dependency (same GAV, scope, optionality), but that original is not conflicted while current is.
      */
-    private void assertEqualsDependencyNode(DependencyNode node1, DependencyNode node2) {
-        assertEquals(node1.getDependency().getArtifact(), node2.getDependency().getArtifact());
-        assertEquals(node1.getDependency().getScope(), node2.getDependency().getScope());
-        assertEquals(node1.getDependency().getOptional(), node2.getDependency().getOptional());
+    private void assertConflictedButSameAsOriginal(DependencyNode original, DependencyNode current) {
+        assertNotSame(original, current);
+        assertEquals(
+                original.getDependency().getArtifact(), current.getDependency().getArtifact());
+        assertEquals(
+                original.getDependency().getScope(), current.getDependency().getScope());
+        assertEquals(
+                original.getDependency().getOptional(), current.getDependency().getOptional());
+        assertNull(original.getData().get(ConflictResolver.NODE_DATA_WINNER));
+        assertNotNull(current.getData().get(ConflictResolver.NODE_DATA_WINNER));
     }
 
     private static final DependencyGraphDumper DUMPER_SOUT = new DependencyGraphDumper(System.out::println);
