@@ -197,7 +197,7 @@ public class DefaultDeployer implements Deployer, Service {
                     e);
         }
 
-        try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
+        try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {
             return deploy(syncContext, session, request);
         }
     }
