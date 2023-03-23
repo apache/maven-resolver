@@ -282,7 +282,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
     private static void removeLosers(State state) {
         ConflictItem winner = state.conflictCtx.winner;
-        String winnerId = ArtifactIdUtils.toId(winner.node.getArtifact());
+        String winnerArtifactId = ArtifactIdUtils.toId(winner.node.getArtifact());
         List<DependencyNode> previousParent = null;
         ListIterator<DependencyNode> childIt = null;
         HashSet<String> toRemoveIds = new HashSet<>();
@@ -305,7 +305,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
                     // STANDARD: doing extra bookkeeping to select "which nodes to remove"
                     if (Verbosity.STANDARD == state.verbosity) {
-                        String childId = ArtifactIdUtils.toId(child.getArtifact());
+                        String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
                         // if two IDs are equal, it means "there is nearest", not conflict per se.
                         // In that case we do NOT allow this child to be removed (but remove others)
                         // and this keeps us safe from iteration (and in general, version) ordering
@@ -319,8 +319,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                         // for dependency convergence calculations: it represented state like parent node
                         // depends on "wrong" version (diverge), while "right" version was present (but removed)
                         // as well, as it was contained in parents version range.
-                        if (!Objects.equals(winnerId, childId)) {
-                            toRemoveIds.add(childId);
+                        if (!Objects.equals(winnerArtifactId, childArtifactId)) {
+                            toRemoveIds.add(childArtifactId);
                         }
                     }
 
@@ -335,6 +335,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                     loser.setScope(item.getScopes().iterator().next());
                     loser.setChildren(Collections.emptyList());
                     childIt.set(loser);
+                    item.node = loser;
                     break;
                 }
             }
@@ -342,6 +343,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
         // 2nd pass to apply "standard" verbosity: leaving only 1 loser, but with care
         if (Verbosity.STANDARD == state.verbosity && !toRemoveIds.isEmpty()) {
+            previousParent = null;
             for (ConflictItem item : state.items) {
                 if (item == winner) {
                     continue;
@@ -352,9 +354,11 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 }
                 while (childIt.hasNext()) {
                     DependencyNode child = childIt.next();
-                    String childId = ArtifactIdUtils.toId(child.getArtifact());
-                    if (toRemoveIds.contains(childId)) {
-                        childIt.remove();
+                    if (child == item.node) {
+                        String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
+                        if (toRemoveIds.contains(childArtifactId) && item.parent.size() > 1) {
+                            childIt.remove();
+                        }
                         break;
                     }
                 }
@@ -827,7 +831,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         // only for debugging/toString() to help identify the parent node(s)
         final Artifact artifact;
 
-        final DependencyNode node;
+        // is mutable as removeLosers will mutate it (if Verbosity==STANDARD)
+        DependencyNode node;
 
         int depth;
 

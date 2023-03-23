@@ -80,6 +80,33 @@ public class ConflictResolverTest {
     }
 
     @Test
+    public void versionClashForkedStandardVerbose() throws RepositoryException {
+
+        // root -> impl1 -> api:1
+        //  |----> impl2 -> api:2
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode impl1 = makeDependencyNode("some-group", "impl1", "1.0");
+        DependencyNode impl2 = makeDependencyNode("some-group", "impl2", "1.0");
+        DependencyNode api1 = makeDependencyNode("some-group", "api", "1.1");
+        DependencyNode api2 = makeDependencyNode("some-group", "api", "1.0");
+
+        root.setChildren(mutableList(impl1, impl2));
+        impl1.setChildren(mutableList(api1));
+        impl2.setChildren(mutableList(api2));
+
+        DependencyNode transformedNode = versionRangeClash(root, ConflictResolver.Verbosity.STANDARD);
+
+        assertSame(root, transformedNode);
+        assertEquals(2, root.getChildren().size());
+        assertSame(impl1, root.getChildren().get(0));
+        assertSame(impl2, root.getChildren().get(1));
+        assertEquals(1, impl1.getChildren().size());
+        assertSame(api1, impl1.getChildren().get(0));
+        assertEquals(1, impl2.getChildren().size());
+        assertEqualsDependencyNode(api2, impl2.getChildren().get(0));
+    }
+
+    @Test
     public void versionRangeClashAscOrder() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
