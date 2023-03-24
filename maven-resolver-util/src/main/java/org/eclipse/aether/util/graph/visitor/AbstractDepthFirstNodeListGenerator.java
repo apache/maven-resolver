@@ -156,7 +156,9 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
         return visitedNodes.put(node, Boolean.TRUE) == null;
     }
 
+    @Override
     public abstract boolean visitEnter(DependencyNode node);
 
+    @Override
     public abstract boolean visitLeave(DependencyNode node);
 }

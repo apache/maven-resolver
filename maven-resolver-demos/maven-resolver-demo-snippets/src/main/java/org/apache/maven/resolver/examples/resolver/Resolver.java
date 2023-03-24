@@ -20,9 +20,10 @@ package org.apache.maven.resolver.examples.resolver;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.apache.maven.resolver.examples.util.ConsoleDependencyGraphDumper;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -40,6 +41,7 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 
@@ -121,8 +123,13 @@ public class Resolver {
     }
 
     private void displayTree(DependencyNode node, StringBuilder sb) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
-        node.accept(new ConsoleDependencyGraphDumper(new PrintStream(os)));
-        sb.append(os.toString());
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
+            PrintStream ps = new PrintStream(os, true, StandardCharsets.UTF_8.name());
+            node.accept(new DependencyGraphDumper(ps::println));
+            sb.append(os);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

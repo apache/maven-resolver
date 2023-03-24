@@ -18,26 +18,17 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.*;
 
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -66,8 +57,65 @@ public final class ConflictResolver implements DependencyGraphTransformer {
     /**
      * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
+     * Accepted values are {@link Boolean} type, {@link String} type (where "true" would be interpreted as {@code true}
+     * or {@link Verbosity} enum instances.
      */
     public static final String CONFIG_PROP_VERBOSE = "aether.conflictResolver.verbose";
+
+    /**
+     * The enum representing verbosity levels of conflict resolver.
+     *
+     * @since 1.9.8
+     */
+    public enum Verbosity {
+        /**
+         * Verbosity level to be used in all "common" resolving use cases (ie. dependencies to build class path). The
+         * {@link ConflictResolver} in this mode will trim down the graph to the barest minimum: will not leave
+         * any conflicting node in place, hence no conflicts will be present in transformed graph either.
+         */
+        NONE,
+
+        /**
+         * Verbosity level to be used in "analyze" resolving use cases (ie. dependency convergence calculations). The
+         * {@link ConflictResolver} in this mode will remove any redundant collected nodes, in turn it will leave one
+         * with recorded conflicting information. This mode corresponds to "classic verbose" mode when
+         * {@link #CONFIG_PROP_VERBOSE} was set to {@code true}. Obviously, the resulting dependency tree is not
+         * suitable for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
+         */
+        STANDARD,
+
+        /**
+         * Verbosity level to be used in "analyze" resolving use cases (ie. dependency convergence calculations). The
+         * {@link ConflictResolver} in this mode will not remove any collected node, in turn it will record on all
+         * eliminated nodes the conflicting information. Obviously, the resulting dependency tree is not suitable
+         * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
+         */
+        FULL
+    }
+
+    /**
+     * Helper method that uses {@link RepositorySystemSession} and {@link #CONFIG_PROP_VERBOSE} key to figure out
+     * current {@link Verbosity}: if {@link Boolean} or {@code String} found, returns {@link Verbosity#STANDARD}
+     * or {@link Verbosity#NONE}, depending on value (string is parsed with {@link Boolean#parseBoolean(String)}
+     * for {@code true} or {@code false} correspondingly. This is to retain "existing" behavior, where the config
+     * key accepted only these values.
+     * Since 1.9.8 release, this key may contain {@link Verbosity} enum instance as well, in which case that instance
+     * is returned.
+     * This method never returns {@code null}.
+     */
+    private static Verbosity getVerbosity(RepositorySystemSession session) {
+        final Object verbosityValue = session.getConfigProperties().get(CONFIG_PROP_VERBOSE);
+        if (verbosityValue instanceof Boolean) {
+            return (Boolean) verbosityValue ? Verbosity.STANDARD : Verbosity.NONE;
+        } else if (verbosityValue instanceof String) {
+            return Boolean.parseBoolean(verbosityValue.toString()) ? Verbosity.STANDARD : Verbosity.NONE;
+        } else if (verbosityValue instanceof Verbosity) {
+            return (Verbosity) verbosityValue;
+        } else if (verbosityValue != null) {
+            throw new IllegalArgumentException("Unsupported Verbosity configuration: " + verbosityValue);
+        }
+        return Verbosity.NONE;
+    }
 
     /**
      * The key in the dependency node's {@link DependencyNode#getData() custom data} under which a reference to the
@@ -173,14 +221,14 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 DependencyNode winner = ctx.winner.node;
 
                 state.scopeSelector.selectScope(ctx);
-                if (state.verbose) {
+                if (Verbosity.NONE != state.verbosity) {
                     winner.setData(
                             NODE_DATA_ORIGINAL_SCOPE, winner.getDependency().getScope());
                 }
                 winner.setScope(ctx.scope);
 
                 state.optionalitySelector.selectOptionality(ctx);
-                if (state.verbose) {
+                if (Verbosity.NONE != state.verbosity) {
                     winner.setData(
                             NODE_DATA_ORIGINAL_OPTIONALITY,
                             winner.getDependency().isOptional());
@@ -232,11 +280,12 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         return true;
     }
 
-    private void removeLosers(State state) {
+    private static void removeLosers(State state) {
         ConflictItem winner = state.conflictCtx.winner;
+        String winnerArtifactId = ArtifactIdUtils.toId(winner.node.getArtifact());
         List<DependencyNode> previousParent = null;
         ListIterator<DependencyNode> childIt = null;
-        boolean conflictVisualized = false;
+        HashSet<String> toRemoveIds = new HashSet<>();
         for (ConflictItem item : state.items) {
             if (item == winner) {
                 continue;
@@ -244,30 +293,78 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             if (item.parent != previousParent) {
                 childIt = item.parent.listIterator();
                 previousParent = item.parent;
-                conflictVisualized = false;
             }
             while (childIt.hasNext()) {
                 DependencyNode child = childIt.next();
                 if (child == item.node) {
-                    if (state.verbose && !conflictVisualized && item.parent != winner.parent) {
-                        conflictVisualized = true;
-                        DependencyNode loser = new DefaultDependencyNode(child);
-                        loser.setData(NODE_DATA_WINNER, winner.node);
-                        loser.setData(
-                                NODE_DATA_ORIGINAL_SCOPE, loser.getDependency().getScope());
-                        loser.setData(
-                                NODE_DATA_ORIGINAL_OPTIONALITY,
-                                loser.getDependency().isOptional());
-                        loser.setScope(item.getScopes().iterator().next());
-                        loser.setChildren(Collections.<DependencyNode>emptyList());
-                        childIt.set(loser);
-                    } else {
+                    // NONE: just remove it and done
+                    if (Verbosity.NONE == state.verbosity) {
                         childIt.remove();
+                        break;
                     }
+
+                    // STANDARD: doing extra bookkeeping to select "which nodes to remove"
+                    if (Verbosity.STANDARD == state.verbosity) {
+                        String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
+                        // if two IDs are equal, it means "there is nearest", not conflict per se.
+                        // In that case we do NOT allow this child to be removed (but remove others)
+                        // and this keeps us safe from iteration (and in general, version) ordering
+                        // as we explicitly leave out ID that is "nearest found" state.
+                        //
+                        // This tackles version ranges mostly, where ranges are turned into list of
+                        // several nodes in collector (as many were discovered, ie. from metadata), and
+                        // old code would just "mark" the first hit as conflict, and remove the rest,
+                        // even if rest could contain "more suitable" version, that is not conflicting/diverging.
+                        // This resulted in verbose mode transformed tree, that was misrepresenting things
+                        // for dependency convergence calculations: it represented state like parent node
+                        // depends on "wrong" version (diverge), while "right" version was present (but removed)
+                        // as well, as it was contained in parents version range.
+                        if (!Objects.equals(winnerArtifactId, childArtifactId)) {
+                            toRemoveIds.add(childArtifactId);
+                        }
+                    }
+
+                    // FULL: just record the facts
+                    DependencyNode loser = new DefaultDependencyNode(child);
+                    loser.setData(NODE_DATA_WINNER, winner.node);
+                    loser.setData(
+                            NODE_DATA_ORIGINAL_SCOPE, loser.getDependency().getScope());
+                    loser.setData(
+                            NODE_DATA_ORIGINAL_OPTIONALITY,
+                            loser.getDependency().isOptional());
+                    loser.setScope(item.getScopes().iterator().next());
+                    loser.setChildren(Collections.emptyList());
+                    childIt.set(loser);
+                    item.node = loser;
                     break;
                 }
             }
         }
+
+        // 2nd pass to apply "standard" verbosity: leaving only 1 loser, but with care
+        if (Verbosity.STANDARD == state.verbosity && !toRemoveIds.isEmpty()) {
+            previousParent = null;
+            for (ConflictItem item : state.items) {
+                if (item == winner) {
+                    continue;
+                }
+                if (item.parent != previousParent) {
+                    childIt = item.parent.listIterator();
+                    previousParent = item.parent;
+                }
+                while (childIt.hasNext()) {
+                    DependencyNode child = childIt.next();
+                    if (child == item.node) {
+                        String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
+                        if (toRemoveIds.contains(childArtifactId) && item.parent.size() > 1) {
+                            childIt.remove();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         // there might still be losers beneath the winner (e.g. in case of cycles)
         // those will be nuked during future graph walks when we include the winner in the recursion
     }
@@ -361,7 +458,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         /**
          * Flag whether we should keep losers in the graph to enable visualization/troubleshooting of conflicts.
          */
-        final boolean verbose;
+        final Verbosity verbosity;
 
         /**
          * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
@@ -458,7 +555,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 DependencyGraphTransformationContext context)
                 throws RepositoryException {
             this.conflictIds = conflictIds;
-            verbose = ConfigUtils.getBoolean(context.getSession(), false, CONFIG_PROP_VERBOSE);
+            this.verbosity = getVerbosity(context.getSession());
             potentialAncestorIds = new HashSet<>(conflictIdCount * 2);
             resolvedIds = new HashMap<>(conflictIdCount * 2);
             items = new ArrayList<>(256);
@@ -734,7 +831,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         // only for debugging/toString() to help identify the parent node(s)
         final Artifact artifact;
 
-        final DependencyNode node;
+        // is mutable as removeLosers will mutate it (if Verbosity==STANDARD)
+        DependencyNode node;
 
         int depth;
 

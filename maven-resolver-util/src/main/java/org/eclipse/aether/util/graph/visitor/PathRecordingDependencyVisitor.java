@@ -85,6 +85,7 @@ public final class PathRecordingDependencyVisitor implements DependencyVisitor {
         return paths;
     }
 
+    @Override
     public boolean visitEnter(DependencyNode node) {
         boolean accept = filter == null || filter.accept(node, parents);
 
@@ -106,6 +107,7 @@ public final class PathRecordingDependencyVisitor implements DependencyVisitor {
         return !hasDuplicateNodeInParent;
     }
 
+    @Override
     public boolean visitLeave(DependencyNode node) {
         parents.pop();
 

@@ -50,6 +50,7 @@ public final class TreeDependencyVisitor implements DependencyVisitor {
         visits = new Stack<>();
     }
 
+    @Override
     public boolean visitEnter(DependencyNode node) {
         boolean visited = visitedNodes.put(node, Boolean.TRUE) != null;
 
@@ -62,6 +63,7 @@ public final class TreeDependencyVisitor implements DependencyVisitor {
         return visitor.visitEnter(node);
     }
 
+    @Override
     public boolean visitLeave(DependencyNode node) {
         Boolean visited = visits.pop();
 

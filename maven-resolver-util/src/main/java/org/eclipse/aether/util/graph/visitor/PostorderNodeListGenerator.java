@@ -42,11 +42,7 @@ public final class PostorderNodeListGenerator extends AbstractDepthFirstNodeList
 
         visits.push(visited);
 
-        if (visited) {
-            return false;
-        }
-
-        return true;
+        return !visited;
     }
 
     @Override

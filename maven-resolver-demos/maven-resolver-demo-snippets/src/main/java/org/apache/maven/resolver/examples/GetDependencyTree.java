@@ -19,7 +19,6 @@
 package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.apache.maven.resolver.examples.util.ConsoleDependencyGraphDumper;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -54,6 +53,6 @@ public class GetDependencyTree {
 
         CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
-        collectResult.getRoot().accept(new ConsoleDependencyGraphDumper());
+        collectResult.getRoot().accept(Booter.DUMPER_SOUT);
     }
 }
