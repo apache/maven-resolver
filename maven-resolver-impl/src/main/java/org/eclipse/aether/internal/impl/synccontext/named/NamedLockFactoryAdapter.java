@@ -181,13 +181,18 @@ public final class NamedLockFactoryAdapter {
                         }
 
                         if (!locked) {
-                            LOGGER.trace("Failed to acquire {} lock for '{}'", shared ? "read" : "write", key);
+                            String timeStr = time + " " + timeUnit;
+                            LOGGER.trace(
+                                    "Failed to acquire {} lock for '{}' in {}",
+                                    shared ? "read" : "write",
+                                    key,
+                                    timeStr);
 
                             namedLock.close();
                             closeAll();
-                            illegalStateExceptions.add(
-                                    new IllegalStateException("Attempt: " + retry + ": Could not acquire "
-                                            + (shared ? "read" : "write") + " lock for '" + namedLock.name() + "'"));
+                            illegalStateExceptions.add(new IllegalStateException(
+                                    "Attempt: " + retry + ": Could not acquire " + (shared ? "read" : "write")
+                                            + " lock for '" + namedLock.name() + "' in " + timeStr));
                             break;
                         } else {
                             locks.push(namedLock);
