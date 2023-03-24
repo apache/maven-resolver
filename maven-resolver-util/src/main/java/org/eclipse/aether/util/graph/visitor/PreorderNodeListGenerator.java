@@ -21,7 +21,7 @@ package org.eclipse.aether.util.graph.visitor;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Generates a sequence of dependency nodes from a dependeny graph by traversing the graph in preorder. This visitor
+ * Generates a sequence of dependency nodes from a dependency graph by traversing the graph in preorder. This visitor
  * visits each node exactly once regardless how many paths within the dependency graph lead to the node such that the
  * resulting node sequence is free of duplicates.
  */

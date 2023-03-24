@@ -59,10 +59,13 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
     protected void setupCollector() {
         session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, useSkipper);
 
-        collector = new BfDependencyCollector();
-        collector.setArtifactDescriptorReader(newReader(""));
-        collector.setVersionRangeResolver(new StubVersionRangeResolver());
-        collector.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
+        collector = new BfDependencyCollector(
+                new StubRemoteRepositoryManager(), newReader(""), new StubVersionRangeResolver());
+    }
+
+    @Override
+    protected String getTransitiveDepsUseRangesDirtyTreeResource() {
+        return "transitiveDepsUseRangesDirtyTreeResult_BF.txt";
     }
 
     private Dependency newDep(String coords, String scope, Collection<Exclusion> exclusions) {
