@@ -257,9 +257,9 @@ final class HttpTransporter extends AbstractTransporter {
 
         final long maxConnectionTTL = ConfigUtils.getLong(
                 session,
-                ConfigurationProperties.DEFAULT_HTTP_MAX_CONNECTION_TTL,
-                ConfigurationProperties.HTTP_MAX_CONNECTION_TTL + "." + repository.getId(),
-                ConfigurationProperties.HTTP_MAX_CONNECTION_TTL);
+                ConfigurationProperties.DEFAULT_HTTP_CONNECTION_MAX_TTL,
+                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL + "." + repository.getId(),
+                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL);
         if (maxConnectionTTL > 0) {
             ConnectionKeepAliveStrategy connectionKeepAliveStrategy = (response, context) -> {
                 long keepAlive = DefaultConnectionKeepAliveStrategy.INSTANCE.getKeepAliveDuration(response, context);
