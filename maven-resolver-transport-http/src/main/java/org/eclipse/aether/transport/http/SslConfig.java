@@ -47,10 +47,7 @@ final class SslConfig {
 
     final String httpsSecurityMode;
 
-    SslConfig(
-            RepositorySystemSession session,
-            AuthenticationContext authContext,
-            String httpsSecurityMode) {
+    SslConfig(RepositorySystemSession session, AuthenticationContext authContext, String httpsSecurityMode) {
         context = (authContext != null) ? authContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class) : null;
         verifier = (authContext != null)
                 ? authContext.get(AuthenticationContext.SSL_HOSTNAME_VERIFIER, HostnameVerifier.class)
