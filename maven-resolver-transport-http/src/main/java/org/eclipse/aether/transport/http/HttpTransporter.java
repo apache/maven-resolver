@@ -61,6 +61,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.BasicSchemeFactory;
 import org.apache.http.impl.auth.DigestSchemeFactory;
@@ -241,6 +242,15 @@ final class HttpTransporter extends AbstractTransporter {
                     "Transport used Apache HttpClient is instructed to use system properties: this may yield in unwanted side-effects!");
             LOGGER.warn("Please use documented means to configure resolver transport.");
             builder.useSystemProperties();
+        }
+
+        final boolean reuseConnections = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_REUSE_CONNECTIONS,
+                ConfigurationProperties.HTTP_REUSE_CONNECTIONS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_REUSE_CONNECTIONS);
+        if (!reuseConnections) {
+            builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
         }
 
         this.client = builder.build();

@@ -160,6 +160,21 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_HTTP_PREEMPTIVE_AUTH = false;
 
     /**
+     * Should HTTP client reuse connections (in other words, pool connections) or not?
+     *
+     * @see #DEFAULT_HTTP_REUSE_CONNECTIONS
+     * @since 1.9.8
+     */
+    public static final String HTTP_REUSE_CONNECTIONS = PREFIX_CONNECTOR + "http.reuseConnections";
+
+    /**
+     * The default value to use if {@link #HTTP_REUSE_CONNECTIONS} isn't set (true).
+     *
+     * @since 1.9.8
+     */
+    public static final boolean DEFAULT_HTTP_REUSE_CONNECTIONS = true;
+
+    /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
      * hostname verification). The default value is {@link #HTTPS_SECURITY_MODE_DEFAULT}.
      *
