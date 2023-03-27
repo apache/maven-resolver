@@ -47,7 +47,10 @@ final class SslConfig {
 
     final String httpsSecurityMode;
 
-    SslConfig(RepositorySystemSession session, AuthenticationContext authContext, String httpsSecurityMode) {
+    SslConfig(
+            RepositorySystemSession session,
+            AuthenticationContext authContext,
+            String httpsSecurityMode) {
         context = (authContext != null) ? authContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class) : null;
         verifier = (authContext != null)
                 ? authContext.get(AuthenticationContext.SSL_HOSTNAME_VERIFIER, HostnameVerifier.class)
@@ -85,7 +88,8 @@ final class SslConfig {
         return Objects.equals(context, that.context)
                 && Objects.equals(verifier, that.verifier)
                 && Arrays.equals(cipherSuites, that.cipherSuites)
-                && Arrays.equals(protocols, that.protocols);
+                && Arrays.equals(protocols, that.protocols)
+                && Objects.equals(httpsSecurityMode, that.httpsSecurityMode);
     }
 
     @Override
@@ -95,6 +99,7 @@ final class SslConfig {
         hash = hash * 31 + hash(verifier);
         hash = hash * 31 + Arrays.hashCode(cipherSuites);
         hash = hash * 31 + Arrays.hashCode(protocols);
+        hash = hash * 31 + hash(httpsSecurityMode);
         return hash;
     }
 
