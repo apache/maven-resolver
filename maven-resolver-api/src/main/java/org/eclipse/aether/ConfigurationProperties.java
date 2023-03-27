@@ -175,6 +175,22 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_HTTP_REUSE_CONNECTIONS = true;
 
     /**
+     * The maximum TTL (in milliseconds) HTTP client should apply to connections when reused.
+     *
+     * @see #DEFAULT_HTTP_MAX_CONNECTION_TTL
+     * @see <a href="https://hc.apache.org/httpcomponents-client-4.5.x/current/httpclient/apidocs/org/apache/http/conn/ConnectionKeepAliveStrategy.html">ConnectionKeepAliveStrategy</a>
+     * @since 1.9.8
+     */
+    public static final String HTTP_MAX_CONNECTION_TTL = PREFIX_CONNECTOR + "http.maxConnectionsTtl";
+
+    /**
+     * The default value to use if {@link #HTTP_MAX_CONNECTION_TTL} isn't set (-1 or "no suggested duration"/forever).
+     *
+     * @since 1.9.8
+     */
+    public static final long DEFAULT_HTTP_MAX_CONNECTION_TTL = -1;
+
+    /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
      * hostname verification). The default value is {@link #HTTPS_SECURITY_MODE_DEFAULT}.
      *
