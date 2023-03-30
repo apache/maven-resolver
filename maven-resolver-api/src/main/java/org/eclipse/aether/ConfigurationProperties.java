@@ -178,7 +178,6 @@ public final class ConfigurationProperties {
      * Time to live in seconds for an HTTP connection, after that time, the connection will be dropped.
      *
      * @see #DEFAULT_HTTP_CONNECTION_MAX_TTL
-     * @see <a href="https://hc.apache.org/httpcomponents-client-4.5.x/current/httpclient/apidocs/org/apache/http/conn/ConnectionKeepAliveStrategy.html">ConnectionKeepAliveStrategy</a>
      * @since 1.9.8
      */
     public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_CONNECTOR + "http.connectionMaxTtl";
