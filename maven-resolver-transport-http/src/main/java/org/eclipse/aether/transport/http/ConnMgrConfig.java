@@ -98,6 +98,7 @@ final class ConnMgrConfig {
                 && Objects.equals(verifier, that.verifier)
                 && Arrays.equals(cipherSuites, that.cipherSuites)
                 && Arrays.equals(protocols, that.protocols)
+                && Objects.equals(httpsSecurityMode, that.httpsSecurityMode)
                 && connectionMaxTtlSeconds == that.connectionMaxTtlSeconds
                 && maxConnectionsPerRoute == that.maxConnectionsPerRoute;
     }
@@ -109,6 +110,7 @@ final class ConnMgrConfig {
         hash = hash * 31 + hash(verifier);
         hash = hash * 31 + Arrays.hashCode(cipherSuites);
         hash = hash * 31 + Arrays.hashCode(protocols);
+        hash = hash * 31 + hash(httpsSecurityMode);
         hash = hash * 31 + hash(connectionMaxTtlSeconds);
         hash = hash * 31 + hash(maxConnectionsPerRoute);
         return hash;
