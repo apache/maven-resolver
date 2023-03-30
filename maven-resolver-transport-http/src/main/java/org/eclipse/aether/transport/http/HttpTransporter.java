@@ -59,7 +59,6 @@ import org.apache.http.client.utils.URIUtils;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.NoConnectionReuseStrategy;
@@ -70,7 +69,6 @@ import org.apache.http.impl.auth.KerberosSchemeFactory;
 import org.apache.http.impl.auth.NTLMSchemeFactory;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -164,7 +162,21 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
                 ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
                 ConfigurationProperties.HTTPS_SECURITY_MODE);
-        this.state = new LocalState(session, repository, new SslConfig(session, repoAuthContext, httpsSecurityMode));
+        final int connectionMaxTtlSeconds = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_CONNECTION_MAX_TTL,
+                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL + "." + repository.getId(),
+                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL);
+        final int maxConnectionsPerRoute = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE,
+                ConfigurationProperties.HTTP_MAX_CONNECTIONS_PER_ROUTE + "." + repository.getId(),
+                ConfigurationProperties.HTTP_MAX_CONNECTIONS_PER_ROUTE);
+        this.state = new LocalState(
+                session,
+                repository,
+                new ConnMgrConfig(
+                        session, repoAuthContext, httpsSecurityMode, connectionMaxTtlSeconds, maxConnectionsPerRoute));
 
         this.headers = ConfigUtils.getMap(
                 session,
@@ -253,23 +265,6 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.HTTP_REUSE_CONNECTIONS);
         if (!reuseConnections) {
             builder.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE);
-        }
-
-        final long maxConnectionTTL = ConfigUtils.getLong(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_CONNECTION_MAX_TTL,
-                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL + "." + repository.getId(),
-                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL);
-        if (maxConnectionTTL > 0) {
-            ConnectionKeepAliveStrategy connectionKeepAliveStrategy = (response, context) -> {
-                long keepAlive = DefaultConnectionKeepAliveStrategy.INSTANCE.getKeepAliveDuration(response, context);
-                if (keepAlive < 1) {
-                    return maxConnectionTTL;
-                } else {
-                    return Math.min(maxConnectionTTL, keepAlive);
-                }
-            };
-            builder.setKeepAliveStrategy(connectionKeepAliveStrategy);
         }
 
         this.client = builder.build();

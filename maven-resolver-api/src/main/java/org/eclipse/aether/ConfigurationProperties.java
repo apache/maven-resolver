@@ -175,7 +175,7 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_HTTP_REUSE_CONNECTIONS = true;
 
     /**
-     * The maximum TTL (in milliseconds) HTTP client should apply to connections when reused.
+     * Time to live in seconds for an HTTP connection, after that time, the connection will be dropped.
      *
      * @see #DEFAULT_HTTP_CONNECTION_MAX_TTL
      * @see <a href="https://hc.apache.org/httpcomponents-client-4.5.x/current/httpclient/apidocs/org/apache/http/conn/ConnectionKeepAliveStrategy.html">ConnectionKeepAliveStrategy</a>
@@ -184,11 +184,26 @@ public final class ConfigurationProperties {
     public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_CONNECTOR + "http.connectionMaxTtl";
 
     /**
-     * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (-1 or "no suggested duration"/forever).
+     * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (600 seconds).
      *
      * @since 1.9.8
      */
-    public static final long DEFAULT_HTTP_CONNECTION_MAX_TTL = -1;
+    public static final int DEFAULT_HTTP_CONNECTION_MAX_TTL = 600;
+
+    /**
+     * The maximum concurrent connections per route HTTP client is allowed to use.
+     *
+     * @see #DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE
+     * @since 1.9.8
+     */
+    public static final String HTTP_MAX_CONNECTIONS_PER_ROUTE = PREFIX_CONNECTOR + "http.maxConnectionsPerRoute";
+
+    /**
+     * The default value to use if {@link #HTTP_MAX_CONNECTIONS_PER_ROUTE} isn't set (50 connections).
+     *
+     * @since 1.9.8
+     */
+    public static final int DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE = 50;
 
     /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,

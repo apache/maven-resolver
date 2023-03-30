@@ -29,9 +29,10 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * SSL-related configuration and cache key for connection pools (whose scheme registries are derived from this config).
+ * Connection manager config: among other SSL-related configuration and cache key for connection pools (whose scheme
+ * registries are derived from this config).
  */
-final class SslConfig {
+final class ConnMgrConfig {
 
     private static final String CIPHER_SUITES = "https.cipherSuites";
 
@@ -47,7 +48,16 @@ final class SslConfig {
 
     final String httpsSecurityMode;
 
-    SslConfig(RepositorySystemSession session, AuthenticationContext authContext, String httpsSecurityMode) {
+    final int connectionMaxTtlSeconds;
+
+    final int maxConnectionsPerRoute;
+
+    ConnMgrConfig(
+            RepositorySystemSession session,
+            AuthenticationContext authContext,
+            String httpsSecurityMode,
+            int connectionMaxTtlSeconds,
+            int maxConnectionsPerRoute) {
         context = (authContext != null) ? authContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class) : null;
         verifier = (authContext != null)
                 ? authContext.get(AuthenticationContext.SSL_HOSTNAME_VERIFIER, HostnameVerifier.class)
@@ -56,6 +66,8 @@ final class SslConfig {
         cipherSuites = split(get(session, CIPHER_SUITES));
         protocols = split(get(session, PROTOCOLS));
         this.httpsSecurityMode = httpsSecurityMode;
+        this.connectionMaxTtlSeconds = connectionMaxTtlSeconds;
+        this.maxConnectionsPerRoute = maxConnectionsPerRoute;
     }
 
     private static String get(RepositorySystemSession session, String key) {
@@ -81,11 +93,13 @@ final class SslConfig {
         if (obj == null || !getClass().equals(obj.getClass())) {
             return false;
         }
-        SslConfig that = (SslConfig) obj;
+        ConnMgrConfig that = (ConnMgrConfig) obj;
         return Objects.equals(context, that.context)
                 && Objects.equals(verifier, that.verifier)
                 && Arrays.equals(cipherSuites, that.cipherSuites)
-                && Arrays.equals(protocols, that.protocols);
+                && Arrays.equals(protocols, that.protocols)
+                && connectionMaxTtlSeconds == that.connectionMaxTtlSeconds
+                && maxConnectionsPerRoute == that.maxConnectionsPerRoute;
     }
 
     @Override
@@ -95,6 +109,8 @@ final class SslConfig {
         hash = hash * 31 + hash(verifier);
         hash = hash * 31 + Arrays.hashCode(cipherSuites);
         hash = hash * 31 + Arrays.hashCode(protocols);
+        hash = hash * 31 + hash(connectionMaxTtlSeconds);
+        hash = hash * 31 + hash(maxConnectionsPerRoute);
         return hash;
     }
 

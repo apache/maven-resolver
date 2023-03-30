@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpHost;
 import org.apache.http.config.RegistryBuilder;
@@ -35,7 +36,11 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.conn.DefaultHttpClientConnectionOperator;
+import org.apache.http.impl.conn.DefaultSchemePortResolver;
+import org.apache.http.impl.conn.ManagedHttpClientConnectionFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLInitializationException;
 import org.eclipse.aether.ConfigurationProperties;
@@ -86,7 +91,7 @@ final class GlobalState implements Closeable {
 
     private static final String CONFIG_PROP_CACHE_STATE = "aether.connector.http.cacheState";
 
-    private final ConcurrentMap<SslConfig, HttpClientConnectionManager> connectionManagers;
+    private final ConcurrentMap<ConnMgrConfig, HttpClientConnectionManager> connectionManagers;
 
     private final ConcurrentMap<CompoundKey, Object> userTokens;
 
@@ -127,7 +132,7 @@ final class GlobalState implements Closeable {
 
     @Override
     public void close() {
-        for (Iterator<Map.Entry<SslConfig, HttpClientConnectionManager>> it =
+        for (Iterator<Map.Entry<ConnMgrConfig, HttpClientConnectionManager>> it =
                         connectionManagers.entrySet().iterator();
                 it.hasNext(); ) {
             HttpClientConnectionManager connMgr = it.next().getValue();
@@ -136,39 +141,34 @@ final class GlobalState implements Closeable {
         }
     }
 
-    public HttpClientConnectionManager getConnectionManager(SslConfig config) {
-        HttpClientConnectionManager manager = connectionManagers.get(config);
-        if (manager == null) {
-            HttpClientConnectionManager connMgr = newConnectionManager(config);
-            manager = connectionManagers.putIfAbsent(config, connMgr);
-            if (manager != null) {
-                connMgr.shutdown();
-            } else {
-                manager = connMgr;
-            }
-        }
-        return manager;
+    public HttpClientConnectionManager getConnectionManager(ConnMgrConfig config) {
+        return connectionManagers.computeIfAbsent(config, GlobalState::newConnectionManager);
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
-    public static HttpClientConnectionManager newConnectionManager(SslConfig sslConfig) {
+    public static HttpClientConnectionManager newConnectionManager(ConnMgrConfig connMgrConfig) {
         RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", PlainConnectionSocketFactory.getSocketFactory());
+        int connectionMaxTtlSeconds = ConfigurationProperties.DEFAULT_HTTP_CONNECTION_MAX_TTL;
+        int maxConnectionsPerRoute = ConfigurationProperties.DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE;
 
-        if (sslConfig == null) {
+        if (connMgrConfig == null) {
             registryBuilder.register("https", SSLConnectionSocketFactory.getSystemSocketFactory());
         } else {
             // config present: use provided, if any, or create (depending on httpsSecurityMode)
-            SSLSocketFactory sslSocketFactory = sslConfig.context != null ? sslConfig.context.getSocketFactory() : null;
-            HostnameVerifier hostnameVerifier = sslConfig.verifier;
-            if (ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(sslConfig.httpsSecurityMode)) {
+            connectionMaxTtlSeconds = connMgrConfig.connectionMaxTtlSeconds;
+            maxConnectionsPerRoute = connMgrConfig.maxConnectionsPerRoute;
+            SSLSocketFactory sslSocketFactory =
+                    connMgrConfig.context != null ? connMgrConfig.context.getSocketFactory() : null;
+            HostnameVerifier hostnameVerifier = connMgrConfig.verifier;
+            if (ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(connMgrConfig.httpsSecurityMode)) {
                 if (sslSocketFactory == null) {
                     sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
                 }
                 if (hostnameVerifier == null) {
                     hostnameVerifier = SSLConnectionSocketFactory.getDefaultHostnameVerifier();
                 }
-            } else if (ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(sslConfig.httpsSecurityMode)) {
+            } else if (ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(connMgrConfig.httpsSecurityMode)) {
                 if (sslSocketFactory == null) {
                     try {
                         sslSocketFactory = new SSLContextBuilder()
@@ -177,7 +177,7 @@ final class GlobalState implements Closeable {
                                 .getSocketFactory();
                     } catch (Exception e) {
                         throw new SSLInitializationException(
-                                "Could not configure '" + sslConfig.httpsSecurityMode + "' HTTPS security mode", e);
+                                "Could not configure '" + connMgrConfig.httpsSecurityMode + "' HTTPS security mode", e);
                     }
                 }
                 if (hostnameVerifier == null) {
@@ -185,18 +185,23 @@ final class GlobalState implements Closeable {
                 }
             } else {
                 throw new IllegalArgumentException(
-                        "Unsupported '" + sslConfig.httpsSecurityMode + "' HTTPS security mode.");
+                        "Unsupported '" + connMgrConfig.httpsSecurityMode + "' HTTPS security mode.");
             }
 
             registryBuilder.register(
                     "https",
                     new SSLConnectionSocketFactory(
-                            sslSocketFactory, sslConfig.protocols, sslConfig.cipherSuites, hostnameVerifier));
+                            sslSocketFactory, connMgrConfig.protocols, connMgrConfig.cipherSuites, hostnameVerifier));
         }
 
-        PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(registryBuilder.build());
-        connMgr.setMaxTotal(100);
-        connMgr.setDefaultMaxPerRoute(50);
+        PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(
+                new DefaultHttpClientConnectionOperator(
+                        registryBuilder.build(), DefaultSchemePortResolver.INSTANCE, SystemDefaultDnsResolver.INSTANCE),
+                ManagedHttpClientConnectionFactory.INSTANCE,
+                connectionMaxTtlSeconds,
+                TimeUnit.SECONDS);
+        connMgr.setMaxTotal(maxConnectionsPerRoute * 2);
+        connMgr.setDefaultMaxPerRoute(maxConnectionsPerRoute);
         return connMgr;
     }
 

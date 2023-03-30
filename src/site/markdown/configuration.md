@@ -35,9 +35,10 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.classpath.loader` | ClassLoader | `ClassLoader` from which resources should be retrieved which start with the `classpath:` protocol. | `Thread.currentThread().getContextClassLoader()` | no
 `aether.connector.connectTimeout` | long | Connect timeout in milliseconds. | `10000` | yes
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
-`aether.connector.http.connectionMaxTtl` | long | The maximum TTL (in milliseconds) HTTP client should apply to connections when reused. See <a href="https://hc.apache.org/httpcomponents-client-4.5.x/current/httpclient/apidocs/org/apache/http/conn/ConnectionKeepAliveStrategy.html">ConnectionKeepAliveStrategy</a> for values. | `-1` | yes
+`aether.connector.http.connectionMaxTtl` | int | Time to live in seconds for an HTTP connection, after that time, the connection will be dropped. | `600` | yes
 `aether.connector.http.credentialEncoding` | String | The encoding/charset to use when exchanging credentials with HTTP servers. | `"ISO-8859-1"` | yes
 `aether.connector.http.headers` | `Map<String, String>` | The request headers to use for HTTP-based repository connectors. The headers are specified using a map of strings mapping a header name to its value. The repository-specific headers map is supposed to be complete, i.e. is not merged with the general headers map. | - | yes
+`aether.connector.http.maxConnectionsPerRoute` | int | The maximum concurrent connections per route HTTP client is allowed to use. | `50` | yes
 `aether.connector.http.preemptiveAuth` | boolean | Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default is disabled, as it is considered less secure. | `false` | yes
 `aether.connector.http.preemptivePutAuth` | boolean | Should HTTP client use preemptive-authentication for HTTP PUTs only (works only w/ BASIC). By default is enabled (same as Wagon). | `true` | yes
 `aether.connector.http.retryHandler.count` | int | The maximum number of times a request to a remote HTTP server should be retried in case of an error. | `3` | yes
