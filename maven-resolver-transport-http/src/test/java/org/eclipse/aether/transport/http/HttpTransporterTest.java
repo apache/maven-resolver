@@ -1165,6 +1165,23 @@ public class HttpTransporterTest {
         assertEquals(stats.toString(), 1, stats.getAvailable());
     }
 
+    @Test
+    public void testConnectionNoReuse() throws Exception {
+        httpServer.addSslConnector();
+        session.setCache(new DefaultRepositoryCache());
+        session.setConfigProperty(ConfigurationProperties.HTTP_REUSE_CONNECTIONS, false);
+        for (int i = 0; i < 3; i++) {
+            newTransporter(httpServer.getHttpsUrl());
+            GetTask task = new GetTask(URI.create("repo/file.txt"));
+            transporter.get(task);
+            assertEquals("test", task.getDataString());
+        }
+        PoolStats stats = ((ConnPoolControl<?>)
+                        ((HttpTransporter) transporter).getState().getConnectionManager())
+                .getTotalStats();
+        assertEquals(stats.toString(), 0, stats.getAvailable());
+    }
+
     @Test(expected = NoTransporterException.class)
     public void testInit_BadProtocol() throws Exception {
         newTransporter("bad:/void");

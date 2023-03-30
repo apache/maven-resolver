@@ -50,16 +50,16 @@ final class LocalState implements Closeable {
 
     private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
 
-    LocalState(RepositorySystemSession session, RemoteRepository repo, SslConfig sslConfig) {
+    LocalState(RepositorySystemSession session, RemoteRepository repo, ConnMgrConfig connMgrConfig) {
         global = GlobalState.get(session);
         userToken = this;
         if (global == null) {
-            connMgr = GlobalState.newConnectionManager(sslConfig);
+            connMgr = GlobalState.newConnectionManager(connMgrConfig);
             userTokenKey = null;
             expectContinueKey = null;
             authSchemePools = new ConcurrentHashMap<>();
         } else {
-            connMgr = global.getConnectionManager(sslConfig);
+            connMgr = global.getConnectionManager(connMgrConfig);
             userTokenKey = new CompoundKey(repo.getId(), repo.getUrl(), repo.getAuthentication(), repo.getProxy());
             expectContinueKey = new CompoundKey(repo.getUrl(), repo.getProxy());
             authSchemePools = global.getAuthSchemePools();

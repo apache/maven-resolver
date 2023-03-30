@@ -160,6 +160,51 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_HTTP_PREEMPTIVE_AUTH = false;
 
     /**
+     * Should HTTP client reuse connections (in other words, pool connections) or not?
+     *
+     * @see #DEFAULT_HTTP_REUSE_CONNECTIONS
+     * @since 1.9.8
+     */
+    public static final String HTTP_REUSE_CONNECTIONS = PREFIX_CONNECTOR + "http.reuseConnections";
+
+    /**
+     * The default value to use if {@link #HTTP_REUSE_CONNECTIONS} isn't set (true).
+     *
+     * @since 1.9.8
+     */
+    public static final boolean DEFAULT_HTTP_REUSE_CONNECTIONS = true;
+
+    /**
+     * Time to live in seconds for an HTTP connection, after that time, the connection will be dropped.
+     *
+     * @see #DEFAULT_HTTP_CONNECTION_MAX_TTL
+     * @since 1.9.8
+     */
+    public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_CONNECTOR + "http.connectionMaxTtl";
+
+    /**
+     * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (600 seconds).
+     *
+     * @since 1.9.8
+     */
+    public static final int DEFAULT_HTTP_CONNECTION_MAX_TTL = 600;
+
+    /**
+     * The maximum concurrent connections per route HTTP client is allowed to use.
+     *
+     * @see #DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE
+     * @since 1.9.8
+     */
+    public static final String HTTP_MAX_CONNECTIONS_PER_ROUTE = PREFIX_CONNECTOR + "http.maxConnectionsPerRoute";
+
+    /**
+     * The default value to use if {@link #HTTP_MAX_CONNECTIONS_PER_ROUTE} isn't set (50 connections).
+     *
+     * @since 1.9.8
+     */
+    public static final int DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE = 50;
+
+    /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
      * hostname verification). The default value is {@link #HTTPS_SECURITY_MODE_DEFAULT}.
      *
