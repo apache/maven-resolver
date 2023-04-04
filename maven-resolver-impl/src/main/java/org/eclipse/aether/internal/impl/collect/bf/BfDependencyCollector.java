@@ -34,12 +34,14 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
@@ -491,8 +493,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
         }
 
         void cacheVersionRangeDescriptor(Artifact artifact, DescriptorResolutionResult resolutionResult) {
-            results.computeIfAbsent(
-                    ArtifactIdUtils.toId(artifact), key -> ConcurrentUtils.constantFuture(resolutionResult));
+            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> new DoneFuture<>(resolutionResult));
         }
 
         Future<DescriptorResolutionResult> find(Artifact artifact) {
@@ -502,6 +503,39 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
         @Override
         public void close() {
             executorService.shutdown();
+        }
+    }
+
+    static class DoneFuture<V> implements Future<V> {
+        private final V v;
+
+        DoneFuture(V v) {
+            this.v = v;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+
+        @Override
+        public boolean isDone() {
+            return true;
+        }
+
+        @Override
+        public V get() throws InterruptedException, ExecutionException {
+            return v;
+        }
+
+        @Override
+        public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return v;
         }
     }
 

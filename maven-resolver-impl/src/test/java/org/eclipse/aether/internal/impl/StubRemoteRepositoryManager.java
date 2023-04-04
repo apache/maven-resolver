@@ -20,11 +20,11 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
+import org.eclipse.aether.util.StringUtils;
 
 import static java.util.Objects.requireNonNull;
 
