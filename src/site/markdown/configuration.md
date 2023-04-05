@@ -92,7 +92,9 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.syncContext.named.factory` | String | Name of the named lock factory implementing the `org.eclipse.aether.named.NamedLockFactory` interface. | `"rwlock-local"` | no
 `aether.syncContext.named.hashing.depth` | int | The directory depth to "spread" hashes in git-like fashion, integer between 0 and 4 (inclusive). | 2 | no
 `aether.syncContext.named.nameMapper` | String | Name of name mapper implementing the `org.eclipse.aether.internal.impl.synccontext.named.NameMapper` interface. | `"gav"` | no
-`aether.syncContext.named.time` | long | Amount of time a synchronization context shall wait to obtain a lock. | 30 | no
+`aether.syncContext.named.retry` | int | Count of retries SyncContext adapter should perform, when obtaining locks. | `1` | no
+`aether.syncContext.named.retry.wait` | long | Amount of milliseconds a thread to wait between retries, when obtaining locks. | `200` | no
+`aether.syncContext.named.time` | long | Amount of time a synchronization context shall wait to obtain a lock. | `30` | no
 `aether.syncContext.named.time.unit` | long | Unit of the lock wait time. | `"SECONDS"` | no
 `aether.syncContext.named.discriminating.discriminator` | String | A discriminator name prefix identifying a Resolver instance. | `"sha1('${hostname:-localhost}:${maven.repo.local}')"` or `"sha1('')"` if generation fails | no
 `aether.syncContext.named.discriminating.hostname` | String | The hostname to be used with discriminating mapper. | Detected with `InetAddress.getLocalHost().getHostName()` | no
