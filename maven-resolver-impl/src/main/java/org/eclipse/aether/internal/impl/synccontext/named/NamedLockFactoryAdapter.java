@@ -51,7 +51,7 @@ public final class NamedLockFactoryAdapter {
 
     public static final String RETRY_KEY = "aether.syncContext.named.retry";
 
-    public static final int DEFAULT_RETRY = 2;
+    public static final int DEFAULT_RETRY = 1;
 
     public static final String RETRY_WAIT_KEY = "aether.syncContext.named.retry.wait";
 
