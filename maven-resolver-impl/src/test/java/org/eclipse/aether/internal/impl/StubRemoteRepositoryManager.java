@@ -24,7 +24,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.util.StringUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -50,11 +49,11 @@ public class StubRemoteRepositoryManager implements RemoteRepositoryManager {
         RepositoryPolicy policy = repository.getPolicy(snapshots);
 
         String checksums = session.getChecksumPolicy();
-        if (StringUtils.isEmpty(checksums)) {
+        if (checksums == null || checksums.isEmpty()) {
             checksums = policy.getChecksumPolicy();
         }
         String updates = session.getUpdatePolicy();
-        if (StringUtils.isEmpty(updates)) {
+        if (updates == null || updates.isEmpty()) {
             updates = policy.getUpdatePolicy();
         }
 

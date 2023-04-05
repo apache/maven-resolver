@@ -41,7 +41,6 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
-import org.eclipse.aether.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -281,7 +280,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
         } else {
             String checksums = session.getChecksumPolicy();
             //noinspection StatementWithEmptyBody
-            if (globalPolicy && !StringUtils.isEmpty(checksums)) {
+            if (globalPolicy && checksums != null && !checksums.isEmpty()) {
                 // use global override
             } else {
                 checksums = checksumPolicyProvider.getEffectiveChecksumPolicy(
@@ -290,7 +289,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
             String updates = session.getUpdatePolicy();
             //noinspection StatementWithEmptyBody
-            if (globalPolicy && !StringUtils.isEmpty(updates)) {
+            if (globalPolicy && updates != null && !updates.isEmpty()) {
                 // use global override
             } else {
                 updates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
@@ -305,10 +304,10 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
     private RepositoryPolicy merge(RepositoryPolicy policy, String updates, String checksums) {
         if (policy != null) {
-            if (StringUtils.isEmpty(updates)) {
+            if (updates == null || updates.isEmpty()) {
                 updates = policy.getUpdatePolicy();
             }
-            if (StringUtils.isEmpty(checksums)) {
+            if (checksums == null || checksums.isEmpty()) {
                 checksums = policy.getChecksumPolicy();
             }
             if (!policy.getUpdatePolicy().equals(updates)
