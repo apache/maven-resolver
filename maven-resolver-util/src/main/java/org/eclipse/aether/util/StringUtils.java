@@ -33,7 +33,7 @@ public final class StringUtils {
      *
      * @param string The string to check, may be {@code null}.
      * @return {@code true} if the string is {@code null} or of zero length, {@code false} otherwise.
-     * @deprecated
+     * @deprecated Deprecated since 1.5.0 without any alternative provided. Use Java 8 APIs instead.
      */
     @Deprecated
     public static boolean isEmpty(String string) {
