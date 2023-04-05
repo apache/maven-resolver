@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -42,6 +41,7 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
