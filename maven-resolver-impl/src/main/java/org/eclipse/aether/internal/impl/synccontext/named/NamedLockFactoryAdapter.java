@@ -172,12 +172,12 @@ public final class NamedLockFactoryAdapter {
                 LOGGER.trace(
                         "Attempt {}: Need {} {} lock(s) for {}", attempt, keys.size(), shared ? "read" : "write", keys);
                 int acquiredLockCount = 0;
-                for (String key : keys) {
-                    NamedLock namedLock = namedLockFactory.getLock(key);
-                    try {
-                        if (attempt > 1) {
-                            Thread.sleep(retryWait);
-                        }
+                try {
+                    if (attempt > 1) {
+                        Thread.sleep(retryWait);
+                    }
+                    for (String key : keys) {
+                        NamedLock namedLock = namedLockFactory.getLock(key);
                         LOGGER.trace("Acquiring {} lock for '{}'", shared ? "read" : "write", key);
 
                         boolean locked;
@@ -205,11 +205,10 @@ public final class NamedLockFactoryAdapter {
                             locks.push(namedLock);
                             acquiredLockCount++;
                         }
-
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException(e);
                     }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
                 }
                 LOGGER.trace("Attempt {}: Total locks acquired: {}", attempt, acquiredLockCount);
                 if (acquiredLockCount == keys.size()) {
