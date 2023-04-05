@@ -169,222 +169,245 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
             RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
+        try (SyncContext shared = syncContextFactory.newInstance(session, true);
+                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
             Collection<Metadata> metadata = new ArrayList<>(requests.size());
             for (MetadataRequest request : requests) {
                 metadata.add(request.getMetadata());
             }
 
-            syncContext.acquire(null, metadata);
-
-            return resolve(session, requests);
+            return resolve(shared, exclusive, metadata, session, requests);
         }
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     private List<MetadataResult> resolve(
-            RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
-        List<MetadataResult> results = new ArrayList<>(requests.size());
+            SyncContext shared,
+            SyncContext exclusive,
+            Collection<Metadata> subjects,
+            RepositorySystemSession session,
+            Collection<? extends MetadataRequest> requests) {
+        SyncContext current = shared;
+        try {
+            while (true) {
+                current.acquire(null, subjects);
 
-        List<ResolveTask> tasks = new ArrayList<>(requests.size());
+                final List<MetadataResult> results = new ArrayList<>(requests.size());
+                final List<ResolveTask> tasks = new ArrayList<>(requests.size());
+                final Map<File, Long> localLastUpdates = new HashMap<>();
+                final RemoteRepositoryFilter remoteRepositoryFilter =
+                        remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
 
-        Map<File, Long> localLastUpdates = new HashMap<>();
+                for (MetadataRequest request : requests) {
+                    RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
-        RemoteRepositoryFilter remoteRepositoryFilter =
-                remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
+                    MetadataResult result = new MetadataResult(request);
+                    results.add(result);
 
-        for (MetadataRequest request : requests) {
-            RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
+                    Metadata metadata = request.getMetadata();
+                    RemoteRepository repository = request.getRepository();
 
-            MetadataResult result = new MetadataResult(request);
-            results.add(result);
+                    if (repository == null) {
+                        LocalRepository localRepo =
+                                session.getLocalRepositoryManager().getRepository();
 
-            Metadata metadata = request.getMetadata();
-            RemoteRepository repository = request.getRepository();
+                        metadataResolving(session, trace, metadata, localRepo);
 
-            if (repository == null) {
-                LocalRepository localRepo = session.getLocalRepositoryManager().getRepository();
+                        File localFile = getLocalFile(session, metadata);
 
-                metadataResolving(session, trace, metadata, localRepo);
+                        if (localFile != null) {
+                            metadata = metadata.setFile(localFile);
+                            result.setMetadata(metadata);
+                        } else {
+                            result.setException(new MetadataNotFoundException(metadata, localRepo));
+                        }
 
-                File localFile = getLocalFile(session, metadata);
+                        metadataResolved(session, trace, metadata, localRepo, result.getException());
+                        continue;
+                    }
 
-                if (localFile != null) {
-                    metadata = metadata.setFile(localFile);
-                    result.setMetadata(metadata);
-                } else {
-                    result.setException(new MetadataNotFoundException(metadata, localRepo));
+                    if (remoteRepositoryFilter != null) {
+                        RemoteRepositoryFilter.Result filterResult =
+                                remoteRepositoryFilter.acceptMetadata(repository, metadata);
+                        if (!filterResult.isAccepted()) {
+                            result.setException(
+                                    new MetadataNotFoundException(metadata, repository, filterResult.reasoning()));
+                            continue;
+                        }
+                    }
+
+                    List<RemoteRepository> repositories =
+                            getEnabledSourceRepositories(repository, metadata.getNature());
+
+                    if (repositories.isEmpty()) {
+                        continue;
+                    }
+
+                    metadataResolving(session, trace, metadata, repository);
+                    LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+                    LocalMetadataRequest localRequest =
+                            new LocalMetadataRequest(metadata, repository, request.getRequestContext());
+                    LocalMetadataResult lrmResult = lrm.find(session, localRequest);
+
+                    File metadataFile = lrmResult.getFile();
+
+                    try {
+                        Utils.checkOffline(session, offlineController, repository);
+                    } catch (RepositoryOfflineException e) {
+                        if (metadataFile != null) {
+                            metadata = metadata.setFile(metadataFile);
+                            result.setMetadata(metadata);
+                        } else {
+                            String msg = "Cannot access " + repository.getId() + " (" + repository.getUrl()
+                                    + ") in offline mode and the metadata " + metadata
+                                    + " has not been downloaded from it before";
+                            result.setException(new MetadataNotFoundException(metadata, repository, msg, e));
+                        }
+
+                        metadataResolved(session, trace, metadata, repository, result.getException());
+                        continue;
+                    }
+
+                    Long localLastUpdate = null;
+                    if (request.isFavorLocalRepository()) {
+                        File localFile = getLocalFile(session, metadata);
+                        localLastUpdate = localLastUpdates.get(localFile);
+                        if (localLastUpdate == null) {
+                            localLastUpdate = localFile != null ? localFile.lastModified() : 0;
+                            localLastUpdates.put(localFile, localLastUpdate);
+                        }
+                    }
+
+                    List<UpdateCheck<Metadata, MetadataTransferException>> checks = new ArrayList<>();
+                    Exception exception = null;
+                    for (RemoteRepository repo : repositories) {
+                        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
+                        check.setLocalLastUpdated((localLastUpdate != null) ? localLastUpdate : 0);
+                        check.setItem(metadata);
+
+                        // use 'main' installation file for the check (-> use requested repository)
+                        File checkFile = new File(
+                                session.getLocalRepository().getBasedir(),
+                                session.getLocalRepositoryManager()
+                                        .getPathForRemoteMetadata(metadata, repository, request.getRequestContext()));
+                        check.setFile(checkFile);
+                        check.setRepository(repository);
+                        check.setAuthoritativeRepository(repo);
+                        check.setPolicy(
+                                getPolicy(session, repo, metadata.getNature()).getUpdatePolicy());
+
+                        if (lrmResult.isStale()) {
+                            checks.add(check);
+                        } else {
+                            updateCheckManager.checkMetadata(session, check);
+                            if (check.isRequired()) {
+                                checks.add(check);
+                            } else if (exception == null) {
+                                exception = check.getException();
+                            }
+                        }
+                    }
+
+                    if (!checks.isEmpty()) {
+                        RepositoryPolicy policy = getPolicy(session, repository, metadata.getNature());
+
+                        // install path may be different from lookup path
+                        File installFile = new File(
+                                session.getLocalRepository().getBasedir(),
+                                session.getLocalRepositoryManager()
+                                        .getPathForRemoteMetadata(
+                                                metadata, request.getRepository(), request.getRequestContext()));
+
+                        metadataDownloading(
+                                session,
+                                trace,
+                                result.getRequest().getMetadata(),
+                                result.getRequest().getRepository());
+
+                        ResolveTask task = new ResolveTask(
+                                session, trace, result, installFile, checks, policy.getChecksumPolicy());
+                        tasks.add(task);
+                    } else {
+                        result.setException(exception);
+                        if (metadataFile != null) {
+                            metadata = metadata.setFile(metadataFile);
+                            result.setMetadata(metadata);
+                        }
+                        metadataResolved(session, trace, metadata, repository, result.getException());
+                    }
                 }
 
-                metadataResolved(session, trace, metadata, localRepo, result.getException());
-                continue;
-            }
-
-            if (remoteRepositoryFilter != null) {
-                RemoteRepositoryFilter.Result filterResult =
-                        remoteRepositoryFilter.acceptMetadata(repository, metadata);
-                if (!filterResult.isAccepted()) {
-                    result.setException(new MetadataNotFoundException(metadata, repository, filterResult.reasoning()));
+                if (!tasks.isEmpty() && current == shared) {
+                    current.close();
+                    current = exclusive;
                     continue;
                 }
-            }
 
-            List<RemoteRepository> repositories = getEnabledSourceRepositories(repository, metadata.getNature());
+                if (!tasks.isEmpty()) {
+                    int threads = ExecutorUtils.threadCount(session, 4, CONFIG_PROP_THREADS);
+                    Executor executor = ExecutorUtils.executor(
+                            Math.min(tasks.size(), threads), getClass().getSimpleName() + '-');
+                    try {
+                        RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
-            if (repositories.isEmpty()) {
-                continue;
-            }
+                        for (ResolveTask task : tasks) {
+                            executor.execute(errorForwarder.wrap(task));
+                        }
 
-            metadataResolving(session, trace, metadata, repository);
-            LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-            LocalMetadataRequest localRequest =
-                    new LocalMetadataRequest(metadata, repository, request.getRequestContext());
-            LocalMetadataResult lrmResult = lrm.find(session, localRequest);
+                        errorForwarder.await();
 
-            File metadataFile = lrmResult.getFile();
+                        for (ResolveTask task : tasks) {
+                            /*
+                             * NOTE: Touch after registration with local repo to ensure concurrent resolution is not
+                             * rejected with "already updated" via session data when actual update to local repo is
+                             * still pending.
+                             */
+                            for (UpdateCheck<Metadata, MetadataTransferException> check : task.checks) {
+                                updateCheckManager.touchMetadata(task.session, check.setException(task.exception));
+                            }
 
-            try {
-                Utils.checkOffline(session, offlineController, repository);
-            } catch (RepositoryOfflineException e) {
-                if (metadataFile != null) {
-                    metadata = metadata.setFile(metadataFile);
-                    result.setMetadata(metadata);
-                } else {
-                    String msg = "Cannot access " + repository.getId() + " (" + repository.getUrl()
-                            + ") in offline mode and the metadata " + metadata
-                            + " has not been downloaded from it before";
-                    result.setException(new MetadataNotFoundException(metadata, repository, msg, e));
-                }
+                            metadataDownloaded(
+                                    session,
+                                    task.trace,
+                                    task.request.getMetadata(),
+                                    task.request.getRepository(),
+                                    task.metadataFile,
+                                    task.exception);
 
-                metadataResolved(session, trace, metadata, repository, result.getException());
-                continue;
-            }
-
-            Long localLastUpdate = null;
-            if (request.isFavorLocalRepository()) {
-                File localFile = getLocalFile(session, metadata);
-                localLastUpdate = localLastUpdates.get(localFile);
-                if (localLastUpdate == null) {
-                    localLastUpdate = localFile != null ? localFile.lastModified() : 0;
-                    localLastUpdates.put(localFile, localLastUpdate);
-                }
-            }
-
-            List<UpdateCheck<Metadata, MetadataTransferException>> checks = new ArrayList<>();
-            Exception exception = null;
-            for (RemoteRepository repo : repositories) {
-                UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
-                check.setLocalLastUpdated((localLastUpdate != null) ? localLastUpdate : 0);
-                check.setItem(metadata);
-
-                // use 'main' installation file for the check (-> use requested repository)
-                File checkFile = new File(
-                        session.getLocalRepository().getBasedir(),
-                        session.getLocalRepositoryManager()
-                                .getPathForRemoteMetadata(metadata, repository, request.getRequestContext()));
-                check.setFile(checkFile);
-                check.setRepository(repository);
-                check.setAuthoritativeRepository(repo);
-                check.setPolicy(getPolicy(session, repo, metadata.getNature()).getUpdatePolicy());
-
-                if (lrmResult.isStale()) {
-                    checks.add(check);
-                } else {
-                    updateCheckManager.checkMetadata(session, check);
-                    if (check.isRequired()) {
-                        checks.add(check);
-                    } else if (exception == null) {
-                        exception = check.getException();
+                            task.result.setException(task.exception);
+                        }
+                    } finally {
+                        ExecutorUtils.shutdown(executor);
+                    }
+                    for (ResolveTask task : tasks) {
+                        Metadata metadata = task.request.getMetadata();
+                        // re-lookup metadata for resolve
+                        LocalMetadataRequest localRequest = new LocalMetadataRequest(
+                                metadata, task.request.getRepository(), task.request.getRequestContext());
+                        File metadataFile = session.getLocalRepositoryManager()
+                                .find(session, localRequest)
+                                .getFile();
+                        if (metadataFile != null) {
+                            metadata = metadata.setFile(metadataFile);
+                            task.result.setMetadata(metadata);
+                        }
+                        if (task.result.getException() == null) {
+                            task.result.setUpdated(true);
+                        }
+                        metadataResolved(
+                                session,
+                                task.trace,
+                                metadata,
+                                task.request.getRepository(),
+                                task.result.getException());
                     }
                 }
+
+                return results;
             }
-
-            if (!checks.isEmpty()) {
-                RepositoryPolicy policy = getPolicy(session, repository, metadata.getNature());
-
-                // install path may be different from lookup path
-                File installFile = new File(
-                        session.getLocalRepository().getBasedir(),
-                        session.getLocalRepositoryManager()
-                                .getPathForRemoteMetadata(
-                                        metadata, request.getRepository(), request.getRequestContext()));
-
-                metadataDownloading(
-                        session,
-                        trace,
-                        result.getRequest().getMetadata(),
-                        result.getRequest().getRepository());
-
-                ResolveTask task =
-                        new ResolveTask(session, trace, result, installFile, checks, policy.getChecksumPolicy());
-                tasks.add(task);
-            } else {
-                result.setException(exception);
-                if (metadataFile != null) {
-                    metadata = metadata.setFile(metadataFile);
-                    result.setMetadata(metadata);
-                }
-                metadataResolved(session, trace, metadata, repository, result.getException());
-            }
+        } finally {
+            current.close();
         }
-
-        if (!tasks.isEmpty()) {
-            int threads = ExecutorUtils.threadCount(session, 4, CONFIG_PROP_THREADS);
-            Executor executor = ExecutorUtils.executor(
-                    Math.min(tasks.size(), threads), getClass().getSimpleName() + '-');
-            try {
-                RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
-
-                for (ResolveTask task : tasks) {
-                    executor.execute(errorForwarder.wrap(task));
-                }
-
-                errorForwarder.await();
-
-                for (ResolveTask task : tasks) {
-                    /*
-                     * NOTE: Touch after registration with local repo to ensure concurrent resolution is not
-                     * rejected with "already updated" via session data when actual update to local repo is
-                     * still pending.
-                     */
-                    for (UpdateCheck<Metadata, MetadataTransferException> check : task.checks) {
-                        updateCheckManager.touchMetadata(task.session, check.setException(task.exception));
-                    }
-
-                    metadataDownloaded(
-                            session,
-                            task.trace,
-                            task.request.getMetadata(),
-                            task.request.getRepository(),
-                            task.metadataFile,
-                            task.exception);
-
-                    task.result.setException(task.exception);
-                }
-            } finally {
-                ExecutorUtils.shutdown(executor);
-            }
-            for (ResolveTask task : tasks) {
-                Metadata metadata = task.request.getMetadata();
-                // re-lookup metadata for resolve
-                LocalMetadataRequest localRequest = new LocalMetadataRequest(
-                        metadata, task.request.getRepository(), task.request.getRequestContext());
-                File metadataFile = session.getLocalRepositoryManager()
-                        .find(session, localRequest)
-                        .getFile();
-                if (metadataFile != null) {
-                    metadata = metadata.setFile(metadataFile);
-                    task.result.setMetadata(metadata);
-                }
-                if (task.result.getException() == null) {
-                    task.result.setUpdated(true);
-                }
-                metadataResolved(
-                        session, task.trace, metadata, task.request.getRepository(), task.result.getException());
-            }
-        }
-
-        return results;
     }
 
     private File getLocalFile(RepositorySystemSession session, Metadata metadata) {
