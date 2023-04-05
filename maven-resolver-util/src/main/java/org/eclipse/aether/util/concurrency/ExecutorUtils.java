@@ -87,10 +87,61 @@ public final class ExecutorUtils {
         if (defaultValue < 1) {
             throw new IllegalArgumentException("Invalid defaultValue: " + defaultValue + ". Must be greater than 0.");
         }
-        int threadCount = ConfigUtils.getInteger(session, defaultValue, keys);
+
+        int threadCount;
+
+        Object threadCountAsObject = ConfigUtils.getObject(session, defaultValue, keys);
+        if (threadCountAsObject instanceof Number) {
+            threadCount = ((Number) threadCountAsObject).intValue();
+        } else {
+            threadCount = calculateDegreeOfConcurrency(String.valueOf(threadCountAsObject));
+        }
+
         if (threadCount < 1) {
             throw new IllegalArgumentException("Invalid value: " + threadCount + ". Must be greater than 0.");
         }
         return threadCount;
+    }
+
+    /**
+     * Calculates "degree of concurrency" (count of threads to be used) based on non-null input string. String may
+     * be string representation of integer or a string representation of float followed by "C" character
+     * (case-sensitive) in which case the float is interpreted as multiplier for core count as reported by Java.
+     * Blatantly copied (and simplified) from maven-embedder
+     * {@code org.apache.maven.cli.MavenCli#calculateDegreeOfConcurrency} class.
+     */
+    private static int calculateDegreeOfConcurrency(String threadConfiguration) {
+        if (threadConfiguration.endsWith("C")) {
+            threadConfiguration = threadConfiguration.substring(0, threadConfiguration.length() - 1);
+
+            try {
+                float coreMultiplier = Float.parseFloat(threadConfiguration);
+
+                if (coreMultiplier <= 0.0f) {
+                    throw new IllegalArgumentException("Invalid threads core multiplier value: '" + threadConfiguration
+                            + "C'. Value must be positive.");
+                }
+
+                int threads = (int) (coreMultiplier * Runtime.getRuntime().availableProcessors());
+                return threads == 0 ? 1 : threads;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Invalid threads value: '" + threadConfiguration + "C'. Value must be positive.");
+            }
+        } else {
+            try {
+                int threads = Integer.parseInt(threadConfiguration);
+
+                if (threads <= 0) {
+                    throw new IllegalArgumentException(
+                            "Invalid threads value: '" + threadConfiguration + "'. Value must be positive.");
+                }
+
+                return threads;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Invalid threads value: '" + threadConfiguration + "'. Supported are integer values.");
+            }
+        }
     }
 }
