@@ -247,7 +247,8 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
+        try (SyncContext shared = syncContextFactory.newInstance(session, true);
+                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
             Collection<Artifact> artifacts = new ArrayList<>(requests.size());
             for (ArtifactRequest request : requests) {
                 if (request.getArtifact().getProperty(ArtifactProperties.LOCAL_PATH, null) != null) {
@@ -256,207 +257,226 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                 artifacts.add(request.getArtifact());
             }
 
-            syncContext.acquire(artifacts, null);
-
-            return resolve(session, requests);
+            return resolve(shared, exclusive, artifacts, session, requests);
         }
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     private List<ArtifactResult> resolve(
-            RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)
+            SyncContext shared,
+            SyncContext exclusive,
+            Collection<Artifact> subjects,
+            RepositorySystemSession session,
+            Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException {
-        List<ArtifactResult> results = new ArrayList<>(requests.size());
-        boolean failures = false;
-        final boolean simpleLrmInterop = ConfigUtils.getBoolean(session, false, CONFIG_PROP_SIMPLE_LRM_INTEROP);
+        SyncContext current = shared;
+        try {
+            while (true) {
+                current.acquire(subjects, null);
 
-        LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-        WorkspaceReader workspace = session.getWorkspaceReader();
+                boolean failures = false;
+                final List<ArtifactResult> results = new ArrayList<>(requests.size());
+                final boolean simpleLrmInterop = ConfigUtils.getBoolean(session, false, CONFIG_PROP_SIMPLE_LRM_INTEROP);
+                final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+                final WorkspaceReader workspace = session.getWorkspaceReader();
+                final List<ResolutionGroup> groups = new ArrayList<>();
+                // filter != null: means "filtering applied", if null no filtering applied (behave as before)
+                final RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
 
-        List<ResolutionGroup> groups = new ArrayList<>();
-        // filter != null: means "filtering applied", if null no filtering applied (behave as before)
-        RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
+                for (ArtifactRequest request : requests) {
+                    RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
-        for (ArtifactRequest request : requests) {
-            RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
+                    ArtifactResult result = new ArtifactResult(request);
+                    results.add(result);
 
-            ArtifactResult result = new ArtifactResult(request);
-            results.add(result);
+                    Artifact artifact = request.getArtifact();
 
-            Artifact artifact = request.getArtifact();
+                    if (current == shared) {
+                        artifactResolving(session, trace, artifact);
+                    }
 
-            artifactResolving(session, trace, artifact);
+                    String localPath = artifact.getProperty(ArtifactProperties.LOCAL_PATH, null);
+                    if (localPath != null) {
+                        // unhosted artifact, just validate file
+                        File file = new File(localPath);
+                        if (!file.isFile()) {
+                            failures = true;
+                            result.addException(new ArtifactNotFoundException(artifact, null));
+                        } else {
+                            artifact = artifact.setFile(file);
+                            result.setArtifact(artifact);
+                            artifactResolved(session, trace, artifact, null, result.getExceptions());
+                        }
+                        continue;
+                    }
 
-            String localPath = artifact.getProperty(ArtifactProperties.LOCAL_PATH, null);
-            if (localPath != null) {
-                // unhosted artifact, just validate file
-                File file = new File(localPath);
-                if (!file.isFile()) {
-                    failures = true;
-                    result.addException(new ArtifactNotFoundException(artifact, null));
-                } else {
-                    artifact = artifact.setFile(file);
-                    result.setArtifact(artifact);
-                    artifactResolved(session, trace, artifact, null, result.getExceptions());
-                }
-                continue;
-            }
+                    List<RemoteRepository> remoteRepositories = request.getRepositories();
+                    List<RemoteRepository> filteredRemoteRepositories = new ArrayList<>(remoteRepositories);
+                    if (filter != null) {
+                        for (RemoteRepository repository : remoteRepositories) {
+                            RemoteRepositoryFilter.Result filterResult = filter.acceptArtifact(repository, artifact);
+                            if (!filterResult.isAccepted()) {
+                                result.addException(new ArtifactFilteredOutException(
+                                        artifact, repository, filterResult.reasoning()));
+                                filteredRemoteRepositories.remove(repository);
+                            }
+                        }
+                    }
 
-            List<RemoteRepository> remoteRepositories = request.getRepositories();
-            List<RemoteRepository> filteredRemoteRepositories = new ArrayList<>(remoteRepositories);
-            if (filter != null) {
-                for (RemoteRepository repository : remoteRepositories) {
-                    RemoteRepositoryFilter.Result filterResult = filter.acceptArtifact(repository, artifact);
-                    if (!filterResult.isAccepted()) {
-                        result.addException(
-                                new ArtifactFilteredOutException(artifact, repository, filterResult.reasoning()));
-                        filteredRemoteRepositories.remove(repository);
+                    VersionResult versionResult;
+                    try {
+                        VersionRequest versionRequest =
+                                new VersionRequest(artifact, filteredRemoteRepositories, request.getRequestContext());
+                        versionRequest.setTrace(trace);
+                        versionResult = versionResolver.resolveVersion(session, versionRequest);
+                    } catch (VersionResolutionException e) {
+                        result.addException(e);
+                        continue;
+                    }
+
+                    artifact = artifact.setVersion(versionResult.getVersion());
+
+                    if (versionResult.getRepository() != null) {
+                        if (versionResult.getRepository() instanceof RemoteRepository) {
+                            filteredRemoteRepositories =
+                                    Collections.singletonList((RemoteRepository) versionResult.getRepository());
+                        } else {
+                            filteredRemoteRepositories = Collections.emptyList();
+                        }
+                    }
+
+                    if (workspace != null) {
+                        File file = workspace.findArtifact(artifact);
+                        if (file != null) {
+                            artifact = artifact.setFile(file);
+                            result.setArtifact(artifact);
+                            result.setRepository(workspace.getRepository());
+                            artifactResolved(session, trace, artifact, result.getRepository(), null);
+                            continue;
+                        }
+                    }
+
+                    LocalArtifactResult local = lrm.find(
+                            session,
+                            new LocalArtifactRequest(
+                                    artifact, filteredRemoteRepositories, request.getRequestContext()));
+                    result.setLocalArtifactResult(local);
+                    boolean found = (filter != null && local.isAvailable()) || isLocallyInstalled(local, versionResult);
+                    // with filtering it is availability that drives logic
+                    // without filtering it is simply presence of file that drives the logic
+                    // "interop" logic with simple LRM leads to RRF breakage: hence is ignored when filtering in effect
+                    if (found) {
+                        if (local.getRepository() != null) {
+                            result.setRepository(local.getRepository());
+                        } else {
+                            result.setRepository(lrm.getRepository());
+                        }
+
+                        try {
+                            artifact = artifact.setFile(getFile(session, artifact, local.getFile()));
+                            result.setArtifact(artifact);
+                            artifactResolved(session, trace, artifact, result.getRepository(), null);
+                        } catch (ArtifactTransferException e) {
+                            result.addException(e);
+                        }
+                        if (filter == null && simpleLrmInterop && !local.isAvailable()) {
+                            /*
+                             * NOTE: Interop with simple local repository: An artifact installed by a simple local repo
+                             * manager will not show up in the repository tracking file of the enhanced local repository.
+                             * If however the maven-metadata-local.xml tells us the artifact was installed locally, we
+                             * sync the repository tracking file.
+                             */
+                            lrm.add(session, new LocalArtifactRegistration(artifact));
+                        }
+
+                        continue;
+                    }
+
+                    if (local.getFile() != null) {
+                        LOGGER.info(
+                                "Artifact {} is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from {}",
+                                artifact,
+                                remoteRepositories);
+                    }
+
+                    LOGGER.debug("Resolving artifact {} from {}", artifact, remoteRepositories);
+                    AtomicBoolean resolved = new AtomicBoolean(false);
+                    Iterator<ResolutionGroup> groupIt = groups.iterator();
+                    for (RemoteRepository repo : filteredRemoteRepositories) {
+                        if (!repo.getPolicy(artifact.isSnapshot()).isEnabled()) {
+                            continue;
+                        }
+
+                        try {
+                            Utils.checkOffline(session, offlineController, repo);
+                        } catch (RepositoryOfflineException e) {
+                            Exception exception = new ArtifactNotFoundException(
+                                    artifact,
+                                    repo,
+                                    "Cannot access " + repo.getId() + " ("
+                                            + repo.getUrl() + ") in offline mode and the artifact " + artifact
+                                            + " has not been downloaded from it before.",
+                                    e);
+                            result.addException(exception);
+                            continue;
+                        }
+
+                        ResolutionGroup group = null;
+                        while (groupIt.hasNext()) {
+                            ResolutionGroup t = groupIt.next();
+                            if (t.matches(repo)) {
+                                group = t;
+                                break;
+                            }
+                        }
+                        if (group == null) {
+                            group = new ResolutionGroup(repo);
+                            groups.add(group);
+                            groupIt = Collections.emptyIterator();
+                        }
+                        group.items.add(new ResolutionItem(trace, artifact, resolved, result, local, repo));
                     }
                 }
-            }
 
-            VersionResult versionResult;
-            try {
-                VersionRequest versionRequest =
-                        new VersionRequest(artifact, filteredRemoteRepositories, request.getRequestContext());
-                versionRequest.setTrace(trace);
-                versionResult = versionResolver.resolveVersion(session, versionRequest);
-            } catch (VersionResolutionException e) {
-                result.addException(e);
-                continue;
-            }
-
-            artifact = artifact.setVersion(versionResult.getVersion());
-
-            if (versionResult.getRepository() != null) {
-                if (versionResult.getRepository() instanceof RemoteRepository) {
-                    filteredRemoteRepositories =
-                            Collections.singletonList((RemoteRepository) versionResult.getRepository());
-                } else {
-                    filteredRemoteRepositories = Collections.emptyList();
-                }
-            }
-
-            if (workspace != null) {
-                File file = workspace.findArtifact(artifact);
-                if (file != null) {
-                    artifact = artifact.setFile(file);
-                    result.setArtifact(artifact);
-                    result.setRepository(workspace.getRepository());
-                    artifactResolved(session, trace, artifact, result.getRepository(), null);
-                    continue;
-                }
-            }
-
-            LocalArtifactResult local = lrm.find(
-                    session,
-                    new LocalArtifactRequest(artifact, filteredRemoteRepositories, request.getRequestContext()));
-            result.setLocalArtifactResult(local);
-            boolean found = (filter != null && local.isAvailable()) || isLocallyInstalled(local, versionResult);
-            // with filtering it is availability that drives logic
-            // without filtering it is simply presence of file that drives the logic
-            // "interop" logic with simple LRM leads to RRF breakage: hence is ignored when filtering in effect
-            if (found) {
-                if (local.getRepository() != null) {
-                    result.setRepository(local.getRepository());
-                } else {
-                    result.setRepository(lrm.getRepository());
-                }
-
-                try {
-                    artifact = artifact.setFile(getFile(session, artifact, local.getFile()));
-                    result.setArtifact(artifact);
-                    artifactResolved(session, trace, artifact, result.getRepository(), null);
-                } catch (ArtifactTransferException e) {
-                    result.addException(e);
-                }
-                if (filter == null && simpleLrmInterop && !local.isAvailable()) {
-                    /*
-                     * NOTE: Interop with simple local repository: An artifact installed by a simple local repo
-                     * manager will not show up in the repository tracking file of the enhanced local repository.
-                     * If however the maven-metadata-local.xml tells us the artifact was installed locally, we
-                     * sync the repository tracking file.
-                     */
-                    lrm.add(session, new LocalArtifactRegistration(artifact));
-                }
-
-                continue;
-            }
-
-            if (local.getFile() != null) {
-                LOGGER.info(
-                        "Artifact {} is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from {}",
-                        artifact,
-                        remoteRepositories);
-            }
-
-            LOGGER.debug("Resolving artifact {} from {}", artifact, remoteRepositories);
-            AtomicBoolean resolved = new AtomicBoolean(false);
-            Iterator<ResolutionGroup> groupIt = groups.iterator();
-            for (RemoteRepository repo : filteredRemoteRepositories) {
-                if (!repo.getPolicy(artifact.isSnapshot()).isEnabled()) {
+                if (!groups.isEmpty() && current == shared) {
+                    current.close();
+                    current = exclusive;
                     continue;
                 }
 
-                try {
-                    Utils.checkOffline(session, offlineController, repo);
-                } catch (RepositoryOfflineException e) {
-                    Exception exception = new ArtifactNotFoundException(
-                            artifact,
-                            repo,
-                            "Cannot access " + repo.getId() + " ("
-                                    + repo.getUrl() + ") in offline mode and the artifact " + artifact
-                                    + " has not been downloaded from it before.",
-                            e);
-                    result.addException(exception);
-                    continue;
+                for (ResolutionGroup group : groups) {
+                    performDownloads(session, group);
                 }
 
-                ResolutionGroup group = null;
-                while (groupIt.hasNext()) {
-                    ResolutionGroup t = groupIt.next();
-                    if (t.matches(repo)) {
-                        group = t;
-                        break;
+                for (ArtifactResolverPostProcessor artifactResolverPostProcessor :
+                        artifactResolverPostProcessors.values()) {
+                    artifactResolverPostProcessor.postProcess(session, results);
+                }
+
+                for (ArtifactResult result : results) {
+                    ArtifactRequest request = result.getRequest();
+
+                    Artifact artifact = result.getArtifact();
+                    if (artifact == null || artifact.getFile() == null) {
+                        failures = true;
+                        if (result.getExceptions().isEmpty()) {
+                            Exception exception = new ArtifactNotFoundException(request.getArtifact(), null);
+                            result.addException(exception);
+                        }
+                        RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
+                        artifactResolved(session, trace, request.getArtifact(), null, result.getExceptions());
                     }
                 }
-                if (group == null) {
-                    group = new ResolutionGroup(repo);
-                    groups.add(group);
-                    groupIt = Collections.emptyIterator();
+
+                if (failures) {
+                    throw new ArtifactResolutionException(results);
                 }
-                group.items.add(new ResolutionItem(trace, artifact, resolved, result, local, repo));
+
+                return results;
             }
+        } finally {
+            current.close();
         }
-
-        for (ResolutionGroup group : groups) {
-            performDownloads(session, group);
-        }
-
-        for (ArtifactResolverPostProcessor artifactResolverPostProcessor : artifactResolverPostProcessors.values()) {
-            artifactResolverPostProcessor.postProcess(session, results);
-        }
-
-        for (ArtifactResult result : results) {
-            ArtifactRequest request = result.getRequest();
-
-            Artifact artifact = result.getArtifact();
-            if (artifact == null || artifact.getFile() == null) {
-                failures = true;
-                if (result.getExceptions().isEmpty()) {
-                    Exception exception = new ArtifactNotFoundException(request.getArtifact(), null);
-                    result.addException(exception);
-                }
-                RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
-                artifactResolved(session, trace, request.getArtifact(), null, result.getExceptions());
-            }
-        }
-
-        if (failures) {
-            throw new ArtifactResolutionException(results);
-        }
-
-        return results;
     }
 
     private boolean isLocallyInstalled(LocalArtifactResult lar, VersionResult vr) {
