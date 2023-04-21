@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositoryEvent;
+import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.Filters;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
@@ -71,6 +73,8 @@ public class DefaultMetadataResolverTest {
 
     private DefaultRemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    private RecordingRepositoryListener listener;
+
     @Before
     public void setup() throws Exception {
         remoteRepositoryFilterSources = new HashMap<>();
@@ -95,6 +99,9 @@ public class DefaultMetadataResolverTest {
         metadata = new DefaultMetadata("gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         connector = new RecordingRepositoryConnector();
         connectorProvider.setConnector(connector);
+
+        listener = new RecordingRepositoryListener();
+        session.setRepositoryListener(listener);
     }
 
     @After
@@ -150,6 +157,21 @@ public class DefaultMetadataResolverTest {
                 ((TestLocalRepositoryManager) session.getLocalRepositoryManager()).getMetadataRegistration();
         assertTrue(metadataRegistration.contains(metadata));
         assertEquals(1, metadataRegistration.size());
+
+        List<RepositoryEvent> events =
+                listener.getEvents(EventType.METADATA_DOWNLOADING, EventType.METADATA_DOWNLOADED);
+        assertEquals(2, events.size());
+        assertSame(events.get(0).getTrace(), events.get(1).getTrace());
+
+        RepositoryEvent event = events.get(0);
+        assertEquals(EventType.METADATA_DOWNLOADING, event.getType());
+        assertEquals(metadata, event.getMetadata());
+
+        event = events.get(1);
+        assertEquals(EventType.METADATA_DOWNLOADED, event.getType());
+        assertEquals(metadata, event.getMetadata());
+        assertNull(event.getException());
+        assertNotNull(event.getFile());
     }
 
     @Test

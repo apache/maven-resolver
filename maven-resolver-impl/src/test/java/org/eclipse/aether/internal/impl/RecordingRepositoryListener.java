@@ -19,8 +19,12 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
@@ -32,10 +36,14 @@ import static java.util.Objects.requireNonNull;
  */
 class RecordingRepositoryListener implements RepositoryListener {
 
-    private List<RepositoryEvent> events = Collections.synchronizedList(new ArrayList<RepositoryEvent>());
+    private final List<RepositoryEvent> events = Collections.synchronizedList(new ArrayList<>());
 
-    public List<RepositoryEvent> getEvents() {
-        return events;
+    public List<RepositoryEvent> getEvents(RepositoryEvent.EventType... types) {
+        if (types == null || types.length == 0) {
+            return events;
+        }
+        Set<RepositoryEvent.EventType> requiredTypes = EnumSet.copyOf(Arrays.asList(types));
+        return events.stream().filter(e -> requiredTypes.contains(e.getType())).collect(Collectors.toList());
     }
 
     public void clear() {
