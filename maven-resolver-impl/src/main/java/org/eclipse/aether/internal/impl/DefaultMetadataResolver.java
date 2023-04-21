@@ -318,12 +318,6 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                                         .getPathForRemoteMetadata(
                                                 metadata, request.getRepository(), request.getRequestContext()));
 
-                        metadataDownloading(
-                                session,
-                                trace,
-                                result.getRequest().getMetadata(),
-                                result.getRequest().getRepository());
-
                         ResolveTask task = new ResolveTask(
                                 session, trace, result, installFile, checks, policy.getChecksumPolicy());
                         tasks.add(task);
@@ -351,6 +345,9 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
                         for (ResolveTask task : tasks) {
+                            metadataDownloading(
+                                    task.session, task.trace, task.request.getMetadata(), task.request.getRepository());
+
                             executor.execute(errorForwarder.wrap(task));
                         }
 
