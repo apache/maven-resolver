@@ -61,15 +61,15 @@ proliferation of non-standard checksums.
 
 ## Implemented Checksum Algorithms
 
-Resolver out of the box provides the following checksum algorithms (not, algorithm names are case sensitive):
+Resolver out of the box provides the following checksum algorithms (important: algorithm names are case sensitive):
 
 * MD5
 * SHA-1
 * SHA-256
 * SHA-512
 
-This set of algorithms above are provided by Resolver by default, but using the SPI anyone can extend
-Resolver with new type of Checksum Algorithms.
+The algorithms above are provided by Resolver, by default. Still, using the SPI, anyone can extend
+Resolver with new types of Checksum Algorithms.
 
 To see how and when checksums are used in Resolver, continue on [Expected Checksums](expected-checksums.html)
 page.
