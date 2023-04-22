@@ -59,12 +59,16 @@ that were provided by remote repository along with its content.
 Finally, the **Remote External** checksums are the classic checksums we all know: They are laid down 
 next to Artifact files (hence "external") on remote repository (hence "remote"), according 
 to remote repository layout. To obtain Remote External checksum, an HTTP GET request is
-required.
+required. This strategy will follow the order given in `aether.checksums.algorithms`, so
+will ask for checksums in same order as the parameter contains algorithm names.
 
 During single artifact retrieval, these strategies are executed in above specified order,
 and only if current strategy has "no answer", the next strategy is attempted. Hence, if 
 resolver is able to get "expected" checksum from Provided Checksum Source, the Remote Included
-and Remote External sources will not be used at all.
+and Remote External sources will not be consulted. Important implication: given that almost
+all MRMs and remote repositories (Maven Central, Google Mirror of Maven Central) send "standard"
+checksums in their response, if any of the standard (SHA-1, MD5) checksum is enabled, validation will
+be probably satisfied by "Remote Included" strategy. 
 
 The big win here is that by obtaining hashes using "Remote Included" and not by "Remote External"
 strategy, we can halve the count of HTTP requests to download an Artifact.
