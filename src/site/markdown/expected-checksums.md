@@ -23,10 +23,10 @@ to ensure Artifact integrity. In addition, latest Resolver may
 use checksums in various other ways too, for example to ensure 
 Artifact integrity during resolution. 
 
-Still, the essence of all checksums uses in Resolver is 
+The bare essence of all checksum uses in Resolver is 
 "integrity validation": Resolver calculates by various
 means the "calculated" checksum (for given payload), 
-then obtains the "expected" checksum (for same payload)
+then obtains somehow the "expected" checksum (for same payload)
 and compares the two.
 
 In essence and somewhat simplified, Resolver integrity validation looks like this:
@@ -34,7 +34,7 @@ In essence and somewhat simplified, Resolver integrity validation looks like thi
 * obtain the Artifact "expected" checksum
 * compare the "calculated" checksum with "expected" checksum
 
-This page will cover all the "expected" checksums.
+This page will cover all the "expected" checksum varieties.
 
 
 ## Transport Checksum Strategies
