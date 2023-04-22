@@ -119,3 +119,18 @@ artifacts are "validated" with some known (possibly even cryptographically stron
 
 This new "post processing" may become handy in cases when user does not trust the local
 repository, as may be shared with some other unknown or even untrusted party.
+
+The Trusted Checksums provide two source implementations out of the box.
+
+### Summary File Trusted Checksums Source
+
+The summary file source uses single file that is in GNU coreutils compatible format: each
+line contains the hash and relative path of artifact from local repository basedir.
+
+The file can be produced using plain GNU coreutils `sha1sum` and alike command line tools,
+and same tools can be also used to "batch verify" all the artifacts enlisted in the summary file.
+
+### Sparse Directory Trusted Checksums Source
+
+This source mimics Maven local repository layout, and stores checksums in similar layout
+as Maven local repository stores checksums in local repository.
