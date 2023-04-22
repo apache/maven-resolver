@@ -29,12 +29,7 @@ means the "calculated" checksum (for given payload),
 then obtains somehow the "expected" checksum (for same payload)
 and compares the two.
 
-In essence and somewhat simplified, Resolver integrity validation looks like this:
-* hash the Artifact payload (file), this is the "calculated" checksum
-* obtain the Artifact "expected" checksum
-* compare the "calculated" checksum with "expected" checksum
-
-This page will cover all the "expected" checksum varieties.
+This page covers all the "expected" checksum varieties.
 
 
 ## Transport Checksum Strategies
