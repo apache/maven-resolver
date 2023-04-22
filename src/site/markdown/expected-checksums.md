@@ -41,30 +41,30 @@ ways.
 
 Resolver has broadened the "obtain" step for "expected" checksum with two new strategies,
 so the three expected checksum kinds in transport are: "Provided", "Remote Included" and 
-"Remote External". All these strategies represent the source of "expected" checksum
-as explained above, but it differs **how** Resolver obtains these.
+"Remote External". All these strategies provide the source of "expected" checksum, 
+but it differs **how** Resolver obtains these.
 
-The **Provided** kind of expected checksums are "provided" to resolver by some alternative
+The new **Provided** kind of expected checksums are "provided" to resolver by some alternative
 means, possibly ahead of any transport operation. There is an SPI interfacce that users may 
 implement, to have own ways to provide checksums to resolver, or, may use out of the 
-box implementation, that simply delegates call to "trusted checksums" (more about them later).
+box implementation, that simply delegates to "trusted checksums" (more about them later).
 
-The **Remote Included** checkums are "included" by remote party in some way, most typically 
+The new **Remote Included** checksums are in some way "included" by remote party, typically 
 in their response. Since advent of modern Repository Managers, most of 
 them already sends checksums (usually the "standard" SHA-1 and MD5)
 in their response headers. Moreover, Maven Central, and even Google Mirror of Maven Central 
-sends these as well. By extracting these checksums from response, we can get hashes
-that were provided by remote repository along with it' content. 
+sends them as well. By extracting these checksums from response, we can get hashes
+that were provided by remote repository along with its content. 
 
 Finally, the **Remote External** checksums are the classic checksums we all know: They are laid down 
 next to Artifact files (hence "external") on remote repository (hence "remote"), according 
-to remote repository layout. To obtain Remote External checksum, a HTTP request is
-made toward remote repository.
+to remote repository layout. To obtain Remote External checksum, an HTTP GET request is
+required.
 
 During single artifact retrieval, these strategies are executed in above specified order,
-and only if current strategy has "no answer", the next strategy is tried. Hence, if 
+and only if current strategy has "no answer", the next strategy is attempted. Hence, if 
 resolver is able to get "expected" checksum from Provided Checksum Source, the Remote Included
-and Remote External sources will not be invoked at all.
+and Remote External sources will not be used at all.
 
 The big win here is that by obtaining hashes using "Remote Included" and not by "Remote External"
 strategy, we can halve the count of HTTP requests to download an Artifact.
@@ -99,20 +99,23 @@ Emitted by: Maven Central, GCS, some CDNs and probably more.
 ## Trusted Checksums
 
 All the "expected" checksums discussed above are trasport bound, they are all
-about HTTP requests and responses, or require Transport related API elements.
+about URLs, HTTP requests and responses, or require Transport related API elements.
 
-Trusted checksums are yet another SPI component `TrustedChecksumsSource` that are able
-to deliver "expected" checksums for given Artifact, with difference that trusted 
-checksums SPI is unrelated and not coupled to any transport API element.
+Trusted checksums is a SPI component that is able to deliver "expected" checksums 
+for given Artifact, without use of any transport API element. In other words, this
+API is not bound to transport.
 
-Since they map ideally into transport "Provided Checksum" kind, resolver provides Provided
-Checksum Source implementation that simply delegates to Trusted checksums (is able to
-make Provided and Trusted checksums become equivalent as transport is regarded).
+Since they almost on-to-one into transport "Provided Checksum" strategy, resolver provides 
+implementation that simply delegates Provided to Trusted checksums (is able to
+make Provided and Trusted checksums equivalent, as transport is regarded).
 
-But the biggest game changer of Trusted Checksumms is their transport agnosticism, that they
-can participate in places where there is no transport happening at all.
+But the biggest game changer of Trusted Checksumms is their transport independence, that they
+can be utilized in places where there is no transport happening at all.
 
 One of such uses of Trusted Checksums in Resolver is in ArtifactResolver "post processing".
 This new functionality, at the cost of checksumming overhead, is able to validate all
 the resolved artifacts againstr Truated Checksums, thus, making sure that all resolved
 artifacts are "validated" with some known (possibly even cryptographically strong) checksum.
+
+This new "post processing" may become handy in cases when user does not trust the local
+repository, as may be shared with some other unknown or even untrusted party.
