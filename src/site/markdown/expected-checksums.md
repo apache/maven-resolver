@@ -34,7 +34,7 @@ This page covers all the "expected" checksum varieties.
 
 ## Transport Checksum Strategies
 
-Historically, the "obtain expected checksum" was implemented as simple HTTP GET 
+Historically, the "obtain expected checksum" was implemented as simple 
 request against Artifact checksum URL (Artifact URL appended by ".sha1"). This logic 
 is still present in current Resolver, but is "decorated" and extended in multiple 
 ways.
@@ -45,7 +45,7 @@ so the three expected checksum kinds in transport are: "Provided", "Remote Inclu
 but it differs **how** Resolver obtains these.
 
 The new **Provided** kind of expected checksums are "provided" to resolver by some alternative
-means, possibly ahead of any transport operation. There is an SPI interfacce that users may 
+means, possibly ahead of any transport operation. There is an SPI interface that users may 
 implement, to have own ways to provide checksums to resolver, or, may use out of the 
 box implementation, that simply delegates to "trusted checksums" (more about them later).
 
@@ -113,15 +113,15 @@ Since they almost on-to-one into transport "Provided Checksum" strategy, resolve
 implementation that simply delegates Provided to Trusted checksums (is able to
 make Provided and Trusted checksums equivalent, as transport is regarded).
 
-But the biggest game changer of Trusted Checksumms is their transport independence, that they
+But the biggest game changer of Trusted Checksums is their transport independence, that they
 can be utilized in places where there is no transport happening at all.
 
-One of such uses of Trusted Checksums in Resolver is in ArtifactResolver "post processing".
-This new functionality, at the cost of checksumming overhead, is able to validate all
-the resolved artifacts againstr Truated Checksums, thus, making sure that all resolved
+One of such uses of Trusted Checksums in Resolver is in ArtifactResolver post-processing.
+This new functionality, at the cost of checksum calculation overhead, is able to validate all
+the resolved artifacts against Trusted Checksums, thus, making sure that all resolved
 artifacts are "validated" with some known (possibly even cryptographically strong) checksum.
 
-This new "post processing" may become handy in cases when user does not trust the local
+This new post-processing may become handy in cases when user does not trust the local
 repository, as may be shared with some other unknown or even untrusted party.
 
 The Trusted Checksums provide two source implementations out of the box.
@@ -134,7 +134,12 @@ line contains the hash and relative path of artifact from local repository based
 The file can be produced using plain GNU coreutils `sha1sum` and alike command line tools,
 and same tools can be also used to "batch verify" all the artifacts enlisted in the summary file.
 
+Each file contains information for single checksum algorithm (noted by file extension).
+
 ### Sparse Directory Trusted Checksums Source
 
 This source mimics Maven local repository layout, and stores checksums in similar layout
 as Maven local repository stores checksums in local repository.
+
+Hare, just like Maven local repository, the sparse directory can contain multiple algorithm checksums
+as they are coded in looked up checksum path (the extension).

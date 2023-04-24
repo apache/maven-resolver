@@ -49,7 +49,7 @@ of message digests for checksums. While this is not wrong or even mistake in any
 wrong use case. The notion of transport validation and secure hashes are being constantly mixed up due historical
 reasons explained above.
 
-Hence, Maven Resolver team decided to make supported set of checksums limited. Instead of directly exposing
+Hence, Maven Resolver team decided to make supported set of checksums more controlled. Instead of directly exposing
 `MessageDigest` algorithms, we introduced an SPI around checksums. This not only prevents wrong use cases (not
 exposing all supported algorithms of `MessageDigest` to users), but also makes possible to introduce real checksum
 algorithms. Finally, the set of supported checksum algorithms remains extensible: if some required algorithm is
