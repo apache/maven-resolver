@@ -50,7 +50,7 @@ so the three expected checksum kinds in transport are: "Provided", "Remote Inclu
 but it differs **how** Resolver obtains these.
 
 The new **Provided** kind of expected checksums are provided to resolver by some alternative
-means, possibly ahead of any transport operation. There is an SPI interface that users may 
+means, possibly ahead of any transport operation. There is an SPI extension point that users may 
 implement, to have own ways to provide checksums to resolver. Alternatively, one may use Resolver out of the 
 box implementation, that simply delegates "provided checksums" to "trusted checksums" (more about them later).
 
