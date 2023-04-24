@@ -107,7 +107,7 @@ Emitted by: Maven Central, GCS, some CDNs and probably more.
 
 ## Trusted Checksums
 
-All the "expected" checksums discussed above are trasport bound, they are all
+All the "expected" checksums discussed above are transport bound, they are all
 about URLs, HTTP requests and responses, or require Transport related API elements.
 
 Trusted checksums is a SPI component that is able to deliver "expected" checksums 
