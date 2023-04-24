@@ -29,7 +29,12 @@ means the "calculated" checksum (for given payload),
 then obtains somehow the "expected" checksum (for same payload)
 and compares the two.
 
-This page covers all the "expected" checksum varieties.
+The "calculated" checksum is uninteresting from technical viewpoint,
+as it is calculated by standard means: either during payload
+streaming, or in worst case, from file already present on local
+file system (transport dependant).
+
+Instead, this page covers all the "expected" checksum varieties.
 
 
 ## Transport Checksum Strategies
