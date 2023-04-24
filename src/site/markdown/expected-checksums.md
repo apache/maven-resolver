@@ -114,20 +114,18 @@ Trusted checksums is a SPI component that is able to deliver "expected" checksum
 for given Artifact, without use of any transport API element. In other words, this
 API is not bound to transport.
 
-Since they almost on-to-one into transport "Provided Checksum" strategy, resolver provides 
-implementation that simply delegates Provided to Trusted checksums (is able to
-make Provided and Trusted checksums equivalent, as transport is regarded).
+Since they map almost on-to-one into transport "Provided Checksum" strategy, resolver provides 
+implementation that delegates Provided to Trusted checksums (makes Provided and Trusted 
+checksums equivalent, transport-wise).
 
 But the biggest game changer of Trusted Checksums is their transport independence, that they
-can be utilized in places where there is no transport happening at all.
-
-One of such uses of Trusted Checksums in Resolver is in ArtifactResolver post-processing.
+can be utilized in places where there is no transport happening at all.  One of such uses of 
+Trusted Checksums is ArtifactResolver post-processing.
 This new functionality, at the cost of checksum calculation overhead, is able to validate all
 the resolved artifacts against Trusted Checksums, thus, making sure that all resolved
-artifacts are "validated" with some known (possibly even cryptographically strong) checksum.
-
-This new post-processing may become handy in cases when user does not trust the local
-repository, as may be shared with some other unknown or even untrusted party.
+artifacts are "validated" with some known (possibly even cryptographically strong) checksum
+provided by user.  This new feature may become handy in cases when user does not trust the local
+repository, as it may be shared with some other unknown or even untrusted party.
 
 The Trusted Checksums provide two source implementations out of the box.
 
@@ -136,15 +134,15 @@ The Trusted Checksums provide two source implementations out of the box.
 The summary file source uses single file that is in GNU coreutils compatible format: each
 line contains the hash and relative path of artifact from local repository basedir.
 
-The file can be produced using plain GNU coreutils `sha1sum` and alike command line tools,
-and same tools can be also used to "batch verify" all the artifacts enlisted in the summary file.
+The file can be produced using common OS and GNU coreutils `sha1sum` command line tools,
+and the same tools can be also used to "batch verify" the enlisted artifacts in local repository.
 
-Each file contains information for single checksum algorithm (noted by file extension).
+Each summary file contains information for single checksum algorithm, represented as summary file extension.
 
 ### Sparse Directory Trusted Checksums Source
 
 This source mimics Maven local repository layout, and stores checksums in similar layout
 as Maven local repository stores checksums in local repository.
 
-Hare, just like Maven local repository, the sparse directory can contain multiple algorithm checksums
-as they are coded in looked up checksum path (the extension).
+Hare, just like Maven local repository, the sparse directory can contain multiple algorithm checksums,
+as they are coded in checksum file path (the extension).
