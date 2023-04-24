@@ -44,17 +44,17 @@ request against Artifact checksum URL (Artifact URL appended by ".sha1"). This l
 is still present in current Resolver, but is "decorated" and extended in multiple 
 ways.
 
-Resolver has broadened the "obtain" step for "expected" checksum with two new strategies,
+Resolver has broadened the "obtain checksum" step for "expected" checksum with two new strategies,
 so the three expected checksum kinds in transport are: "Provided", "Remote Included" and 
 "Remote External". All these strategies provide the source of "expected" checksum, 
 but it differs **how** Resolver obtains these.
 
-The new **Provided** kind of expected checksums are "provided" to resolver by some alternative
+The new **Provided** kind of expected checksums are provided to resolver by some alternative
 means, possibly ahead of any transport operation. There is an SPI interface that users may 
-implement, to have own ways to provide checksums to resolver, or, may use out of the 
-box implementation, that simply delegates to "trusted checksums" (more about them later).
+implement, to have own ways to provide checksums to resolver. Alternatively, one may use Resolver out of the 
+box implementation, that simply delegates "provided checksums" to "trusted checksums" (more about them later).
 
-The new **Remote Included** checksums are in some way "included" by remote party, typically 
+The new **Remote Included** checksums are in some way included by remote party, typically 
 in their response. Since advent of modern Repository Managers, most of 
 them already sends checksums (usually the "standard" SHA-1 and MD5)
 in their response headers. Moreover, Maven Central, and even Google Mirror of Maven Central 
@@ -62,18 +62,18 @@ sends them as well. By extracting these checksums from response, we can get hash
 that were provided by remote repository along with its content. 
 
 Finally, the **Remote External** checksums are the classic checksums we all know: They are laid down 
-next to Artifact files (hence "external") on remote repository (hence "remote"), according 
-to remote repository layout. To obtain Remote External checksum, an HTTP GET request is
-required. This strategy will follow the order given in `aether.checksums.algorithms`, so
-will ask for checksums in same order as the parameter contains algorithm names.
+next to Artifact files, external in other words on the remote repository, according 
+to remote repository layout. To obtain Remote External checksum, new request again remote repository is
+required. The order of requested checksums will follow the order given in `aether.checksums.algorithms`, 
+it asks for checksums in same order as the parameter contains algorithm names.
 
 During single artifact retrieval, these strategies are executed in above specified order,
 and only if current strategy has "no answer", the next strategy is attempted. Hence, if 
 resolver is able to get "expected" checksum from Provided Checksum Source, the Remote Included
 and Remote External sources will not be consulted. Important implication: given that almost
-all MRMs and remote repositories (Maven Central, Google Mirror of Maven Central) send "standard"
-checksums in their response, if any of the standard (SHA-1, MD5) checksum is enabled, validation will
-be probably satisfied by "Remote Included" strategy. 
+all MRMs and remote repositories (Maven Central, Google Mirror of Maven Central) send "standard" (SHA-1, MD5)
+checksums in their response, if any of the standard checksum are enabled, validation will
+be probably satisfied by "Remote Included" strategy and "Remove External" will be skipped. 
 
 The big win here is that by obtaining hashes using "Remote Included" and not by "Remote External"
 strategy, we can halve the count of HTTP requests to download an Artifact.
