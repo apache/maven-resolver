@@ -73,7 +73,7 @@ resolver is able to get "expected" checksum from Provided Checksum Source, the R
 and Remote External sources will not be consulted. Important implication: given that almost
 all MRMs and remote repositories (Maven Central, Google Mirror of Maven Central) send "standard" (SHA-1, MD5)
 checksums in their response, if any of the standard checksum are enabled, validation will
-be probably satisfied by "Remote Included" strategy and "Remove External" will be skipped. 
+be probably satisfied by "Remote Included" strategy and "Remote External" will be skipped. 
 
 The big win here is that by obtaining hashes using "Remote Included" and not by "Remote External"
 strategy, we can halve the count of HTTP requests to download an Artifact.
