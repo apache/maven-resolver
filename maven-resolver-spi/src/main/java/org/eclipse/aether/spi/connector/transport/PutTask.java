@@ -37,6 +37,8 @@ public final class PutTask extends TransportTask {
 
     private byte[] dataBytes = EMPTY;
 
+    private boolean supportWebDav;
+
     /**
      * Creates a new task for the specified remote resource.
      *
@@ -125,6 +127,15 @@ public final class PutTask extends TransportTask {
     public PutTask setListener(TransportListener listener) {
         super.setListener(listener);
         return this;
+    }
+
+    public PutTask supportWebDav(boolean supportWebDav) {
+        this.supportWebDav = supportWebDav;
+        return this;
+    }
+
+    public boolean isSupportWebDav() {
+        return this.supportWebDav;
     }
 
     @Override

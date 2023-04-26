@@ -320,7 +320,7 @@ final class HttpTransporter extends AbstractTransporter {
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         HttpHead request = commonHeaders(new HttpHead(resolve(task)));
-        execute(request, null);
+        execute(request, null, task);
     }
 
     @Override
@@ -340,7 +340,7 @@ final class HttpTransporter extends AbstractTransporter {
                         checksumExtractor.prepareRequest(request);
                     }
                 }
-                execute(request, getter);
+                execute(request, getter, task);
                 break;
             } catch (HttpResponseException e) {
                 if (resume
@@ -374,22 +374,22 @@ final class HttpTransporter extends AbstractTransporter {
         PutTaskEntity entity = new PutTaskEntity(task);
         HttpPut request = commonHeaders(entity(new HttpPut(resolve(task)), entity));
         try {
-            execute(request, null);
+            execute(request, null, task);
         } catch (HttpResponseException e) {
             if (e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader(HttpHeaders.EXPECT)) {
                 state.setExpectContinue(false);
                 request = commonHeaders(entity(new HttpPut(request.getURI()), entity));
-                execute(request, null);
+                execute(request, null, task);
                 return;
             }
             throw e;
         }
     }
 
-    private void execute(HttpUriRequest request, EntityGetter getter) throws Exception {
+    private void execute(HttpUriRequest request, EntityGetter getter, TransportTask task) throws Exception {
         try {
             SharingHttpContext context = new SharingHttpContext(state);
-            prepare(request, context);
+            prepare(request, context, task);
             try (CloseableHttpResponse response = client.execute(server, request, context)) {
                 try {
                     context.close();
@@ -409,12 +409,12 @@ final class HttpTransporter extends AbstractTransporter {
         }
     }
 
-    private void prepare(HttpUriRequest request, SharingHttpContext context) {
+    private void prepare(HttpUriRequest request, SharingHttpContext context, TransportTask task) {
         final boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (preemptiveAuth || (preemptivePutAuth && put)) {
             context.getAuthCache().put(server, new BasicScheme());
         }
-        if (supportWebDav) {
+        if (supportWebDav || ((task instanceof PutTask) && ((PutTask) task).isSupportWebDav())) {
             if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
                 HttpOptions req = commonHeaders(new HttpOptions(request.getURI()));
                 try (CloseableHttpResponse response = client.execute(server, req, context)) {
