@@ -29,7 +29,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>1.9.9-SNAPSHOT</version>
+  <version>1.9.9</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -64,7 +64,7 @@
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</developerConnection>
-    <tag>master</tag>
+    <tag>maven-resolver-1.9.9</tag>
     <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
   </scm>
   <issueManagement>
@@ -94,7 +94,7 @@
     <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <minimalMavenBuildVersion>3.8.4</minimalMavenBuildVersion>
-    <project.build.outputTimestamp>2023-04-12T08:43:31Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2023-04-26T09:59:22Z</project.build.outputTimestamp>
   </properties>
 
   <dependencyManagement>
