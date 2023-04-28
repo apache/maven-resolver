@@ -94,7 +94,7 @@
     <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <minimalMavenBuildVersion>[3.8.4,)</minimalMavenBuildVersion>
-    <minimalJavaBuildVersion>[1.8.0-371,)</minimalJavaBuildVersion>
+    <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-04-26T10:02:03Z</project.build.outputTimestamp>
   </properties>
 
