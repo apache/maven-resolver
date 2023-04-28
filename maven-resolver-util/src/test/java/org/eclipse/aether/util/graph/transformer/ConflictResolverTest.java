@@ -279,6 +279,36 @@ public class ConflictResolverTest {
     }
 
     @Test
+    public void versionRangeClashMixedOrderStandardVerboseLeavesOne() throws RepositoryException {
+        // This is a bit different then others, is related to MRESOLVER-357 and makes sure that
+        // ConflictResolver fulfils the promise of "leaving 1 loser"
+        //
+        //  A -> B -> C[1..2]
+        //  |    \ -> D1
+        //  |--> C[1..2]
+        //  \--> D2
+        DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
+        DependencyNode b = makeDependencyNode("some-group", "b", "1.0");
+        DependencyNode c1 = makeDependencyNode("some-group", "c", "1.0");
+        DependencyNode c2 = makeDependencyNode("some-group", "c", "2.0");
+        DependencyNode d1 = makeDependencyNode("some-group", "d", "1.0");
+        DependencyNode d2 = makeDependencyNode("some-group", "d", "2.0");
+        a.setChildren(mutableList(b, c2, c1, d2));
+        b.setChildren(mutableList(c1, c2, d1));
+
+        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
+
+        assertSame(a, ta);
+        assertEquals(3, a.getChildren().size());
+        assertSame(b, a.getChildren().get(0));
+        assertSame(c2, a.getChildren().get(1));
+        assertSame(d2, a.getChildren().get(2));
+        assertEquals(2, b.getChildren().size());
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(d1, b.getChildren().get(1));
+    }
+
+    @Test
     public void versionRangeClashMixedOrderFullVerbose() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]

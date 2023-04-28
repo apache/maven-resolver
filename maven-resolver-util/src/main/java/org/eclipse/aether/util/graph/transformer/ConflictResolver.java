@@ -356,7 +356,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                     DependencyNode child = childIt.next();
                     if (child == item.node) {
                         String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
-                        if (toRemoveIds.contains(childArtifactId) && item.parent.size() > 1) {
+                        if (toRemoveIds.contains(childArtifactId)
+                                && relatedSiblingsCount(child.getArtifact(), item.parent) > 1) {
                             childIt.remove();
                         }
                         break;
@@ -367,6 +368,14 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
         // there might still be losers beneath the winner (e.g. in case of cycles)
         // those will be nuked during future graph walks when we include the winner in the recursion
+    }
+
+    private static long relatedSiblingsCount(Artifact artifact, List<DependencyNode> parent) {
+        String ga = artifact.getGroupId() + ":" + artifact.getArtifactId();
+        return parent.stream()
+                .map(DependencyNode::getArtifact)
+                .filter(a -> ga.equals(a.getGroupId() + ":" + a.getArtifactId()))
+                .count();
     }
 
     static final class NodeInfo {
