@@ -90,7 +90,7 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.3.5</sisuVersion>
     <guiceVersion>5.1.0</guiceVersion>
-    <guavaVersion>30.1-jre</guavaVersion>
+    <guavaVersion>31.1-jre</guavaVersion>
     <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <minimalMavenBuildVersion>3.8.4</minimalMavenBuildVersion>
@@ -177,14 +177,14 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>4.8.1</version>
+        <version>4.11.0</version>
         <scope>test</scope>
       </dependency>
 
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>3.5.0</version>
+        <version>3.5.1</version>
       </dependency>
 
       <dependency>
