@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver</artifactId>
-    <version>1.9.10-SNAPSHOT</version>
+    <version>1.9.10</version>
   </parent>
 
   <artifactId>maven-resolver-connector-basic</artifactId>
