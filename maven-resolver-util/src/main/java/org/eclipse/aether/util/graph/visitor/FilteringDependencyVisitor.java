@@ -26,7 +26,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A dependency visitor that delegates to another visitor if nodes match a filter. Note that in case of a mismatching
- * node, the children of that node are still visisted and presented to the filter.
+ * node, the children of that node are still visited and presented to the filter.
  */
 public final class FilteringDependencyVisitor implements DependencyVisitor {
 
@@ -69,6 +69,7 @@ public final class FilteringDependencyVisitor implements DependencyVisitor {
         return filter;
     }
 
+    @Override
     public boolean visitEnter(DependencyNode node) {
         boolean accept = filter == null || filter.accept(node, parents);
 
@@ -83,6 +84,7 @@ public final class FilteringDependencyVisitor implements DependencyVisitor {
         }
     }
 
+    @Override
     public boolean visitLeave(DependencyNode node) {
         parents.pop();
 

@@ -35,6 +35,7 @@ public class AllResolverDemos {
         GetDirectDependencies.main(args);
         GetDependencyTree.main(args);
         GetDependencyHierarchy.main(args);
+        DependencyHierarchyWithRanges.main(args);
         ResolveArtifact.main(args);
         ResolveTransitiveDependencies.main(args);
         ReverseDependencyTree.main(args);

@@ -22,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.Objects;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.spi.locator.Service;
@@ -51,12 +49,12 @@ public final class DefaultSyncContextFactory implements org.eclipse.aether.impl.
 
     @Inject
     public DefaultSyncContextFactory(final SyncContextFactory delegate) {
-        this.delegate = Objects.requireNonNull(delegate);
+        this.delegate = requireNonNull(delegate);
     }
 
     @Override
     public void initService(final ServiceLocator locator) {
-        this.delegate = Objects.requireNonNull(locator.getService(SyncContextFactory.class));
+        this.delegate = requireNonNull(locator.getService(SyncContextFactory.class));
     }
 
     @Override

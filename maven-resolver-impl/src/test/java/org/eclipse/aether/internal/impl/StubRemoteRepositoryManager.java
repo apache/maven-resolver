@@ -20,7 +20,6 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -50,11 +49,11 @@ public class StubRemoteRepositoryManager implements RemoteRepositoryManager {
         RepositoryPolicy policy = repository.getPolicy(snapshots);
 
         String checksums = session.getChecksumPolicy();
-        if (StringUtils.isEmpty(checksums)) {
+        if (checksums == null || checksums.isEmpty()) {
             checksums = policy.getChecksumPolicy();
         }
         String updates = session.getUpdatePolicy();
-        if (StringUtils.isEmpty(updates)) {
+        if (updates == null || updates.isEmpty()) {
             updates = policy.getUpdatePolicy();
         }
 

@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +38,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.mockito.Mockito.mock;
@@ -68,7 +68,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     private RepositorySystemSession session;
 
     public static void createAdapter() {
-        Objects.requireNonNull(namedLockFactory, "NamedLockFactory not set");
+        requireNonNull(namedLockFactory, "NamedLockFactory not set");
         adapter = new NamedLockFactoryAdapter(nameMapper, namedLockFactory);
     }
 

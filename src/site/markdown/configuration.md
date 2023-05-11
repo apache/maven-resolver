@@ -27,7 +27,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing` | boolean | Makes `trustedChecksums` fail validation if a trusted checksum for an artifact is missing. | `false` | no 
 `aether.artifactResolver.postProcessor.trustedChecksums.record` | boolean | Makes `trustedChecksums` calculate and record checksums. | `false` | no 
 `aether.artifactResolver.postProcessor.trustedChecksums.snapshots` | boolean | Enables or disables snapshot processing in `trustedChecksums` post processor. | `false` | no 
-`aether.checksums.omitChecksumsForExtensions` | String | Comma-separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc` | no
+`aether.checksums.omitChecksumsForExtensions` | String | Comma-separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc,.sigstore` | no
 `aether.checksums.algorithms` | String | Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | no
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no
 `aether.connector.basic.threads` or `maven.artifact.threads` | int | Number of threads to use for uploading/downloading. | `5` | no
@@ -35,11 +35,14 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.classpath.loader` | ClassLoader | `ClassLoader` from which resources should be retrieved which start with the `classpath:` protocol. | `Thread.currentThread().getContextClassLoader()` | no
 `aether.connector.connectTimeout` | long | Connect timeout in milliseconds. | `10000` | yes
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
+`aether.connector.http.connectionMaxTtl` | int | Time to live in seconds for an HTTP connection, after that time, the connection will be dropped. | `600` | yes
 `aether.connector.http.credentialEncoding` | String | The encoding/charset to use when exchanging credentials with HTTP servers. | `"ISO-8859-1"` | yes
 `aether.connector.http.headers` | `Map<String, String>` | The request headers to use for HTTP-based repository connectors. The headers are specified using a map of strings mapping a header name to its value. The repository-specific headers map is supposed to be complete, i.e. is not merged with the general headers map. | - | yes
+`aether.connector.http.maxConnectionsPerRoute` | int | The maximum concurrent connections per route HTTP client is allowed to use. | `50` | yes
 `aether.connector.http.preemptiveAuth` | boolean | Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default is disabled, as it is considered less secure. | `false` | yes
 `aether.connector.http.preemptivePutAuth` | boolean | Should HTTP client use preemptive-authentication for HTTP PUTs only (works only w/ BASIC). By default is enabled (same as Wagon). | `true` | yes
 `aether.connector.http.retryHandler.count` | int | The maximum number of times a request to a remote HTTP server should be retried in case of an error. | `3` | yes
+`aether.connector.http.reuseConnections` | boolean | Should HTTP client reuse connections (in other words, pool connections) or not? | `true` | yes
 `aether.connector.http.supportWebDav` | boolean | If enabled, transport makes best effort to deploy to WebDAV server. This mode is not recommended, better use real Maven Repository Manager instead. | `false` | yes
 `aether.connector.http.useSystemProperties` | boolean | If enabled, underlying Apache HttpClient will use system properties as well to configure itself (typically used to set up HTTP Proxy via Java system properties). See <a href="https://hc.apache.org/httpcomponents-client-4.5.x/current/httpclient/apidocs/org/apache/http/impl/client/HttpClientBuilder.html">HttpClientBuilder</a> for used properties. This mode is **not recommended**, better use documented ways of configuration instead. | `false` | yes
 `aether.connector.https.cipherSuites` | String | Comma-separated list of [Cipher Suites](https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#ciphersuites) which are enabled for HTTPS connections. | - (no restriction) | no
@@ -89,7 +92,9 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.syncContext.named.factory` | String | Name of the named lock factory implementing the `org.eclipse.aether.named.NamedLockFactory` interface. | `"rwlock-local"` | no
 `aether.syncContext.named.hashing.depth` | int | The directory depth to "spread" hashes in git-like fashion, integer between 0 and 4 (inclusive). | 2 | no
 `aether.syncContext.named.nameMapper` | String | Name of name mapper implementing the `org.eclipse.aether.internal.impl.synccontext.named.NameMapper` interface. | `"gav"` | no
-`aether.syncContext.named.time` | long | Amount of time a synchronization context shall wait to obtain a lock. | 30 | no
+`aether.syncContext.named.retry` | int | Count of retries SyncContext adapter should perform, when obtaining locks. | `1` | no
+`aether.syncContext.named.retry.wait` | long | Amount of milliseconds a thread to wait between retries, when obtaining locks. | `200` | no
+`aether.syncContext.named.time` | long | Amount of time a synchronization context shall wait to obtain a lock. | `30` | no
 `aether.syncContext.named.time.unit` | long | Unit of the lock wait time. | `"SECONDS"` | no
 `aether.syncContext.named.discriminating.discriminator` | String | A discriminator name prefix identifying a Resolver instance. | `"sha1('${hostname:-localhost}:${maven.repo.local}')"` or `"sha1('')"` if generation fails | no
 `aether.syncContext.named.discriminating.hostname` | String | The hostname to be used with discriminating mapper. | Detected with `InetAddress.getLocalHost().getHostName()` | no

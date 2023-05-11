@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.maven.resolver.examples.util;
+package org.eclipse.aether.util.graph.visitor;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
@@ -31,25 +31,27 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 
-/**
- * A dependency visitor that dumps the graph to the console.
- */
-public class ConsoleDependencyGraphDumper implements DependencyVisitor {
+import static java.util.Objects.requireNonNull;
 
-    private final PrintStream out;
+/**
+ * A dependency visitor that dumps the graph to any {@link Consumer<String>}. Meant for diagnostic and testing, as
+ * it may output the graph to standard output, error or even some logging interface.
+ *
+ * @since 1.9.8
+ */
+public class DependencyGraphDumper implements DependencyVisitor {
+
+    private final Consumer<String> consumer;
 
     private final List<ChildInfo> childInfos = new ArrayList<>();
 
-    public ConsoleDependencyGraphDumper() {
-        this(null);
+    public DependencyGraphDumper(Consumer<String> consumer) {
+        this.consumer = requireNonNull(consumer);
     }
 
-    public ConsoleDependencyGraphDumper(PrintStream out) {
-        this.out = (out != null) ? out : System.out;
-    }
-
+    @Override
     public boolean visitEnter(DependencyNode node) {
-        out.println(formatIndentation() + formatNode(node));
+        consumer.accept(formatIndentation() + formatNode(node));
         childInfos.add(new ChildInfo(node.getChildren().size()));
         return true;
     }
@@ -84,19 +86,24 @@ public class ConsoleDependencyGraphDumper implements DependencyVisitor {
             buffer.append(" (scope managed from ").append(premanaged).append(")");
         }
         DependencyNode winner = (DependencyNode) node.getData().get(ConflictResolver.NODE_DATA_WINNER);
-        if (winner != null && !ArtifactIdUtils.equalsId(a, winner.getArtifact())) {
-            Artifact w = winner.getArtifact();
-            buffer.append(" (conflicts with ");
-            if (ArtifactIdUtils.toVersionlessId(a).equals(ArtifactIdUtils.toVersionlessId(w))) {
-                buffer.append(w.getVersion());
+        if (winner != null) {
+            if (ArtifactIdUtils.equalsId(a, winner.getArtifact())) {
+                buffer.append(" (nearer exists)");
             } else {
-                buffer.append(w);
+                Artifact w = winner.getArtifact();
+                buffer.append(" (conflicts with ");
+                if (ArtifactIdUtils.toVersionlessId(a).equals(ArtifactIdUtils.toVersionlessId(w))) {
+                    buffer.append(w.getVersion());
+                } else {
+                    buffer.append(w);
+                }
+                buffer.append(")");
             }
-            buffer.append(")");
         }
         return buffer.toString();
     }
 
+    @Override
     public boolean visitLeave(DependencyNode node) {
         if (!childInfos.isEmpty()) {
             childInfos.remove(childInfos.size() - 1);

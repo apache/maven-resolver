@@ -19,9 +19,9 @@
 package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -35,6 +35,8 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Adapter to adapt {@link NamedLockFactory} and {@link NamedLock} to {@link SyncContext}.
  */
@@ -47,13 +49,21 @@ public final class NamedLockFactoryAdapter {
 
     public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.SECONDS;
 
+    public static final String RETRY_KEY = "aether.syncContext.named.retry";
+
+    public static final int DEFAULT_RETRY = 1;
+
+    public static final String RETRY_WAIT_KEY = "aether.syncContext.named.retry.wait";
+
+    public static final long DEFAULT_RETRY_WAIT = 200L;
+
     private final NameMapper nameMapper;
 
     private final NamedLockFactory namedLockFactory;
 
     public NamedLockFactoryAdapter(final NameMapper nameMapper, final NamedLockFactory namedLockFactory) {
-        this.nameMapper = Objects.requireNonNull(nameMapper);
-        this.namedLockFactory = Objects.requireNonNull(namedLockFactory);
+        this.nameMapper = requireNonNull(nameMapper);
+        this.namedLockFactory = requireNonNull(namedLockFactory);
         // TODO: this is ad-hoc "validation", experimental and likely to change
         if (this.namedLockFactory instanceof FileLockNamedLockFactory && !this.nameMapper.isFileSystemFriendly()) {
             throw new IllegalArgumentException(
@@ -101,6 +111,10 @@ public final class NamedLockFactoryAdapter {
 
         private final TimeUnit timeUnit;
 
+        private final int retry;
+
+        private final long retryWait;
+
         private final Deque<NamedLock> locks;
 
         private AdaptedLockSyncContext(
@@ -114,10 +128,18 @@ public final class NamedLockFactoryAdapter {
             this.namedLockFactory = namedLockFactory;
             this.time = getTime(session);
             this.timeUnit = getTimeUnit(session);
+            this.retry = getRetry(session);
+            this.retryWait = getRetryWait(session);
             this.locks = new ArrayDeque<>();
 
             if (time < 0L) {
-                throw new IllegalArgumentException("time cannot be negative");
+                throw new IllegalArgumentException(TIME_KEY + " value cannot be negative");
+            }
+            if (retry < 0L) {
+                throw new IllegalArgumentException(RETRY_KEY + " value cannot be negative");
+            }
+            if (retryWait < 0L) {
+                throw new IllegalArgumentException(RETRY_WAIT_KEY + " value cannot be negative");
             }
         }
 
@@ -129,6 +151,14 @@ public final class NamedLockFactoryAdapter {
             return TimeUnit.valueOf(ConfigUtils.getString(session, DEFAULT_TIME_UNIT.name(), TIME_UNIT_KEY));
         }
 
+        private int getRetry(final RepositorySystemSession session) {
+            return ConfigUtils.getInteger(session, DEFAULT_RETRY, RETRY_KEY);
+        }
+
+        private long getRetryWait(final RepositorySystemSession session) {
+            return ConfigUtils.getLong(session, DEFAULT_RETRY_WAIT, RETRY_WAIT_KEY);
+        }
+
         @Override
         public void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {
             Collection<String> keys = lockNaming.nameLocks(session, artifacts, metadatas);
@@ -136,40 +166,63 @@ public final class NamedLockFactoryAdapter {
                 return;
             }
 
-            LOGGER.trace("Need {} {} lock(s) for {}", keys.size(), shared ? "read" : "write", keys);
-            int acquiredLockCount = 0;
-            for (String key : keys) {
-                NamedLock namedLock = namedLockFactory.getLock(key);
+            final int attempts = retry + 1;
+            final ArrayList<IllegalStateException> illegalStateExceptions = new ArrayList<>();
+            for (int attempt = 1; attempt <= attempts; attempt++) {
+                LOGGER.trace(
+                        "Attempt {}: Need {} {} lock(s) for {}", attempt, keys.size(), shared ? "read" : "write", keys);
+                int acquiredLockCount = 0;
                 try {
-                    LOGGER.trace("Acquiring {} lock for '{}'", shared ? "read" : "write", key);
-
-                    boolean locked;
-                    if (shared) {
-                        locked = namedLock.lockShared(time, timeUnit);
-                    } else {
-                        locked = namedLock.lockExclusively(time, timeUnit);
+                    if (attempt > 1) {
+                        Thread.sleep(retryWait);
                     }
+                    for (String key : keys) {
+                        NamedLock namedLock = namedLockFactory.getLock(key);
+                        LOGGER.trace("Acquiring {} lock for '{}'", shared ? "read" : "write", key);
 
-                    if (!locked) {
-                        LOGGER.trace("Failed to acquire {} lock for '{}'", shared ? "read" : "write", key);
+                        boolean locked;
+                        if (shared) {
+                            locked = namedLock.lockShared(time, timeUnit);
+                        } else {
+                            locked = namedLock.lockExclusively(time, timeUnit);
+                        }
 
-                        namedLock.close();
-                        throw new IllegalStateException("Could not acquire " + (shared ? "read" : "write")
-                                + " lock for '" + namedLock.name() + "'");
+                        if (!locked) {
+                            String timeStr = time + " " + timeUnit;
+                            LOGGER.trace(
+                                    "Failed to acquire {} lock for '{}' in {}",
+                                    shared ? "read" : "write",
+                                    key,
+                                    timeStr);
+
+                            namedLock.close();
+                            closeAll();
+                            illegalStateExceptions.add(new IllegalStateException(
+                                    "Attempt " + attempt + ": Could not acquire " + (shared ? "read" : "write")
+                                            + " lock for '" + namedLock.name() + "' in " + timeStr));
+                            break;
+                        } else {
+                            locks.push(namedLock);
+                            acquiredLockCount++;
+                        }
                     }
-
-                    locks.push(namedLock);
-                    acquiredLockCount++;
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException(e);
                 }
+                LOGGER.trace("Attempt {}: Total locks acquired: {}", attempt, acquiredLockCount);
+                if (acquiredLockCount == keys.size()) {
+                    break;
+                }
             }
-            LOGGER.trace("Total locks acquired: {}", acquiredLockCount);
+            if (!illegalStateExceptions.isEmpty()) {
+                IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
+                illegalStateExceptions.forEach(ex::addSuppressed);
+                throw ex;
+            }
         }
 
-        @Override
-        public void close() {
+        private void closeAll() {
             if (locks.isEmpty()) {
                 return;
             }
@@ -184,6 +237,11 @@ public final class NamedLockFactoryAdapter {
                 }
             }
             LOGGER.trace("Total locks released: {}", released);
+        }
+
+        @Override
+        public void close() {
+            closeAll();
         }
     }
 }

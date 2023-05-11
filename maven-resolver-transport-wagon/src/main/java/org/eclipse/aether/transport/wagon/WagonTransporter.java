@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -59,6 +58,8 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter using Maven Wagon.
@@ -353,7 +354,7 @@ final class WagonTransporter implements Transporter {
     }
 
     private void execute(TransportTask task, TaskRunner runner) throws Exception {
-        Objects.requireNonNull(task, "task cannot be null");
+        requireNonNull(task, "task cannot be null");
 
         if (closed.get()) {
             throw new IllegalStateException("transporter closed, cannot execute task " + task);

@@ -497,6 +497,23 @@ public abstract class DependencyCollectorDelegateTestSupport {
         assertEqualSubtree(expectedTree, toDependencyResult(result.getRoot(), "compile", null));
     }
 
+    @Test
+    public void testTransitiveDepsUseRangesDirtyTree() throws DependencyCollectionException, IOException {
+        // Note: DF depends on version order (ultimately the order of versions as returned by VersionRangeResolver
+        // that in case of Maven, means order as in maven-metadata.xml
+        // BF on the other hand explicitly sorts versions from range in descending order
+        //
+        // Hence, the "dirty tree" of two will not match.
+        DependencyNode root = parser.parseResource(getTransitiveDepsUseRangesDirtyTreeResource());
+        Dependency dependency = root.getDependency();
+        CollectRequest request = new CollectRequest(dependency, singletonList(repository));
+
+        CollectResult result = collector.collectDependencies(session, request);
+        assertEqualSubtree(root, result.getRoot());
+    }
+
+    protected abstract String getTransitiveDepsUseRangesDirtyTreeResource();
+
     private DependencyNode toDependencyResult(
             final DependencyNode root, final String rootScope, final Boolean optional) {
         // Make the root artifact resultion result a dependency resolution result for the subtree check.

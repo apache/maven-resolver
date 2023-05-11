@@ -22,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.Objects;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -56,7 +54,7 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
 
     @Override
     public void initService(final ServiceLocator locator) {
-        this.localPathComposer = Objects.requireNonNull(locator.getService(LocalPathComposer.class));
+        this.localPathComposer = requireNonNull(locator.getService(LocalPathComposer.class));
     }
 
     @Override

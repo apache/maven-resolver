@@ -29,7 +29,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>1.9.8-SNAPSHOT</version>
+  <version>1.9.11-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -91,11 +91,12 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.3.5</sisuVersion>
     <guiceVersion>5.1.0</guiceVersion>
-    <guavaVersion>30.1-jre</guavaVersion>
+    <guavaVersion>31.1-jre</guavaVersion>
     <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
-    <minimalMavenBuildVersion>3.8.4</minimalMavenBuildVersion>
-    <project.build.outputTimestamp>2023-03-08T08:25:35Z</project.build.outputTimestamp>
+    <minimalMavenBuildVersion>[3.8.7,)</minimalMavenBuildVersion>
+    <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
+    <project.build.outputTimestamp>2023-05-02T08:27:27Z</project.build.outputTimestamp>
   </properties>
 
   <dependencyManagement>
@@ -183,14 +184,14 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>4.8.1</version>
+        <version>4.11.0</version>
         <scope>test</scope>
       </dependency>
 
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>3.5.0</version>
+        <version>3.5.1</version>
       </dependency>
 
       <dependency>
