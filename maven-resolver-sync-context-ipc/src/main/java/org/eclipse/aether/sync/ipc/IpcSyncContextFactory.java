@@ -18,7 +18,7 @@
  */
 package org.eclipse.aether.sync.ipc;
 
-import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
+import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.sisu.Priority;
 
@@ -45,6 +46,18 @@ public class IpcSyncContextFactory implements SyncContextFactory {
 
     private final Map<Path, IpcClient> clients = new ConcurrentHashMap<>();
 
+    /** Constructor for tests */
+    protected IpcSyncContextFactory() {
+        this(null);
+    }
+
+    @Inject
+    public IpcSyncContextFactory(RepositorySystemLifecycle repositorySystemLifecycle) {
+        if (repositorySystemLifecycle != null) {
+            repositorySystemLifecycle.addOnSystemEndedHandler(this::shutdown);
+        }
+    }
+
     @Override
     public SyncContext newInstance(RepositorySystemSession session, boolean shared) {
         Path repository = session.getLocalRepository().getBasedir().toPath();
@@ -56,8 +69,10 @@ public class IpcSyncContextFactory implements SyncContextFactory {
         return new IpcSyncContext(client, shared);
     }
 
-    @PreDestroy
-    void close() {
+    /**
+     * To be invoked on repository system shut down. This method will shut down each {@link IpcClient}.
+     */
+    protected void shutdown() {
         clients.values().forEach(IpcClient::close);
     }
 
