@@ -69,7 +69,7 @@ import org.apache.http.impl.auth.KerberosSchemeFactory;
 import org.apache.http.impl.auth.NTLMSchemeFactory;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.ConfigurationProperties;
@@ -236,7 +236,7 @@ final class HttpTransporter extends AbstractTransporter {
                 .setSocketTimeout(requestTimeout)
                 .build();
 
-        DefaultHttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(retryCount, false);
+        StandardHttpRequestRetryHandler retryHandler = new StandardHttpRequestRetryHandler(retryCount, false);
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
