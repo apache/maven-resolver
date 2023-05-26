@@ -87,6 +87,12 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
 
     private static final int STATE_DISABLED = 2;
 
+    /**
+     * For code and intent readability purposes only. This value is used fpr "last updated" value when it cannot
+     * be read or found in properties file by {@link #getLastUpdated(Properties, String)} method.
+     */
+    private static final long NO_TS_AVAILABLE = 0L;
+
     public DefaultUpdateCheckManager() {
         // default ctor for ServiceLocator
     }
@@ -146,7 +152,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
                 lastUpdated = artifactFile.lastModified();
             } else {
                 // this is the first attempt ever
-                lastUpdated = 0L;
+                lastUpdated = NO_TS_AVAILABLE;
             }
         } else if (error.isEmpty()) {
             // artifact did not exist
@@ -157,7 +163,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
-        if (lastUpdated == 0L) {
+        if (lastUpdated == NO_TS_AVAILABLE) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
             LOGGER.debug("Skipped remote request for {}, already updated during this session", check.getItem());
@@ -251,7 +257,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
                 lastUpdated = getLastUpdated(props, dataKey);
             } else {
                 // this is the first attempt ever
-                lastUpdated = 0L;
+                lastUpdated = NO_TS_AVAILABLE;
             }
         } else if (error.isEmpty()) {
             // metadata did not exist
@@ -262,7 +268,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
-        if (lastUpdated == 0L) {
+        if (lastUpdated == NO_TS_AVAILABLE) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
             LOGGER.debug("Skipped remote request for {}, already updated during this session", check.getItem());
@@ -316,10 +322,10 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     private long getLastUpdated(Properties props, String key) {
         String value = props.getProperty(key + UPDATED_KEY_SUFFIX, "");
         try {
-            return (value.length() > 0) ? Long.parseLong(value) : 1;
+            return (value.length() > 0) ? Long.parseLong(value) : NO_TS_AVAILABLE;
         } catch (NumberFormatException e) {
             LOGGER.debug("Cannot parse last updated date {}, ignoring it", value, e);
-            return 1;
+            return NO_TS_AVAILABLE;
         }
     }
 
