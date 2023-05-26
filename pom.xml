@@ -90,8 +90,6 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.3.5</sisuVersion>
     <guiceVersion>5.1.0</guiceVersion>
-    <guavaVersion>31.1-jre</guavaVersion>
-    <guavafailureaccessVersion>1.0.1</guavafailureaccessVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <minimalMavenBuildVersion>[3.8.7,)</minimalMavenBuildVersion>
     <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
@@ -215,57 +213,6 @@
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
         <version>${guiceVersion}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <!-- This is a transitive dep of com.google.inject:guice -->
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guavaVersion}</version>
-        <scope>runtime</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.errorprone</groupId>
-            <artifactId>error_prone_annotations</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>failureaccess</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>listenablefuture</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.j2objc</groupId>
-            <artifactId>j2objc-annotations</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.checkerframework</groupId>
-            <artifactId>checker-qual</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <!-- This is a transitive dep of com.google.guava:guava -->
-        <groupId>com.google.guava</groupId>
-        <artifactId>failureaccess</artifactId>
-        <version>${guavafailureaccessVersion}</version>
       </dependency>
 
       <dependency>
