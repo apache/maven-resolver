@@ -103,7 +103,10 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
         List<ChecksumAlgorithmFactory> checksumsAlgorithms = checksumAlgorithmFactorySelector.selectList(
                 ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
+                        session,
+                        DEFAULT_CHECKSUMS_ALGORITHMS,
+                        CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
+                        CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
 
         // ensure uniqueness of (potentially user set) extension list
         Set<String> omitChecksumsForExtensions = Arrays.stream(ConfigUtils.getString(
