@@ -87,6 +87,25 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
 
     private static final int STATE_DISABLED = 2;
 
+    /**
+     * This "last modified" timestamp is used when no local file is present, signaling "first attempt" to cache a file,
+     * but as it is not present, outcome is simply always "go get it".
+     * <p>
+     * Its meaning is "we never downloaded it", so go grab it.
+     */
+    private static final long TS_NEVER = 0L;
+
+    /**
+     * This "last modified" timestamp is returned by {@link #getLastUpdated(Properties, String)} method when the
+     * timestamp entry is not found (due properties file not present or key not present in properties file, irrelevant).
+     * It means that the cached file (artifact or metadata) is present, but we cannot tell when was it downloaded. In
+     * this case, it is {@link UpdatePolicyAnalyzer} applying in-effect policy, that decide is update (re-download)
+     * needed or not. For example, if policy is "never", we should not re-download the file.
+     * <p>
+     * Its meaning is "we downloaded it, but have no idea when", so let the policy decide its fate.
+     */
+    private static final long TS_UNKNOWN = 1L;
+
     public DefaultUpdateCheckManager() {
         // default ctor for ServiceLocator
     }
@@ -146,7 +165,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
                 lastUpdated = artifactFile.lastModified();
             } else {
                 // this is the first attempt ever
-                lastUpdated = 0L;
+                lastUpdated = TS_NEVER;
             }
         } else if (error.isEmpty()) {
             // artifact did not exist
@@ -157,7 +176,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
-        if (lastUpdated == 0L) {
+        if (lastUpdated == TS_NEVER) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
             LOGGER.debug("Skipped remote request for {}, already updated during this session", check.getItem());
@@ -251,7 +270,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
                 lastUpdated = getLastUpdated(props, dataKey);
             } else {
                 // this is the first attempt ever
-                lastUpdated = 0L;
+                lastUpdated = TS_NEVER;
             }
         } else if (error.isEmpty()) {
             // metadata did not exist
@@ -262,7 +281,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
-        if (lastUpdated == 0L) {
+        if (lastUpdated == TS_NEVER) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
             LOGGER.debug("Skipped remote request for {}, already updated during this session", check.getItem());
@@ -316,10 +335,10 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     private long getLastUpdated(Properties props, String key) {
         String value = props.getProperty(key + UPDATED_KEY_SUFFIX, "");
         try {
-            return (value.length() > 0) ? Long.parseLong(value) : 1;
+            return (value.length() > 0) ? Long.parseLong(value) : TS_UNKNOWN;
         } catch (NumberFormatException e) {
             LOGGER.debug("Cannot parse last updated date {}, ignoring it", value, e);
-            return 1;
+            return TS_UNKNOWN;
         }
     }
 
