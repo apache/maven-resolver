@@ -261,7 +261,7 @@ final class HttpTransporter extends AbstractTransporter {
             retryHandler = new DefaultHttpRequestRetryHandler(retryCount, retryHandlerRequestSentEnabled);
         } else {
             throw new IllegalArgumentException(
-                    "Unsupported parameter " + HTTP_RETRY_HANDLER_NAME + ": " + retryHandlerName);
+                    "Unsupported parameter " + HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
         }
 
         HttpClientBuilder builder = HttpClientBuilder.create()
