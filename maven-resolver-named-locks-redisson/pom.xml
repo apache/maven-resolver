@@ -34,28 +34,24 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.named.redisson</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+    <!-- Used in site also -->
+    <redissonVersion>3.17.7</redissonVersion>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-named-locks</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>3.21.3</version>
+      <version>${redissonVersion}</version>
       <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>javax.cache</groupId>
           <artifactId>cache-api</artifactId>
@@ -89,7 +85,7 @@
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
-      <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -131,25 +127,6 @@
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.5.0</version>
-        <executions>
-          <execution>
-            <id>bundle</id>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <descriptors>
-                <descriptor>src/assembly/bundle.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
