@@ -42,10 +42,10 @@ To use this implementation within your project, depending on how you integrate, 
 
 ${esc.hash}${esc.hash} Installation/Testing
 
-- Create the directory `${maven.home}/lib/ext/redisson/`.
+- Create the directory `${maven.home}/lib/ext/redisson/` (if it does not exist).
 - Unzip the following bundle from Maven Central to `${maven.home}/lib/ext/redisson/`:
   <pre class="source">
-  └── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}-bundle.zip">${project.artifactId}-${project.version}-bundle.zip</a>
+  └── <a href="https://repo.maven.apache.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}-bundle.zip">${project.artifactId}-${project.version}-bundle.zip</a>
 - Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
 - Now start a multithreaded Maven build or multiple builds (e.g., CI server) on your project.
 
