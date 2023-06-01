@@ -20,7 +20,10 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -96,5 +99,47 @@ public class DefaultTrackingFileManagerTest {
             assertNotNull(tfm.update(propFile, updates));
             assertTrue("Leaked file: " + propFile, propFile.delete());
         }
+    }
+
+    @Test
+    public void testLockingOnCanonicalPath() throws Exception {
+        final TrackingFileManager tfm = new DefaultTrackingFileManager();
+
+        final File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
+
+        final List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
+
+        Thread[] threads = new Thread[4];
+        for (int i = 0; i < threads.length; i++) {
+            String path = propFile.getParent();
+            for (int j = 0; j < i; j++) {
+                path += "/.";
+            }
+            path += "/" + propFile.getName();
+            final File file = new File(path);
+
+            threads[i] = new Thread(() -> {
+                try {
+                    for (int i1 = 0; i1 < 1000; i1++) {
+                        assertNotNull(tfm.read(file));
+                        HashMap<String, String> update = new HashMap<>();
+                        update.put("wasHere", Thread.currentThread().getName() + "-" + i1);
+                        tfm.update(file, update);
+                    }
+                } catch (Throwable e) {
+                    errors.add(e);
+                }
+            });
+        }
+
+        for (Thread thread1 : threads) {
+            thread1.start();
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        assertEquals(Collections.emptyList(), errors);
     }
 }
