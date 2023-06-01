@@ -51,9 +51,9 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     public Properties read(File file) {
         Path filePath = file.toPath();
         if (Files.isReadable(filePath)) {
-            synchronized (getLock(filePath)) {
+            synchronized (getMutex(filePath)) {
                 try (FileInputStream stream = new FileInputStream(filePath.toFile());
-                        FileLock unused = lock(stream.getChannel(), Math.max(1, file.length()), true)) {
+                        FileLock unused = fileLock(stream.getChannel(), Math.max(1, file.length()), true)) {
                     Properties props = new Properties();
                     props.load(stream);
                     return props;
@@ -78,9 +78,9 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
             throw new UncheckedIOException(e);
         }
 
-        synchronized (getLock(filePath)) {
+        synchronized (getMutex(filePath)) {
             try (RandomAccessFile raf = new RandomAccessFile(filePath.toFile(), "rw");
-                    FileLock unused = lock(raf.getChannel(), Math.max(1, raf.length()), false)) {
+                    FileLock unused = fileLock(raf.getChannel(), Math.max(1, raf.length()), false)) {
                 if (raf.length() > 0) {
                     byte[] buffer = new byte[(int) raf.length()];
                     raf.readFully(buffer);
@@ -114,7 +114,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return props;
     }
 
-    private Object getLock(Path file) {
+    private Object getMutex(Path file) {
         /*
          * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
          * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
@@ -123,15 +123,14 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         try {
             return file.toRealPath().toString().intern();
         } catch (IOException e) {
-            LOGGER.warn("Failed to canonicalize path {}", file, e);
+            LOGGER.warn("Failed to get real path {}", file, e);
             return file.toAbsolutePath().toString().intern();
         }
     }
 
     @SuppressWarnings({"checkstyle:magicnumber"})
-    private FileLock lock(FileChannel channel, long size, boolean shared) throws IOException {
+    private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
         FileLock lock = null;
-
         for (int attempts = 8; attempts >= 0; attempts--) {
             try {
                 lock = channel.lock(0, size, shared);
@@ -147,11 +146,9 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 }
             }
         }
-
         if (lock == null) {
             throw new IOException("Could not lock file");
         }
-
         return lock;
     }
 }
