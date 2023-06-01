@@ -45,6 +45,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
@@ -71,6 +72,7 @@ import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -101,6 +103,15 @@ final class HttpTransporter extends AbstractTransporter {
     static final String PREEMPTIVE_PUT_AUTH = "aether.connector.http.preemptivePutAuth";
 
     static final String USE_SYSTEM_PROPERTIES = "aether.connector.http.useSystemProperties";
+
+    static final String HTTP_RETRY_HANDLER_NAME = "aether.connector.http.retryHandler.name";
+
+    private static final String HTTP_RETRY_HANDLER_NAME_STANDARD = "standard";
+
+    private static final String HTTP_RETRY_HANDLER_NAME_DEFAULT = "default";
+
+    static final String HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED =
+            "aether.connector.http.retryHandler.requestSentEnabled";
 
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
@@ -214,11 +225,20 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_COUNT,
                 ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT + "." + repository.getId(),
                 ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT);
+        String retryHandlerName = ConfigUtils.getString(
+                session,
+                HTTP_RETRY_HANDLER_NAME_STANDARD,
+                HTTP_RETRY_HANDLER_NAME + "." + repository.getId(),
+                HTTP_RETRY_HANDLER_NAME);
+        boolean retryHandlerRequestSentEnabled = ConfigUtils.getBoolean(
+                session,
+                false,
+                HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED + "." + repository.getId(),
+                HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED);
         String userAgent = ConfigUtils.getString(
                 session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
 
         Charset credentialsCharset = Charset.forName(credentialEncoding);
-
         Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
                 .register(AuthSchemes.BASIC, new BasicSchemeFactory(credentialsCharset))
                 .register(AuthSchemes.DIGEST, new DigestSchemeFactory(credentialsCharset))
@@ -226,17 +246,23 @@ final class HttpTransporter extends AbstractTransporter {
                 .register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory())
                 .register(AuthSchemes.KERBEROS, new KerberosSchemeFactory())
                 .build();
-
         SocketConfig socketConfig =
                 SocketConfig.custom().setSoTimeout(requestTimeout).build();
-
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
                 .setSocketTimeout(requestTimeout)
                 .build();
 
-        DefaultHttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(retryCount, false);
+        HttpRequestRetryHandler retryHandler;
+        if (HTTP_RETRY_HANDLER_NAME_STANDARD.equals(retryHandlerName)) {
+            retryHandler = new StandardHttpRequestRetryHandler(retryCount, retryHandlerRequestSentEnabled);
+        } else if (HTTP_RETRY_HANDLER_NAME_DEFAULT.equals(retryHandlerName)) {
+            retryHandler = new DefaultHttpRequestRetryHandler(retryCount, retryHandlerRequestSentEnabled);
+        } else {
+            throw new IllegalArgumentException(
+                    "Unsupported parameter " + HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
+        }
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
@@ -248,7 +274,6 @@ final class HttpTransporter extends AbstractTransporter {
                 .setConnectionManagerShared(true)
                 .setDefaultCredentialsProvider(toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext))
                 .setProxy(proxy);
-
         final boolean useSystemProperties = ConfigUtils.getBoolean(
                 session, false, USE_SYSTEM_PROPERTIES + "." + repository.getId(), USE_SYSTEM_PROPERTIES);
         if (useSystemProperties) {
