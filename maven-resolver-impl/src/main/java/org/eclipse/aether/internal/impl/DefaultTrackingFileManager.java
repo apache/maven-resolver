@@ -84,8 +84,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 if (raf.length() > 0) {
                     byte[] buffer = new byte[(int) raf.length()];
                     raf.readFully(buffer);
-                    ByteArrayInputStream stream = new ByteArrayInputStream(buffer);
-                    props.load(stream);
+                    props.load(new ByteArrayInputStream(buffer));
                 }
 
                 for (Map.Entry<String, String> update : updates.entrySet()) {
