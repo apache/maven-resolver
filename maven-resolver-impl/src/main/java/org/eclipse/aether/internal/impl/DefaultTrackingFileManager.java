@@ -21,11 +21,16 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.io.UncheckedIOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -36,6 +41,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Manages access to a properties file.
+ * <p>
+ * Note: the file locking in this component (that predates {@link org.eclipse.aether.SyncContext}) is present only
+ * to back off two parallel implementations that coexist in Maven (this class and {@code maven-compat} one), as in
+ * certain cases the two implementations may collide on properties files. This locking must remain in place for as long
+ * as {@code maven-compat} code exists.
  */
 @Singleton
 @Named
@@ -46,13 +56,16 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     public Properties read(File file) {
         Path filePath = file.toPath();
         if (Files.isReadable(filePath)) {
-            try (InputStream stream = Files.newInputStream(filePath)) {
-                Properties props = new Properties();
-                props.load(stream);
-                return props;
-            } catch (IOException e) {
-                LOGGER.warn("Failed to read tracking file '{}'", file, e);
-                throw new UncheckedIOException(e);
+            synchronized (getMutex(filePath)) {
+                try (FileInputStream stream = new FileInputStream(filePath.toFile());
+                        FileLock unused = fileLock(stream.getChannel(), Math.max(1, file.length()), true)) {
+                    Properties props = new Properties();
+                    props.load(stream);
+                    return props;
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to read tracking file '{}'", file, e);
+                    throw new UncheckedIOException(e);
+                }
             }
         }
         return null;
@@ -70,33 +83,76 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
             throw new UncheckedIOException(e);
         }
 
-        try {
-            if (Files.isReadable(filePath)) {
-                try (InputStream stream = Files.newInputStream(filePath)) {
-                    props.load(stream);
+        synchronized (getMutex(filePath)) {
+            try (RandomAccessFile raf = new RandomAccessFile(filePath.toFile(), "rw");
+                    FileLock unused = fileLock(raf.getChannel(), Math.max(1, raf.length()), false)) {
+                if (raf.length() > 0) {
+                    byte[] buffer = new byte[(int) raf.length()];
+                    raf.readFully(buffer);
+                    props.load(new ByteArrayInputStream(buffer));
                 }
-            }
 
-            for (Map.Entry<String, String> update : updates.entrySet()) {
-                if (update.getValue() == null) {
-                    props.remove(update.getKey());
-                } else {
-                    props.setProperty(update.getKey(), update.getValue());
+                for (Map.Entry<String, String> update : updates.entrySet()) {
+                    if (update.getValue() == null) {
+                        props.remove(update.getKey());
+                    } else {
+                        props.setProperty(update.getKey(), update.getValue());
+                    }
                 }
-            }
 
-            try (OutputStream stream = Files.newOutputStream(filePath)) {
                 LOGGER.debug("Writing tracking file '{}'", file);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 2);
                 props.store(
                         stream,
                         "NOTE: This is a Maven Resolver internal implementation file"
                                 + ", its format can be changed without prior notice.");
+                raf.seek(0L);
+                raf.write(stream.toByteArray());
+                raf.setLength(raf.getFilePointer());
+            } catch (IOException e) {
+                LOGGER.warn("Failed to write tracking file '{}'", file, e);
+                throw new UncheckedIOException(e);
             }
-        } catch (IOException e) {
-            LOGGER.warn("Failed to write tracking file '{}'", file, e);
-            throw new UncheckedIOException(e);
         }
 
         return props;
+    }
+
+    private Object getMutex(Path file) {
+        /*
+         * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
+         * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
+         * identity sufficiently as is the case with Java 1.6 and symlinks on Windows.
+         */
+        try {
+            return file.toRealPath().toString().intern();
+        } catch (IOException e) {
+            LOGGER.warn("Failed to get real path {}", file, e);
+            return file.toAbsolutePath().toString().intern();
+        }
+    }
+
+    @SuppressWarnings({"checkstyle:magicnumber"})
+    private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
+        FileLock lock = null;
+        for (int attempts = 8; attempts >= 0; attempts--) {
+            try {
+                lock = channel.lock(0, size, shared);
+                break;
+            } catch (OverlappingFileLockException e) {
+                if (attempts <= 0) {
+                    throw new IOException(e);
+                }
+                try {
+                    Thread.sleep(50L);
+                } catch (InterruptedException e1) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+        if (lock == null) {
+            throw new IOException("Could not lock file");
+        }
+        return lock;
     }
 }
