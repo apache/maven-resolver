@@ -39,21 +39,23 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-api</artifactId>
+      <artifactId>maven-resolver-named-locks</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-named-locks</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.hazelcast</groupId>
       <artifactId>hazelcast</artifactId>
-      <version>5.1.4</version>
+      <version>5.3.0</version>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
-      <optional>true</optional>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
