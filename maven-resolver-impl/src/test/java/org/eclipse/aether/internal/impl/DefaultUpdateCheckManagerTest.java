@@ -54,7 +54,7 @@ import static org.junit.Assume.assumeThat;
 public class DefaultUpdateCheckManagerTest {
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {{"all"}, {"metadata"}});
+        return Arrays.asList(new Object[][] {{""}, {"all"}, {"metadata"}});
     }
 
     private static final long HOUR = 60L * 60L * 1000L;
