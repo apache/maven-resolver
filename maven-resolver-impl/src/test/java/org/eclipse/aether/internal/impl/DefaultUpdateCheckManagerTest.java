@@ -20,9 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.*;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
@@ -43,14 +41,25 @@ import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 
 /**
  */
+@RunWith(Parameterized.class)
 public class DefaultUpdateCheckManagerTest {
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {{"all"}, {"metadata"}});
+    }
 
     private static final long HOUR = 60L * 60L * 1000L;
+
+    private final String updatePolicyScope;
 
     private DefaultUpdateCheckManager manager;
 
@@ -61,6 +70,10 @@ public class DefaultUpdateCheckManagerTest {
     private RemoteRepository repository;
 
     private Artifact artifact;
+
+    public DefaultUpdateCheckManagerTest(String updatePolicyScope) {
+        this.updatePolicyScope = updatePolicyScope;
+    }
 
     @Before
     public void setup() throws Exception {
@@ -73,6 +86,7 @@ public class DefaultUpdateCheckManagerTest {
         TestFileUtils.writeString(artifactFile, "artifact");
 
         session = TestUtils.newSession();
+        session.setConfigProperty(DefaultUpdateCheckManager.CONFIG_PROP_UPDATE_POLICY_SCOPE, updatePolicyScope);
         repository = new RemoteRepository.Builder(
                         "id",
                         "default",
@@ -445,6 +459,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactUpdatePolicyRequired() {
+        assumeThat(updatePolicyScope, equalTo("all"));
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem(artifact);
         check.setFile(artifact.getFile());
@@ -500,6 +515,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifact() {
+        assumeThat(updatePolicyScope, equalTo("all"));
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         long fifteenMinutes = new Date().getTime() - (15L * 60L * 1000L);
         check.getFile().setLastModified(fifteenMinutes);
@@ -613,6 +629,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways() {
+        assumeThat(updatePolicyScope, equalTo("all"));
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
@@ -629,6 +646,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactSessionStateModes() {
+        assumeThat(updatePolicyScope, equalTo("all"));
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.touchArtifact(session, check);
@@ -677,6 +695,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
+        assumeThat(updatePolicyScope, equalTo("all"));
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 

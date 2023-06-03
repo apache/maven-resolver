@@ -23,12 +23,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -88,6 +83,20 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     private static final int STATE_DISABLED = 2;
 
     /**
+     * Configuration property key for effective {@link UpdatePolicyScope}, defaults to {@link #DEFAULT_UPDATE_POLICY_SCOPE}.
+     *
+     * @since TBD
+     */
+    static final String CONFIG_PROP_UPDATE_POLICY_SCOPE = "aether.updateCheckManager.updatePolicyScope";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_UPDATE_POLICY_SCOPE}, {@link UpdatePolicyScope#METADATA}.
+     *
+     * @since TBD
+     */
+    static final UpdatePolicyScope DEFAULT_UPDATE_POLICY_SCOPE = UpdatePolicyScope.METADATA;
+
+    /**
      * This "last modified" timestamp is used when no local file is present, signaling "first attempt" to cache a file,
      * but as it is not present, outcome is simply always "go get it".
      * <p>
@@ -106,6 +115,17 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
      */
     private static final long TS_UNKNOWN = 1L;
 
+    /**
+     * Update policy scope defines to what the policy is applied. If policy is not applied, the presence or absence
+     * matters only.
+     *
+     * @since TBD
+     */
+    private enum UpdatePolicyScope {
+        ALL, // Maven3.x behaviour: applies to metadata and artifacts
+        METADATA // Applies ONLY to metadata (as artifacts are immutable)
+    }
+
     public DefaultUpdateCheckManager() {
         // default ctor for ServiceLocator
     }
@@ -116,6 +136,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
     }
 
+    @Override
     public void initService(ServiceLocator locator) {
         setTrackingFileManager(locator.getService(TrackingFileManager.class));
         setUpdatePolicyAnalyzer(locator.getService(UpdatePolicyAnalyzer.class));
@@ -131,6 +152,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         return this;
     }
 
+    @Override
     public void checkArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -149,6 +171,11 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
                 requireNonNull(check.getFile(), String.format("The artifact '%s' has no file attached", artifact));
 
         boolean fileExists = check.isFileValid() && artifactFile.exists();
+
+        if (fileExists && getUpdatePolicyScope(session, check.getAuthoritativeRepository()) != UpdatePolicyScope.ALL) {
+            check.setRequired(false);
+            return;
+        }
 
         File touchFile = getArtifactTouchFile(artifactFile);
         Properties props = read(touchFile);
@@ -236,6 +263,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         }
     }
 
+    @Override
     public void checkMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -460,6 +488,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         return (props != null) ? props : new Properties();
     }
 
+    @Override
     public void touchArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -487,6 +516,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         return false;
     }
 
+    @Override
     public void touchMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -525,5 +555,28 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         }
 
         return trackingFileManager.update(touchFile, updates);
+    }
+
+    /**
+     * Returns the configured {@link UpdatePolicyScope} or default value {@link #DEFAULT_UPDATE_POLICY_SCOPE}.
+     */
+    private UpdatePolicyScope getUpdatePolicyScope(RepositorySystemSession session, RemoteRepository repository) {
+        String scope = ConfigUtils.getString(
+                session,
+                "",
+                CONFIG_PROP_UPDATE_POLICY_SCOPE + "." + repository.getId(),
+                CONFIG_PROP_UPDATE_POLICY_SCOPE);
+        if (scope != null && !scope.isEmpty()) {
+            try {
+                return UpdatePolicyScope.valueOf(scope.toUpperCase(Locale.ENGLISH));
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn(
+                        "Illegal value for '{}': '{}' (allowed case-insensitive values are {})",
+                        CONFIG_PROP_UPDATE_POLICY_SCOPE,
+                        scope,
+                        UpdatePolicyScope.values());
+            }
+        }
+        return DEFAULT_UPDATE_POLICY_SCOPE;
     }
 }
