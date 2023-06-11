@@ -125,20 +125,20 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         ALL(true, true), // Maven3.x behaviour: applies to metadata and artifacts
         METADATA(false, true); // Applies ONLY to metadata (as artifacts are immutable)
 
-        private final boolean checkArtifact;
-        private final boolean checkMetadata;
+        private final boolean applyToArtifact;
+        private final boolean applyToMetadata;
 
-        UpdatePolicyScope(boolean checkArtifact, boolean checkMetadata) {
-            this.checkArtifact = checkArtifact;
-            this.checkMetadata = checkMetadata;
+        UpdatePolicyScope(boolean applyToArtifact, boolean applyToMetadata) {
+            this.applyToArtifact = applyToArtifact;
+            this.applyToMetadata = applyToMetadata;
         }
 
-        public boolean isCheckArtifact() {
-            return checkArtifact;
+        public boolean isApplyToArtifact() {
+            return applyToArtifact;
         }
 
-        public boolean isCheckMetadata() {
-            return checkMetadata;
+        public boolean isApplyToMetadata() {
+            return applyToMetadata;
         }
     }
 
@@ -224,7 +224,8 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, artifact, repository));
             }
-        } else if (updatePolicyScope.isCheckArtifact() && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (updatePolicyScope.isApplyToArtifact()
+                && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
             check.setRequired(true);
         } else if (fileExists) {
             LOGGER.debug("Skipped remote request for {}, locally cached artifact up-to-date", check.getItem());
@@ -331,7 +332,8 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, metadata, repository));
             }
-        } else if (updatePolicyScope.isCheckMetadata() && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (updatePolicyScope.isApplyToMetadata()
+                && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
             check.setRequired(true);
         } else if (fileExists) {
             LOGGER.debug("Skipped remote request for {}, locally cached metadata up-to-date", check.getItem());

@@ -461,7 +461,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactUpdatePolicyRequired() {
-        assumeTrue(updatePolicyScope.isCheckArtifact());
+        assumeTrue(updatePolicyScope.isApplyToArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem(artifact);
         check.setFile(artifact.getFile());
@@ -517,7 +517,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifact() {
-        assumeTrue(updatePolicyScope.isCheckArtifact());
+        assumeTrue(updatePolicyScope.isApplyToArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         long fifteenMinutes = new Date().getTime() - (15L * 60L * 1000L);
         check.getFile().setLastModified(fifteenMinutes);
@@ -631,7 +631,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways() {
-        assumeTrue(updatePolicyScope.isCheckArtifact());
+        assumeTrue(updatePolicyScope.isApplyToArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
@@ -648,7 +648,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactSessionStateModes() {
-        assumeTrue(updatePolicyScope.isCheckArtifact());
+        assumeTrue(updatePolicyScope.isApplyToArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.touchArtifact(session, check);
@@ -697,7 +697,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
-        assumeTrue(updatePolicyScope.isCheckArtifact());
+        assumeTrue(updatePolicyScope.isApplyToArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
