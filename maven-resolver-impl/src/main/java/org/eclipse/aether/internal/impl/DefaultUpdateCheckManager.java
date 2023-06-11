@@ -214,7 +214,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
-        UpdatePolicyScope updatePolicyScope = getUpdatePolicyScope(session, repository);
+        boolean policyApplies = getUpdatePolicyScope(session, repository).isApplyToArtifact();
         if (lastUpdated == TS_NEVER) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
@@ -224,11 +224,13 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, artifact, repository));
             }
-        } else if (updatePolicyScope.isApplyToArtifact()
-                && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (policyApplies && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
             check.setRequired(true);
         } else if (fileExists) {
-            LOGGER.debug("Skipped remote request for {}, locally cached artifact up-to-date", check.getItem());
+            LOGGER.debug(
+                    "Skipped remote request for {}, locally cached artifact is {}",
+                    check.getItem(),
+                    policyApplies ? "up-to-date" : "present");
 
             check.setRequired(false);
         } else {
@@ -322,7 +324,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
-        UpdatePolicyScope updatePolicyScope = getUpdatePolicyScope(session, repository);
+        boolean policyApplies = getUpdatePolicyScope(session, repository).isApplyToMetadata();
         if (lastUpdated == TS_NEVER) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
@@ -332,11 +334,13 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, metadata, repository));
             }
-        } else if (updatePolicyScope.isApplyToMetadata()
-                && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (policyApplies && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
             check.setRequired(true);
         } else if (fileExists) {
-            LOGGER.debug("Skipped remote request for {}, locally cached metadata up-to-date", check.getItem());
+            LOGGER.debug(
+                    "Skipped remote request for {}, locally cached metadata is {}",
+                    check.getItem(),
+                    policyApplies ? "up-to-date" : "present");
 
             check.setRequired(false);
         } else {
