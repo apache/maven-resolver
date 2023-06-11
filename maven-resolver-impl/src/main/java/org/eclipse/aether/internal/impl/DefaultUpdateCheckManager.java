@@ -121,9 +121,25 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
      *
      * @since TBD
      */
-    private enum UpdatePolicyScope {
-        ALL, // Maven3.x behaviour: applies to metadata and artifacts
-        METADATA // Applies ONLY to metadata (as artifacts are immutable)
+    enum UpdatePolicyScope {
+        ALL(true, true), // Maven3.x behaviour: applies to metadata and artifacts
+        METADATA(false, true); // Applies ONLY to metadata (as artifacts are immutable)
+
+        private final boolean checkArtifact;
+        private final boolean checkMetadata;
+
+        UpdatePolicyScope(boolean checkArtifact, boolean checkMetadata) {
+            this.checkArtifact = checkArtifact;
+            this.checkMetadata = checkMetadata;
+        }
+
+        public boolean isCheckArtifact() {
+            return checkArtifact;
+        }
+
+        public boolean isCheckMetadata() {
+            return checkMetadata;
+        }
     }
 
     public DefaultUpdateCheckManager() {
@@ -172,11 +188,6 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
 
         boolean fileExists = check.isFileValid() && artifactFile.exists();
 
-        if (fileExists && getUpdatePolicyScope(session, check.getAuthoritativeRepository()) != UpdatePolicyScope.ALL) {
-            check.setRequired(false);
-            return;
-        }
-
         File touchFile = getArtifactTouchFile(artifactFile);
         Properties props = read(touchFile);
 
@@ -203,6 +214,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
+        UpdatePolicyScope updatePolicyScope = getUpdatePolicyScope(session, repository);
         if (lastUpdated == TS_NEVER) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
@@ -212,7 +224,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, artifact, repository));
             }
-        } else if (isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (updatePolicyScope.isCheckArtifact() && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
             check.setRequired(true);
         } else if (fileExists) {
             LOGGER.debug("Skipped remote request for {}, locally cached artifact up-to-date", check.getItem());
@@ -309,6 +321,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
+        UpdatePolicyScope updatePolicyScope = getUpdatePolicyScope(session, repository);
         if (lastUpdated == TS_NEVER) {
             check.setRequired(true);
         } else if (isAlreadyUpdated(session, updateKey)) {
@@ -318,7 +331,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, metadata, repository));
             }
-        } else if (isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (updatePolicyScope.isCheckMetadata() && isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
             check.setRequired(true);
         } else if (fileExists) {
             LOGGER.debug("Skipped remote request for {}, locally cached metadata up-to-date", check.getItem());
@@ -560,7 +573,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     /**
      * Returns the configured {@link UpdatePolicyScope} or default value {@link #DEFAULT_UPDATE_POLICY_SCOPE}.
      */
-    private UpdatePolicyScope getUpdatePolicyScope(RepositorySystemSession session, RemoteRepository repository) {
+    static UpdatePolicyScope getUpdatePolicyScope(RepositorySystemSession session, RemoteRepository repository) {
         String scope = ConfigUtils.getString(
                 session,
                 "",

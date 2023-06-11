@@ -44,9 +44,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  */
@@ -59,7 +58,7 @@ public class DefaultUpdateCheckManagerTest {
 
     private static final long HOUR = 60L * 60L * 1000L;
 
-    private final String updatePolicyScope;
+    private final String updatePolicyScopeString;
 
     private DefaultUpdateCheckManager manager;
 
@@ -71,8 +70,10 @@ public class DefaultUpdateCheckManagerTest {
 
     private Artifact artifact;
 
-    public DefaultUpdateCheckManagerTest(String updatePolicyScope) {
-        this.updatePolicyScope = updatePolicyScope;
+    private DefaultUpdateCheckManager.UpdatePolicyScope updatePolicyScope;
+
+    public DefaultUpdateCheckManagerTest(String updatePolicyScopeString) {
+        this.updatePolicyScopeString = updatePolicyScopeString;
     }
 
     @Before
@@ -86,7 +87,7 @@ public class DefaultUpdateCheckManagerTest {
         TestFileUtils.writeString(artifactFile, "artifact");
 
         session = TestUtils.newSession();
-        session.setConfigProperty(DefaultUpdateCheckManager.CONFIG_PROP_UPDATE_POLICY_SCOPE, updatePolicyScope);
+        session.setConfigProperty(DefaultUpdateCheckManager.CONFIG_PROP_UPDATE_POLICY_SCOPE, updatePolicyScopeString);
         repository = new RemoteRepository.Builder(
                         "id",
                         "default",
@@ -98,6 +99,7 @@ public class DefaultUpdateCheckManagerTest {
         metadata = new DefaultMetadata(
                 "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT, metadataFile);
         artifact = new DefaultArtifact("gid", "aid", "", "ext", "ver").setFile(artifactFile);
+        updatePolicyScope = DefaultUpdateCheckManager.getUpdatePolicyScope(session, repository);
     }
 
     @After
@@ -459,7 +461,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactUpdatePolicyRequired() {
-        assumeThat(updatePolicyScope, equalTo("all"));
+        assumeTrue(updatePolicyScope.isCheckArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem(artifact);
         check.setFile(artifact.getFile());
@@ -515,7 +517,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifact() {
-        assumeThat(updatePolicyScope, equalTo("all"));
+        assumeTrue(updatePolicyScope.isCheckArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         long fifteenMinutes = new Date().getTime() - (15L * 60L * 1000L);
         check.getFile().setLastModified(fifteenMinutes);
@@ -629,7 +631,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways() {
-        assumeThat(updatePolicyScope, equalTo("all"));
+        assumeTrue(updatePolicyScope.isCheckArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
@@ -646,7 +648,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactSessionStateModes() {
-        assumeThat(updatePolicyScope, equalTo("all"));
+        assumeTrue(updatePolicyScope.isCheckArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.touchArtifact(session, check);
@@ -695,7 +697,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
-        assumeThat(updatePolicyScope, equalTo("all"));
+        assumeTrue(updatePolicyScope.isCheckArtifact());
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
