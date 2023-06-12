@@ -35,7 +35,9 @@ import static java.util.Objects.requireNonNull;
 public abstract class NamedLockFactorySupport implements NamedLockFactory {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    final boolean diagnostic = logger.isDebugEnabled();
+    boolean isDiagnosticEnabled() {
+        return logger.isDebugEnabled();
+    }
 
     private final ConcurrentMap<String, NamedLockHolder> locks;
 
@@ -62,7 +64,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
 
     @Override
     public <E extends Throwable> E onFailure(E failure) {
-        if (diagnostic) {
+        if (isDiagnosticEnabled()) {
             logger.debug("{} with {} active lock(s)", getClass().getSimpleName(), locks.size());
             logger.debug("");
             for (Map.Entry<String, NamedLockHolder> entry : locks.entrySet()) {

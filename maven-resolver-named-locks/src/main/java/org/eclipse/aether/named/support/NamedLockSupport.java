@@ -43,7 +43,7 @@ public abstract class NamedLockSupport implements NamedLock {
     public NamedLockSupport(final String name, final NamedLockFactorySupport factory) {
         this.name = name;
         this.factory = factory;
-        this.state = factory.diagnostic ? new ConcurrentHashMap<>() : null;
+        this.state = factory.isDiagnosticEnabled() ? new ConcurrentHashMap<>() : null;
     }
 
     @Override
