@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.named;
 
-import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -67,7 +66,7 @@ public abstract class NamedLockFactoryTestSupport {
         t2.start();
         t1.join();
         t2.join();
-        throw namedLockFactory.failure(Collections.singletonList(new IllegalStateException("foo")));
+        throw namedLockFactory.onFailure(new IllegalStateException("failure"));
     }
 
     @Test

@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.named;
 
-import java.util.List;
-
 /**
  * A factory of {@link NamedLock}s.
  */
@@ -39,24 +37,15 @@ public interface NamedLockFactory {
     void shutdown();
 
     /**
-     * Utility method to provide more (factory specific) description when a locking operation failed. Assumption is
-     * that provided list has at least one element (one failure) or more (in case of retries), must not be {@code null}
-     * to get meaningful exceptions. The returned exception will be new instance of {@link IllegalStateException} with
-     * passed in list added as suppressed exceptions. Still, the fact this method has been invoked, means there is a
-     * "abort failure" ahead, so factory may either decorate (add info about state) or even log some diagnostic
-     * about the state of the locks.
+     * Method to notify factory about locking failure, to make it possible to provide more (factory specific)
+     * information about factory state when a locking operation failed. Factory may alter provided failure or
+     * provide information via some other side effect (for example via logging).
      * <p>
-     * The default implementation merely does what happened before this change: adds no extra information.
+     * The default implementation merely does what happened before: adds no extra information.
      *
      * @since TBD
-     * @return A new instance of {@link IllegalStateException} (decorated) and may have other side effects as well
-     * (dumping state), never returns {@code null}.
      */
-    default IllegalStateException failure(List<IllegalStateException> attempts) {
-        IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
-        if (attempts != null) {
-            attempts.forEach(ex::addSuppressed);
-        }
-        return ex;
+    default <E extends Throwable> E onFailure(E failure) {
+        return failure;
     }
 }

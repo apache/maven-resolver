@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.named.support;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -62,7 +61,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     }
 
     @Override
-    public IllegalStateException failure(List<IllegalStateException> attempts) {
+    public <E extends Throwable> E onFailure(E failure) {
         if (diagnostic) {
             logger.debug("{} with {} active lock(s)", getClass().getSimpleName(), locks.size());
             logger.debug("");
@@ -75,12 +74,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
                 logger.debug("");
             }
         }
-
-        IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
-        if (attempts != null) {
-            attempts.forEach(ex::addSuppressed);
-        }
-        return ex;
+        return failure;
     }
 
     public void closeLock(final String name) {
