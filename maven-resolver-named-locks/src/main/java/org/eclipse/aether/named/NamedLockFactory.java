@@ -42,13 +42,21 @@ public interface NamedLockFactory {
      * Utility method to provide more (factory specific) description when a locking operation failed. Assumption is
      * that provided list has at least one element (one failure) or more (in case of retries), must not be {@code null}
      * to get meaningful exceptions. The returned exception will be new instance of {@link IllegalStateException} with
-     * passed in list added as suppressed exceptions. Still, the fact this method has be invoked, means there is a
+     * passed in list added as suppressed exceptions. Still, the fact this method has been invoked, means there is a
      * "abort failure" ahead, so factory may either decorate (add info about state) or even log some diagnostic
      * about the state of the locks.
+     * <p>
+     * The default implementation merely does what happened before this change: adds no extra information.
      *
      * @since TBD
      * @return A new instance of {@link IllegalStateException} (decorated) and may have other side effects as well
-     * (dumping state), never {@code null}.
+     * (dumping state), never returns {@code null}.
      */
-    IllegalStateException failure(List<IllegalStateException> attempts);
+    default IllegalStateException failure(List<IllegalStateException> attempts) {
+        IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
+        if (attempts != null) {
+            attempts.forEach(ex::addSuppressed);
+        }
+        return ex;
+    }
 }
