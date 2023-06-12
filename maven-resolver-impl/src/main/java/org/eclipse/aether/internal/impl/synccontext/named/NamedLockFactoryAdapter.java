@@ -216,9 +216,7 @@ public final class NamedLockFactoryAdapter {
                 }
             }
             if (!illegalStateExceptions.isEmpty()) {
-                IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
-                illegalStateExceptions.forEach(ex::addSuppressed);
-                throw ex;
+                throw namedLockFactory.failure(illegalStateExceptions);
             }
         }
 

@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.named;
 
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +42,32 @@ public abstract class NamedLockFactoryTestSupport {
 
     protected String lockName() {
         return testName.getMethodName();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testFailure() throws InterruptedException {
+        Thread t1 = new Thread(() -> {
+            try {
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        Thread t2 = new Thread(() -> {
+            try {
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        throw namedLockFactory.failure(Collections.singletonList(new IllegalStateException("foo")));
     }
 
     @Test

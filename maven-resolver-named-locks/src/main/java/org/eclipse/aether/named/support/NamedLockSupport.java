@@ -18,6 +18,12 @@
  */
 package org.eclipse.aether.named.support;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.aether.named.NamedLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +38,12 @@ public abstract class NamedLockSupport implements NamedLock {
 
     private final NamedLockFactorySupport factory;
 
+    private final ConcurrentHashMap<Thread, Deque<String>> state;
+
     public NamedLockSupport(final String name, final NamedLockFactorySupport factory) {
         this.name = name;
         this.factory = factory;
+        this.state = factory.diagnostic ? new ConcurrentHashMap<>() : null;
     }
 
     @Override
@@ -43,7 +52,62 @@ public abstract class NamedLockSupport implements NamedLock {
     }
 
     @Override
+    public boolean lockShared(long time, TimeUnit unit) throws InterruptedException {
+        if (state != null) {
+            state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+                    .push("S");
+        }
+        return doLockShared(time, unit);
+    }
+
+    protected abstract boolean doLockShared(long time, TimeUnit unit) throws InterruptedException;
+
+    @Override
+    public boolean lockExclusively(long time, TimeUnit unit) throws InterruptedException {
+        if (state != null) {
+            state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+                    .push("X");
+        }
+        return doLockExclusively(time, unit);
+    }
+
+    protected abstract boolean doLockExclusively(long time, TimeUnit unit) throws InterruptedException;
+
+    @Override
+    public void unlock() {
+        doUnlock();
+        if (state != null) {
+            state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+                    .pop();
+        }
+    }
+
+    protected abstract void doUnlock();
+
+    @Override
     public void close() {
+        doClose();
+    }
+
+    protected void doClose() {
         factory.closeLock(name);
+    }
+
+    @Override
+    public String toString() {
+        if (state != null) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(getClass().getSimpleName()).append("\n");
+            for (Map.Entry<Thread, Deque<String>> entry : state.entrySet()) {
+                stringBuilder
+                        .append(entry.getKey())
+                        .append(" -> ")
+                        .append(entry.getValue())
+                        .append("\n");
+            }
+            return stringBuilder.toString();
+        } else {
+            return name + " (" + getClass().getSimpleName() + ")";
+        }
     }
 }

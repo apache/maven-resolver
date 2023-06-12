@@ -83,12 +83,12 @@ public final class FileLockNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public boolean lockShared(final long time, final TimeUnit unit) throws InterruptedException {
+    protected boolean doLockShared(final long time, final TimeUnit unit) throws InterruptedException {
         return retry(time, unit, RETRY_SLEEP_MILLIS, this::doLockShared, null, false);
     }
 
     @Override
-    public boolean lockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
+    protected boolean doLockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
         return retry(time, unit, RETRY_SLEEP_MILLIS, this::doLockExclusively, null, false);
     }
 
@@ -169,7 +169,7 @@ public final class FileLockNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public void unlock() {
+    protected void doUnlock() {
         criticalRegion.lock();
         try {
             Deque<Boolean> steps = threadSteps.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>());

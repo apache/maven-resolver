@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.named.support;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,6 +35,8 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class NamedLockFactorySupport implements NamedLockFactory {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    final boolean diagnostic = logger.isDebugEnabled();
 
     private final ConcurrentMap<String, NamedLockHolder> locks;
 
@@ -55,6 +59,28 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     @Override
     public void shutdown() {
         // override if needed
+    }
+
+    @Override
+    public IllegalStateException failure(List<IllegalStateException> attempts) {
+        if (diagnostic) {
+            logger.debug("{} with {} active lock(s)", getClass().getSimpleName(), locks.size());
+            logger.debug("");
+            for (Map.Entry<String, NamedLockHolder> entry : locks.entrySet()) {
+                logger.debug(
+                        "Lock name: {} (refCount {})",
+                        entry.getKey(),
+                        entry.getValue().referenceCount.get());
+                logger.debug("{}", entry.getValue().namedLock);
+                logger.debug("");
+            }
+        }
+
+        IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
+        if (attempts != null) {
+            attempts.forEach(ex::addSuppressed);
+        }
+        return ex;
     }
 
     public void closeLock(final String name) {

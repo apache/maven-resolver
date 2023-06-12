@@ -53,7 +53,7 @@ public class ReadWriteLockNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public boolean lockShared(final long time, final TimeUnit unit) throws InterruptedException {
+    protected boolean doLockShared(final long time, final TimeUnit unit) throws InterruptedException {
         Deque<Step> steps = threadSteps.get();
         if (readWriteLock.readLock().tryLock(time, unit)) {
             steps.push(Step.SHARED);
@@ -63,7 +63,7 @@ public class ReadWriteLockNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public boolean lockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
+    protected boolean doLockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
         Deque<Step> steps = threadSteps.get();
         if (!steps.isEmpty()) { // we already own shared or exclusive lock
             if (!steps.contains(Step.EXCLUSIVE)) {
@@ -78,7 +78,7 @@ public class ReadWriteLockNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public void unlock() {
+    protected void doUnlock() {
         Deque<Step> steps = threadSteps.get();
         if (steps.isEmpty()) {
             throw new IllegalStateException("Wrong API usage: unlock without lock");

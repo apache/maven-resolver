@@ -45,17 +45,17 @@ public class NoopNamedLockFactory extends NamedLockFactorySupport {
         }
 
         @Override
-        public boolean lockShared(final long time, final TimeUnit unit) {
+        protected boolean doLockShared(final long time, final TimeUnit unit) {
             return true;
         }
 
         @Override
-        public boolean lockExclusively(final long time, final TimeUnit unit) {
+        protected boolean doLockExclusively(final long time, final TimeUnit unit) {
             return true;
         }
 
         @Override
-        public void unlock() {
+        protected void doUnlock() {
             // no-op
         }
     }

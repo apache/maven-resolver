@@ -66,7 +66,7 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public boolean lockShared(final long time, final TimeUnit unit) throws InterruptedException {
+    protected boolean doLockShared(final long time, final TimeUnit unit) throws InterruptedException {
         Deque<Integer> perms = threadPerms.get();
         if (!perms.isEmpty()) { // we already own shared or exclusive lock
             perms.push(NONE);
@@ -80,7 +80,7 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public boolean lockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
+    protected boolean doLockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
         Deque<Integer> perms = threadPerms.get();
         if (!perms.isEmpty()) { // we already own shared or exclusive lock
             if (perms.contains(EXCLUSIVE)) {
@@ -98,7 +98,7 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport {
     }
 
     @Override
-    public void unlock() {
+    protected void doUnlock() {
         Deque<Integer> steps = threadPerms.get();
         if (steps.isEmpty()) {
             throw new IllegalStateException("Wrong API usage: unlock without lock");
