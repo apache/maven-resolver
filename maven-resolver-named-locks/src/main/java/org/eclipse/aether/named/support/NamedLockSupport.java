@@ -55,7 +55,7 @@ public abstract class NamedLockSupport implements NamedLock {
     public boolean lockShared(long time, TimeUnit unit) throws InterruptedException {
         if (state != null) {
             state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
-                    .push("S");
+                    .push("shared");
         }
         return doLockShared(time, unit);
     }
@@ -66,7 +66,7 @@ public abstract class NamedLockSupport implements NamedLock {
     public boolean lockExclusively(long time, TimeUnit unit) throws InterruptedException {
         if (state != null) {
             state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
-                    .push("X");
+                    .push("exclusive");
         }
         return doLockExclusively(time, unit);
     }
