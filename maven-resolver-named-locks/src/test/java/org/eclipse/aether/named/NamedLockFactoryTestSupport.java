@@ -45,6 +45,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test(expected = IllegalStateException.class)
     public void testFailure() throws InterruptedException {
+        // note: set system property "aether.named.diagnostic.enabled" to "true" to have log output
+        // this test does NOT assert its presence, only the proper flow
         Thread t1 = new Thread(() -> {
             try {
                 namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
