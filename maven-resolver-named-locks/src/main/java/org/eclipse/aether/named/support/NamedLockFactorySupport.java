@@ -38,7 +38,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     /**
      * System property key to enable locking diagnostic collection.
      *
-     * @since TBD
+     * @since 1.9.11
      */
     private static final boolean DIAGNOSTIC_ENABLED = Boolean.getBoolean("aether.named.diagnostic.enabled");
 
@@ -60,7 +60,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     /**
      * Returns {@code true} if factory diagnostic collection is enabled.
      *
-     * @since TBD
+     * @since 1.9.11
      */
     public boolean isDiagnosticEnabled() {
         return diagnosticEnabled;

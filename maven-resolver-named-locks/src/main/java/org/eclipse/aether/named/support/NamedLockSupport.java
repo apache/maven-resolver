@@ -100,7 +100,7 @@ public abstract class NamedLockSupport implements NamedLock {
     /**
      * Returns the diagnostic state (if collected) or empty map, never {@code null}.
      *
-     * @since TBD
+     * @since 1.9.11
      */
     public Map<Thread, Deque<String>> diagnosticState() {
         if (diagnosticState != null) {

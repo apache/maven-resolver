@@ -43,7 +43,7 @@ public interface NamedLockFactory {
      * <p>
      * The default implementation merely does what happened before: adds no extra information.
      *
-     * @since TBD
+     * @since 1.9.11
      */
     default <E extends Throwable> E onFailure(E failure) {
         return failure;
