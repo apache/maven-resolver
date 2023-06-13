@@ -97,6 +97,11 @@ public abstract class NamedLockSupport implements NamedLock {
         factory.closeLock(name);
     }
 
+    /**
+     * Returns the diagnostic state (if collected) or empty map, never {@code null}.
+     *
+     * @since TBD
+     */
     public Map<Thread, Deque<String>> diagnosticState() {
         if (diagnosticState != null) {
             return diagnosticState;

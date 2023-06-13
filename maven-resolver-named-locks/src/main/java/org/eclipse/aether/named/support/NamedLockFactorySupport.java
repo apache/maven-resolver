@@ -35,6 +35,11 @@ import static java.util.Objects.requireNonNull;
  * Support class for {@link NamedLockFactory} implementations providing reference counting.
  */
 public abstract class NamedLockFactorySupport implements NamedLockFactory {
+    /**
+     * System property key to enable locking diagnostic collection.
+     *
+     * @since TBD
+     */
     private static final boolean DIAGNOSTIC_ENABLED = Boolean.getBoolean("aether.named.diagnostic.enabled");
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -52,6 +57,11 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
         this.diagnosticEnabled = diagnosticEnabled;
     }
 
+    /**
+     * Returns {@code true} if factory diagnostic collection is enabled.
+     *
+     * @since TBD
+     */
     public boolean isDiagnosticEnabled() {
         return diagnosticEnabled;
     }
