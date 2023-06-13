@@ -70,12 +70,14 @@ Out of the box, name mapper implementations are the following:
 
 Note: the `file-gav` name mapper MUST be used with `file-lock` named locking, no other mapper will work with it.
 
-${esc.hash}${esc.hash} Diagnostic dump in case of failures
+${esc.hash}${esc.hash} Diagnostic collection in case of failures
 
 If you experience locking failures, to get access to full dump (may be huge in case of big builds) on failure,
-enable debug log level for the logger of the factory in use. When enabled, "diagnostic dump" will be emitted by factory
-to DEBUG log (console by default). Please note, that enabling diagnostic dump may increase heap requirement (as
+enable lock diagnostic collection. When enabled, "diagnostic dump" will be emitted by factory
+to INFO log (console by default). Please note, that enabling diagnostic dump may increase heap requirement (as
 diagnostic is collected in memory).
 
-For example, if you use `file-lock` (see above), then pass following parameter to Maven on command line:
-`-Dorg.slf4j.simpleLogger.log.org.eclipse.aether.named.providers.FileLockNamedLockFactory=debug`.
+To enable diagnostic collection, set Java System Property `aether.named.diagnostic.enabled` to `true`.
+
+If diagnostic collection is not enabled, Resolver will "just" fail, telling about failed lock, but not reveal any
+information about other active locks and threads.

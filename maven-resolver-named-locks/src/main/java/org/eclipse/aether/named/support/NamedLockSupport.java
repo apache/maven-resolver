@@ -19,6 +19,7 @@
 package org.eclipse.aether.named.support;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,12 +39,12 @@ public abstract class NamedLockSupport implements NamedLock {
 
     private final NamedLockFactorySupport factory;
 
-    private final ConcurrentHashMap<Thread, Deque<String>> state;
+    private final ConcurrentHashMap<Thread, Deque<String>> diagnosticState; // non-null only if diag enabled
 
     public NamedLockSupport(final String name, final NamedLockFactorySupport factory) {
         this.name = name;
         this.factory = factory;
-        this.state = factory.isDiagnosticEnabled() ? new ConcurrentHashMap<>() : null;
+        this.diagnosticState = NamedLockFactorySupport.isDiagnosticEnabled() ? new ConcurrentHashMap<>() : null;
     }
 
     @Override
@@ -53,8 +54,9 @@ public abstract class NamedLockSupport implements NamedLock {
 
     @Override
     public boolean lockShared(long time, TimeUnit unit) throws InterruptedException {
-        if (state != null) {
-            state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+        if (diagnosticState != null) {
+            diagnosticState
+                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
                     .push("shared");
         }
         return doLockShared(time, unit);
@@ -64,8 +66,9 @@ public abstract class NamedLockSupport implements NamedLock {
 
     @Override
     public boolean lockExclusively(long time, TimeUnit unit) throws InterruptedException {
-        if (state != null) {
-            state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+        if (diagnosticState != null) {
+            diagnosticState
+                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
                     .push("exclusive");
         }
         return doLockExclusively(time, unit);
@@ -76,8 +79,9 @@ public abstract class NamedLockSupport implements NamedLock {
     @Override
     public void unlock() {
         doUnlock();
-        if (state != null) {
-            state.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+        if (diagnosticState != null) {
+            diagnosticState
+                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
                     .pop();
         }
     }
@@ -93,21 +97,16 @@ public abstract class NamedLockSupport implements NamedLock {
         factory.closeLock(name);
     }
 
+    public Map<Thread, Deque<String>> diagnosticState() {
+        if (diagnosticState != null) {
+            return diagnosticState;
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
     @Override
     public String toString() {
-        if (state != null) {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(getClass().getSimpleName()).append("\n");
-            for (Map.Entry<Thread, Deque<String>> entry : state.entrySet()) {
-                stringBuilder
-                        .append(entry.getKey())
-                        .append(" -> ")
-                        .append(entry.getValue())
-                        .append("\n");
-            }
-            return stringBuilder.toString();
-        } else {
-            return name + " (" + getClass().getSimpleName() + ")";
-        }
+        return getClass().getSimpleName() + "{" + "name='" + name + '\'' + '}';
     }
 }
