@@ -18,6 +18,13 @@
  */
 package org.eclipse.aether.named.support;
 
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.aether.named.NamedLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +39,12 @@ public abstract class NamedLockSupport implements NamedLock {
 
     private final NamedLockFactorySupport factory;
 
+    private final ConcurrentHashMap<Thread, Deque<String>> diagnosticState; // non-null only if diag enabled
+
     public NamedLockSupport(final String name, final NamedLockFactorySupport factory) {
         this.name = name;
         this.factory = factory;
+        this.diagnosticState = factory.isDiagnosticEnabled() ? new ConcurrentHashMap<>() : null;
     }
 
     @Override
@@ -43,7 +53,65 @@ public abstract class NamedLockSupport implements NamedLock {
     }
 
     @Override
+    public boolean lockShared(long time, TimeUnit unit) throws InterruptedException {
+        if (diagnosticState != null) {
+            diagnosticState
+                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+                    .push("shared");
+        }
+        return doLockShared(time, unit);
+    }
+
+    protected abstract boolean doLockShared(long time, TimeUnit unit) throws InterruptedException;
+
+    @Override
+    public boolean lockExclusively(long time, TimeUnit unit) throws InterruptedException {
+        if (diagnosticState != null) {
+            diagnosticState
+                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+                    .push("exclusive");
+        }
+        return doLockExclusively(time, unit);
+    }
+
+    protected abstract boolean doLockExclusively(long time, TimeUnit unit) throws InterruptedException;
+
+    @Override
+    public void unlock() {
+        doUnlock();
+        if (diagnosticState != null) {
+            diagnosticState
+                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
+                    .pop();
+        }
+    }
+
+    protected abstract void doUnlock();
+
+    @Override
     public void close() {
+        doClose();
+    }
+
+    protected void doClose() {
         factory.closeLock(name);
+    }
+
+    /**
+     * Returns the diagnostic state (if collected) or empty map, never {@code null}.
+     *
+     * @since TBD
+     */
+    public Map<Thread, Deque<String>> diagnosticState() {
+        if (diagnosticState != null) {
+            return diagnosticState;
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{" + "name='" + name + '\'' + '}';
     }
 }

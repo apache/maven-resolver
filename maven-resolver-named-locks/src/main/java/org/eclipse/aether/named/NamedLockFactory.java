@@ -35,4 +35,17 @@ public interface NamedLockFactory {
      * Performs a clean shut down of the factory.
      */
     void shutdown();
+
+    /**
+     * Method to notify factory about locking failure, to make it possible to provide more (factory specific)
+     * information about factory state when a locking operation failed. Factory may alter provided failure or
+     * provide information via some other side effect (for example via logging).
+     * <p>
+     * The default implementation merely does what happened before: adds no extra information.
+     *
+     * @since TBD
+     */
+    default <E extends Throwable> E onFailure(E failure) {
+        return failure;
+    }
 }

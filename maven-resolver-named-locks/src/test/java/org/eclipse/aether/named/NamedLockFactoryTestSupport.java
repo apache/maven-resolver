@@ -43,6 +43,34 @@ public abstract class NamedLockFactoryTestSupport {
         return testName.getMethodName();
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testFailure() throws InterruptedException {
+        // note: set system property "aether.named.diagnostic.enabled" to "true" to have log output
+        // this test does NOT assert its presence, only the proper flow
+        Thread t1 = new Thread(() -> {
+            try {
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        Thread t2 = new Thread(() -> {
+            try {
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        throw namedLockFactory.onFailure(new IllegalStateException("failure"));
+    }
+
     @Test
     public void refCounting() {
         final String name = lockName();

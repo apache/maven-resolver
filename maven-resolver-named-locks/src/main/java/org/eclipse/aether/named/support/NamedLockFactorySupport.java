@@ -18,6 +18,9 @@
  */
 package org.eclipse.aether.named.support;
 
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,12 +35,35 @@ import static java.util.Objects.requireNonNull;
  * Support class for {@link NamedLockFactory} implementations providing reference counting.
  */
 public abstract class NamedLockFactorySupport implements NamedLockFactory {
+    /**
+     * System property key to enable locking diagnostic collection.
+     *
+     * @since TBD
+     */
+    private static final boolean DIAGNOSTIC_ENABLED = Boolean.getBoolean("aether.named.diagnostic.enabled");
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ConcurrentMap<String, NamedLockHolder> locks;
 
+    private final boolean diagnosticEnabled;
+
     public NamedLockFactorySupport() {
+        this(DIAGNOSTIC_ENABLED);
+    }
+
+    public NamedLockFactorySupport(boolean diagnosticEnabled) {
         this.locks = new ConcurrentHashMap<>();
+        this.diagnosticEnabled = diagnosticEnabled;
+    }
+
+    /**
+     * Returns {@code true} if factory diagnostic collection is enabled.
+     *
+     * @since TBD
+     */
+    public boolean isDiagnosticEnabled() {
+        return diagnosticEnabled;
     }
 
     @Override
@@ -55,6 +81,32 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     @Override
     public void shutdown() {
         // override if needed
+    }
+
+    @Override
+    public <E extends Throwable> E onFailure(E failure) {
+        if (isDiagnosticEnabled()) {
+            Map<String, NamedLockHolder> locks = new HashMap<>(this.locks); // copy
+            int activeLocks = locks.size();
+            logger.info("Diagnostic dump of lock factory");
+            logger.info("===============================");
+            logger.info("Implementation: {}", getClass().getName());
+            logger.info("Active locks: {}", activeLocks);
+            logger.info("");
+            if (activeLocks > 0) {
+                for (Map.Entry<String, NamedLockHolder> entry : locks.entrySet()) {
+                    String name = entry.getKey();
+                    int refCount = entry.getValue().referenceCount.get();
+                    NamedLockSupport lock = entry.getValue().namedLock;
+                    logger.info("Name: {}", name);
+                    logger.info("RefCount: {}", refCount);
+                    Map<Thread, Deque<String>> diag = lock.diagnosticState();
+                    diag.forEach((key, value) -> logger.info("  {} -> {}", key, value));
+                }
+                logger.info("");
+            }
+        }
+        return failure;
     }
 
     public void closeLock(final String name) {
