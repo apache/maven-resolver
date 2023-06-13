@@ -37,16 +37,23 @@ import static java.util.Objects.requireNonNull;
 public abstract class NamedLockFactorySupport implements NamedLockFactory {
     private static final boolean DIAGNOSTIC_ENABLED = Boolean.getBoolean("aether.named.diagnostic.enabled");
 
-    public static boolean isDiagnosticEnabled() {
-        return DIAGNOSTIC_ENABLED;
-    }
-
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ConcurrentMap<String, NamedLockHolder> locks;
 
+    private final boolean diagnosticEnabled;
+
     public NamedLockFactorySupport() {
+        this(DIAGNOSTIC_ENABLED);
+    }
+
+    public NamedLockFactorySupport(boolean diagnosticEnabled) {
         this.locks = new ConcurrentHashMap<>();
+        this.diagnosticEnabled = diagnosticEnabled;
+    }
+
+    public boolean isDiagnosticEnabled() {
+        return diagnosticEnabled;
     }
 
     @Override
