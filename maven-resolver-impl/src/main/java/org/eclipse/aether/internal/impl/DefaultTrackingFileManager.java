@@ -114,6 +114,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
 
         return props;
     }
+
     private Object getMutex(File file) {
         // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
         // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
@@ -122,13 +123,10 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
          * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
          * identity sufficiently as is the case with Java 1.6 and symlinks on Windows.
          */
-        try
-        {
+        try {
             return file.getCanonicalPath().intern();
-        }
-        catch ( IOException e )
-        {
-            LOGGER.warn( "Failed to canonicalize path {}", file, e );
+        } catch (IOException e) {
+            LOGGER.warn("Failed to canonicalize path {}", file, e);
             // TODO This is code smell and deprecated
             return file.getAbsolutePath().intern();
         }
