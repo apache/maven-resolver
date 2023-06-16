@@ -119,16 +119,21 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     }
 
     private Object getMutex(Path file) {
+        // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
+        // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
+        return getRealPath(file).toString().intern();
+    }
+
+    private Path getRealPath(Path file) {
         /*
          * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
          * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
          * identity sufficiently as is the case with Java 1.6 and symlinks on Windows.
          */
         try {
-            return file.toRealPath().toString().intern();
+            return file.toRealPath();
         } catch (IOException e) {
-            LOGGER.warn("Failed to get real path {}", file, e);
-            return file.toAbsolutePath().toString().intern();
+            return getRealPath(file.getParent()).resolve(file.getFileName());
         }
     }
 
