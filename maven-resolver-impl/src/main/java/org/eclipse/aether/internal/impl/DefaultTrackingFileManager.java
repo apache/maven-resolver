@@ -32,7 +32,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
 
@@ -54,10 +53,9 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
 
     @Override
     public Properties read(File file) {
-        Path filePath = file.toPath();
-        if (Files.isReadable(filePath)) {
-            synchronized (getMutex(filePath)) {
-                try (FileInputStream stream = new FileInputStream(filePath.toFile());
+        if (Files.isReadable(file.toPath())) {
+            synchronized (getMutex(file)) {
+                try (FileInputStream stream = new FileInputStream(file);
                         FileLock unused = fileLock(stream.getChannel(), Math.max(1, file.length()), true)) {
                     Properties props = new Properties();
                     props.load(stream);
@@ -73,18 +71,17 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
 
     @Override
     public Properties update(File file, Map<String, String> updates) {
-        Path filePath = file.toPath();
         Properties props = new Properties();
 
         try {
-            Files.createDirectories(filePath.getParent());
+            Files.createDirectories(file.getParentFile().toPath());
         } catch (IOException e) {
             LOGGER.warn("Failed to create tracking file parent '{}'", file, e);
             throw new UncheckedIOException(e);
         }
 
-        synchronized (getMutex(filePath)) {
-            try (RandomAccessFile raf = new RandomAccessFile(filePath.toFile(), "rw");
+        synchronized (getMutex(file)) {
+            try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
                     FileLock unused = fileLock(raf.getChannel(), Math.max(1, raf.length()), false)) {
                 if (raf.length() > 0) {
                     byte[] buffer = new byte[(int) raf.length()];
@@ -118,17 +115,20 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return props;
     }
 
-    private Object getMutex(Path file) {
+    private Object getMutex(File file) {
+        // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
+        // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
         /*
          * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
          * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
          * identity sufficiently as is the case with Java 1.6 and symlinks on Windows.
          */
         try {
-            return file.toRealPath().toString().intern();
+            return file.getCanonicalPath().intern();
         } catch (IOException e) {
-            LOGGER.warn("Failed to get real path {}", file, e);
-            return file.toAbsolutePath().toString().intern();
+            LOGGER.warn("Failed to canonicalize path {}", file, e);
+            // TODO This is code smell and deprecated
+            return file.getAbsolutePath().intern();
         }
     }
 
