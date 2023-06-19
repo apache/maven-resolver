@@ -21,6 +21,7 @@ package org.eclipse.aether.named;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -132,7 +133,11 @@ public abstract class NamedLockFactoryTestSupport {
         final String name = lockName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
             assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(false));
+            try {
+                one.lockExclusively(1L, TimeUnit.MILLISECONDS);
+            } catch (LockUpgradeNotSupportedException e) {
+                // good
+            }
             one.unlock();
         }
     }

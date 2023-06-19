@@ -137,7 +137,11 @@ public final class FileLockNamedLock extends NamedLockSupport {
                         // if we own shared, that's attempted upgrade
                         boolean weOwnShared = steps.contains(Boolean.TRUE);
                         if (weOwnShared) {
-                            return false; // Lock upgrade not supported
+                            throw new LockUpgradeNotSupportedException(
+                                    "Thread " + Thread.currentThread().getName()
+                                            + " already possesses shared lock fpr '" + name()
+                                            + "', but wants exclusive lock; upgrade not supported"); // Lock upgrade not
+                            // supported
                         } else {
                             // someone else owns shared, let's wait
                             return null;

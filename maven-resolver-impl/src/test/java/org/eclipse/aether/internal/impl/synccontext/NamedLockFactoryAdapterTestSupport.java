@@ -31,6 +31,7 @@ import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.internal.impl.synccontext.named.*;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.junit.AfterClass;
@@ -266,7 +267,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                         chained.run();
                     }
                     loser.await();
-                } catch (IllegalStateException e) {
+                } catch (IllegalStateException | LockUpgradeNotSupportedException e) {
                     e.printStackTrace(); // for ref purposes
                     loser.countDown();
                     winner.await();
