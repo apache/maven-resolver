@@ -19,11 +19,12 @@
 package org.eclipse.aether.named.support;
 
 /**
- * Exception thrown when lock upgrade attempted that we do not support.
+ * Exception thrown when lock upgrade attempted that we do not support. This exception when used within {@link Retry}
+ * helper should never be reattempted, hence is marked with {@link Retry.DoNotRetry} marker.
  *
  * @since 1.9.13
  */
-public final class LockUpgradeNotSupportedException extends RuntimeException {
+public final class LockUpgradeNotSupportedException extends RuntimeException implements Retry.DoNotRetry {
     public LockUpgradeNotSupportedException(String message) {
         super(message);
     }

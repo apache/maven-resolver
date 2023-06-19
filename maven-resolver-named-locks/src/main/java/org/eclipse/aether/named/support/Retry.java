@@ -37,6 +37,14 @@ import org.slf4j.LoggerFactory;
 public final class Retry {
     private static final Logger LOGGER = LoggerFactory.getLogger(Retry.class);
 
+    /**
+     * Marker interface to apply onto exceptions to make them "never retried" when thrown. This shortcuts checks with
+     * predicate, if used.
+     *
+     * @since 1.9.13
+     */
+    public interface DoNotRetry {}
+
     private Retry() {
         // no instances
     }
@@ -71,6 +79,13 @@ public final class Retry {
                 throw e;
             } catch (Exception e) {
                 LOGGER.trace("Retry attempt {}: operation failure", attempt, e);
+                if (e instanceof DoNotRetry) {
+                    if (e instanceof RuntimeException) {
+                        throw (RuntimeException) e;
+                    } else {
+                        throw new IllegalStateException(e);
+                    }
+                }
                 if (retryPredicate != null && !retryPredicate.test(e)) {
                     throw new IllegalStateException(e);
                 }
@@ -111,6 +126,13 @@ public final class Retry {
                 throw e;
             } catch (Exception e) {
                 LOGGER.trace("Retry attempt {}: operation failure", attempt, e);
+                if (e instanceof DoNotRetry) {
+                    if (e instanceof RuntimeException) {
+                        throw (RuntimeException) e;
+                    } else {
+                        throw new IllegalStateException(e);
+                    }
+                }
                 if (retryPredicate != null && !retryPredicate.test(e)) {
                     throw new IllegalStateException(e);
                 }

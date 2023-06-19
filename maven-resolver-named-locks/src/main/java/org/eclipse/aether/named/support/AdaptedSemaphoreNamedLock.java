@@ -88,7 +88,7 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport {
                 return true;
             } else {
                 throw new LockUpgradeNotSupportedException(
-                        "Thread " + Thread.currentThread().getName() + " already possesses shared lock fpr '" + name()
+                        "Thread " + Thread.currentThread().getName() + " already possesses shared lock for '" + name()
                                 + "', but wants exclusive lock; upgrade not supported"); // Lock upgrade not supported
             }
         }
