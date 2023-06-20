@@ -268,7 +268,6 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                     }
                     loser.await();
                 } catch (IllegalStateException | LockUpgradeNotSupportedException e) {
-                    e.printStackTrace(); // for ref purposes
                     loser.countDown();
                     winner.await();
                 }
