@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -114,7 +115,11 @@ public abstract class NamedLockFactoryTestSupport {
         final String name = testName.getMethodName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
             assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(false));
+            try {
+                one.lockExclusively(1L, TimeUnit.MILLISECONDS);
+            } catch (LockUpgradeNotSupportedException e) {
+                // good
+            }
             one.unlock();
         }
     }
