@@ -25,20 +25,23 @@ then you can use named locks to make sure they are being protected from concurre
 
 The building block for named locks is `org.eclipse.aether.named.NamedLock` that is acquired from factory
 `org.eclipse.aether.named.NamedLockFactory` for given "name". Two threads (or processes, or even distributed
-processes, depending on backing implementation) that use same name can then coordinate each other by acquiring
-"shared" or "exclusive" access to resource mapped to "name". Named locks tread "name" just as an opaque identifier,
-nothing more. The design attempts for similarity with existing Java constructs like `ReentrantReadWriteLock` is,
-and have similar properties as well.
+processes, depending on backing implementation) that use same "name" can then coordinate each other by acquiring
+"shared" or "exclusive" access to resource mapped to "name". Named locks treat "name" just as an opaque identifier.
+The design attempts for similarity with existing Java constructs like `ReentrantReadWriteLock`,
+and share similar properties as well.
 
 Named locks properties:
-* lock states are assigned to current threads, hence, even same instance of named lock can be used by multiple threads
-* reentrant: named locks allow you to reacquire same (shared or exclusive) lock you already have
-* lock downgrading: named locks allow "lock downgrading", but semantically this results in no-op (as thread already owns
-  exclusive lock)
-* lock upgrading: is not support and implementations will "fail fast" (throw runtime exception) for code that attempts
-  to perform lock upgrade. If must, proposed alternative is [DCL](https://en.wikipedia.org/wiki/Double-checked_locking).
-* interruption of acquisition: named locks support interruption during acquisition
-* named locks can be JVM local only, host wide (file advisory locking) or even fully distributed (Hazelcast, Redisson).
+* Reentrant: named locks allow you to reacquire same (shared or exclusive) lock you already have.
+* Lock downgrading: named locks allow "lock downgrading", but semantically this results in no-op (as thread already owns
+  exclusive lock).
+* Lock upgrading: is not supported and implementations will "fail fast" (throw runtime exception) for code that attempts
+  to perform it. If required, proposed alternative is [DCL](https://en.wikipedia.org/wiki/Double-checked_locking).
+* Interruption of acquisition: named locks support interruption during acquisition.
+
+Named locks special properties:
+* Coordination happens on Thread level (always) and goes all way up to processes or distributed processes (backing
+  implementation dependant)
+* Named locks can be JVM local only, host wide (file locking) or even fully distributed (Hazelcast, Redisson).
 
 Named locks provide support classes for implementations, and provide out of the box several lock and name mapper implementations.
 
