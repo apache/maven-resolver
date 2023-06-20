@@ -24,10 +24,11 @@ resources that each can have unique ID assigned (i.e., file with an absolute pat
 then you can use named locks to make sure they are being protected from concurrent read and write actions.
 
 The building block for named locks is `org.eclipse.aether.named.NamedLock` that is acquired from factory
-`org.eclipse.aether.named.NamedLockFactory` for given "name". Two threads (or processes, depending on backing
-implementation) that use same name can then coordinate each other by acquiring "shared" or "exclusive" access to
-resource mapped to "name". Named locks tread "name" just as an opaque identifier, nothing more. The design attempts
-for similarity with existing Java constructs like `ReentrantReadWriteLock` is, and have similar properties as well.
+`org.eclipse.aether.named.NamedLockFactory` for given "name". Two threads (or processes, or even distributed
+processes, depending on backing implementation) that use same name can then coordinate each other by acquiring
+"shared" or "exclusive" access to resource mapped to "name". Named locks tread "name" just as an opaque identifier,
+nothing more. The design attempts for similarity with existing Java constructs like `ReentrantReadWriteLock` is,
+and have similar properties as well.
 
 Named locks properties:
 * lock states are assigned to current threads, hence, even same instance of named lock can be used by multiple threads
