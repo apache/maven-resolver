@@ -116,6 +116,6 @@ public class GAVNameMapper implements NameMapper {
     }
 
     public static NameMapper fileGav() {
-        return new GAVNameMapper(true, "", ".lock", "", ".lock", "~");
+        return new GAVNameMapper(true, "artifact~", ".lock", "metadata~", ".lock", "~");
     }
 }

@@ -59,7 +59,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
 
         assertThat(names, hasSize(1));
-        assertThat(names.iterator().next(), equalTo("group~artifact~1.0.lock"));
+        assertThat(names.iterator().next(), equalTo("artifact~group~artifact~1.0.lock"));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
         Collection<String> names = mapper.nameLocks(session, null, singletonList(metadata));
 
         assertThat(names, hasSize(1));
-        assertThat(names.iterator().next(), equalTo("group~artifact.lock"));
+        assertThat(names.iterator().next(), equalTo("metadata~group~artifact.lock"));
     }
 
     @Test
@@ -83,7 +83,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
         Iterator<String> namesIterator = names.iterator();
 
         // they are sorted as well
-        assertThat(namesIterator.next(), equalTo("agroup~artifact~1.0.lock"));
-        assertThat(namesIterator.next(), equalTo("bgroup~artifact.lock"));
+        assertThat(namesIterator.next(), equalTo("artifact~agroup~artifact~1.0.lock"));
+        assertThat(namesIterator.next(), equalTo("metadata~bgroup~artifact.lock"));
     }
 }
