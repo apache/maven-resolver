@@ -87,9 +87,7 @@ public class AdaptedSemaphoreNamedLock extends NamedLockSupport {
                 perms.push(NONE);
                 return true;
             } else {
-                throw new LockUpgradeNotSupportedException(
-                        "Thread " + Thread.currentThread().getName() + " already possesses shared lock for '" + name()
-                                + "', but wants exclusive lock; upgrade not supported"); // Lock upgrade not supported
+                throw new LockUpgradeNotSupportedException(this); // Lock upgrade not supported
             }
         }
         if (semaphore.tryAcquire(EXCLUSIVE, time, unit)) {

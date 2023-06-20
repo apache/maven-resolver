@@ -67,9 +67,7 @@ public class ReadWriteLockNamedLock extends NamedLockSupport {
         Deque<Step> steps = threadSteps.get();
         if (!steps.isEmpty()) { // we already own shared or exclusive lock
             if (!steps.contains(Step.EXCLUSIVE)) {
-                throw new LockUpgradeNotSupportedException(
-                        "Thread " + Thread.currentThread().getName() + " already possesses shared lock for '" + name()
-                                + "', but wants exclusive lock; upgrade not supported"); // Lock upgrade not supported
+                throw new LockUpgradeNotSupportedException(this); // Lock upgrade not supported
             }
         }
         if (readWriteLock.writeLock().tryLock(time, unit)) {

@@ -25,7 +25,12 @@ package org.eclipse.aether.named.support;
  * @since 1.9.13
  */
 public final class LockUpgradeNotSupportedException extends RuntimeException implements Retry.DoNotRetry {
-    public LockUpgradeNotSupportedException(String message) {
-        super(message);
+    /**
+     * Constructor for case, when current thread attempts lock upgrade on given lock instance.
+     */
+    public LockUpgradeNotSupportedException(NamedLockSupport namedLock) {
+        super("Thread " + Thread.currentThread().getName()
+                + " already possesses shared lock for '" + namedLock.name()
+                + "', but wants exclusive lock; upgrade not supported");
     }
 }
