@@ -23,6 +23,26 @@ Named locks are essentially locks that are assigned to some given (opaque) ID. I
 resources that each can have unique ID assigned (i.e., file with an absolute path, some entities with unique ID),
 then you can use named locks to make sure they are being protected from concurrent read and write actions.
 
+The building block for named locks is `org.eclipse.aether.named.NamedLock` that is acquired from factory
+`org.eclipse.aether.named.NamedLockFactory` for given "name". Two threads (or processes, or even distributed
+processes, depending on backing implementation) that use same "name" can then coordinate each other by acquiring
+"shared" or "exclusive" access to resource mapped to "name". Named locks treat "name" just as an opaque identifier.
+The design attempts for similarity with existing Java constructs like `ReentrantReadWriteLock`,
+and share similar properties as well.
+
+Named locks properties:
+* Reentrant: named locks allow you to reacquire same (shared or exclusive) lock you already have.
+* Lock downgrading: named locks allow "lock downgrading", but semantically this results in no-op (as thread already owns
+  exclusive lock).
+* Lock upgrading: is not supported and implementations will "fail fast" (throw runtime exception) for code that attempts
+  to perform it. If required, proposed alternative is [DCL](https://en.wikipedia.org/wiki/Double-checked_locking).
+* Interruption of acquisition: named locks support interruption during acquisition.
+
+Named locks special properties:
+* Coordination happens on Thread level (always) and goes all way up to processes or distributed processes (backing
+  implementation dependant)
+* Named locks can be JVM local only, host wide (file locking) or even fully distributed (Hazelcast, Redisson).
+
 Named locks provide support classes for implementations, and provide out of the box several lock and name mapper implementations.
 
 Following implementations are "local" (local to JVM) named lock implementations:
