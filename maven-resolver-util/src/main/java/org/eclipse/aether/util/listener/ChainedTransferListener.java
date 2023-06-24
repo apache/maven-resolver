@@ -112,7 +112,7 @@ public final class ChainedTransferListener extends AbstractTransferListener {
     }
 
     @SuppressWarnings("EmptyMethod")
-    protected void handleError(TransferEvent event, TransferListener listener, RuntimeException error) {
+void handleError(TransferEvent event, TransferListener listener, RuntimeException error) {
         // default just swallows errors
     }
 
