@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class ScopeDependencySelector implements DependencySelector {
 
-    private final boolean transitive;
+    private final int depth;
 
     private final Collection<String> included;
 
@@ -53,7 +53,7 @@ public final class ScopeDependencySelector implements DependencySelector {
      * @param excluded The set of scopes to exclude, may be {@code null} or empty to exclude no scope.
      */
     public ScopeDependencySelector(Collection<String> included, Collection<String> excluded) {
-        transitive = false;
+        this.depth = 0;
         this.included = clone(included);
         this.excluded = clone(excluded);
     }
@@ -82,15 +82,15 @@ public final class ScopeDependencySelector implements DependencySelector {
         this(null, (excluded != null) ? Arrays.asList(excluded) : null);
     }
 
-    private ScopeDependencySelector(boolean transitive, Collection<String> included, Collection<String> excluded) {
-        this.transitive = transitive;
+    private ScopeDependencySelector(int depth, Collection<String> included, Collection<String> excluded) {
+        this.depth = depth;
         this.included = included;
         this.excluded = excluded;
     }
 
     public boolean selectDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
-        if (!transitive) {
+        if (depth < 2) {
             return true;
         }
 
@@ -100,11 +100,11 @@ public final class ScopeDependencySelector implements DependencySelector {
 
     public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
-        if (this.transitive || context.getDependency() == null) {
+        if (this.depth >= 2) {
             return this;
         }
 
-        return new ScopeDependencySelector(true, included, excluded);
+        return new ScopeDependencySelector(depth + 1, included, excluded);
     }
 
     @Override
@@ -116,7 +116,7 @@ public final class ScopeDependencySelector implements DependencySelector {
         }
 
         ScopeDependencySelector that = (ScopeDependencySelector) obj;
-        return transitive == that.transitive
+        return depth == that.depth
                 && Objects.equals(included, that.included)
                 && Objects.equals(excluded, that.excluded);
     }
@@ -124,7 +124,7 @@ public final class ScopeDependencySelector implements DependencySelector {
     @Override
     public int hashCode() {
         int hash = 17;
-        hash = hash * 31 + (transitive ? 1 : 0);
+        hash = hash * 31 + depth;
         hash = hash * 31 + (included != null ? included.hashCode() : 0);
         hash = hash * 31 + (excluded != null ? excluded.hashCode() : 0);
         return hash;
@@ -133,7 +133,6 @@ public final class ScopeDependencySelector implements DependencySelector {
     @Override
     public String toString() {
         return String.format(
-                "%s(included: %s, excluded: %s, transitive: %s)",
-                getClass().getSimpleName(), included, excluded, transitive);
+                "%s(included: %s, excluded: %s, depth: %s)", getClass().getSimpleName(), included, excluded, depth);
     }
 }
