@@ -28,10 +28,10 @@ import java.util.Map;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 
 import static java.util.Objects.requireNonNull;
 
@@ -57,14 +57,27 @@ public final class TrustedToProvidedChecksumsSourceAdapter implements ProvidedCh
     public Map<String, String> getProvidedArtifactChecksums(
             RepositorySystemSession session,
             ArtifactDownload transfer,
+            RemoteRepository repository,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         Artifact artifact = transfer.getArtifact();
-        for (RemoteRepository remoteRepository : transfer.getRepositories()) {
-            for (TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values()) {
-                Map<String, String> trustedChecksums = trustedChecksumsSource.getTrustedArtifactChecksums(
-                        session, artifact, remoteRepository, checksumAlgorithmFactories);
-                if (trustedChecksums != null && !trustedChecksums.isEmpty()) {
-                    return trustedChecksums;
+        Map<String, String> trustedChecksums;
+        // check for connector repository
+        for (TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values()) {
+            trustedChecksums = trustedChecksumsSource.getTrustedArtifactChecksums(
+                    session, artifact, repository, checksumAlgorithmFactories);
+            if (trustedChecksums != null && !trustedChecksums.isEmpty()) {
+                return trustedChecksums;
+            }
+        }
+        // if repo above is "mirrorOf", this one kicks in
+        if (!transfer.getRepositories().isEmpty()) {
+            for (RemoteRepository remoteRepository : transfer.getRepositories()) {
+                for (TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values()) {
+                    trustedChecksums = trustedChecksumsSource.getTrustedArtifactChecksums(
+                            session, artifact, remoteRepository, checksumAlgorithmFactories);
+                    if (trustedChecksums != null && !trustedChecksums.isEmpty()) {
+                        return trustedChecksums;
+                    }
                 }
             }
         }

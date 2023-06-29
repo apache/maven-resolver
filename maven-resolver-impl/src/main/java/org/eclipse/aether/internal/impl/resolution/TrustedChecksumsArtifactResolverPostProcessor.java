@@ -115,7 +115,9 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                         CHECKSUM_ALGORITHMS_CACHE_KEY,
                         () -> checksumAlgorithmFactorySelector.selectList(
                                 ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                                        session, DEFAULT_CHECKSUM_ALGORITHMS, CONF_NAME_CHECKSUM_ALGORITHMS))));
+                                        session,
+                                        DEFAULT_CHECKSUM_ALGORITHMS,
+                                        configPropKey(CONF_NAME_CHECKSUM_ALGORITHMS)))));
 
         final boolean failIfMissing = ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_FAIL_IF_MISSING));
         final boolean record = ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_RECORD));
