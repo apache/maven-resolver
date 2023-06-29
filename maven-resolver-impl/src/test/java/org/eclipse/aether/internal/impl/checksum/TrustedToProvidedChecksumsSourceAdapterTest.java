@@ -18,18 +18,11 @@
  */
 package org.eclipse.aether.internal.impl.checksum;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -39,6 +32,14 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TrustedToProvidedChecksumsSourceAdapterTest {
     private final Artifact artifactWithChecksum = new DefaultArtifact("g:a:v1");
@@ -61,8 +62,9 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     public void before() {
         HashMap<String, String> result = new HashMap<>();
         result.put(Sha1ChecksumAlgorithmFactory.NAME, "foo");
-        when(trustedChecksumsSource.getTrustedArtifactChecksums(eq(session), eq(artifactWithChecksum), eq(repository),
-                eq(checksums))).thenReturn(result);
+        when(trustedChecksumsSource.getTrustedArtifactChecksums(
+                        eq(session), eq(artifactWithChecksum), eq(repository), eq(checksums)))
+                .thenReturn(result);
         adapter = new TrustedToProvidedChecksumsSourceAdapter(
                 Collections.singletonMap("trusted", trustedChecksumsSource));
     }
@@ -71,8 +73,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     public void testSimplePositive() {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithChecksum);
-        Map<String, String>
-                chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
+        Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
         assertThat(chk, notNullValue());
         assertThat(chk, hasEntry(Sha1ChecksumAlgorithmFactory.NAME, "foo"));
     }
@@ -81,8 +82,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     public void testSimpleNegative() {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithoutChecksum);
-        Map<String, String>
-                chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
+        Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
         assertThat(chk, nullValue());
     }
 
@@ -92,8 +92,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithChecksum);
         transfer.setRepositories(Collections.singletonList(repository));
-        Map<String, String>
-                chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
+        Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
         assertThat(chk, notNullValue());
         assertThat(chk, hasEntry(Sha1ChecksumAlgorithmFactory.NAME, "foo"));
     }
@@ -104,8 +103,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithoutChecksum);
         transfer.setRepositories(Collections.singletonList(repository));
-        Map<String, String>
-                chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
+        Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
         assertThat(chk, nullValue());
     }
 }
