@@ -62,13 +62,25 @@ public final class RepositoryPolicy {
 
     private final String updatePolicy;
 
+    private final String metadataUpdatePolicy;
+
     private final String checksumPolicy;
 
     /**
      * Creates a new policy with checksum warnings and daily update checks.
      */
     public RepositoryPolicy() {
-        this(true, UPDATE_POLICY_DAILY, CHECKSUM_POLICY_WARN);
+        this(true, UPDATE_POLICY_DAILY, UPDATE_POLICY_DAILY, CHECKSUM_POLICY_WARN);
+    }
+
+    /**
+     * Legacy constructor that handles update policy and metadata update policy same (as before).
+     *
+     * @deprecated Use any other constructor.
+     */
+    @Deprecated
+    public RepositoryPolicy(boolean enabled, String updatePolicy, String checksumPolicy) {
+        this(enabled, updatePolicy, updatePolicy, checksumPolicy);
     }
 
     /**
@@ -77,11 +89,16 @@ public final class RepositoryPolicy {
      * @param enabled A flag whether the associated repository should be accessed or not.
      * @param updatePolicy The update interval after which locally cached data from the repository is considered stale
      *            and should be refetched, may be {@code null}.
+     * @param metadataUpdatePolicy The update interval after which locally cached metadata from the repository is considered stale
+     *            and should be refetched, may be {@code null}.
      * @param checksumPolicy The way checksum verification should be handled, may be {@code null}.
+     *
+     * @since TBD
      */
-    public RepositoryPolicy(boolean enabled, String updatePolicy, String checksumPolicy) {
+    public RepositoryPolicy(boolean enabled, String updatePolicy, String metadataUpdatePolicy, String checksumPolicy) {
         this.enabled = enabled;
         this.updatePolicy = (updatePolicy != null) ? updatePolicy : "";
+        this.metadataUpdatePolicy = (metadataUpdatePolicy != null) ? metadataUpdatePolicy : "";
         this.checksumPolicy = (checksumPolicy != null) ? checksumPolicy : "";
     }
 
@@ -104,6 +121,16 @@ public final class RepositoryPolicy {
     }
 
     /**
+     * Gets the update policy for locally cached metadata from the repository.
+     *
+     * @return The update policy, never {@code null}.
+     * @since TBD
+     */
+    public String getMetadataUpdatePolicy() {
+        return metadataUpdatePolicy;
+    }
+
+    /**
      * Gets the policy for checksum validation.
      *
      * @return The checksum policy, never {@code null}.
@@ -118,6 +145,7 @@ public final class RepositoryPolicy {
         buffer.append("enabled=").append(isEnabled());
         buffer.append(", checksums=").append(getChecksumPolicy());
         buffer.append(", updates=").append(getUpdatePolicy());
+        buffer.append(", metadataUpdates=").append(getMetadataUpdatePolicy());
         return buffer.toString();
     }
 

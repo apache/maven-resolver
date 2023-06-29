@@ -73,6 +73,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private String updatePolicy;
 
+    private String metadataUpdatePolicy;
+
     private LocalRepositoryManager localRepositoryManager;
 
     private FileTransformerManager fileTransformerManager;
@@ -154,6 +156,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setArtifactDescriptorPolicy(session.getArtifactDescriptorPolicy());
         setChecksumPolicy(session.getChecksumPolicy());
         setUpdatePolicy(session.getUpdatePolicy());
+        setMetadataUpdatePolicy(session.getMetadataUpdatePolicy());
         setLocalRepositoryManager(session.getLocalRepositoryManager());
         setWorkspaceReader(session.getWorkspaceReader());
         setRepositoryListener(session.getRepositoryListener());
@@ -290,6 +293,27 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     public DefaultRepositorySystemSession setUpdatePolicy(String updatePolicy) {
         verifyStateForMutation();
         this.updatePolicy = updatePolicy;
+        return this;
+    }
+
+    @Override
+    public String getMetadataUpdatePolicy() {
+        return metadataUpdatePolicy;
+    }
+
+    /**
+     * Sets the global metadata update policy. If set, the global update policy overrides the update policies of the remote
+     * repositories being used for resolution.
+     *
+     * @param metadataUpdatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
+     * @return This session for chaining, never {@code null}.
+     * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
+     * @see RepositoryPolicy#UPDATE_POLICY_DAILY
+     * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     */
+    public DefaultRepositorySystemSession setMetadataUpdatePolicy(String metadataUpdatePolicy) {
+        verifyStateForMutation();
+        this.metadataUpdatePolicy = metadataUpdatePolicy;
         return this;
     }
 

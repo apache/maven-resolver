@@ -134,8 +134,9 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     public void checkArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
+        final String updatePolicy = check.getPolicy();
         if (check.getLocalLastUpdated() != 0
-                && !isUpdatedRequired(session, check.getLocalLastUpdated(), check.getPolicy())) {
+                && !isUpdatedRequired(session, check.getLocalLastUpdated(), updatePolicy)) {
             LOGGER.debug("Skipped remote request for {}, locally installed artifact up-to-date", check.getItem());
 
             check.setRequired(false);
@@ -185,7 +186,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, artifact, repository));
             }
-        } else if (isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (isUpdatedRequired(session, lastUpdated, updatePolicy)) {
             check.setRequired(true);
         } else if (fileExists) {
             LOGGER.debug("Skipped remote request for {}, locally cached artifact up-to-date", check.getItem());
@@ -239,8 +240,9 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     public void checkMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
+        final String updatePolicy = check.getMetadataPolicy();
         if (check.getLocalLastUpdated() != 0
-                && !isUpdatedRequired(session, check.getLocalLastUpdated(), check.getPolicy())) {
+                && !isUpdatedRequired(session, check.getLocalLastUpdated(), updatePolicy)) {
             LOGGER.debug("Skipped remote request for {} locally installed metadata up-to-date", check.getItem());
 
             check.setRequired(false);
@@ -290,7 +292,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
             if (error != null) {
                 check.setException(newException(error, metadata, repository));
             }
-        } else if (isUpdatedRequired(session, lastUpdated, check.getPolicy())) {
+        } else if (isUpdatedRequired(session, lastUpdated, updatePolicy)) {
             check.setRequired(true);
         } else if (fileExists) {
             LOGGER.debug("Skipped remote request for {}, locally cached metadata up-to-date", check.getItem());

@@ -290,6 +290,8 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                     check.setAuthoritativeRepository(repo);
                     check.setPolicy(
                             getPolicy(session, repo, metadata.getNature()).getUpdatePolicy());
+                    check.setMetadataPolicy(
+                            getPolicy(session, repo, metadata.getNature()).getMetadataUpdatePolicy());
 
                     if (lrmResult.isStale()) {
                         checks.add(check);

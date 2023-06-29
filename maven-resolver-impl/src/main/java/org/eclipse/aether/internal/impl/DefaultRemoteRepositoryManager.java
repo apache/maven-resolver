@@ -255,25 +255,41 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
         if (policy2 == null) {
             if (globalPolicy) {
-                policy = merge(policy1, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy1,
+                        session.getUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy1;
             }
         } else if (policy1 == null) {
             if (globalPolicy) {
-                policy = merge(policy2, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy2,
+                        session.getUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy2;
             }
         } else if (!policy2.isEnabled()) {
             if (globalPolicy) {
-                policy = merge(policy1, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy1,
+                        session.getUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy1;
             }
         } else if (!policy1.isEnabled()) {
             if (globalPolicy) {
-                policy = merge(policy2, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy2,
+                        session.getUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy2;
             }
@@ -295,24 +311,35 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
                 updates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
                         session, policy1.getUpdatePolicy(), policy2.getUpdatePolicy());
             }
+            String metadataUpdates = session.getMetadataUpdatePolicy();
+            if (globalPolicy && metadataUpdates != null && !metadataUpdates.isEmpty()) {
+                // use global override
+            } else {
+                metadataUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
+                        session, policy1.getMetadataUpdatePolicy(), policy2.getMetadataUpdatePolicy());
+            }
 
-            policy = new RepositoryPolicy(true, updates, checksums);
+            policy = new RepositoryPolicy(true, updates, metadataUpdates, checksums);
         }
 
         return policy;
     }
 
-    private RepositoryPolicy merge(RepositoryPolicy policy, String updates, String checksums) {
+    private RepositoryPolicy merge(RepositoryPolicy policy, String updates, String metadataUpdates, String checksums) {
         if (policy != null) {
             if (updates == null || updates.isEmpty()) {
                 updates = policy.getUpdatePolicy();
+            }
+            if (metadataUpdates == null || metadataUpdates.isEmpty()) {
+                metadataUpdates = policy.getMetadataUpdatePolicy();
             }
             if (checksums == null || checksums.isEmpty()) {
                 checksums = policy.getChecksumPolicy();
             }
             if (!policy.getUpdatePolicy().equals(updates)
+                    || !policy.getMetadataUpdatePolicy().equals(metadataUpdates)
                     || !policy.getChecksumPolicy().equals(checksums)) {
-                policy = new RepositoryPolicy(policy.isEnabled(), updates, checksums);
+                policy = new RepositoryPolicy(policy.isEnabled(), updates, metadataUpdates, checksums);
             }
         }
         return policy;
