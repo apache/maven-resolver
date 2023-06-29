@@ -186,7 +186,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
                         PremanagedDependency.create(rootDepManager, dependency, false, args.premanagedState));
                 if (!filter(processingContext)) {
                     processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
-                    resolveArtifactDescriptorAsync(args, processingContext, results);
+                    resolveArtifactDescriptorAsync(args, processingContext, results, false);
                     args.dependencyProcessingQueue.add(processingContext);
                 }
             }
@@ -267,7 +267,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
 
                     if (!filter(relocatedContext)) {
                         relocatedContext.withDependency(premanagedDependency.getManagedDependency());
-                        resolveArtifactDescriptorAsync(args, relocatedContext, results);
+                        resolveArtifactDescriptorAsync(args, relocatedContext, results, true);
                         processDependency(
                                 args,
                                 results,
@@ -383,7 +383,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
                     if (!filter(processingContext)) {
                         // resolve descriptors ahead for managed dependency
                         processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
-                        resolveArtifactDescriptorAsync(args, processingContext, results);
+                        resolveArtifactDescriptorAsync(args, processingContext, results, false);
                         args.dependencyProcessingQueue.add(processingContext);
                     }
                 }
@@ -399,9 +399,10 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
         return context.depSelector != null && !context.depSelector.selectDependency(context.dependency);
     }
 
-    private void resolveArtifactDescriptorAsync(Args args, DependencyProcessingContext context, Results results) {
+    private void resolveArtifactDescriptorAsync(
+            Args args, DependencyProcessingContext context, Results results, boolean replace) {
         Dependency dependency = context.dependency;
-        args.resolver.resolveDescriptors(dependency.getArtifact(), () -> {
+        args.resolver.resolveDescriptors(dependency.getArtifact(), replace, () -> {
             VersionRangeRequest rangeRequest = createVersionRangeRequest(
                     args.request.getRequestContext(), context.trace, context.repositories, dependency);
             VersionRangeResult rangeResult = cachedResolveRangeResult(rangeRequest, args.pool, args.session);
@@ -488,8 +489,12 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
             this.executorService = ExecutorUtils.threadPool(threads, getClass().getSimpleName() + "-");
         }
 
-        void resolveDescriptors(Artifact artifact, Callable<DescriptorResolutionResult> callable) {
-            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> this.executorService.submit(callable));
+        void resolveDescriptors(Artifact artifact, boolean replace, Callable<DescriptorResolutionResult> callable) {
+            if (replace) {
+                results.compute(ArtifactIdUtils.toId(artifact), (k, v) -> this.executorService.submit(callable));
+            } else {
+                results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> this.executorService.submit(callable));
+            }
         }
 
         void cacheVersionRangeDescriptor(Artifact artifact, DescriptorResolutionResult resolutionResult) {
