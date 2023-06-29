@@ -310,6 +310,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
      */
     public DefaultRepositorySystemSession setMetadataUpdatePolicy(String metadataUpdatePolicy) {
         verifyStateForMutation();

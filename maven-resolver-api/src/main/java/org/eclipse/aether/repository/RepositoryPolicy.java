@@ -92,7 +92,6 @@ public final class RepositoryPolicy {
      * @param metadataUpdatePolicy The update interval after which locally cached metadata from the repository is considered stale
      *            and should be refetched, may be {@code null}.
      * @param checksumPolicy The way checksum verification should be handled, may be {@code null}.
-     *
      * @since TBD
      */
     public RepositoryPolicy(boolean enabled, String updatePolicy, String metadataUpdatePolicy, String checksumPolicy) {
