@@ -41,7 +41,7 @@ public class StaticNameMapper implements NameMapper {
             final Collection<? extends Artifact> artifacts,
             final Collection<? extends Metadata> metadatas) {
         if (artifacts != null && !artifacts.isEmpty()) {
-            return Collections.singletonList( "static-artifact" );
+            return Collections.singletonList("static-artifact");
         } else if (metadatas != null && !metadatas.isEmpty()) {
             return Collections.singletonList("static-metadata");
 
