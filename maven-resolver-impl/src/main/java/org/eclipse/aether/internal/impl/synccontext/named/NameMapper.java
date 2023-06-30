@@ -49,7 +49,7 @@ public interface NameMapper {
      * then two named locks will be used etc.
      * <p>
      * Note: name mapper must not use same string for artifacts and metadata, so even the simplest possible
-     * implementation like {@link StaticNameMapper} uses two "static" strings.
+     * implementation like {@link StaticNameMapper} uses two different static strings.
      */
     Collection<String> nameLocks(
             RepositorySystemSession session,
