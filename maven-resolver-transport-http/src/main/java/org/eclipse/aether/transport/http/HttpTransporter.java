@@ -24,8 +24,10 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -33,6 +35,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -98,6 +101,7 @@ import static java.util.Objects.requireNonNull;
  */
 final class HttpTransporter extends AbstractTransporter {
 
+    static final String BIND_ADDRESS = "aether.connector.bind.address";
     static final String SUPPORT_WEBDAV = "aether.connector.http.supportWebDav";
 
     static final String PREEMPTIVE_PUT_AUTH = "aether.connector.http.preemptivePutAuth";
@@ -251,6 +255,7 @@ final class HttpTransporter extends AbstractTransporter {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
+                .setLocalAddress(getBindAddress(session))
                 .setSocketTimeout(requestTimeout)
                 .build();
 
@@ -293,6 +298,19 @@ final class HttpTransporter extends AbstractTransporter {
         }
 
         this.client = builder.build();
+    }
+
+    private InetAddress getBindAddress(RepositorySystemSession session) {
+        String bindAddress = ConfigUtils.getString(session, null, BIND_ADDRESS);
+        return Optional.ofNullable(bindAddress).map(this::resolveAddress).orElse(null);
+    }
+
+    private InetAddress resolveAddress(String bindAddress) {
+        try {
+            return InetAddress.getByName(bindAddress);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException("Given bind address (" + bindAddress + ") cannot be resolved.", uhe);
+        }
     }
 
     private static HttpHost toHost(Proxy proxy) {
