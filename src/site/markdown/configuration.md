@@ -34,6 +34,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.basic.parallelPut` | boolean | Enables or disables parallel PUT processing (parallel deploys) on basic connector globally or per remote repository. When disabled, connector behaves exactly as in Maven 3.8.x did: GETs are parallel while PUTs are sequential. | `true` | yes
 `aether.connector.classpath.loader` | ClassLoader | `ClassLoader` from which resources should be retrieved which start with the `classpath:` protocol. | `Thread.currentThread().getContextClassLoader()` | no
 `aether.connector.connectTimeout` | long | Connect timeout in milliseconds. | `10000` | yes
+`aether.connector.http.bind.address` | String | Set the outgoing interface. Valid values are local accessible IP addresses or host names. The default will use the system's default route. | `null` | no
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
 `aether.connector.http.connectionMaxTtl` | int | Time to live in seconds for an HTTP connection, after that time, the connection will be dropped. | `600` | yes
 `aether.connector.http.credentialEncoding` | String | The encoding/charset to use when exchanging credentials with HTTP servers. | `"ISO-8859-1"` | yes
