@@ -33,7 +33,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
  * implementation: an adapter, that makes {@link TrustedChecksumsSource} into {@link ProvidedChecksumsSource}. Users
  * are encouraged to rely on this adapter, and do not create their own implementations.
  *
- * @since TBD
+ * @since 1.9.14
  */
 public interface ProvidedChecksumsSource {
     /**
