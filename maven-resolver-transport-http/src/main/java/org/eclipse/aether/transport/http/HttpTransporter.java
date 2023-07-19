@@ -102,6 +102,7 @@ import static java.util.Objects.requireNonNull;
 final class HttpTransporter extends AbstractTransporter {
 
     static final String BIND_ADDRESS = "aether.connector.bind.address";
+
     static final String SUPPORT_WEBDAV = "aether.connector.http.supportWebDav";
 
     static final String PREEMPTIVE_PUT_AUTH = "aether.connector.http.preemptivePutAuth";
@@ -255,7 +256,7 @@ final class HttpTransporter extends AbstractTransporter {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
-                .setLocalAddress(getBindAddress(session))
+                .setLocalAddress(getBindAddress(session, repository))
                 .setSocketTimeout(requestTimeout)
                 .build();
 
@@ -300,17 +301,24 @@ final class HttpTransporter extends AbstractTransporter {
         this.client = builder.build();
     }
 
-    private InetAddress getBindAddress(RepositorySystemSession session) {
-        String bindAddress = ConfigUtils.getString(session, null, BIND_ADDRESS);
-        return Optional.ofNullable(bindAddress).map(this::resolveAddress).orElse(null);
-    }
-
-    private InetAddress resolveAddress(String bindAddress) {
-        try {
-            return InetAddress.getByName(bindAddress);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException("Given bind address (" + bindAddress + ") cannot be resolved.", uhe);
-        }
+    /**
+     * Returns non-null {@link InetAddress} if set in configuration, {@code null} otherwise.
+     */
+    private InetAddress getBindAddress(RepositorySystemSession session, RemoteRepository repository) {
+        String bindAddress =
+                ConfigUtils.getString(session, null, BIND_ADDRESS + "." + repository.getId(), BIND_ADDRESS);
+        return Optional.ofNullable(bindAddress)
+                .map(a -> {
+                    try {
+                        return InetAddress.getByName(bindAddress);
+                    } catch (UnknownHostException uhe) {
+                        throw new IllegalArgumentException(
+                                "Given bind address (" + bindAddress + ") cannot be resolved for remote repository "
+                                        + repository,
+                                uhe);
+                    }
+                })
+                .orElse(null);
     }
 
     private static HttpHost toHost(Proxy proxy) {
