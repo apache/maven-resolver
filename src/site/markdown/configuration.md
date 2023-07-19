@@ -36,7 +36,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.connectTimeout` | long | Connect timeout in milliseconds. | `10000` | yes
 `aether.connector.http.bind.address` | String | Set the outgoing interface (globally or per remote repository). Valid values are local accessible IP addresses or host names. The default will use the system's default route. Invalid addresses will result in HttpTransport creation failure. | `null` | yes
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
-`aether.connector.http.connectionMaxTtl` | int | Time to live in seconds for an HTTP connection, after that time, the connection will be dropped. | `600` | yes
+`aether.connector.http.connectionMaxTtl` | int | Time to live in seconds for an HTTP connection, after that time, the connection will be dropped. | `300` | yes
 `aether.connector.http.credentialEncoding` | String | The encoding/charset to use when exchanging credentials with HTTP servers. | `"ISO-8859-1"` | yes
 `aether.connector.http.headers` | `Map<String, String>` | The request headers to use for HTTP-based repository connectors. The headers are specified using a map of strings mapping a header name to its value. The repository-specific headers map is supposed to be complete, i.e. is not merged with the general headers map. | - | yes
 `aether.connector.http.maxConnectionsPerRoute` | int | The maximum concurrent connections per route HTTP client is allowed to use. | `50` | yes
