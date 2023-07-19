@@ -554,7 +554,14 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
 
         DescriptorResolutionResult(
                 VersionRangeResult rangeResult, Version version, ArtifactDescriptorResult descriptor) {
-            this(descriptor.getArtifact(), rangeResult);
+            // NOTE: In case of A1 -> A2 relocation this happens:
+            // ArtifactDescriptorResult read by ArtifactDescriptorResultReader for A1
+            // will return instance that will have artifact = A2 (as RelocatedArtifact).
+            // So to properly "key" this instance, we need to use "originally requested" A1 instead!
+            // In short:
+            // ArtifactDescriptorRequest.artifact != ArtifactDescriptorResult.artifact WHEN relocation in play
+            // otherwise (no relocation), they are EQUAL.
+            this(descriptor.getRequest().getArtifact(), rangeResult);
             this.descriptors.put(version, descriptor);
         }
 
