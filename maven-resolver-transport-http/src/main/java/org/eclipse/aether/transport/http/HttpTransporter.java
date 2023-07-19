@@ -24,8 +24,10 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -97,6 +99,8 @@ import static java.util.Objects.requireNonNull;
  * A transporter for HTTP/HTTPS.
  */
 final class HttpTransporter extends AbstractTransporter {
+
+    static final String BIND_ADDRESS = "aether.connector.bind.address";
 
     static final String SUPPORT_WEBDAV = "aether.connector.http.supportWebDav";
 
@@ -251,6 +255,7 @@ final class HttpTransporter extends AbstractTransporter {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
+                .setLocalAddress(getBindAddress(session, repository))
                 .setSocketTimeout(requestTimeout)
                 .build();
 
@@ -293,6 +298,24 @@ final class HttpTransporter extends AbstractTransporter {
         }
 
         this.client = builder.build();
+    }
+
+    /**
+     * Returns non-null {@link InetAddress} if set in configuration, {@code null} otherwise.
+     */
+    private InetAddress getBindAddress(RepositorySystemSession session, RemoteRepository repository) {
+        String bindAddress =
+                ConfigUtils.getString(session, null, BIND_ADDRESS + "." + repository.getId(), BIND_ADDRESS);
+        if (bindAddress == null) {
+            return null;
+        }
+        try {
+            return InetAddress.getByName(bindAddress);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(
+                    "Given bind address (" + bindAddress + ") cannot be resolved for remote repository " + repository,
+                    uhe);
+        }
     }
 
     private static HttpHost toHost(Proxy proxy) {
