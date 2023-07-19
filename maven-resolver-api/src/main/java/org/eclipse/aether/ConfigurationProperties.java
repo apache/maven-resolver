@@ -183,11 +183,11 @@ public final class ConfigurationProperties {
     public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_CONNECTOR + "http.connectionMaxTtl";
 
     /**
-     * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (600 seconds).
+     * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (300 seconds).
      *
      * @since 1.9.8
      */
-    public static final int DEFAULT_HTTP_CONNECTION_MAX_TTL = 600;
+    public static final int DEFAULT_HTTP_CONNECTION_MAX_TTL = 300;
 
     /**
      * The maximum concurrent connections per route HTTP client is allowed to use.
