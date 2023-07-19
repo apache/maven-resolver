@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -307,18 +306,16 @@ final class HttpTransporter extends AbstractTransporter {
     private InetAddress getBindAddress(RepositorySystemSession session, RemoteRepository repository) {
         String bindAddress =
                 ConfigUtils.getString(session, null, BIND_ADDRESS + "." + repository.getId(), BIND_ADDRESS);
-        return Optional.ofNullable(bindAddress)
-                .map(a -> {
-                    try {
-                        return InetAddress.getByName(bindAddress);
-                    } catch (UnknownHostException uhe) {
-                        throw new IllegalArgumentException(
-                                "Given bind address (" + bindAddress + ") cannot be resolved for remote repository "
-                                        + repository,
-                                uhe);
-                    }
-                })
-                .orElse(null);
+        if (bindAddress == null) {
+            return null;
+        }
+        try {
+            return InetAddress.getByName(bindAddress);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(
+                    "Given bind address (" + bindAddress + ") cannot be resolved for remote repository " + repository,
+                    uhe);
+        }
     }
 
     private static HttpHost toHost(Proxy proxy) {
