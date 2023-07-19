@@ -37,6 +37,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
@@ -46,7 +47,6 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.GetTask;
@@ -223,7 +223,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             Map<String, String> providedChecksums = Collections.emptyMap();
             for (ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources.values()) {
                 Map<String, String> provided = providedChecksumsSource.getProvidedArtifactChecksums(
-                        session, transfer, checksumAlgorithmFactories);
+                        session, transfer, repository, checksumAlgorithmFactories);
 
                 if (provided != null) {
                     providedChecksums = provided;

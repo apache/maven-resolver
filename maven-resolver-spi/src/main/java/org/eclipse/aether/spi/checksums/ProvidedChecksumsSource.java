@@ -16,22 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.spi.connector.checksum;
+package org.eclipse.aether.spi.checksums;
 
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 
 /**
  * Component able to provide (expected) checksums to connector beforehand the download happens. Checksum provided by
- * this component are of kind {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#PROVIDED}.
+ * this component are of kind {@link ChecksumPolicy.ChecksumKind#PROVIDED}. Resolver by default provides one
+ * implementation: an adapter, that makes {@link TrustedChecksumsSource} into {@link ProvidedChecksumsSource}. Users
+ * are encouraged to rely on this adapter, and do not create their own implementations.
  *
- * @since 1.8.0
- * @deprecated This interface is not used anymore, use {@link org.eclipse.aether.spi.checksums.ProvidedChecksumsSource}.
+ * @since TBD
  */
-@Deprecated
 public interface ProvidedChecksumsSource {
     /**
      * May return the provided checksums (for given artifact transfer) from source other than remote repository, or
@@ -43,12 +46,15 @@ public interface ProvidedChecksumsSource {
      * the meaning "nothing to add here", as there are no checksums to be provided upfront transfer. Semantically, this
      * is equivalent to returning empty map, but signals the intent better.
      *
+     * @param session                    The current session.
      * @param transfer                   The transfer that is about to be executed.
+     * @param remoteRepository           The remote repository connector is about to contact.
      * @param checksumAlgorithmFactories The checksum algorithms that are expected.
      * @return Map of expected checksums, or {@code null}.
      */
     Map<String, String> getProvidedArtifactChecksums(
             RepositorySystemSession session,
             ArtifactDownload transfer,
+            RemoteRepository remoteRepository,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories);
 }
