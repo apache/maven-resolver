@@ -1,0 +1,2 @@
+transitiveDepsUseRangesAndRelocationDirtyTree:aid:ext:1 compile
+\- transitiveDepsUseRangesAndRelocationDirtyTree:relocatedcid:ext:1 compile

@@ -68,6 +68,11 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
         return "transitiveDepsUseRangesDirtyTreeResult_BF.txt";
     }
 
+    @Override
+    protected String getTransitiveDepsUseRangesAndRelocationDirtyTreeResource() {
+        return "transitiveDepsUseRangesAndRelocationDirtyTreeResult_BF.txt";
+    }
+
     private Dependency newDep(String coords, String scope, Collection<Exclusion> exclusions) {
         Dependency d = new Dependency(new DefaultArtifact(coords), scope);
         return d.setExclusions(exclusions);
