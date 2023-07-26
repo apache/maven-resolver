@@ -38,3 +38,15 @@ By default, "full resolver experience" is provided:
 The supplier will provide only a "vanilla" instance. To configure resolver, use session user (or 
 configuration) properties, when constructing session. All the configuration options are available as 
 [listed here](https://maven.apache.org/resolver/configuration.html).
+
+# Extending Resolver
+
+Extending supplied resolver is simple, and basically requires same 3 step for whatever extra you want to include
+(like Wagon transport, distributed locking, etc).
+
+First, you need to included needed module (with transitive deps) to your dependencies.
+
+Second, you need to customize `RepositorySystemSupplier` to make new components (WagonTransporterFactory, or 
+distributed lock factories) available.
+
+Third, you need to configure session (via user of config properties) to make Resolver use newly added components. 
