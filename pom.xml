@@ -59,6 +59,7 @@
     <module>maven-resolver-transport-http</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-demos</module>
+    <module>maven-resolver-supplier</module>
   </modules>
 
   <scm>
