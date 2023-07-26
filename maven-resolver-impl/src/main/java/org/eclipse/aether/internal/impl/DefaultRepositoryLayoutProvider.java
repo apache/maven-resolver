@@ -50,12 +50,13 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
 
     private Collection<RepositoryLayoutFactory> factories = new ArrayList<>();
 
+    @Deprecated
     public DefaultRepositoryLayoutProvider() {
         // enables default constructor
     }
 
     @Inject
-    DefaultRepositoryLayoutProvider(Set<RepositoryLayoutFactory> layoutFactories) {
+    public DefaultRepositoryLayoutProvider(Set<RepositoryLayoutFactory> layoutFactories) {
         setRepositoryLayoutFactories(layoutFactories);
     }
 

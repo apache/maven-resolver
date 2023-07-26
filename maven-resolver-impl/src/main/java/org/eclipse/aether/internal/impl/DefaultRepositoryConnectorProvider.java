@@ -57,12 +57,13 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    @Deprecated
     public DefaultRepositoryConnectorProvider() {
         // enables default constructor
     }
 
     @Inject
-    DefaultRepositoryConnectorProvider(
+    public DefaultRepositoryConnectorProvider(
             Set<RepositoryConnectorFactory> connectorFactories,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
         setRepositoryConnectorFactories(connectorFactories);
