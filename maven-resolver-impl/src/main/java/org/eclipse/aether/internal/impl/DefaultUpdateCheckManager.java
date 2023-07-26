@@ -112,7 +112,8 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     }
 
     @Inject
-    public DefaultUpdateCheckManager(TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer) {
+    public DefaultUpdateCheckManager(
+            TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer) {
         setTrackingFileManager(trackingFileManager);
         setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
     }
