@@ -14,6 +14,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+
 # Maven Resolver Supplier
 
 This simple module serves the purpose to "bootstrap" resolver when there is no desire to use Eclipse SISU. It provides
@@ -23,9 +24,17 @@ and supplies ready-to-use `RepositorySystem` instances.
 The supplier class is written in such way, to allow easy customization if needed: just extend the class and override
 method one need (all methods are protected).
 
-By default, "full resolver experience" is provided:
-* for connector, the connector-basic is added
-* for transport the two transport-file and transport-http implementations are added
-
 Consumer/User of this module **must provide SLF4J backend**. Resolver uses `slf4j-api` for logging purposes, but this 
 module does NOT provide any backend for it. It is the consumer/user obligation to provide one at runtime.
+
+By default, "full resolver experience" is provided:
+* for connector, the connector-basic is provided
+* for transport the two transport-file and transport-http implementations are provided. If Wagon is needed, add
+  transport-wagon as dependency, and customize `RepositorySystemSupplier` to include it. This makes it available, but
+  NOT used yet! To use it, you still need to configure resolver to favor Wagon over native HTTP.
+
+# Resolver configuration
+
+The supplier will provide only a "vanilla" instance. To configure resolver, use session user (or 
+configuration) properties, when constructing session. All the configuration options are available as 
+[listed here](https://maven.apache.org/resolver/configuration.html).
