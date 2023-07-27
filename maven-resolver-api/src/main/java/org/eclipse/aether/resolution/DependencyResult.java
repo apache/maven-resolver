@@ -18,10 +18,12 @@
  */
 package org.eclipse.aether.resolution;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
 
@@ -160,6 +162,27 @@ public final class DependencyResult {
             this.artifactResults = results;
         }
         return this;
+    }
+
+    /**
+     * Returns the list of resolved artifacts.
+     *
+     * @since TBD
+     */
+    public List<Artifact> getArtifacts(boolean includeUnresolved) {
+        List<Artifact> artifacts = new ArrayList<>(artifactResults.size());
+
+        for (ArtifactResult artifactResult : artifactResults) {
+            Artifact artifact = artifactResult.getArtifact();
+            if (artifact == null && includeUnresolved) {
+                artifact = artifactResult.getRequest().getArtifact();
+            }
+            if (artifact != null) {
+                artifacts.add(artifact);
+            }
+        }
+
+        return artifacts;
     }
 
     @Override
