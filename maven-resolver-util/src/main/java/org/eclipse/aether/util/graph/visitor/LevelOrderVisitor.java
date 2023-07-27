@@ -18,45 +18,55 @@
  */
 package org.eclipse.aether.util.graph.visitor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.function.Consumer;
+
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Generates a sequence of dependency nodes from a dependency graph by traversing the graph in postorder. This visitor
- * visits each node exactly once regardless how many paths within the dependency graph lead to the node such that the
- * resulting node sequence is free of duplicates.
+ * Processes dependency graph by traversing the graph in level order. This visitor visits each node exactly once
+ * regardless how many paths within the dependency graph lead to the node such that the resulting node sequence is
+ * free of duplicates.
+ *
+ * @since TBD
  */
-public final class PostorderNodeListGenerator extends AbstractDepthFirstNodeListGenerator {
+public final class LevelOrderVisitor extends AbstractVisitor {
+
+    private final HashMap<Integer, ArrayList<DependencyNode>> nodesPerLevel;
 
     private final Stack<Boolean> visits;
 
     /**
-     * Creates a new postorder list generator.
+     * Creates a new level order list generator.
      */
-    public PostorderNodeListGenerator() {
+    public LevelOrderVisitor(Consumer<DependencyNode> nodeConsumer) {
+        super(nodeConsumer);
+        nodesPerLevel = new HashMap<>(16);
         visits = new Stack<>();
     }
 
     @Override
     public boolean visitEnter(DependencyNode node) {
         boolean visited = !setVisited(node);
-
         visits.push(visited);
-
+        if (!visited) {
+            nodesPerLevel.computeIfAbsent(visits.size(), k -> new ArrayList<>()).add(node);
+        }
         return !visited;
     }
 
     @Override
     public boolean visitLeave(DependencyNode node) {
         Boolean visited = visits.pop();
-
         if (visited) {
             return true;
         }
-
-        if (node.getDependency() != null) {
-            nodes.add(node);
+        if (visits.isEmpty()) {
+            for (int l = 1; nodesPerLevel.containsKey(l); l++) {
+                nodesPerLevel.get(l).forEach(nodeConsumer);
+            }
         }
-
         return true;
     }
 }

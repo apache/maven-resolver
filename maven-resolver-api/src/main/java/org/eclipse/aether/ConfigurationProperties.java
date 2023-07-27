@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether;
 
+import org.eclipse.aether.resolution.DependencyRequest;
+
 /**
  * The keys and defaults for common configuration properties.
  *
@@ -241,6 +243,24 @@ public final class ConfigurationProperties {
      * The default checksum persistence mode if {@link #PERSISTED_CHECKSUMS} isn't set.
      */
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
+
+    /**
+     * A flag indicating which visitor should be used to "flatten" the dependency graph into list of artifacts in
+     * method {@link RepositorySystem#resolveDependencies(RepositorySystemSession, DependencyRequest)}. Default is
+     * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
+     *
+     * @see #DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR
+     * @since TBD
+     */
+    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR =
+            PREFIX_AETHER + "system.resolveDependencies.visitor";
+
+    /**
+     * The default visitor strategy "preOrder".
+     *
+     * @since TBD
+     */
+    public static final String DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR = "preOrder";
 
     private ConfigurationProperties() {
         // hide constructor

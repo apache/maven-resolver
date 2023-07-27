@@ -20,34 +20,32 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.graph.DependencyVisitor;
+
+import static java.util.stream.Collectors.toList;
 
 /**
- * Abstract base class for depth first dependency tree traverses. Subclasses of this visitor will visit each node
- * exactly once regardless how many paths within the dependency graph lead to the node such that the resulting node
- * sequence is free of duplicates.
- * <p>
- * Actual vertex ordering (preorder, inorder, postorder) needs to be defined by subclasses through appropriate
- * implementations for {@link #visitEnter(org.eclipse.aether.graph.DependencyNode)} and
- * {@link #visitLeave(org.eclipse.aether.graph.DependencyNode)}
+ * Node list generator usable with different traversing strategies.
+ *
+ * @since TBD
  */
-abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor {
+public final class NodeListGenerator implements Consumer<DependencyNode> {
 
-    private final Map<DependencyNode, Object> visitedNodes;
+    private final ArrayList<DependencyNode> nodes;
 
-    protected final List<DependencyNode> nodes;
-
-    AbstractDepthFirstNodeListGenerator() {
+    public NodeListGenerator() {
         nodes = new ArrayList<>(128);
-        visitedNodes = new IdentityHashMap<>(512);
+    }
+
+    @Override
+    public void accept(DependencyNode dependencyNode) {
+        nodes.add(dependencyNode);
     }
 
     /**
@@ -60,6 +58,16 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
     }
 
     /**
+     * Gets the list of dependency nodes that was generated during the graph traversal and have {@code non-null}
+     * {@link DependencyNode#getDependency()}.
+     *
+     * @return The list of dependency nodes having dependency, never {@code null}.
+     */
+    public List<DependencyNode> getNodesWithDependencies() {
+        return nodes.stream().filter(d -> d.getDependency() != null).collect(toList());
+    }
+
+    /**
      * Gets the dependencies seen during the graph traversal.
      *
      * @param includeUnresolved Whether unresolved dependencies shall be included in the result or not.
@@ -67,16 +75,12 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      */
     public List<Dependency> getDependencies(boolean includeUnresolved) {
         List<Dependency> dependencies = new ArrayList<>(getNodes().size());
-
-        for (DependencyNode node : getNodes()) {
+        for (DependencyNode node : getNodesWithDependencies()) {
             Dependency dependency = node.getDependency();
-            if (dependency != null) {
-                if (includeUnresolved || dependency.getArtifact().getFile() != null) {
-                    dependencies.add(dependency);
-                }
+            if (includeUnresolved || dependency.getArtifact().getFile() != null) {
+                dependencies.add(dependency);
             }
         }
-
         return dependencies;
     }
 
@@ -88,13 +92,10 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      */
     public List<Artifact> getArtifacts(boolean includeUnresolved) {
         List<Artifact> artifacts = new ArrayList<>(getNodes().size());
-
-        for (DependencyNode node : getNodes()) {
-            if (node.getDependency() != null) {
-                Artifact artifact = node.getDependency().getArtifact();
-                if (includeUnresolved || artifact.getFile() != null) {
-                    artifacts.add(artifact);
-                }
+        for (DependencyNode node : getNodesWithDependencies()) {
+            Artifact artifact = node.getDependency().getArtifact();
+            if (includeUnresolved || artifact.getFile() != null) {
+                artifacts.add(artifact);
             }
         }
 
@@ -108,16 +109,12 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      */
     public List<File> getFiles() {
         List<File> files = new ArrayList<>(getNodes().size());
-
-        for (DependencyNode node : getNodes()) {
-            if (node.getDependency() != null) {
-                File file = node.getDependency().getArtifact().getFile();
-                if (file != null) {
-                    files.add(file);
-                }
+        for (DependencyNode node : getNodesWithDependencies()) {
+            File file = node.getDependency().getArtifact().getFile();
+            if (file != null) {
+                files.add(file);
             }
         }
-
         return files;
     }
 
@@ -129,46 +126,16 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      */
     public String getClassPath() {
         StringBuilder buffer = new StringBuilder(1024);
-
-        for (Iterator<DependencyNode> it = getNodes().iterator(); it.hasNext(); ) {
+        for (Iterator<DependencyNode> it = getNodesWithDependencies().iterator(); it.hasNext(); ) {
             DependencyNode node = it.next();
-            if (node.getDependency() != null) {
-                Artifact artifact = node.getDependency().getArtifact();
-                if (artifact.getFile() != null) {
-                    buffer.append(artifact.getFile().getAbsolutePath());
-                    if (it.hasNext()) {
-                        buffer.append(File.pathSeparatorChar);
-                    }
+            Artifact artifact = node.getDependency().getArtifact();
+            if (artifact.getFile() != null) {
+                buffer.append(artifact.getFile().getAbsolutePath());
+                if (it.hasNext()) {
+                    buffer.append(File.pathSeparatorChar);
                 }
             }
         }
-
         return buffer.toString();
     }
-
-    /**
-     * Marks the specified node as being visited and determines whether the node has been visited before.
-     *
-     * @param node The node being visited, must not be {@code null}.
-     * @return {@code true} if the node has not been visited before, {@code false} if the node was already visited.
-     */
-    protected boolean setVisited(DependencyNode node) {
-        return visitedNodes.put(node, Boolean.TRUE) == null;
-    }
-
-    /**
-     * Checks the specified node for being visited without altering it's "visited" state.
-     *
-     * @param node The node being visited, must not be {@code null}.
-     * @return {@code true} if the node has been visited before, {@code false} if the node was not yet visited.
-     */
-    protected boolean isVisited(DependencyNode node) {
-        return visitedNodes.get(node) == Boolean.TRUE;
-    }
-
-    @Override
-    public abstract boolean visitEnter(DependencyNode node);
-
-    @Override
-    public abstract boolean visitLeave(DependencyNode node);
 }

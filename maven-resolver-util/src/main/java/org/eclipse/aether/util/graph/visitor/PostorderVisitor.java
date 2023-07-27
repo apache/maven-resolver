@@ -18,45 +18,43 @@
  */
 package org.eclipse.aether.util.graph.visitor;
 
+import java.util.function.Consumer;
+
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Generates a sequence of dependency nodes from a dependency graph by traversing the graph in postorder. This visitor
- * visits each node exactly once regardless how many paths within the dependency graph lead to the node such that the
- * resulting node sequence is free of duplicates.
+ * Processes dependency graph by traversing the graph in postorder. This visitor visits each node exactly once
+ * regardless how many paths within the dependency graph lead to the node such that the resulting node sequence is
+ * free of duplicates.
+ *
+ * @since TBD
  */
-public final class PostorderNodeListGenerator extends AbstractDepthFirstNodeListGenerator {
+public final class PostorderVisitor extends AbstractVisitor {
 
     private final Stack<Boolean> visits;
 
     /**
      * Creates a new postorder list generator.
      */
-    public PostorderNodeListGenerator() {
+    public PostorderVisitor(Consumer<DependencyNode> nodeConsumer) {
+        super(nodeConsumer);
         visits = new Stack<>();
     }
 
     @Override
     public boolean visitEnter(DependencyNode node) {
         boolean visited = !setVisited(node);
-
         visits.push(visited);
-
         return !visited;
     }
 
     @Override
     public boolean visitLeave(DependencyNode node) {
         Boolean visited = visits.pop();
-
         if (visited) {
             return true;
         }
-
-        if (node.getDependency() != null) {
-            nodes.add(node);
-        }
-
+        nodeConsumer.accept(node);
         return true;
     }
 }

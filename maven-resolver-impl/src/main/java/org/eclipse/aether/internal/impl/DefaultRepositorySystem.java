@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -39,6 +41,7 @@ import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.ArtifactResolver;
@@ -80,8 +83,11 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
-import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
+import org.eclipse.aether.util.graph.visitor.LevelOrderVisitor;
+import org.eclipse.aether.util.graph.visitor.PostorderVisitor;
+import org.eclipse.aether.util.graph.visitor.PreorderVisitor;
 
 import static java.util.Objects.requireNonNull;
 
@@ -336,16 +342,20 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
             throw new NullPointerException("dependency node and collect request cannot be null");
         }
 
-        ArtifactRequestBuilder builder = new ArtifactRequestBuilder(trace);
+        final ArrayList<ArtifactRequest> requests = new ArrayList<>();
+        Consumer<DependencyNode> builderConsumer = n -> {
+            if (n.getDependency() != null) {
+                ArtifactRequest artifactRequest = new ArtifactRequest(n);
+                artifactRequest.setTrace(trace);
+                requests.add(artifactRequest);
+            }
+        };
+        DependencyVisitor builder = getDependencyVisitor(session, builderConsumer);
         DependencyFilter filter = request.getFilter();
         DependencyVisitor visitor = (filter != null) ? new FilteringDependencyVisitor(builder, filter) : builder;
-        visitor = new TreeDependencyVisitor(visitor);
-
         if (result.getRoot() != null) {
             result.getRoot().accept(visitor);
         }
-
-        List<ArtifactRequest> requests = builder.getRequests();
 
         List<ArtifactResult> results;
         try {
@@ -365,6 +375,24 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         }
 
         return result;
+    }
+
+    private DependencyVisitor getDependencyVisitor(
+            RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
+        String strategy = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR,
+                ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR);
+        switch (strategy) {
+            case "preOrder":
+                return new PreorderVisitor(nodeConsumer);
+            case "postOrder":
+                return new PostorderVisitor(nodeConsumer);
+            case "levelOrder":
+                return new LevelOrderVisitor(nodeConsumer);
+            default:
+                throw new IllegalArgumentException("Invalid dependency visitor strategy: " + strategy);
+        }
     }
 
     private void updateNodesWithResolvedArtifacts(List<ArtifactResult> results) {
