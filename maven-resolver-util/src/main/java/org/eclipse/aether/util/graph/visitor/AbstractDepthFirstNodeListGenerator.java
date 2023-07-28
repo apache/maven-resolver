@@ -156,16 +156,6 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
         return visitedNodes.put(node, Boolean.TRUE) == null;
     }
 
-    /**
-     * Checks the specified node for being visited without altering it's "visited" state.
-     *
-     * @param node The node being visited, must not be {@code null}.
-     * @return {@code true} if the node has been visited before, {@code false} if the node was not yet visited.
-     */
-    protected boolean isVisited(DependencyNode node) {
-        return visitedNodes.get(node) == Boolean.TRUE;
-    }
-
     @Override
     public abstract boolean visitEnter(DependencyNode node);
 
