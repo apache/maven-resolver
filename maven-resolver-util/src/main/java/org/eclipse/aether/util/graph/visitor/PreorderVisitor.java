@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.util.graph.visitor;
 
-import java.util.function.Consumer;
-
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -34,7 +32,7 @@ public final class PreorderVisitor extends AbstractVisitor {
     /**
      * Creates a new preorder list generator.
      */
-    public PreorderVisitor(Consumer<DependencyNode> nodeConsumer) {
+    public PreorderVisitor(ResettableDependencyNodeConsumer nodeConsumer) {
         super(nodeConsumer);
     }
 

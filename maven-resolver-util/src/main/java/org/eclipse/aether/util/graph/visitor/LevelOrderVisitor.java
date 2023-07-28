@@ -20,7 +20,6 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.graph.DependencyNode;
 
@@ -40,7 +39,7 @@ public final class LevelOrderVisitor extends AbstractVisitor {
     /**
      * Creates a new level order list generator.
      */
-    public LevelOrderVisitor(Consumer<DependencyNode> nodeConsumer) {
+    public LevelOrderVisitor(ResettableDependencyNodeConsumer nodeConsumer) {
         super(nodeConsumer);
         nodesPerLevel = new HashMap<>(16);
         visits = new Stack<>();
@@ -63,6 +62,7 @@ public final class LevelOrderVisitor extends AbstractVisitor {
             return true;
         }
         if (visits.isEmpty()) {
+            nodeConsumer.reset();
             for (int l = 1; nodesPerLevel.containsKey(l); l++) {
                 nodesPerLevel.get(l).forEach(nodeConsumer);
             }

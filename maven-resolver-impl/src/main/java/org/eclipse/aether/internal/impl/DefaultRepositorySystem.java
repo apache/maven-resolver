@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystem;
@@ -88,6 +87,7 @@ import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.LevelOrderVisitor;
 import org.eclipse.aether.util.graph.visitor.PostorderVisitor;
 import org.eclipse.aether.util.graph.visitor.PreorderVisitor;
+import org.eclipse.aether.util.graph.visitor.ResettableDependencyNodeConsumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -343,11 +343,19 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         }
 
         final ArrayList<ArtifactRequest> requests = new ArrayList<>();
-        Consumer<DependencyNode> builderConsumer = n -> {
-            if (n.getDependency() != null) {
-                ArtifactRequest artifactRequest = new ArtifactRequest(n);
-                artifactRequest.setTrace(trace);
-                requests.add(artifactRequest);
+        ResettableDependencyNodeConsumer builderConsumer = new ResettableDependencyNodeConsumer() {
+            @Override
+            public void reset() {
+                requests.clear();
+            }
+
+            @Override
+            public void accept(DependencyNode n) {
+                if (n.getDependency() != null) {
+                    ArtifactRequest artifactRequest = new ArtifactRequest(n);
+                    artifactRequest.setTrace(trace);
+                    requests.add(artifactRequest);
+                }
             }
         };
         DependencyVisitor builder = getDependencyVisitor(session, builderConsumer);
@@ -378,7 +386,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
     }
 
     private DependencyVisitor getDependencyVisitor(
-            RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
+            RepositorySystemSession session, ResettableDependencyNodeConsumer nodeConsumer) {
         String strategy = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR,

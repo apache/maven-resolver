@@ -18,41 +18,20 @@
  */
 package org.eclipse.aether.util.graph.visitor;
 
+import java.util.function.Consumer;
+
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Processes dependency graph by traversing the graph in postorder. This visitor visits each node exactly once
- * regardless how many paths within the dependency graph lead to the node such that the resulting node sequence is
- * free of duplicates.
+ * Consumer to be used with {@link AbstractVisitor} implementations.
  *
  * @since TBD
  */
-public final class PostorderVisitor extends AbstractVisitor {
-
-    private final Stack<Boolean> visits;
-
+public interface ResettableDependencyNodeConsumer extends Consumer<DependencyNode> {
     /**
-     * Creates a new postorder list generator.
+     * This call is required to be able to implement wildly different strategies. If this method is invoked,
+     * the instance should "reset" itself, "forget" all the invocations happened so far. Some strategies, most
+     * notable those retaining states like "level" one have to make use of this call due lack of calling state.
      */
-    public PostorderVisitor(ResettableDependencyNodeConsumer nodeConsumer) {
-        super(nodeConsumer);
-        visits = new Stack<>();
-    }
-
-    @Override
-    public boolean visitEnter(DependencyNode node) {
-        boolean visited = !setVisited(node);
-        visits.push(visited);
-        return !visited;
-    }
-
-    @Override
-    public boolean visitLeave(DependencyNode node) {
-        Boolean visited = visits.pop();
-        if (visited) {
-            return true;
-        }
-        nodeConsumer.accept(node);
-        return true;
-    }
+    void reset();
 }

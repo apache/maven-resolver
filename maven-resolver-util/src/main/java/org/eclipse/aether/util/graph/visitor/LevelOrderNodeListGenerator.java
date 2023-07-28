@@ -61,6 +61,7 @@ public final class LevelOrderNodeListGenerator extends AbstractDepthFirstNodeLis
             return true;
         }
         if (visits.isEmpty()) {
+            nodes.clear();
             for (int l = 1; nodesPerLevel.containsKey(l); l++) {
                 nodes.addAll(nodesPerLevel.get(l));
             }

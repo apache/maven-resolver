@@ -20,7 +20,6 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
@@ -33,12 +32,11 @@ import static java.util.Objects.requireNonNull;
  * @since TBD
  */
 abstract class AbstractVisitor implements DependencyVisitor {
-
-    protected final Consumer<DependencyNode> nodeConsumer;
+    protected final ResettableDependencyNodeConsumer nodeConsumer;
 
     private final Map<DependencyNode, Object> visitedNodes;
 
-    protected AbstractVisitor(Consumer<DependencyNode> nodeConsumer) {
+    protected AbstractVisitor(ResettableDependencyNodeConsumer nodeConsumer) {
         this.nodeConsumer = requireNonNull(nodeConsumer);
         this.visitedNodes = new IdentityHashMap<>(512);
     }

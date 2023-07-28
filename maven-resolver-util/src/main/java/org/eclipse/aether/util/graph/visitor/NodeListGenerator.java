@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
@@ -35,12 +34,17 @@ import static java.util.stream.Collectors.toList;
  *
  * @since TBD
  */
-public final class NodeListGenerator implements Consumer<DependencyNode> {
+public final class NodeListGenerator implements ResettableDependencyNodeConsumer {
 
     private final ArrayList<DependencyNode> nodes;
 
     public NodeListGenerator() {
         nodes = new ArrayList<>(128);
+    }
+
+    @Override
+    public void reset() {
+        nodes.clear();
     }
 
     @Override
