@@ -44,6 +44,8 @@ public final class DependencyResult {
 
     private List<Exception> collectExceptions;
 
+    private List<DependencyNode> dependencyNodeResults;
+
     private List<ArtifactResult> artifactResults;
 
     /**
@@ -56,6 +58,7 @@ public final class DependencyResult {
         root = request.getRoot();
         cycles = Collections.emptyList();
         collectExceptions = Collections.emptyList();
+        this.dependencyNodeResults = Collections.emptyList();
         artifactResults = Collections.emptyList();
     }
 
@@ -136,6 +139,32 @@ public final class DependencyResult {
             this.collectExceptions = Collections.emptyList();
         } else {
             this.collectExceptions = exceptions;
+        }
+        return this;
+    }
+
+    /**
+     * Gets the resolution results for the dependency nodes that matched {@link DependencyRequest#getFilter()}.
+     *
+     * @return The resolution results for the dependency nodes, never {@code null}.
+     * @since TBD
+     */
+    public List<DependencyNode> getDependencyNodeResults() {
+        return dependencyNodeResults;
+    }
+
+    /**
+     * Sets the resolution results for the dependency nodes that matched {@link DependencyRequest#getFilter()}.
+     *
+     * @param results The resolution results for the dependency nodes, may be {@code null}.
+     * @return This result for chaining, never {@code null}.
+     * @since TBD
+     */
+    public DependencyResult setDependencyNodeResults(List<DependencyNode> results) {
+        if (results == null) {
+            this.dependencyNodeResults = Collections.emptyList();
+        } else {
+            this.dependencyNodeResults = results;
         }
         return this;
     }

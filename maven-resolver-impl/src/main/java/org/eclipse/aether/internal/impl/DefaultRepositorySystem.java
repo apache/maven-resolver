@@ -25,7 +25,9 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystem;
@@ -342,29 +344,37 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
             throw new NullPointerException("dependency node and collect request cannot be null");
         }
 
-        final ArrayList<ArtifactRequest> requests = new ArrayList<>();
-        ResettableDependencyNodeConsumer builderConsumer = new ResettableDependencyNodeConsumer() {
+        final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
+        ResettableDependencyNodeConsumer consumer = new ResettableDependencyNodeConsumer() {
             @Override
             public void reset() {
-                requests.clear();
+                dependencyNodes.clear();
             }
 
             @Override
             public void accept(DependencyNode n) {
-                if (n.getDependency() != null) {
-                    ArtifactRequest artifactRequest = new ArtifactRequest(n);
-                    artifactRequest.setTrace(trace);
-                    requests.add(artifactRequest);
-                }
+                dependencyNodes.add(n);
             }
         };
-        DependencyVisitor builder = getDependencyVisitor(session, builderConsumer);
+        DependencyVisitor builder = getDependencyVisitor(session, consumer);
         DependencyFilter filter = request.getFilter();
         DependencyVisitor visitor = (filter != null) ? new FilteringDependencyVisitor(builder, filter) : builder;
         if (result.getRoot() != null) {
             result.getRoot().accept(visitor);
         }
 
+        final List<ArtifactRequest> requests = dependencyNodes.stream()
+                .map(n -> {
+                    if (n.getDependency() != null) {
+                        ArtifactRequest artifactRequest = new ArtifactRequest(n);
+                        artifactRequest.setTrace(trace);
+                        return artifactRequest;
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         List<ArtifactResult> results;
         try {
             results = artifactResolver.resolveArtifacts(session, requests);
@@ -372,6 +382,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
             are = e;
             results = e.getResults();
         }
+        result.setDependencyNodeResults(dependencyNodes);
         result.setArtifactResults(results);
 
         updateNodesWithResolvedArtifacts(results);
