@@ -31,6 +31,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -639,6 +640,17 @@ final class HttpTransporter extends AbstractTransporter {
                     tempFile.move();
                 } finally {
                     task.setDataFile(dataFile);
+                }
+            }
+            if (task.getDataFile() != null) {
+                Header lastModifiedHeader =
+                        response.getFirstHeader(HttpHeaders.LAST_MODIFIED); // note: Wagon also does first not last
+                if (lastModifiedHeader != null) {
+                    Date lastModified = DateUtils.parseDate(lastModifiedHeader.getValue());
+                    if (lastModified != null) {
+                        Files.setLastModifiedTime(
+                                task.getDataFile().toPath(), FileTime.fromMillis(lastModified.getTime()));
+                    }
                 }
             }
             extractChecksums(response);
