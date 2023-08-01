@@ -56,7 +56,7 @@ public final class WagonTransporterFactory implements TransporterFactory, Servic
     }
 
     @Inject
-    WagonTransporterFactory(WagonProvider wagonProvider, WagonConfigurator wagonConfigurator) {
+    public WagonTransporterFactory(WagonProvider wagonProvider, WagonConfigurator wagonConfigurator) {
         setWagonProvider(wagonProvider);
         setWagonConfigurator(wagonConfigurator);
     }
