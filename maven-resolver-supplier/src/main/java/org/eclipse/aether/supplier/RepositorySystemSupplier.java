@@ -134,7 +134,7 @@ import org.eclipse.aether.transport.http.XChecksumChecksumExtractor;
  * <p>
  * Extend this class and override methods to customize, if needed.
  *
- * @since TBD
+ * @since 1.9.15
  */
 public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected FileProcessor getFileProcessor() {
