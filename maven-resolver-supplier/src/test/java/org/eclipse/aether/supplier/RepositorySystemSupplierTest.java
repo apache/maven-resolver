@@ -61,7 +61,7 @@ public class RepositorySystemSupplierTest {
         VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest);
         List<Version> versions = rangeResult.getVersions();
 
-        // 2023. 07. 26.: as of today, Central has 33 versions of this artifact (and it will just grow)
+        // As of 2023-08-01, Maven Central has 33 versions of this artifact (and it will just grow)
         assertThat(versions, hasSize(greaterThanOrEqualTo(33)));
         System.out.println("Available versions " + versions);
     }
