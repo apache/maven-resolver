@@ -75,12 +75,13 @@ public class DefaultInstaller implements Installer, Service {
 
     private SyncContextFactory syncContextFactory;
 
+    @Deprecated
     public DefaultInstaller() {
         // enables default constructor
     }
 
     @Inject
-    DefaultInstaller(
+    public DefaultInstaller(
             FileProcessor fileProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
             Set<MetadataGeneratorFactory> metadataFactories,

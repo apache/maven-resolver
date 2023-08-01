@@ -50,12 +50,13 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider, 
 
     private Collection<LocalRepositoryManagerFactory> managerFactories = new ArrayList<>();
 
+    @Deprecated
     public DefaultLocalRepositoryProvider() {
         // enables default constructor
     }
 
     @Inject
-    DefaultLocalRepositoryProvider(Set<LocalRepositoryManagerFactory> factories) {
+    public DefaultLocalRepositoryProvider(Set<LocalRepositoryManagerFactory> factories) {
         setLocalRepositoryManagerFactories(factories);
     }
 

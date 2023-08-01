@@ -83,12 +83,13 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
     private ChecksumPolicyProvider checksumPolicyProvider;
 
+    @Deprecated
     public DefaultRemoteRepositoryManager() {
         // enables default constructor
     }
 
     @Inject
-    DefaultRemoteRepositoryManager(
+    public DefaultRemoteRepositoryManager(
             UpdatePolicyAnalyzer updatePolicyAnalyzer, ChecksumPolicyProvider checksumPolicyProvider) {
         setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
         setChecksumPolicyProvider(checksumPolicyProvider);

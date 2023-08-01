@@ -117,6 +117,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
 
     private RepositorySystemLifecycle repositorySystemLifecycle;
 
+    @Deprecated
     public DefaultRepositorySystem() {
         // enables default constructor
         this.shutdown = new AtomicBoolean(false);
@@ -124,7 +125,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
-    DefaultRepositorySystem(
+    public DefaultRepositorySystem(
             VersionResolver versionResolver,
             VersionRangeResolver versionRangeResolver,
             ArtifactResolver artifactResolver,

@@ -43,6 +43,7 @@ import static java.util.Objects.requireNonNull;
 public final class DefaultSyncContextFactory implements org.eclipse.aether.impl.SyncContextFactory, Service {
     private SyncContextFactory delegate;
 
+    @Deprecated
     public DefaultSyncContextFactory() {
         // default ctor for ServiceLocator
     }

@@ -55,6 +55,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     private LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
+    @Deprecated
     public EnhancedLocalRepositoryManagerFactory() {
         // no arg ctor for ServiceLocator
     }

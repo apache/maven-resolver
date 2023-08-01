@@ -106,12 +106,14 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
      */
     private static final long TS_UNKNOWN = 1L;
 
+    @Deprecated
     public DefaultUpdateCheckManager() {
         // default ctor for ServiceLocator
     }
 
     @Inject
-    DefaultUpdateCheckManager(TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer) {
+    public DefaultUpdateCheckManager(
+            TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer) {
         setTrackingFileManager(trackingFileManager);
         setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
     }

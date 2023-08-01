@@ -97,13 +97,14 @@ public class DefaultDeployer implements Deployer, Service {
 
     private OfflineController offlineController;
 
+    @Deprecated
     public DefaultDeployer() {
         // enables default constructor
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
-    DefaultDeployer(
+    public DefaultDeployer(
             FileProcessor fileProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
             RepositoryConnectorProvider repositoryConnectorProvider,
