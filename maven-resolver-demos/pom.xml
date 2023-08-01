@@ -38,8 +38,7 @@
   </modules>
 
   <properties>
-    <!-- This is somewhat strange, but let's keep this in sync w/ minimalMavenBuildVersion -->
-    <mavenVersion>3.8.7</mavenVersion>
+    <mavenVersion>3.9.3</mavenVersion>
   </properties>
 
   <build>
