@@ -128,9 +128,8 @@ import org.eclipse.aether.transport.http.Nexus2ChecksumExtractor;
 import org.eclipse.aether.transport.http.XChecksumChecksumExtractor;
 
 /**
- * A simple {@link Supplier} of {@link org.eclipse.aether.RepositorySystem} instance that on each call supplies newly
- * constructed {@link RepositorySystem} instance. For proper shut down, use {@link RepositorySystem#shutdown()} method
- * on supplied instance(s).
+ * A simple {@link Supplier} of {@link org.eclipse.aether.RepositorySystem} instances, that on each call supplies newly
+ * constructed instance. For proper shut down, use {@link RepositorySystem#shutdown()} method on supplied instance(s).
  * <p>
  * Extend this class and override methods to customize, if needed.
  *
