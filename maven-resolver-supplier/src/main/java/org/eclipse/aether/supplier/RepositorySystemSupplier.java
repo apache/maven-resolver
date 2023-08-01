@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.supplier;
 
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -118,6 +118,7 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
@@ -166,10 +167,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected UpdateCheckManager getUpdateCheckManager(
             TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer) {
-        DefaultUpdateCheckManager result = new DefaultUpdateCheckManager();
-        result.setTrackingFileManager(trackingFileManager);
-        result.setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
-        return result;
+        return new DefaultUpdateCheckManager(trackingFileManager, updatePolicyAnalyzer);
     }
 
     protected Map<String, NamedLockFactory> getNamedLockFactories() {
@@ -178,7 +176,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         result.put(LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory());
         result.put(LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory());
         result.put(FileLockNamedLockFactory.NAME, new FileLockNamedLockFactory());
-        return Collections.unmodifiableMap(result);
+        return result;
     }
 
     protected Map<String, NameMapper> getNameMappers() {
@@ -188,7 +186,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         result.put(NameMappers.DISCRIMINATING_NAME, NameMappers.discriminatingNameMapper());
         result.put(NameMappers.FILE_GAV_NAME, NameMappers.fileGavNameMapper());
         result.put(NameMappers.FILE_HGAV_NAME, NameMappers.fileHashingGavNameMapper());
-        return Collections.unmodifiableMap(result);
+        return result;
     }
 
     protected NamedLockFactoryAdapterFactory getNamedLockFactoryAdapterFactory(
@@ -225,28 +223,23 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected RepositoryLayoutProvider getRepositoryLayoutProvider(
             Map<String, RepositoryLayoutFactory> repositoryLayoutFactories) {
-        DefaultRepositoryLayoutProvider result = new DefaultRepositoryLayoutProvider();
-        result.setRepositoryLayoutFactories(repositoryLayoutFactories.values());
-        return result;
+        return new DefaultRepositoryLayoutProvider(new HashSet<>(repositoryLayoutFactories.values()));
     }
 
     protected LocalRepositoryProvider getLocalRepositoryProvider(
             LocalPathComposer localPathComposer,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposerFactory localPathPrefixComposerFactory) {
-        DefaultLocalRepositoryProvider result = new DefaultLocalRepositoryProvider();
-        result.addLocalRepositoryManagerFactory(new SimpleLocalRepositoryManagerFactory(localPathComposer));
-        result.addLocalRepositoryManagerFactory(new EnhancedLocalRepositoryManagerFactory(
+        HashSet<LocalRepositoryManagerFactory> localRepositoryProviders = new HashSet<>(2);
+        localRepositoryProviders.add(new SimpleLocalRepositoryManagerFactory(localPathComposer));
+        localRepositoryProviders.add(new EnhancedLocalRepositoryManagerFactory(
                 localPathComposer, trackingFileManager, localPathPrefixComposerFactory));
-        return result;
+        return new DefaultLocalRepositoryProvider(localRepositoryProviders);
     }
 
     protected RemoteRepositoryManager getRemoteRepositoryManager(
             UpdatePolicyAnalyzer updatePolicyAnalyzer, ChecksumPolicyProvider checksumPolicyProvider) {
-        DefaultRemoteRepositoryManager result = new DefaultRemoteRepositoryManager();
-        result.setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
-        result.setChecksumPolicyProvider(checksumPolicyProvider);
-        return result;
+        return new DefaultRemoteRepositoryManager(updatePolicyAnalyzer, checksumPolicyProvider);
     }
 
     protected Map<String, RemoteRepositoryFilterSource> getRemoteRepositoryFilterSources(
@@ -272,9 +265,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected RepositoryEventDispatcher getRepositoryEventDispatcher(
             Map<String, RepositoryListener> repositoryListeners) {
-        DefaultRepositoryEventDispatcher result = new DefaultRepositoryEventDispatcher();
-        result.setRepositoryListeners(repositoryListeners.values());
-        return result;
+        return new DefaultRepositoryEventDispatcher(new HashSet<>(repositoryListeners.values()));
     }
 
     protected Map<String, TrustedChecksumsSource> getTrustedChecksumsSources(
@@ -315,9 +306,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected TransporterProvider getTransporterProvider(Map<String, TransporterFactory> transporterFactories) {
-        DefaultTransporterProvider result = new DefaultTransporterProvider();
-        result.setTransporterFactories(transporterFactories.values());
-        return result;
+        return new DefaultTransporterProvider(new HashSet<>(transporterFactories.values()));
     }
 
     protected BasicRepositoryConnectorFactory getBasicRepositoryConnectorFactory(
@@ -326,13 +315,12 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             ChecksumPolicyProvider checksumPolicyProvider,
             FileProcessor fileProcessor,
             Map<String, ProvidedChecksumsSource> providedChecksumsSources) {
-        BasicRepositoryConnectorFactory result = new BasicRepositoryConnectorFactory();
-        result.setTransporterProvider(transporterProvider);
-        result.setRepositoryLayoutProvider(repositoryLayoutProvider);
-        result.setChecksumPolicyProvider(checksumPolicyProvider);
-        result.setFileProcessor(fileProcessor);
-        result.setProvidedChecksumSources(providedChecksumsSources);
-        return result;
+        return new BasicRepositoryConnectorFactory(
+                transporterProvider,
+                repositoryLayoutProvider,
+                checksumPolicyProvider,
+                fileProcessor,
+                providedChecksumsSources);
     }
 
     protected Map<String, RepositoryConnectorFactory> getRepositoryConnectorFactories(
@@ -345,10 +333,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected RepositoryConnectorProvider getRepositoryConnectorProvider(
             Map<String, RepositoryConnectorFactory> repositoryConnectorFactories,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        DefaultRepositoryConnectorProvider result = new DefaultRepositoryConnectorProvider();
-        result.setRepositoryConnectorFactories(repositoryConnectorFactories.values());
-        result.setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
-        return result;
+        return new DefaultRepositoryConnectorProvider(
+                new HashSet<>(repositoryConnectorFactories.values()), remoteRepositoryFilterManager);
     }
 
     protected Installer getInstaller(
@@ -356,12 +342,11 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             RepositoryEventDispatcher repositoryEventDispatcher,
             Map<String, MetadataGeneratorFactory> metadataGeneratorFactories,
             SyncContextFactory syncContextFactory) {
-        DefaultInstaller result = new DefaultInstaller();
-        result.setFileProcessor(fileProcessor);
-        result.setRepositoryEventDispatcher(repositoryEventDispatcher);
-        result.setMetadataGeneratorFactories(metadataGeneratorFactories.values());
-        result.setSyncContextFactory(syncContextFactory);
-        return result;
+        return new DefaultInstaller(
+                fileProcessor,
+                repositoryEventDispatcher,
+                new HashSet<>(metadataGeneratorFactories.values()),
+                syncContextFactory);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -374,38 +359,15 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             Map<String, MetadataGeneratorFactory> metadataGeneratorFactories,
             SyncContextFactory syncContextFactory,
             OfflineController offlineController) {
-        DefaultDeployer result = new DefaultDeployer();
-        result.setFileProcessor(fileProcessor);
-        result.setRepositoryEventDispatcher(repositoryEventDispatcher);
-        result.setRepositoryConnectorProvider(repositoryConnectorProvider);
-        result.setRemoteRepositoryManager(remoteRepositoryManager);
-        result.setUpdateCheckManager(updateCheckManager);
-        result.setMetadataGeneratorFactories(metadataGeneratorFactories.values());
-        result.setSyncContextFactory(syncContextFactory);
-        result.setOfflineController(offlineController);
-        return result;
-    }
-
-    protected DfDependencyCollector getDfDependencyCollector(
-            RemoteRepositoryManager remoteRepositoryManager,
-            ArtifactDescriptorReader artifactDescriptorReader,
-            VersionRangeResolver versionRangeResolver) {
-        DfDependencyCollector result = new DfDependencyCollector();
-        result.setRemoteRepositoryManager(remoteRepositoryManager);
-        result.setArtifactDescriptorReader(artifactDescriptorReader);
-        result.setVersionRangeResolver(versionRangeResolver);
-        return result;
-    }
-
-    protected BfDependencyCollector getBfDependencyCollector(
-            RemoteRepositoryManager remoteRepositoryManager,
-            ArtifactDescriptorReader artifactDescriptorReader,
-            VersionRangeResolver versionRangeResolver) {
-        BfDependencyCollector result = new BfDependencyCollector();
-        result.setRemoteRepositoryManager(remoteRepositoryManager);
-        result.setArtifactDescriptorReader(artifactDescriptorReader);
-        result.setVersionRangeResolver(versionRangeResolver);
-        return result;
+        return new DefaultDeployer(
+                fileProcessor,
+                repositoryEventDispatcher,
+                repositoryConnectorProvider,
+                remoteRepositoryManager,
+                updateCheckManager,
+                new HashSet<>(metadataGeneratorFactories.values()),
+                syncContextFactory,
+                offlineController);
     }
 
     protected Map<String, DependencyCollectorDelegate> getDependencyCollectorDelegates(
@@ -415,10 +377,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         HashMap<String, DependencyCollectorDelegate> result = new HashMap<>();
         result.put(
                 DfDependencyCollector.NAME,
-                getDfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
+                new DfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
         result.put(
                 BfDependencyCollector.NAME,
-                getBfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
+                new BfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
         return result;
     }
 
@@ -450,18 +412,17 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             OfflineController offlineController,
             Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        DefaultArtifactResolver result = new DefaultArtifactResolver();
-        result.setFileProcessor(fileProcessor);
-        result.setRepositoryEventDispatcher(repositoryEventDispatcher);
-        result.setVersionResolver(versionResolver);
-        result.setUpdateCheckManager(updateCheckManager);
-        result.setRepositoryConnectorProvider(repositoryConnectorProvider);
-        result.setRemoteRepositoryManager(remoteRepositoryManager);
-        result.setSyncContextFactory(syncContextFactory);
-        result.setOfflineController(offlineController);
-        result.setArtifactResolverPostProcessors(artifactResolverPostProcessors);
-        result.setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
-        return result;
+        return new DefaultArtifactResolver(
+                fileProcessor,
+                repositoryEventDispatcher,
+                versionResolver,
+                updateCheckManager,
+                repositoryConnectorProvider,
+                remoteRepositoryManager,
+                syncContextFactory,
+                offlineController,
+                artifactResolverPostProcessors,
+                remoteRepositoryFilterManager);
     }
 
     protected MetadataResolver getMetadataResolver(
@@ -472,15 +433,14 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             SyncContextFactory syncContextFactory,
             OfflineController offlineController,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        DefaultMetadataResolver result = new DefaultMetadataResolver();
-        result.setRepositoryEventDispatcher(repositoryEventDispatcher);
-        result.setUpdateCheckManager(updateCheckManager);
-        result.setRepositoryConnectorProvider(repositoryConnectorProvider);
-        result.setRemoteRepositoryManager(remoteRepositoryManager);
-        result.setSyncContextFactory(syncContextFactory);
-        result.setOfflineController(offlineController);
-        result.setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
-        return result;
+        return new DefaultMetadataResolver(
+                repositoryEventDispatcher,
+                updateCheckManager,
+                repositoryConnectorProvider,
+                remoteRepositoryManager,
+                syncContextFactory,
+                offlineController,
+                remoteRepositoryFilterManager);
     }
 
     // Maven provided
@@ -501,6 +461,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             ModelBuilder modelBuilder,
             RepositoryEventDispatcher repositoryEventDispatcher,
             ModelCacheFactory modelCacheFactory) {
+        // from maven-resolver-provider
         DefaultArtifactDescriptorReader result = new DefaultArtifactDescriptorReader();
         result.setRemoteRepositoryManager(remoteRepositoryManager);
         result.setVersionResolver(versionResolver);
@@ -516,6 +477,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             MetadataResolver metadataResolver,
             SyncContextFactory syncContextFactory,
             RepositoryEventDispatcher repositoryEventDispatcher) {
+        // from maven-resolver-provider
         DefaultVersionResolver result = new DefaultVersionResolver();
         result.setMetadataResolver(metadataResolver);
         result.setSyncContextFactory(syncContextFactory);
@@ -527,6 +489,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             MetadataResolver metadataResolver,
             SyncContextFactory syncContextFactory,
             RepositoryEventDispatcher repositoryEventDispatcher) {
+        // from maven-resolver-provider
         DefaultVersionRangeResolver result = new DefaultVersionRangeResolver();
         result.setMetadataResolver(metadataResolver);
         result.setSyncContextFactory(syncContextFactory);
@@ -535,10 +498,12 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected ModelBuilder getModelBuilder() {
+        // from maven-model-builder
         return new DefaultModelBuilderFactory().newInstance();
     }
 
     protected ModelCacheFactory getModelCacheFactory() {
+        // from maven-resolver-provider
         return new DefaultModelCacheFactory();
     }
 
@@ -659,19 +624,18 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
         DependencyCollector dependencyCollector = getDependencyCollector(dependencyCollectorDelegates);
 
-        DefaultRepositorySystem repositorySystem = new DefaultRepositorySystem();
-        repositorySystem.setVersionResolver(versionResolver);
-        repositorySystem.setVersionRangeResolver(versionRangeResolver);
-        repositorySystem.setArtifactResolver(artifactResolver);
-        repositorySystem.setMetadataResolver(metadataResolver);
-        repositorySystem.setArtifactDescriptorReader(artifactDescriptorReader);
-        repositorySystem.setDependencyCollector(dependencyCollector);
-        repositorySystem.setInstaller(installer);
-        repositorySystem.setDeployer(deployer);
-        repositorySystem.setLocalRepositoryProvider(localRepositoryProvider);
-        repositorySystem.setRemoteRepositoryManager(remoteRepositoryManager);
-        repositorySystem.setSyncContextFactory(syncContextFactory);
-        repositorySystem.setRepositorySystemLifecycle(repositorySystemLifecycle);
-        return repositorySystem;
+        return new DefaultRepositorySystem(
+                versionResolver,
+                versionRangeResolver,
+                artifactResolver,
+                metadataResolver,
+                artifactDescriptorReader,
+                dependencyCollector,
+                installer,
+                deployer,
+                localRepositoryProvider,
+                syncContextFactory,
+                remoteRepositoryManager,
+                repositorySystemLifecycle);
     }
 }
