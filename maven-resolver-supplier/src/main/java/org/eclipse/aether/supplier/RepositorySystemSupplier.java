@@ -446,6 +446,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     // Maven provided
 
     protected Map<String, MetadataGeneratorFactory> getMetadataGeneratorFactories() {
+        // from maven-resolver-provider
         HashMap<String, MetadataGeneratorFactory> result = new HashMap<>();
         result.put("plugins", new PluginsMetadataGeneratorFactory());
         result.put("versions", new VersionsMetadataGeneratorFactory());
