@@ -102,6 +102,8 @@ public class HttpTransporterTest {
         transporter = factory.newInstance(session, newRepo(url));
     }
 
+    private static final long OLD_FILE_TIMESTAMP = 160660800000L;
+
     @Before
     public void setUp() throws Exception {
         System.out.println("=== " + testName.getMethodName() + " ===");
@@ -110,6 +112,7 @@ public class HttpTransporterTest {
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
         TestFileUtils.writeString(new File(repoDir, "dir/file.txt"), "test");
+        TestFileUtils.writeString(new File(repoDir, "dir/oldFile.txt"), "oldTest", OLD_FILE_TIMESTAMP);
         TestFileUtils.writeString(new File(repoDir, "empty.txt"), "");
         TestFileUtils.writeString(new File(repoDir, "some space.txt"), "space");
         File resumable = new File(repoDir, "resume.txt");
@@ -291,6 +294,23 @@ public class HttpTransporterTest {
         assertEquals(1, listener.startedCount);
         assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
         assertEquals("test", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testGet_ToFileTimestamp() throws Exception {
+        File file = TestFileUtils.createTempFile("failure");
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask(URI.create("repo/dir/oldFile.txt"))
+                .setDataFile(file)
+                .setListener(listener);
+        transporter.get(task);
+        assertEquals("oldTest", TestFileUtils.readString(file));
+        assertEquals(0L, listener.dataOffset);
+        assertEquals(7L, listener.dataLength);
+        assertEquals(1, listener.startedCount);
+        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertEquals("oldTest", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
+        assertEquals(file.lastModified(), OLD_FILE_TIMESTAMP);
     }
 
     @Test
