@@ -28,6 +28,9 @@ method one need (all methods are protected).
 Consumer/users of this module **must provide SLF4J backend**. Resolver uses `slf4j-api` for logging purposes, but this 
 module does NOT provide any backend for it. It is the consumer/user obligation to provide one at runtime.
 
+Version of `maven-resolver-supplier` artifact used **must be strictly aligned** with other Resolver artifacts 
+on classpath.
+
 By default, "full resolver experience" is provided:
 * for connector, the connector-basic is provided
 * for transport the two transport-file and transport-http implementations are provided. If Wagon is needed, add
