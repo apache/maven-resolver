@@ -17,14 +17,15 @@
 
 # Maven Resolver Supplier
 
-This simple module serves the purpose to "bootstrap" resolver when there is no desire to use Eclipse SISU. It provides
-one simple class `org.eclipse.aether.supplier.RepositorySystemSupplier` that implements `Supplier<RepositorySystem>`
+This simple module serves the purpose to "bootstrap" resolver when there is no desire to use 
+[Eclipse Sisu](https://eclipse.dev/sisu/). It provides one simple class 
+`org.eclipse.aether.supplier.RepositorySystemSupplier` that implements `Supplier<RepositorySystem>`
 and supplies ready-to-use `RepositorySystem` instances.
 
 The supplier class is written in such way, to allow easy customization if needed: just extend the class and override
 method one need (all methods are protected).
 
-Consumer/User of this module **must provide SLF4J backend**. Resolver uses `slf4j-api` for logging purposes, but this 
+Consumer/users of this module **must provide SLF4J backend**. Resolver uses `slf4j-api` for logging purposes, but this 
 module does NOT provide any backend for it. It is the consumer/user obligation to provide one at runtime.
 
 By default, "full resolver experience" is provided:
@@ -41,12 +42,12 @@ configuration) properties, when constructing session. All the configuration opti
 
 # Extending Resolver
 
-Extending supplied resolver is simple, and basically requires same 3 step for whatever extra you want to include
+Extending supplied resolver is simple, and basically requires same three steps for whatever extra you want to include
 (like Wagon transport, distributed locking, etc).
 
-First, you need to included needed module (with transitive deps) to your dependencies.
+First, you need to include needed module (with transitive deps) to your dependencies.
 
-Second, you need to customize `RepositorySystemSupplier` to make new components (WagonTransporterFactory, or 
+Second, you need to customize `RepositorySystemSupplier` to make new components (`WagonTransporterFactory`, or 
 distributed lock factories) available.
 
 Third, you need to configure session (via user of config properties) to make Resolver use newly added components. 
