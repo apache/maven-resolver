@@ -125,13 +125,14 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    @Deprecated
     public DefaultArtifactResolver() {
         // enables default constructor
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
-    DefaultArtifactResolver(
+    public DefaultArtifactResolver(
             FileProcessor fileProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
             VersionResolver versionResolver,

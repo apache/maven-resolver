@@ -63,12 +63,13 @@ public final class BasicRepositoryConnectorFactory implements RepositoryConnecto
      * clients, the new factory needs to be configured via its various mutators before first use or runtime errors will
      * occur.
      */
+    @Deprecated
     public BasicRepositoryConnectorFactory() {
         // enables default constructor
     }
 
     @Inject
-    BasicRepositoryConnectorFactory(
+    public BasicRepositoryConnectorFactory(
             TransporterProvider transporterProvider,
             RepositoryLayoutProvider layoutProvider,
             ChecksumPolicyProvider checksumPolicyProvider,

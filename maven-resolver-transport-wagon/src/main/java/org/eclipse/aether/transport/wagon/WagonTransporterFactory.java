@@ -50,12 +50,13 @@ public final class WagonTransporterFactory implements TransporterFactory, Servic
      * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
      * will occur.
      */
+    @Deprecated
     public WagonTransporterFactory() {
         // enables default constructor
     }
 
     @Inject
-    WagonTransporterFactory(WagonProvider wagonProvider, WagonConfigurator wagonConfigurator) {
+    public WagonTransporterFactory(WagonProvider wagonProvider, WagonConfigurator wagonConfigurator) {
         setWagonProvider(wagonProvider);
         setWagonConfigurator(wagonConfigurator);
     }

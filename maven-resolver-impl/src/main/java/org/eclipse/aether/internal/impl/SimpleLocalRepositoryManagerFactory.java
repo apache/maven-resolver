@@ -42,6 +42,7 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
 
     private LocalPathComposer localPathComposer;
 
+    @Deprecated
     public SimpleLocalRepositoryManagerFactory() {
         // enable no-arg constructor
         this.localPathComposer = new DefaultLocalPathComposer(); // maven UTs needs this

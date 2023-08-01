@@ -92,12 +92,13 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    @Deprecated
     public DefaultMetadataResolver() {
         // enables default constructor
     }
 
     @Inject
-    DefaultMetadataResolver(
+    public DefaultMetadataResolver(
             RepositoryEventDispatcher repositoryEventDispatcher,
             UpdateCheckManager updateCheckManager,
             RepositoryConnectorProvider repositoryConnectorProvider,
