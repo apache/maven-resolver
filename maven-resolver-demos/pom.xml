@@ -37,10 +37,6 @@
     <module>maven-resolver-demo-maven-plugin</module>
   </modules>
 
-  <properties>
-    <mavenVersion>3.9.3</mavenVersion>
-  </properties>
-
   <build>
     <pluginManagement>
       <plugins>

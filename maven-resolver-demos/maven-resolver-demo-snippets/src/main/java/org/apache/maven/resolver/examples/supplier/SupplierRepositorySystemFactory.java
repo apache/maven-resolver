@@ -16,32 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.maven.resolver.examples;
+package org.apache.maven.resolver.examples.supplier;
 
-import org.apache.maven.resolver.examples.util.Booter;
-import org.junit.Test;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.supplier.RepositorySystemSupplier;
 
 /**
- * Runs all demos at once as part of UT.
+ * A factory for repository system instances that employs Maven Artifact Resolver's provided supplier.
  */
-public class AllResolverDemosTest {
-    @Test
-    public void serviceLocator() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.SERVICE_LOCATOR});
-    }
-
-    @Test
-    public void supplier() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.SUPPLIER});
-    }
-
-    @Test
-    public void guice() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.GUICE});
-    }
-
-    @Test
-    public void sisu() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.SISU});
+public class SupplierRepositorySystemFactory {
+    public static RepositorySystem newRepositorySystem() {
+        return new RepositorySystemSupplier().get();
     }
 }

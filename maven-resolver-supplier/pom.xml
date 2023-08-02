@@ -34,8 +34,6 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.supplier</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-
-    <mavenVersion>3.9.3</mavenVersion>
   </properties>
 
   <dependencies>
