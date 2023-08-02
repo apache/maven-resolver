@@ -37,11 +37,6 @@
     <module>maven-resolver-demo-maven-plugin</module>
   </modules>
 
-  <properties>
-    <!-- This is somewhat strange, but let's keep this in sync w/ minimalMavenBuildVersion -->
-    <mavenVersion>3.8.7</mavenVersion>
-  </properties>
-
   <build>
     <pluginManagement>
       <plugins>

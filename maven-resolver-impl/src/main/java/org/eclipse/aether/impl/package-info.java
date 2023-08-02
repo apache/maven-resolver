@@ -18,7 +18,7 @@
  * under the License.
  */
 /**
- * The provisional interfaces defining the various sub components that implement the repository system. Aether Core
+ * The provisional interfaces defining the various subcomponents that implement the repository system. Aether Core
  * provides stock implementations for most of these components but not all. To obtain a complete/runnable repository
  * system, the application needs to provide implementations of the following component contracts:
  * {@link org.eclipse.aether.impl.ArtifactDescriptorReader}, {@link org.eclipse.aether.impl.VersionResolver},
