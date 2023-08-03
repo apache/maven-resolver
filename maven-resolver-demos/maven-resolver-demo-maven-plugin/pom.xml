@@ -33,7 +33,7 @@
   <description>A simple Maven plugin using Maven Artifact Resolver with Maven repositories.</description>
 
   <prerequisites>
-    <maven>${mavenVersion}</maven>
+    <maven>${minimalMavenBuildVersion}</maven>
   </prerequisites>
 
   <dependencies>
