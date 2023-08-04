@@ -50,7 +50,7 @@
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>3.21.3</version>
+      <version>3.23.2</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -135,7 +135,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.5.0</version>
         <executions>
           <execution>
             <id>bundle</id>
