@@ -34,8 +34,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,12 +46,14 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -76,6 +80,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -147,6 +152,7 @@ final class HttpTransporter extends AbstractTransporter {
 
     private final boolean supportWebDav;
 
+    @SuppressWarnings("checkstyle:methodlength")
     HttpTransporter(
             Map<String, ChecksumExtractor> checksumExtractors,
             RemoteRepository repository,
@@ -230,6 +236,16 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_COUNT,
                 ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT + "." + repository.getId(),
                 ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT);
+        long retryInterval = ConfigUtils.getLong(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL);
+        String serviceUnavailableCodesString = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE);
         String retryHandlerName = ConfigUtils.getString(
                 session,
                 HTTP_RETRY_HANDLER_NAME_STANDARD,
@@ -269,11 +285,24 @@ final class HttpTransporter extends AbstractTransporter {
             throw new IllegalArgumentException(
                     "Unsupported parameter " + HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
         }
+        Set<Integer> serviceUnavailableCodes = new HashSet<>();
+        try {
+            for (String code : ConfigUtils.parseCommaSeparatedUniqueNames(serviceUnavailableCodesString)) {
+                serviceUnavailableCodes.add(Integer.parseInt(code));
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "Illegal HTTP codes for " + ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
+                            + " (list of integers): " + serviceUnavailableCodesString);
+        }
+        ServiceUnavailableRetryStrategy serviceUnavailableRetryStrategy =
+                new ResolverServiceUnavailableRetryStrategy(retryCount, retryInterval, serviceUnavailableCodes);
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
+                .setServiceUnavailableRetryStrategy(serviceUnavailableRetryStrategy)
                 .setRetryHandler(retryHandler)
                 .setDefaultAuthSchemeRegistry(authSchemeRegistry)
                 .setConnectionManager(state.getConnectionManager())
@@ -702,6 +731,51 @@ final class HttpTransporter extends AbstractTransporter {
             } catch (TransferCancelledException e) {
                 throw (IOException) new InterruptedIOException().initCause(e);
             }
+        }
+    }
+
+    private static class ResolverServiceUnavailableRetryStrategy implements ServiceUnavailableRetryStrategy {
+        private final int retryCount;
+
+        private final long retryInterval;
+
+        private final Set<Integer> serviceUnavailableHttpCodes;
+
+        private final ThreadLocal<Long> retryIntervalHolder;
+
+        private ResolverServiceUnavailableRetryStrategy(
+                int retryCount, long retryInterval, Set<Integer> serviceUnavailableHttpCodes) {
+            if (retryCount < 0) {
+                throw new IllegalArgumentException("retryCount must be >= 0");
+            }
+            if (retryInterval < 0L) {
+                throw new IllegalArgumentException("retryInterval must be >= 0");
+            }
+            this.retryCount = retryCount;
+            this.retryInterval = retryInterval;
+            this.serviceUnavailableHttpCodes = requireNonNull(serviceUnavailableHttpCodes);
+            this.retryIntervalHolder = new ThreadLocal<>();
+        }
+
+        @Override
+        public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
+            final boolean retry = executionCount <= retryCount
+                    && (serviceUnavailableHttpCodes.contains(
+                            response.getStatusLine().getStatusCode()));
+            if (retry) {
+                retryIntervalHolder.set(executionCount * retryInterval);
+            }
+            return retry;
+        }
+
+        @Override
+        public long getRetryInterval() {
+            Long ri = retryIntervalHolder.get();
+            if (ri == null) {
+                return 0L;
+            }
+            retryIntervalHolder.remove();
+            return ri;
         }
     }
 }

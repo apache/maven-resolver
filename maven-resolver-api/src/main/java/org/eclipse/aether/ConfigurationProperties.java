@@ -145,6 +145,41 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
+     * The initial retry interval of request to a remote server should be waited in case of "too many requests"
+     * (HTTP codes 429 and 503).
+     *
+     * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL
+     * @since 1.9.16
+     */
+    public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_CONNECTOR + "http.retryHandler.interval";
+
+    /**
+     * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
+     * Default value 500 ms.
+     *
+     * @since 1.9.16
+     */
+    public static final int DEFAULT_HTTP_RETRY_HANDLER_INTERVAL = 500;
+
+    /**
+     * The initial retry interval of request to a remote server should be waited in case of "too many requests"
+     * (HTTP codes 429 and 503).
+     *
+     * @see #DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
+     * @since 1.9.16
+     */
+    public static final String HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE =
+            PREFIX_CONNECTOR + "http.retryHandler.serviceUnavailable";
+
+    /**
+     * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE} isn't set.
+     * Default value: "429,503".
+     *
+     * @since 1.9.16
+     */
+    public static final String DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE = "429,503";
+
+    /**
      * Should HTTP client use preemptive auth (w/ BASIC) or not?
      *
      * @see #DEFAULT_HTTP_PREEMPTIVE_AUTH
