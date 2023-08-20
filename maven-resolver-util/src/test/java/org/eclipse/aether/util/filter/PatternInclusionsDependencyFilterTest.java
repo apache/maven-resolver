@@ -169,11 +169,11 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
     }
 
     public boolean accept(DependencyNode node, String expression) {
-        return new PatternInclusionsDependencyFilter(expression).accept(node, new LinkedList<DependencyNode>());
+        return new PatternInclusionsDependencyFilter(expression).accept(node, new LinkedList<>());
     }
 
     public boolean acceptVersionRange(DependencyNode node, String... expression) {
         return new PatternInclusionsDependencyFilter(new GenericVersionScheme(), expression)
-                .accept(node, new LinkedList<DependencyNode>());
+                .accept(node, new LinkedList<>());
     }
 }

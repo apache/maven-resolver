@@ -177,11 +177,11 @@ public class PatternExclusionsDependencyFilterTest {
     }
 
     private boolean dontAccept(DependencyNode node, String expression) {
-        return !new PatternExclusionsDependencyFilter(expression).accept(node, new LinkedList<DependencyNode>());
+        return !new PatternExclusionsDependencyFilter(expression).accept(node, new LinkedList<>());
     }
 
     private boolean dontAcceptVersionRange(DependencyNode node, String... expression) {
         return !new PatternExclusionsDependencyFilter(new GenericVersionScheme(), expression)
-                .accept(node, new LinkedList<DependencyNode>());
+                .accept(node, new LinkedList<>());
     }
 }

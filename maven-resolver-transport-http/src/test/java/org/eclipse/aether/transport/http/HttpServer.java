@@ -113,7 +113,7 @@ public class HttpServer {
 
     private final AtomicInteger connectionsToClose = new AtomicInteger(0);
 
-    private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<LogEntry>());
+    private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
 
     public String getHost() {
         return "localhost";
