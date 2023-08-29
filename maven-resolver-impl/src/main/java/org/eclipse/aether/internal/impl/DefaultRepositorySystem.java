@@ -418,8 +418,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         validateSession(session);
         validateRepositories(repositories);
 
-        repositories = remoteRepositoryManager.aggregateRepositories(
-                session, new ArrayList<RemoteRepository>(), repositories, true);
+        repositories = remoteRepositoryManager.aggregateRepositories(session, new ArrayList<>(), repositories, true);
         return repositories;
     }
 
