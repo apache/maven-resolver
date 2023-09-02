@@ -145,8 +145,8 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
-     * The initial retry interval of request to a remote server should be waited in case of "too many requests"
-     * (HTTP codes 429 and 503).
+     * The retry interval of request to a remote server should be waited in case of "too many requests"
+     * (HTTP codes 429 and 503). Accepts long as milliseconds.
      *
      * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL
      * @since 1.9.16
@@ -154,12 +154,12 @@ public final class ConfigurationProperties {
     public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_CONNECTOR + "http.retryHandler.interval";
 
     /**
-     * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
-     * Default value 500 ms.
+     * The default retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
+     * Default value 5000ms.
      *
      * @since 1.9.16
      */
-    public static final int DEFAULT_HTTP_RETRY_HANDLER_INTERVAL = 500;
+    public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL = 5000L;
 
     /**
      * The initial retry interval of request to a remote server should be waited in case of "too many requests"

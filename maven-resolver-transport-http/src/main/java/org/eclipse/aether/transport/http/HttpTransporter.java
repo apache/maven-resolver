@@ -741,8 +741,6 @@ final class HttpTransporter extends AbstractTransporter {
 
         private final Set<Integer> serviceUnavailableHttpCodes;
 
-        private final ThreadLocal<Long> retryIntervalHolder;
-
         private ResolverServiceUnavailableRetryStrategy(
                 int retryCount, long retryInterval, Set<Integer> serviceUnavailableHttpCodes) {
             if (retryCount < 0) {
@@ -754,28 +752,18 @@ final class HttpTransporter extends AbstractTransporter {
             this.retryCount = retryCount;
             this.retryInterval = retryInterval;
             this.serviceUnavailableHttpCodes = requireNonNull(serviceUnavailableHttpCodes);
-            this.retryIntervalHolder = new ThreadLocal<>();
         }
 
         @Override
         public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
-            final boolean retry = executionCount <= retryCount
+            return executionCount <= retryCount
                     && (serviceUnavailableHttpCodes.contains(
                             response.getStatusLine().getStatusCode()));
-            if (retry) {
-                retryIntervalHolder.set(executionCount * retryInterval);
-            }
-            return retry;
         }
 
         @Override
         public long getRetryInterval() {
-            Long ri = retryIntervalHolder.get();
-            if (ri == null) {
-                return 0L;
-            }
-            retryIntervalHolder.remove();
-            return ri;
+            return retryInterval;
         }
     }
 }
