@@ -748,6 +748,11 @@ final class HttpTransporter extends AbstractTransporter {
 
         private final Set<Integer> serviceUnavailableHttpCodes;
 
+        /**
+         * Ugly, but forced by HttpClient API {@link ServiceUnavailableRetryStrategy}: the calls for
+         * {@link #retryRequest(HttpResponse, int, HttpContext)} and {@link #getRetryInterval()} are done by same
+         * thread and are actually done from spot that are very close to each other (almost subsequent calls).
+         */
         private static final ThreadLocal<Long> RETRY_INTERVAL_HOLDER = new ThreadLocal<>();
 
         private ResolverServiceUnavailableRetryStrategy(
