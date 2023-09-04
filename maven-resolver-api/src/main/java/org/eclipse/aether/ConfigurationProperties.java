@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * The keys and defaults for common configuration properties.
  *
@@ -180,7 +178,7 @@ public final class ConfigurationProperties {
      *
      * @since 1.9.16
      */
-    public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX = TimeUnit.MINUTES.toMillis(5L);
+    public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX = 300_000L;
 
     /**
      * The initial retry interval of request to a remote server should be waited in case of "too many requests"
