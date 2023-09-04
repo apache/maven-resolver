@@ -43,7 +43,8 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.http.preemptiveAuth` | boolean | Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default is disabled, as it is considered less secure. | `false` | yes
 `aether.connector.http.preemptivePutAuth` | boolean | Should HTTP client use preemptive-authentication for HTTP PUTs only (works only w/ BASIC). By default is enabled (same as Wagon). | `true` | yes
 `aether.connector.http.retryHandler.count` | int | The maximum number of times a request to a remote HTTP server should be retried in case of an error. | `3` | yes
-`aether.connector.http.retryHandler.interval` | long | The retry interval if server responds with "too many requests". | `5000` | yes
+`aether.connector.http.retryHandler.interval` | long | The initial retry interval if server responds with "too many requests". Is multiplied by 1, 2,.. on each try. | `5000` | yes
+`aether.connector.http.retryHandler.intervalMax` | long | The retry interval maximum after request should be given up. | `5 minutes` | yes
 `aether.connector.http.retryHandler.name` | String | The name of retryHandler, supported values are "standard", that obeys RFC-2616, regarding idempotent methods, and "default" that considers requests w/o payload as idempotent. | `standard` | yes
 `aether.connector.http.retryHandler.requestSentEnabled` | boolean | Set to `true` if it is acceptable to retry non-idempotent requests, that have been sent. | `false` | yes
 `aether.connector.http.retryHandler.serviceUnavailable` | String | Comma separated list of HTTP codes that should be handled as "too many requests". | `"429,503"` | yes

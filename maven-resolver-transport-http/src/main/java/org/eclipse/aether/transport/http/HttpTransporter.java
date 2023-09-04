@@ -241,6 +241,11 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL,
                 ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL + "." + repository.getId(),
                 ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL);
+        long retryIntervalMax = ConfigUtils.getLong(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX);
         String serviceUnavailableCodesString = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE,
@@ -295,8 +300,8 @@ final class HttpTransporter extends AbstractTransporter {
                     "Illegal HTTP codes for " + ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
                             + " (list of integers): " + serviceUnavailableCodesString);
         }
-        ServiceUnavailableRetryStrategy serviceUnavailableRetryStrategy =
-                new ResolverServiceUnavailableRetryStrategy(retryCount, retryInterval, serviceUnavailableCodes);
+        ServiceUnavailableRetryStrategy serviceUnavailableRetryStrategy = new ResolverServiceUnavailableRetryStrategy(
+                retryCount, retryInterval, retryIntervalMax, serviceUnavailableCodes);
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
@@ -739,31 +744,87 @@ final class HttpTransporter extends AbstractTransporter {
 
         private final long retryInterval;
 
+        private final long retryIntervalMax;
+
         private final Set<Integer> serviceUnavailableHttpCodes;
 
+        private static final ThreadLocal<Long> RETRY_INTERVAL_HOLDER = new ThreadLocal<>();
+
         private ResolverServiceUnavailableRetryStrategy(
-                int retryCount, long retryInterval, Set<Integer> serviceUnavailableHttpCodes) {
+                int retryCount, long retryInterval, long retryIntervalMax, Set<Integer> serviceUnavailableHttpCodes) {
             if (retryCount < 0) {
                 throw new IllegalArgumentException("retryCount must be >= 0");
             }
             if (retryInterval < 0L) {
                 throw new IllegalArgumentException("retryInterval must be >= 0");
             }
+            if (retryIntervalMax < 0L) {
+                throw new IllegalArgumentException("retryIntervalMax must be >= 0");
+            }
             this.retryCount = retryCount;
             this.retryInterval = retryInterval;
+            this.retryIntervalMax = retryIntervalMax;
             this.serviceUnavailableHttpCodes = requireNonNull(serviceUnavailableHttpCodes);
         }
 
         @Override
         public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
-            return executionCount <= retryCount
+            final boolean retry = executionCount <= retryCount
                     && (serviceUnavailableHttpCodes.contains(
                             response.getStatusLine().getStatusCode()));
+            if (retry) {
+                Long retryInterval = retryInterval(response, executionCount, context);
+                if (retryInterval != null) {
+                    RETRY_INTERVAL_HOLDER.set(retryInterval);
+                    return true;
+                }
+            }
+            RETRY_INTERVAL_HOLDER.remove();
+            return false;
+        }
+
+        /**
+         * Calculates retry interval in milliseconds. If {@link HttpHeaders#RETRY_AFTER} header present, it obeys it.
+         * Otherwise, it returns {@link this#retryInterval} long value multiplied with {@code executionCount} (starts
+         * from 1 and goes 2, 3,...).
+         *
+         * @return Long representing the retry interval as millis, or {@code null} if the request should be failed.
+         */
+        private Long retryInterval(HttpResponse httpResponse, int executionCount, HttpContext httpContext) {
+            Long result = null;
+            Header header = httpResponse.getFirstHeader(HttpHeaders.RETRY_AFTER);
+            if (header != null && header.getValue() != null) {
+                String headerValue = header.getValue();
+                if (headerValue.contains(":")) { // is date when to retry
+                    Date when = DateUtils.parseDate(headerValue); // presumably future
+                    if (when != null) {
+                        result = Math.max(when.getTime() - System.currentTimeMillis(), 0L);
+                    }
+                } else {
+                    try {
+                        result = Long.parseLong(headerValue) * 1000L; // is in seconds
+                    } catch (NumberFormatException e) {
+                        // fall through
+                    }
+                }
+            }
+            if (result == null) {
+                result = executionCount * this.retryInterval;
+            }
+            if (result > retryIntervalMax) {
+                return null;
+            }
+            return result;
         }
 
         @Override
         public long getRetryInterval() {
-            return retryInterval;
+            Long ri = RETRY_INTERVAL_HOLDER.get();
+            if (ri == null) {
+                return 0L;
+            }
+            RETRY_INTERVAL_HOLDER.remove();
+            return ri;
         }
     }
 }

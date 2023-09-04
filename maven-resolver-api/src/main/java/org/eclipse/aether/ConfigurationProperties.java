@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * The keys and defaults for common configuration properties.
  *
@@ -145,8 +147,9 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
-     * The retry interval of request to a remote server should be waited in case of "too many requests"
-     * (HTTP codes 429 and 503). Accepts long as milliseconds.
+     * The initial retry interval of request to a remote server should be waited in case of "too many requests"
+     * (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if remote server does not use
+     * {@code Retry-After} header, in which case Server value is obeyed.
      *
      * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL
      * @since 1.9.16
@@ -154,12 +157,30 @@ public final class ConfigurationProperties {
     public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_CONNECTOR + "http.retryHandler.interval";
 
     /**
-     * The default retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
+     * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
      * Default value 5000ms.
      *
      * @since 1.9.16
      */
     public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL = 5000L;
+
+    /**
+     * The maximum retry interval of request to a remote server above which the request should be aborted instead.
+     * In theory, a malicious server could tell Maven "come back after 100 years" that would stall the build for
+     * some. Using this parameter Maven will fail the request instead, if interval is above this value.
+     *
+     * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX
+     * @since 1.9.16
+     */
+    public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_CONNECTOR + "http.retryHandler.intervalMax";
+
+    /**
+     * The default retry interval maximum to use if {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX} isn't set.
+     * Default value 5 minutes.
+     *
+     * @since 1.9.16
+     */
+    public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX = TimeUnit.MINUTES.toMillis(5L);
 
     /**
      * The initial retry interval of request to a remote server should be waited in case of "too many requests"
