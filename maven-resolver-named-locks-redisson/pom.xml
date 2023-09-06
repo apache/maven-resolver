@@ -50,7 +50,7 @@
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>3.23.2</version>
+      <version>3.23.4</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
