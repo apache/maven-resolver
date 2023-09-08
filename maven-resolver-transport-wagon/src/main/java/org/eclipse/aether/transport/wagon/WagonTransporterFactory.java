@@ -36,8 +36,9 @@ import static java.util.Objects.requireNonNull;
  * that this factory merely serves as an adapter to the Wagon API and by itself does not provide any transport services
  * unless one or more wagon implementations are registered with the {@link WagonProvider}.
  */
-@Named("wagon")
+@Named(WagonTransporterFactory.NAME)
 public final class WagonTransporterFactory implements TransporterFactory, Service {
+    public static final String NAME = "wagon";
 
     private WagonProvider wagonProvider;
 
