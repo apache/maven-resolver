@@ -37,8 +37,10 @@ import static java.util.Objects.requireNonNull;
  * A transporter factory for repositories using the {@code http:} or {@code https:} protocol. The provided transporters
  * support uploads to WebDAV servers and resumable downloads.
  */
-@Named("http")
+@Named(HttpTransporterFactory.NAME)
 public final class HttpTransporterFactory implements TransporterFactory {
+    public static final String NAME = "http";
+
     private static Map<String, ChecksumExtractor> getManuallyCreatedExtractors() {
         HashMap<String, ChecksumExtractor> map = new HashMap<>();
         map.put(Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor());

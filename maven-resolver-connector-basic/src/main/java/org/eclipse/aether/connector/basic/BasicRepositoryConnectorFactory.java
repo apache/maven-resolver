@@ -44,8 +44,9 @@ import static java.util.Objects.requireNonNull;
  * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory transporters} and
  * {@link org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory repository layouts} for the transfers.
  */
-@Named("basic")
+@Named(BasicRepositoryConnectorFactory.NAME)
 public final class BasicRepositoryConnectorFactory implements RepositoryConnectorFactory, Service {
+    public static final String NAME = "basic";
     private TransporterProvider transporterProvider;
 
     private RepositoryLayoutProvider layoutProvider;

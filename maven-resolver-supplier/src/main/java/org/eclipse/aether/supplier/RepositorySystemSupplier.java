@@ -220,7 +220,9 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected Map<String, RepositoryLayoutFactory> getRepositoryLayoutFactories(
             ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
         HashMap<String, RepositoryLayoutFactory> result = new HashMap<>();
-        result.put("maven2", new Maven2RepositoryLayoutFactory(checksumAlgorithmFactorySelector));
+        result.put(
+                Maven2RepositoryLayoutFactory.NAME,
+                new Maven2RepositoryLayoutFactory(checksumAlgorithmFactorySelector));
         return result;
     }
 
@@ -303,8 +305,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected Map<String, TransporterFactory> getTransporterFactories(Map<String, ChecksumExtractor> extractors) {
         HashMap<String, TransporterFactory> result = new HashMap<>();
-        result.put("file", new FileTransporterFactory());
-        result.put("http", new HttpTransporterFactory(extractors));
+        result.put(FileTransporterFactory.NAME, new FileTransporterFactory());
+        result.put(HttpTransporterFactory.NAME, new HttpTransporterFactory(extractors));
         return result;
     }
 
@@ -329,7 +331,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected Map<String, RepositoryConnectorFactory> getRepositoryConnectorFactories(
             BasicRepositoryConnectorFactory basicRepositoryConnectorFactory) {
         HashMap<String, RepositoryConnectorFactory> result = new HashMap<>();
-        result.put("basic", basicRepositoryConnectorFactory);
+        result.put(BasicRepositoryConnectorFactory.NAME, basicRepositoryConnectorFactory);
         return result;
     }
 

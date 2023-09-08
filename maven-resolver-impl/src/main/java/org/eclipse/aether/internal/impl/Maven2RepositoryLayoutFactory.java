@@ -49,8 +49,9 @@ import static java.util.Objects.requireNonNull;
  * Provides a Maven-2 repository layout for repositories with content type {@code "default"}.
  */
 @Singleton
-@Named("maven2")
+@Named(Maven2RepositoryLayoutFactory.NAME)
 public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFactory {
+    public static final String NAME = "maven2";
 
     public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
 

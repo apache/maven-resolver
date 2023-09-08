@@ -31,8 +31,9 @@ import static java.util.Objects.requireNonNull;
 /**
  * A transporter factory for repositories using the {@code file:} protocol.
  */
-@Named("file")
+@Named(FileTransporterFactory.NAME)
 public final class FileTransporterFactory implements TransporterFactory {
+    public static final String NAME = "file";
 
     private float priority;
 
