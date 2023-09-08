@@ -453,6 +453,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected Map<String, MetadataGeneratorFactory> getMetadataGeneratorFactories() {
         // from maven-resolver-provider
         HashMap<String, MetadataGeneratorFactory> result = new HashMap<>();
+        // TODO: Fix this once MNG-7874 done and released
         result.put("plugins", new PluginsMetadataGeneratorFactory());
         result.put("versions", new VersionsMetadataGeneratorFactory());
         result.put("snapshot", new SnapshotMetadataGeneratorFactory());
