@@ -435,11 +435,8 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                 && repository.getPolicy(false).isEnabled()) {
             return true;
         }
-        if (!Metadata.Nature.RELEASE.equals(nature)
-                && repository.getPolicy(true).isEnabled()) {
-            return true;
-        }
-        return false;
+        return !Metadata.Nature.RELEASE.equals(nature)
+                && repository.getPolicy(true).isEnabled();
     }
 
     private RepositoryPolicy getPolicy(

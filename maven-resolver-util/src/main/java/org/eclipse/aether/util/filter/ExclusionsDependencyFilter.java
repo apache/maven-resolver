@@ -65,11 +65,7 @@ public final class ExclusionsDependencyFilter implements DependencyFilter {
 
         id = dependency.getArtifact().getGroupId() + ':' + id;
 
-        if (excludes.contains(id)) {
-            return false;
-        }
-
-        return true;
+        return !(excludes.contains(id));
     }
 
     @Override
