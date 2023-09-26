@@ -90,10 +90,7 @@ public final class ExclusionDependencySelector implements DependencySelector {
         if (!matches(exclusion.getExtension(), artifact.getExtension())) {
             return false;
         }
-        if (!matches(exclusion.getClassifier(), artifact.getClassifier())) {
-            return false;
-        }
-        return true;
+        return matches(exclusion.getClassifier(), artifact.getClassifier());
     }
 
     private boolean matches(String pattern, String value) {
