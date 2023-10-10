@@ -85,17 +85,20 @@
 
   <properties>
     <javaVersion>8</javaVersion>
+    <maven.compiler.source>${javaVersion}</maven.compiler.source>
+    <maven.compiler.target>${javaVersion}</maven.compiler.target>
+    <maven.compiler.release>${javaVersion}</maven.compiler.release>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
-    <sisuVersion>0.3.5</sisuVersion>
-    <guiceVersion>5.1.0</guiceVersion>
+    <sisuVersion>0.9.0.M2</sisuVersion>
+    <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <!-- used by supplier and demo only -->
-    <mavenVersion>3.9.4</mavenVersion>
-    <minimalMavenBuildVersion>[3.8.7,)</minimalMavenBuildVersion>
-    <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
+    <mavenVersion>3.9.5</mavenVersion>
+    <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
+    <minimalJavaBuildVersion>[17.0.6,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-10-10T21:40:45Z</project.build.outputTimestamp>
   </properties>
 
@@ -307,6 +310,27 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>enforce-bytecode-version</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <enforceBytecodeVersion>
+                    <maxJdkVersion>${maven.compiler.release}</maxJdkVersion>
+                    <ignoredScopes>test</ignoredScopes>
+                  </enforceBytecodeVersion>
+                </rules>
+                <fail>true</fail>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <configuration>
             <detectOfflineLinks>false</detectOfflineLinks>
@@ -488,29 +512,6 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.23</version>
-        <configuration>
-          <signature>
-            <groupId>org.codehaus.mojo.signature</groupId>
-            <artifactId>java18</artifactId>
-            <version>1.0</version>
-          </signature>
-        </configuration>
-        <executions>
-          <execution>
-            <id>check-java-compat</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>process-classes</phase>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
 
   <profiles>
