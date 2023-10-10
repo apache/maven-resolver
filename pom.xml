@@ -29,7 +29,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>1.9.17-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -96,7 +96,7 @@
     <mavenVersion>3.9.4</mavenVersion>
     <minimalMavenBuildVersion>[3.8.7,)</minimalMavenBuildVersion>
     <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
-    <project.build.outputTimestamp>2023-09-22T18:13:46Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2023-10-10T21:40:45Z</project.build.outputTimestamp>
   </properties>
 
   <dependencyManagement>
