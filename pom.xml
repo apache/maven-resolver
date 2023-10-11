@@ -85,8 +85,6 @@
 
   <properties>
     <javaVersion>8</javaVersion>
-    <maven.compiler.source>${javaVersion}</maven.compiler.source>
-    <maven.compiler.target>${javaVersion}</maven.compiler.target>
     <maven.compiler.release>${javaVersion}</maven.compiler.release>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
@@ -508,6 +506,38 @@
                 <Automatic-Module-Name>${Automatic-Module-Name}</Automatic-Module-Name>
               </manifestEntries>
             </archive>
+          </configuration>
+        </plugin>
+        <!-- Remove when Parent 41 used -->
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>2.40.0</version>
+          <configuration>
+            <java>
+              <!-- orders of used formatters are important MPOM-376 -->
+              <!-- eg. palantir override importOrder, so should be first -->
+              <palantirJavaFormat>
+                <version>2.38.0</version>
+              </palantirJavaFormat>
+              <removeUnusedImports />
+              <importOrder>
+                <file>config/maven-eclipse-importorder.txt</file>
+              </importOrder>
+              <licenseHeader>
+                <file>config/maven-header-plain.txt</file>
+              </licenseHeader>
+            </java>
+            <pom>
+              <sortPom>
+                <expandEmptyElements>false</expandEmptyElements>
+                <!-- https://issues.apache.org/jira/browse/MRELEASE-1111 -->
+                <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
+              </sortPom>
+            </pom>
+            <upToDateChecking>
+              <enabled>true</enabled>
+            </upToDateChecking>
           </configuration>
         </plugin>
       </plugins>
