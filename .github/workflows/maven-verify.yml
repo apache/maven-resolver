@@ -27,5 +27,5 @@ jobs:
     uses: apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v3
     with:
       ff-site-run: false
-      jdk-matrix: '[ "17" ]'
+      jdk-matrix: '[ "17", "21" ]'
 
