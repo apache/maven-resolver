@@ -453,10 +453,9 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected Map<String, MetadataGeneratorFactory> getMetadataGeneratorFactories() {
         // from maven-resolver-provider
         HashMap<String, MetadataGeneratorFactory> result = new HashMap<>();
-        // TODO: Fix this once MNG-7874 done and released
-        result.put("plugins", new PluginsMetadataGeneratorFactory());
-        result.put("versions", new VersionsMetadataGeneratorFactory());
-        result.put("snapshot", new SnapshotMetadataGeneratorFactory());
+        result.put(PluginsMetadataGeneratorFactory.NAME, new PluginsMetadataGeneratorFactory());
+        result.put(VersionsMetadataGeneratorFactory.NAME, new VersionsMetadataGeneratorFactory());
+        result.put(SnapshotMetadataGeneratorFactory.NAME, new SnapshotMetadataGeneratorFactory());
         return result;
     }
 
@@ -469,15 +468,14 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             RepositoryEventDispatcher repositoryEventDispatcher,
             ModelCacheFactory modelCacheFactory) {
         // from maven-resolver-provider
-        DefaultArtifactDescriptorReader result = new DefaultArtifactDescriptorReader();
-        result.setRemoteRepositoryManager(remoteRepositoryManager);
-        result.setVersionResolver(versionResolver);
-        result.setVersionRangeResolver(versionRangeResolver);
-        result.setArtifactResolver(artifactResolver);
-        result.setModelBuilder(modelBuilder);
-        result.setRepositoryEventDispatcher(repositoryEventDispatcher);
-        result.setModelCacheFactory(modelCacheFactory);
-        return result;
+        return new DefaultArtifactDescriptorReader(
+                remoteRepositoryManager,
+                versionResolver,
+                versionRangeResolver,
+                artifactResolver,
+                modelBuilder,
+                repositoryEventDispatcher,
+                modelCacheFactory);
     }
 
     protected VersionResolver getVersionResolver(
@@ -485,11 +483,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             SyncContextFactory syncContextFactory,
             RepositoryEventDispatcher repositoryEventDispatcher) {
         // from maven-resolver-provider
-        DefaultVersionResolver result = new DefaultVersionResolver();
-        result.setMetadataResolver(metadataResolver);
-        result.setSyncContextFactory(syncContextFactory);
-        result.setRepositoryEventDispatcher(repositoryEventDispatcher);
-        return result;
+        return new DefaultVersionResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
     }
 
     protected VersionRangeResolver getVersionRangeResolver(
@@ -497,11 +491,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             SyncContextFactory syncContextFactory,
             RepositoryEventDispatcher repositoryEventDispatcher) {
         // from maven-resolver-provider
-        DefaultVersionRangeResolver result = new DefaultVersionRangeResolver();
-        result.setMetadataResolver(metadataResolver);
-        result.setSyncContextFactory(syncContextFactory);
-        result.setRepositoryEventDispatcher(repositoryEventDispatcher);
-        return result;
+        return new DefaultVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
     }
 
     protected ModelBuilder getModelBuilder() {

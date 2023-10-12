@@ -35,8 +35,12 @@ to current solution described below.
 A new simple module `maven-resolver-supplier` serves the purpose to "bootstrap" resolver instance
 when there is no desire to use [Eclipse Sisu](https://eclipse.dev/sisu/) DI. It provides one simple class 
 `org.eclipse.aether.supplier.RepositorySystemSupplier` that implements `Supplier<RepositorySystem>`
-and supplies ready-to-use `RepositorySystem` instances. The `RepositorySystemSession` should be
-created using the `org.apache.maven.repository.internal.MavenRepositorySystemUtils#newSession()` method
+and supplies new, ready-to-use `RepositorySystem` instance for each call. Class is intentionally simplistic,
+no instance caching or anything alike is present: all that is concern of caller, just like proper shutdown 
+of the created resolver instances is.
+
+The `RepositorySystemSession` should be created using the 
+`org.apache.maven.repository.internal.MavenRepositorySystemUtils#newSession()` method
 and local repository added to it in usual way (there is no change in this area).
 
 The supplier class is written in a way, to allow easy customization if needed: just extend the class and override
@@ -47,7 +51,10 @@ logging purposes, but this module does NOT provide any implementation for it as 
 It is the consumer/user obligation to provide one at runtime.
 
 Version of `maven-resolver-supplier` artifact in use **must be strictly aligned** with other Resolver artifacts 
-on classpath.
+on classpath and Maven version.
+
+An example usage (and customization) of supplier can be seen in
+[Maven Resolver Ant Tasks 1.5.0](https://github.com/apache/maven-resolver-ant-tasks/blob/maven-resolver-ant-tasks-1.5.0/src/main/java/org/apache/maven/resolver/internal/ant/AntRepositorySystemSupplier.java).
 
 ## Resolver configuration
 
@@ -60,7 +67,7 @@ The supplier will provide fully usable instance. To configure resolver, use sess
 configuration) properties, when constructing session. All the configuration options are available as 
 [listed here](https://maven.apache.org/resolver/configuration.html).
 
-## Extending Resolver
+## Extending Supplied Resolver
 
 Extending supplied resolver is simple, and basically requires same three steps for whatever extra you want to include
 (like Wagon transport, distributed locking, etc).
