@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether;
 
-import org.eclipse.aether.resolution.DependencyRequest;
-
 /**
  * The keys and defaults for common configuration properties.
  *
@@ -299,8 +297,7 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
 
     /**
-     * A flag indicating which visitor should be used to "flatten" the dependency graph into list of artifacts in
-     * method {@link RepositorySystem#resolveDependencies(RepositorySystemSession, DependencyRequest)}. Default is
+     * A flag indicating which visitor should be used to "flatten" the dependency graph into list. Default is
      * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
      *
      * @see #DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR
