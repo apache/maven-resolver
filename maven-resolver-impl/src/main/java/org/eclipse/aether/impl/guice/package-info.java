@@ -20,5 +20,7 @@
 /**
  * The integration with the dependency injection framework
  * <a href="https://github.com/google/guice" target="_blank">Google Guice</a>.
+ *
+ * @deprecated This package is about to be dropped in 2.0.0.
  */
 package org.eclipse.aether.impl.guice;

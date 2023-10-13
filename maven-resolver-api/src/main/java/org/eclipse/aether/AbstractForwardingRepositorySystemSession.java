@@ -88,6 +88,11 @@ public abstract class AbstractForwardingRepositorySystemSession implements Repos
     }
 
     @Override
+    public String getMetadataUpdatePolicy() {
+        return getSession().getMetadataUpdatePolicy();
+    }
+
+    @Override
     public LocalRepository getLocalRepository() {
         return getSession().getLocalRepository();
     }

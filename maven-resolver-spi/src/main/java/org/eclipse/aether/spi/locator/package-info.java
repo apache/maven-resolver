@@ -19,7 +19,7 @@
  */
 /**
  * A lightweight service locator infrastructure to help components acquire dependent components. The implementation of
- * the repository system is decomposed into many sub components that interact with each other via interfaces, allowing
+ * the repository system is decomposed into many subcomponents that interact with each other via interfaces, allowing
  * an application to customize the system by swapping in different implementation classes for these interfaces. The
  * service locator defined by this package is one means for components to get hold of the proper implementation for its
  * dependencies. While not the most popular approach to component wiring, this service locator enables applications
@@ -27,6 +27,7 @@
  * footprint. Therefore, all components should implement {@link org.eclipse.aether.spi.locator.Service} to support this
  * goal.
  *
- * @deprecated Use some out-of-the-box DI implementation instead.
+ * @deprecated Use of out-of-the-box DI implementation recommended, or, as alternative new supplier from
+ * module {@code maven-resolver-supplier}.
  */
 package org.eclipse.aether.spi.locator;

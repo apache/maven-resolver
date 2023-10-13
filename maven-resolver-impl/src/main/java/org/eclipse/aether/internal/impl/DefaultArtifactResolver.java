@@ -125,13 +125,14 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    @Deprecated
     public DefaultArtifactResolver() {
         // enables default constructor
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
-    DefaultArtifactResolver(
+    public DefaultArtifactResolver(
             FileProcessor fileProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
             VersionResolver versionResolver,
@@ -581,6 +582,7 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                 check.setFileValid(false);
                 check.setRepository(group.repository);
                 check.setPolicy(policy.getUpdatePolicy());
+                check.setMetadataPolicy(policy.getMetadataUpdatePolicy());
                 item.updateCheck = check;
                 updateCheckManager.checkArtifact(session, check);
                 if (!check.isRequired()) {

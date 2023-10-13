@@ -23,7 +23,8 @@ package org.eclipse.aether.spi.locator;
  * means to programmatically wire the several components of the repository system together when it is used outside of an
  * IoC container.
  *
- * @deprecated Use some out-of-the-box DI implementation instead.
+ * @deprecated Use of out-of-the-box DI implementation recommended, or, as alternative new supplier from
+ * module {@code maven-resolver-supplier}.
  */
 @Deprecated
 public interface Service {

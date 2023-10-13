@@ -31,6 +31,11 @@ public class AllResolverDemosTest {
     }
 
     @Test
+    public void supplier() throws Exception {
+        AllResolverDemos.main(new String[] {Booter.SUPPLIER});
+    }
+
+    @Test
     public void guice() throws Exception {
         AllResolverDemos.main(new String[] {Booter.GUICE});
     }

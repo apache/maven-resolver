@@ -128,7 +128,10 @@ import org.slf4j.ILoggerFactory;
  *
  * @noextend This class must not be extended by clients and will eventually be marked {@code final} without prior
  * notice.
+ * @deprecated This class is about to be dropped in 2.0.0 release. Use SISU or use maven-resolver-supplier to
+ * get Resolver instances.
  */
+@Deprecated
 public class AetherModule extends AbstractModule {
 
     /**

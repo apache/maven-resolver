@@ -32,8 +32,10 @@ import com.google.inject.name.Names;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.repository.internal.DefaultArtifactDescriptorReader;
+import org.apache.maven.repository.internal.DefaultModelCacheFactory;
 import org.apache.maven.repository.internal.DefaultVersionRangeResolver;
 import org.apache.maven.repository.internal.DefaultVersionResolver;
+import org.apache.maven.repository.internal.ModelCacheFactory;
 import org.apache.maven.repository.internal.SnapshotMetadataGeneratorFactory;
 import org.apache.maven.repository.internal.VersionsMetadataGeneratorFactory;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
@@ -141,5 +143,10 @@ class DemoResolverModule extends AbstractModule {
     @Provides
     ModelBuilder provideModelBuilder() {
         return new DefaultModelBuilderFactory().newInstance();
+    }
+
+    @Provides
+    ModelCacheFactory provideModelCacheFactory() {
+        return new DefaultModelCacheFactory();
     }
 }

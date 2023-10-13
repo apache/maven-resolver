@@ -165,10 +165,7 @@ public final class ArtifactIdUtils {
         if (!Objects.equals(artifact1.getClassifier(), artifact2.getClassifier())) {
             return false;
         }
-        if (!Objects.equals(artifact1.getVersion(), artifact2.getVersion())) {
-            return false;
-        }
-        return true;
+        return Objects.equals(artifact1.getVersion(), artifact2.getVersion());
     }
 
     /**
@@ -196,10 +193,7 @@ public final class ArtifactIdUtils {
         if (!Objects.equals(artifact1.getClassifier(), artifact2.getClassifier())) {
             return false;
         }
-        if (!Objects.equals(artifact1.getBaseVersion(), artifact2.getBaseVersion())) {
-            return false;
-        }
-        return true;
+        return Objects.equals(artifact1.getBaseVersion(), artifact2.getBaseVersion());
     }
 
     /**
@@ -225,9 +219,6 @@ public final class ArtifactIdUtils {
         if (!Objects.equals(artifact1.getExtension(), artifact2.getExtension())) {
             return false;
         }
-        if (!Objects.equals(artifact1.getClassifier(), artifact2.getClassifier())) {
-            return false;
-        }
-        return true;
+        return Objects.equals(artifact1.getClassifier(), artifact2.getClassifier());
     }
 }

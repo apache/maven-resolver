@@ -44,8 +44,9 @@ import static java.util.Objects.requireNonNull;
  * {@link org.eclipse.aether.spi.connector.transport.TransporterFactory transporters} and
  * {@link org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory repository layouts} for the transfers.
  */
-@Named("basic")
+@Named(BasicRepositoryConnectorFactory.NAME)
 public final class BasicRepositoryConnectorFactory implements RepositoryConnectorFactory, Service {
+    public static final String NAME = "basic";
     private TransporterProvider transporterProvider;
 
     private RepositoryLayoutProvider layoutProvider;
@@ -63,12 +64,13 @@ public final class BasicRepositoryConnectorFactory implements RepositoryConnecto
      * clients, the new factory needs to be configured via its various mutators before first use or runtime errors will
      * occur.
      */
+    @Deprecated
     public BasicRepositoryConnectorFactory() {
         // enables default constructor
     }
 
     @Inject
-    BasicRepositoryConnectorFactory(
+    public BasicRepositoryConnectorFactory(
             TransporterProvider transporterProvider,
             RepositoryLayoutProvider layoutProvider,
             ChecksumPolicyProvider checksumPolicyProvider,

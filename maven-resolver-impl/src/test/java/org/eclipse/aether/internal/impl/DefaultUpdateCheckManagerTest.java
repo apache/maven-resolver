@@ -106,6 +106,7 @@ public class DefaultUpdateCheckManagerTest {
         check.setRepository(repository);
         check.setAuthoritativeRepository(repository);
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
+        check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
         return check;
     }
 
@@ -298,6 +299,7 @@ public class DefaultUpdateCheckManagerTest {
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
         // first check
         manager.checkMetadata(session, check);
@@ -314,6 +316,7 @@ public class DefaultUpdateCheckManagerTest {
     public void testCheckMetadataSessionStateModes() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.touchMetadata(session, check);
 
         session.setConfigProperty(DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "bypass");
@@ -338,6 +341,7 @@ public class DefaultUpdateCheckManagerTest {
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
 
         // first check
@@ -364,6 +368,7 @@ public class DefaultUpdateCheckManagerTest {
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
 
         // first check
@@ -427,6 +432,7 @@ public class DefaultUpdateCheckManagerTest {
     public void testCheckMetadataNotWhenUpdatePolicyIsNeverAndTimestampIsUnavailable() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         manager.checkMetadata(session, check);

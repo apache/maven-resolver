@@ -121,7 +121,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
     }
 
     @Inject
-    BfDependencyCollector(
+    public BfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
             VersionRangeResolver versionRangeResolver) {

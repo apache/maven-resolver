@@ -92,12 +92,13 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    @Deprecated
     public DefaultMetadataResolver() {
         // enables default constructor
     }
 
     @Inject
-    DefaultMetadataResolver(
+    public DefaultMetadataResolver(
             RepositoryEventDispatcher repositoryEventDispatcher,
             UpdateCheckManager updateCheckManager,
             RepositoryConnectorProvider repositoryConnectorProvider,
@@ -281,6 +282,8 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                     List<UpdateCheck<Metadata, MetadataTransferException>> checks = new ArrayList<>();
                     Exception exception = null;
                     for (RemoteRepository repo : repositories) {
+                        RepositoryPolicy policy = getPolicy(session, repo, metadata.getNature());
+
                         UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
                         check.setLocalLastUpdated((localLastUpdate != null) ? localLastUpdate : 0);
                         check.setItem(metadata);
@@ -293,8 +296,8 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                         check.setFile(checkFile);
                         check.setRepository(repository);
                         check.setAuthoritativeRepository(repo);
-                        check.setPolicy(
-                                getPolicy(session, repo, metadata.getNature()).getUpdatePolicy());
+                        check.setPolicy(policy.getUpdatePolicy());
+                        check.setMetadataPolicy(policy.getMetadataUpdatePolicy());
 
                         if (lrmResult.isStale()) {
                             checks.add(check);
@@ -434,11 +437,8 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                 && repository.getPolicy(false).isEnabled()) {
             return true;
         }
-        if (!Metadata.Nature.RELEASE.equals(nature)
-                && repository.getPolicy(true).isEnabled()) {
-            return true;
-        }
-        return false;
+        return !Metadata.Nature.RELEASE.equals(nature)
+                && repository.getPolicy(true).isEnabled();
     }
 
     private RepositoryPolicy getPolicy(

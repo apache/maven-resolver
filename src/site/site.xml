@@ -32,6 +32,8 @@ under the License.
       <item name="Expected Checksums" href="expected-checksums.html"/>
       <item name="About Local Repository" href="local-repository.html"/>
       <item name="Remote Repository Filtering" href="remote-repository-filtering.html"/>
+      <item name="Third-party Integrations" href="third-party-integrations.html"/>
+      <item name="Upgrading Resolver" href="upgrading-resolver.html"/>
       <item name="Maven 3.8.x" href="maven-3.8.x.html"/>
       <item name="JavaDocs" href="apidocs/index.html"/>
       <item name="Source Xref" href="xref/index.html"/>

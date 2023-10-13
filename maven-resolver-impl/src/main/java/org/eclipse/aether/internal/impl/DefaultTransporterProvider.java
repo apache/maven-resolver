@@ -50,12 +50,13 @@ public final class DefaultTransporterProvider implements TransporterProvider, Se
 
     private Collection<TransporterFactory> factories = new ArrayList<>();
 
+    @Deprecated
     public DefaultTransporterProvider() {
         // enables default constructor
     }
 
     @Inject
-    DefaultTransporterProvider(Set<TransporterFactory> transporterFactories) {
+    public DefaultTransporterProvider(Set<TransporterFactory> transporterFactories) {
         setTransporterFactories(transporterFactories);
     }
 
