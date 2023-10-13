@@ -105,6 +105,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.syncContext.named.discriminating.discriminator` | String | A discriminator name prefix identifying a Resolver instance. | `"sha1('${hostname:-localhost}:${maven.repo.local}')"` or `"sha1('')"` if generation fails | no
 `aether.syncContext.named.discriminating.hostname` | String | The hostname to be used with discriminating mapper. | Detected with `InetAddress.getLocalHost().getHostName()` | no
 `aether.syncContext.named.redisson.configFile` | String | Path to a Redisson configuration file in YAML format. Read [official documentation](https://github.com/redisson/redisson/wiki/2.-Configuration) for details. | none or `"${maven.conf}/maven-resolver-redisson.yaml"` if present | no
+`aether.system.resolveDependencies.visitor` | String | Name of the visitor to be used to "flatten" the dependency graph into list of Artifacts. Accepted values are "preOrder" (default, only possibility in Resolver 1.x), "levelOrder" and "postOrder". | `"preOrder"` | no
 `aether.trustedChecksumsSource.sparseDirectory` | boolean | Enable `sparseDirectory` trusted checksum source. | `false` | no
 `aether.trustedChecksumsSource.sparseDirectory.basedir` | String | The basedir path for `sparseDirectory` trusted checksum source. If relative, resolved against local repository root, if absolute, used as is. | `".checksums"` | no
 `aether.trustedChecksumsSource.sparseDirectory.originAware` | boolean | Is trusted checksum source origin aware (factors in Repository ID into path) or not. | `true` | no
