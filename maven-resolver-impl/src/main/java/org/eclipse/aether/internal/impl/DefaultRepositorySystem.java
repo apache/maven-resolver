@@ -393,11 +393,11 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
                 ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR,
                 ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR);
         switch (strategy) {
-            case "preOrder":
+            case PreorderDependencyNodeConsumerVisitor.NAME:
                 return new PreorderDependencyNodeConsumerVisitor(nodeConsumer);
-            case "postOrder":
+            case PostorderDependencyNodeConsumerVisitor.NAME:
                 return new PostorderDependencyNodeConsumerVisitor(nodeConsumer);
-            case "levelOrder":
+            case LevelOrderDependencyNodeConsumerVisitor.NAME:
                 return new LevelOrderDependencyNodeConsumerVisitor(nodeConsumer);
             default:
                 throw new IllegalArgumentException("Invalid dependency visitor strategy: " + strategy);

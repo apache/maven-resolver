@@ -40,6 +40,11 @@ import org.eclipse.aether.graph.DependencyVisitor;
  * <p>
  * Note: inorder vertex ordering is not provided out of the box, as resolver cannot partition (or does not know how to
  * partition) the node children into "left" and "right" partitions.
+ * <p>
+ * The newer class {@link AbstractDependencyNodeConsumerVisitor} and reusable {@link NodeListGenerator} offers
+ * similar capabilities but are pluggable. Use of this class, while not deprecated, is discouraged.
+ *
+ * @see AbstractDependencyNodeConsumerVisitor
  */
 abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor {
 
@@ -68,7 +73,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The list of dependencies, never {@code null}.
      */
     public List<Dependency> getDependencies(boolean includeUnresolved) {
-        return DependencyNodesUtilities.getDependencies(getNodes(), includeUnresolved);
+        return NodeListGenerator.getDependencies(getNodes(), includeUnresolved);
     }
 
     /**
@@ -78,7 +83,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The list of artifacts, never {@code null}.
      */
     public List<Artifact> getArtifacts(boolean includeUnresolved) {
-        return DependencyNodesUtilities.getArtifacts(getNodes(), includeUnresolved);
+        return NodeListGenerator.getArtifacts(getNodes(), includeUnresolved);
     }
 
     /**
@@ -87,7 +92,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The list of artifact files, never {@code null}.
      */
     public List<File> getFiles() {
-        return DependencyNodesUtilities.getFiles(getNodes());
+        return NodeListGenerator.getFiles(getNodes());
     }
 
     /**
@@ -97,7 +102,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The class path, using the platform-specific path separator, never {@code null}.
      */
     public String getClassPath() {
-        return DependencyNodesUtilities.getClassPath(getNodes());
+        return NodeListGenerator.getClassPath(getNodes());
     }
 
     /**

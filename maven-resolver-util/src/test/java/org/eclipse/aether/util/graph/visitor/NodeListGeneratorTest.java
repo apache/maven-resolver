@@ -92,7 +92,8 @@ public class NodeListGeneratorTest {
         DependencyNode root = parse("simple.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
-        LevelOrderDependencyNodeConsumerVisitor visitor = new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
+        LevelOrderDependencyNodeConsumerVisitor visitor =
+                new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
         root.accept(visitor);
 
         assertSequence(nodeListGenerator.getNodes(), "a", "b", "d", "c", "e");
@@ -103,7 +104,8 @@ public class NodeListGeneratorTest {
         DependencyNode root = parse("cycles.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
-        LevelOrderDependencyNodeConsumerVisitor visitor = new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
+        LevelOrderDependencyNodeConsumerVisitor visitor =
+                new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
         root.accept(visitor);
 
         assertSequence(nodeListGenerator.getNodes(), "a", "b", "d", "c", "e");

@@ -31,10 +31,12 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public final class PreorderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
+    public static final String NAME = "preOrder";
+
     /**
      * Creates a new preorder list generator.
      */
-    public PreorderDependencyNodeConsumerVisitor( Consumer<DependencyNode> nodeConsumer) {
+    public PreorderDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer) {
         super(nodeConsumer);
     }
 

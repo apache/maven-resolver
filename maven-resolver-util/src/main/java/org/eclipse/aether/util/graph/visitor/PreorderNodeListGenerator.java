@@ -24,6 +24,12 @@ import org.eclipse.aether.graph.DependencyNode;
  * Generates a sequence of dependency nodes from a dependency graph by traversing the graph in preorder. This visitor
  * visits each node exactly once regardless how many paths within the dependency graph lead to the node such that the
  * resulting node sequence is free of duplicates.
+ * <p>
+ * The newer classes {@link PreorderDependencyNodeConsumerVisitor} and reusable {@link NodeListGenerator} offers similar
+ * capabilities but are pluggable. Use of this class, while not deprecated, is discouraged.
+ *
+ * @see PreorderDependencyNodeConsumerVisitor
+ * @see NodeListGenerator
  */
 public final class PreorderNodeListGenerator extends AbstractDepthFirstNodeListGenerator {
 

@@ -31,12 +31,14 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public final class PostorderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
+    public static final String NAME = "postOrder";
+
     private final Stack<Boolean> visits;
 
     /**
      * Creates a new postorder list generator.
      */
-    public PostorderDependencyNodeConsumerVisitor( Consumer<DependencyNode> nodeConsumer) {
+    public PostorderDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer) {
         super(nodeConsumer);
         visits = new Stack<>();
     }

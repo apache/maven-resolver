@@ -33,6 +33,8 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
+    public static final String NAME = "levelOrder";
+
     private final HashMap<Integer, ArrayList<DependencyNode>> nodesPerLevel;
 
     private final Stack<Boolean> visits;
@@ -40,7 +42,7 @@ public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDepen
     /**
      * Creates a new level order list generator.
      */
-    public LevelOrderDependencyNodeConsumerVisitor( Consumer<DependencyNode> nodeConsumer) {
+    public LevelOrderDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer) {
         super(nodeConsumer);
         nodesPerLevel = new HashMap<>(16);
         visits = new Stack<>();
