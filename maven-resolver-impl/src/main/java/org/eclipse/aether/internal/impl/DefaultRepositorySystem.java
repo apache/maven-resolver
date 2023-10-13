@@ -386,6 +386,16 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         return result;
     }
 
+    @Override
+    public List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root) {
+        validateSession(session);
+        requireNonNull(root, "root cannot be null");
+
+        final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
+        root.accept(getDependencyVisitor(session, dependencyNodes::add));
+        return dependencyNodes;
+    }
+
     private DependencyVisitor getDependencyVisitor(
             RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
         String strategy = ConfigUtils.getString(
