@@ -43,6 +43,8 @@ public final class UpdateCheck<T, E extends RepositoryException> {
 
     private String policy;
 
+    private String metadataPolicy;
+
     private RemoteRepository repository;
 
     private RemoteRepository authoritativeRepository;
@@ -147,9 +149,9 @@ public final class UpdateCheck<T, E extends RepositoryException> {
     }
 
     /**
-     * Gets the policy to use for the check.
+     * Gets the policy to use for the data check.
      *
-     * @return The policy to use for the check.
+     * @return The policy to use for the data check.
      * @see org.eclipse.aether.repository.RepositoryPolicy
      */
     public String getPolicy() {
@@ -157,14 +159,38 @@ public final class UpdateCheck<T, E extends RepositoryException> {
     }
 
     /**
+     * Gets the policy to use for the metadata check.
+     *
+     * @return The policy to use for the metadata check.
+     * @see org.eclipse.aether.repository.RepositoryPolicy
+     * @since TBD
+     */
+    public String getMetadataPolicy() {
+        return metadataPolicy;
+    }
+
+    /**
      * Sets the policy to use for the check.
      *
-     * @param policy The policy to use for the check, may be {@code null}.
+     * @param policy The policy to use for the data check, may be {@code null}.
      * @return This object for chaining.
      * @see org.eclipse.aether.repository.RepositoryPolicy
      */
     public UpdateCheck<T, E> setPolicy(String policy) {
         this.policy = policy;
+        return this;
+    }
+
+    /**
+     * Sets the policy to use for the check.
+     *
+     * @param metadataPolicy The policy to use for the metadata check, may be {@code null}.
+     * @return This object for chaining.
+     * @see org.eclipse.aether.repository.RepositoryPolicy
+     * @since TBD
+     */
+    public UpdateCheck<T, E> setMetadataPolicy(String metadataPolicy) {
+        this.metadataPolicy = metadataPolicy;
         return this;
     }
 
@@ -256,6 +282,6 @@ public final class UpdateCheck<T, E extends RepositoryException> {
 
     @Override
     public String toString() {
-        return getPolicy() + ": " + getFile() + " < " + getRepository();
+        return getPolicy() + "/" + getMetadataPolicy() + ": " + getFile() + " < " + getRepository();
     }
 }

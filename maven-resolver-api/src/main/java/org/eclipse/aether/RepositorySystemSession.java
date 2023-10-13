@@ -94,7 +94,7 @@ public interface RepositorySystemSession {
     String getChecksumPolicy();
 
     /**
-     * Gets the global update policy. If set, the global update policy overrides the update policies of the remote
+     * Gets the global data update policy. If set, the global update policy overrides the update policies of the remote
      * repositories being used for resolution.
      *
      * @return The global update policy or {@code null}/empty if not set and the per-repository policies apply.
@@ -103,6 +103,18 @@ public interface RepositorySystemSession {
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
      */
     String getUpdatePolicy();
+
+    /**
+     * Gets the global metadata update policy. If set, the global update policy overrides the update policies of the remote
+     * repositories being used for resolution.
+     *
+     * @return The global update policy or {@code null}/empty if not set and the per-repository policies apply.
+     * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
+     * @see RepositoryPolicy#UPDATE_POLICY_DAILY
+     * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
+     */
+    String getMetadataUpdatePolicy();
 
     /**
      * Gets the local repository used during this session. This is a convenience method for
