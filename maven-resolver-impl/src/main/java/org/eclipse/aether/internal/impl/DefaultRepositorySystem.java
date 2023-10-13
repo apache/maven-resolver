@@ -87,9 +87,9 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
-import org.eclipse.aether.util.graph.visitor.LevelOrderVisitor;
-import org.eclipse.aether.util.graph.visitor.PostorderVisitor;
-import org.eclipse.aether.util.graph.visitor.PreorderVisitor;
+import org.eclipse.aether.util.graph.visitor.LevelOrderDependencyNodeConsumerVisitor;
+import org.eclipse.aether.util.graph.visitor.PostorderDependencyNodeConsumerVisitor;
+import org.eclipse.aether.util.graph.visitor.PreorderDependencyNodeConsumerVisitor;
 
 import static java.util.Objects.requireNonNull;
 
@@ -394,11 +394,11 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
                 ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR);
         switch (strategy) {
             case "preOrder":
-                return new PreorderVisitor(nodeConsumer);
+                return new PreorderDependencyNodeConsumerVisitor(nodeConsumer);
             case "postOrder":
-                return new PostorderVisitor(nodeConsumer);
+                return new PostorderDependencyNodeConsumerVisitor(nodeConsumer);
             case "levelOrder":
-                return new LevelOrderVisitor(nodeConsumer);
+                return new LevelOrderDependencyNodeConsumerVisitor(nodeConsumer);
             default:
                 throw new IllegalArgumentException("Invalid dependency visitor strategy: " + strategy);
         }

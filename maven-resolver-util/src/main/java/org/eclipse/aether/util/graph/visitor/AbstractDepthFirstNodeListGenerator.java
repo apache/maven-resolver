@@ -36,7 +36,10 @@ import org.eclipse.aether.graph.DependencyVisitor;
  * <p>
  * Actual vertex ordering (preorder, inorder, postorder) needs to be defined by subclasses through appropriate
  * implementations for {@link #visitEnter(org.eclipse.aether.graph.DependencyNode)} and
- * {@link #visitLeave(org.eclipse.aether.graph.DependencyNode)}
+ * {@link #visitLeave(org.eclipse.aether.graph.DependencyNode)}.
+ * <p>
+ * Note: inorder vertex ordering is not provided out of the box, as resolver cannot partition (or does not know how to
+ * partition) the node children into "left" and "right" partitions.
  */
 abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor {
 
