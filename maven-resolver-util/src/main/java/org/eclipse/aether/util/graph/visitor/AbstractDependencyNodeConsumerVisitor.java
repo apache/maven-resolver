@@ -20,6 +20,7 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
@@ -27,16 +28,16 @@ import org.eclipse.aether.graph.DependencyVisitor;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Abstract base class for dependency tree traverses.
+ * Abstract base class for dependency tree traverses that feed {@link Consumer<DependencyNode>}.
  *
  * @since TBD
  */
-abstract class AbstractVisitor implements DependencyVisitor {
-    protected final ResettableDependencyNodeConsumer nodeConsumer;
+abstract class AbstractDependencyNodeConsumerVisitor implements DependencyVisitor {
+    protected final Consumer<DependencyNode> nodeConsumer;
 
     private final Map<DependencyNode, Object> visitedNodes;
 
-    protected AbstractVisitor(ResettableDependencyNodeConsumer nodeConsumer) {
+    protected AbstractDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer) {
         this.nodeConsumer = requireNonNull(nodeConsumer);
         this.visitedNodes = new IdentityHashMap<>(512);
     }

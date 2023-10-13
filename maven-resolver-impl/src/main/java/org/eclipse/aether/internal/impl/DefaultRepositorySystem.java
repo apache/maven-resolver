@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -89,7 +90,6 @@ import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.LevelOrderVisitor;
 import org.eclipse.aether.util.graph.visitor.PostorderVisitor;
 import org.eclipse.aether.util.graph.visitor.PreorderVisitor;
-import org.eclipse.aether.util.graph.visitor.ResettableDependencyNodeConsumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -346,18 +346,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         }
 
         final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
-        ResettableDependencyNodeConsumer consumer = new ResettableDependencyNodeConsumer() {
-            @Override
-            public void reset() {
-                dependencyNodes.clear();
-            }
-
-            @Override
-            public void accept(DependencyNode n) {
-                dependencyNodes.add(n);
-            }
-        };
-        DependencyVisitor builder = getDependencyVisitor(session, consumer);
+        DependencyVisitor builder = getDependencyVisitor(session, dependencyNodes::add);
         DependencyFilter filter = request.getFilter();
         DependencyVisitor visitor = (filter != null) ? new FilteringDependencyVisitor(builder, filter) : builder;
         if (result.getRoot() != null) {
@@ -398,7 +387,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
     }
 
     private DependencyVisitor getDependencyVisitor(
-            RepositorySystemSession session, ResettableDependencyNodeConsumer nodeConsumer) {
+            RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
         String strategy = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR,
