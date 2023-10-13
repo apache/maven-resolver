@@ -74,11 +74,9 @@ public final class RepositoryPolicy {
     }
 
     /**
-     * Legacy constructor that handles update policy and metadata update policy same (as before).
-     *
-     * @deprecated Use any other constructor.
+     * Creates a new policy with the specified settings (uses same update policy for data and metadata, retains old
+     * resolver behaviour).
      */
-    @Deprecated
     public RepositoryPolicy(boolean enabled, String updatePolicy, String checksumPolicy) {
         this(enabled, updatePolicy, updatePolicy, checksumPolicy);
     }
