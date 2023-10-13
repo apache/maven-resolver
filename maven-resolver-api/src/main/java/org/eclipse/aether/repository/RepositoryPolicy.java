@@ -86,9 +86,9 @@ public final class RepositoryPolicy {
      *
      * @param enabled A flag whether the associated repository should be accessed or not.
      * @param updatePolicy The update interval after which locally cached data from the repository is considered stale
-     *            and should be refetched, may be {@code null}.
+     *            and should be re-fetched, may be {@code null}.
      * @param metadataUpdatePolicy The update interval after which locally cached metadata from the repository is considered stale
-     *            and should be refetched, may be {@code null}.
+     *            and should be re-fetched, may be {@code null}.
      * @param checksumPolicy The way checksum verification should be handled, may be {@code null}.
      * @since TBD
      */
@@ -138,12 +138,10 @@ public final class RepositoryPolicy {
 
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder(256);
-        buffer.append("enabled=").append(isEnabled());
-        buffer.append(", checksums=").append(getChecksumPolicy());
-        buffer.append(", updates=").append(getUpdatePolicy());
-        buffer.append(", metadataUpdates=").append(getMetadataUpdatePolicy());
-        return buffer.toString();
+        return "enabled=" + isEnabled()
+                + ", checksums=" + getChecksumPolicy()
+                + ", updates=" + getUpdatePolicy()
+                + ", metadataUpdates=" + getMetadataUpdatePolicy();
     }
 
     @Override
