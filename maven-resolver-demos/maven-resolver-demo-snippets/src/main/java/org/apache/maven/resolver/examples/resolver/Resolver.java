@@ -42,7 +42,8 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
-import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
+import org.eclipse.aether.util.graph.visitor.NodeListGenerator;
+import org.eclipse.aether.util.graph.visitor.PreorderDependencyNodeConsumerVisitor;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 
 /**
@@ -89,8 +90,8 @@ public class Resolver {
         System.out.println("Tree:");
         System.out.println(dump);
 
-        PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
-        rootNode.accept(nlg);
+        NodeListGenerator nlg = new NodeListGenerator();
+        rootNode.accept(new PreorderDependencyNodeConsumerVisitor(nlg));
 
         return new ResolverResult(rootNode, nlg.getFiles(), nlg.getClassPath());
     }

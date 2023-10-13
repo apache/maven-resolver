@@ -296,6 +296,23 @@ public final class ConfigurationProperties {
      */
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
 
+    /**
+     * A flag indicating which visitor should be used to "flatten" the dependency graph into list. Default is
+     * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
+     *
+     * @see #DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR
+     * @since TBD
+     */
+    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR =
+            PREFIX_AETHER + "system.resolveDependencies.visitor";
+
+    /**
+     * The default visitor strategy "preOrder".
+     *
+     * @since TBD
+     */
+    public static final String DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR = "preOrder";
+
     private ConfigurationProperties() {
         // hide constructor
     }

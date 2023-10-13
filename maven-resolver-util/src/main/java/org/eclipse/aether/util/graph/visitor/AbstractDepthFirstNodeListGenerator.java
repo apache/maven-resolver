@@ -21,7 +21,6 @@ package org.eclipse.aether.util.graph.visitor;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,13 +30,22 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 
 /**
- * Abstract base class for depth first dependency tree traversers. Subclasses of this visitor will visit each node
+ * Abstract base class for depth first dependency tree traverses. Subclasses of this visitor will visit each node
  * exactly once regardless how many paths within the dependency graph lead to the node such that the resulting node
  * sequence is free of duplicates.
  * <p>
  * Actual vertex ordering (preorder, inorder, postorder) needs to be defined by subclasses through appropriate
  * implementations for {@link #visitEnter(org.eclipse.aether.graph.DependencyNode)} and
- * {@link #visitLeave(org.eclipse.aether.graph.DependencyNode)}
+ * {@link #visitLeave(org.eclipse.aether.graph.DependencyNode)}.
+ * <p>
+ * Note: inorder vertex ordering is not provided out of the box, as resolver cannot partition (or does not know how to
+ * partition) the node children into "left" and "right" partitions.
+ * <p>
+ * The newer classes {@link AbstractDependencyNodeConsumerVisitor} and {@link NodeListGenerator} offer
+ * similar capabilities but are pluggable. Use of this class, while not deprecated, is discouraged. This class
+ * is not used in Resolver and is kept only for backward compatibility reasons.
+ *
+ * @see AbstractDependencyNodeConsumerVisitor
  */
 abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor {
 
@@ -66,18 +74,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The list of dependencies, never {@code null}.
      */
     public List<Dependency> getDependencies(boolean includeUnresolved) {
-        List<Dependency> dependencies = new ArrayList<>(getNodes().size());
-
-        for (DependencyNode node : getNodes()) {
-            Dependency dependency = node.getDependency();
-            if (dependency != null) {
-                if (includeUnresolved || dependency.getArtifact().getFile() != null) {
-                    dependencies.add(dependency);
-                }
-            }
-        }
-
-        return dependencies;
+        return NodeListGenerator.getDependencies(getNodes(), includeUnresolved);
     }
 
     /**
@@ -87,18 +84,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The list of artifacts, never {@code null}.
      */
     public List<Artifact> getArtifacts(boolean includeUnresolved) {
-        List<Artifact> artifacts = new ArrayList<>(getNodes().size());
-
-        for (DependencyNode node : getNodes()) {
-            if (node.getDependency() != null) {
-                Artifact artifact = node.getDependency().getArtifact();
-                if (includeUnresolved || artifact.getFile() != null) {
-                    artifacts.add(artifact);
-                }
-            }
-        }
-
-        return artifacts;
+        return NodeListGenerator.getArtifacts(getNodes(), includeUnresolved);
     }
 
     /**
@@ -107,18 +93,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The list of artifact files, never {@code null}.
      */
     public List<File> getFiles() {
-        List<File> files = new ArrayList<>(getNodes().size());
-
-        for (DependencyNode node : getNodes()) {
-            if (node.getDependency() != null) {
-                File file = node.getDependency().getArtifact().getFile();
-                if (file != null) {
-                    files.add(file);
-                }
-            }
-        }
-
-        return files;
+        return NodeListGenerator.getFiles(getNodes());
     }
 
     /**
@@ -128,22 +103,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * @return The class path, using the platform-specific path separator, never {@code null}.
      */
     public String getClassPath() {
-        StringBuilder buffer = new StringBuilder(1024);
-
-        for (Iterator<DependencyNode> it = getNodes().iterator(); it.hasNext(); ) {
-            DependencyNode node = it.next();
-            if (node.getDependency() != null) {
-                Artifact artifact = node.getDependency().getArtifact();
-                if (artifact.getFile() != null) {
-                    buffer.append(artifact.getFile().getAbsolutePath());
-                    if (it.hasNext()) {
-                        buffer.append(File.pathSeparatorChar);
-                    }
-                }
-            }
-        }
-
-        return buffer.toString();
+        return NodeListGenerator.getClassPath(getNodes());
     }
 
     /**

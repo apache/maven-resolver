@@ -28,6 +28,7 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
@@ -144,6 +145,17 @@ public interface RepositorySystem {
      */
     DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)
             throws DependencyResolutionException;
+
+    /**
+     * Flattens the provided graph as {@link DependencyNode} into a {@link List<DependencyNode>} according to session
+     * configuration.
+     *
+     * @param session The repository session, must not be {@code null}.
+     * @param root The dependency node root of the graph, must not be {@code null}.
+     * @return The flattened list of dependency nodes, never {@code null}.
+     * @since TBD
+     */
+    List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root);
 
     /**
      * Resolves the path for an artifact. The artifact will be downloaded to the local repository if necessary. An

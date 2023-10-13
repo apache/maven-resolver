@@ -16,43 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl;
+package org.eclipse.aether.util.graph.visitor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Consumer;
 
-import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.graph.DependencyVisitor;
-import org.eclipse.aether.resolution.ArtifactRequest;
 
 /**
+ * Processes dependency graph by traversing the graph in preorder. This visitor visits each node exactly once
+ * regardless how many paths within the dependency graph lead to the node such that the resulting node sequence is
+ * free of duplicates.
+ *
+ * @since TBD
  */
-class ArtifactRequestBuilder implements DependencyVisitor {
+public final class PreorderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
-    private final RequestTrace trace;
+    public static final String NAME = "preOrder";
 
-    private final List<ArtifactRequest> requests;
-
-    ArtifactRequestBuilder(RequestTrace trace) {
-        this.trace = trace;
-        this.requests = new ArrayList<>();
+    /**
+     * Creates a new preorder list generator.
+     */
+    public PreorderDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer) {
+        super(nodeConsumer);
     }
 
-    public List<ArtifactRequest> getRequests() {
-        return requests;
-    }
-
+    @Override
     public boolean visitEnter(DependencyNode node) {
-        if (node.getDependency() != null) {
-            ArtifactRequest request = new ArtifactRequest(node);
-            request.setTrace(trace);
-            requests.add(request);
+        if (!setVisited(node)) {
+            return false;
         }
-
+        nodeConsumer.accept(node);
         return true;
     }
 
+    @Override
     public boolean visitLeave(DependencyNode node) {
         return true;
     }

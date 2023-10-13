@@ -69,7 +69,7 @@ public class DependencyGraphDumper implements DependencyVisitor {
         Artifact a = node.getArtifact();
         Dependency d = node.getDependency();
         buffer.append(a);
-        if (d != null && d.getScope().length() > 0) {
+        if (d != null && !d.getScope().isEmpty()) {
             buffer.append(" [").append(d.getScope());
             if (d.isOptional()) {
                 buffer.append(", optional");
@@ -82,7 +82,7 @@ public class DependencyGraphDumper implements DependencyVisitor {
         }
 
         premanaged = DependencyManagerUtils.getPremanagedScope(node);
-        if (premanaged != null && !premanaged.equals(d.getScope())) {
+        if (premanaged != null && d != null && !premanaged.equals(d.getScope())) {
             buffer.append(" (scope managed from ").append(premanaged).append(")");
         }
         DependencyNode winner = (DependencyNode) node.getData().get(ConflictResolver.NODE_DATA_WINNER);
