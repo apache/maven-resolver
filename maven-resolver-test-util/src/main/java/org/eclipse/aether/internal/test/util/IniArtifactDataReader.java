@@ -118,7 +118,7 @@ class IniArtifactDataReader {
                         String name = line.substring(1, line.length() - 1);
                         name = name.replace("-", "").toUpperCase(Locale.ENGLISH);
                         state = State.valueOf(name);
-                        sections.put(state, new ArrayList<String>());
+                        sections.put(state, new ArrayList<>());
                     } catch (IllegalArgumentException e) {
                         throw new IOException("unknown section: " + line);
                     }

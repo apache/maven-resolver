@@ -36,8 +36,9 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * <em>Note:</em> Such repositories are read-only and uploads to them are generally not supported.
  */
-@Named("classpath")
+@Named(ClasspathTransporterFactory.NAME)
 public final class ClasspathTransporterFactory implements TransporterFactory {
+    public static final String NAME = "classpath";
 
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration

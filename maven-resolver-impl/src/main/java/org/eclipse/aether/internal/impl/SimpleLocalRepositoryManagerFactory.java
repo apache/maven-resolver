@@ -36,12 +36,14 @@ import static java.util.Objects.requireNonNull;
  * Creates local repository managers for repository type {@code "simple"}.
  */
 @Singleton
-@Named("simple")
+@Named(SimpleLocalRepositoryManagerFactory.NAME)
 public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManagerFactory, Service {
+    public static final String NAME = "simple";
     private float priority;
 
     private LocalPathComposer localPathComposer;
 
+    @Deprecated
     public SimpleLocalRepositoryManagerFactory() {
         // enable no-arg constructor
         this.localPathComposer = new DefaultLocalPathComposer(); // maven UTs needs this

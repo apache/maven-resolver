@@ -79,7 +79,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate implement
     }
 
     @Inject
-    DfDependencyCollector(
+    public DfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
             VersionRangeResolver versionRangeResolver) {

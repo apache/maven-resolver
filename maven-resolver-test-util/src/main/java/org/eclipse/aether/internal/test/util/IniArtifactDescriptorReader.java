@@ -100,6 +100,7 @@ public class IniArtifactDescriptorReader {
                 ArtifactDescription data = reader.parse(resourceName);
                 if (data.getRelocation() != null) {
                     result.addRelocation(artifact);
+                    result.setArtifact(data.getRelocation());
                     artifact = data.getRelocation();
                 } else {
                     result.setArtifact(artifact);

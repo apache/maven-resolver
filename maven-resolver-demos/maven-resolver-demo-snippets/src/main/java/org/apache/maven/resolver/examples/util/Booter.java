@@ -36,6 +36,8 @@ import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 public class Booter {
     public static final String SERVICE_LOCATOR = "serviceLocator";
 
+    public static final String SUPPLIER = "supplier";
+
     public static final String GUICE = "guice";
 
     public static final String SISU = "sisu";
@@ -44,7 +46,7 @@ public class Booter {
 
     public static String selectFactory(String[] args) {
         if (args == null || args.length == 0) {
-            return SERVICE_LOCATOR;
+            return SUPPLIER;
         } else {
             return args[0];
         }
@@ -54,6 +56,9 @@ public class Booter {
         switch (factory) {
             case SERVICE_LOCATOR:
                 return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
+            case SUPPLIER:
+                return org.apache.maven.resolver.examples.supplier.SupplierRepositorySystemFactory
+                        .newRepositorySystem();
             case GUICE:
                 return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
             case SISU:

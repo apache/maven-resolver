@@ -46,12 +46,13 @@ public class DefaultRepositoryEventDispatcher implements RepositoryEventDispatch
 
     private Collection<RepositoryListener> listeners = new ArrayList<>();
 
+    @Deprecated
     public DefaultRepositoryEventDispatcher() {
         // enables no-arg constructor
     }
 
     @Inject
-    DefaultRepositoryEventDispatcher(Set<RepositoryListener> listeners) {
+    public DefaultRepositoryEventDispatcher(Set<RepositoryListener> listeners) {
         setRepositoryListeners(listeners);
     }
 

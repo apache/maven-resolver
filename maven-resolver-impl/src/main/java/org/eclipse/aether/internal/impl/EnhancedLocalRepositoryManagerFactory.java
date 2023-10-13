@@ -41,8 +41,9 @@ import static java.util.Objects.requireNonNull;
  * emulating physically separated artifact caches per remote repository.
  */
 @Singleton
-@Named("enhanced")
+@Named(EnhancedLocalRepositoryManagerFactory.NAME)
 public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryManagerFactory, Service {
+    public static final String NAME = "enhanced";
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
     private static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
@@ -55,6 +56,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     private LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
+    @Deprecated
     public EnhancedLocalRepositoryManagerFactory() {
         // no arg ctor for ServiceLocator
     }

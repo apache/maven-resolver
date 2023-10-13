@@ -240,6 +240,11 @@ public class TestFileUtils {
         writeBytes(file, content.getBytes(StandardCharsets.UTF_8), 1);
     }
 
+    public static void writeString(File file, String content, long timestamp) throws IOException {
+        writeBytes(file, content.getBytes(StandardCharsets.UTF_8), 1);
+        file.setLastModified(timestamp);
+    }
+
     public static void readProps(File file, Properties props) throws IOException {
         FileInputStream fis = null;
         try {

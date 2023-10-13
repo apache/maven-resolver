@@ -104,11 +104,11 @@ import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
@@ -128,7 +128,10 @@ import org.slf4j.ILoggerFactory;
  *
  * @noextend This class must not be extended by clients and will eventually be marked {@code final} without prior
  * notice.
+ * @deprecated This class is about to be dropped in 2.0.0 release. Use SISU or use maven-resolver-supplier to
+ * get Resolver instances.
  */
+@Deprecated
 public class AetherModule extends AbstractModule {
 
     /**

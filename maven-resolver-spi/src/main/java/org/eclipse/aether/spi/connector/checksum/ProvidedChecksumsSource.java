@@ -29,7 +29,9 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
  * this component are of kind {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#PROVIDED}.
  *
  * @since 1.8.0
+ * @deprecated This interface is not used anymore, use {@link org.eclipse.aether.spi.checksums.ProvidedChecksumsSource}.
  */
+@Deprecated
 public interface ProvidedChecksumsSource {
     /**
      * May return the provided checksums (for given artifact transfer) from source other than remote repository, or

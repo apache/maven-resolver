@@ -36,4 +36,9 @@ public class DfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
     protected String getTransitiveDepsUseRangesDirtyTreeResource() {
         return "transitiveDepsUseRangesDirtyTreeResult_DF.txt";
     }
+
+    @Override
+    protected String getTransitiveDepsUseRangesAndRelocationDirtyTreeResource() {
+        return "transitiveDepsUseRangesAndRelocationDirtyTreeResult_DF.txt";
+    }
 }

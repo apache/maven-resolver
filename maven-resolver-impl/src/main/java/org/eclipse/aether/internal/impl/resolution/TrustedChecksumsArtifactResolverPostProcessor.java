@@ -41,8 +41,6 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -92,8 +90,6 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
     private static final String CHECKSUM_ALGORITHMS_CACHE_KEY =
             TrustedChecksumsArtifactResolverPostProcessor.class.getName() + ".checksumAlgorithms";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrustedChecksumsArtifactResolverPostProcessor.class);
-
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
     private final Map<String, TrustedChecksumsSource> trustedChecksumsSources;
@@ -115,7 +111,9 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                         CHECKSUM_ALGORITHMS_CACHE_KEY,
                         () -> checksumAlgorithmFactorySelector.selectList(
                                 ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                                        session, DEFAULT_CHECKSUM_ALGORITHMS, CONF_NAME_CHECKSUM_ALGORITHMS))));
+                                        session,
+                                        DEFAULT_CHECKSUM_ALGORITHMS,
+                                        configPropKey(CONF_NAME_CHECKSUM_ALGORITHMS)))));
 
         final boolean failIfMissing = ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_FAIL_IF_MISSING));
         final boolean record = ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_RECORD));
