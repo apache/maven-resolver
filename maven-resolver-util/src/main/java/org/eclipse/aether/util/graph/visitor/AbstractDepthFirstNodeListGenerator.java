@@ -41,8 +41,9 @@ import org.eclipse.aether.graph.DependencyVisitor;
  * Note: inorder vertex ordering is not provided out of the box, as resolver cannot partition (or does not know how to
  * partition) the node children into "left" and "right" partitions.
  * <p>
- * The newer class {@link AbstractDependencyNodeConsumerVisitor} and reusable {@link NodeListGenerator} offers
- * similar capabilities but are pluggable. Use of this class, while not deprecated, is discouraged.
+ * The newer classes {@link AbstractDependencyNodeConsumerVisitor} and {@link NodeListGenerator} offer
+ * similar capabilities but are pluggable. Use of this class, while not deprecated, is discouraged. This class
+ * is not used in Resolver and is kept only for backward compatibility reasons.
  *
  * @see AbstractDependencyNodeConsumerVisitor
  */
