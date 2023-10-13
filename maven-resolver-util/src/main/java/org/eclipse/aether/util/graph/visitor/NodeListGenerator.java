@@ -107,24 +107,10 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
         return getClassPath(getNodes());
     }
 
-    /**
-     * Gets the list of dependency nodes that was generated during the graph traversal and have {@code non-null}
-     * {@link DependencyNode#getDependency()}.
-     *
-     * @param nodes The collection of dependency nodes, never {@code null}.
-     * @return The list of dependency nodes having dependency, never {@code null}.
-     */
     static List<DependencyNode> getNodesWithDependencies(List<DependencyNode> nodes) {
         return nodes.stream().filter(d -> d.getDependency() != null).collect(toList());
     }
 
-    /**
-     * Gets the dependencies seen during the graph traversal.
-     *
-     * @param nodes The collection of dependency nodes, never {@code null}.
-     * @param includeUnresolved Whether unresolved dependencies shall be included in the result or not.
-     * @return The list of dependencies, never {@code null}.
-     */
     static List<Dependency> getDependencies(List<DependencyNode> nodes, boolean includeUnresolved) {
         List<Dependency> dependencies = new ArrayList<>(nodes.size());
         for (DependencyNode node : getNodesWithDependencies(nodes)) {
@@ -136,13 +122,6 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
         return dependencies;
     }
 
-    /**
-     * Gets the artifacts associated with the list of dependency nodes generated during the graph traversal.
-     *
-     * @param nodes The collection of dependency nodes, never {@code null}.
-     * @param includeUnresolved Whether unresolved artifacts shall be included in the result or not.
-     * @return The list of artifacts, never {@code null}.
-     */
     static List<Artifact> getArtifacts(List<DependencyNode> nodes, boolean includeUnresolved) {
         List<Artifact> artifacts = new ArrayList<>(nodes.size());
         for (DependencyNode node : getNodesWithDependencies(nodes)) {
@@ -155,12 +134,6 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
         return artifacts;
     }
 
-    /**
-     * Gets the files of resolved artifacts seen during the graph traversal.
-     *
-     * @param nodes The collection of dependency nodes, never {@code null}.
-     * @return The list of artifact files, never {@code null}.
-     */
     static List<File> getFiles(List<DependencyNode> nodes) {
         List<File> files = new ArrayList<>(nodes.size());
         for (DependencyNode node : getNodesWithDependencies(nodes)) {
@@ -172,13 +145,6 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
         return files;
     }
 
-    /**
-     * Gets a class path by concatenating the artifact files of the visited dependency nodes. Nodes with unresolved
-     * artifacts are automatically skipped.
-     *
-     * @param nodes The collection of dependency nodes, never {@code null}.
-     * @return The class path, using the platform-specific path separator, never {@code null}.
-     */
     static String getClassPath(List<DependencyNode> nodes) {
         StringBuilder buffer = new StringBuilder(1024);
         for (Iterator<DependencyNode> it = getNodesWithDependencies(nodes).iterator(); it.hasNext(); ) {
