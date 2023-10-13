@@ -90,10 +90,10 @@ public class Resolver {
         System.out.println("Tree:");
         System.out.println(dump);
 
-        NodeListGenerator generator = new NodeListGenerator();
-        rootNode.accept(new PreorderDependencyNodeConsumerVisitor(generator));
+        NodeListGenerator nlg = new NodeListGenerator();
+        rootNode.accept(new PreorderDependencyNodeConsumerVisitor(nlg));
 
-        return new ResolverResult(rootNode, generator.getFiles(), generator.getClassPath());
+        return new ResolverResult(rootNode, nlg.getFiles(), nlg.getClassPath());
     }
 
     public void install(Artifact artifact, Artifact pom) throws InstallationException {
