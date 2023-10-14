@@ -301,6 +301,12 @@
                     <exclude>org.eclipse.aether.spi.log.LoggerFactory</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLogger</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLoggerFactory</exclude>
+                    <!-- MRESOLVER-409 Dropping deprecated bits/ctors -->
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource</exclude>
+                    <exclude>org.eclipse.aether.transfer.ChecksumFailureException#ChecksumFailureException(java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.transfer.TransferResource#TransferResource(java.lang.String,java.lang.String,java.io.File,org.eclipse.aether.RequestTrace)</exclude>
+                    <exclude>org.eclipse.aether.util.repository.DefaultMirrorSelector#add(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.util.StringUtils</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -333,6 +339,12 @@
                     <exclude>org.eclipse.aether.spi.log.LoggerFactory</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLogger</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLoggerFactory</exclude>
+                    <!-- MRESOLVER-409 Dropping deprecated bits/ctors -->
+                    <exclude>org.eclipse.aether.transfer.ChecksumFailureException#ChecksumFailureException(java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.transfer.TransferResource#TransferResource(java.lang.String,java.lang.String,java.io.File,org.eclipse.aether.RequestTrace)</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource</exclude>
+                    <exclude>org.eclipse.aether.util.repository.DefaultMirrorSelector#add(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.util.StringUtils</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
