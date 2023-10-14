@@ -22,6 +22,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.impl.ArtifactResolver;
+import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.impl.Deployer;
+import org.eclipse.aether.impl.Installer;
+import org.eclipse.aether.impl.LocalRepositoryProvider;
+import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.StubArtifactDescriptorReader;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
@@ -34,6 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 public class DefaultRepositorySystemTest {
 
@@ -43,9 +51,20 @@ public class DefaultRepositorySystemTest {
 
     @Before
     public void init() {
-        DefaultRemoteRepositoryManager remoteRepoManager = new DefaultRemoteRepositoryManager();
-        system = new DefaultRepositorySystem();
-        system.setRemoteRepositoryManager(remoteRepoManager);
+        system = new DefaultRepositorySystem(
+                new StubVersionResolver(),
+                new StubVersionRangeResolver(),
+                mock(ArtifactResolver.class),
+                mock(MetadataResolver.class),
+                new StubArtifactDescriptorReader(),
+                mock(DependencyCollector.class),
+                mock(Installer.class),
+                mock(Deployer.class),
+                mock(LocalRepositoryProvider.class),
+                new StubSyncContextFactory(),
+                new DefaultRemoteRepositoryManager(
+                        new DefaultUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider()),
+                new DefaultRepositorySystemLifecycle());
         session = TestUtils.newSession();
     }
 

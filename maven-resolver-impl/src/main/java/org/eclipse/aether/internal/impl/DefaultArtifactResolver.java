@@ -68,8 +68,6 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.ArtifactFilteredOutException;
@@ -88,7 +86,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultArtifactResolver implements ArtifactResolver, Service {
+public class DefaultArtifactResolver implements ArtifactResolver {
 
     /**
      * Configuration to enable "snapshot normalization", downloaded snapshots from remote with timestamped file names
@@ -105,30 +103,25 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultArtifactResolver.class);
 
-    private FileProcessor fileProcessor;
+    private final FileProcessor fileProcessor;
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private VersionResolver versionResolver;
+    private final VersionResolver versionResolver;
 
-    private UpdateCheckManager updateCheckManager;
+    private final UpdateCheckManager updateCheckManager;
 
-    private RepositoryConnectorProvider repositoryConnectorProvider;
+    private final RepositoryConnectorProvider repositoryConnectorProvider;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private OfflineController offlineController;
+    private final OfflineController offlineController;
 
-    private Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors;
+    private final Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors;
 
-    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
-
-    @Deprecated
-    public DefaultArtifactResolver() {
-        // enables default constructor
-    }
+    private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
@@ -143,89 +136,24 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             OfflineController offlineController,
             Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        setFileProcessor(fileProcessor);
-        setRepositoryEventDispatcher(repositoryEventDispatcher);
-        setVersionResolver(versionResolver);
-        setUpdateCheckManager(updateCheckManager);
-        setRepositoryConnectorProvider(repositoryConnectorProvider);
-        setRemoteRepositoryManager(remoteRepositoryManager);
-        setSyncContextFactory(syncContextFactory);
-        setOfflineController(offlineController);
-        setArtifactResolverPostProcessors(artifactResolverPostProcessors);
-        setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setFileProcessor(locator.getService(FileProcessor.class));
-        setRepositoryEventDispatcher(locator.getService(RepositoryEventDispatcher.class));
-        setVersionResolver(locator.getService(VersionResolver.class));
-        setUpdateCheckManager(locator.getService(UpdateCheckManager.class));
-        setRepositoryConnectorProvider(locator.getService(RepositoryConnectorProvider.class));
-        setRemoteRepositoryManager(locator.getService(RemoteRepositoryManager.class));
-        setSyncContextFactory(locator.getService(SyncContextFactory.class));
-        setOfflineController(locator.getService(OfflineController.class));
-        setArtifactResolverPostProcessors(Collections.emptyMap());
-        setRemoteRepositoryFilterManager(locator.getService(RemoteRepositoryFilterManager.class));
-    }
-
-    public DefaultArtifactResolver setFileProcessor(FileProcessor fileProcessor) {
         this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setRepositoryEventDispatcher(RepositoryEventDispatcher repositoryEventDispatcher) {
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setVersionResolver(VersionResolver versionResolver) {
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setUpdateCheckManager(UpdateCheckManager updateCheckManager) {
         this.updateCheckManager = requireNonNull(updateCheckManager, "update check manager cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setRepositoryConnectorProvider(
-            RepositoryConnectorProvider repositoryConnectorProvider) {
         this.repositoryConnectorProvider =
                 requireNonNull(repositoryConnectorProvider, "repository connector provider cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setRemoteRepositoryManager(RemoteRepositoryManager remoteRepositoryManager) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setSyncContextFactory(SyncContextFactory syncContextFactory) {
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setOfflineController(OfflineController offlineController) {
         this.offlineController = requireNonNull(offlineController, "offline controller cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setArtifactResolverPostProcessors(
-            Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors) {
         this.artifactResolverPostProcessors =
                 requireNonNull(artifactResolverPostProcessors, "artifact resolver post-processors cannot be null");
-        return this;
-    }
-
-    public DefaultArtifactResolver setRemoteRepositoryFilterManager(
-            RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
         this.remoteRepositoryFilterManager =
                 requireNonNull(remoteRepositoryFilterManager, "remote repository filter manager cannot be null");
-        return this;
     }
 
+    @Override
     public ArtifactResult resolveArtifact(RepositorySystemSession session, ArtifactRequest request)
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
@@ -234,6 +162,7 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
         return resolveArtifacts(session, Collections.singleton(request)).get(0);
     }
 
+    @Override
     public List<ArtifactResult> resolveArtifacts(
             RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException {
@@ -476,13 +405,13 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             return true;
         }
         if (lar.getFile() != null) {
+            // resolution of version range found locally installed artifact
             if (vr.getRepository() instanceof LocalRepository) {
                 // resolution of (snapshot) version found locally installed artifact
                 return true;
-            } else if (vr.getRepository() == null
-                    && lar.getRequest().getRepositories().isEmpty()) {
-                // resolution of version range found locally installed artifact
-                return true;
+            } else {
+                return vr.getRepository() == null
+                        && lar.getRequest().getRepositories().isEmpty();
             }
         }
         return false;

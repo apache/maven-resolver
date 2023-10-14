@@ -24,6 +24,7 @@ import javax.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -32,8 +33,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,40 +43,18 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public final class DefaultTransporterProvider implements TransporterProvider, Service {
+public final class DefaultTransporterProvider implements TransporterProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransporterProvider.class);
 
-    private Collection<TransporterFactory> factories = new ArrayList<>();
-
-    @Deprecated
-    public DefaultTransporterProvider() {
-        // enables default constructor
-    }
+    private final Collection<TransporterFactory> factories;
 
     @Inject
     public DefaultTransporterProvider(Set<TransporterFactory> transporterFactories) {
-        setTransporterFactories(transporterFactories);
+        this.factories = Collections.unmodifiableCollection(transporterFactories);
     }
 
-    public void initService(ServiceLocator locator) {
-        setTransporterFactories(locator.getServices(TransporterFactory.class));
-    }
-
-    public DefaultTransporterProvider addTransporterFactory(TransporterFactory factory) {
-        factories.add(requireNonNull(factory, "transporter factory cannot be null"));
-        return this;
-    }
-
-    public DefaultTransporterProvider setTransporterFactories(Collection<TransporterFactory> factories) {
-        if (factories == null) {
-            this.factories = new ArrayList<>();
-        } else {
-            this.factories = factories;
-        }
-        return this;
-    }
-
+    @Override
     public Transporter newTransporter(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");

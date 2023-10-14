@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Collections;
 import java.util.Locale;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -37,7 +38,7 @@ public class DefaultRepositoryEventDispatcherTest {
 
     @Test
     public void testDispatchHandlesAllEventTypes() {
-        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher();
+        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher(Collections.emptySet());
 
         ListenerHandler handler = new ListenerHandler();
 

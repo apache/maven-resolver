@@ -39,10 +39,7 @@ public class DefaultUpdatePolicyAnalyzer implements UpdatePolicyAnalyzer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUpdatePolicyAnalyzer.class);
 
-    public DefaultUpdatePolicyAnalyzer() {
-        // enables default constructor
-    }
-
+    @Override
     public String getEffectiveUpdatePolicy(RepositorySystemSession session, String policy1, String policy2) {
         requireNonNull(session, "session cannot be null");
         return ordinalOfUpdatePolicy(policy1) < ordinalOfUpdatePolicy(policy2) ? policy1 : policy2;
@@ -62,6 +59,7 @@ public class DefaultUpdatePolicyAnalyzer implements UpdatePolicyAnalyzer {
         }
     }
 
+    @Override
     public boolean isUpdatedRequired(RepositorySystemSession session, long lastModified, String policy) {
         requireNonNull(session, "session cannot be null");
         boolean checkForUpdates;

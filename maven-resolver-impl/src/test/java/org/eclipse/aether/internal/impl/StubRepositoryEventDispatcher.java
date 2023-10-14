@@ -28,6 +28,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class StubRepositoryEventDispatcher implements RepositoryEventDispatcher {
 
+    @Override
     public void dispatch(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         RepositoryListener listener = event.getSession().getRepositoryListener();

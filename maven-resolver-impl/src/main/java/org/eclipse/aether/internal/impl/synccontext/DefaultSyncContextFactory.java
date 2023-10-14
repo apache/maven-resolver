@@ -26,8 +26,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 import static java.util.Objects.requireNonNull;
@@ -40,10 +38,10 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public final class DefaultSyncContextFactory implements SyncContextFactory, Service {
+public final class DefaultSyncContextFactory implements SyncContextFactory {
     private static final String ADAPTER_KEY = DefaultSyncContextFactory.class.getName() + ".adapter";
 
-    private NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory;
+    private final NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory;
 
     /**
      * Constructor used with DI, where factories are injected and selected based on key.
@@ -51,21 +49,6 @@ public final class DefaultSyncContextFactory implements SyncContextFactory, Serv
     @Inject
     public DefaultSyncContextFactory(final NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory) {
         this.namedLockFactoryAdapterFactory = requireNonNull(namedLockFactoryAdapterFactory);
-    }
-
-    /**
-     * ServiceLocator default ctor.
-     *
-     * @deprecated Will be removed once ServiceLocator removed.
-     */
-    @Deprecated
-    public DefaultSyncContextFactory() {
-        // ctor for ServiceLoader
-    }
-
-    @Override
-    public void initService(final ServiceLocator locator) {
-        this.namedLockFactoryAdapterFactory = requireNonNull(locator.getService(NamedLockFactoryAdapterFactory.class));
     }
 
     @Override

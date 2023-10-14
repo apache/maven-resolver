@@ -42,10 +42,7 @@ public final class DefaultChecksumPolicyProvider implements ChecksumPolicyProvid
 
     private static final int ORDINAL_FAIL = 2;
 
-    public DefaultChecksumPolicyProvider() {
-        // enables default constructor
-    }
-
+    @Override
     public ChecksumPolicy newChecksumPolicy(
             RepositorySystemSession session, RemoteRepository repository, TransferResource resource, String policy) {
         requireNonNull(session, "session cannot be null");
@@ -65,6 +62,7 @@ public final class DefaultChecksumPolicyProvider implements ChecksumPolicyProvid
         }
     }
 
+    @Override
     public String getEffectiveChecksumPolicy(RepositorySystemSession session, String policy1, String policy2) {
         requireNonNull(session, "session cannot be null");
         validatePolicy("policy1", policy1);

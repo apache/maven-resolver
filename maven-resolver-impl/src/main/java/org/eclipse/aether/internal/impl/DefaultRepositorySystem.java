@@ -82,8 +82,6 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
@@ -98,38 +96,32 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultRepositorySystem implements RepositorySystem, Service {
+public class DefaultRepositorySystem implements RepositorySystem {
     private final AtomicBoolean shutdown;
 
-    private VersionResolver versionResolver;
+    private final VersionResolver versionResolver;
 
-    private VersionRangeResolver versionRangeResolver;
+    private final VersionRangeResolver versionRangeResolver;
 
-    private ArtifactResolver artifactResolver;
+    private final ArtifactResolver artifactResolver;
 
-    private MetadataResolver metadataResolver;
+    private final MetadataResolver metadataResolver;
 
-    private ArtifactDescriptorReader artifactDescriptorReader;
+    private final ArtifactDescriptorReader artifactDescriptorReader;
 
-    private DependencyCollector dependencyCollector;
+    private final DependencyCollector dependencyCollector;
 
-    private Installer installer;
+    private final Installer installer;
 
-    private Deployer deployer;
+    private final Deployer deployer;
 
-    private LocalRepositoryProvider localRepositoryProvider;
+    private final LocalRepositoryProvider localRepositoryProvider;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private RepositorySystemLifecycle repositorySystemLifecycle;
-
-    @Deprecated
-    public DefaultRepositorySystem() {
-        // enables default constructor
-        this.shutdown = new AtomicBoolean(false);
-    }
+    private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
@@ -147,98 +139,22 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
             RemoteRepositoryManager remoteRepositoryManager,
             RepositorySystemLifecycle repositorySystemLifecycle) {
         this.shutdown = new AtomicBoolean(false);
-        setVersionResolver(versionResolver);
-        setVersionRangeResolver(versionRangeResolver);
-        setArtifactResolver(artifactResolver);
-        setMetadataResolver(metadataResolver);
-        setArtifactDescriptorReader(artifactDescriptorReader);
-        setDependencyCollector(dependencyCollector);
-        setInstaller(installer);
-        setDeployer(deployer);
-        setLocalRepositoryProvider(localRepositoryProvider);
-        setSyncContextFactory(syncContextFactory);
-        setRemoteRepositoryManager(remoteRepositoryManager);
-        setRepositorySystemLifecycle(repositorySystemLifecycle);
-    }
-
-    @Override
-    public void initService(ServiceLocator locator) {
-        setVersionResolver(locator.getService(VersionResolver.class));
-        setVersionRangeResolver(locator.getService(VersionRangeResolver.class));
-        setArtifactResolver(locator.getService(ArtifactResolver.class));
-        setMetadataResolver(locator.getService(MetadataResolver.class));
-        setArtifactDescriptorReader(locator.getService(ArtifactDescriptorReader.class));
-        setDependencyCollector(locator.getService(DependencyCollector.class));
-        setInstaller(locator.getService(Installer.class));
-        setDeployer(locator.getService(Deployer.class));
-        setLocalRepositoryProvider(locator.getService(LocalRepositoryProvider.class));
-        setRemoteRepositoryManager(locator.getService(RemoteRepositoryManager.class));
-        setSyncContextFactory(locator.getService(SyncContextFactory.class));
-        setRepositorySystemLifecycle(locator.getService(RepositorySystemLifecycle.class));
-    }
-
-    public DefaultRepositorySystem setVersionResolver(VersionResolver versionResolver) {
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setVersionRangeResolver(VersionRangeResolver versionRangeResolver) {
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setArtifactResolver(ArtifactResolver artifactResolver) {
         this.artifactResolver = requireNonNull(artifactResolver, "artifact resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setMetadataResolver(MetadataResolver metadataResolver) {
         this.metadataResolver = requireNonNull(metadataResolver, "metadata resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setArtifactDescriptorReader(ArtifactDescriptorReader artifactDescriptorReader) {
         this.artifactDescriptorReader =
                 requireNonNull(artifactDescriptorReader, "artifact descriptor reader cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setDependencyCollector(DependencyCollector dependencyCollector) {
         this.dependencyCollector = requireNonNull(dependencyCollector, "dependency collector cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setInstaller(Installer installer) {
         this.installer = requireNonNull(installer, "installer cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setDeployer(Deployer deployer) {
         this.deployer = requireNonNull(deployer, "deployer cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setLocalRepositoryProvider(LocalRepositoryProvider localRepositoryProvider) {
         this.localRepositoryProvider =
                 requireNonNull(localRepositoryProvider, "local repository provider cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setSyncContextFactory(SyncContextFactory syncContextFactory) {
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setRemoteRepositoryManager(RemoteRepositoryManager remoteRepositoryManager) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setRepositorySystemLifecycle(RepositorySystemLifecycle repositorySystemLifecycle) {
         this.repositorySystemLifecycle =
                 requireNonNull(repositorySystemLifecycle, "repository system lifecycle cannot be null");
-        return this;
     }
 
     @Override

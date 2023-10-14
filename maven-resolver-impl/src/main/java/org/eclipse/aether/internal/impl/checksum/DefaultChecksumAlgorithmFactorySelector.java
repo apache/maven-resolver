@@ -24,7 +24,6 @@ import javax.inject.Singleton;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,18 +42,6 @@ import static java.util.stream.Collectors.toList;
 @Named
 public class DefaultChecksumAlgorithmFactorySelector implements ChecksumAlgorithmFactorySelector {
     private final Map<String, ChecksumAlgorithmFactory> factories;
-
-    /**
-     * Default ctor for SL.
-     */
-    @Deprecated
-    public DefaultChecksumAlgorithmFactorySelector() {
-        this.factories = new HashMap<>();
-        this.factories.put(Sha512ChecksumAlgorithmFactory.NAME, new Sha512ChecksumAlgorithmFactory());
-        this.factories.put(Sha256ChecksumAlgorithmFactory.NAME, new Sha256ChecksumAlgorithmFactory());
-        this.factories.put(Sha1ChecksumAlgorithmFactory.NAME, new Sha1ChecksumAlgorithmFactory());
-        this.factories.put(Md5ChecksumAlgorithmFactory.NAME, new Md5ChecksumAlgorithmFactory());
-    }
 
     @Inject
     public DefaultChecksumAlgorithmFactorySelector(Map<String, ChecksumAlgorithmFactory> factories) {

@@ -94,7 +94,7 @@
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <!-- used by supplier and demo only -->
-    <mavenVersion>3.9.5</mavenVersion>
+    <mavenVersion>4.0.0-alpha-8-SNAPSHOT</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <minimalJavaBuildVersion>[11.0.16,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-10-10T21:40:45Z</project.build.outputTimestamp>
@@ -285,7 +285,7 @@
                     <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.transport.TransporterProvider</exclude>
-                    <!-- MRESOLVER-338 Drop FileTransform API -->
+                    <!-- MRESOLVER-338 Dropping FileTransform API -->
                     <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#setFileTransformerManager(org.eclipse.aether.transform.FileTransformerManager)</exclude>
@@ -307,6 +307,9 @@
                     <exclude>org.eclipse.aether.transfer.TransferResource#TransferResource(java.lang.String,java.lang.String,java.io.File,org.eclipse.aether.RequestTrace)</exclude>
                     <exclude>org.eclipse.aether.util.repository.DefaultMirrorSelector#add(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.String,java.lang.String)</exclude>
                     <exclude>org.eclipse.aether.util.StringUtils</exclude>
+                    <!-- MRESOLVER-157 Dropping ServiceLocator -->
+                    <exclude>org.eclipse.aether.spi.locator.Service</exclude>
+                    <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -345,6 +348,9 @@
                     <exclude>org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource</exclude>
                     <exclude>org.eclipse.aether.util.repository.DefaultMirrorSelector#add(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.String,java.lang.String)</exclude>
                     <exclude>org.eclipse.aether.util.StringUtils</exclude>
+                    <!-- MRESOLVER-157 Dropping ServiceLocator -->
+                    <exclude>org.eclipse.aether.spi.locator.Service</exclude>
+                    <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>

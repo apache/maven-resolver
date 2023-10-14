@@ -83,14 +83,14 @@ public class DefaultMetadataResolverTest {
         session = TestUtils.newSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
         connectorProvider = new StubRepositoryConnectorProvider();
-        resolver = new DefaultMetadataResolver();
-        resolver.setUpdateCheckManager(new StaticUpdateCheckManager(true));
-        resolver.setRepositoryEventDispatcher(new StubRepositoryEventDispatcher());
-        resolver.setRepositoryConnectorProvider(connectorProvider);
-        resolver.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
-        resolver.setSyncContextFactory(new StubSyncContextFactory());
-        resolver.setOfflineController(new DefaultOfflineController());
-        resolver.setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
+        resolver = new DefaultMetadataResolver(
+                new StubRepositoryEventDispatcher(),
+                new StaticUpdateCheckManager(true),
+                connectorProvider,
+                new StubRemoteRepositoryManager(),
+                new StubSyncContextFactory(),
+                new DefaultOfflineController(),
+                remoteRepositoryFilterManager);
         repository = new RemoteRepository.Builder(
                         "test-DMRT",
                         "default",
@@ -259,7 +259,15 @@ public class DefaultMetadataResolverTest {
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         request.setFavorLocalRepository(true);
-        resolver.setUpdateCheckManager(new StaticUpdateCheckManager(true, true));
+
+        resolver = new DefaultMetadataResolver(
+                new StubRepositoryEventDispatcher(),
+                new StaticUpdateCheckManager(true, true),
+                connectorProvider,
+                new StubRemoteRepositoryManager(),
+                new StubSyncContextFactory(),
+                new DefaultOfflineController(),
+                remoteRepositoryFilterManager);
 
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
 

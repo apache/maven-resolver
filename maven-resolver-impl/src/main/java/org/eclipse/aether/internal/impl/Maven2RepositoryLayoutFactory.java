@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -68,14 +67,6 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
     public float getPriority() {
         return priority;
-    }
-
-    /**
-     * Service locator ctor.
-     */
-    @Deprecated
-    public Maven2RepositoryLayoutFactory() {
-        this(new DefaultChecksumAlgorithmFactorySelector());
     }
 
     @Inject
@@ -181,11 +172,11 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
             path.append(artifact.getArtifactId()).append('-').append(artifact.getVersion());
 
-            if (artifact.getClassifier().length() > 0) {
+            if (!artifact.getClassifier().isEmpty()) {
                 path.append('-').append(artifact.getClassifier());
             }
 
-            if (artifact.getExtension().length() > 0) {
+            if (!artifact.getExtension().isEmpty()) {
                 path.append('.').append(artifact.getExtension());
             }
 
@@ -196,13 +187,13 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
         public URI getLocation(Metadata metadata, boolean upload) {
             StringBuilder path = new StringBuilder(128);
 
-            if (metadata.getGroupId().length() > 0) {
+            if (!metadata.getGroupId().isEmpty()) {
                 path.append(metadata.getGroupId().replace('.', '/')).append('/');
 
-                if (metadata.getArtifactId().length() > 0) {
+                if (!metadata.getArtifactId().isEmpty()) {
                     path.append(metadata.getArtifactId()).append('/');
 
-                    if (metadata.getVersion().length() > 0) {
+                    if (!metadata.getVersion().isEmpty()) {
                         path.append(metadata.getVersion()).append('/');
                     }
                 }

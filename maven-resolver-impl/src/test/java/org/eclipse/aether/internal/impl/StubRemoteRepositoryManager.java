@@ -31,6 +31,7 @@ public class StubRemoteRepositoryManager implements RemoteRepositoryManager {
 
     public StubRemoteRepositoryManager() {}
 
+    @Override
     public List<RemoteRepository> aggregateRepositories(
             RepositorySystemSession session,
             List<RemoteRepository> dominantRepositories,
@@ -42,6 +43,7 @@ public class StubRemoteRepositoryManager implements RemoteRepositoryManager {
         return dominantRepositories;
     }
 
+    @Override
     public RepositoryPolicy getPolicy(
             RepositorySystemSession session, RemoteRepository repository, boolean releases, boolean snapshots) {
         requireNonNull(session, "session cannot be null");

@@ -33,11 +33,14 @@ import static java.util.Objects.requireNonNull;
  */
 public class StubSyncContextFactory implements SyncContextFactory {
 
+    @Override
     public SyncContext newInstance(RepositorySystemSession session, boolean shared) {
         requireNonNull(session, "session cannot be null");
         return new SyncContext() {
+            @Override
             public void close() {}
 
+            @Override
             public void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {}
         };
     }

@@ -38,6 +38,7 @@ class StubRepositoryConnectorProvider implements RepositoryConnectorProvider {
         this.connector = connector;
     }
 
+    @Override
     public RepositoryConnector newRepositoryConnector(RepositorySystemSession session, RemoteRepository repository)
             throws NoRepositoryConnectorException {
         return connector;

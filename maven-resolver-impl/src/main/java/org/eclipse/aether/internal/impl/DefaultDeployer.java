@@ -61,8 +61,6 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
@@ -78,27 +76,22 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultDeployer implements Deployer, Service {
-    private FileProcessor fileProcessor;
+public class DefaultDeployer implements Deployer {
+    private final FileProcessor fileProcessor;
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private RepositoryConnectorProvider repositoryConnectorProvider;
+    private final RepositoryConnectorProvider repositoryConnectorProvider;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private UpdateCheckManager updateCheckManager;
+    private final UpdateCheckManager updateCheckManager;
 
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
+    private final Collection<MetadataGeneratorFactory> metadataFactories;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private OfflineController offlineController;
-
-    @Deprecated
-    public DefaultDeployer() {
-        // enables default constructor
-    }
+    private final OfflineController offlineController;
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
@@ -111,79 +104,20 @@ public class DefaultDeployer implements Deployer, Service {
             Set<MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory,
             OfflineController offlineController) {
-        setFileProcessor(fileProcessor);
-        setRepositoryEventDispatcher(repositoryEventDispatcher);
-        setRepositoryConnectorProvider(repositoryConnectorProvider);
-        setRemoteRepositoryManager(remoteRepositoryManager);
-        setUpdateCheckManager(updateCheckManager);
-        setMetadataGeneratorFactories(metadataFactories);
-        setSyncContextFactory(syncContextFactory);
-        setOfflineController(offlineController);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setFileProcessor(locator.getService(FileProcessor.class));
-        setRepositoryEventDispatcher(locator.getService(RepositoryEventDispatcher.class));
-        setRepositoryConnectorProvider(locator.getService(RepositoryConnectorProvider.class));
-        setRemoteRepositoryManager(locator.getService(RemoteRepositoryManager.class));
-        setUpdateCheckManager(locator.getService(UpdateCheckManager.class));
-        setMetadataGeneratorFactories(locator.getServices(MetadataGeneratorFactory.class));
-        setSyncContextFactory(locator.getService(SyncContextFactory.class));
-        setOfflineController(locator.getService(OfflineController.class));
-    }
-
-    public DefaultDeployer setFileProcessor(FileProcessor fileProcessor) {
         this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
-        return this;
-    }
-
-    public DefaultDeployer setRepositoryEventDispatcher(RepositoryEventDispatcher repositoryEventDispatcher) {
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
-        return this;
-    }
-
-    public DefaultDeployer setRepositoryConnectorProvider(RepositoryConnectorProvider repositoryConnectorProvider) {
         this.repositoryConnectorProvider =
                 requireNonNull(repositoryConnectorProvider, "repository connector provider cannot be null");
-        return this;
-    }
-
-    public DefaultDeployer setRemoteRepositoryManager(RemoteRepositoryManager remoteRepositoryManager) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
-        return this;
-    }
-
-    public DefaultDeployer setUpdateCheckManager(UpdateCheckManager updateCheckManager) {
         this.updateCheckManager = requireNonNull(updateCheckManager, "update check manager cannot be null");
-        return this;
-    }
-
-    public DefaultDeployer addMetadataGeneratorFactory(MetadataGeneratorFactory factory) {
-        metadataFactories.add(requireNonNull(factory, "metadata generator factory cannot be null"));
-        return this;
-    }
-
-    public DefaultDeployer setMetadataGeneratorFactories(Collection<MetadataGeneratorFactory> metadataFactories) {
-        if (metadataFactories == null) {
-            this.metadataFactories = new ArrayList<>();
-        } else {
-            this.metadataFactories = metadataFactories;
-        }
-        return this;
-    }
-
-    public DefaultDeployer setSyncContextFactory(SyncContextFactory syncContextFactory) {
+        this.metadataFactories = Collections.unmodifiableCollection(metadataFactories);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
-        return this;
-    }
-
-    public DefaultDeployer setOfflineController(OfflineController offlineController) {
         this.offlineController = requireNonNull(offlineController, "offline controller cannot be null");
-        return this;
     }
 
+    @Override
     public DeployResult deploy(RepositorySystemSession session, DeployRequest request) throws DeploymentException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");

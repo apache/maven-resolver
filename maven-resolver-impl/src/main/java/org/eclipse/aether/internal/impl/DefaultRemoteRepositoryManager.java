@@ -39,8 +39,6 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, Service {
+public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
     private static final class LoggedMirror {
 
@@ -79,37 +77,18 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRepositoryManager.class);
 
-    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
+    private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
-    private ChecksumPolicyProvider checksumPolicyProvider;
-
-    @Deprecated
-    public DefaultRemoteRepositoryManager() {
-        // enables default constructor
-    }
+    private final ChecksumPolicyProvider checksumPolicyProvider;
 
     @Inject
     public DefaultRemoteRepositoryManager(
             UpdatePolicyAnalyzer updatePolicyAnalyzer, ChecksumPolicyProvider checksumPolicyProvider) {
-        setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
-        setChecksumPolicyProvider(checksumPolicyProvider);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setUpdatePolicyAnalyzer(locator.getService(UpdatePolicyAnalyzer.class));
-        setChecksumPolicyProvider(locator.getService(ChecksumPolicyProvider.class));
-    }
-
-    public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer(UpdatePolicyAnalyzer updatePolicyAnalyzer) {
         this.updatePolicyAnalyzer = requireNonNull(updatePolicyAnalyzer, "update policy analyzer cannot be null");
-        return this;
-    }
-
-    public DefaultRemoteRepositoryManager setChecksumPolicyProvider(ChecksumPolicyProvider checksumPolicyProvider) {
         this.checksumPolicyProvider = requireNonNull(checksumPolicyProvider, "checksum policy provider cannot be null");
-        return this;
     }
 
+    @Override
     public List<RemoteRepository> aggregateRepositories(
             RepositorySystemSession session,
             List<RemoteRepository> dominantRepositories,
@@ -241,6 +220,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
         return merged.setReleasePolicy(releases).setSnapshotPolicy(snapshots).build();
     }
 
+    @Override
     public RepositoryPolicy getPolicy(
             RepositorySystemSession session, RemoteRepository repository, boolean releases, boolean snapshots) {
         requireNonNull(session, "session cannot be null");

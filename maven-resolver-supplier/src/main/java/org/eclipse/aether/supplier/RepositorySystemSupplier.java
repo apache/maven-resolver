@@ -126,6 +126,8 @@ import org.eclipse.aether.transport.http.ChecksumExtractor;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transport.http.Nexus2ChecksumExtractor;
 import org.eclipse.aether.transport.http.XChecksumChecksumExtractor;
+import org.eclipse.aether.util.version.GenericVersionScheme;
+import org.eclipse.aether.version.VersionScheme;
 
 /**
  * A simple {@link Supplier} of {@link org.eclipse.aether.RepositorySystem} instances, that on each call supplies newly
@@ -448,6 +450,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 remoteRepositoryFilterManager);
     }
 
+    protected VersionScheme getVersionScheme() {
+        return new GenericVersionScheme();
+    }
+
     // Maven provided
 
     protected Map<String, MetadataGeneratorFactory> getMetadataGeneratorFactories() {
@@ -489,9 +495,11 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected VersionRangeResolver getVersionRangeResolver(
             MetadataResolver metadataResolver,
             SyncContextFactory syncContextFactory,
-            RepositoryEventDispatcher repositoryEventDispatcher) {
+            RepositoryEventDispatcher repositoryEventDispatcher,
+            VersionScheme versionScheme) {
         // from maven-resolver-provider
-        return new DefaultVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
+        return new DefaultVersionRangeResolver(
+                metadataResolver, syncContextFactory, repositoryEventDispatcher, versionScheme);
     }
 
     protected ModelBuilder getModelBuilder() {
@@ -586,10 +594,11 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 offlineController,
                 remoteRepositoryFilterManager);
 
+        VersionScheme versionScheme = getVersionScheme();
         VersionResolver versionResolver =
                 getVersionResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
         VersionRangeResolver versionRangeResolver =
-                getVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
+                getVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher, versionScheme);
 
         Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors =
                 getArtifactResolverPostProcessors(checksumAlgorithmFactorySelector, trustedChecksumsSources);

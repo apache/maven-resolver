@@ -78,9 +78,7 @@ public class DefaultUpdateCheckManagerTest {
                         "default",
                         TestFileUtils.createTempDir().toURI().toURL().toString())
                 .build();
-        manager = new DefaultUpdateCheckManager()
-                .setUpdatePolicyAnalyzer(new DefaultUpdatePolicyAnalyzer())
-                .setTrackingFileManager(new DefaultTrackingFileManager());
+        manager = new DefaultUpdateCheckManager(new DefaultTrackingFileManager(), new DefaultUpdatePolicyAnalyzer());
         metadata = new DefaultMetadata(
                 "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT, metadataFile);
         artifact = new DefaultArtifact("gid", "aid", "", "ext", "ver").setFile(artifactFile);
