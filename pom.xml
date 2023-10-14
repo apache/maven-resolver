@@ -285,7 +285,7 @@
                     <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.transport.TransporterProvider</exclude>
-                    <!-- MRESOLVER-338 (Attention: we made a mistake, by deprecating type, but not related methods) -->
+                    <!-- MRESOLVER-338 Drop FileTransform API -->
                     <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#setFileTransformerManager(org.eclipse.aether.transform.FileTransformerManager)</exclude>
@@ -323,7 +323,7 @@
               <configuration>
                 <parameter>
                   <excludes>
-                    <!-- MRESOLVER-338 (Attention: we made a mistake, by deprecating type, but not related methods) -->
+                    <!-- MRESOLVER-338 Drop FileTransform API -->
                     <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#setFileTransformerManager(org.eclipse.aether.transform.FileTransformerManager)</exclude>
