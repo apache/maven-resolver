@@ -59,6 +59,16 @@ public final class BasicRepositoryConnectorFactory implements RepositoryConnecto
 
     private float priority;
 
+    /**
+     * Creates an (uninitialized) instance of this connector factory. <em>Note:</em> In case of manual instantiation by
+     * clients, the new factory needs to be configured via its various mutators before first use or runtime errors will
+     * occur.
+     */
+    @Deprecated
+    public BasicRepositoryConnectorFactory() {
+        // enables default constructor
+    }
+
     @Inject
     public BasicRepositoryConnectorFactory(
             TransporterProvider transporterProvider,
