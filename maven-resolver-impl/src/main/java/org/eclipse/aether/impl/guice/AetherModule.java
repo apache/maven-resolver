@@ -267,9 +267,6 @@ public class AetherModule extends AbstractModule {
                 .to(NamedLockFactoryAdapterFactoryImpl.class)
                 .in(Singleton.class);
         bind(SyncContextFactory.class).to(DefaultSyncContextFactory.class).in(Singleton.class);
-        bind(org.eclipse.aether.impl.SyncContextFactory.class)
-                .to(org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class)
-                .in(Singleton.class);
 
         bind(NameMapper.class)
                 .annotatedWith(Names.named(NameMappers.STATIC_NAME))

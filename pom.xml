@@ -285,7 +285,7 @@
                     <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.transport.TransporterProvider</exclude>
-                    <!-- MRESOLVER-338 (Attention: we made a mistake, by deprecating type, but not related methods) -->
+                    <!-- MRESOLVER-338 Drop FileTransform API -->
                     <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#setFileTransformerManager(org.eclipse.aether.transform.FileTransformerManager)</exclude>
@@ -301,6 +301,12 @@
                     <exclude>org.eclipse.aether.spi.log.LoggerFactory</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLogger</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLoggerFactory</exclude>
+                    <!-- MRESOLVER-409 Dropping deprecated bits/ctors -->
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource</exclude>
+                    <exclude>org.eclipse.aether.transfer.ChecksumFailureException#ChecksumFailureException(java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.transfer.TransferResource#TransferResource(java.lang.String,java.lang.String,java.io.File,org.eclipse.aether.RequestTrace)</exclude>
+                    <exclude>org.eclipse.aether.util.repository.DefaultMirrorSelector#add(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.util.StringUtils</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -317,7 +323,7 @@
               <configuration>
                 <parameter>
                   <excludes>
-                    <!-- MRESOLVER-338 (Attention: we made a mistake, by deprecating type, but not related methods) -->
+                    <!-- MRESOLVER-338 Drop FileTransform API -->
                     <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#setFileTransformerManager(org.eclipse.aether.transform.FileTransformerManager)</exclude>
@@ -333,6 +339,12 @@
                     <exclude>org.eclipse.aether.spi.log.LoggerFactory</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLogger</exclude>
                     <exclude>org.eclipse.aether.spi.log.NullLoggerFactory</exclude>
+                    <!-- MRESOLVER-409 Dropping deprecated bits/ctors -->
+                    <exclude>org.eclipse.aether.transfer.ChecksumFailureException#ChecksumFailureException(java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.transfer.TransferResource#TransferResource(java.lang.String,java.lang.String,java.io.File,org.eclipse.aether.RequestTrace)</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.checksum.ProvidedChecksumsSource</exclude>
+                    <exclude>org.eclipse.aether.util.repository.DefaultMirrorSelector#add(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.String,java.lang.String)</exclude>
+                    <exclude>org.eclipse.aether.util.StringUtils</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>

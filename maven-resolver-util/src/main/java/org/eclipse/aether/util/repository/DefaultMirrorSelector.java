@@ -40,12 +40,6 @@ public final class DefaultMirrorSelector implements MirrorSelector {
 
     private final List<MirrorDef> mirrors = new ArrayList<>();
 
-    @Deprecated
-    public DefaultMirrorSelector add(
-            String id, String url, String type, boolean repositoryManager, String mirrorOfIds, String mirrorOfTypes) {
-        return add(id, url, type, repositoryManager, false, mirrorOfIds, mirrorOfTypes);
-    }
-
     /**
      * Adds the specified mirror to this selector.
      *

@@ -85,8 +85,9 @@ public interface ChecksumPolicy {
         REMOTE_INCLUDED,
 
         /**
-         * Provided checksums may be provided by {@link ProvidedChecksumsSource} components, ahead of artifact
-         * retrieval. If no provided checksum present, {@link #REMOTE_INCLUDED} is tried for.
+         * Provided checksums may be provided by {@link org.eclipse.aether.spi.checksums.ProvidedChecksumsSource}
+         * components, ahead of artifact retrieval. If no provided checksum present, {@link #REMOTE_INCLUDED} is
+         * tried for.
          */
         PROVIDED
     }

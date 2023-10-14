@@ -34,19 +34,6 @@ public class ChecksumFailureException extends RepositoryException {
     private final boolean retryWorthy;
 
     /**
-     * Creates a new exception with the specified expected and actual checksum. The resulting exception is
-     * {@link #isRetryWorthy() retry-worthy}.
-     *
-     * @param expected The expected checksum as declared by the hosting repository, may be {@code null}.
-     * @param actual The actual checksum as computed from the local bytes, may be {@code null}.
-     * @deprecated Does not reveal expected checksum kind, use other constructor that provide that information as well.
-     */
-    @Deprecated
-    public ChecksumFailureException(String expected, String actual) {
-        this(expected, null, actual);
-    }
-
-    /**
      * Creates a new exception with the specified expected, expected kind and actual checksum. The resulting exception
      * is {@link #isRetryWorthy() retry-worthy}.
      *
