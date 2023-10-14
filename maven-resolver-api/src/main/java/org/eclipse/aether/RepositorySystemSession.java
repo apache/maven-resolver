@@ -36,7 +36,6 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transform.FileTransformerManager;
 
 /**
  * Defines settings and components that control the repository system. Once initialized, the session object itself is
@@ -270,14 +269,4 @@ public interface RepositorySystemSession {
      * @return The repository cache or {@code null} if none.
      */
     RepositoryCache getCache();
-
-    /**
-     * Get the file transformer manager
-     *
-     * @return the manager, never {@code null}
-     * @deprecated Without any direct replacement for now. This API is OOM-prone, and also lacks a lot of context about
-     * transforming.
-     */
-    @Deprecated
-    FileTransformerManager getFileTransformerManager();
 }

@@ -71,8 +71,6 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.transform.FileTransformer;
-import org.eclipse.aether.transform.FileTransformerManager;
 
 import static java.util.Objects.requireNonNull;
 
@@ -221,8 +219,6 @@ public class DefaultDeployer implements Deployer, Service {
         try {
             List<? extends MetadataGenerator> generators = getMetadataGenerators(session, request);
 
-            FileTransformerManager fileTransformerManager = session.getFileTransformerManager();
-
             List<ArtifactUpload> artifactUploads = new ArrayList<>();
             List<MetadataUpload> metadataUploads = new ArrayList<>();
             IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
@@ -249,23 +245,10 @@ public class DefaultDeployer implements Deployer, Service {
 
                 iterator.set(artifact);
 
-                Collection<FileTransformer> fileTransformers =
-                        fileTransformerManager.getTransformersForArtifact(artifact);
-                if (!fileTransformers.isEmpty()) {
-                    for (FileTransformer fileTransformer : fileTransformers) {
-                        Artifact targetArtifact = fileTransformer.transformArtifact(artifact);
-
-                        ArtifactUpload upload = new ArtifactUpload(targetArtifact, artifact.getFile(), fileTransformer);
-                        upload.setTrace(trace);
-                        upload.setListener(new ArtifactUploadListener(catapult, upload));
-                        artifactUploads.add(upload);
-                    }
-                } else {
-                    ArtifactUpload upload = new ArtifactUpload(artifact, artifact.getFile());
-                    upload.setTrace(trace);
-                    upload.setListener(new ArtifactUploadListener(catapult, upload));
-                    artifactUploads.add(upload);
-                }
+                ArtifactUpload upload = new ArtifactUpload(artifact, artifact.getFile());
+                upload.setTrace(trace);
+                upload.setListener(new ArtifactUploadListener(catapult, upload));
+                artifactUploads.add(upload);
             }
 
             connector.put(artifactUploads, null);
