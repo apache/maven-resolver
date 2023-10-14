@@ -19,12 +19,14 @@
 package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Runs all demos at once as part of UT.
  */
 public class AllResolverDemosTest {
+    @Ignore("SL is about to be dropped")
     @Test
     public void serviceLocator() throws Exception {
         AllResolverDemos.main(new String[] {Booter.SERVICE_LOCATOR});

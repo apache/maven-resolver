@@ -193,9 +193,6 @@ public final class DefaultServiceLocator implements ServiceLocator {
         addService(UpdateCheckManager.class, DefaultUpdateCheckManager.class);
         addService(UpdatePolicyAnalyzer.class, DefaultUpdatePolicyAnalyzer.class);
         addService(FileProcessor.class, DefaultFileProcessor.class);
-        addService(
-                org.eclipse.aether.impl.SyncContextFactory.class,
-                org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory.class);
         addService(SyncContextFactory.class, DefaultSyncContextFactory.class);
         addService(RepositoryEventDispatcher.class, DefaultRepositoryEventDispatcher.class);
         addService(OfflineController.class, DefaultOfflineController.class);

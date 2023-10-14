@@ -46,24 +46,6 @@ public final class TransferResource {
     /**
      * Creates a new transfer resource with the specified properties.
      *
-     * @param repositoryUrl The base URL of the repository, may be {@code null} or empty if unknown. If not empty, a
-     * trailing slash will automatically be added if missing.
-     * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
-     * (if any) will be automatically removed.
-     * @param file The source/target file involved in the transfer, may be {@code null}.
-     * @param trace The trace information, may be {@code null}.
-     *
-     * @deprecated As of 1.1.0, replaced by {@link #TransferResource(java.lang.String, java.lang.String,
-     * java.lang.String, java.io.File, org.eclipse.aether.RequestTrace)}
-     */
-    @Deprecated
-    public TransferResource(String repositoryUrl, String resourceName, File file, RequestTrace trace) {
-        this(null, repositoryUrl, resourceName, file, trace);
-    }
-
-    /**
-     * Creates a new transfer resource with the specified properties.
-     *
      * @param repositoryId The ID of the repository used to transfer the resource, may be {@code null} or
      *                     empty if unknown.
      * @param repositoryUrl The base URL of the repository, may be {@code null} or empty if unknown. If not empty, a

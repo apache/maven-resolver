@@ -63,7 +63,7 @@ public class DefaultRepositorySystemTest {
         session.setAuthenticationSelector(authSelector);
 
         DefaultMirrorSelector mirrorSelector = new DefaultMirrorSelector();
-        mirrorSelector.add("mirror", "http:void", "default", false, "test-1", null);
+        mirrorSelector.add("mirror", "http:void", "default", false, false, "test-1", null);
         session.setMirrorSelector(mirrorSelector);
 
         RemoteRepository rawRepo1 = new RemoteRepository.Builder("test-1", "default", "http://void").build();
@@ -97,7 +97,7 @@ public class DefaultRepositorySystemTest {
         session.setAuthenticationSelector(authSelector);
 
         DefaultMirrorSelector mirrorSelector = new DefaultMirrorSelector();
-        mirrorSelector.add("mirror", "file:void", "default", false, "*", null);
+        mirrorSelector.add("mirror", "file:void", "default", false, false, "*", null);
         session.setMirrorSelector(mirrorSelector);
 
         RemoteRepository rawRepo = new RemoteRepository.Builder("test", "default", "http://void").build();

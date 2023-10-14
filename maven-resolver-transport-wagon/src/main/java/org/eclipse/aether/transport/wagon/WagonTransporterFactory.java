@@ -46,16 +46,6 @@ public final class WagonTransporterFactory implements TransporterFactory, Servic
 
     private float priority = -1.0f;
 
-    /**
-     * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
-     * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
-     * will occur.
-     */
-    @Deprecated
-    public WagonTransporterFactory() {
-        // enables default constructor
-    }
-
     @Inject
     public WagonTransporterFactory(WagonProvider wagonProvider, WagonConfigurator wagonConfigurator) {
         setWagonProvider(wagonProvider);
