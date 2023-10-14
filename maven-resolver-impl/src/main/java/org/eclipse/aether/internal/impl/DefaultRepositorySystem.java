@@ -177,15 +177,6 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         setRepositorySystemLifecycle(locator.getService(RepositorySystemLifecycle.class));
     }
 
-    /**
-     * @deprecated not used any more since MRESOLVER-36 move to slf4j, added back in MRESOLVER-64 for compatibility
-     */
-    @Deprecated
-    public DefaultRepositorySystem setLoggerFactory(org.eclipse.aether.spi.log.LoggerFactory loggerFactory) {
-        // this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
-    }
-
     public DefaultRepositorySystem setVersionResolver(VersionResolver versionResolver) {
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
         return this;

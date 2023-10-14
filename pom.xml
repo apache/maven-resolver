@@ -296,6 +296,11 @@
                     <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#getFileTransformer()</exclude>
                     <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#setFileTransformer(org.eclipse.aether.transform.FileTransformer)</exclude>
                     <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#ArtifactUpload(org.eclipse.aether.artifact.Artifact,java.io.File,org.eclipse.aether.transform.FileTransformer)</exclude>
+                    <!-- MRESOLVER-389 Dropping log facade (use SLF4J instead) -->
+                    <exclude>org.eclipse.aether.spi.log.Logger</exclude>
+                    <exclude>org.eclipse.aether.spi.log.LoggerFactory</exclude>
+                    <exclude>org.eclipse.aether.spi.log.NullLogger</exclude>
+                    <exclude>org.eclipse.aether.spi.log.NullLoggerFactory</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -323,6 +328,11 @@
                     <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#getFileTransformer()</exclude>
                     <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#setFileTransformer(org.eclipse.aether.transform.FileTransformer)</exclude>
                     <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#ArtifactUpload(org.eclipse.aether.artifact.Artifact,java.io.File,org.eclipse.aether.transform.FileTransformer)</exclude>
+                    <!-- MRESOLVER-389 Dropping log facade (use SLF4J instead) -->
+                    <exclude>org.eclipse.aether.spi.log.Logger</exclude>
+                    <exclude>org.eclipse.aether.spi.log.LoggerFactory</exclude>
+                    <exclude>org.eclipse.aether.spi.log.NullLogger</exclude>
+                    <exclude>org.eclipse.aether.spi.log.NullLoggerFactory</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
