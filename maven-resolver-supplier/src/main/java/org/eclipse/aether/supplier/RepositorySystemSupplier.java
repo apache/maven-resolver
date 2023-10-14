@@ -459,9 +459,13 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected Map<String, MetadataGeneratorFactory> getMetadataGeneratorFactories() {
         // from maven-resolver-provider
         HashMap<String, MetadataGeneratorFactory> result = new HashMap<>();
-        result.put(PluginsMetadataGeneratorFactory.NAME, new PluginsMetadataGeneratorFactory());
-        result.put(VersionsMetadataGeneratorFactory.NAME, new VersionsMetadataGeneratorFactory());
-        result.put(SnapshotMetadataGeneratorFactory.NAME, new SnapshotMetadataGeneratorFactory());
+        // result.put(PluginsMetadataGeneratorFactory.NAME, new PluginsMetadataGeneratorFactory());
+        // result.put(VersionsMetadataGeneratorFactory.NAME, new VersionsMetadataGeneratorFactory());
+        // result.put(SnapshotMetadataGeneratorFactory.NAME, new SnapshotMetadataGeneratorFactory());
+        // TODO: Fix this once MNG-7874 done and released as Maven 4.0.0-alpha-8
+        result.put("plugins", new PluginsMetadataGeneratorFactory());
+        result.put("versions", new VersionsMetadataGeneratorFactory());
+        result.put("snapshot", new SnapshotMetadataGeneratorFactory());
         return result;
     }
 
