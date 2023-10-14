@@ -88,7 +88,6 @@ import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterMana
 import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
-import org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
@@ -115,10 +114,8 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
-import org.eclipse.aether.spi.log.LoggerFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.slf4j.ILoggerFactory;
 
 /**
  * A ready-made <a href="https://github.com/google/guice" target="_blank">Guice</a> module that sets up bindings
@@ -323,8 +320,6 @@ public class AetherModule extends AbstractModule {
                 .annotatedWith(Names.named(PrefixesRemoteRepositoryFilterSource.NAME))
                 .to(PrefixesRemoteRepositoryFilterSource.class)
                 .in(Singleton.class);
-
-        install(new Slf4jModule());
     }
 
     @Provides
@@ -446,20 +441,5 @@ public class AetherModule extends AbstractModule {
     @Singleton
     Set<RepositoryListener> providesRepositoryListeners() {
         return Collections.emptySet();
-    }
-
-    private static class Slf4jModule extends AbstractModule {
-
-        @Override
-        protected void configure() {
-            bind(LoggerFactory.class) //
-                    .to(Slf4jLoggerFactory.class);
-        }
-
-        @Provides
-        @Singleton
-        ILoggerFactory getLoggerFactory() {
-            return org.slf4j.LoggerFactory.getILoggerFactory();
-        }
     }
 }
