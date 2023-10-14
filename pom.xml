@@ -244,14 +244,14 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.17.2</version>
+          <version>0.18.1</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->
               <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>${project.artifactId}</artifactId>
-                <version>1.8.0</version>
+                <version>1.9.16</version>
                 <type>${project.packaging}</type>
               </dependency>
             </oldVersion>
@@ -285,7 +285,19 @@
                     <exclude>org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider</exclude>
                     <exclude>org.eclipse.aether.spi.connector.transport.TransporterProvider</exclude>
+                    <!-- MRESOLVER-338 (Attention: we made a mistake, by deprecating type, but not related methods) -->
+                    <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
+                    <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>
+                    <exclude>org.eclipse.aether.DefaultRepositorySystemSession#setFileTransformerManager(org.eclipse.aether.transform.FileTransformerManager)</exclude>
+                    <exclude>org.eclipse.aether.AbstractForwardingRepositorySystemSession#getFileTransformerManager()</exclude>
+                    <exclude>org.eclipse.aether.transform.TransformException</exclude>
+                    <exclude>org.eclipse.aether.transform.FileTransformer</exclude>
+                    <exclude>org.eclipse.aether.transform.FileTransformerManager</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#getFileTransformer()</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#setFileTransformer(org.eclipse.aether.transform.FileTransformer)</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#ArtifactUpload(org.eclipse.aether.artifact.Artifact,java.io.File,org.eclipse.aether.transform.FileTransformer)</exclude>
                   </excludes>
+                  <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
                   <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
                 </parameter>
@@ -299,6 +311,20 @@
               <phase>verify</phase>
               <configuration>
                 <parameter>
+                  <excludes>
+                    <!-- MRESOLVER-338 (Attention: we made a mistake, by deprecating type, but not related methods) -->
+                    <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
+                    <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>
+                    <exclude>org.eclipse.aether.DefaultRepositorySystemSession#setFileTransformerManager(org.eclipse.aether.transform.FileTransformerManager)</exclude>
+                    <exclude>org.eclipse.aether.AbstractForwardingRepositorySystemSession#getFileTransformerManager()</exclude>
+                    <exclude>org.eclipse.aether.transform.TransformException</exclude>
+                    <exclude>org.eclipse.aether.transform.FileTransformer</exclude>
+                    <exclude>org.eclipse.aether.transform.FileTransformerManager</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#getFileTransformer()</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#setFileTransformer(org.eclipse.aether.transform.FileTransformer)</exclude>
+                    <exclude>org.eclipse.aether.spi.connector.ArtifactUpload#ArtifactUpload(org.eclipse.aether.artifact.Artifact,java.io.File,org.eclipse.aether.transform.FileTransformer)</exclude>
+                  </excludes>
+                  <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
                   <breakBuildOnSourceIncompatibleModifications>false</breakBuildOnSourceIncompatibleModifications>
                 </parameter>
