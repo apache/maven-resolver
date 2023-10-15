@@ -27,8 +27,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -42,7 +40,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named(EnhancedLocalRepositoryManagerFactory.NAME)
-public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryManagerFactory, Service {
+public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryManagerFactory {
     public static final String NAME = "enhanced";
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
@@ -50,16 +48,11 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     private float priority = 10.0f;
 
-    private LocalPathComposer localPathComposer;
+    private final LocalPathComposer localPathComposer;
 
-    private TrackingFileManager trackingFileManager;
+    private final TrackingFileManager trackingFileManager;
 
-    private LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
-
-    @Deprecated
-    public EnhancedLocalRepositoryManagerFactory() {
-        // no arg ctor for ServiceLocator
-    }
+    private final LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
     @Inject
     public EnhancedLocalRepositoryManagerFactory(
@@ -69,13 +62,6 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
         this.localPathComposer = requireNonNull(localPathComposer);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposerFactory = requireNonNull(localPathPrefixComposerFactory);
-    }
-
-    @Override
-    public void initService(final ServiceLocator locator) {
-        this.localPathComposer = requireNonNull(locator.getService(LocalPathComposer.class));
-        this.trackingFileManager = requireNonNull(locator.getService(TrackingFileManager.class));
-        this.localPathPrefixComposerFactory = new DefaultLocalPathPrefixComposerFactory();
     }
 
     @Override

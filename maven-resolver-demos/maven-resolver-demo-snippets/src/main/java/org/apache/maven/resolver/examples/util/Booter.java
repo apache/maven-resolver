@@ -34,11 +34,7 @@ import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
  * A helper to boot the repository system and a repository system session.
  */
 public class Booter {
-    public static final String SERVICE_LOCATOR = "serviceLocator";
-
     public static final String SUPPLIER = "supplier";
-
-    public static final String GUICE = "guice";
 
     public static final String SISU = "sisu";
 
@@ -54,13 +50,9 @@ public class Booter {
 
     public static RepositorySystem newRepositorySystem(final String factory) {
         switch (factory) {
-            case SERVICE_LOCATOR:
-                return org.apache.maven.resolver.examples.manual.ManualRepositorySystemFactory.newRepositorySystem();
             case SUPPLIER:
                 return org.apache.maven.resolver.examples.supplier.SupplierRepositorySystemFactory
                         .newRepositorySystem();
-            case GUICE:
-                return org.apache.maven.resolver.examples.guice.GuiceRepositorySystemFactory.newRepositorySystem();
             case SISU:
                 return org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
             default:

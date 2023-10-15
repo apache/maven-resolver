@@ -69,7 +69,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.concurrency.ExecutorUtils;
@@ -85,7 +84,7 @@ import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.fi
  */
 @Singleton
 @Named(BfDependencyCollector.NAME)
-public class BfDependencyCollector extends DependencyCollectorDelegate implements Service {
+public class BfDependencyCollector extends DependencyCollectorDelegate {
     public static final String NAME = "bf";
 
     /**
@@ -109,16 +108,6 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
      * @since 1.9.0
      */
     static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
-
-    /**
-     * Default ctor for SL.
-     *
-     * @deprecated Will be dropped once SL gone.
-     */
-    @Deprecated
-    public BfDependencyCollector() {
-        // enables default constructor
-    }
 
     @Inject
     public BfDependencyCollector(

@@ -23,6 +23,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -31,6 +32,8 @@ import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 
+import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
+
 /**
  * UT for {@link PrefixesRemoteRepositoryFilterSource}.
  */
@@ -38,8 +41,8 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
     @Override
     protected RemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository) {
-        DefaultRepositoryLayoutProvider layoutProvider = new DefaultRepositoryLayoutProvider();
-        layoutProvider.addRepositoryLayoutFactory(new Maven2RepositoryLayoutFactory());
+        DefaultRepositoryLayoutProvider layoutProvider = new DefaultRepositoryLayoutProvider(
+                Collections.singleton(new Maven2RepositoryLayoutFactory(checksumsSelector())));
         return new PrefixesRemoteRepositoryFilterSource(layoutProvider);
     }
 

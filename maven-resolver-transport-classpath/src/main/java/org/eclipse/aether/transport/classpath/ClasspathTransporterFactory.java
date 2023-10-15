@@ -49,15 +49,6 @@ public final class ClasspathTransporterFactory implements TransporterFactory {
 
     private float priority;
 
-    /**
-     * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
-     * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
-     * will occur.
-     */
-    public ClasspathTransporterFactory() {
-        // enables default constructor
-    }
-
     public float getPriority() {
         return priority;
     }

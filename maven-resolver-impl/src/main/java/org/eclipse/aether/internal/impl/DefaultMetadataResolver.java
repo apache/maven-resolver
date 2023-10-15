@@ -58,8 +58,6 @@ import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
@@ -74,28 +72,23 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultMetadataResolver implements MetadataResolver, Service {
+public class DefaultMetadataResolver implements MetadataResolver {
 
     private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private UpdateCheckManager updateCheckManager;
+    private final UpdateCheckManager updateCheckManager;
 
-    private RepositoryConnectorProvider repositoryConnectorProvider;
+    private final RepositoryConnectorProvider repositoryConnectorProvider;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private OfflineController offlineController;
+    private final OfflineController offlineController;
 
-    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
-
-    @Deprecated
-    public DefaultMetadataResolver() {
-        // enables default constructor
-    }
+    private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
     @Inject
     public DefaultMetadataResolver(
@@ -106,66 +99,20 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
             SyncContextFactory syncContextFactory,
             OfflineController offlineController,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        setRepositoryEventDispatcher(repositoryEventDispatcher);
-        setUpdateCheckManager(updateCheckManager);
-        setRepositoryConnectorProvider(repositoryConnectorProvider);
-        setRemoteRepositoryManager(remoteRepositoryManager);
-        setSyncContextFactory(syncContextFactory);
-        setOfflineController(offlineController);
-        setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setRepositoryEventDispatcher(locator.getService(RepositoryEventDispatcher.class));
-        setUpdateCheckManager(locator.getService(UpdateCheckManager.class));
-        setRepositoryConnectorProvider(locator.getService(RepositoryConnectorProvider.class));
-        setRemoteRepositoryManager(locator.getService(RemoteRepositoryManager.class));
-        setSyncContextFactory(locator.getService(SyncContextFactory.class));
-        setOfflineController(locator.getService(OfflineController.class));
-        setRemoteRepositoryFilterManager(locator.getService(RemoteRepositoryFilterManager.class));
-    }
-
-    public DefaultMetadataResolver setRepositoryEventDispatcher(RepositoryEventDispatcher repositoryEventDispatcher) {
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
-        return this;
-    }
-
-    public DefaultMetadataResolver setUpdateCheckManager(UpdateCheckManager updateCheckManager) {
         this.updateCheckManager = requireNonNull(updateCheckManager, "update check manager cannot be null");
-        return this;
-    }
-
-    public DefaultMetadataResolver setRepositoryConnectorProvider(
-            RepositoryConnectorProvider repositoryConnectorProvider) {
         this.repositoryConnectorProvider =
                 requireNonNull(repositoryConnectorProvider, "repository connector provider cannot be null");
-        return this;
-    }
-
-    public DefaultMetadataResolver setRemoteRepositoryManager(RemoteRepositoryManager remoteRepositoryManager) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
-        return this;
-    }
-
-    public DefaultMetadataResolver setSyncContextFactory(SyncContextFactory syncContextFactory) {
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
-        return this;
-    }
-
-    public DefaultMetadataResolver setOfflineController(OfflineController offlineController) {
         this.offlineController = requireNonNull(offlineController, "offline controller cannot be null");
-        return this;
-    }
-
-    public DefaultMetadataResolver setRemoteRepositoryFilterManager(
-            RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
         this.remoteRepositoryFilterManager =
                 requireNonNull(remoteRepositoryFilterManager, "remote repository filter manager cannot be null");
-        return this;
     }
 
+    @Override
     public List<MetadataResult> resolveMetadata(
             RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
         requireNonNull(session, "session cannot be null");

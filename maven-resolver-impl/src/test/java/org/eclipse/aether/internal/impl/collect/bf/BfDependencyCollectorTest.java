@@ -29,8 +29,10 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
+import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.StubRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.StubVersionRangeResolver;
+import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestSupport;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
@@ -56,11 +58,11 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
     public boolean useSkipper;
 
     @Override
-    protected void setupCollector() {
+    protected DependencyCollectorDelegate setupCollector(ArtifactDescriptorReader artifactDescriptorReader) {
         session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, useSkipper);
 
-        collector = new BfDependencyCollector(
-                new StubRemoteRepositoryManager(), newReader(""), new StubVersionRangeResolver());
+        return new BfDependencyCollector(
+                new StubRemoteRepositoryManager(), artifactDescriptorReader, new StubVersionRangeResolver());
     }
 
     @Override
@@ -81,7 +83,7 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
     @Test
     public void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
         Assume.assumeTrue(useSkipper);
-        collector.setArtifactDescriptorReader(newReader("managed/"));
+        collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new TransitiveDependencyManager());
 
@@ -94,7 +96,7 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
                 "gid:root:ext:ver", "compile", Collections.singleton(new Exclusion("gid", "transitive-2", "", "ext")));
         List<Dependency> dependencies = Arrays.asList(root1, root2);
 
-        CollectRequest request = new CollectRequest(dependencies, null, Arrays.asList(repository));
+        CollectRequest request = new CollectRequest(dependencies, null, Collections.singletonList(repository));
         request.addManagedDependency(newDep("gid:direct:ext:managed-by-dominant-request"));
         request.addManagedDependency(newDep("gid:transitive-1:ext:managed-by-root"));
 

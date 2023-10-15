@@ -26,18 +26,8 @@ import org.junit.Test;
  */
 public class AllResolverDemosTest {
     @Test
-    public void serviceLocator() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.SERVICE_LOCATOR});
-    }
-
-    @Test
     public void supplier() throws Exception {
         AllResolverDemos.main(new String[] {Booter.SUPPLIER});
-    }
-
-    @Test
-    public void guice() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.GUICE});
     }
 
     @Test

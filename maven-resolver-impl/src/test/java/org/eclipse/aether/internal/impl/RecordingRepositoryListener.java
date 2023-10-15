@@ -50,96 +50,115 @@ class RecordingRepositoryListener implements RepositoryListener {
         events.clear();
     }
 
+    @Override
     public void artifactDescriptorInvalid(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactDescriptorMissing(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataInvalid(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactResolving(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactResolved(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactDownloading(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactDownloaded(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataDownloaded(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataDownloading(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataResolving(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataResolved(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactInstalling(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactInstalled(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataInstalling(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataInstalled(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactDeploying(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void artifactDeployed(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataDeploying(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);
     }
 
+    @Override
     public void metadataDeployed(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         events.add(event);

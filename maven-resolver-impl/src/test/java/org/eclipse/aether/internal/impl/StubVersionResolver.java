@@ -29,12 +29,13 @@ import static java.util.Objects.requireNonNull;
  */
 class StubVersionResolver implements VersionResolver {
 
+    @Override
     public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");
         VersionResult result =
                 new VersionResult(request).setVersion(request.getArtifact().getVersion());
-        if (request.getRepositories().size() > 0) {
+        if (!request.getRepositories().isEmpty()) {
             result = result.setRepository(request.getRepositories().get(0));
         }
         return result;

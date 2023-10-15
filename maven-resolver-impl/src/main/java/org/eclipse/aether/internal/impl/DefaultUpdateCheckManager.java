@@ -42,8 +42,6 @@ import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
@@ -58,13 +56,9 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
+public class DefaultUpdateCheckManager implements UpdateCheckManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUpdatePolicyAnalyzer.class);
-
-    private TrackingFileManager trackingFileManager;
-
-    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     private static final String UPDATED_KEY_SUFFIX = ".lastUpdated";
 
@@ -106,33 +100,18 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
      */
     private static final long TS_UNKNOWN = 1L;
 
-    @Deprecated
-    public DefaultUpdateCheckManager() {
-        // default ctor for ServiceLocator
-    }
+    private final TrackingFileManager trackingFileManager;
+
+    private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     @Inject
     public DefaultUpdateCheckManager(
             TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer) {
-        setTrackingFileManager(trackingFileManager);
-        setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setTrackingFileManager(locator.getService(TrackingFileManager.class));
-        setUpdatePolicyAnalyzer(locator.getService(UpdatePolicyAnalyzer.class));
-    }
-
-    public DefaultUpdateCheckManager setTrackingFileManager(TrackingFileManager trackingFileManager) {
-        this.trackingFileManager = requireNonNull(trackingFileManager);
-        return this;
-    }
-
-    public DefaultUpdateCheckManager setUpdatePolicyAnalyzer(UpdatePolicyAnalyzer updatePolicyAnalyzer) {
+        this.trackingFileManager = requireNonNull(trackingFileManager, "tracking file manager cannot be null");
         this.updatePolicyAnalyzer = requireNonNull(updatePolicyAnalyzer, "update policy analyzer cannot be null");
-        return this;
     }
 
+    @Override
     public void checkArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -239,6 +218,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         }
     }
 
+    @Override
     public void checkMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -339,7 +319,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
     private long getLastUpdated(Properties props, String key) {
         String value = props.getProperty(key + UPDATED_KEY_SUFFIX, "");
         try {
-            return (value.length() > 0) ? Long.parseLong(value) : TS_UNKNOWN;
+            return (!value.isEmpty()) ? Long.parseLong(value) : TS_UNKNOWN;
         } catch (NumberFormatException e) {
             LOGGER.debug("Cannot parse last updated date {}, ignoring it", value, e);
             return TS_UNKNOWN;
@@ -409,7 +389,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
 
     private String normalizeRepoUrl(String url) {
         String result = url;
-        if (url != null && url.length() > 0 && !url.endsWith("/")) {
+        if (url != null && !url.isEmpty() && !url.endsWith("/")) {
             result = url + '/';
         }
         return result;
@@ -464,6 +444,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         return (props != null) ? props : new Properties();
     }
 
+    @Override
     public void touchArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -491,6 +472,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         return false;
     }
 
+    @Override
     public void touchMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");

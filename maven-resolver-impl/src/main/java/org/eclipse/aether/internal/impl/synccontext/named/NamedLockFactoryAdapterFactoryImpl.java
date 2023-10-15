@@ -23,20 +23,13 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
-import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
-import org.eclipse.aether.named.providers.NoopNamedLockFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,29 +50,10 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory, Service {
+public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory {
     private static final String DEFAULT_FACTORY_NAME = LocalReadWriteLockNamedLockFactory.NAME;
 
     private static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.GAV_NAME;
-
-    private static Map<String, NamedLockFactory> getManuallyCreatedFactories() {
-        HashMap<String, NamedLockFactory> factories = new HashMap<>();
-        factories.put(NoopNamedLockFactory.NAME, new NoopNamedLockFactory());
-        factories.put(LocalReadWriteLockNamedLockFactory.NAME, new LocalReadWriteLockNamedLockFactory());
-        factories.put(LocalSemaphoreNamedLockFactory.NAME, new LocalSemaphoreNamedLockFactory());
-        factories.put(FileLockNamedLockFactory.NAME, new FileLockNamedLockFactory());
-        return Collections.unmodifiableMap(factories);
-    }
-
-    private static Map<String, NameMapper> getManuallyCreatedNameMappers() {
-        HashMap<String, NameMapper> mappers = new HashMap<>();
-        mappers.put(NameMappers.STATIC_NAME, NameMappers.staticNameMapper());
-        mappers.put(NameMappers.GAV_NAME, NameMappers.gavNameMapper());
-        mappers.put(NameMappers.DISCRIMINATING_NAME, NameMappers.discriminatingNameMapper());
-        mappers.put(NameMappers.FILE_GAV_NAME, NameMappers.fileGavNameMapper());
-        mappers.put(NameMappers.FILE_HGAV_NAME, NameMappers.fileHashingGavNameMapper());
-        return Collections.unmodifiableMap(mappers);
-    }
 
     protected static final String FACTORY_KEY = "aether.syncContext.named.factory";
 
@@ -94,24 +68,6 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     protected final Map<String, NameMapper> nameMappers;
 
     protected final String defaultNameMapperName;
-
-    /**
-     * Default constructor for non Eclipse Sisu uses.
-     *
-     * @deprecated for use in SL only.
-     */
-    @Deprecated
-    public NamedLockFactoryAdapterFactoryImpl() {
-        this.factories = getManuallyCreatedFactories();
-        this.defaultFactoryName = DEFAULT_FACTORY_NAME;
-        this.nameMappers = getManuallyCreatedNameMappers();
-        this.defaultNameMapperName = DEFAULT_NAME_MAPPER_NAME;
-    }
-
-    @Override
-    public void initService(ServiceLocator locator) {
-        locator.getService(RepositorySystemLifecycle.class).addOnSystemEndedHandler(this::shutdown);
-    }
 
     @Inject
     public NamedLockFactoryAdapterFactoryImpl(

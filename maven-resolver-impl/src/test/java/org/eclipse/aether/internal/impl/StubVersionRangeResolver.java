@@ -37,6 +37,7 @@ public class StubVersionRangeResolver implements VersionRangeResolver {
 
     private final VersionScheme versionScheme = new GenericVersionScheme();
 
+    @Override
     public VersionRangeResult resolveVersionRange(RepositorySystemSession session, VersionRangeRequest request)
             throws VersionRangeResolutionException {
         requireNonNull(session, "session cannot be null");

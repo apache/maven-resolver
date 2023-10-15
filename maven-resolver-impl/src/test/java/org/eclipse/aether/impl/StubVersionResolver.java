@@ -27,6 +27,7 @@ import static java.util.Objects.requireNonNull;
 
 public class StubVersionResolver implements VersionResolver {
 
+    @Override
     public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
             throws VersionResolutionException {
         requireNonNull(session, "session cannot be null");

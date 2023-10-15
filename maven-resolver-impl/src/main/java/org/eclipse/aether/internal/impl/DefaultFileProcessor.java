@@ -53,6 +53,7 @@ public class DefaultFileProcessor implements FileProcessor {
      * @return {@code true} if and only if the directory was created, along with all necessary parent directories;
      * {@code false} otherwise
      */
+    @Override
     public boolean mkdirs(File directory) {
         if (directory == null) {
             return false;
@@ -76,18 +77,22 @@ public class DefaultFileProcessor implements FileProcessor {
         return (parentDir != null && (mkdirs(parentDir) || parentDir.exists()) && canonDir.mkdir());
     }
 
+    @Override
     public void write(File target, String data) throws IOException {
         FileUtils.writeFile(target.toPath(), p -> Files.write(p, data.getBytes(StandardCharsets.UTF_8)));
     }
 
+    @Override
     public void write(File target, InputStream source) throws IOException {
         FileUtils.writeFile(target.toPath(), p -> Files.copy(source, p, StandardCopyOption.REPLACE_EXISTING));
     }
 
+    @Override
     public void copy(File source, File target) throws IOException {
         copy(source, target, null);
     }
 
+    @Override
     public long copy(File source, File target, ProgressListener listener) throws IOException {
         try (InputStream in = new BufferedInputStream(Files.newInputStream(source.toPath()));
                 FileUtils.CollocatedTempFile tempTarget = FileUtils.newTempFile(target.toPath());
@@ -123,6 +128,7 @@ public class DefaultFileProcessor implements FileProcessor {
         return total;
     }
 
+    @Override
     public void move(File source, File target) throws IOException {
         if (!source.renameTo(target)) {
             copy(source, target);

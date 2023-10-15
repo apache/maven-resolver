@@ -44,10 +44,7 @@ public class DefaultOfflineController implements OfflineController {
 
     private static final Pattern SEP = Pattern.compile("\\s*,\\s*");
 
-    public DefaultOfflineController() {
-        // enables default constructor
-    }
-
+    @Override
     public void checkOffline(RepositorySystemSession session, RemoteRepository repository)
             throws RepositoryOfflineException {
         requireNonNull(session, "session cannot be null");
@@ -63,7 +60,7 @@ public class DefaultOfflineController implements OfflineController {
         String[] protocols = getConfig(session, CONFIG_PROP_OFFLINE_PROTOCOLS);
         if (protocols != null) {
             String protocol = repository.getProtocol();
-            if (protocol.length() > 0) {
+            if (!protocol.isEmpty()) {
                 for (String p : protocols) {
                     if (p.equalsIgnoreCase(protocol)) {
                         return true;
@@ -78,7 +75,7 @@ public class DefaultOfflineController implements OfflineController {
         String[] hosts = getConfig(session, CONFIG_PROP_OFFLINE_HOSTS);
         if (hosts != null) {
             String host = repository.getHost();
-            if (host.length() > 0) {
+            if (!host.isEmpty()) {
                 for (String h : hosts) {
                     if (h.equalsIgnoreCase(host)) {
                         return true;

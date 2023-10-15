@@ -126,6 +126,8 @@ import org.eclipse.aether.transport.http.ChecksumExtractor;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transport.http.Nexus2ChecksumExtractor;
 import org.eclipse.aether.transport.http.XChecksumChecksumExtractor;
+import org.eclipse.aether.util.version.GenericVersionScheme;
+import org.eclipse.aether.version.VersionScheme;
 
 /**
  * A simple {@link Supplier} of {@link org.eclipse.aether.RepositorySystem} instances, that on each call supplies newly
@@ -448,14 +450,22 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 remoteRepositoryFilterManager);
     }
 
+    protected VersionScheme getVersionScheme() {
+        return new GenericVersionScheme();
+    }
+
     // Maven provided
 
     protected Map<String, MetadataGeneratorFactory> getMetadataGeneratorFactories() {
         // from maven-resolver-provider
         HashMap<String, MetadataGeneratorFactory> result = new HashMap<>();
-        result.put(PluginsMetadataGeneratorFactory.NAME, new PluginsMetadataGeneratorFactory());
-        result.put(VersionsMetadataGeneratorFactory.NAME, new VersionsMetadataGeneratorFactory());
-        result.put(SnapshotMetadataGeneratorFactory.NAME, new SnapshotMetadataGeneratorFactory());
+        // result.put(PluginsMetadataGeneratorFactory.NAME, new PluginsMetadataGeneratorFactory());
+        // result.put(VersionsMetadataGeneratorFactory.NAME, new VersionsMetadataGeneratorFactory());
+        // result.put(SnapshotMetadataGeneratorFactory.NAME, new SnapshotMetadataGeneratorFactory());
+        // TODO: Fix this once MNG-7874 done and released as Maven 4.0.0-alpha-8
+        result.put("plugins", new PluginsMetadataGeneratorFactory());
+        result.put("versions", new VersionsMetadataGeneratorFactory());
+        result.put("snapshot", new SnapshotMetadataGeneratorFactory());
         return result;
     }
 
@@ -489,9 +499,11 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected VersionRangeResolver getVersionRangeResolver(
             MetadataResolver metadataResolver,
             SyncContextFactory syncContextFactory,
-            RepositoryEventDispatcher repositoryEventDispatcher) {
+            RepositoryEventDispatcher repositoryEventDispatcher,
+            VersionScheme versionScheme) {
         // from maven-resolver-provider
-        return new DefaultVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
+        return new DefaultVersionRangeResolver(
+                metadataResolver, syncContextFactory, repositoryEventDispatcher, versionScheme);
     }
 
     protected ModelBuilder getModelBuilder() {
@@ -586,10 +598,11 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 offlineController,
                 remoteRepositoryFilterManager);
 
+        VersionScheme versionScheme = getVersionScheme();
         VersionResolver versionResolver =
                 getVersionResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
         VersionRangeResolver versionRangeResolver =
-                getVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
+                getVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher, versionScheme);
 
         Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors =
                 getArtifactResolverPostProcessors(checksumAlgorithmFactorySelector, trustedChecksumsSources);

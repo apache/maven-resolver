@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -88,10 +89,11 @@ public class DefaultInstallerTest {
 
         localArtifactFile = new File(session.getLocalRepository().getBasedir(), localArtifactPath);
 
-        installer = new DefaultInstaller();
-        installer.setFileProcessor(new TestFileProcessor());
-        installer.setRepositoryEventDispatcher(new StubRepositoryEventDispatcher());
-        installer.setSyncContextFactory(new StubSyncContextFactory());
+        installer = new DefaultInstaller(
+                new TestFileProcessor(),
+                new StubRepositoryEventDispatcher(),
+                Collections.emptySet(),
+                new StubSyncContextFactory());
         request = new InstallRequest();
         listener = new RecordingRepositoryListener();
         session.setRepositoryListener(listener);
@@ -331,12 +333,16 @@ public class DefaultInstallerTest {
         request.addArtifact(artifact);
         installer.install(session, request);
 
-        installer.setFileProcessor(new DefaultFileProcessor() {
-            @Override
-            public long copy(File src, File target, ProgressListener listener) throws IOException {
-                throw new IOException("copy called");
-            }
-        });
+        installer = new DefaultInstaller(
+                new DefaultFileProcessor() {
+                    @Override
+                    public long copy(File src, File target, ProgressListener listener) throws IOException {
+                        throw new IOException("copy called");
+                    }
+                },
+                new StubRepositoryEventDispatcher(),
+                Collections.emptySet(),
+                new StubSyncContextFactory());
 
         request = new InstallRequest();
         request.addArtifact(artifact);

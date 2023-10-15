@@ -38,6 +38,7 @@ import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
 import static org.junit.Assert.*;
 
 public class Maven2RepositoryLayoutFactoryTest {
@@ -100,7 +101,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     @Before
     public void setUp() throws Exception {
         session = TestUtils.newSession();
-        factory = new Maven2RepositoryLayoutFactory();
+        factory = new Maven2RepositoryLayoutFactory(checksumsSelector());
         layout = factory.newInstance(session, newRepo("default"));
     }
 

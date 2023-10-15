@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -49,8 +50,6 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,22 +60,17 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultInstaller implements Installer, Service {
+public class DefaultInstaller implements Installer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultInstaller.class);
 
-    private FileProcessor fileProcessor;
+    private final FileProcessor fileProcessor;
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
+    private final Collection<MetadataGeneratorFactory> metadataFactories;
 
-    private SyncContextFactory syncContextFactory;
-
-    @Deprecated
-    public DefaultInstaller() {
-        // enables default constructor
-    }
+    private final SyncContextFactory syncContextFactory;
 
     @Inject
     public DefaultInstaller(
@@ -84,49 +78,14 @@ public class DefaultInstaller implements Installer, Service {
             RepositoryEventDispatcher repositoryEventDispatcher,
             Set<MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory) {
-        setFileProcessor(fileProcessor);
-        setRepositoryEventDispatcher(repositoryEventDispatcher);
-        setMetadataGeneratorFactories(metadataFactories);
-        setSyncContextFactory(syncContextFactory);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setFileProcessor(locator.getService(FileProcessor.class));
-        setRepositoryEventDispatcher(locator.getService(RepositoryEventDispatcher.class));
-        setMetadataGeneratorFactories(locator.getServices(MetadataGeneratorFactory.class));
-        setSyncContextFactory(locator.getService(SyncContextFactory.class));
-    }
-
-    public DefaultInstaller setFileProcessor(FileProcessor fileProcessor) {
         this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
-        return this;
-    }
-
-    public DefaultInstaller setRepositoryEventDispatcher(RepositoryEventDispatcher repositoryEventDispatcher) {
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
-        return this;
-    }
-
-    public DefaultInstaller addMetadataGeneratorFactory(MetadataGeneratorFactory factory) {
-        metadataFactories.add(requireNonNull(factory, "metadata generator factory cannot be null"));
-        return this;
-    }
-
-    public DefaultInstaller setMetadataGeneratorFactories(Collection<MetadataGeneratorFactory> metadataFactories) {
-        if (metadataFactories == null) {
-            this.metadataFactories = new ArrayList<>();
-        } else {
-            this.metadataFactories = metadataFactories;
-        }
-        return this;
-    }
-
-    public DefaultInstaller setSyncContextFactory(SyncContextFactory syncContextFactory) {
+        this.metadataFactories = Collections.unmodifiableCollection(metadataFactories);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
-        return this;
     }
 
+    @Override
     public InstallResult install(RepositorySystemSession session, InstallRequest request) throws InstallationException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");

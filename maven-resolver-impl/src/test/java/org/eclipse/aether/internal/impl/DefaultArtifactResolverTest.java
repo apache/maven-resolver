@@ -102,22 +102,27 @@ public class DefaultArtifactResolverTest {
         VersionResolver versionResolver = new StubVersionResolver();
         session = TestUtils.newSession();
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
-        resolver = new DefaultArtifactResolver();
-        resolver.setFileProcessor(new TestFileProcessor());
-        resolver.setRepositoryEventDispatcher(new StubRepositoryEventDispatcher());
-        resolver.setVersionResolver(versionResolver);
-        resolver.setUpdateCheckManager(updateCheckManager);
-        resolver.setRepositoryConnectorProvider(repositoryConnectorProvider);
-        resolver.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
-        resolver.setSyncContextFactory(new StubSyncContextFactory());
-        resolver.setOfflineController(new DefaultOfflineController());
-        resolver.setArtifactResolverPostProcessors(Collections.emptyMap());
-        resolver.setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
+        resolver = setupArtifactResolver(versionResolver, updateCheckManager);
 
         artifact = new DefaultArtifact("gid", "aid", "", "ext", "ver");
 
         connector = new RecordingRepositoryConnector();
         repositoryConnectorProvider.setConnector(connector);
+    }
+
+    private DefaultArtifactResolver setupArtifactResolver(
+            VersionResolver versionResolver, UpdateCheckManager updateCheckManager) {
+        return new DefaultArtifactResolver(
+                new TestFileProcessor(),
+                new StubRepositoryEventDispatcher(),
+                versionResolver,
+                updateCheckManager,
+                repositoryConnectorProvider,
+                new StubRemoteRepositoryManager(),
+                new StubSyncContextFactory(),
+                new DefaultOfflineController(),
+                Collections.emptyMap(),
+                remoteRepositoryFilterManager);
     }
 
     @After
@@ -358,9 +363,9 @@ public class DefaultArtifactResolverTest {
         };
 
         repositoryConnectorProvider.setConnector(connector);
-        resolver.setUpdateCheckManager(new DefaultUpdateCheckManager()
-                .setUpdatePolicyAnalyzer(new DefaultUpdatePolicyAnalyzer())
-                .setTrackingFileManager(new DefaultTrackingFileManager()));
+        resolver = setupArtifactResolver(
+                new StubVersionResolver(),
+                new DefaultUpdateCheckManager(new DefaultTrackingFileManager(), new DefaultUpdatePolicyAnalyzer()));
 
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
         session.setUpdatePolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
@@ -622,13 +627,15 @@ public class DefaultArtifactResolverTest {
 
     @Test
     public void testVersionResolverFails() {
-        resolver.setVersionResolver(new VersionResolver() {
-
-            public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
-                    throws VersionResolutionException {
-                throw new VersionResolutionException(new VersionResult(request));
-            }
-        });
+        resolver = setupArtifactResolver(
+                new VersionResolver() {
+                    @Override
+                    public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
+                            throws VersionResolutionException {
+                        throw new VersionResolutionException(new VersionResult(request));
+                    }
+                },
+                new StaticUpdateCheckManager(true));
 
         ArtifactRequest request = new ArtifactRequest(artifact, null, "");
         try {
@@ -653,13 +660,15 @@ public class DefaultArtifactResolverTest {
 
     @Test
     public void testRepositoryEventsOnVersionResolverFail() {
-        resolver.setVersionResolver(new VersionResolver() {
-
-            public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
-                    throws VersionResolutionException {
-                throw new VersionResolutionException(new VersionResult(request));
-            }
-        });
+        resolver = setupArtifactResolver(
+                new VersionResolver() {
+                    @Override
+                    public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
+                            throws VersionResolutionException {
+                        throw new VersionResolutionException(new VersionResult(request));
+                    }
+                },
+                new StaticUpdateCheckManager(true));
 
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener(listener);
@@ -797,14 +806,17 @@ public class DefaultArtifactResolverTest {
         ArtifactRequest request = new ArtifactRequest(artifact, null, "");
         request.addRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
 
-        resolver.setVersionResolver(new VersionResolver() {
+        resolver = setupArtifactResolver(
+                new VersionResolver() {
+                    @Override
+                    public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request) {
+                        return new VersionResult(request)
+                                .setRepository(new LocalRepository("id"))
+                                .setVersion(request.getArtifact().getVersion());
+                    }
+                },
+                new StaticUpdateCheckManager(true));
 
-            public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request) {
-                return new VersionResult(request)
-                        .setRepository(new LocalRepository("id"))
-                        .setVersion(request.getArtifact().getVersion());
-            }
-        });
         ArtifactResult result = resolver.resolveArtifact(session, request);
 
         assertTrue(result.getExceptions().isEmpty());
@@ -863,13 +875,16 @@ public class DefaultArtifactResolverTest {
         });
         ArtifactRequest request = new ArtifactRequest(artifact, null, "");
 
-        resolver.setVersionResolver(new VersionResolver() {
+        resolver = setupArtifactResolver(
+                new VersionResolver() {
+                    @Override
+                    public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request) {
+                        return new VersionResult(request)
+                                .setVersion(request.getArtifact().getVersion());
+                    }
+                },
+                new StaticUpdateCheckManager(true));
 
-            public VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request) {
-                return new VersionResult(request)
-                        .setVersion(request.getArtifact().getVersion());
-            }
-        });
         ArtifactResult result = resolver.resolveArtifact(session, request);
 
         assertTrue(result.getExceptions().isEmpty());

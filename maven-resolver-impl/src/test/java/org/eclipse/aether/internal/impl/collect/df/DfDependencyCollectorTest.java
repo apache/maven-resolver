@@ -18,8 +18,10 @@
  */
 package org.eclipse.aether.internal.impl.collect.df;
 
+import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.StubRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.StubVersionRangeResolver;
+import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestSupport;
 
 /**
@@ -27,9 +29,9 @@ import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestS
  */
 public class DfDependencyCollectorTest extends DependencyCollectorDelegateTestSupport {
     @Override
-    protected void setupCollector() {
-        collector = new DfDependencyCollector(
-                new StubRemoteRepositoryManager(), newReader(""), new StubVersionRangeResolver());
+    protected DependencyCollectorDelegate setupCollector(ArtifactDescriptorReader artifactDescriptorReader) {
+        return new DfDependencyCollector(
+                new StubRemoteRepositoryManager(), artifactDescriptorReader, new StubVersionRangeResolver());
     }
 
     @Override
