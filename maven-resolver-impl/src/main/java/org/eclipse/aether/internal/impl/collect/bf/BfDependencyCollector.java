@@ -132,7 +132,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             List<Dependency> managedDependencies,
             Results results) {
         boolean useSkip = ConfigUtils.getBoolean(session, CONFIG_PROP_SKIPPER_DEFAULT, CONFIG_PROP_SKIPPER);
-        int nThreads = ExecutorUtils.threadCount(session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads");
+        int nThreads = ExecutorUtils.threadCount(session, 5, CONFIG_PROP_THREADS);
         logger.debug("Using thread pool with {} threads to resolve descriptors.", nThreads);
 
         if (useSkip) {
