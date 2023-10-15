@@ -54,12 +54,16 @@ public class StubRemoteRepositoryManager implements RemoteRepositoryManager {
         if (checksums == null || checksums.isEmpty()) {
             checksums = policy.getChecksumPolicy();
         }
-        String updates = session.getUpdatePolicy();
-        if (updates == null || updates.isEmpty()) {
-            updates = policy.getUpdatePolicy();
+        String artifactUpdates = session.getArtifactUpdatePolicy();
+        if (artifactUpdates == null || artifactUpdates.isEmpty()) {
+            artifactUpdates = policy.getArtifactUpdatePolicy();
+        }
+        String metadataUpdates = session.getArtifactUpdatePolicy();
+        if (metadataUpdates == null || metadataUpdates.isEmpty()) {
+            metadataUpdates = policy.getMetadataUpdatePolicy();
         }
 
-        policy = new RepositoryPolicy(policy.isEnabled(), updates, checksums);
+        policy = new RepositoryPolicy(policy.isEnabled(), artifactUpdates, metadataUpdates, checksums);
 
         return policy;
     }

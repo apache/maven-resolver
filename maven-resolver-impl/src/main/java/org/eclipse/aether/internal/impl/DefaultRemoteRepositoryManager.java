@@ -238,7 +238,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             if (globalPolicy) {
                 policy = merge(
                         policy1,
-                        session.getUpdatePolicy(),
+                        session.getArtifactUpdatePolicy(),
                         session.getMetadataUpdatePolicy(),
                         session.getChecksumPolicy());
             } else {
@@ -248,7 +248,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             if (globalPolicy) {
                 policy = merge(
                         policy2,
-                        session.getUpdatePolicy(),
+                        session.getArtifactUpdatePolicy(),
                         session.getMetadataUpdatePolicy(),
                         session.getChecksumPolicy());
             } else {
@@ -258,7 +258,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             if (globalPolicy) {
                 policy = merge(
                         policy1,
-                        session.getUpdatePolicy(),
+                        session.getArtifactUpdatePolicy(),
                         session.getMetadataUpdatePolicy(),
                         session.getChecksumPolicy());
             } else {
@@ -268,7 +268,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             if (globalPolicy) {
                 policy = merge(
                         policy2,
-                        session.getUpdatePolicy(),
+                        session.getArtifactUpdatePolicy(),
                         session.getMetadataUpdatePolicy(),
                         session.getChecksumPolicy());
             } else {
@@ -284,13 +284,13 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                         session, policy1.getChecksumPolicy(), policy2.getChecksumPolicy());
             }
 
-            String updates = session.getUpdatePolicy();
+            String artifactUpdates = session.getArtifactUpdatePolicy();
             //noinspection StatementWithEmptyBody
-            if (globalPolicy && updates != null && !updates.isEmpty()) {
+            if (globalPolicy && artifactUpdates != null && !artifactUpdates.isEmpty()) {
                 // use global override
             } else {
-                updates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
-                        session, policy1.getUpdatePolicy(), policy2.getUpdatePolicy());
+                artifactUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
+                        session, policy1.getArtifactUpdatePolicy(), policy2.getArtifactUpdatePolicy());
             }
             String metadataUpdates = session.getMetadataUpdatePolicy();
             if (globalPolicy && metadataUpdates != null && !metadataUpdates.isEmpty()) {
@@ -300,16 +300,17 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                         session, policy1.getMetadataUpdatePolicy(), policy2.getMetadataUpdatePolicy());
             }
 
-            policy = new RepositoryPolicy(true, updates, metadataUpdates, checksums);
+            policy = new RepositoryPolicy(true, artifactUpdates, metadataUpdates, checksums);
         }
 
         return policy;
     }
 
-    private RepositoryPolicy merge(RepositoryPolicy policy, String updates, String metadataUpdates, String checksums) {
+    private RepositoryPolicy merge(
+            RepositoryPolicy policy, String artifactUpdates, String metadataUpdates, String checksums) {
         if (policy != null) {
-            if (updates == null || updates.isEmpty()) {
-                updates = policy.getUpdatePolicy();
+            if (artifactUpdates == null || artifactUpdates.isEmpty()) {
+                artifactUpdates = policy.getArtifactUpdatePolicy();
             }
             if (metadataUpdates == null || metadataUpdates.isEmpty()) {
                 metadataUpdates = policy.getMetadataUpdatePolicy();
@@ -317,10 +318,10 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             if (checksums == null || checksums.isEmpty()) {
                 checksums = policy.getChecksumPolicy();
             }
-            if (!policy.getUpdatePolicy().equals(updates)
+            if (!policy.getArtifactUpdatePolicy().equals(artifactUpdates)
                     || !policy.getMetadataUpdatePolicy().equals(metadataUpdates)
                     || !policy.getChecksumPolicy().equals(checksums)) {
-                policy = new RepositoryPolicy(policy.isEnabled(), updates, metadataUpdates, checksums);
+                policy = new RepositoryPolicy(policy.isEnabled(), artifactUpdates, metadataUpdates, checksums);
             }
         }
         return policy;

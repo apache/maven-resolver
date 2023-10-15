@@ -67,7 +67,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private String checksumPolicy;
 
-    private String updatePolicy;
+    private String artifactUpdatePolicy;
 
     private String metadataUpdatePolicy;
 
@@ -269,7 +269,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     @Override
     public String getUpdatePolicy() {
-        return updatePolicy;
+        return getArtifactUpdatePolicy();
     }
 
     /**
@@ -284,7 +284,30 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      */
     public DefaultRepositorySystemSession setUpdatePolicy(String updatePolicy) {
         verifyStateForMutation();
-        this.updatePolicy = updatePolicy;
+        setArtifactUpdatePolicy(updatePolicy);
+        setMetadataUpdatePolicy(updatePolicy);
+        return this;
+    }
+
+    @Override
+    public String getArtifactUpdatePolicy() {
+        return artifactUpdatePolicy;
+    }
+
+    /**
+     * Sets the global artifact update policy. If set, the global update policy overrides the artifact update policies
+     * of the remote repositories being used for resolution.
+     *
+     * @param artifactUpdatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
+     * @return This session for chaining, never {@code null}.
+     * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
+     * @see RepositoryPolicy#UPDATE_POLICY_DAILY
+     * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
+     */
+    public DefaultRepositorySystemSession setArtifactUpdatePolicy(String artifactUpdatePolicy) {
+        verifyStateForMutation();
+        this.artifactUpdatePolicy = artifactUpdatePolicy;
         return this;
     }
 
@@ -294,8 +317,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     }
 
     /**
-     * Sets the global metadata update policy. If set, the global update policy overrides the update policies of the remote
-     * repositories being used for resolution.
+     * Sets the global metadata update policy. If set, the global update policy overrides the metadata update policies
+     * of the remote repositories being used for resolution.
      *
      * @param metadataUpdatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
      * @return This session for chaining, never {@code null}.

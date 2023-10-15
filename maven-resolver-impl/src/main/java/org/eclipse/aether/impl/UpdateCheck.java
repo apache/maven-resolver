@@ -41,7 +41,7 @@ public final class UpdateCheck<T, E extends RepositoryException> {
 
     private boolean fileValid = true;
 
-    private String policy;
+    private String artifactPolicy;
 
     private String metadataPolicy;
 
@@ -149,13 +149,14 @@ public final class UpdateCheck<T, E extends RepositoryException> {
     }
 
     /**
-     * Gets the policy to use for the data check.
+     * Gets the policy to use for the artifact check.
      *
-     * @return The policy to use for the data check.
+     * @return The policy to use for the artifact check.
      * @see org.eclipse.aether.repository.RepositoryPolicy
+     * @since TBD
      */
-    public String getPolicy() {
-        return policy;
+    public String getArtifactPolicy() {
+        return artifactPolicy;
     }
 
     /**
@@ -170,19 +171,20 @@ public final class UpdateCheck<T, E extends RepositoryException> {
     }
 
     /**
-     * Sets the policy to use for the check.
+     * Sets the artifact policy to use for the check.
      *
-     * @param policy The policy to use for the data check, may be {@code null}.
+     * @param artifactPolicy The policy to use for the artifact check, may be {@code null}.
      * @return This object for chaining.
      * @see org.eclipse.aether.repository.RepositoryPolicy
+     * @since TBD
      */
-    public UpdateCheck<T, E> setPolicy(String policy) {
-        this.policy = policy;
+    public UpdateCheck<T, E> setArtifactPolicy(String artifactPolicy) {
+        this.artifactPolicy = artifactPolicy;
         return this;
     }
 
     /**
-     * Sets the policy to use for the check.
+     * Sets the metadata policy to use for the check.
      *
      * @param metadataPolicy The policy to use for the metadata check, may be {@code null}.
      * @return This object for chaining.
@@ -282,6 +284,6 @@ public final class UpdateCheck<T, E extends RepositoryException> {
 
     @Override
     public String toString() {
-        return getPolicy() + "/" + getMetadataPolicy() + ": " + getFile() + " < " + getRepository();
+        return getArtifactPolicy() + "/" + getMetadataPolicy() + ": " + getFile() + " < " + getRepository();
     }
 }

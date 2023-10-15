@@ -103,7 +103,7 @@ public class DefaultUpdateCheckManagerTest {
         check.setFile(metadata.getFile());
         check.setRepository(repository);
         check.setAuthoritativeRepository(repository);
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
         check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
         return check;
     }
@@ -113,7 +113,7 @@ public class DefaultUpdateCheckManagerTest {
         check.setItem(artifact);
         check.setFile(artifact.getFile());
         check.setRepository(repository);
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
         return check;
     }
 
@@ -134,17 +134,17 @@ public class DefaultUpdateCheckManagerTest {
         cal.add(Calendar.DATE, -1);
         check.setLocalLastUpdated(cal.getTimeInMillis());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.checkMetadata(session, check);
         assertNull(check.getException());
         assertTrue(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkMetadata(session, check);
         assertNull(check.getException());
         assertTrue(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":60");
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":60");
         manager.checkMetadata(session, check);
         assertNull(check.getException());
         assertTrue(check.isRequired());
@@ -156,19 +156,19 @@ public class DefaultUpdateCheckManagerTest {
 
         check.setLocalLastUpdated(System.currentTimeMillis());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":61");
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":61");
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
 
-        check.setPolicy("no particular policy");
+        check.setArtifactPolicy("no particular policy");
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
     }
@@ -176,7 +176,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadata() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
 
         // existing file, never checked before
         manager.checkMetadata(session, check);
@@ -187,7 +187,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
 
         check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":60");
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":60");
 
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
@@ -226,7 +226,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
 
         // ! file.exists && ! updateRequired -> artifact not found in remote repo
-        check = newMetadataCheck().setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check = newMetadataCheck().setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
         assertTrue(check.getException() instanceof MetadataNotFoundException);
@@ -245,7 +245,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
 
         // ! file.exists && updateRequired -> check in remote repo
-        check = newMetadataCheck().setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check = newMetadataCheck().setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkMetadata(session, check);
         assertTrue(check.isRequired());
         assertNull(check.getException());
@@ -256,7 +256,7 @@ public class DefaultUpdateCheckManagerTest {
         metadata.getFile().delete();
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
 
         check.setException(new MetadataTransferException(metadata, repository, "some error"));
         manager.touchMetadata(session, check);
@@ -279,7 +279,7 @@ public class DefaultUpdateCheckManagerTest {
         metadata.getFile().delete();
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
 
         check.setException(new MetadataTransferException(metadata, repository, "some error"));
         manager.touchMetadata(session, check);
@@ -296,7 +296,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
         // first check
@@ -313,7 +313,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadataSessionStateModes() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.touchMetadata(session, check);
 
@@ -338,7 +338,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
 
@@ -365,7 +365,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
 
@@ -386,7 +386,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadataWhenLocallyMissingEvenIfUpdatePolicyIsNever() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         check.getFile().delete();
@@ -399,7 +399,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadataWhenLocallyPresentButInvalidEvenIfUpdatePolicyIsNever() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         manager.touchMetadata(session, check);
@@ -429,7 +429,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckMetadataNotWhenUpdatePolicyIsNeverAndTimestampIsUnavailable() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         check.setMetadataPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
@@ -459,17 +459,17 @@ public class DefaultUpdateCheckManagerTest {
         artifact.getFile().setLastModified(lastUpdate);
         check.setLocalLastUpdated(lastUpdate);
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.checkArtifact(session, check);
         assertNull(check.getException());
         assertTrue(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkArtifact(session, check);
         assertNull(check.getException());
         assertTrue(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":60");
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":60");
         manager.checkArtifact(session, check);
         assertNull(check.getException());
         assertTrue(check.isRequired());
@@ -485,19 +485,19 @@ public class DefaultUpdateCheckManagerTest {
         cal.add(Calendar.HOUR_OF_DAY, -1);
         check.setLocalLastUpdated(cal.getTimeInMillis());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
 
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":61");
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":61");
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
 
-        check.setPolicy("no particular policy");
+        check.setArtifactPolicy("no particular policy");
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
     }
@@ -554,7 +554,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
 
         // ! file.exists && ! updateRequired -> artifact not found in remote repo
-        check = newArtifactCheck().setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check = newArtifactCheck().setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
         assertTrue(check.getException() instanceof ArtifactNotFoundException);
@@ -572,7 +572,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
 
         // ! file.exists && updateRequired -> check in remote repo
-        check = newArtifactCheck().setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check = newArtifactCheck().setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkArtifact(session, check);
         assertTrue(check.isRequired());
         assertNull(check.getException());
@@ -583,7 +583,7 @@ public class DefaultUpdateCheckManagerTest {
         artifact.getFile().delete();
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         check.setException(new ArtifactTransferException(artifact, repository, "some error"));
         manager.touchArtifact(session, check);
         resetSessionData(session);
@@ -602,7 +602,7 @@ public class DefaultUpdateCheckManagerTest {
         artifact.getFile().delete();
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         check.setException(new ArtifactTransferException(artifact, repository, "some error"));
         manager.touchArtifact(session, check);
         resetSessionData(session);
@@ -618,7 +618,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
         // first check
         manager.checkArtifact(session, check);
@@ -634,7 +634,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckArtifactSessionStateModes() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         manager.touchArtifact(session, check);
 
         session.setConfigProperty(DefaultUpdateCheckManager.CONFIG_PROP_SESSION_STATE, "bypass");
@@ -656,7 +656,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
 
         // first check
@@ -682,7 +682,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 
         // first check
         manager.checkArtifact(session, check);
@@ -701,7 +701,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckArtifactWhenLocallyMissingEvenIfUpdatePolicyIsNever() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         check.getFile().delete();
@@ -714,7 +714,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckArtifactWhenLocallyPresentButInvalidEvenIfUpdatePolicyIsNever() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         manager.touchArtifact(session, check);
@@ -744,7 +744,7 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     public void testCheckArtifactNotWhenUpdatePolicyIsNeverAndTimestampIsUnavailable() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
+        check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         manager.checkArtifact(session, check);

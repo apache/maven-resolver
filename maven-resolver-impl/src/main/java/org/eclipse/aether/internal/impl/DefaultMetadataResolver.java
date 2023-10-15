@@ -243,7 +243,7 @@ public class DefaultMetadataResolver implements MetadataResolver {
                         check.setFile(checkFile);
                         check.setRepository(repository);
                         check.setAuthoritativeRepository(repo);
-                        check.setPolicy(policy.getUpdatePolicy());
+                        check.setArtifactPolicy(policy.getArtifactUpdatePolicy());
                         check.setMetadataPolicy(policy.getMetadataUpdatePolicy());
 
                         if (lrmResult.isStale()) {
