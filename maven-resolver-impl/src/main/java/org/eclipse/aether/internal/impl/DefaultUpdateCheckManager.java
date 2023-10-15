@@ -115,7 +115,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
     public void checkArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
-        final String updatePolicy = check.getPolicy();
+        final String updatePolicy = check.getArtifactPolicy();
         if (check.getLocalLastUpdated() != 0
                 && !isUpdatedRequired(session, check.getLocalLastUpdated(), updatePolicy)) {
             LOGGER.debug("Skipped remote request for {}, locally installed artifact up-to-date", check.getItem());

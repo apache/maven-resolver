@@ -93,15 +93,29 @@ public interface RepositorySystemSession {
     String getChecksumPolicy();
 
     /**
-     * Gets the global data update policy. If set, the global update policy overrides the update policies of the remote
-     * repositories being used for resolution.
+     * Gets the global update policy, or {@code null} if not set.
+     * <p>
+     * This method is meant for code that does not want to distinguish between artifact and metadata policies.
+     * Note: applications should either use get/set updatePolicy (this method and
+     * {@link DefaultRepositorySystemSession#setUpdatePolicy(String)}) or also distinguish between artifact and
+     * metadata update policies (and use other methods), but <em>should not mix the two!</em>
+     *
+     * @see #getArtifactUpdatePolicy()
+     * @see #getMetadataUpdatePolicy()
+     */
+    String getUpdatePolicy();
+
+    /**
+     * Gets the global artifact update policy. If set, the global update policy overrides the update policies of the
+     * remote repositories being used for resolution.
      *
      * @return The global update policy or {@code null}/empty if not set and the per-repository policies apply.
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
      */
-    String getUpdatePolicy();
+    String getArtifactUpdatePolicy();
 
     /**
      * Gets the global metadata update policy. If set, the global update policy overrides the update policies of the remote

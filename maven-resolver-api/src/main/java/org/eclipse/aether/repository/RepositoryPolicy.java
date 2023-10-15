@@ -60,7 +60,7 @@ public final class RepositoryPolicy {
 
     private final boolean enabled;
 
-    private final String updatePolicy;
+    private final String artifactUpdatePolicy;
 
     private final String metadataUpdatePolicy;
 
@@ -85,16 +85,17 @@ public final class RepositoryPolicy {
      * Creates a new policy with the specified settings.
      *
      * @param enabled A flag whether the associated repository should be accessed or not.
-     * @param updatePolicy The update interval after which locally cached data from the repository is considered stale
+     * @param artifactUpdatePolicy The update interval after which locally cached data from the repository is considered stale
      *            and should be re-fetched, may be {@code null}.
      * @param metadataUpdatePolicy The update interval after which locally cached metadata from the repository is considered stale
      *            and should be re-fetched, may be {@code null}.
      * @param checksumPolicy The way checksum verification should be handled, may be {@code null}.
      * @since TBD
      */
-    public RepositoryPolicy(boolean enabled, String updatePolicy, String metadataUpdatePolicy, String checksumPolicy) {
+    public RepositoryPolicy(
+            boolean enabled, String artifactUpdatePolicy, String metadataUpdatePolicy, String checksumPolicy) {
         this.enabled = enabled;
-        this.updatePolicy = (updatePolicy != null) ? updatePolicy : "";
+        this.artifactUpdatePolicy = (artifactUpdatePolicy != null) ? artifactUpdatePolicy : "";
         this.metadataUpdatePolicy = (metadataUpdatePolicy != null) ? metadataUpdatePolicy : "";
         this.checksumPolicy = (checksumPolicy != null) ? checksumPolicy : "";
     }
@@ -109,12 +110,28 @@ public final class RepositoryPolicy {
     }
 
     /**
-     * Gets the update policy for locally cached data from the repository.
+     * This method is not used in Resolver, as resolver internally strictly distinguishes between artifact and metadata
+     * update policies.
+     *
+     * @see #getArtifactUpdatePolicy()
+     * @see #getMetadataUpdatePolicy()
+     * @deprecated This method should not be used. Since version 2 Resolver internally distinguishes between artifact
+     * update policy and metadata update policy. This method was left only to preserve binary compatibility, and in
+     * reality invokes {@link #getArtifactUpdatePolicy()}.
+     */
+    @Deprecated
+    public String getUpdatePolicy() {
+        return getArtifactUpdatePolicy();
+    }
+
+    /**
+     * Gets the update policy for locally cached artifacts from the repository.
      *
      * @return The update policy, never {@code null}.
+     * @since TBD
      */
-    public String getUpdatePolicy() {
-        return updatePolicy;
+    public String getArtifactUpdatePolicy() {
+        return artifactUpdatePolicy;
     }
 
     /**
@@ -140,7 +157,7 @@ public final class RepositoryPolicy {
     public String toString() {
         return "enabled=" + isEnabled()
                 + ", checksums=" + getChecksumPolicy()
-                + ", updates=" + getUpdatePolicy()
+                + ", artifactUpdates=" + getArtifactUpdatePolicy()
                 + ", metadataUpdates=" + getMetadataUpdatePolicy();
     }
 
@@ -157,7 +174,8 @@ public final class RepositoryPolicy {
         RepositoryPolicy that = (RepositoryPolicy) obj;
 
         return enabled == that.enabled
-                && updatePolicy.equals(that.updatePolicy)
+                && artifactUpdatePolicy.equals(that.artifactUpdatePolicy)
+                && metadataUpdatePolicy.equals(that.metadataUpdatePolicy)
                 && checksumPolicy.equals(that.checksumPolicy);
     }
 
@@ -165,7 +183,8 @@ public final class RepositoryPolicy {
     public int hashCode() {
         int hash = 17;
         hash = hash * 31 + (enabled ? 1 : 0);
-        hash = hash * 31 + updatePolicy.hashCode();
+        hash = hash * 31 + artifactUpdatePolicy.hashCode();
+        hash = hash * 31 + metadataUpdatePolicy.hashCode();
         hash = hash * 31 + checksumPolicy.hashCode();
         return hash;
     }

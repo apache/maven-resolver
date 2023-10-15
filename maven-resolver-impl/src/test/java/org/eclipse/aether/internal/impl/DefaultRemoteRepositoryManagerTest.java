@@ -79,7 +79,8 @@ public class DefaultRemoteRepositoryManagerTest {
     private void assertEqual(RepositoryPolicy expected, RepositoryPolicy actual) {
         assertEquals("enabled", expected.isEnabled(), actual.isEnabled());
         assertEquals("checksums", expected.getChecksumPolicy(), actual.getChecksumPolicy());
-        assertEquals("updates", expected.getUpdatePolicy(), actual.getUpdatePolicy());
+        assertEquals("artifactUpdates", expected.getArtifactUpdatePolicy(), actual.getArtifactUpdatePolicy());
+        assertEquals("metadataUpdates", expected.getMetadataUpdatePolicy(), actual.getMetadataUpdatePolicy());
     }
 
     @Test
@@ -97,7 +98,8 @@ public class DefaultRemoteRepositoryManagerTest {
         RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
         assertTrue(effectivePolicy.isEnabled());
         assertEquals(RepositoryPolicy.CHECKSUM_POLICY_IGNORE, effectivePolicy.getChecksumPolicy());
-        assertEquals(RepositoryPolicy.UPDATE_POLICY_ALWAYS, effectivePolicy.getUpdatePolicy());
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_ALWAYS, effectivePolicy.getArtifactUpdatePolicy());
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_ALWAYS, effectivePolicy.getMetadataUpdatePolicy());
     }
 
     @Test

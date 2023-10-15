@@ -501,7 +501,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 check.setFile(download.getFile());
                 check.setFileValid(false);
                 check.setRepository(group.repository);
-                check.setPolicy(policy.getUpdatePolicy());
+                check.setArtifactPolicy(policy.getArtifactUpdatePolicy());
                 check.setMetadataPolicy(policy.getMetadataUpdatePolicy());
                 item.updateCheck = check;
                 updateCheckManager.checkArtifact(session, check);
