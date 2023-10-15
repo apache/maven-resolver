@@ -93,10 +93,15 @@ public interface RepositorySystemSession {
     String getChecksumPolicy();
 
     /**
-     * Method for code that does not want to distinguish between artifact and metadata policies, in reality this
-     * is method invokes {@link #getArtifactUpdatePolicy()}.
+     * Gets the global update policy, or {@code null} if not set.
+     * <p>
+     * This method is meant for code that does not want to distinguish between artifact and metadata policies.
+     * Note: applications should either use get/set updatePolicy (this method and
+     * {@link DefaultRepositorySystemSession#setUpdatePolicy(String)}) or also distinguish between artifact and
+     * metadata update policies (and use other methods), but <em>should not mix the two!</em>
      *
      * @see #getArtifactUpdatePolicy()
+     * @see #getMetadataUpdatePolicy()
      */
     String getUpdatePolicy();
 

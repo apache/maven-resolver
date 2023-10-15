@@ -110,11 +110,14 @@ public final class RepositoryPolicy {
     }
 
     /**
-     * Shorthand for {@link #getArtifactUpdatePolicy()}. This method is not used in Resolver, nor should be
-     * used outside it. Internally, resolver strictly distinguishes between artifact and metadata update
-     * policies.
+     * This method is not used in Resolver, as resolver internally strictly distinguishes between artifact and metadata
+     * update policies.
      *
-     * @deprecated Use {@link #getArtifactUpdatePolicy()} or {@link #getMetadataUpdatePolicy()} instead.
+     * @see #getArtifactUpdatePolicy()
+     * @see #getMetadataUpdatePolicy() 
+     * @deprecated This method should not be used. Since version 2 Resolver internally distinguishes between artifact
+     * update policy and metadata update policy. This method was left only to preserve binary compatibility, and in
+     * reality invokes {@link #getArtifactUpdatePolicy()}.
      */
     @Deprecated
     public String getUpdatePolicy() {

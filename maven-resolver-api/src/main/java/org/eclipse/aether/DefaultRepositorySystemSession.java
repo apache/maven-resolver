@@ -275,12 +275,19 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     /**
      * Sets the global update policy. If set, the global update policy overrides the update policies of the remote
      * repositories being used for resolution.
+     * <p>
+     * This method is meant for code that does not want to distinguish between artifact and metadata policies.
+     * Note: applications should either use get/set updatePolicy (this method and
+     * {@link RepositorySystemSession#getUpdatePolicy()}) or also distinguish between artifact and
+     * metadata update policies (and use other methods), but <em>should not mix the two!</em>
      *
      * @param updatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
      * @return This session for chaining, never {@code null}.
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @see #setArtifactUpdatePolicy(String)
+     * @see #setMetadataUpdatePolicy(String)
      */
     public DefaultRepositorySystemSession setUpdatePolicy(String updatePolicy) {
         verifyStateForMutation();
