@@ -114,7 +114,7 @@ public final class RepositoryPolicy {
      * update policies.
      *
      * @see #getArtifactUpdatePolicy()
-     * @see #getMetadataUpdatePolicy() 
+     * @see #getMetadataUpdatePolicy()
      * @deprecated This method should not be used. Since version 2 Resolver internally distinguishes between artifact
      * update policy and metadata update policy. This method was left only to preserve binary compatibility, and in
      * reality invokes {@link #getArtifactUpdatePolicy()}.
