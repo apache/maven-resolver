@@ -29,7 +29,7 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import static java.util.Objects.requireNonNull;
 
 /**
- * JDK8 Transport factory: is no-op.
+ * JDK Transport factory: on Java 8 is no-op.
  *
  * @since TBD
  */

@@ -29,7 +29,7 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import static java.util.Objects.requireNonNull;
 
 /**
- * JDK11 Transport factory.
+ * JDK Transport factory.
  *
  * @since TBD
  */

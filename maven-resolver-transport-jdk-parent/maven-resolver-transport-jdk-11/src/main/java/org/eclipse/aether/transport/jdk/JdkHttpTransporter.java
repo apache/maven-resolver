@@ -34,6 +34,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -60,7 +61,9 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 
 /**
- * A transporter for HTTP/HTTPS.
+ * JDK Transport using {@link java.net.http.HttpClient}.
+ *
+ * @since TBD
  */
 final class JdkHttpTransporter extends AbstractTransporter {
     private static final int MULTIPLE_CHOICES = 300;
@@ -84,6 +87,8 @@ final class JdkHttpTransporter extends AbstractTransporter {
     private static final String RANGE = "Range";
 
     private static final String USER_AGENT = "User-Agent";
+
+    private static final String LAST_MODIFIED = "Last-Modified";
 
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
@@ -242,6 +247,16 @@ final class JdkHttpTransporter extends AbstractTransporter {
                 tempFile.move();
             } finally {
                 task.setDataFile(dataFile);
+            }
+        }
+        if (task.getDataFile() != null) {
+            String lastModifiedHeader =
+                    response.headers().firstValue(LAST_MODIFIED).orElse(null); // note: Wagon also does first not last
+            if (lastModifiedHeader != null) {
+                Date lastModified = createRFC7231().parse(lastModifiedHeader);
+                if (lastModified != null) {
+                    Files.setLastModifiedTime(task.getDataFile().toPath(), FileTime.fromMillis(lastModified.getTime()));
+                }
             }
         }
         Map<String, String> checksums = extractXChecksums(response);

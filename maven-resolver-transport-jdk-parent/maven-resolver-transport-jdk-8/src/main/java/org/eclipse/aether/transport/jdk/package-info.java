@@ -18,8 +18,8 @@
  * under the License.
  */
 /**
- * Support for downloads/uploads via the HTTP and HTTPS protocols. Below Java 11 this implementation
- * is no-op.
+ * Support for downloads/uploads via the HTTP and HTTPS protocols. This implementation is no-op on Java versions
+ * below 11.
  *
  * @since TBD
  */
