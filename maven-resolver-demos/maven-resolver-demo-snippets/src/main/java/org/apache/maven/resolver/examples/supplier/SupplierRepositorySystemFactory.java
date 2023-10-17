@@ -18,14 +18,27 @@
  */
 package org.apache.maven.resolver.examples.supplier;
 
+import java.util.Map;
+
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
+import org.eclipse.aether.transport.http.ChecksumExtractor;
+import org.eclipse.aether.transport.jdk.JdkTransporterFactory;
 
 /**
  * A factory for repository system instances that employs Maven Artifact Resolver's provided supplier.
  */
 public class SupplierRepositorySystemFactory {
     public static RepositorySystem newRepositorySystem() {
-        return new RepositorySystemSupplier().get();
+        return new RepositorySystemSupplier() {
+            @Override
+            protected Map<String, TransporterFactory> getTransporterFactories(
+                    Map<String, ChecksumExtractor> extractors) {
+                Map<String, TransporterFactory> result = super.getTransporterFactories(extractors);
+                result.put(JdkTransporterFactory.NAME, new JdkTransporterFactory());
+                return result;
+            }
+        }.get();
     }
 }
