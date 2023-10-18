@@ -25,6 +25,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.transport.http.ChecksumExtractor;
 import org.eclipse.aether.transport.jdk.JdkTransporterFactory;
+import org.eclipse.aether.transport.jetty.JettyTransporterFactory;
 
 /**
  * A factory for repository system instances that employs Maven Artifact Resolver's provided supplier.
@@ -37,6 +38,7 @@ public class SupplierRepositorySystemFactory {
                     Map<String, ChecksumExtractor> extractors) {
                 Map<String, TransporterFactory> result = super.getTransporterFactories(extractors);
                 result.put(JdkTransporterFactory.NAME, new JdkTransporterFactory());
+                result.put(JettyTransporterFactory.NAME, new JettyTransporterFactory());
                 return result;
             }
         }.get();

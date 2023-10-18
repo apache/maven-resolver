@@ -26,15 +26,17 @@
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-jdk</artifactId>
+  <artifactId>maven-resolver-transport-jetty</artifactId>
   <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Transport JDK</name>
-  <description>Maven Artifact Transport JDK Java 11+.</description>
+  <name>Maven Artifact Resolver Transport Jetty</name>
+  <description>Maven Artifact Transport Jetty Java 11+.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.jdk</Automatic-Module-Name>
+    <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+
+    <jettyVersion>10.0.17</jettyVersion>
   </properties>
 
   <dependencies>
@@ -55,6 +57,22 @@
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.http2</groupId>
+      <artifactId>http2-client</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.http2</groupId>
+      <artifactId>http2-http-client-transport</artifactId>
+      <version>${jettyVersion}</version>
     </dependency>
   </dependencies>
 
