@@ -38,4 +38,8 @@
     <module>maven-resolver-transport-jetty</module>
   </modules>
 
+  <properties>
+    <jettyVersion>10.0.17</jettyVersion>
+  </properties>
+
 </project>

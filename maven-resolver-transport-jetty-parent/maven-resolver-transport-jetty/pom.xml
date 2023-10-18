@@ -35,6 +35,9 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+
+    <!-- This is a multi-release JAR, but this property is needed only to pass enforcer -->
+    <javaVersion>11</javaVersion>
   </properties>
 
   <dependencies>
@@ -55,6 +58,22 @@
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.http2</groupId>
+      <artifactId>http2-client</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.http2</groupId>
+      <artifactId>http2-http-client-transport</artifactId>
+      <version>${jettyVersion}</version>
     </dependency>
   </dependencies>
 

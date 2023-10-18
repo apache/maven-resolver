@@ -34,6 +34,8 @@
 
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.demo.snippets</Automatic-Module-Name>
+    <!-- To make Jetty work -->
+    <javaVersion>11</javaVersion>
   </properties>
 
   <dependencies>
