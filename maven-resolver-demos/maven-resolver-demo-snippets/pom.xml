@@ -34,6 +34,8 @@
 
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.demo.snippets</Automatic-Module-Name>
+    <!-- To make Jetty work -->
+    <javaVersion>11</javaVersion>
   </properties>
 
   <dependencies>
@@ -68,6 +70,10 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-jdk</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-transport-jetty</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
