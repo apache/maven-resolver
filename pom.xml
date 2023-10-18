@@ -146,7 +146,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-transport-jetty</artifactId>
+        <artifactId>maven-resolver-transport-jetty-10</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

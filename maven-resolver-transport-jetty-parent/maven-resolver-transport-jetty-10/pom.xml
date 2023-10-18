@@ -26,17 +26,18 @@
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-jetty-11</artifactId>
+  <artifactId>maven-resolver-transport-jetty-10</artifactId>
   <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Transport Jetty (11)</name>
+  <name>Maven Artifact Resolver Transport Jetty 10</name>
   <description>Maven Artifact Transport Jetty.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty</Automatic-Module-Name>
+    <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty10</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
 
     <javaVersion>11</javaVersion>
+    <jettyVersion>10.0.17</jettyVersion>
   </properties>
 
   <dependencies>

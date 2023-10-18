@@ -26,15 +26,17 @@
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-jetty-8</artifactId>
+  <artifactId>maven-resolver-transport-jetty-9</artifactId>
   <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Transport Jetty (8)</name>
+  <name>Maven Artifact Resolver Transport Jetty 9</name>
   <description>Maven Artifact Transport Jetty.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty</Automatic-Module-Name>
+    <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty9</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+
+    <jettyVersion>9.4.53.v20231009</jettyVersion>
   </properties>
 
   <dependencies>
@@ -55,6 +57,12 @@
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+      <version>${jettyVersion}</version>
     </dependency>
   </dependencies>
 

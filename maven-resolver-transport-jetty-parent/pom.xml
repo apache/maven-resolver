@@ -33,13 +33,8 @@
   <description>Maven Artifact Transport Jetty.</description>
 
   <modules>
-    <module>maven-resolver-transport-jetty-8</module>
-    <module>maven-resolver-transport-jetty-11</module>
-    <module>maven-resolver-transport-jetty</module>
+    <module>maven-resolver-transport-jetty-9</module>
+    <module>maven-resolver-transport-jetty-10</module>
   </modules>
-
-  <properties>
-    <jettyVersion>10.0.17</jettyVersion>
-  </properties>
 
 </project>
