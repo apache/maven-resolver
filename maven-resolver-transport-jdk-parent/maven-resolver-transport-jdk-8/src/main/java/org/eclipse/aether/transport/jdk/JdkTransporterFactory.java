@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
 public final class JdkTransporterFactory implements TransporterFactory {
     public static final String NAME = "jdk";
 
-    private float priority = 10.0f;
+    private float priority = Float.MIN_VALUE;
 
     @Override
     public float getPriority() {

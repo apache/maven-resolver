@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
 public final class JettyTransporterFactory implements TransporterFactory {
     public static final String NAME = "jetty";
 
-    private float priority = 15.0f;
+    private float priority = Float.MIN_VALUE;
 
     @Override
     public float getPriority() {
