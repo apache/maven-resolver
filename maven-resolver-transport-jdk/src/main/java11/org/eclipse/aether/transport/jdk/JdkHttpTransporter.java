@@ -63,7 +63,7 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 
 /**
- * JDK Transport using {@link java.net.http.HttpClient}.
+ * JDK Transport using {@link HttpClient}.
  *
  * @since TBD
  */

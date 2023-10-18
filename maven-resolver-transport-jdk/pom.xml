@@ -22,21 +22,19 @@
 
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
-    <artifactId>maven-resolver-transport-jdk-parent</artifactId>
+    <artifactId>maven-resolver</artifactId>
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-jdk-11</artifactId>
+  <artifactId>maven-resolver-transport-jdk</artifactId>
   <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Transport JDK 11</name>
-  <description>Maven Artifact Transport JDK Java 11.</description>
+  <name>Maven Artifact Resolver Transport JDK</name>
+  <description>Maven Artifact Transport JDK Java 11+.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.jdk11</Automatic-Module-Name>
+    <Automatic-Module-Name>org.apache.maven.resolver.transport.jdk</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-
-    <javaVersion>11</javaVersion>
   </properties>
 
   <dependencies>
@@ -59,5 +57,27 @@
       <optional>true</optional>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>java11</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>11</release>
+              <multiReleaseOutput>true</multiReleaseOutput>
+              <compileSourceRoots>src/main/java11</compileSourceRoots>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @since TBD
  */
-@Named(JdkTransporterFactory.NAME)
+@Named( JdkTransporterFactory.NAME)
 public final class JdkTransporterFactory implements TransporterFactory {
     public static final String NAME = "jdk";
 
@@ -44,7 +44,7 @@ public final class JdkTransporterFactory implements TransporterFactory {
         return priority;
     }
 
-    public JdkTransporterFactory setPriority(float priority) {
+    public JdkTransporterFactory setPriority( float priority) {
         this.priority = priority;
         return this;
     }
