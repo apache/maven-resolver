@@ -36,14 +36,16 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -194,7 +196,8 @@ final class JdkHttpTransporter extends AbstractTransporter {
                 request.header(RANGE, "bytes=" + resumeOffset + '-');
                 request.header(
                         IF_UNMODIFIED_SINCE,
-                        toHttpDate(new Date(task.getDataFile().lastModified() - MODIFICATION_THRESHOLD)));
+                        RFC7231.format(
+                                Instant.ofEpochMilli(task.getDataFile().lastModified() - MODIFICATION_THRESHOLD)));
                 request.header(ACCEPT_ENCODING, "identity");
             }
 
@@ -253,9 +256,14 @@ final class JdkHttpTransporter extends AbstractTransporter {
             String lastModifiedHeader =
                     response.headers().firstValue(LAST_MODIFIED).orElse(null); // note: Wagon also does first not last
             if (lastModifiedHeader != null) {
-                Date lastModified = createRFC7231().parse(lastModifiedHeader);
-                if (lastModified != null) {
-                    Files.setLastModifiedTime(task.getDataFile().toPath(), FileTime.fromMillis(lastModified.getTime()));
+                try {
+                    Files.setLastModifiedTime(
+                            task.getDataFile().toPath(),
+                            FileTime.fromMillis(ZonedDateTime.parse(lastModifiedHeader, RFC7231)
+                                    .toInstant()
+                                    .toEpochMilli()));
+                } catch (DateTimeParseException e) {
+                    // fall through
                 }
             }
         }
@@ -268,6 +276,27 @@ final class JdkHttpTransporter extends AbstractTransporter {
         if (checksums != null) {
             checksums.forEach(task::setChecksum);
         }
+    }
+
+    @Override
+    protected void implPut(PutTask task) throws Exception {
+        HttpRequest.Builder request =
+                HttpRequest.newBuilder().uri(resolve(task)).timeout(Duration.ofMillis(requestTimeout));
+        headers.forEach(request::setHeader);
+        try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
+            utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
+            request.method("PUT", HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
+
+            HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
+            if (response.statusCode() >= MULTIPLE_CHOICES) {
+                throw new JdkHttpException(response.statusCode());
+            }
+        }
+    }
+
+    @Override
+    protected void implClose() {
+        // nop
     }
 
     private static Map<String, String> extractXChecksums(HttpResponse<?> response) {
@@ -312,39 +341,9 @@ final class JdkHttpTransporter extends AbstractTransporter {
         return null;
     }
 
-    @Override
-    protected void implPut(PutTask task) throws Exception {
-        HttpRequest.Builder request =
-                HttpRequest.newBuilder().uri(resolve(task)).timeout(Duration.ofMillis(requestTimeout));
-        headers.forEach(request::setHeader);
-        try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
-            utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
-            request.method("PUT", HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
-
-            HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
-            if (response.statusCode() >= MULTIPLE_CHOICES) {
-                throw new JdkHttpException(response.statusCode());
-            }
-        }
-    }
-
-    @Override
-    protected void implClose() {
-        // nop
-    }
-
-    private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
-
-    static String toHttpDate(Date date) {
-        return createRFC7231().format(date);
-    }
-
-    private static SimpleDateFormat createRFC7231() {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
-        sdf.setLenient(false);
-        sdf.setTimeZone(GMT);
-        return sdf;
-    }
+    private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
+                    "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
+            .withZone(ZoneId.of("GMT"));
 
     /**
      * Visible for testing.
