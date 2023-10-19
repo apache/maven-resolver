@@ -29,11 +29,11 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -45,14 +45,14 @@ public class SimpleLocalRepositoryManagerTest {
 
     private RepositorySystemSession session;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         basedir = TestFileUtils.createTempDir("simple-repo");
         manager = new SimpleLocalRepositoryManager(basedir, "simple", new DefaultLocalPathComposer());
         session = TestUtils.newSession();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         TestFileUtils.deleteFile(basedir);
         manager = null;
@@ -100,7 +100,7 @@ public class SimpleLocalRepositoryManagerTest {
         LocalArtifactRequest request = new LocalArtifactRequest();
         request.setArtifact(artifact);
         LocalArtifactResult result = manager.find(session, request);
-        assertNull(result.toString(), result.getFile());
-        assertFalse(result.toString(), result.isAvailable());
+        assertNull(result.getFile(), result.toString());
+        assertFalse(result.isAvailable(), result.toString());
     }
 }

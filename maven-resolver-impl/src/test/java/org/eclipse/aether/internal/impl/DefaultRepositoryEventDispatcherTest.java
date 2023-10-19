@@ -30,7 +30,7 @@ import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -55,7 +55,7 @@ public class DefaultRepositoryEventDispatcherTest {
 
             dispatcher.dispatch(event);
 
-            assertNotNull("not handled: " + type, handler.methodName);
+            assertNotNull(handler.methodName, "not handled: " + type);
 
             assertEquals(
                     "badly handled: " + type,

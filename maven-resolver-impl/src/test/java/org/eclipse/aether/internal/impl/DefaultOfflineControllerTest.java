@@ -22,8 +22,10 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultOfflineControllerTest {
 
@@ -41,19 +43,23 @@ public class DefaultOfflineControllerTest {
         return new RemoteRepository.Builder("central", "default", url).build();
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         controller = new DefaultOfflineController();
     }
 
-    @Test(expected = RepositoryOfflineException.class)
-    public void testCheckOffline_Online() throws Exception {
-        controller.checkOffline(newSession(false, null, null), newRepo("http://eclipse.org"));
+    @Test
+    public void testCheckOffline_Online() {
+        assertThrows(
+                RepositoryOfflineException.class,
+                () -> controller.checkOffline(newSession(false, null, null), newRepo("http://eclipse.org")));
     }
 
-    @Test(expected = RepositoryOfflineException.class)
-    public void testCheckOffline_Offline() throws Exception {
-        controller.checkOffline(newSession(true, null, null), newRepo("http://eclipse.org"));
+    @Test
+    public void testCheckOffline_Offline() {
+        assertThrows(
+                RepositoryOfflineException.class,
+                () -> controller.checkOffline(newSession(true, null, null), newRepo("http://eclipse.org")));
     }
 
     @Test
@@ -64,9 +70,11 @@ public class DefaultOfflineControllerTest {
         controller.checkOffline(newSession(true, "  file  ,  classpath  ", null), newRepo("classpath://repo"));
     }
 
-    @Test(expected = RepositoryOfflineException.class)
-    public void testCheckOffline_Offline_OnlineProtocol() throws Exception {
-        controller.checkOffline(newSession(true, "file", null), newRepo("http://eclipse.org"));
+    @Test
+    public void testCheckOffline_Offline_OnlineProtocol() {
+        assertThrows(
+                RepositoryOfflineException.class,
+                () -> controller.checkOffline(newSession(true, "file", null), newRepo("http://eclipse.org")));
     }
 
     @Test
@@ -77,8 +85,10 @@ public class DefaultOfflineControllerTest {
         controller.checkOffline(newSession(true, null, "  localhost  ,  127.0.0.1  "), newRepo("http://127.0.0.1"));
     }
 
-    @Test(expected = RepositoryOfflineException.class)
-    public void testCheckOffline_Offline_OnlineHost() throws Exception {
-        controller.checkOffline(newSession(true, null, "localhost"), newRepo("http://eclipse.org"));
+    @Test
+    public void testCheckOffline_Offline_OnlineHost() {
+        assertThrows(
+                RepositoryOfflineException.class,
+                () -> controller.checkOffline(newSession(true, null, "localhost"), newRepo("http://eclipse.org")));
     }
 }

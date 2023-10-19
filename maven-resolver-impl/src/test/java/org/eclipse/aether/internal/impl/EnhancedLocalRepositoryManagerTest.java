@@ -39,11 +39,11 @@ import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.LocalMetadataRequest;
 import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EnhancedLocalRepositoryManagerTest {
 
@@ -59,7 +59,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private RemoteRepository repository;
 
-    private String testContext = "project/compile";
+    private final String testContext = "project/compile";
 
     protected TrackingFileManager trackingFileManager;
 
@@ -69,7 +69,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private Metadata noVerMetadata;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         String url = TestFileUtils.createTempDir("enhanced-remote-repo")
                 .toURI()
@@ -80,13 +80,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 .build();
 
         artifact = new DefaultArtifact(
-                "gid",
-                "aid",
-                "",
-                "jar",
-                "1-test",
-                Collections.<String, String>emptyMap(),
-                TestFileUtils.createTempFile("artifact"));
+                "gid", "aid", "", "jar", "1-test", Collections.emptyMap(), TestFileUtils.createTempFile("artifact"));
 
         snapshot = new DefaultArtifact(
                 "gid",
@@ -94,7 +88,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 "",
                 "jar",
                 "1.0-20120710.231549-9",
-                Collections.<String, String>emptyMap(),
+                Collections.emptyMap(),
                 TestFileUtils.createTempFile("artifact"));
 
         metadata = new DefaultMetadata(
@@ -120,7 +114,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 new DefaultLocalPathPrefixComposerFactory().createComposer(session));
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         TestFileUtils.deleteFile(basedir);
         TestFileUtils.deleteFile(new File(new URI(repository.getUrl())));
@@ -245,7 +239,7 @@ public class EnhancedLocalRepositoryManagerTest {
     @Test
     public void testDoNotFindDeletedFile() throws Exception {
         addLocalArtifact(artifact);
-        assertTrue("could not delete artifact file", artifactFile.delete());
+        assertTrue(artifactFile.delete(), "could not delete artifact file");
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         LocalArtifactResult result = manager.find(session, request);
@@ -318,7 +312,7 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalArtifactRequest request = new LocalArtifactRequest();
         request.setArtifact(artifact);
         LocalArtifactResult result = manager.find(session, request);
-        assertNull(result.toString(), result.getFile());
-        assertFalse(result.toString(), result.isAvailable());
+        assertNull(result.getFile(), result.toString());
+        assertFalse(result.isAvailable(), result.toString());
     }
 }

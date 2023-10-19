@@ -45,11 +45,11 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -75,7 +75,7 @@ public class DefaultMetadataResolverTest {
 
     private RecordingRepositoryListener listener;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         remoteRepositoryFilterSources = new HashMap<>();
         remoteRepositoryFilterManager = new DefaultRemoteRepositoryFilterManager(remoteRepositoryFilterSources);
@@ -104,7 +104,7 @@ public class DefaultMetadataResolverTest {
         session.setRepositoryListener(listener);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         TestFileUtils.deleteFile(new File(new URI(repository.getUrl())));
         TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
@@ -120,8 +120,8 @@ public class DefaultMetadataResolverTest {
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
         assertNotNull(
-                "" + (result.getMetadata() != null ? result.getMetadata().getFile() : result.getMetadata()),
-                result.getException());
+                result.getException(),
+                "" + (result.getMetadata() != null ? result.getMetadata().getFile() : result.getMetadata()));
         assertEquals(MetadataNotFoundException.class, result.getException().getClass());
 
         assertNull(result.getMetadata());
@@ -240,7 +240,7 @@ public class DefaultMetadataResolverTest {
         assertEquals(1, results.size());
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
-        assertNull(String.valueOf(result.getException()), result.getException());
+        assertNull(result.getException(), String.valueOf(result.getException()));
         assertNotNull(result.getMetadata());
         assertNotNull(result.getMetadata().getFile());
 
@@ -274,7 +274,7 @@ public class DefaultMetadataResolverTest {
         assertEquals(1, results.size());
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
-        assertNull(String.valueOf(result.getException()), result.getException());
+        assertNull(result.getException(), String.valueOf(result.getException()));
 
         connector.assertSeenExpected();
     }

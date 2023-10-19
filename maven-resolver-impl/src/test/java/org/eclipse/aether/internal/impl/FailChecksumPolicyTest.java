@@ -21,10 +21,10 @@ package org.eclipse.aether.internal.impl;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FailChecksumPolicyTest {
 
@@ -32,7 +32,7 @@ public class FailChecksumPolicyTest {
 
     private ChecksumFailureException exception;
 
-    @Before
+    @BeforeEach
     public void setup() {
         policy = new FailChecksumPolicy(new TransferResource("null", "file:/dev/null", "file.txt", null, null));
         exception = new ChecksumFailureException("test");

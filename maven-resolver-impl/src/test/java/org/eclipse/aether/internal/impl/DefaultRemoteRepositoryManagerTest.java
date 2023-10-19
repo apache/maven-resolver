@@ -32,12 +32,12 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -48,7 +48,7 @@ public class DefaultRemoteRepositoryManagerTest {
 
     private DefaultRemoteRepositoryManager manager;
 
-    @Before
+    @BeforeEach
     public void setup() {
         session = TestUtils.newSession();
         session.setChecksumPolicy(null);
@@ -57,7 +57,7 @@ public class DefaultRemoteRepositoryManagerTest {
                 new DefaultRemoteRepositoryManager(new StubUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider());
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         manager = null;
         session = null;
@@ -77,7 +77,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     private void assertEqual(RepositoryPolicy expected, RepositoryPolicy actual) {
-        assertEquals("enabled", expected.isEnabled(), actual.isEnabled());
+        assertEquals(expected.isEnabled(), actual.isEnabled(), "enabled");
         assertEquals("checksums", expected.getChecksumPolicy(), actual.getChecksumPolicy());
         assertEquals("artifactUpdates", expected.getArtifactUpdatePolicy(), actual.getArtifactUpdatePolicy());
         assertEquals("metadataUpdates", expected.getMetadataUpdatePolicy(), actual.getMetadataUpdatePolicy());

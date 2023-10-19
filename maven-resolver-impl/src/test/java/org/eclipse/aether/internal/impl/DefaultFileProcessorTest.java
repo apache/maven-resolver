@@ -27,11 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.io.FileProcessor.ProgressListener;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -41,13 +41,13 @@ public class DefaultFileProcessorTest {
 
     private DefaultFileProcessor fileProcessor;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         targetDir = TestFileUtils.createTempDir(getClass().getSimpleName());
         fileProcessor = new DefaultFileProcessor();
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         TestFileUtils.deleteFile(targetDir);
         fileProcessor = null;
@@ -86,7 +86,7 @@ public class DefaultFileProcessorTest {
         File target = new File(targetDir, "testCopyEmptyFile");
         target.delete();
         fileProcessor.copy(file, target);
-        assertTrue("empty file was not copied", target.exists() && target.length() == 0L);
+        assertTrue(target.exists() && target.length() == 0L, "empty file was not copied");
         target.delete();
     }
 
@@ -102,9 +102,9 @@ public class DefaultFileProcessorTest {
             }
         };
         fileProcessor.copy(file, target, listener);
-        assertTrue("file was not created", target.isFile());
-        assertEquals("file was not fully copied", 4L, target.length());
-        assertEquals("listener not called", 4, progressed.intValue());
+        assertTrue(target.isFile(), "file was not created");
+        assertEquals(4L, target.length(), "file was not fully copied");
+        assertEquals(4, progressed.intValue(), "listener not called");
         target.delete();
     }
 

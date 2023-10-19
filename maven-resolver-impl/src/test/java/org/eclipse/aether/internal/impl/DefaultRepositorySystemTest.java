@@ -37,10 +37,10 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.util.repository.DefaultAuthenticationSelector;
 import org.eclipse.aether.util.repository.DefaultMirrorSelector;
 import org.eclipse.aether.util.repository.DefaultProxySelector;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 public class DefaultRepositorySystemTest {
@@ -49,7 +49,7 @@ public class DefaultRepositorySystemTest {
 
     private DefaultRepositorySystemSession session;
 
-    @Before
+    @BeforeEach
     public void init() {
         system = new DefaultRepositorySystem(
                 new StubVersionResolver(),
