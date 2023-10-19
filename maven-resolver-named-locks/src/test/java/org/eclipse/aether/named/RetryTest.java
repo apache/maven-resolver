@@ -21,23 +21,16 @@ package org.eclipse.aether.named;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.named.support.Retry.retry;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UT for {@link org.eclipse.aether.named.support.Retry}.
  */
 public class RetryTest {
     private static final long RETRY_SLEEP_MILLIS = 250L;
-
-    @Rule
-    public TestName testName = new TestName();
 
     @Test
     public void happy() throws InterruptedException {
@@ -52,8 +45,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertThat(result, equalTo("happy"));
-        assertThat(retries.sum(), equalTo(1L));
+        assertEquals(result, "happy");
+        assertEquals(retries.sum(), 1);
     }
 
     @Test
@@ -69,8 +62,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertThat(result, equalTo("notHappy"));
-        assertThat(retries.sum(), greaterThan(1L));
+        assertEquals(result, "notHappy");
+        assertTrue(retries.sum() > 1, retries.sum() + " > 1");
     }
 
     @Test
@@ -86,8 +79,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertThat(result, equalTo("got it"));
-        assertThat(retries.sum(), equalTo(2L));
+        assertEquals(result, "got it");
+        assertEquals(retries.sum(), 2);
     }
 
     @Test
@@ -102,8 +95,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertThat(result, equalTo("happy"));
-        assertThat(retries.sum(), equalTo(1L));
+        assertEquals(result, "happy");
+        assertEquals(retries.sum(), 1);
     }
 
     @Test
@@ -118,8 +111,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertThat(result, equalTo("notHappy"));
-        assertThat(retries.sum(), equalTo(5L));
+        assertEquals(result, "notHappy");
+        assertEquals(retries.sum(), 5);
     }
 
     @Test
@@ -134,7 +127,7 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertThat(result, equalTo("got it"));
-        assertThat(retries.sum(), equalTo(3L));
+        assertEquals(result, "got it");
+        assertEquals(retries.sum(), 3);
     }
 }

@@ -31,7 +31,7 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;

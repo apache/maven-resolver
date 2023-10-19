@@ -30,10 +30,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -43,17 +43,19 @@ public class IniArtifactDescriptorReaderTest {
 
     private RepositorySystemSession session;
 
-    @Before
+    @BeforeEach
     public void setup() {
         reader = new IniArtifactDescriptorReader("org/eclipse/aether/internal/test/util/");
         session = TestUtils.newSession();
     }
 
-    @Test(expected = ArtifactDescriptorException.class)
+    @Test
     public void testMissingDescriptor() throws ArtifactDescriptorException {
-        Artifact art = new DefaultArtifact("missing:aid:ver:ext");
-        ArtifactDescriptorRequest request = new ArtifactDescriptorRequest(art, null, "");
-        reader.readArtifactDescriptor(session, request);
+        assertThrows(ArtifactDescriptorException.class, () -> {
+            Artifact art = new DefaultArtifact("missing:aid:ver:ext");
+            ArtifactDescriptorRequest request = new ArtifactDescriptorRequest(art, null, "");
+            reader.readArtifactDescriptor(session, request);
+        });
     }
 
     @Test

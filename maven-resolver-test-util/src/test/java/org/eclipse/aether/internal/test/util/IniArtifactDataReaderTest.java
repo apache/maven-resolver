@@ -27,10 +27,10 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -38,7 +38,7 @@ public class IniArtifactDataReaderTest {
 
     private IniArtifactDataReader parser;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.parser = new IniArtifactDataReader("org/eclipse/aether/internal/test/util/");
     }

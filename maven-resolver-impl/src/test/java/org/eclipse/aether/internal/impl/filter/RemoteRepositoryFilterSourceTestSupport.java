@@ -26,7 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;

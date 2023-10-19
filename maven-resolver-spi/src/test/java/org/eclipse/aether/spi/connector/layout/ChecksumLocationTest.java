@@ -24,33 +24,33 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySupport;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChecksumLocationTest {
-    private ChecksumAlgorithmFactory SHA512 = new ChecksumAlgorithmFactorySupport("SHA-512", "sha512") {
+    private final ChecksumAlgorithmFactory SHA512 = new ChecksumAlgorithmFactorySupport("SHA-512", "sha512") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
         }
     };
 
-    private ChecksumAlgorithmFactory SHA256 = new ChecksumAlgorithmFactorySupport("SHA-256", "sha256") {
+    private final ChecksumAlgorithmFactory SHA256 = new ChecksumAlgorithmFactorySupport("SHA-256", "sha256") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
         }
     };
 
-    private ChecksumAlgorithmFactory SHA1 = new ChecksumAlgorithmFactorySupport("SHA-1", "sha1") {
+    private final ChecksumAlgorithmFactory SHA1 = new ChecksumAlgorithmFactorySupport("SHA-1", "sha1") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
         }
     };
 
-    private ChecksumAlgorithmFactory MD5 = new ChecksumAlgorithmFactorySupport("MD5", "md5") {
+    private final ChecksumAlgorithmFactory MD5 = new ChecksumAlgorithmFactorySupport("MD5", "md5") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
@@ -76,13 +76,17 @@ public class ChecksumLocationTest {
         assertEquals("dir/sub%20dir/file.txt.md5", cs.getLocation().toString());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testForLocation_WithQueryParams() {
-        ChecksumLocation.forLocation(URI.create("file.php?param=1"), SHA1);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ChecksumLocation.forLocation(URI.create("file.php?param=1"), SHA1));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testForLocation_WithFragment() {
-        ChecksumLocation.forLocation(URI.create("file.html#fragment"), SHA1);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ChecksumLocation.forLocation(URI.create("file.html#fragment"), SHA1));
     }
 }

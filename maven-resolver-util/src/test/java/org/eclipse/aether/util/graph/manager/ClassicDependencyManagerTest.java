@@ -28,10 +28,10 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ClassicDependencyManagerTest {
 
@@ -49,7 +49,7 @@ public class ClassicDependencyManagerTest {
         return TestUtils.newCollectionContext(session, null, Arrays.asList(managedDependencies));
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         session = TestUtils.newSession();
     }

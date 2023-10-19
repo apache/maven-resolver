@@ -36,7 +36,7 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
 import static org.junit.Assert.*;

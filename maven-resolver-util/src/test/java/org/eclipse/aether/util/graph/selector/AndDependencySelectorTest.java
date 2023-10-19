@@ -26,10 +26,10 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AndDependencySelectorTest {
 

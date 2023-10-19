@@ -24,9 +24,9 @@ import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ComponentAuthenticationTest {
 

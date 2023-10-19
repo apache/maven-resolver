@@ -26,9 +26,9 @@ import java.util.Queue;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -56,7 +56,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
             }
         }
 
-        assertTrue(String.format("leftover conflict groups (remaining: '%s')", queue), queue.isEmpty());
+        assertTrue(queue.isEmpty(), String.format("leftover conflict groups (remaining: '%s')", queue));
     }
 
     private void expectOrder(String... id) {

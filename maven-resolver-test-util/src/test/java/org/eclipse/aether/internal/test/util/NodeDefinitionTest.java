@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class NodeDefinitionTest {
 
@@ -33,9 +33,9 @@ public class NodeDefinitionTest {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
         assertTrue(matcher.matches());
-        assertTrue(groups.length + " vs " + matcher.groupCount(), groups.length <= matcher.groupCount());
+        assertTrue(groups.length <= matcher.groupCount(), groups.length + " vs " + matcher.groupCount());
         for (int i = 1; i <= groups.length; i++) {
-            assertEquals("Mismatch for group " + i, groups[i - 1], matcher.group(i));
+            assertEquals(groups[i - 1], matcher.group(i), "Mismatch for group " + i);
         }
     }
 

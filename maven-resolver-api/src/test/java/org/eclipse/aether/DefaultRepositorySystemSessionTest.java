@@ -26,13 +26,10 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -119,7 +116,7 @@ public class DefaultRepositorySystemSessionTest {
 
         for (Method method : methods) {
             if (method.getParameterCount() == 0) {
-                assertEquals(method.getName(), method.invoke(session) == null, method.invoke(newSession) == null);
+                assertEquals(method.invoke(session) == null, method.invoke(newSession) == null, method.getName());
             }
         }
     }

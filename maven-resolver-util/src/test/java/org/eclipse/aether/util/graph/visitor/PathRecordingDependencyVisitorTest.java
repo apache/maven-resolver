@@ -23,10 +23,10 @@ import java.util.List;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PathRecordingDependencyVisitorTest {
 
@@ -35,13 +35,10 @@ public class PathRecordingDependencyVisitorTest {
     }
 
     private void assertPath(List<DependencyNode> actual, String... expected) {
-        assertEquals(actual.toString(), expected.length, actual.size());
+        assertEquals(expected.length, actual.size(), actual.toString());
         for (int i = 0; i < expected.length; i++) {
             DependencyNode node = actual.get(i);
-            assertEquals(
-                    actual.toString(),
-                    expected[i],
-                    node.getDependency().getArtifact().getArtifactId());
+            assertEquals(expected[i], node.getDependency().getArtifact().getArtifactId(), actual.toString());
         }
     }
 
@@ -53,7 +50,7 @@ public class PathRecordingDependencyVisitorTest {
         root.accept(visitor);
 
         List<List<DependencyNode>> paths = visitor.getPaths();
-        assertEquals(paths.toString(), 2, paths.size());
+        assertEquals(2, paths.size(), paths.toString());
         assertPath(paths.get(0), "a", "b", "x");
         assertPath(paths.get(1), "a", "x");
     }
@@ -66,7 +63,7 @@ public class PathRecordingDependencyVisitorTest {
         root.accept(visitor);
 
         List<List<DependencyNode>> paths = visitor.getPaths();
-        assertEquals(paths.toString(), 1, paths.size());
+        assertEquals(1, paths.size(), paths.toString());
         assertPath(paths.get(0), "x");
     }
 
@@ -78,7 +75,7 @@ public class PathRecordingDependencyVisitorTest {
         root.accept(visitor);
 
         List<List<DependencyNode>> paths = visitor.getPaths();
-        assertEquals(paths.toString(), 3, paths.size());
+        assertEquals(3, paths.size(), paths.toString());
         assertPath(paths.get(0), "x");
         assertPath(paths.get(1), "x", "a", "y");
         assertPath(paths.get(2), "x", "y");
@@ -115,7 +112,7 @@ public class PathRecordingDependencyVisitorTest {
         root.accept(visitor);
 
         List<List<DependencyNode>> paths = visitor.getPaths();
-        assertEquals(paths.toString(), 4, paths.size());
+        assertEquals(4, paths.size(), paths.toString());
         assertPath(paths.get(0), "a", "b", "x");
         assertPath(paths.get(1), "a", "x");
         assertPath(paths.get(2), "a", "x", "b", "x");
@@ -130,7 +127,7 @@ public class PathRecordingDependencyVisitorTest {
         root.accept(visitor);
 
         List<List<DependencyNode>> paths = visitor.getPaths();
-        assertEquals(paths.toString(), 1, paths.size());
+        assertEquals(1, paths.size(), paths.toString());
         assertPath(paths.get(0), "a", "b");
     }
 

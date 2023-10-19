@@ -27,7 +27,7 @@ import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TestName;
 
 import static org.hamcrest.MatcherAssert.assertThat;

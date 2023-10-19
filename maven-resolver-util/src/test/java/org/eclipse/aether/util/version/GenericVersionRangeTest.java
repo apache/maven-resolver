@@ -21,9 +21,9 @@ package org.eclipse.aether.util.version;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionRange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GenericVersionRangeTest {
 
@@ -49,11 +49,11 @@ public class GenericVersionRangeTest {
     }
 
     private void assertContains(VersionRange range, String version) {
-        assertTrue(range + " should contain " + version, range.containsVersion(newVersion(version)));
+        assertTrue(range.containsVersion(newVersion(version)), range + " should contain " + version);
     }
 
     private void assertNotContains(VersionRange range, String version) {
-        assertFalse(range + " should not contain " + version, range.containsVersion(newVersion(version)));
+        assertFalse(range.containsVersion(newVersion(version)), range + " should not contain " + version);
     }
 
     @Test

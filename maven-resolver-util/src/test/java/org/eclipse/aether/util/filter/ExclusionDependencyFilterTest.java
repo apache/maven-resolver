@@ -24,9 +24,9 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ExclusionDependencyFilterTest {
 

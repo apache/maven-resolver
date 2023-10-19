@@ -23,9 +23,9 @@ import java.util.Map;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AuthenticationContextTest {
 
@@ -50,7 +50,7 @@ public class AuthenticationContextTest {
                 assertNotNull(context);
                 assertNotNull(context.getSession());
                 assertNotNull(context.getRepository());
-                assertNull("fill() should only be called once", context.get("key"));
+                assertNull(context.get("key"), "fill() should only be called once");
                 context.put("key", "value");
             }
 

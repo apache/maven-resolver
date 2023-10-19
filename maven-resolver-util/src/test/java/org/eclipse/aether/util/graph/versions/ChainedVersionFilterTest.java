@@ -24,9 +24,9 @@ import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
 import org.eclipse.aether.util.graph.version.ChainedVersionFilter;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChainedVersionFilterTest extends AbstractVersionFilterTest {
 

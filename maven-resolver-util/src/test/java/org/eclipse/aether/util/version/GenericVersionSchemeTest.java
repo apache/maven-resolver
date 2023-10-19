@@ -20,10 +20,10 @@ package org.eclipse.aether.util.version;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionConstraint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -31,7 +31,7 @@ public class GenericVersionSchemeTest {
 
     private GenericVersionScheme scheme;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         scheme = new GenericVersionScheme();
     }
@@ -79,7 +79,7 @@ public class GenericVersionSchemeTest {
 
     private void assertContains(String msg, VersionConstraint c, boolean b, String... versions) {
         for (String v : versions) {
-            assertEquals(String.format(msg, v), b, c.containsVersion(new GenericVersion(v)));
+            assertEquals(b, c.containsVersion(new GenericVersion(v)), String.format(msg, v));
         }
     }
 

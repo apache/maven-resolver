@@ -29,7 +29,7 @@ import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.io.FileProcessor.ProgressListener;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.*;
 

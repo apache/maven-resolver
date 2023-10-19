@@ -27,12 +27,12 @@ import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AndDependencyTraverserTest {
 
@@ -70,13 +70,13 @@ public class AndDependencyTraverserTest {
     private RepositorySystemSession session;
     private DependencyCollectionContext context;
 
-    @Before
+    @BeforeEach
     public void setup() {
         session = TestUtils.newSession();
         context = TestUtils.newCollectionContext(session, null, Collections.emptyList());
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());

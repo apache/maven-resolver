@@ -53,7 +53,7 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TestName;
 
 import static org.junit.Assert.*;

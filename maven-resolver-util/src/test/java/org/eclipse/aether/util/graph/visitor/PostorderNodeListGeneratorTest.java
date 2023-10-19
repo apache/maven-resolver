@@ -22,9 +22,9 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PostorderNodeListGeneratorTest {
 
@@ -33,13 +33,10 @@ public class PostorderNodeListGeneratorTest {
     }
 
     private void assertSequence(List<DependencyNode> actual, String... expected) {
-        assertEquals(actual.toString(), expected.length, actual.size());
+        assertEquals(expected.length, actual.size(), actual.toString());
         for (int i = 0; i < expected.length; i++) {
             DependencyNode node = actual.get(i);
-            assertEquals(
-                    actual.toString(),
-                    expected[i],
-                    node.getDependency().getArtifact().getArtifactId());
+            assertEquals(expected[i], node.getDependency().getArtifact().getArtifactId(), actual.toString());
         }
     }
 

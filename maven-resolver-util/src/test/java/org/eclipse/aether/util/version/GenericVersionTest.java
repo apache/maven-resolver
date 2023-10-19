@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.version.Version;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */

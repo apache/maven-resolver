@@ -20,9 +20,9 @@ package org.eclipse.aether;
 
 import java.lang.reflect.Method;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AbstractForwardingRepositorySystemSessionTest {
 
@@ -31,7 +31,7 @@ public class AbstractForwardingRepositorySystemSessionTest {
         for (Method method : RepositorySystemSession.class.getMethods()) {
             Method m = AbstractForwardingRepositorySystemSession.class.getDeclaredMethod(
                     method.getName(), method.getParameterTypes());
-            assertNotNull(method.toString(), m);
+            assertNotNull(m, method.toString());
         }
     }
 }

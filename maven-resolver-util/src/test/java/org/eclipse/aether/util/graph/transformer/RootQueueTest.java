@@ -20,9 +20,9 @@ package org.eclipse.aether.util.graph.transformer;
 
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter.ConflictId;
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter.RootQueue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RootQueueTest {
 

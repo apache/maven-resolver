@@ -21,9 +21,9 @@ package org.eclipse.aether.util.graph.transformer;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */

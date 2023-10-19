@@ -21,15 +21,16 @@ package org.eclipse.aether;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultRepositoryCacheTest {
 
-    private DefaultRepositoryCache cache = new DefaultRepositoryCache();
+    private final DefaultRepositoryCache cache = new DefaultRepositoryCache();
 
-    private RepositorySystemSession session = new DefaultRepositorySystemSession();
+    private final RepositorySystemSession session = new DefaultRepositorySystemSession();
 
     private Object get(Object key) {
         return cache.get(session, key);
@@ -39,14 +40,14 @@ public class DefaultRepositoryCacheTest {
         cache.put(session, key, value);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testGet_NullKey() {
-        get(null);
+        assertThrows(RuntimeException.class, () -> get(null));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testPut_NullKey() {
-        put(null, "data");
+        assertThrows(RuntimeException.class, () -> put(null, "data"));
     }
 
     @Test
@@ -61,7 +62,8 @@ public class DefaultRepositoryCacheTest {
         assertNull(get(key));
     }
 
-    @Test(timeout = 10000L)
+    @Test
+    @Timeout(value = 10L)
     public void testConcurrency() throws Exception {
         final AtomicReference<Throwable> error = new AtomicReference<>();
         Thread[] threads = new Thread[20];
@@ -88,6 +90,6 @@ public class DefaultRepositoryCacheTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertNull(String.valueOf(error.get()), error.get());
+        assertNull(error.get(), String.valueOf(error.get()));
     }
 }

@@ -27,10 +27,10 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -96,14 +96,14 @@ public abstract class AbstractDependencyGraphTransformerTest {
         return id.equals(node.getDependency().getArtifact().getArtifactId());
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         transformer = newTransformer();
         parser = newParser();
         session = new DefaultRepositorySystemSession();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         transformer = null;
         parser = null;

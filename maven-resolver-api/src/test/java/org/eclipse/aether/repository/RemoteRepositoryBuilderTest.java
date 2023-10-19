@@ -24,16 +24,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.repository.RemoteRepository.Builder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RemoteRepositoryBuilderTest {
 
     private RemoteRepository prototype;
 
-    @Before
+    @BeforeEach
     public void init() {
         prototype = new Builder("id", "type", "file:void").build();
     }
@@ -44,9 +44,9 @@ public class RemoteRepositoryBuilderTest {
         assertSame(prototype, builder.build());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testPrototypeMandatory() {
-        new Builder(null);
+        assertThrows(NullPointerException.class, () -> new Builder(null));
     }
 
     @Test

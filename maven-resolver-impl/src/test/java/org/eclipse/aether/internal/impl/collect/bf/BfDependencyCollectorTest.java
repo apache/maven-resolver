@@ -38,7 +38,7 @@ import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 

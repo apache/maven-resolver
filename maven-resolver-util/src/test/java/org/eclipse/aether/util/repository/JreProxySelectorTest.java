@@ -35,29 +35,29 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JreProxySelectorTest {
 
-    private abstract class AbstractProxySelector extends java.net.ProxySelector {
+    private abstract static class AbstractProxySelector extends java.net.ProxySelector {
         @Override
         public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {}
     }
 
-    private ProxySelector selector = new JreProxySelector();
+    private final ProxySelector selector = new JreProxySelector();
 
     private java.net.ProxySelector original;
 
-    @Before
+    @BeforeEach
     public void init() {
         original = java.net.ProxySelector.getDefault();
     }
 
-    @After
+    @AfterEach
     public void exit() {
         java.net.ProxySelector.setDefault(original);
         Authenticator.setDefault(null);

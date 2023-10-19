@@ -65,7 +65,7 @@ import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;

@@ -23,9 +23,9 @@ import java.util.Locale;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTest {
 
@@ -65,10 +65,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
             DependencyNode node = root;
             node = path(node, coords);
 
-            assertEquals(
-                    msg + "\nculprit: " + node.toString() + "\n",
-                    expected,
-                    node.getDependency().getScope());
+            assertEquals(expected, node.getDependency().getScope(), msg + "\nculprit: " + node.toString() + "\n");
         } catch (IndexOutOfBoundsException | NullPointerException e) {
             throw new IllegalArgumentException("illegal coordinates for child", e);
         }

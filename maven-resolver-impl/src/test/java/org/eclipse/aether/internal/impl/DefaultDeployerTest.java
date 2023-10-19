@@ -50,7 +50,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
