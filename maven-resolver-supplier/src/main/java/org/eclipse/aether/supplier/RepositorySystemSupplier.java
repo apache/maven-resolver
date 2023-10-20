@@ -230,17 +230,20 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected RepositoryLayoutProvider getRepositoryLayoutProvider(
             Map<String, RepositoryLayoutFactory> repositoryLayoutFactories) {
-        return new DefaultRepositoryLayoutProvider(new HashSet<>(repositoryLayoutFactories.values()));
+        return new DefaultRepositoryLayoutProvider(repositoryLayoutFactories);
     }
 
     protected LocalRepositoryProvider getLocalRepositoryProvider(
             LocalPathComposer localPathComposer,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposerFactory localPathPrefixComposerFactory) {
-        HashSet<LocalRepositoryManagerFactory> localRepositoryProviders = new HashSet<>(2);
-        localRepositoryProviders.add(new SimpleLocalRepositoryManagerFactory(localPathComposer));
-        localRepositoryProviders.add(new EnhancedLocalRepositoryManagerFactory(
-                localPathComposer, trackingFileManager, localPathPrefixComposerFactory));
+        HashMap<String, LocalRepositoryManagerFactory> localRepositoryProviders = new HashMap<>(2);
+        localRepositoryProviders.put(
+                SimpleLocalRepositoryManagerFactory.NAME, new SimpleLocalRepositoryManagerFactory(localPathComposer));
+        localRepositoryProviders.put(
+                EnhancedLocalRepositoryManagerFactory.NAME,
+                new EnhancedLocalRepositoryManagerFactory(
+                        localPathComposer, trackingFileManager, localPathPrefixComposerFactory));
         return new DefaultLocalRepositoryProvider(localRepositoryProviders);
     }
 
@@ -272,7 +275,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected RepositoryEventDispatcher getRepositoryEventDispatcher(
             Map<String, RepositoryListener> repositoryListeners) {
-        return new DefaultRepositoryEventDispatcher(new HashSet<>(repositoryListeners.values()));
+        return new DefaultRepositoryEventDispatcher(repositoryListeners);
     }
 
     protected Map<String, TrustedChecksumsSource> getTrustedChecksumsSources(
@@ -313,7 +316,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected TransporterProvider getTransporterProvider(Map<String, TransporterFactory> transporterFactories) {
-        return new DefaultTransporterProvider(new HashSet<>(transporterFactories.values()));
+        return new DefaultTransporterProvider(transporterFactories);
     }
 
     protected BasicRepositoryConnectorFactory getBasicRepositoryConnectorFactory(

@@ -41,8 +41,8 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
     @Override
     protected RemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository) {
-        DefaultRepositoryLayoutProvider layoutProvider = new DefaultRepositoryLayoutProvider(
-                Collections.singleton(new Maven2RepositoryLayoutFactory(checksumsSelector())));
+        DefaultRepositoryLayoutProvider layoutProvider = new DefaultRepositoryLayoutProvider(Collections.singletonMap(
+                Maven2RepositoryLayoutFactory.NAME, new Maven2RepositoryLayoutFactory(checksumsSelector())));
         return new PrefixesRemoteRepositoryFilterSource(layoutProvider);
     }
 

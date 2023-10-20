@@ -22,9 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
@@ -42,18 +41,18 @@ public class DefaultRepositoryEventDispatcher implements RepositoryEventDispatch
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRepositoryEventDispatcher.class);
 
-    private final Collection<RepositoryListener> listeners;
+    private final Map<String, RepositoryListener> listeners;
 
     @Inject
-    public DefaultRepositoryEventDispatcher(Set<RepositoryListener> listeners) {
-        this.listeners = Collections.unmodifiableCollection(listeners);
+    public DefaultRepositoryEventDispatcher(Map<String, RepositoryListener> listeners) {
+        this.listeners = Collections.unmodifiableMap(listeners);
     }
 
     @Override
     public void dispatch(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
         if (!listeners.isEmpty()) {
-            for (RepositoryListener listener : listeners) {
+            for (RepositoryListener listener : listeners.values()) {
                 dispatch(event, listener);
             }
         }
