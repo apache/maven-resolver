@@ -73,7 +73,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-transport-jetty-10</artifactId>
+      <artifactId>maven-resolver-transport-jetty</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
