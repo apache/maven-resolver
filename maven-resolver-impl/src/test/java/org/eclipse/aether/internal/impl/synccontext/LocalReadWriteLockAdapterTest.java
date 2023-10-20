@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 public class LocalReadWriteLockAdapterTest extends NamedLockFactoryAdapterTestSupport {
     @BeforeAll
-    public static void createNamedLockFactory() {
+    static void createNamedLockFactory() {
         namedLockFactory = new LocalReadWriteLockNamedLockFactory();
         createAdapter();
     }

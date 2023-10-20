@@ -51,7 +51,7 @@ public class ChecksumUtilTest {
     private final Map<String, Map<String, String>> sums = new HashMap<>();
 
     @BeforeAll
-    public static void beforeClass() {
+    static void beforeClass() {
         emptyChecksums.put("MD5", "d41d8cd98f00b204e9800998ecf8427e");
         emptyChecksums.put("SHA-1", "da39a3ee5e6b4b0d3255bfef95601890afd80709");
         emptyChecksums.put("SHA-256", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");

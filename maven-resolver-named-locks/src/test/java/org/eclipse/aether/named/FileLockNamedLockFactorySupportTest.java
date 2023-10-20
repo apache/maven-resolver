@@ -43,7 +43,7 @@ public class FileLockNamedLockFactorySupportTest extends NamedLockFactoryTestSup
     }
 
     @BeforeAll
-    public static void createNamedLockFactory() throws IOException {
+    static void createNamedLockFactory() throws IOException {
         namedLockFactory = new FileLockNamedLockFactory();
     }
 }

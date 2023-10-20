@@ -40,7 +40,7 @@ public abstract class NamedLockFactoryTestSupport {
     protected static NamedLockFactory namedLockFactory;
 
     @AfterAll
-    public static void cleanup() {
+    static void cleanup() {
         if (namedLockFactory != null) {
             namedLockFactory.shutdown();
         }

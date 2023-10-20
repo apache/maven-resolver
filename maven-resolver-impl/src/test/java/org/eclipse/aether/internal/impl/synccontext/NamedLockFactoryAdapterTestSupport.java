@@ -73,7 +73,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @AfterAll
-    public static void cleanupAdapter() {
+    static void cleanupAdapter() {
         if (adapter != null) {
             adapter.getNamedLockFactory().shutdown();
         }

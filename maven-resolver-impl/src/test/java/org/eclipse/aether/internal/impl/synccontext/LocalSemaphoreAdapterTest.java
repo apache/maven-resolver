@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 public class LocalSemaphoreAdapterTest extends NamedLockFactoryAdapterTestSupport {
     @BeforeAll
-    public static void createNamedLockFactory() {
+    static void createNamedLockFactory() {
         namedLockFactory = new LocalSemaphoreNamedLockFactory();
         createAdapter();
     }

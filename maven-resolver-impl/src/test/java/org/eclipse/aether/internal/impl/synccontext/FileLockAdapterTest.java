@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 public class FileLockAdapterTest extends NamedLockFactoryAdapterTestSupport {
     @BeforeAll
-    public static void createNamedLockFactory() {
+    static void createNamedLockFactory() {
         nameMapper = new BasedirNameMapper(GAVNameMapper.fileGav());
         namedLockFactory = new FileLockNamedLockFactory();
         createAdapter();

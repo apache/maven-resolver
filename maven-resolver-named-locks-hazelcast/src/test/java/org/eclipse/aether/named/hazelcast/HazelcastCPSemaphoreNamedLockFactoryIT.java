@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 public class HazelcastCPSemaphoreNamedLockFactoryIT extends NamedLockFactoryTestSupport {
 
     @BeforeAll
-    public static void createNamedLockFactory() {
+    static void createNamedLockFactory() {
         String clusterName = utils.clusterName(HazelcastCPSemaphoreNamedLockFactoryIT.class);
         namedLockFactory = new HazelcastCPSemaphoreNamedLockFactory(utils.createMember(clusterName), true);
     }
