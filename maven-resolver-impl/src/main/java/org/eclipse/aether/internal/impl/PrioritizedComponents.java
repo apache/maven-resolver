@@ -48,7 +48,7 @@ final class PrioritizedComponents<T> {
         return (PrioritizedComponents<C>) session.getData().computeIfAbsent(key, () -> {
             PrioritizedComponents<C> newInstance = new PrioritizedComponents<>(session);
             components.forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
-            return components;
+            return newInstance;
         });
     }
 
