@@ -37,29 +37,17 @@ import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestS
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.junit.Assume;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * UT for {@link BfDependencyCollector}.
  */
-@RunWith(Parameterized.class)
-public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSupport {
-    @Parameterized.Parameters
-    public static List<Boolean> parameters() {
-        return Arrays.asList(Boolean.TRUE, Boolean.FALSE);
-    }
-
-    @Parameterized.Parameter
-    public boolean useSkipper;
-
+public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDelegateTestSupport {
     @Override
     protected DependencyCollectorDelegate setupCollector(ArtifactDescriptorReader artifactDescriptorReader) {
-        session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, useSkipper);
+        session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, true);
 
         return new BfDependencyCollector(
                 new StubRemoteRepositoryManager(), artifactDescriptorReader, new StubVersionRangeResolver());
@@ -82,7 +70,6 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
 
     @Test
     public void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
-        Assume.assumeTrue(useSkipper);
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new TransitiveDependencyManager());

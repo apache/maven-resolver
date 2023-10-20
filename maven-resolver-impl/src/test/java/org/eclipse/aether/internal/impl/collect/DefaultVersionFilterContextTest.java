@@ -32,8 +32,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultVersionFilterContextTest {
     private static final Dependency FOO_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:foo:1.0"), "test");
@@ -85,7 +84,7 @@ public class DefaultVersionFilterContextTest {
         assertEquals(0, context.getCount());
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void nextBeyondEnd() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
@@ -94,7 +93,7 @@ public class DefaultVersionFilterContextTest {
 
         Iterator<Version> iterator = context.iterator();
         iterator.next();
-        iterator.next();
+        assertThrows(NoSuchElementException.class, iterator::next);
     }
 
     @Test

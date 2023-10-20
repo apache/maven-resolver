@@ -69,18 +69,18 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     private void assertEqual(RemoteRepository expected, RemoteRepository actual) {
-        assertEquals("id", expected.getId(), actual.getId());
-        assertEquals("url", expected.getUrl(), actual.getUrl());
-        assertEquals("type", expected.getContentType(), actual.getContentType());
+        assertEquals(expected.getId(), actual.getId(), "id");
+        assertEquals(expected.getUrl(), actual.getUrl(), "url");
+        assertEquals(expected.getContentType(), actual.getContentType(), "type");
         assertEqual(expected.getPolicy(false), actual.getPolicy(false));
         assertEqual(expected.getPolicy(true), actual.getPolicy(true));
     }
 
     private void assertEqual(RepositoryPolicy expected, RepositoryPolicy actual) {
         assertEquals(expected.isEnabled(), actual.isEnabled(), "enabled");
-        assertEquals("checksums", expected.getChecksumPolicy(), actual.getChecksumPolicy());
-        assertEquals("artifactUpdates", expected.getArtifactUpdatePolicy(), actual.getArtifactUpdatePolicy());
-        assertEquals("metadataUpdates", expected.getMetadataUpdatePolicy(), actual.getMetadataUpdatePolicy());
+        assertEquals(expected.getChecksumPolicy(), actual.getChecksumPolicy(), "checksums");
+        assertEquals(expected.getArtifactUpdatePolicy(), actual.getArtifactUpdatePolicy(), "artifactUpdates");
+        assertEquals(expected.getMetadataUpdatePolicy(), actual.getMetadataUpdatePolicy(), "metadataUpdates");
     }
 
     @Test

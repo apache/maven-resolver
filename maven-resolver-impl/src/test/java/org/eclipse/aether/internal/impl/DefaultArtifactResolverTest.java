@@ -67,11 +67,11 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -92,7 +92,7 @@ public class DefaultArtifactResolverTest {
 
     private DefaultRemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
-    @Before
+    @BeforeEach
     public void setup() {
         remoteRepositoryFilterSources = new HashMap<>();
         remoteRepositoryFilterManager = new DefaultRemoteRepositoryFilterManager(remoteRepositoryFilterSources);
@@ -125,7 +125,7 @@ public class DefaultArtifactResolverTest {
                 remoteRepositoryFilterManager);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
@@ -400,8 +400,8 @@ public class DefaultArtifactResolverTest {
             connector.assertSeenExpected();
             for (ArtifactResult result : e.getResults()) {
                 Throwable t = result.getExceptions().get(0);
-                assertTrue(t.toString(), t instanceof ArtifactNotFoundException);
-                assertTrue(t.toString(), t.getMessage().contains("cached"));
+                assertTrue(t instanceof ArtifactNotFoundException, t.toString());
+                assertTrue(t.getMessage().contains("cached"), t.toString());
             }
         }
     }
@@ -472,7 +472,7 @@ public class DefaultArtifactResolverTest {
 
         ArtifactResult result = resolver.resolveArtifact(session, request);
 
-        assertTrue("exception on resolveArtifact", result.getExceptions().isEmpty());
+        assertTrue(result.getExceptions().isEmpty(), "exception on resolveArtifact");
 
         Artifact resolved = result.getArtifact();
         assertNotNull(resolved.getFile());
@@ -550,7 +550,7 @@ public class DefaultArtifactResolverTest {
         resolver.resolveArtifact(session, request);
 
         List<RepositoryEvent> events = listener.getEvents();
-        assertEquals(events.toString(), 4, events.size());
+        assertEquals(4, events.size(), events.toString());
         RepositoryEvent event = events.get(0);
         assertEquals(EventType.ARTIFACT_RESOLVING, event.getType());
         assertNull(event.getException());
@@ -602,7 +602,7 @@ public class DefaultArtifactResolverTest {
         }
 
         List<RepositoryEvent> events = listener.getEvents();
-        assertEquals(events.toString(), 4, events.size());
+        assertEquals(4, events.size(), events.toString());
 
         RepositoryEvent event = events.get(0);
         assertEquals(artifact, event.getArtifact());

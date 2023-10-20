@@ -58,9 +58,9 @@ public class DefaultRepositoryEventDispatcherTest {
             assertNotNull(handler.methodName, "not handled: " + type);
 
             assertEquals(
-                    "badly handled: " + type,
                     type.name().replace("_", "").toLowerCase(Locale.ENGLISH),
-                    handler.methodName.toLowerCase(Locale.ENGLISH));
+                    handler.methodName.toLowerCase(Locale.ENGLISH),
+                    "badly handled: " + type);
         }
     }
 

@@ -30,13 +30,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -58,7 +55,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
 
     private TrustedToProvidedChecksumsSourceAdapter adapter;
 
-    @Before
+    @BeforeEach
     public void before() {
         HashMap<String, String> result = new HashMap<>();
         result.put(Sha1ChecksumAlgorithmFactory.NAME, "foo");
@@ -74,8 +71,8 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithChecksum);
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
-        assertThat(chk, notNullValue());
-        assertThat(chk, hasEntry(Sha1ChecksumAlgorithmFactory.NAME, "foo"));
+        assertNotNull(chk);
+        assertEquals(chk.get(Sha1ChecksumAlgorithmFactory.NAME), "foo");
     }
 
     @Test
@@ -83,7 +80,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithoutChecksum);
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
-        assertThat(chk, nullValue());
+        assertNull(chk);
     }
 
     @Test
@@ -93,8 +90,8 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         transfer.setArtifact(artifactWithChecksum);
         transfer.setRepositories(Collections.singletonList(repository));
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
-        assertThat(chk, notNullValue());
-        assertThat(chk, hasEntry(Sha1ChecksumAlgorithmFactory.NAME, "foo"));
+        assertNotNull(chk);
+        assertEquals(chk.get(Sha1ChecksumAlgorithmFactory.NAME), "foo");
     }
 
     @Test
@@ -104,6 +101,6 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         transfer.setArtifact(artifactWithoutChecksum);
         transfer.setRepositories(Collections.singletonList(repository));
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
-        assertThat(chk, nullValue());
+        assertNull(chk);
     }
 }

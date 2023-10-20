@@ -32,10 +32,7 @@ import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DependencyResolutionSkipperTest {
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {

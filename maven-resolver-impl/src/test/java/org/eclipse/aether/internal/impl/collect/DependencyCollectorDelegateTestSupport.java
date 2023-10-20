@@ -64,18 +64,12 @@ import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Common tests for various {@link DependencyCollectorDelegate} implementations.
@@ -102,7 +96,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         return new Dependency(new DefaultArtifact(coords), scope);
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         session = TestUtils.newSession();
         parser = new DependencyGraphParser("artifact-descriptions/");
@@ -118,7 +112,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
 
     private static void assertEqualSubtree(
             DependencyNode expected, DependencyNode actual, LinkedList<DependencyNode> parents) {
-        assertEquals("path: " + parents, expected.getDependency(), actual.getDependency());
+        assertEquals(expected.getDependency(), actual.getDependency(), "path: " + parents);
 
         if (actual.getDependency() != null) {
             Artifact artifact = actual.getDependency().getArtifact();
@@ -133,9 +127,9 @@ public abstract class DependencyCollectorDelegateTestSupport {
         parents.addLast(expected);
 
         assertEquals(
-                "path: " + parents + ", expected: " + expected.getChildren() + ", actual: " + actual.getChildren(),
                 expected.getChildren().size(),
-                actual.getChildren().size());
+                actual.getChildren().size(),
+                "path: " + parents + ", expected: " + expected.getChildren() + ", actual: " + actual.getChildren());
 
         Iterator<DependencyNode> iterator1 = expected.getChildren().iterator();
         Iterator<DependencyNode> iterator2 = actual.getChildren().iterator();
@@ -534,8 +528,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
 
     private DependencyNode toDependencyResult(
             final DependencyNode root, final String rootScope, final Boolean optional) {
-        // Make the root artifact resultion result a dependency resolution result for the subtree check.
-        assertNull("Expected root artifact resolution result.", root.getDependency());
+        // Make the root artifact resolution result a dependency resolution result for the subtree check.
+        assertNull(root.getDependency(), "Expected root artifact resolution result.");
         final DefaultDependencyNode defaultNode =
                 new DefaultDependencyNode(new Dependency(root.getArtifact(), rootScope));
 

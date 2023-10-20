@@ -117,13 +117,13 @@ public class DefaultUpdateCheckManagerTest {
         return check;
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void testCheckMetadataFailOnNoFile() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setItem(metadata.setFile(null));
         check.setFile(null);
 
-        manager.checkMetadata(session, check);
+        assertThrows(NullPointerException.class, () -> manager.checkMetadata(session, check));
     }
 
     @Test
@@ -435,14 +435,13 @@ public class DefaultUpdateCheckManagerTest {
         assertFalse(check.isRequired());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testCheckArtifactFailOnNoFile() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem(artifact.setFile(null));
         check.setFile(null);
 
-        manager.checkArtifact(session, check);
-        assertNotNull(check.getException());
+        assertThrows(NullPointerException.class, () -> manager.checkArtifact(session, check));
     }
 
     @Test

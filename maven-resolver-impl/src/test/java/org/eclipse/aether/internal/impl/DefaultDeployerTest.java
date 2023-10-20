@@ -48,15 +48,12 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultDeployerTest {
 
@@ -76,7 +73,7 @@ public class DefaultDeployerTest {
 
     private RecordingRepositoryListener listener;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
         artifact = artifact.setFile(TestFileUtils.createTempFile("artifact"));
@@ -105,7 +102,7 @@ public class DefaultDeployerTest {
         session.setRepositoryListener(listener);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
@@ -131,16 +128,16 @@ public class DefaultDeployerTest {
         connector.assertSeenExpected();
     }
 
-    @Test(expected = DeploymentException.class)
-    public void testNullArtifactFile() throws DeploymentException {
+    @Test
+    public void testNullArtifactFile() {
         request.addArtifact(artifact.setFile(null));
-        deployer.deploy(session, request);
+        assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
-    @Test(expected = DeploymentException.class)
-    public void testNullMetadataFile() throws DeploymentException {
-        request.addArtifact(artifact.setFile(null));
-        deployer.deploy(session, request);
+    @Test
+    public void testNullMetadataFile() {
+        request.addMetadata(metadata.setFile(null));
+        assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
     @Test
@@ -333,6 +330,6 @@ public class DefaultDeployerTest {
 
         props = new Properties();
         TestFileUtils.readProps(metadataFile, props);
-        assertNull(props.toString(), props.get("old"));
+        assertNull(props.get("old"), props.toString());
     }
 }

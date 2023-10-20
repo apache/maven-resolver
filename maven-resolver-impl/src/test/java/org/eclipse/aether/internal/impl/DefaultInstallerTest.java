@@ -214,7 +214,7 @@ public class DefaultInstallerTest {
         TestFileUtils.writeString(file, "test");
 
         request.addMetadata(metadata);
-        assertThrows( InstallationException.class, () -> installer.install(session, request));
+        assertThrows(InstallationException.class, () -> installer.install(session, request));
     }
 
     @Test

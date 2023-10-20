@@ -24,14 +24,11 @@ import java.util.Iterator;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HashingNameMapperTest extends NameMapperTestSupport {
     HashingNameMapper mapper = new HashingNameMapper(GAVNameMapper.gav());
@@ -41,16 +38,16 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
         Collection<String> names;
 
         names = mapper.nameLocks(session, null, null);
-        assertThat(names, Matchers.empty());
+        assertTrue(names.isEmpty());
 
         names = mapper.nameLocks(session, null, emptyList());
-        assertThat(names, Matchers.empty());
+        assertTrue(names.isEmpty());
 
         names = mapper.nameLocks(session, emptyList(), null);
-        assertThat(names, Matchers.empty());
+        assertTrue(names.isEmpty());
 
         names = mapper.nameLocks(session, emptyList(), emptyList());
-        assertThat(names, Matchers.empty());
+        assertTrue(names.isEmpty());
     }
 
     @Test
@@ -58,9 +55,8 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
-
-        assertThat(names, hasSize(1));
-        assertThat(names.iterator().next(), equalTo("46e98183d232f1e16f863025080c7f2b9797fd10"));
+        assertEquals(names.size(), 1);
+        assertEquals(names.iterator().next(), "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -69,9 +65,8 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<String> names = mapper.nameLocks(session, null, singletonList(metadata));
-
-        assertThat(names, hasSize(1));
-        assertThat(names.iterator().next(), equalTo("293b3990971f4b4b02b220620d2538eaac5f221b"));
+        assertEquals(names.size(), 1);
+        assertEquals(names.iterator().next(), "293b3990971f4b4b02b220620d2538eaac5f221b");
     }
 
     @Test
@@ -82,12 +77,12 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
                 new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
 
-        assertThat(names, hasSize(2));
+        assertEquals(names.size(), 2);
         Iterator<String> namesIterator = names.iterator();
 
         // they are sorted as well
-        assertThat(namesIterator.next(), equalTo("d36504431d00d1c6e4d1c34258f2bf0a004de085"));
-        assertThat(namesIterator.next(), equalTo("fbcebba60d7eb931eca634f6ca494a8a1701b638"));
+        assertEquals(namesIterator.next(), "d36504431d00d1c6e4d1c34258f2bf0a004de085");
+        assertEquals(namesIterator.next(), "fbcebba60d7eb931eca634f6ca494a8a1701b638");
     }
 
     @Test
@@ -96,8 +91,8 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
 
-        assertThat(names, hasSize(1));
-        assertThat(names.iterator().next(), equalTo("46/e9/46e98183d232f1e16f863025080c7f2b9797fd10"));
+        assertEquals(names.size(), 1);
+        assertEquals(names.iterator().next(), "46/e9/46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -107,8 +102,8 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<String> names = mapper.nameLocks(session, null, singletonList(metadata));
 
-        assertThat(names, hasSize(1));
-        assertThat(names.iterator().next(), equalTo("29/3b/293b3990971f4b4b02b220620d2538eaac5f221b"));
+        assertEquals(names.size(), 1);
+        assertEquals(names.iterator().next(), "29/3b/293b3990971f4b4b02b220620d2538eaac5f221b");
     }
 
     @Test
@@ -119,11 +114,11 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
                 new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
 
-        assertThat(names, hasSize(2));
+        assertEquals(names.size(), 2);
         Iterator<String> namesIterator = names.iterator();
 
         // they are sorted as well
-        assertThat(namesIterator.next(), equalTo("d3/65/d36504431d00d1c6e4d1c34258f2bf0a004de085"));
-        assertThat(namesIterator.next(), equalTo("fb/ce/fbcebba60d7eb931eca634f6ca494a8a1701b638"));
+        assertEquals(namesIterator.next(), "d3/65/d36504431d00d1c6e4d1c34258f2bf0a004de085");
+        assertEquals(namesIterator.next(), "fb/ce/fbcebba60d7eb931eca634f6ca494a8a1701b638");
     }
 }

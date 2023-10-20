@@ -24,16 +24,11 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.transfer.TransferResource;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultChecksumPolicyProviderTest {
 
@@ -47,7 +42,7 @@ public class DefaultChecksumPolicyProviderTest {
 
     private TransferResource resource;
 
-    @Before
+    @BeforeEach
     public void setup() {
         session = TestUtils.newSession();
         provider = new DefaultChecksumPolicyProvider();
@@ -55,7 +50,7 @@ public class DefaultChecksumPolicyProviderTest {
         resource = new TransferResource(repository.getId(), repository.getUrl(), "file.txt", null, null);
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         provider = null;
         session = null;
@@ -86,11 +81,11 @@ public class DefaultChecksumPolicyProviderTest {
         assertNull(policy);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNewChecksumPolicy_Unknown() {
-        ChecksumPolicy policy = provider.newChecksumPolicy(session, repository, resource, CHECKSUM_POLICY_UNKNOWN);
-        assertNotNull(policy);
-        assertEquals(WarnChecksumPolicy.class, policy.getClass());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> provider.newChecksumPolicy(session, repository, resource, CHECKSUM_POLICY_UNKNOWN));
     }
 
     @Test
@@ -101,7 +96,7 @@ public class DefaultChecksumPolicyProviderTest {
             RepositoryPolicy.CHECKSUM_POLICY_IGNORE
         };
         for (String policy : policies) {
-            assertEquals(policy, policy, provider.getEffectiveChecksumPolicy(session, policy, policy));
+            assertEquals(policy, provider.getEffectiveChecksumPolicy(session, policy, policy), policy);
         }
     }
 
@@ -114,13 +109,13 @@ public class DefaultChecksumPolicyProviderTest {
         };
         for (String[] testCase : testCases) {
             assertEquals(
-                    testCase[0] + " vs " + testCase[1],
                     testCase[0],
-                    provider.getEffectiveChecksumPolicy(session, testCase[0], testCase[1]));
+                    provider.getEffectiveChecksumPolicy(session, testCase[0], testCase[1]),
+                    testCase[0] + " vs " + testCase[1]);
             assertEquals(
-                    testCase[0] + " vs " + testCase[1],
                     testCase[0],
-                    provider.getEffectiveChecksumPolicy(session, testCase[1], testCase[0]));
+                    provider.getEffectiveChecksumPolicy(session, testCase[1], testCase[0]),
+                    testCase[0] + " vs " + testCase[1]);
         }
     }
 
@@ -135,11 +130,11 @@ public class DefaultChecksumPolicyProviderTest {
             IllegalArgumentException e = assertThrows(
                     IllegalArgumentException.class,
                     () -> provider.getEffectiveChecksumPolicy(session, CHECKSUM_POLICY_UNKNOWN, testCase[1]));
-            assertThat(e.getMessage(), is("Unsupported policy: unknown"));
+            assertEquals(e.getMessage(), "Unsupported policy: unknown");
             e = assertThrows(
                     IllegalArgumentException.class,
                     () -> provider.getEffectiveChecksumPolicy(session, testCase[1], CHECKSUM_POLICY_UNKNOWN));
-            assertThat(e.getMessage(), is("Unsupported policy: unknown"));
+            assertEquals(e.getMessage(), "Unsupported policy: unknown");
         }
     }
 }
