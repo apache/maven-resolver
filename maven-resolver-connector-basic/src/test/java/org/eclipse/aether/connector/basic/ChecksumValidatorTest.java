@@ -35,12 +35,12 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.transfer.ChecksumFailureException;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChecksumValidatorTest {
 
@@ -208,7 +208,7 @@ public class ChecksumValidatorTest {
         return checksums;
     }
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         dataFile = TestFileUtils.createTempFile("");
         dataFile.delete();
@@ -369,7 +369,7 @@ public class ChecksumValidatorTest {
         assertEquals(1, fetcher.checksumFiles.size());
         validator.retry();
         for (File file : fetcher.checksumFiles) {
-            assertFalse(file.getAbsolutePath(), file.exists());
+            assertFalse(file.exists(), file.getAbsolutePath());
         }
     }
 
@@ -382,13 +382,13 @@ public class ChecksumValidatorTest {
         assertEquals(1, fetcher.checksumFiles.size());
         validator.commit();
         File checksumFile = new File(dataFile.getPath() + ".sha1");
-        assertTrue(checksumFile.getAbsolutePath(), checksumFile.isFile());
+        assertTrue(checksumFile.isFile(), checksumFile.getAbsolutePath());
         assertEquals("foo", TestFileUtils.readString(checksumFile));
         checksumFile = new File(dataFile.getPath() + ".md5");
-        assertTrue(checksumFile.getAbsolutePath(), checksumFile.isFile());
+        assertTrue(checksumFile.isFile(), checksumFile.getAbsolutePath());
         assertEquals("bar", TestFileUtils.readString(checksumFile));
         for (File file : fetcher.checksumFiles) {
-            assertFalse(file.getAbsolutePath(), file.exists());
+            assertFalse(file.exists(), file.getAbsolutePath());
         }
     }
 
@@ -400,7 +400,7 @@ public class ChecksumValidatorTest {
         fetcher.assertFetchedFiles(SHA1);
         assertEquals(1, fetcher.checksumFiles.size());
         for (File file : fetcher.checksumFiles) {
-            assertFalse(file.getAbsolutePath(), file.exists());
+            assertFalse(file.exists(), file.getAbsolutePath());
         }
     }
 }

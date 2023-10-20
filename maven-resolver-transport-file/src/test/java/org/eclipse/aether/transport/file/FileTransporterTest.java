@@ -34,11 +34,11 @@ import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -64,7 +64,7 @@ public class FileTransporterTest {
         transporter = factory.newInstance(session, newRepo(url));
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         session = TestUtils.newSession();
         factory = new FileTransporterFactory();
@@ -75,7 +75,7 @@ public class FileTransporterTest {
         newTransporter(repoDir.toURI().toString());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (transporter != null) {
             transporter.close();
@@ -126,7 +126,7 @@ public class FileTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -140,7 +140,7 @@ public class FileTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("test", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -184,7 +184,7 @@ public class FileTransporterTest {
         for (int i = 0; i < 100; i++) {
             File file = TestFileUtils.createTempFile("failure");
             transporter.get(new GetTask(URI.create("file.txt")).setDataFile(file));
-            assertTrue(i + ", " + file.getAbsolutePath(), file.delete());
+            assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
         }
     }
 
@@ -251,7 +251,7 @@ public class FileTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -264,7 +264,7 @@ public class FileTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -290,7 +290,7 @@ public class FileTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "dir/sub/dir/file.txt")));
     }
 
@@ -304,7 +304,7 @@ public class FileTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(2L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("OK", TestFileUtils.readString(new File(repoDir, "some space.txt")));
     }
 
@@ -314,8 +314,8 @@ public class FileTransporterTest {
             File src = TestFileUtils.createTempFile("upload");
             File dst = new File(repoDir, "file.txt");
             transporter.put(new PutTask(URI.create("file.txt")).setDataFile(src));
-            assertTrue(i + ", " + src.getAbsolutePath(), src.delete());
-            assertTrue(i + ", " + dst.getAbsolutePath(), dst.delete());
+            assertTrue(src.delete(), i + ", " + src.getAbsolutePath());
+            assertTrue(dst.delete(), i + ", " + dst.getAbsolutePath());
         }
     }
 
@@ -366,9 +366,9 @@ public class FileTransporterTest {
         assertFalse(new File(repoDir, "file.txt").exists());
     }
 
-    @Test(expected = NoTransporterException.class)
-    public void testInit_BadProtocol() throws Exception {
-        newTransporter("bad:/void");
+    @Test
+    public void testInit_BadProtocol() {
+        assertThrows(NoTransporterException.class, () -> newTransporter("bad:/void"));
     }
 
     @Test
