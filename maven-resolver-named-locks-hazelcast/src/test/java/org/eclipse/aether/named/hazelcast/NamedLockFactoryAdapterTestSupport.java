@@ -36,11 +36,12 @@ import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -66,7 +67,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         adapter = new NamedLockFactoryAdapter(new DiscriminatingNameMapper(GAVNameMapper.gav()), namedLockFactory);
     }
 
-    @AfterClass
+    @AfterAll
     public static void cleanup() {
         if (adapter != null) {
             adapter.getNamedLockFactory().shutdown();
@@ -75,7 +76,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         utils.cleanup();
     }
 
-    @Before
+    @BeforeEach
     public void before() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         LocalRepository localRepository =
@@ -104,7 +105,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         }
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void sharedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -118,7 +120,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void exclusiveAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -132,7 +135,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void mixedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -146,7 +150,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void nestedSharedShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -158,7 +163,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void nestedExclusiveShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -170,7 +176,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void nestedExclusiveExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -182,7 +189,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void nestedSharedExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner (outer)
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser (inner)
@@ -236,7 +244,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                     winner.await();
                 }
             } catch (InterruptedException e) {
-                Assert.fail("interrupted");
+                fail("interrupted");
             }
         }
     }

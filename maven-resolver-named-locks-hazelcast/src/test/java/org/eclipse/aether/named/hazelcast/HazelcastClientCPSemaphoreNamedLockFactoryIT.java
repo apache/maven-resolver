@@ -18,10 +18,10 @@
  */
 package org.eclipse.aether.named.hazelcast;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 public class HazelcastClientCPSemaphoreNamedLockFactoryIT extends NamedLockFactoryTestSupport {
-    @BeforeClass
+    @BeforeAll
     public static void createNamedLockFactory() {
         String clusterName = utils.clusterName(HazelcastClientCPSemaphoreNamedLockFactoryIT.class);
         utils.createMember(clusterName);

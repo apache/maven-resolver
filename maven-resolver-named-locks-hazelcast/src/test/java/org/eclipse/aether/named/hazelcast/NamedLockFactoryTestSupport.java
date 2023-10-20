@@ -24,16 +24,12 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Rule;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.Timeout;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UT support for {@link NamedLockFactory}.
@@ -43,10 +39,7 @@ public abstract class NamedLockFactoryTestSupport {
 
     protected static NamedLockFactory namedLockFactory;
 
-    @Rule
-    public TestName testName = new TestName();
-
-    @AfterClass
+    @AfterAll
     public static void cleanup() {
         if (namedLockFactory != null) {
             namedLockFactory.shutdown();
@@ -55,68 +48,69 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void refCounting() {
-        final String name = testName.getMethodName();
+    public void refCounting(TestInfo testInfo) {
+        final String name = testInfo.getDisplayName();
         try (NamedLock one = namedLockFactory.getLock(name);
                 NamedLock two = namedLockFactory.getLock(name)) {
-            assertThat(one, sameInstance(two));
+            assertSame(one, two);
             one.close();
             two.close();
 
             try (NamedLock three = namedLockFactory.getLock(name)) {
-                assertThat(three, not(sameInstance(two)));
+                assertNotSame(three, two);
             }
         }
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void unlockWoLock() {
-        final String name = testName.getMethodName();
+    @Test
+    public void unlockWoLock(TestInfo testInfo) {
+        final String name = testInfo.getDisplayName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            one.unlock();
+            assertThrows(IllegalStateException.class, one::unlock);
         }
     }
 
     @Test
-    public void wwBoxing() throws InterruptedException {
-        final String name = testName.getMethodName();
+    public void wwBoxing(TestInfo testInfo) throws InterruptedException {
+        final String name = testInfo.getDisplayName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(true));
-            one.unlock();
-            one.unlock();
-        }
-    }
-
-    @Test
-    public void rrBoxing() throws InterruptedException {
-        final String name = testName.getMethodName();
-        try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             one.unlock();
             one.unlock();
         }
     }
 
     @Test
-    public void wrBoxing() throws InterruptedException {
-        final String name = testName.getMethodName();
+    public void rrBoxing(TestInfo testInfo) throws InterruptedException {
+        final String name = testInfo.getDisplayName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             one.unlock();
             one.unlock();
         }
     }
 
     @Test
-    public void rwBoxing() throws InterruptedException {
-        final String name = testName.getMethodName();
+    public void wrBoxing(TestInfo testInfo) throws InterruptedException {
+        final String name = testInfo.getDisplayName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
+            one.unlock();
+            one.unlock();
+        }
+    }
+
+    @Test
+    public void rwBoxing(TestInfo testInfo) throws InterruptedException {
+        final String name = testInfo.getDisplayName();
+        try (NamedLock one = namedLockFactory.getLock(name)) {
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             try {
                 one.lockExclusively(1L, TimeUnit.MILLISECONDS);
+                fail("lock upgrade should be not supported");
             } catch (LockUpgradeNotSupportedException e) {
                 // good
             }
@@ -124,9 +118,10 @@ public abstract class NamedLockFactoryTestSupport {
         }
     }
 
-    @Test(timeout = 5000)
-    public void sharedAccess() throws InterruptedException {
-        final String name = testName.getMethodName();
+    @Test
+    @Timeout(5)
+    public void sharedAccess(TestInfo testInfo) throws InterruptedException {
+        final String name = testInfo.getDisplayName();
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 loser
         Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
@@ -139,9 +134,10 @@ public abstract class NamedLockFactoryTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
-    public void exclusiveAccess() throws InterruptedException {
-        final String name = testName.getMethodName();
+    @Test
+    @Timeout(5)
+    public void exclusiveAccess(TestInfo testInfo) throws InterruptedException {
+        final String name = testInfo.getDisplayName();
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
         Thread t1 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
@@ -154,9 +150,10 @@ public abstract class NamedLockFactoryTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
-    public void mixedAccess() throws InterruptedException {
-        final String name = testName.getMethodName();
+    @Test
+    @Timeout(5)
+    public void mixedAccess(TestInfo testInfo) throws InterruptedException {
+        final String name = testInfo.getDisplayName();
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
         Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
@@ -206,7 +203,7 @@ public abstract class NamedLockFactoryTestSupport {
                     winner.await();
                 }
             } catch (InterruptedException e) {
-                Assert.fail(e.getMessage());
+                fail(e.getMessage());
             }
         }
     }
