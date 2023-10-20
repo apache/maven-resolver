@@ -26,10 +26,10 @@ import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -37,13 +37,13 @@ public class DependencyGraphParserTest {
 
     private DependencyGraphParser parser;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         this.parser = new DependencyGraphParser();
     }
 
     @Test
-    public void testOnlyRoot() throws IOException {
+    void testOnlyRoot() throws IOException {
         String def = "gid:aid:jar:1 scope";
 
         DependencyNode node = parser.parseLiteral(def);
@@ -65,7 +65,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testOptionalScope() throws IOException {
+    void testOptionalScope() throws IOException {
         String def = "gid:aid:jar:1";
 
         DependencyNode node = parser.parseLiteral(def);
@@ -79,7 +79,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testWithChildren() throws IOException {
+    void testWithChildren() throws IOException {
         String def =
                 "gid1:aid1:ext1:ver1 scope1\n" + "+- gid2:aid2:ext2:ver2 scope2\n" + "\\- gid3:aid3:ext3:ver3 scope3\n";
 
@@ -99,7 +99,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testDeepChildren() throws IOException {
+    void testDeepChildren() throws IOException {
         String def = "gid1:aid1:ext1:ver1\n" + "+- gid2:aid2:ext2:ver2 scope2\n" + "|  \\- gid3:aid3:ext3:ver3\n"
                 + "\\- gid4:aid4:ext4:ver4 scope4";
 
@@ -137,7 +137,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testComments() throws IOException {
+    void testComments() throws IOException {
         String def = "# first line\n#second line\ngid:aid:ext:ver # root artifact asdf:qwer:zcxv:uip";
 
         DependencyNode node = parser.parseLiteral(def);
@@ -146,7 +146,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testId() throws IOException {
+    void testId() throws IOException {
         String def = "gid:aid:ext:ver (id)\n\\- ^id";
         DependencyNode node = parser.parseLiteral(def);
         assertNodeProperties(node, "");
@@ -158,7 +158,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testResourceLoading() throws IOException {
+    void testResourceLoading() throws IOException {
         String prefix = "org/eclipse/aether/internal/test/util/";
         String name = "testResourceLoading.txt";
 
@@ -168,7 +168,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testResourceLoadingWithPrefix() throws IOException {
+    void testResourceLoadingWithPrefix() throws IOException {
         String prefix = "org/eclipse/aether/internal/test/util/";
         parser = new DependencyGraphParser(prefix);
 
@@ -180,7 +180,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testProperties() throws IOException {
+    void testProperties() throws IOException {
         String def = "gid:aid:ext:ver props=test:foo,test2:fizzle";
         DependencyNode node = parser.parseLiteral(def);
 
@@ -197,7 +197,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testSubstitutions() throws IOException {
+    void testSubstitutions() throws IOException {
         parser.setSubstitutions(Arrays.asList("subst1", "subst2"));
         String def = "%s:%s:ext:ver";
         DependencyNode root = parser.parseLiteral(def);
@@ -215,7 +215,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testMultiple() throws IOException {
+    void testMultiple() throws IOException {
         String prefix = "org/eclipse/aether/internal/test/util/";
         String name = "testResourceLoading.txt";
 
@@ -227,7 +227,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testRootNullDependency() throws IOException {
+    void testRootNullDependency() throws IOException {
         String literal = "(null)\n+- gid:aid:ext:ver";
         DependencyNode root = parser.parseLiteral(literal);
 
@@ -236,7 +236,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testChildNullDependency() throws IOException {
+    void testChildNullDependency() throws IOException {
         String literal = "gid:aid:ext:ver\n+- (null)";
         DependencyNode root = parser.parseLiteral(literal);
 
@@ -246,7 +246,7 @@ public class DependencyGraphParserTest {
     }
 
     @Test
-    public void testOptional() throws IOException {
+    void testOptional() throws IOException {
         String def = "gid:aid:jar:1 compile optional";
 
         DependencyNode node = parser.parseLiteral(def);

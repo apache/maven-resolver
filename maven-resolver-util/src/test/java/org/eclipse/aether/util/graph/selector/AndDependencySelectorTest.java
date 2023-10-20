@@ -26,10 +26,10 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AndDependencySelectorTest {
 
@@ -70,7 +70,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testNewInstance() {
+    void testNewInstance() {
         assertNull(AndDependencySelector.newInstance(null, null));
         DependencySelector selector = new DummyDependencySelector();
         assertSame(selector, AndDependencySelector.newInstance(selector, null));
@@ -80,7 +80,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testTraverseDependency() {
+    void testTraverseDependency() {
         Dependency dependency = new Dependency(new DefaultArtifact("g:a:v:1"), "runtime");
 
         DependencySelector selector = new AndDependencySelector();
@@ -97,7 +97,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testDeriveChildSelector_Unchanged() {
+    void testDeriveChildSelector_Unchanged() {
         DependencySelector other1 = new DummyDependencySelector(true);
         DependencySelector other2 = new DummyDependencySelector(false);
         DependencySelector selector = new AndDependencySelector(other1, other2);
@@ -107,7 +107,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testDeriveChildSelector_OneRemaining() {
+    void testDeriveChildSelector_OneRemaining() {
         DependencySelector other1 = new DummyDependencySelector(true);
         DependencySelector other2 = new DummyDependencySelector(false, null);
         DependencySelector selector = new AndDependencySelector(other1, other2);
@@ -117,7 +117,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testDeriveChildSelector_ZeroRemaining() {
+    void testDeriveChildSelector_ZeroRemaining() {
         DependencySelector other1 = new DummyDependencySelector(true, null);
         DependencySelector other2 = new DummyDependencySelector(false, null);
         DependencySelector selector = new AndDependencySelector(other1, other2);
@@ -127,7 +127,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         DependencySelector other1 = new DummyDependencySelector(true);
         DependencySelector other2 = new DummyDependencySelector(false);
         DependencySelector selector1 = new AndDependencySelector(other1, other2);
@@ -141,7 +141,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         DependencySelector other1 = new DummyDependencySelector(true);
         DependencySelector other2 = new DummyDependencySelector(false);
         DependencySelector selector1 = new AndDependencySelector(other1, other2);
@@ -150,7 +150,7 @@ public class AndDependencySelectorTest {
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         DependencySelector andSelector =
                 new AndDependencySelector(new DummyDependencySelector(true), new DummyDependencySelector(false));
         assertEquals("AndDependencySelector(Dummy(true) && Dummy(false))", andSelector.toString());

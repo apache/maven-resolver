@@ -30,12 +30,9 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DependencyResolutionSkipperTest {
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
@@ -55,7 +52,7 @@ public class DependencyResolutionSkipperTest {
     }
 
     @Test
-    public void testSkipVersionConflict() {
+    void testSkipVersionConflict() {
         // A -> B -> C 3.0 -> D   => C3.0 SHOULD BE SKIPPED
         // | -> E -> F -> G
         // | -> C 2.0 -> H  => C2.0 is the winner
@@ -105,7 +102,7 @@ public class DependencyResolutionSkipperTest {
     }
 
     @Test
-    public void testSkipDeeperDuplicateNode() {
+    void testSkipDeeperDuplicateNode() {
         // A -> B
         // |--> C -> B  => B here will be skipped
         // |--> D -> C  => C here will be skipped
@@ -153,7 +150,7 @@ public class DependencyResolutionSkipperTest {
     }
 
     @Test
-    public void testForceResolution() {
+    void testForceResolution() {
         // A -> B -> C -> D => 3rd D here will be force-resolved
         // |--> C -> D => 2nd D will be force-resolved
         // |--> D => 1st D to resolve

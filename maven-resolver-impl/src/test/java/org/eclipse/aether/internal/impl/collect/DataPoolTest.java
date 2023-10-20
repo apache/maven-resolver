@@ -27,10 +27,9 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DataPoolTest {
 
@@ -39,7 +38,7 @@ public class DataPoolTest {
     }
 
     @Test
-    public void testArtifactDescriptorCaching() {
+    void testArtifactDescriptorCaching() {
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
         request.setArtifact(new DefaultArtifact("gid:aid:1"));
         ArtifactDescriptorResult result = new ArtifactDescriptorResult(request);
@@ -64,7 +63,7 @@ public class DataPoolTest {
     }
 
     @Test
-    public void testConstraintKey() {
+    void testConstraintKey() {
         VersionRangeRequest request = new VersionRangeRequest();
         request.setRepositories(Collections.singletonList(
                 new RemoteRepository.Builder("some-id", "some-type", "http://www.example.com").build()));

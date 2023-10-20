@@ -20,13 +20,13 @@ package org.eclipse.aether.util.graph.selector;
 
 import java.util.Collections;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ScopeDependencySelectorTest {
     @Test
-    public void testToString() {
+    void testToString() {
         assertEquals(
                 "ScopeDependencySelector(included: [foo], excluded: [bar], transitive: false)",
                 new ScopeDependencySelector(Collections.singleton("foo"), Collections.singleton("bar")).toString());

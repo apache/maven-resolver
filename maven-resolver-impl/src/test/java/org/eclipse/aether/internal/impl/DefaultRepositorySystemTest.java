@@ -37,10 +37,10 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.util.repository.DefaultAuthenticationSelector;
 import org.eclipse.aether.util.repository.DefaultMirrorSelector;
 import org.eclipse.aether.util.repository.DefaultProxySelector;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 public class DefaultRepositorySystemTest {
@@ -49,8 +49,8 @@ public class DefaultRepositorySystemTest {
 
     private DefaultRepositorySystemSession session;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         system = new DefaultRepositorySystem(
                 new StubVersionResolver(),
                 new StubVersionRangeResolver(),
@@ -69,7 +69,7 @@ public class DefaultRepositorySystemTest {
     }
 
     @Test
-    public void testNewResolutionRepositories() {
+    void testNewResolutionRepositories() {
         Proxy proxy = new Proxy("http", "localhost", 8080);
         DefaultProxySelector proxySelector = new DefaultProxySelector();
         proxySelector.add(proxy, null);
@@ -104,7 +104,7 @@ public class DefaultRepositorySystemTest {
     }
 
     @Test
-    public void testNewDeploymentRepository() {
+    void testNewDeploymentRepository() {
         Proxy proxy = new Proxy("http", "localhost", 8080);
         DefaultProxySelector proxySelector = new DefaultProxySelector();
         proxySelector.add(proxy, null);

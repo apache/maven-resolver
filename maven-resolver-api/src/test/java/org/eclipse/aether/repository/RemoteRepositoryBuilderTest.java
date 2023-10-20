@@ -24,33 +24,33 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.repository.RemoteRepository.Builder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RemoteRepositoryBuilderTest {
 
     private RemoteRepository prototype;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         prototype = new Builder("id", "type", "file:void").build();
     }
 
     @Test
-    public void testReusePrototype() {
+    void testReusePrototype() {
         Builder builder = new Builder(prototype);
         assertSame(prototype, builder.build());
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testPrototypeMandatory() {
-        new Builder(null);
+    @Test
+    void testPrototypeMandatory() {
+        assertThrows(NullPointerException.class, () -> new Builder(null));
     }
 
     @Test
-    public void testSetId() {
+    void testSetId() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo = builder.setId(prototype.getId()).build();
         assertSame(prototype, repo);
@@ -59,7 +59,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetContentType() {
+    void testSetContentType() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo =
                 builder.setContentType(prototype.getContentType()).build();
@@ -69,7 +69,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetUrl() {
+    void testSetUrl() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo = builder.setUrl(prototype.getUrl()).build();
         assertSame(prototype, repo);
@@ -78,7 +78,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetPolicy() {
+    void testSetPolicy() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo = builder.setPolicy(prototype.getPolicy(false)).build();
         assertSame(prototype, repo);
@@ -89,7 +89,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetReleasePolicy() {
+    void testSetReleasePolicy() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo =
                 builder.setReleasePolicy(prototype.getPolicy(false)).build();
@@ -101,7 +101,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetSnapshotPolicy() {
+    void testSetSnapshotPolicy() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo =
                 builder.setSnapshotPolicy(prototype.getPolicy(true)).build();
@@ -113,7 +113,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetProxy() {
+    void testSetProxy() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo = builder.setProxy(prototype.getProxy()).build();
         assertSame(prototype, repo);
@@ -123,7 +123,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetAuthentication() {
+    void testSetAuthentication() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo =
                 builder.setAuthentication(prototype.getAuthentication()).build();
@@ -138,7 +138,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetMirroredRepositories() {
+    void testSetMirroredRepositories() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo = builder.setMirroredRepositories(prototype.getMirroredRepositories())
                 .build();
@@ -149,7 +149,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testAddMirroredRepository() {
+    void testAddMirroredRepository() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo = builder.addMirroredRepository(null).build();
         assertSame(prototype, repo);
@@ -158,7 +158,7 @@ public class RemoteRepositoryBuilderTest {
     }
 
     @Test
-    public void testSetRepositoryManager() {
+    void testSetRepositoryManager() {
         Builder builder = new Builder(prototype);
         RemoteRepository repo =
                 builder.setRepositoryManager(prototype.isRepositoryManager()).build();

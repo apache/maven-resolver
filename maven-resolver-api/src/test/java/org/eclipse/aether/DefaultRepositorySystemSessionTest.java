@@ -26,20 +26,17 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
 public class DefaultRepositorySystemSessionTest {
 
     @Test
-    public void testDefaultProxySelectorUsesExistingProxy() {
+    void testDefaultProxySelectorUsesExistingProxy() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
         RemoteRepository repo = new RemoteRepository.Builder("id", "default", "void").build();
@@ -51,7 +48,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testDefaultAuthenticationSelectorUsesExistingAuth() {
+    void testDefaultAuthenticationSelectorUsesExistingAuth() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
         RemoteRepository repo = new RemoteRepository.Builder("id", "default", "void").build();
@@ -67,7 +64,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testCopyConstructorCopiesPropertiesDeep() {
+    void testCopyConstructorCopiesPropertiesDeep() {
         DefaultRepositorySystemSession session1 = new DefaultRepositorySystemSession();
         session1.setUserProperties(System.getProperties());
         session1.setSystemProperties(System.getProperties());
@@ -84,7 +81,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testReadOnlyProperties() {
+    void testReadOnlyProperties() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
         try {
@@ -110,7 +107,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testCopyRepositorySystemSession() throws Exception {
+    void testCopyRepositorySystemSession() throws Exception {
         RepositorySystemSession session = Mockito.mock(RepositorySystemSession.class, Mockito.RETURNS_MOCKS);
 
         RepositorySystemSession newSession = new DefaultRepositorySystemSession(session);
@@ -119,7 +116,7 @@ public class DefaultRepositorySystemSessionTest {
 
         for (Method method : methods) {
             if (method.getParameterCount() == 0) {
-                assertEquals(method.getName(), method.invoke(session) == null, method.invoke(newSession) == null);
+                assertEquals(method.invoke(session) == null, method.invoke(newSession) == null, method.getName());
             }
         }
     }

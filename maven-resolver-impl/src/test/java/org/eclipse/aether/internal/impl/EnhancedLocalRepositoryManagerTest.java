@@ -39,11 +39,11 @@ import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.LocalMetadataRequest;
 import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EnhancedLocalRepositoryManagerTest {
 
@@ -59,7 +59,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private RemoteRepository repository;
 
-    private String testContext = "project/compile";
+    private final String testContext = "project/compile";
 
     protected TrackingFileManager trackingFileManager;
 
@@ -69,8 +69,8 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private Metadata noVerMetadata;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         String url = TestFileUtils.createTempDir("enhanced-remote-repo")
                 .toURI()
                 .toURL()
@@ -80,13 +80,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 .build();
 
         artifact = new DefaultArtifact(
-                "gid",
-                "aid",
-                "",
-                "jar",
-                "1-test",
-                Collections.<String, String>emptyMap(),
-                TestFileUtils.createTempFile("artifact"));
+                "gid", "aid", "", "jar", "1-test", Collections.emptyMap(), TestFileUtils.createTempFile("artifact"));
 
         snapshot = new DefaultArtifact(
                 "gid",
@@ -94,7 +88,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 "",
                 "jar",
                 "1.0-20120710.231549-9",
-                Collections.<String, String>emptyMap(),
+                Collections.emptyMap(),
                 TestFileUtils.createTempFile("artifact"));
 
         metadata = new DefaultMetadata(
@@ -120,8 +114,8 @@ public class EnhancedLocalRepositoryManagerTest {
                 new DefaultLocalPathPrefixComposerFactory().createComposer(session));
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         TestFileUtils.deleteFile(basedir);
         TestFileUtils.deleteFile(new File(new URI(repository.getUrl())));
 
@@ -161,7 +155,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testGetPathForLocalArtifact() {
+    void testGetPathForLocalArtifact() {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
         assertEquals("1.0-SNAPSHOT", artifact.getBaseVersion());
         assertEquals("g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact(artifact));
@@ -172,7 +166,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testGetPathForRemoteArtifact() {
+    void testGetPathForRemoteArtifact() {
         RemoteRepository remoteRepo = new RemoteRepository.Builder("repo", "default", "ram:/void").build();
 
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
@@ -189,7 +183,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testFindLocalArtifact() throws Exception {
+    void testFindLocalArtifact() throws Exception {
         addLocalArtifact(artifact);
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, null, null);
@@ -207,7 +201,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testFindRemoteArtifact() throws Exception {
+    void testFindRemoteArtifact() throws Exception {
         addRemoteArtifact(artifact);
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
@@ -224,7 +218,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testDoNotFindDifferentContext() throws Exception {
+    void testDoNotFindDifferentContext() throws Exception {
         addRemoteArtifact(artifact);
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), "different");
@@ -233,7 +227,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testDoNotFindNullFile() throws Exception {
+    void testDoNotFindNullFile() throws Exception {
         artifact = artifact.setFile(null);
         addLocalArtifact(artifact);
 
@@ -243,9 +237,9 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testDoNotFindDeletedFile() throws Exception {
+    void testDoNotFindDeletedFile() throws Exception {
         addLocalArtifact(artifact);
-        assertTrue("could not delete artifact file", artifactFile.delete());
+        assertTrue(artifactFile.delete(), "could not delete artifact file");
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         LocalArtifactResult result = manager.find(session, request);
@@ -253,7 +247,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testFindUntrackedFile() throws Exception {
+    void testFindUntrackedFile() throws Exception {
         copy(artifact, manager.getPathForLocalArtifact(artifact));
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
@@ -274,7 +268,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testFindLocalMetadata() throws Exception {
+    void testFindLocalMetadata() throws Exception {
         addMetadata(metadata, null);
 
         LocalMetadataRequest request = new LocalMetadataRequest(metadata, null, testContext);
@@ -284,7 +278,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testFindLocalMetadataNoVersion() throws Exception {
+    void testFindLocalMetadataNoVersion() throws Exception {
         addMetadata(noVerMetadata, null);
 
         LocalMetadataRequest request = new LocalMetadataRequest(noVerMetadata, null, testContext);
@@ -294,7 +288,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testDoNotFindRemoteMetadataDifferentContext() throws Exception {
+    void testDoNotFindRemoteMetadataDifferentContext() throws Exception {
         addMetadata(noVerMetadata, repository);
         addMetadata(metadata, repository);
 
@@ -308,7 +302,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testFindArtifactUsesTimestampedVersion() throws Exception {
+    void testFindArtifactUsesTimestampedVersion() throws Exception {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
         File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
         TestFileUtils.writeString(file, "test");
@@ -318,7 +312,7 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalArtifactRequest request = new LocalArtifactRequest();
         request.setArtifact(artifact);
         LocalArtifactResult result = manager.find(session, request);
-        assertNull(result.toString(), result.getFile());
-        assertFalse(result.toString(), result.isAvailable());
+        assertNull(result.getFile(), result.toString());
+        assertFalse(result.isAvailable(), result.toString());
     }
 }

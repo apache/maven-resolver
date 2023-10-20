@@ -26,9 +26,9 @@ import java.util.Queue;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -56,7 +56,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
             }
         }
 
-        assertTrue(String.format("leftover conflict groups (remaining: '%s')", queue), queue.isEmpty());
+        assertTrue(queue.isEmpty(), String.format("leftover conflict groups (remaining: '%s')", queue));
     }
 
     private void expectOrder(String... id) {
@@ -71,7 +71,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testSimple() throws Exception {
+    void testSimple() throws Exception {
         DependencyNode node = parseResource("simple.txt");
         assertSame(node, transform(node));
 
@@ -80,7 +80,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testCycle() throws Exception {
+    void testCycle() throws Exception {
         DependencyNode node = parseResource("cycle.txt");
         assertSame(node, transform(node));
 
@@ -89,7 +89,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testCycles() throws Exception {
+    void testCycles() throws Exception {
         DependencyNode node = parseResource("cycles.txt");
         assertSame(node, transform(node));
 
@@ -98,7 +98,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testNoConflicts() throws Exception {
+    void testNoConflicts() throws Exception {
         DependencyNode node = parseResource("no-conflicts.txt");
         assertSame(node, transform(node));
 

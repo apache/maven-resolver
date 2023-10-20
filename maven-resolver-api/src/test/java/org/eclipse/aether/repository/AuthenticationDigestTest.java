@@ -22,9 +22,9 @@ import java.util.Map;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AuthenticationDigestTest {
 
@@ -44,7 +44,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForRepository() {
+    void testForRepository() {
         final RepositorySystemSession session = newSession();
         final RemoteRepository[] repos = {null};
 
@@ -58,7 +58,7 @@ public class AuthenticationDigestTest {
                 assertSame(session, digest.getSession());
                 assertNotNull(digest.getRepository());
                 assertNull(digest.getProxy());
-                assertNull("digest() should only be called once", repos[0]);
+                assertNull(repos[0], "digest() should only be called once");
                 repos[0] = digest.getRepository();
 
                 digest.update((byte[]) null);
@@ -77,7 +77,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForRepository_NoAuth() {
+    void testForRepository_NoAuth() {
         RemoteRepository repo = newRepo(null, null);
 
         String digest = AuthenticationDigest.forRepository(newSession(), repo);
@@ -85,7 +85,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy() {
+    void testForProxy() {
         final RepositorySystemSession session = newSession();
         final Proxy[] proxies = {null};
 
@@ -99,7 +99,7 @@ public class AuthenticationDigestTest {
                 assertSame(session, digest.getSession());
                 assertNotNull(digest.getRepository());
                 assertNotNull(digest.getProxy());
-                assertNull("digest() should only be called once", proxies[0]);
+                assertNull(proxies[0], "digest() should only be called once");
                 proxies[0] = digest.getProxy();
 
                 digest.update((byte[]) null);
@@ -118,7 +118,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy_NoProxy() {
+    void testForProxy_NoProxy() {
         RemoteRepository repo = newRepo(null, null);
 
         String digest = AuthenticationDigest.forProxy(newSession(), repo);
@@ -126,7 +126,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy_NoProxyAuth() {
+    void testForProxy_NoProxyAuth() {
         RemoteRepository repo = newRepo(null, newProxy(null));
 
         String digest = AuthenticationDigest.forProxy(newSession(), repo);

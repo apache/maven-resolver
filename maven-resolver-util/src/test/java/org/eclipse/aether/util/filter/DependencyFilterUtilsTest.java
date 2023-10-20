@@ -24,9 +24,9 @@ import java.util.List;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -35,7 +35,7 @@ public class DependencyFilterUtilsTest {
     private static List<DependencyNode> PARENTS = Collections.emptyList();
 
     @Test
-    public void testClasspathFilterCompile() {
+    void testClasspathFilterCompile() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter("compile");
 
@@ -47,7 +47,7 @@ public class DependencyFilterUtilsTest {
     }
 
     @Test
-    public void testClasspathFilterRuntime() {
+    void testClasspathFilterRuntime() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter("runtime");
 
@@ -59,7 +59,7 @@ public class DependencyFilterUtilsTest {
     }
 
     @Test
-    public void testClasspathFilterTest() {
+    void testClasspathFilterTest() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter("test");
 
@@ -71,7 +71,7 @@ public class DependencyFilterUtilsTest {
     }
 
     @Test
-    public void testClasspathFilterCompileRuntime() {
+    void testClasspathFilterCompileRuntime() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter("compile", "runtime");
 
@@ -83,7 +83,7 @@ public class DependencyFilterUtilsTest {
     }
 
     @Test
-    public void testClasspathFilterCompilePlusRuntime() {
+    void testClasspathFilterCompilePlusRuntime() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter("compile+runtime");
 
@@ -95,7 +95,7 @@ public class DependencyFilterUtilsTest {
     }
 
     @Test
-    public void testClasspathFilterRuntimeCommaSystem() {
+    void testClasspathFilterRuntimeCommaSystem() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter("runtime,system");
 
@@ -107,7 +107,7 @@ public class DependencyFilterUtilsTest {
     }
 
     @Test
-    public void testClasspathFilterNull() {
+    void testClasspathFilterNull() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter((String[]) null);
 
@@ -119,7 +119,7 @@ public class DependencyFilterUtilsTest {
     }
 
     @Test
-    public void testClasspathFilterUnknownScope() {
+    void testClasspathFilterUnknownScope() {
         NodeBuilder builder = new NodeBuilder().artifactId("aid");
         DependencyFilter filter = DependencyFilterUtils.classpathFilter("compile");
 

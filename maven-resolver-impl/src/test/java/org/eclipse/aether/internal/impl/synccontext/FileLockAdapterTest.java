@@ -21,11 +21,11 @@ package org.eclipse.aether.internal.impl.synccontext;
 import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 public class FileLockAdapterTest extends NamedLockFactoryAdapterTestSupport {
-    @BeforeClass
-    public static void createNamedLockFactory() {
+    @BeforeAll
+    static void createNamedLockFactory() {
         nameMapper = new BasedirNameMapper(GAVNameMapper.fileGav());
         namedLockFactory = new FileLockNamedLockFactory();
         createAdapter();

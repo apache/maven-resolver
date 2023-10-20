@@ -26,32 +26,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.internal.test.util.TestFileUtils.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChecksumUtilTest {
     private static final String EMPTY = "EMPTY";
     private static final String PATTERN = "PATTERN";
     private static final String TEXT = "TEXT";
 
-    private Map<String, File> files = new HashMap<>(3);
+    private final Map<String, File> files = new HashMap<>(3);
 
-    private Map<String, byte[]> bytes = new HashMap<>(3);
+    private final Map<String, byte[]> bytes = new HashMap<>(3);
 
-    private static Map<String, String> emptyChecksums = new HashMap<>();
+    private static final Map<String, String> emptyChecksums = new HashMap<>();
 
-    private static Map<String, String> patternChecksums = new HashMap<>();
+    private static final Map<String, String> patternChecksums = new HashMap<>();
 
-    private static Map<String, String> textChecksums = new HashMap<>();
+    private static final Map<String, String> textChecksums = new HashMap<>();
 
-    private Map<String, Map<String, String>> sums = new HashMap<>();
+    private final Map<String, Map<String, String>> sums = new HashMap<>();
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         emptyChecksums.put("MD5", "d41d8cd98f00b204e9800998ecf8427e");
         emptyChecksums.put("SHA-1", "da39a3ee5e6b4b0d3255bfef95601890afd80709");
         emptyChecksums.put("SHA-256", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
@@ -72,8 +72,8 @@ public class ChecksumUtilTest {
                 "2d6d19570b26080fa88101af2256ce3dae63512b06864cd36a05371c81d6dbd0ec226dd75f22e8d46a9582e1fc40ee6e7a02d43c852f3c92255982b835db6e7c");
     }
 
-    @Before
-    public void before() throws IOException {
+    @BeforeEach
+    void before() throws IOException {
         sums.clear();
 
         byte[] emptyBytes = new byte[0];
@@ -95,8 +95,8 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testEquality() throws Throwable {
-        Map<String, Object> checksums = null;
+    void testEquality() throws Throwable {
+        Map<String, Object> checksums;
 
         for (Map.Entry<String, File> fileEntry : files.entrySet()) {
 
@@ -109,28 +109,28 @@ public class ChecksumUtilTest {
                 String actual = entry.getValue().toString();
                 String expected = sums.get(fileEntry.getKey()).get(entry.getKey());
                 assertEquals(
+                        expected,
+                        actual,
                         String.format(
                                 "checksums do not match for '%s', algorithm '%s'",
-                                fileEntry.getValue().getName(), entry.getKey()),
-                        expected,
-                        actual);
+                                fileEntry.getValue().getName(), entry.getKey()));
             }
-            assertTrue("Could not delete file", fileEntry.getValue().delete());
+            assertTrue(fileEntry.getValue().delete(), "Could not delete file");
         }
     }
 
     @Test
-    public void testFileHandleLeakage() throws IOException {
+    void testFileHandleLeakage() throws IOException {
         for (File file : files.values()) {
             for (int i = 0; i < 150; i++) {
                 ChecksumUtils.calc(file, Arrays.asList("SHA-512", "SHA-256", "SHA-1", "MD5"));
             }
-            assertTrue("Could not delete file", file.delete());
+            assertTrue(file.delete(), "Could not delete file");
         }
     }
 
     @Test
-    public void testRead() throws IOException {
+    void testRead() throws IOException {
         for (Map<String, String> checksums : sums.values()) {
             String sha512 = checksums.get("SHA-512");
             String sha256 = checksums.get("SHA-256");
@@ -147,15 +147,15 @@ public class ChecksumUtilTest {
             assertEquals(sha1, ChecksumUtils.read(sha1File));
             assertEquals(md5, ChecksumUtils.read(md5File));
 
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.sha512)", sha512File.delete());
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.sha256)", sha256File.delete());
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.sha1)", sha1File.delete());
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.md5)", md5File.delete());
+            assertTrue(sha512File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.sha512)");
+            assertTrue(sha256File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.sha256)");
+            assertTrue(sha1File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.sha1)");
+            assertTrue(md5File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.md5)");
         }
     }
 
     @Test
-    public void testReadSpaces() throws IOException {
+    void testReadSpaces() throws IOException {
         for (Map<String, String> checksums : sums.values()) {
             String sha512 = checksums.get("SHA-512");
             String sha256 = checksums.get("SHA-256");
@@ -172,24 +172,24 @@ public class ChecksumUtilTest {
             assertEquals(sha1, ChecksumUtils.read(sha1File));
             assertEquals(md5, ChecksumUtils.read(md5File));
 
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.sha512)", sha512File.delete());
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.sha256)", sha256File.delete());
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.sha1)", sha1File.delete());
-            assertTrue("ChecksumUtils leaks file handles (cannot delete checksums.md5)", md5File.delete());
+            assertTrue(sha512File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.sha512)");
+            assertTrue(sha256File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.sha256)");
+            assertTrue(sha1File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.sha1)");
+            assertTrue(md5File.delete(), "ChecksumUtils leaks file handles (cannot delete checksums.md5)");
         }
     }
 
     @Test
-    public void testReadEmptyFile() throws IOException {
+    void testReadEmptyFile() throws IOException {
         File file = createTempFile("");
 
         assertEquals("", ChecksumUtils.read(file));
 
-        assertTrue("ChecksumUtils leaks file handles (cannot delete checksum.empty)", file.delete());
+        assertTrue(file.delete(), "ChecksumUtils leaks file handles (cannot delete checksum.empty)");
     }
 
     @Test
-    public void testToHexString() {
+    void testToHexString() {
         assertNull(ChecksumUtils.toHexString(null));
         assertEquals("", ChecksumUtils.toHexString(new byte[] {}));
         assertEquals("00", ChecksumUtils.toHexString(new byte[] {0}));
@@ -198,7 +198,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testFromHexString() {
+    void testFromHexString() {
         assertNull(ChecksumUtils.toHexString(null));
         assertArrayEquals(new byte[] {}, ChecksumUtils.fromHexString(""));
         assertArrayEquals(new byte[] {0}, ChecksumUtils.fromHexString("00"));
@@ -207,8 +207,8 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testCalcWithByteArray() throws Throwable {
-        Map<String, Object> checksums = null;
+    void testCalcWithByteArray() throws Throwable {
+        Map<String, Object> checksums;
 
         for (Map.Entry<String, byte[]> bytesEntry : bytes.entrySet()) {
             checksums = ChecksumUtils.calc(bytesEntry.getValue(), Arrays.asList("SHA-512", "SHA-256", "SHA-1", "MD5"));
@@ -220,10 +220,11 @@ public class ChecksumUtilTest {
                 String actual = entry.getValue().toString();
                 String expected = sums.get(bytesEntry.getKey()).get(entry.getKey());
                 assertEquals(
-                        String.format(
-                                "checksums do not match for '%s', algorithm '%s'", bytesEntry.getKey(), entry.getKey()),
                         expected,
-                        actual);
+                        actual,
+                        String.format(
+                                "checksums do not match for '%s', algorithm '%s'",
+                                bytesEntry.getKey(), entry.getKey()));
             }
         }
     }

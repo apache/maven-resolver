@@ -35,55 +35,55 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JreProxySelectorTest {
 
-    private abstract class AbstractProxySelector extends java.net.ProxySelector {
+    private abstract static class AbstractProxySelector extends java.net.ProxySelector {
         @Override
         public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {}
     }
 
-    private ProxySelector selector = new JreProxySelector();
+    private final ProxySelector selector = new JreProxySelector();
 
     private java.net.ProxySelector original;
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         original = java.net.ProxySelector.getDefault();
     }
 
-    @After
-    public void exit() {
+    @AfterEach
+    void exit() {
         java.net.ProxySelector.setDefault(original);
         Authenticator.setDefault(null);
     }
 
     @Test
-    public void testGetProxy_InvalidUrl() {
+    void testGetProxy_InvalidUrl() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://host:invalid").build();
         assertNull(selector.getProxy(repo));
     }
 
     @Test
-    public void testGetProxy_OpaqueUrl() {
+    void testGetProxy_OpaqueUrl() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "classpath:base").build();
         assertNull(selector.getProxy(repo));
     }
 
     @Test
-    public void testGetProxy_NullSelector() {
+    void testGetProxy_NullSelector() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         java.net.ProxySelector.setDefault(null);
         assertNull(selector.getProxy(repo));
     }
 
     @Test
-    public void testGetProxy_NoProxies() {
+    void testGetProxy_NoProxies() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         java.net.ProxySelector.setDefault(new AbstractProxySelector() {
             @Override
@@ -95,7 +95,7 @@ public class JreProxySelectorTest {
     }
 
     @Test
-    public void testGetProxy_DirectProxy() {
+    void testGetProxy_DirectProxy() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         final InetSocketAddress addr = InetSocketAddress.createUnresolved("proxy", 8080);
         java.net.ProxySelector.setDefault(new AbstractProxySelector() {
@@ -108,7 +108,7 @@ public class JreProxySelectorTest {
     }
 
     @Test
-    public void testGetProxy_HttpProxy() throws Exception {
+    void testGetProxy_HttpProxy() throws Exception {
         final RemoteRepository repo =
                 new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         final URL url = new URL(repo.getUrl());

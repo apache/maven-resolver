@@ -18,16 +18,16 @@
  */
 package org.eclipse.aether;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
 public class RequestTraceTest {
 
     @Test
-    public void testConstructor() {
+    void testConstructor() {
         RequestTrace trace = new RequestTrace(null);
         assertSame(null, trace.getData());
 
@@ -36,7 +36,7 @@ public class RequestTraceTest {
     }
 
     @Test
-    public void testParentChaining() {
+    void testParentChaining() {
         RequestTrace trace1 = new RequestTrace(null);
         RequestTrace trace2 = trace1.newChild(this);
 
@@ -47,7 +47,7 @@ public class RequestTraceTest {
     }
 
     @Test
-    public void testNewChildRequestTrace() {
+    void testNewChildRequestTrace() {
         RequestTrace trace = RequestTrace.newChild(null, this);
         assertNotNull(trace);
         assertSame(null, trace.getParent());

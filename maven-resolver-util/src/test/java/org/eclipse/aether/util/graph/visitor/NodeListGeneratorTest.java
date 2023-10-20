@@ -22,9 +22,9 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class NodeListGeneratorTest {
 
@@ -33,18 +33,15 @@ public class NodeListGeneratorTest {
     }
 
     private void assertSequence(List<DependencyNode> actual, String... expected) {
-        assertEquals(actual.toString(), expected.length, actual.size());
+        assertEquals(expected.length, actual.size(), actual.toString());
         for (int i = 0; i < expected.length; i++) {
             DependencyNode node = actual.get(i);
-            assertEquals(
-                    actual.toString(),
-                    expected[i],
-                    node.getDependency().getArtifact().getArtifactId());
+            assertEquals(expected[i], node.getDependency().getArtifact().getArtifactId(), actual.toString());
         }
     }
 
     @Test
-    public void testPreOrder() throws Exception {
+    void testPreOrder() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -55,7 +52,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testPreOrderDuplicateSuppression() throws Exception {
+    void testPreOrderDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -66,7 +63,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testPostOrder() throws Exception {
+    void testPostOrder() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -77,7 +74,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testPostOrderDuplicateSuppression() throws Exception {
+    void testPostOrderDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -88,7 +85,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testLevelOrder() throws Exception {
+    void testLevelOrder() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -100,7 +97,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testLevelOrderDuplicateSuppression() throws Exception {
+    void testLevelOrderDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();

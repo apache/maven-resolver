@@ -45,11 +45,11 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -75,8 +75,8 @@ public class DefaultMetadataResolverTest {
 
     private RecordingRepositoryListener listener;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         remoteRepositoryFilterSources = new HashMap<>();
         remoteRepositoryFilterManager = new DefaultRemoteRepositoryFilterManager(remoteRepositoryFilterSources);
 
@@ -104,14 +104,14 @@ public class DefaultMetadataResolverTest {
         session.setRepositoryListener(listener);
     }
 
-    @After
-    public void teardown() throws Exception {
+    @AfterEach
+    void teardown() throws Exception {
         TestFileUtils.deleteFile(new File(new URI(repository.getUrl())));
         TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
     }
 
     @Test
-    public void testNoRepositoryFailing() {
+    void testNoRepositoryFailing() {
         MetadataRequest request = new MetadataRequest(metadata, null, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
 
@@ -120,15 +120,15 @@ public class DefaultMetadataResolverTest {
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
         assertNotNull(
-                "" + (result.getMetadata() != null ? result.getMetadata().getFile() : result.getMetadata()),
-                result.getException());
+                result.getException(),
+                "" + (result.getMetadata() != null ? result.getMetadata().getFile() : result.getMetadata()));
         assertEquals(MetadataNotFoundException.class, result.getException().getClass());
 
         assertNull(result.getMetadata());
     }
 
     @Test
-    public void testResolve() throws IOException {
+    void testResolve() throws IOException {
         connector.setExpectGet(metadata);
 
         // prepare "download"
@@ -175,7 +175,7 @@ public class DefaultMetadataResolverTest {
     }
 
     @Test
-    public void testRemoveMetadataIfMissing() throws IOException {
+    void testRemoveMetadataIfMissing() throws IOException {
         connector = new RecordingRepositoryConnector() {
 
             @Override
@@ -208,7 +208,7 @@ public class DefaultMetadataResolverTest {
     }
 
     @Test
-    public void testOfflineSessionResolveMetadataMissing() {
+    void testOfflineSessionResolveMetadataMissing() {
         session.setOffline(true);
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
@@ -224,7 +224,7 @@ public class DefaultMetadataResolverTest {
     }
 
     @Test
-    public void testOfflineSessionResolveMetadata() throws IOException {
+    void testOfflineSessionResolveMetadata() throws IOException {
         session.setOffline(true);
 
         String path = session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, "");
@@ -240,7 +240,7 @@ public class DefaultMetadataResolverTest {
         assertEquals(1, results.size());
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
-        assertNull(String.valueOf(result.getException()), result.getException());
+        assertNull(result.getException(), String.valueOf(result.getException()));
         assertNotNull(result.getMetadata());
         assertNotNull(result.getMetadata().getFile());
 
@@ -251,7 +251,7 @@ public class DefaultMetadataResolverTest {
     }
 
     @Test
-    public void testFavorLocal() throws IOException {
+    void testFavorLocal() throws IOException {
         lrm.add(session, new LocalMetadataRegistration(metadata));
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
         File file = new File(session.getLocalRepository().getBasedir(), path);
@@ -274,13 +274,13 @@ public class DefaultMetadataResolverTest {
         assertEquals(1, results.size());
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
-        assertNull(String.valueOf(result.getException()), result.getException());
+        assertNull(result.getException(), String.valueOf(result.getException()));
 
         connector.assertSeenExpected();
     }
 
     @Test
-    public void testResolveAlwaysAcceptFilter() throws IOException {
+    void testResolveAlwaysAcceptFilter() throws IOException {
         remoteRepositoryFilterSources.put("filter1", Filters.neverAcceptFrom("invalid repo id"));
         remoteRepositoryFilterSources.put("filter2", Filters.alwaysAccept());
         connector.setExpectGet(metadata);
@@ -314,7 +314,7 @@ public class DefaultMetadataResolverTest {
     }
 
     @Test
-    public void testResolveNeverAcceptFilter() throws IOException {
+    void testResolveNeverAcceptFilter() throws IOException {
         remoteRepositoryFilterSources.put("filter1", Filters.neverAcceptFrom("invalid repo id"));
         remoteRepositoryFilterSources.put("filter2", Filters.neverAccept());
         // connector.setExpectGet( metadata ); // should not see it
@@ -342,7 +342,7 @@ public class DefaultMetadataResolverTest {
     }
 
     @Test
-    public void testResolveAlwaysAcceptFromRepoFilter() throws IOException {
+    void testResolveAlwaysAcceptFromRepoFilter() throws IOException {
         remoteRepositoryFilterSources.put("filter1", Filters.alwaysAcceptFrom(repository.getId()));
         connector.setExpectGet(metadata);
 
@@ -375,7 +375,7 @@ public class DefaultMetadataResolverTest {
     }
 
     @Test
-    public void testResolveNeverAcceptFromRepoFilter() throws IOException {
+    void testResolveNeverAcceptFromRepoFilter() throws IOException {
         remoteRepositoryFilterSources.put("filter1", Filters.neverAcceptFrom(repository.getId()));
         // connector.setExpectGet( metadata ); // should not see it
 

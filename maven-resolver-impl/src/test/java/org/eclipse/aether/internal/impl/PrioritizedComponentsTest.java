@@ -25,16 +25,14 @@ import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 
 import org.eclipse.aether.ConfigurationProperties;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PrioritizedComponentsTest {
 
     @Test
-    public void testGetConfigKeys() {
+    void testGetConfigKeys() {
         String[] keys = {
             ConfigurationProperties.PREFIX_PRIORITY + "java.lang.String",
             ConfigurationProperties.PREFIX_PRIORITY + "String"
@@ -50,7 +48,7 @@ public class PrioritizedComponentsTest {
     }
 
     @Test
-    public void testAdd_PriorityOverride() {
+    void testAdd_PriorityOverride() {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
         Map<Object, Object> config = new HashMap<>();
@@ -68,7 +66,7 @@ public class PrioritizedComponentsTest {
     }
 
     @Test
-    public void testAdd_ImplicitPriority() {
+    void testAdd_ImplicitPriority() {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
         Map<Object, Object> config = new HashMap<>();
@@ -83,7 +81,7 @@ public class PrioritizedComponentsTest {
     }
 
     @Test
-    public void testAdd_Disabled() {
+    void testAdd_Disabled() {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
         Map<Object, Object> config = new HashMap<>();
@@ -111,7 +109,7 @@ public class PrioritizedComponentsTest {
     }
 
     @Test
-    public void testList() {
+    void testList() {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
 

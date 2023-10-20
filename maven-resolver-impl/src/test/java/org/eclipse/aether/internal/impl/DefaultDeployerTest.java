@@ -48,15 +48,12 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultDeployerTest {
 
@@ -76,8 +73,8 @@ public class DefaultDeployerTest {
 
     private RecordingRepositoryListener listener;
 
-    @Before
-    public void setup() throws IOException {
+    @BeforeEach
+    void setup() throws IOException {
         artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
         artifact = artifact.setFile(TestFileUtils.createTempFile("artifact"));
         metadata = new DefaultMetadata(
@@ -105,8 +102,8 @@ public class DefaultDeployerTest {
         session.setRepositoryListener(listener);
     }
 
-    @After
-    public void teardown() throws Exception {
+    @AfterEach
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
@@ -118,7 +115,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testSuccessfulDeploy() throws DeploymentException {
+    void testSuccessfulDeploy() throws DeploymentException {
 
         connector.setExpectPut(artifact);
         connector.setExpectPut(metadata);
@@ -131,20 +128,20 @@ public class DefaultDeployerTest {
         connector.assertSeenExpected();
     }
 
-    @Test(expected = DeploymentException.class)
-    public void testNullArtifactFile() throws DeploymentException {
+    @Test
+    void testNullArtifactFile() {
         request.addArtifact(artifact.setFile(null));
-        deployer.deploy(session, request);
-    }
-
-    @Test(expected = DeploymentException.class)
-    public void testNullMetadataFile() throws DeploymentException {
-        request.addArtifact(artifact.setFile(null));
-        deployer.deploy(session, request);
+        assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
     @Test
-    public void testSuccessfulArtifactEvents() throws DeploymentException {
+    void testNullMetadataFile() {
+        request.addMetadata(metadata.setFile(null));
+        assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
+    }
+
+    @Test
+    void testSuccessfulArtifactEvents() throws DeploymentException {
         request.addArtifact(artifact);
 
         deployer.deploy(session, request);
@@ -164,7 +161,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testFailingArtifactEvents() {
+    void testFailingArtifactEvents() {
         connector.fail = true;
 
         request.addArtifact(artifact);
@@ -189,7 +186,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testSuccessfulMetadataEvents() throws DeploymentException {
+    void testSuccessfulMetadataEvents() throws DeploymentException {
         request.addMetadata(metadata);
 
         deployer.deploy(session, request);
@@ -209,7 +206,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testFailingMetdataEvents() {
+    void testFailingMetdataEvents() {
         connector.fail = true;
 
         request.addMetadata(metadata);
@@ -234,7 +231,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testStaleLocalMetadataCopyGetsDeletedBeforeMergeWhenMetadataIsNotCurrentlyPresentInRemoteRepo()
+    void testStaleLocalMetadataCopyGetsDeletedBeforeMergeWhenMetadataIsNotCurrentlyPresentInRemoteRepo()
             throws Exception {
         MergeableMetadata metadata = new MergeableMetadata() {
 
@@ -333,6 +330,6 @@ public class DefaultDeployerTest {
 
         props = new Properties();
         TestFileUtils.readProps(metadataFile, props);
-        assertNull(props.toString(), props.get("old"));
+        assertNull(props.get("old"), props.toString());
     }
 }

@@ -50,13 +50,13 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.Timeout;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -69,9 +69,6 @@ public class HttpTransporterTest {
         System.setProperty("javax.net.ssl.keyStore", new File("src/test/resources/ssl/client-store").getAbsolutePath());
         System.setProperty("javax.net.ssl.keyStorePassword", "client-pwd");
     }
-
-    @Rule
-    public TestName testName = new TestName();
 
     private DefaultRepositorySystemSession session;
 
@@ -104,9 +101,9 @@ public class HttpTransporterTest {
 
     private static final long OLD_FILE_TIMESTAMP = 160660800000L;
 
-    @Before
-    public void setUp() throws Exception {
-        System.out.println("=== " + testName.getMethodName() + " ===");
+    @BeforeEach
+    void setUp(TestInfo testInfo) throws Exception {
+        System.out.println("=== " + testInfo.getDisplayName() + " ===");
         session = TestUtils.newSession();
         factory = new HttpTransporterFactory();
         repoDir = TestFileUtils.createTempDir();
@@ -122,8 +119,8 @@ public class HttpTransporterTest {
         newTransporter(httpServer.getHttpUrl());
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         if (transporter != null) {
             transporter.close();
             transporter = null;
@@ -137,25 +134,25 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testClassify() {
+    void testClassify() {
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new HttpResponseException(403, "Forbidden")));
         assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new HttpResponseException(404, "Not Found")));
     }
 
     @Test
-    public void testPeek() throws Exception {
+    void testPeek() throws Exception {
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
     }
 
     @Test
-    public void testRetryHandler_defaultCount_positive() throws Exception {
+    void testRetryHandler_defaultCount_positive() throws Exception {
         httpServer.setConnectionsToClose(3);
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
     }
 
     @Test
-    public void testRetryHandler_defaultCount_negative() throws Exception {
+    void testRetryHandler_defaultCount_negative() throws Exception {
         httpServer.setConnectionsToClose(4);
         try {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));
@@ -165,7 +162,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testRetryHandler_explicitCount_positive() throws Exception {
+    void testRetryHandler_explicitCount_positive() throws Exception {
         session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 10);
         newTransporter(httpServer.getHttpUrl());
         httpServer.setConnectionsToClose(10);
@@ -173,7 +170,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testRetryHandler_disabled() throws Exception {
+    void testRetryHandler_disabled() throws Exception {
         session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 0);
         newTransporter(httpServer.getHttpUrl());
         httpServer.setConnectionsToClose(1);
@@ -184,7 +181,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPeek_NotFound() throws Exception {
+    void testPeek_NotFound() throws Exception {
         try {
             transporter.peek(new PeekTask(URI.create("repo/missing.txt")));
             fail("Expected error");
@@ -195,7 +192,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPeek_Closed() throws Exception {
+    void testPeek_Closed() throws Exception {
         transporter.close();
         try {
             transporter.peek(new PeekTask(URI.create("repo/missing.txt")));
@@ -206,7 +203,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPeek_Authenticated() throws Exception {
+    void testPeek_Authenticated() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -217,7 +214,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPeek_Unauthenticated() throws Exception {
+    void testPeek_Unauthenticated() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         try {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));
@@ -229,7 +226,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPeek_ProxyAuthenticated() throws Exception {
+    void testPeek_ProxyAuthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -241,7 +238,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPeek_ProxyUnauthenticated() throws Exception {
+    void testPeek_ProxyUnauthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         proxy = new Proxy(Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort());
         newTransporter("http://bad.localhost:1/");
@@ -255,21 +252,21 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPeek_SSL() throws Exception {
+    void testPeek_SSL() throws Exception {
         httpServer.addSslConnector();
         newTransporter(httpServer.getHttpsUrl());
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
     }
 
     @Test
-    public void testPeek_Redirect() throws Exception {
+    void testPeek_Redirect() throws Exception {
         httpServer.addSslConnector();
         transporter.peek(new PeekTask(URI.create("redirect/file.txt")));
         transporter.peek(new PeekTask(URI.create("redirect/file.txt?scheme=https")));
     }
 
     @Test
-    public void testGet_ToMemory() throws Exception {
+    void testGet_ToMemory() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
         transporter.get(task);
@@ -277,12 +274,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_ToFile() throws Exception {
+    void testGet_ToFile() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task =
@@ -292,12 +289,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("test", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_ToFileTimestamp() throws Exception {
+    void testGet_ToFileTimestamp() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/dir/oldFile.txt"))
@@ -308,13 +305,13 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(7L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("oldTest", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
         assertEquals(file.lastModified(), OLD_FILE_TIMESTAMP);
     }
 
     @Test
-    public void testGet_EmptyResource() throws Exception {
+    void testGet_EmptyResource() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task =
@@ -329,14 +326,14 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_EncodedResourcePath() throws Exception {
+    void testGet_EncodedResourcePath() throws Exception {
         GetTask task = new GetTask(URI.create("repo/some%20space.txt"));
         transporter.get(task);
         assertEquals("space", task.getDataString());
     }
 
     @Test
-    public void testGet_Authenticated() throws Exception {
+    void testGet_Authenticated() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -350,12 +347,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_Unauthenticated() throws Exception {
+    void testGet_Unauthenticated() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         try {
             transporter.get(new GetTask(URI.create("repo/file.txt")));
@@ -367,7 +364,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_ProxyAuthenticated() throws Exception {
+    void testGet_ProxyAuthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         Authentication auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -382,12 +379,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_ProxyUnauthenticated() throws Exception {
+    void testGet_ProxyUnauthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         proxy = new Proxy(Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort());
         newTransporter("http://bad.localhost:1/");
@@ -401,7 +398,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_SSL() throws Exception {
+    void testGet_SSL() throws Exception {
         httpServer.addSslConnector();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
@@ -411,12 +408,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
+    void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
         session.setConfigProperty("aether.connector.https.securityMode", "unknown");
         httpServer.addSelfSignedSslConnector();
         try {
@@ -428,7 +425,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_HTTPS_Insecure_SecurityMode() throws Exception {
+    void testGet_HTTPS_Insecure_SecurityMode() throws Exception {
         // here we use alternate server-store-selfigned key (as the key set it static initalizer is probably already
         // used to init SSLContext/SSLSocketFactory/etc
         session.setConfigProperty(
@@ -442,12 +439,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_WebDav() throws Exception {
+    void testGet_WebDav() throws Exception {
         httpServer.setWebDav(true);
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/dir/file.txt")).setListener(listener);
@@ -457,16 +454,14 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
         assertEquals(
-                httpServer.getLogEntries().toString(),
-                1,
-                httpServer.getLogEntries().size());
+                1, httpServer.getLogEntries().size(), httpServer.getLogEntries().toString());
     }
 
     @Test
-    public void testGet_Redirect() throws Exception {
+    void testGet_Redirect() throws Exception {
         httpServer.addSslConnector();
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("redirect/file.txt?scheme=https")).setListener(listener);
@@ -475,12 +470,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_Resume() throws Exception {
+    void testGet_Resume() throws Exception {
         File file = TestFileUtils.createTempFile("re");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/resume.txt"))
@@ -491,12 +486,12 @@ public class HttpTransporterTest {
         assertEquals(1L, listener.startedCount);
         assertEquals(2L, listener.dataOffset);
         assertEquals(9, listener.dataLength);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("sumable", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_ResumeLocalContentsOutdated() throws Exception {
+    void testGet_ResumeLocalContentsOutdated() throws Exception {
         File file = TestFileUtils.createTempFile("re");
         file.setLastModified(System.currentTimeMillis() - 5 * 60 * 1000);
         RecordingTransportListener listener = new RecordingTransportListener();
@@ -508,12 +503,12 @@ public class HttpTransporterTest {
         assertEquals(1L, listener.startedCount);
         assertEquals(0L, listener.dataOffset);
         assertEquals(9, listener.dataLength);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("resumable", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_ResumeRangesNotSupportedByServer() throws Exception {
+    void testGet_ResumeRangesNotSupportedByServer() throws Exception {
         httpServer.setRangeSupport(false);
         File file = TestFileUtils.createTempFile("re");
         RecordingTransportListener listener = new RecordingTransportListener();
@@ -525,12 +520,12 @@ public class HttpTransporterTest {
         assertEquals(1L, listener.startedCount);
         assertEquals(0L, listener.dataOffset);
         assertEquals(9, listener.dataLength);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("resumable", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGet_Checksums_Nexus() throws Exception {
+    void testGet_Checksums_Nexus() throws Exception {
         httpServer.setChecksumHeader(HttpServer.ChecksumHeader.NEXUS);
         GetTask task = new GetTask(URI.create("repo/file.txt"));
         transporter.get(task);
@@ -540,7 +535,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_Checksums_XChecksum() throws Exception {
+    void testGet_Checksums_XChecksum() throws Exception {
         httpServer.setChecksumHeader(HttpServer.ChecksumHeader.XCHECKSUM);
         GetTask task = new GetTask(URI.create("repo/file.txt"));
         transporter.get(task);
@@ -550,16 +545,16 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_FileHandleLeak() throws Exception {
+    void testGet_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
             File file = TestFileUtils.createTempFile("failure");
             transporter.get(new GetTask(URI.create("repo/file.txt")).setDataFile(file));
-            assertTrue(i + ", " + file.getAbsolutePath(), file.delete());
+            assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
         }
     }
 
     @Test
-    public void testGet_NotFound() throws Exception {
+    void testGet_NotFound() throws Exception {
         try {
             transporter.get(new GetTask(URI.create("repo/missing.txt")));
             fail("Expected error");
@@ -570,7 +565,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_Closed() throws Exception {
+    void testGet_Closed() throws Exception {
         transporter.close();
         try {
             transporter.get(new GetTask(URI.create("repo/file.txt")));
@@ -581,7 +576,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_StartCancelled() throws Exception {
+    void testGet_StartCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
@@ -598,7 +593,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGet_ProgressCancelled() throws Exception {
+    void testGet_ProgressCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
@@ -615,7 +610,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_FromMemory() throws Exception {
+    void testPut_FromMemory() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
                 new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataString("upload");
@@ -623,12 +618,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_FromFile() throws Exception {
+    void testPut_FromFile() throws Exception {
         File file = TestFileUtils.createTempFile("upload");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
@@ -637,12 +632,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_EmptyResource() throws Exception {
+    void testPut_EmptyResource() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("repo/file.txt")).setListener(listener);
         transporter.put(task);
@@ -654,7 +649,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_EncodedResourcePath() throws Exception {
+    void testPut_EncodedResourcePath() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("repo/some%20space.txt"))
                 .setListener(listener)
@@ -663,12 +658,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(2L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("OK", TestFileUtils.readString(new File(repoDir, "some space.txt")));
     }
 
     @Test
-    public void testPut_Authenticated_ExpectContinue() throws Exception {
+    void testPut_Authenticated_ExpectContinue() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -682,12 +677,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_Authenticated_ExpectContinueBroken() throws Exception {
+    void testPut_Authenticated_ExpectContinueBroken() throws Exception {
         // this makes OPTIONS recover, and have only 1 PUT (startedCount=1 as OPTIONS is not counted)
         session.setConfigProperty(HttpTransporter.SUPPORT_WEBDAV, true);
         httpServer.setAuthentication("testuser", "testpass");
@@ -704,12 +699,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_Authenticated_ExpectContinueRejected() throws Exception {
+    void testPut_Authenticated_ExpectContinueRejected() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         httpServer.setExpectSupport(HttpServer.ExpectContinue.FAIL);
         auth = new AuthenticationBuilder()
@@ -724,12 +719,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {
+    void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {
         Map<String, String> headers = new HashMap<>();
         headers.put("Expect", "100-continue");
         session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
@@ -747,12 +742,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_Unauthenticated() throws Exception {
+    void testPut_Unauthenticated() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
@@ -769,7 +764,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_ProxyAuthenticated() throws Exception {
+    void testPut_ProxyAuthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         Authentication auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -784,12 +779,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_ProxyUnauthenticated() throws Exception {
+    void testPut_ProxyUnauthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         proxy = new Proxy(Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort());
         newTransporter("http://bad.localhost:1/");
@@ -808,7 +803,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_SSL() throws Exception {
+    void testPut_SSL() throws Exception {
         httpServer.addSslConnector();
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
@@ -823,12 +818,12 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
-    public void testPut_WebDav() throws Exception {
+    void testPut_WebDav() throws Exception {
         httpServer.setWebDav(true);
         session.setConfigProperty(HttpTransporter.SUPPORT_WEBDAV, true);
         newTransporter(httpServer.getHttpUrl());
@@ -841,7 +836,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "dir1/dir2/file.txt")));
 
         assertEquals(5, httpServer.getLogEntries().size());
@@ -856,18 +851,18 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_FileHandleLeak() throws Exception {
+    void testPut_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
             File src = TestFileUtils.createTempFile("upload");
             File dst = new File(repoDir, "file.txt");
             transporter.put(new PutTask(URI.create("repo/file.txt")).setDataFile(src));
-            assertTrue(i + ", " + src.getAbsolutePath(), src.delete());
-            assertTrue(i + ", " + dst.getAbsolutePath(), dst.delete());
+            assertTrue(src.delete(), i + ", " + src.getAbsolutePath());
+            assertTrue(dst.delete(), i + ", " + dst.getAbsolutePath());
         }
     }
 
     @Test
-    public void testPut_Closed() throws Exception {
+    void testPut_Closed() throws Exception {
         transporter.close();
         try {
             transporter.put(new PutTask(URI.create("repo/missing.txt")));
@@ -878,7 +873,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_StartCancelled() throws Exception {
+    void testPut_StartCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
         PutTask task =
@@ -896,7 +891,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_ProgressCancelled() throws Exception {
+    void testPut_ProgressCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;
         PutTask task =
@@ -914,7 +909,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testGetPut_AuthCache() throws Exception {
+    void testGetPut_AuthCache() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -931,7 +926,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_PreemptiveIsDefault() throws Exception {
+    void testPut_PreemptiveIsDefault() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -944,7 +939,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_AuthCache() throws Exception {
+    void testPut_AuthCache() throws Exception {
         session.setConfigProperty(HttpTransporter.PREEMPTIVE_PUT_AUTH, false);
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
@@ -962,7 +957,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testPut_AuthCache_Preemptive() throws Exception {
+    void testPut_AuthCache_Preemptive() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -979,7 +974,8 @@ public class HttpTransporterTest {
         assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
     }
 
-    @Test(timeout = 20000L)
+    @Test
+    @Timeout(20)
     public void testConcurrency() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
@@ -1015,10 +1011,11 @@ public class HttpTransporterTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertNull(String.valueOf(error.get()), error.get());
+        assertNull(error.get(), String.valueOf(error.get()));
     }
 
-    @Test(timeout = 1000L)
+    @Test
+    @Timeout(10)
     public void testConnectTimeout() throws Exception {
         session.setConfigProperty(ConfigurationProperties.CONNECT_TIMEOUT, 100);
         int port = 1;
@@ -1031,7 +1028,8 @@ public class HttpTransporterTest {
         }
     }
 
-    @Test(timeout = 1000L)
+    @Test
+    @Timeout(10)
     public void testRequestTimeout() throws Exception {
         session.setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, 100);
         ServerSocket server = new ServerSocket(0);
@@ -1049,7 +1047,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testUserAgent() throws Exception {
+    void testUserAgent() throws Exception {
         session.setConfigProperty(ConfigurationProperties.USER_AGENT, "SomeTest/1.0");
         newTransporter(httpServer.getHttpUrl());
         transporter.get(new GetTask(URI.create("repo/file.txt")));
@@ -1060,7 +1058,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testCustomHeaders() throws Exception {
+    void testCustomHeaders() throws Exception {
         Map<String, String> headers = new HashMap<>();
         headers.put("User-Agent", "Custom/1.0");
         headers.put("X-CustomHeader", "Custom-Value");
@@ -1071,13 +1069,13 @@ public class HttpTransporterTest {
         assertEquals(1, httpServer.getLogEntries().size());
         for (HttpServer.LogEntry log : httpServer.getLogEntries()) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
-                assertEquals(entry.getKey(), entry.getValue(), log.headers.get(entry.getKey()));
+                assertEquals(entry.getValue(), log.headers.get(entry.getKey()), entry.getKey());
             }
         }
     }
 
     @Test
-    public void testServerAuthScope_NotUsedForProxy() throws Exception {
+    void testServerAuthScope_NotUsedForProxy() throws Exception {
         String username = "testuser", password = "testpass";
         httpServer.setProxyAuthentication(username, password);
         auth = new AuthenticationBuilder()
@@ -1095,7 +1093,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testProxyAuthScope_NotUsedForServer() throws Exception {
+    void testProxyAuthScope_NotUsedForServer() throws Exception {
         String username = "testuser", password = "testpass";
         httpServer.setAuthentication(username, password);
         Authentication auth = new AuthenticationBuilder()
@@ -1113,7 +1111,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testAuthSchemeReuse() throws Exception {
+    void testAuthSchemeReuse() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         httpServer.setProxyAuthentication("proxyuser", "proxypass");
         session.setCache(new DefaultRepositoryCache());
@@ -1142,7 +1140,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testAuthSchemePreemptive() throws Exception {
+    void testAuthSchemePreemptive() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         session.setCache(new DefaultRepositoryCache());
         auth = new AuthenticationBuilder()
@@ -1170,7 +1168,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    public void testConnectionReuse() throws Exception {
+    void testConnectionReuse() throws Exception {
         httpServer.addSslConnector();
         session.setCache(new DefaultRepositoryCache());
         for (int i = 0; i < 3; i++) {
@@ -1182,11 +1180,11 @@ public class HttpTransporterTest {
         PoolStats stats = ((ConnPoolControl<?>)
                         ((HttpTransporter) transporter).getState().getConnectionManager())
                 .getTotalStats();
-        assertEquals(stats.toString(), 1, stats.getAvailable());
+        assertEquals(1, stats.getAvailable(), stats.toString());
     }
 
     @Test
-    public void testConnectionNoReuse() throws Exception {
+    void testConnectionNoReuse() throws Exception {
         httpServer.addSslConnector();
         session.setCache(new DefaultRepositoryCache());
         session.setConfigProperty(ConfigurationProperties.HTTP_REUSE_CONNECTIONS, false);
@@ -1199,21 +1197,21 @@ public class HttpTransporterTest {
         PoolStats stats = ((ConnPoolControl<?>)
                         ((HttpTransporter) transporter).getState().getConnectionManager())
                 .getTotalStats();
-        assertEquals(stats.toString(), 0, stats.getAvailable());
-    }
-
-    @Test(expected = NoTransporterException.class)
-    public void testInit_BadProtocol() throws Exception {
-        newTransporter("bad:/void");
-    }
-
-    @Test(expected = NoTransporterException.class)
-    public void testInit_BadUrl() throws Exception {
-        newTransporter("http://localhost:NaN");
+        assertEquals(0, stats.getAvailable(), stats.toString());
     }
 
     @Test
-    public void testInit_CaseInsensitiveProtocol() throws Exception {
+    void testInit_BadProtocol() {
+        assertThrows(NoTransporterException.class, () -> newTransporter("bad:/void"));
+    }
+
+    @Test
+    void testInit_BadUrl() {
+        assertThrows(NoTransporterException.class, () -> newTransporter("http://localhost:NaN"));
+    }
+
+    @Test
+    void testInit_CaseInsensitiveProtocol() throws Exception {
         newTransporter("http://localhost");
         newTransporter("HTTP://localhost");
         newTransporter("Http://localhost");

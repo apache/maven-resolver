@@ -24,9 +24,9 @@ import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SecretAuthenticationTest {
 
@@ -49,14 +49,14 @@ public class SecretAuthenticationTest {
     }
 
     @Test
-    public void testConstructor_CopyChars() {
+    void testConstructor_CopyChars() {
         char[] value = {'v', 'a', 'l'};
         new SecretAuthentication("key", value);
         assertArrayEquals(new char[] {'v', 'a', 'l'}, value);
     }
 
     @Test
-    public void testFill() {
+    void testFill() {
         Authentication auth = new SecretAuthentication("key", "value");
         AuthenticationContext context = newContext(auth);
         assertNull(context.get("another-key"));
@@ -64,7 +64,7 @@ public class SecretAuthenticationTest {
     }
 
     @Test
-    public void testDigest() {
+    void testDigest() {
         Authentication auth1 = new SecretAuthentication("key", "value");
         Authentication auth2 = new SecretAuthentication("key", "value");
         String digest1 = newDigest(auth1);
@@ -81,7 +81,7 @@ public class SecretAuthenticationTest {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         Authentication auth1 = new SecretAuthentication("key", "value");
         Authentication auth2 = new SecretAuthentication("key", "value");
         Authentication auth3 = new SecretAuthentication("key", "Value");
@@ -91,7 +91,7 @@ public class SecretAuthenticationTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         Authentication auth1 = new SecretAuthentication("key", "value");
         Authentication auth2 = new SecretAuthentication("key", "value");
         assertEquals(auth1.hashCode(), auth2.hashCode());

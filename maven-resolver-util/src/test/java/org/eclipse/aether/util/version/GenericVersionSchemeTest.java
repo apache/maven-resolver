@@ -20,10 +20,10 @@ package org.eclipse.aether.util.version;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionConstraint;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -31,8 +31,8 @@ public class GenericVersionSchemeTest {
 
     private GenericVersionScheme scheme;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         scheme = new GenericVersionScheme();
     }
 
@@ -47,7 +47,7 @@ public class GenericVersionSchemeTest {
     }
 
     @Test
-    public void testEnumeratedVersions() throws InvalidVersionSpecificationException {
+    void testEnumeratedVersions() throws InvalidVersionSpecificationException {
         VersionConstraint c = scheme.parseVersionConstraint("1.0");
         assertEquals("1.0", c.getVersion().toString());
         assertTrue(c.containsVersion(new GenericVersion("1.0")));
@@ -79,7 +79,7 @@ public class GenericVersionSchemeTest {
 
     private void assertContains(String msg, VersionConstraint c, boolean b, String... versions) {
         for (String v : versions) {
-            assertEquals(String.format(msg, v), b, c.containsVersion(new GenericVersion(v)));
+            assertEquals(b, c.containsVersion(new GenericVersion(v)), String.format(msg, v));
         }
     }
 
@@ -88,14 +88,14 @@ public class GenericVersionSchemeTest {
     }
 
     @Test
-    public void testInvalid() {
+    void testInvalid() {
         parseInvalid("[1,");
         parseInvalid("[1,2],(3,");
         parseInvalid("[1,2],3");
     }
 
     @Test
-    public void testSameUpperAndLowerBound() throws InvalidVersionSpecificationException {
+    void testSameUpperAndLowerBound() throws InvalidVersionSpecificationException {
         VersionConstraint c = scheme.parseVersionConstraint("[1.0]");
         assertEquals("[1.0,1.0]", c.toString());
         VersionConstraint c2 = scheme.parseVersionConstraint(c.toString());

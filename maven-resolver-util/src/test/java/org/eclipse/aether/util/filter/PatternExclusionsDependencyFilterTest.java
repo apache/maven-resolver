@@ -25,14 +25,14 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.VersionScheme;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PatternExclusionsDependencyFilterTest {
 
     @Test
-    public void acceptTestCornerCases() {
+    void acceptTestCornerCases() {
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId("testArtifact");
         DependencyNode node = builder.build();
@@ -46,7 +46,7 @@ public class PatternExclusionsDependencyFilterTest {
     }
 
     @Test
-    public void acceptTestMatches() {
+    void acceptTestMatches() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -56,44 +56,44 @@ public class PatternExclusionsDependencyFilterTest {
 
         // full match
         assertTrue(
-                "com.example.test:testArtifact:jar:1.0.3", dontAccept(node, "com.example.test:testArtifact:jar:1.0.3"));
+                dontAccept(node, "com.example.test:testArtifact:jar:1.0.3"), "com.example.test:testArtifact:jar:1.0.3");
 
         // single wildcard
-        assertTrue("*:testArtifact:jar:1.0.3", dontAccept(node, "*:testArtifact:jar:1.0.3"));
-        assertTrue("com.example.test:*:jar:1.0.3", dontAccept(node, "com.example.test:*:jar:1.0.3"));
-        assertTrue("com.example.test:testArtifact:*:1.0.3", dontAccept(node, "com.example.test:testArtifact:*:1.0.3"));
-        assertTrue("com.example.test:testArtifact:*:1.0.3", dontAccept(node, "com.example.test:testArtifact:*:1.0.3"));
+        assertTrue(dontAccept(node, "*:testArtifact:jar:1.0.3"), "*:testArtifact:jar:1.0.3");
+        assertTrue(dontAccept(node, "com.example.test:*:jar:1.0.3"), "com.example.test:*:jar:1.0.3");
+        assertTrue(dontAccept(node, "com.example.test:testArtifact:*:1.0.3"), "com.example.test:testArtifact:*:1.0.3");
+        assertTrue(dontAccept(node, "com.example.test:testArtifact:*:1.0.3"), "com.example.test:testArtifact:*:1.0.3");
 
         // implicit wildcard
-        assertTrue(":testArtifact:jar:1.0.3", dontAccept(node, ":testArtifact:jar:1.0.3"));
-        assertTrue("com.example.test::jar:1.0.3", dontAccept(node, "com.example.test::jar:1.0.3"));
-        assertTrue("com.example.test:testArtifact::1.0.3", dontAccept(node, "com.example.test:testArtifact::1.0.3"));
-        assertTrue("com.example.test:testArtifact:jar:", dontAccept(node, "com.example.test:testArtifact:jar:"));
+        assertTrue(dontAccept(node, ":testArtifact:jar:1.0.3"), ":testArtifact:jar:1.0.3");
+        assertTrue(dontAccept(node, "com.example.test::jar:1.0.3"), "com.example.test::jar:1.0.3");
+        assertTrue(dontAccept(node, "com.example.test:testArtifact::1.0.3"), "com.example.test:testArtifact::1.0.3");
+        assertTrue(dontAccept(node, "com.example.test:testArtifact:jar:"), "com.example.test:testArtifact:jar:");
 
         // multi wildcards
-        assertTrue("*:*:jar:1.0.3", dontAccept(node, "*:*:jar:1.0.3"));
-        assertTrue("com.example.test:*:*:1.0.3", dontAccept(node, "com.example.test:*:*:1.0.3"));
-        assertTrue("com.example.test:testArtifact:*:*", dontAccept(node, "com.example.test:testArtifact:*:*"));
-        assertTrue("*:testArtifact:jar:*", dontAccept(node, "*:testArtifact:jar:*"));
-        assertTrue("*:*:jar:*", dontAccept(node, "*:*:jar:*"));
-        assertTrue(":*:jar:", dontAccept(node, ":*:jar:"));
+        assertTrue(dontAccept(node, "*:*:jar:1.0.3"), "*:*:jar:1.0.3");
+        assertTrue(dontAccept(node, "com.example.test:*:*:1.0.3"), "com.example.test:*:*:1.0.3");
+        assertTrue(dontAccept(node, "com.example.test:testArtifact:*:*"), "com.example.test:testArtifact:*:*");
+        assertTrue(dontAccept(node, "*:testArtifact:jar:*"), "*:testArtifact:jar:*");
+        assertTrue(dontAccept(node, "*:*:jar:*"), "*:*:jar:*");
+        assertTrue(dontAccept(node, ":*:jar:"), ":*:jar:");
 
         // partial wildcards
-        assertTrue("*.example.test:testArtifact:jar:1.0.3", dontAccept(node, "*.example.test:testArtifact:jar:1.0.3"));
+        assertTrue(dontAccept(node, "*.example.test:testArtifact:jar:1.0.3"), "*.example.test:testArtifact:jar:1.0.3");
         assertTrue(
-                "com.example.test:testArtifact:*ar:1.0.*", dontAccept(node, "com.example.test:testArtifact:*ar:1.0.*"));
+                dontAccept(node, "com.example.test:testArtifact:*ar:1.0.*"), "com.example.test:testArtifact:*ar:1.0.*");
         assertTrue(
-                "com.example.test:testArtifact:jar:1.0.*", dontAccept(node, "com.example.test:testArtifact:jar:1.0.*"));
-        assertTrue("*.example.*:testArtifact:jar:1.0.3", dontAccept(node, "*.example.*:testArtifact:jar:1.0.3"));
+                dontAccept(node, "com.example.test:testArtifact:jar:1.0.*"), "com.example.test:testArtifact:jar:1.0.*");
+        assertTrue(dontAccept(node, "*.example.*:testArtifact:jar:1.0.3"), "*.example.*:testArtifact:jar:1.0.3");
 
         // wildcard as empty string
         assertTrue(
-                "com.example.test*:testArtifact:jar:1.0.3",
-                dontAccept(node, "com.example.test*:testArtifact:jar:1.0.3"));
+                dontAccept(node, "com.example.test*:testArtifact:jar:1.0.3"),
+                "com.example.test*:testArtifact:jar:1.0.3");
     }
 
     @Test
-    public void acceptTestLessToken() {
+    void acceptTestLessToken() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -101,15 +101,15 @@ public class PatternExclusionsDependencyFilterTest {
                 .version("1.0.3");
         DependencyNode node = builder.build();
 
-        assertTrue("com.example.test:testArtifact:jar", dontAccept(node, "com.example.test:testArtifact:jar"));
-        assertTrue("com.example.test:testArtifact", dontAccept(node, "com.example.test:testArtifact"));
-        assertTrue("com.example.test", dontAccept(node, "com.example.test"));
+        assertTrue(dontAccept(node, "com.example.test:testArtifact:jar"), "com.example.test:testArtifact:jar");
+        assertTrue(dontAccept(node, "com.example.test:testArtifact"), "com.example.test:testArtifact");
+        assertTrue(dontAccept(node, "com.example.test"), "com.example.test");
 
-        assertFalse("com.example.foo", dontAccept(node, "com.example.foo"));
+        assertFalse(dontAccept(node, "com.example.foo"), "com.example.foo");
     }
 
     @Test
-    public void acceptTestMissmatch() {
+    void acceptTestMismatch() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -117,25 +117,25 @@ public class PatternExclusionsDependencyFilterTest {
                 .version("1.0.3");
         DependencyNode node = builder.build();
 
-        assertFalse("OTHER.GROUP.ID:testArtifact:jar:1.0.3", dontAccept(node, "OTHER.GROUP.ID:testArtifact:jar:1.0.3"));
+        assertFalse(dontAccept(node, "OTHER.GROUP.ID:testArtifact:jar:1.0.3"), "OTHER.GROUP.ID:testArtifact:jar:1.0.3");
         assertFalse(
-                "com.example.test:OTHER_ARTIFACT:jar:1.0.3",
-                dontAccept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"));
+                dontAccept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"),
+                "com.example.test:OTHER_ARTIFACT:jar:1.0.3");
         assertFalse(
-                "com.example.test:OTHER_ARTIFACT:jar:1.0.3",
-                dontAccept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"));
+                dontAccept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"),
+                "com.example.test:OTHER_ARTIFACT:jar:1.0.3");
         assertFalse(
-                "com.example.test:testArtifact:WAR:1.0.3", dontAccept(node, "com.example.test:testArtifact:WAR:1.0.3"));
+                dontAccept(node, "com.example.test:testArtifact:WAR:1.0.3"), "com.example.test:testArtifact:WAR:1.0.3");
         assertFalse(
-                "com.example.test:testArtifact:jar:SNAPSHOT",
-                dontAccept(node, "com.example.test:testArtifact:jar:SNAPSHOT"));
+                dontAccept(node, "com.example.test:testArtifact:jar:SNAPSHOT"),
+                "com.example.test:testArtifact:jar:SNAPSHOT");
 
-        assertFalse("*:*:war:*", dontAccept(node, "*:*:war:*"));
-        assertFalse("OTHER.GROUP.ID", dontAccept(node, "OTHER.GROUP.ID"));
+        assertFalse(dontAccept(node, "*:*:war:*"), "*:*:war:*");
+        assertFalse(dontAccept(node, "OTHER.GROUP.ID"), "OTHER.GROUP.ID");
     }
 
     @Test
-    public void acceptTestMoreToken() {
+    void acceptTestMoreToken() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -144,12 +144,12 @@ public class PatternExclusionsDependencyFilterTest {
 
         DependencyNode node = builder.build();
         assertFalse(
-                "com.example.test:testArtifact:jar:1.0.3:foo",
-                dontAccept(node, "com.example.test:testArtifact:jar:1.0.3:foo"));
+                dontAccept(node, "com.example.test:testArtifact:jar:1.0.3:foo"),
+                "com.example.test:testArtifact:jar:1.0.3:foo");
     }
 
     @Test
-    public void acceptTestRange() {
+    void acceptTestRange() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -159,21 +159,21 @@ public class PatternExclusionsDependencyFilterTest {
 
         String prefix = "com.example.test:testArtifact:jar:";
 
-        assertTrue(prefix + "[1.0.3,1.0.4)", dontAcceptVersionRange(node, prefix + "[1.0.3,1.0.4)"));
-        assertTrue(prefix + "[1.0.3,)", dontAcceptVersionRange(node, prefix + "[1.0.3,)"));
-        assertTrue(prefix + "[1.0.3,]", dontAcceptVersionRange(node, prefix + "[1.0.3,]"));
-        assertTrue(prefix + "(,1.0.3]", dontAcceptVersionRange(node, prefix + "(,1.0.3]"));
-        assertTrue(prefix + "[1.0,]", dontAcceptVersionRange(node, prefix + "[1.0,]"));
-        assertTrue(prefix + "[1,4]", dontAcceptVersionRange(node, prefix + "[1,4]"));
-        assertTrue(prefix + "(1,4)", dontAcceptVersionRange(node, prefix + "(1,4)"));
+        assertTrue(dontAcceptVersionRange(node, prefix + "[1.0.3,1.0.4)"), prefix + "[1.0.3,1.0.4)");
+        assertTrue(dontAcceptVersionRange(node, prefix + "[1.0.3,)"), prefix + "[1.0.3,)");
+        assertTrue(dontAcceptVersionRange(node, prefix + "[1.0.3,]"), prefix + "[1.0.3,]");
+        assertTrue(dontAcceptVersionRange(node, prefix + "(,1.0.3]"), prefix + "(,1.0.3]");
+        assertTrue(dontAcceptVersionRange(node, prefix + "[1.0,]"), prefix + "[1.0,]");
+        assertTrue(dontAcceptVersionRange(node, prefix + "[1,4]"), prefix + "[1,4]");
+        assertTrue(dontAcceptVersionRange(node, prefix + "(1,4)"), prefix + "(1,4)");
 
-        assertTrue(prefix + "(1.0.2,1.0.3]", dontAcceptVersionRange(node, prefix + "(1.0.2,1.0.3]", prefix + "(1.1,)"));
+        assertTrue(dontAcceptVersionRange(node, prefix + "(1.0.2,1.0.3]", prefix + "(1.1,)"), prefix + "(1.0.2,1.0.3]");
 
-        assertFalse(prefix + "(1.0.3,2.0]", dontAcceptVersionRange(node, prefix + "(1.0.3,2.0]"));
-        assertFalse(prefix + "(1,1.0.2]", dontAcceptVersionRange(node, prefix + "(1,1.0.2]"));
+        assertFalse(dontAcceptVersionRange(node, prefix + "(1.0.3,2.0]"), prefix + "(1.0.3,2.0]");
+        assertFalse(dontAcceptVersionRange(node, prefix + "(1,1.0.2]"), prefix + "(1,1.0.2]");
 
         assertFalse(
-                prefix + "(1.0.2,1.0.3)", dontAcceptVersionRange(node, prefix + "(1.0.2,1.0.3)", prefix + "(1.0.3,)"));
+                dontAcceptVersionRange(node, prefix + "(1.0.2,1.0.3)", prefix + "(1.0.3,)"), prefix + "(1.0.2,1.0.3)");
     }
 
     private boolean dontAccept(DependencyNode node, String expression) {

@@ -18,21 +18,26 @@
  */
 package org.eclipse.aether.transport.wagon;
 
-import org.codehaus.plexus.ContainerConfiguration;
-import org.codehaus.plexus.PlexusTestCase;
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.codehaus.plexus.testing.PlexusTest;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
-public class PlexusSupportTest extends PlexusTestCase {
+@PlexusTest
+public class PlexusSupportTest {
 
-    @Override
-    protected void customizeContainerConfiguration(ContainerConfiguration containerConfiguration) {
-        containerConfiguration.setClassPathScanning("cache");
-    }
+    @Inject
+    @Named("wagon")
+    private TransporterFactory factory;
 
-    public void testExistenceOfPlexusComponentMetadata() throws Exception {
-        TransporterFactory factory = lookup(TransporterFactory.class, "wagon");
+    @Test
+    void testExistenceOfPlexusComponentMetadata() {
         assertNotNull(factory);
         assertEquals(WagonTransporterFactory.class, factory.getClass());
     }

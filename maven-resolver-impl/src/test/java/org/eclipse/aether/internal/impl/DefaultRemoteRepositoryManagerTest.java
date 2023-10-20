@@ -32,12 +32,12 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -48,8 +48,8 @@ public class DefaultRemoteRepositoryManagerTest {
 
     private DefaultRemoteRepositoryManager manager;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         session = TestUtils.newSession();
         session.setChecksumPolicy(null);
         session.setUpdatePolicy(null);
@@ -57,8 +57,8 @@ public class DefaultRemoteRepositoryManagerTest {
                 new DefaultRemoteRepositoryManager(new StubUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider());
     }
 
-    @After
-    public void teardown() {
+    @AfterEach
+    void teardown() {
         manager = null;
         session = null;
     }
@@ -69,22 +69,22 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     private void assertEqual(RemoteRepository expected, RemoteRepository actual) {
-        assertEquals("id", expected.getId(), actual.getId());
-        assertEquals("url", expected.getUrl(), actual.getUrl());
-        assertEquals("type", expected.getContentType(), actual.getContentType());
+        assertEquals(expected.getId(), actual.getId(), "id");
+        assertEquals(expected.getUrl(), actual.getUrl(), "url");
+        assertEquals(expected.getContentType(), actual.getContentType(), "type");
         assertEqual(expected.getPolicy(false), actual.getPolicy(false));
         assertEqual(expected.getPolicy(true), actual.getPolicy(true));
     }
 
     private void assertEqual(RepositoryPolicy expected, RepositoryPolicy actual) {
-        assertEquals("enabled", expected.isEnabled(), actual.isEnabled());
-        assertEquals("checksums", expected.getChecksumPolicy(), actual.getChecksumPolicy());
-        assertEquals("artifactUpdates", expected.getArtifactUpdatePolicy(), actual.getArtifactUpdatePolicy());
-        assertEquals("metadataUpdates", expected.getMetadataUpdatePolicy(), actual.getMetadataUpdatePolicy());
+        assertEquals(expected.isEnabled(), actual.isEnabled(), "enabled");
+        assertEquals(expected.getChecksumPolicy(), actual.getChecksumPolicy(), "checksums");
+        assertEquals(expected.getArtifactUpdatePolicy(), actual.getArtifactUpdatePolicy(), "artifactUpdates");
+        assertEquals(expected.getMetadataUpdatePolicy(), actual.getMetadataUpdatePolicy(), "metadataUpdates");
     }
 
     @Test
-    public void testGetPolicy() {
+    void testGetPolicy() {
         RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
                 true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         RepositoryPolicy releasePolicy =
@@ -103,7 +103,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateSimpleRepos() {
+    void testAggregateSimpleRepos() {
         RemoteRepository dominant1 = newRepo("a", "file://", false, "", "").build();
 
         RemoteRepository recessive1 = newRepo("a", "http://", true, "", "").build();
@@ -118,7 +118,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateSimpleRepos_MustKeepDisabledRecessiveRepo() {
+    void testAggregateSimpleRepos_MustKeepDisabledRecessiveRepo() {
         RemoteRepository dominant = newRepo("a", "file://", true, "", "").build();
 
         RemoteRepository recessive1 = newRepo("b", "http://", false, "", "").build();
@@ -137,7 +137,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateMirrorRepos_DominantMirrorComplete() {
+    void testAggregateMirrorRepos_DominantMirrorComplete() {
         RemoteRepository dominant1 = newRepo("a", "http://", false, "", "").build();
         RemoteRepository dominantMirror1 = newRepo("x", "file://", false, "", "")
                 .addMirroredRepository(dominant1)
@@ -158,7 +158,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateMirrorRepos_DominantMirrorIncomplete() {
+    void testAggregateMirrorRepos_DominantMirrorIncomplete() {
         RemoteRepository dominant1 = newRepo("a", "http://", false, "", "").build();
         RemoteRepository dominantMirror1 = newRepo("x", "file://", false, "", "")
                 .addMirroredRepository(dominant1)
@@ -181,7 +181,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testMirrorAuthentication() {
+    void testMirrorAuthentication() {
         final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
         final RemoteRepository mirror = newRepo("a", "http://", true, "", "")
                 .setAuthentication(
@@ -201,7 +201,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testMirrorProxy() {
+    void testMirrorProxy() {
         final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
         final RemoteRepository mirror = newRepo("a", "http://", true, "", "")
                 .setProxy(new Proxy("http", "host", 2011, null))
@@ -222,7 +222,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testProxySelector() {
+    void testProxySelector() {
         final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
         final Proxy proxy = new Proxy("http", "host", 2011, null);
         session.setProxySelector(new ProxySelector() {

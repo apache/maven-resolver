@@ -22,13 +22,14 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultSessionDataTest {
 
-    private DefaultSessionData data = new DefaultSessionData();
+    private final DefaultSessionData data = new DefaultSessionData();
 
     private Object get(Object key) {
         return data.get(key);
@@ -46,18 +47,18 @@ public class DefaultSessionDataTest {
         return data.computeIfAbsent(key, supplier);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testGet_NullKey() {
-        get(null);
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testSet_NullKey() {
-        set(null, "data");
+    @Test
+    void testGet_NullKey() {
+        assertThrows(RuntimeException.class, () -> get(null));
     }
 
     @Test
-    public void testGetSet() {
+    void testSet_NullKey() {
+        assertThrows(RuntimeException.class, () -> set(null, "data"));
+    }
+
+    @Test
+    void testGetSet() {
         Object key = "key";
         assertNull(get(key));
         set(key, "value");
@@ -69,7 +70,7 @@ public class DefaultSessionDataTest {
     }
 
     @Test
-    public void testGetSafeSet() {
+    void testGetSafeSet() {
         Object key = "key";
         assertNull(get(key));
         assertFalse(set(key, "wrong", "value"));
@@ -91,15 +92,16 @@ public class DefaultSessionDataTest {
     }
 
     @Test
-    public void testComputeIfAbsent() {
+    void testComputeIfAbsent() {
         Object key = "key";
         assertNull(get(key));
         assertEquals("value", computeIfAbsent(key, () -> "value"));
         assertEquals("value", computeIfAbsent(key, () -> "changed"));
     }
 
-    @Test(timeout = 10000L)
-    public void testConcurrency() throws Exception {
+    @Test
+    @Timeout(10L)
+    public void testConcurrency() throws InterruptedException {
         final AtomicReference<Throwable> error = new AtomicReference<>();
         Thread[] threads = new Thread[20];
         for (int i = 0; i < threads.length; i++) {
@@ -125,6 +127,6 @@ public class DefaultSessionDataTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertNull(String.valueOf(error.get()), error.get());
+        assertNull(error.get(), String.valueOf(error.get()));
     }
 }

@@ -24,7 +24,7 @@ import java.util.HashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,8 +39,8 @@ public abstract class NameMapperTestSupport {
 
     protected RepositorySystemSession session;
 
-    @Before
-    public void before() throws IOException {
+    @BeforeEach
+    void before() throws IOException {
         basedir = new File("/home/maven/.m2/repository").getCanonicalPath();
         configProperties = new HashMap<>();
 

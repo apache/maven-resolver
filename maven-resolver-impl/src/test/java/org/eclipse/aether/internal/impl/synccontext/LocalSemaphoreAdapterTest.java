@@ -19,11 +19,11 @@
 package org.eclipse.aether.internal.impl.synccontext;
 
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 public class LocalSemaphoreAdapterTest extends NamedLockFactoryAdapterTestSupport {
-    @BeforeClass
-    public static void createNamedLockFactory() {
+    @BeforeAll
+    static void createNamedLockFactory() {
         namedLockFactory = new LocalSemaphoreNamedLockFactory();
         createAdapter();
     }

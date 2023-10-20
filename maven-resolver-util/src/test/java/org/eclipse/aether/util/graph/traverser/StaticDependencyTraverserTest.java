@@ -27,25 +27,25 @@ import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StaticDependencyTraverserTest {
 
     private RepositorySystemSession session;
     private DependencyCollectionContext context;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         session = TestUtils.newSession();
         context = TestUtils.newCollectionContext(session, null, Collections.emptyList());
     }
 
-    @After
-    public void teardown() throws Exception {
+    @AfterEach
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
@@ -54,7 +54,7 @@ public class StaticDependencyTraverserTest {
     }
 
     @Test
-    public void testTraverseDependency() {
+    void testTraverseDependency() {
         Dependency dependency = new Dependency(new DefaultArtifact("g:a:v:1"), "runtime");
         DependencyTraverser traverser = new StaticDependencyTraverser(true);
         assertTrue(traverser.traverseDependency(dependency));
@@ -63,13 +63,13 @@ public class StaticDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser() {
+    void testDeriveChildTraverser() {
         DependencyTraverser traverser = new StaticDependencyTraverser(true);
         assertSame(traverser, traverser.deriveChildTraverser(context));
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         DependencyTraverser traverser1 = new StaticDependencyTraverser(true);
         DependencyTraverser traverser2 = new StaticDependencyTraverser(true);
         DependencyTraverser traverser3 = new StaticDependencyTraverser(false);
@@ -81,7 +81,7 @@ public class StaticDependencyTraverserTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         DependencyTraverser traverser1 = new StaticDependencyTraverser(true);
         DependencyTraverser traverser2 = new StaticDependencyTraverser(true);
         assertEquals(traverser1.hashCode(), traverser2.hashCode());

@@ -30,17 +30,16 @@ import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultVersionFilterContextTest {
     private static final Dependency FOO_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:foo:1.0"), "test");
     private static final Dependency BAR_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:bar:1.0"), "test");
 
     @Test
-    public void iteratorOneItem() {
+    void iteratorOneItem() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -52,7 +51,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void getCountOneItem() {
+    void getCountOneItem() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -62,7 +61,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void getOneItem() {
+    void getOneItem() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -72,7 +71,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void iteratorDelete() {
+    void iteratorDelete() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -85,8 +84,8 @@ public class DefaultVersionFilterContextTest {
         assertEquals(0, context.getCount());
     }
 
-    @Test(expected = NoSuchElementException.class)
-    public void nextBeyondEnd() {
+    @Test
+    void nextBeyondEnd() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -94,11 +93,11 @@ public class DefaultVersionFilterContextTest {
 
         Iterator<Version> iterator = context.iterator();
         iterator.next();
-        iterator.next();
+        assertThrows(NoSuchElementException.class, iterator::next);
     }
 
     @Test
-    public void removeOneOfOne() {
+    void removeOneOfOne() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -112,7 +111,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void removeOneOfTwo() {
+    void removeOneOfTwo() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -127,7 +126,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void removeOneOfThree() {
+    void removeOneOfThree() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -143,7 +142,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void setTwice() {
+    void setTwice() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult fooResult = new VersionRangeResult(new VersionRangeRequest());
         fooResult.addVersion(new TestVersion("1.0"));

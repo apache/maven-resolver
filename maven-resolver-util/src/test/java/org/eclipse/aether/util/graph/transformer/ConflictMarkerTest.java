@@ -23,9 +23,9 @@ import java.util.Map;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -42,7 +42,7 @@ public class ConflictMarkerTest extends AbstractDependencyGraphTransformerTest {
     }
 
     @Test
-    public void testSimple() throws Exception {
+    void testSimple() throws Exception {
         DependencyNode root = parseResource("simple.txt");
 
         assertSame(root, transform(root));
@@ -60,7 +60,7 @@ public class ConflictMarkerTest extends AbstractDependencyGraphTransformerTest {
     }
 
     @Test
-    public void testRelocation1() throws Exception {
+    void testRelocation1() throws Exception {
         DependencyNode root = parseResource("relocation1.txt");
 
         assertSame(root, transform(root));
@@ -76,7 +76,7 @@ public class ConflictMarkerTest extends AbstractDependencyGraphTransformerTest {
     }
 
     @Test
-    public void testRelocation2() throws Exception {
+    void testRelocation2() throws Exception {
         DependencyNode root = parseResource("relocation2.txt");
 
         assertSame(root, transform(root));
@@ -92,7 +92,7 @@ public class ConflictMarkerTest extends AbstractDependencyGraphTransformerTest {
     }
 
     @Test
-    public void testRelocation3() throws Exception {
+    void testRelocation3() throws Exception {
         DependencyNode root = parseResource("relocation3.txt");
 
         assertSame(root, transform(root));

@@ -20,14 +20,14 @@ package org.eclipse.aether.util.graph.versions;
 
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
 import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SnapshotVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test
-    public void testFilterVersions() {
+    void testFilterVersions() {
         SnapshotVersionFilter filter = new SnapshotVersionFilter();
         VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2-SNAPSHOT", "3.1", "4.0-SNAPSHOT", "5.0.0");
         filter.filterVersions(ctx);
@@ -35,14 +35,14 @@ public class SnapshotVersionFilterTest extends AbstractVersionFilterTest {
     }
 
     @Test
-    public void testDeriveChildFilter() {
+    void testDeriveChildFilter() {
         SnapshotVersionFilter filter = new SnapshotVersionFilter();
         assertSame(filter, derive(filter, "g:a:1"));
     }
 
     @SuppressWarnings("EqualsWithItself")
     @Test
-    public void testEquals() {
+    void testEquals() {
         SnapshotVersionFilter filter = new SnapshotVersionFilter();
         assertNotEquals(null, filter);
         assertEquals(filter, filter);
