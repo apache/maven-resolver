@@ -21,8 +21,6 @@ package org.eclipse.aether.transport.http;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -41,24 +39,9 @@ import static java.util.Objects.requireNonNull;
 public final class HttpTransporterFactory implements TransporterFactory {
     public static final String NAME = "http";
 
-    private static Map<String, ChecksumExtractor> getManuallyCreatedExtractors() {
-        HashMap<String, ChecksumExtractor> map = new HashMap<>();
-        map.put(Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor());
-        map.put(XChecksumChecksumExtractor.NAME, new XChecksumChecksumExtractor());
-        return Collections.unmodifiableMap(map);
-    }
-
     private float priority = 5.0f;
 
     private final Map<String, ChecksumExtractor> extractors;
-
-    /**
-     * Ctor for ServiceLocator.
-     */
-    @Deprecated
-    public HttpTransporterFactory() {
-        this(getManuallyCreatedExtractors());
-    }
 
     /**
      * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
