@@ -23,10 +23,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
@@ -52,15 +51,15 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRepositoryConnectorProvider.class);
 
-    private final Collection<RepositoryConnectorFactory> connectorFactories;
+    private final Map<String, RepositoryConnectorFactory> connectorFactories;
 
     private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
     @Inject
     public DefaultRepositoryConnectorProvider(
-            Set<RepositoryConnectorFactory> connectorFactories,
+            Map<String, RepositoryConnectorFactory> connectorFactories,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        this.connectorFactories = Collections.unmodifiableCollection(connectorFactories);
+        this.connectorFactories = Collections.unmodifiableMap(connectorFactories);
         this.remoteRepositoryFilterManager = requireNonNull(remoteRepositoryFilterManager);
     }
 
@@ -81,7 +80,7 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
         RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
 
         PrioritizedComponents<RepositoryConnectorFactory> factories = new PrioritizedComponents<>(session);
-        for (RepositoryConnectorFactory factory : this.connectorFactories) {
+        for (RepositoryConnectorFactory factory : this.connectorFactories.values()) {
             factories.add(factory, factory.getPriority());
         }
 

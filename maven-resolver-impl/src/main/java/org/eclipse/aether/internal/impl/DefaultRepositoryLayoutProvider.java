@@ -23,10 +23,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -47,11 +46,11 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRepositoryLayoutProvider.class);
 
-    private final Collection<RepositoryLayoutFactory> factories;
+    private final Map<String, RepositoryLayoutFactory> layoutFactories;
 
     @Inject
-    public DefaultRepositoryLayoutProvider(Set<RepositoryLayoutFactory> layoutFactories) {
-        this.factories = Collections.unmodifiableCollection(layoutFactories);
+    public DefaultRepositoryLayoutProvider(Map<String, RepositoryLayoutFactory> layoutFactories) {
+        this.layoutFactories = Collections.unmodifiableMap(layoutFactories);
     }
 
     @Override
@@ -61,7 +60,7 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
         requireNonNull(repository, "remote repository cannot be null");
 
         PrioritizedComponents<RepositoryLayoutFactory> factories = new PrioritizedComponents<>(session);
-        for (RepositoryLayoutFactory factory : this.factories) {
+        for (RepositoryLayoutFactory factory : this.layoutFactories.values()) {
             factories.add(factory, factory.getPriority());
         }
 

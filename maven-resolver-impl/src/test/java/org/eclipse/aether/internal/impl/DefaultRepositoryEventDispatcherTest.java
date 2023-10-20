@@ -38,7 +38,7 @@ public class DefaultRepositoryEventDispatcherTest {
 
     @Test
     void testDispatchHandlesAllEventTypes() {
-        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher(Collections.emptySet());
+        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher(Collections.emptyMap());
 
         ListenerHandler handler = new ListenerHandler();
 

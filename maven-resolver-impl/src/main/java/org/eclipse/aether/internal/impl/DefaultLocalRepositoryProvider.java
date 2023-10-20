@@ -23,10 +23,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
@@ -47,12 +46,11 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLocalRepositoryProvider.class);
 
-    private final Collection<LocalRepositoryManagerFactory> managerFactories;
+    private final Map<String, LocalRepositoryManagerFactory> localRepositoryManagerFactories;
 
     @Inject
-    public DefaultLocalRepositoryProvider(Set<LocalRepositoryManagerFactory> factories) {
-        requireNonNull(factories, "local repository manager factory cannot be null");
-        this.managerFactories = Collections.unmodifiableCollection(factories);
+    public DefaultLocalRepositoryProvider(Map<String, LocalRepositoryManagerFactory> localRepositoryManagerFactories) {
+        this.localRepositoryManagerFactories = Collections.unmodifiableMap(localRepositoryManagerFactories);
     }
 
     @Override
@@ -61,7 +59,7 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
         PrioritizedComponents<LocalRepositoryManagerFactory> factories = new PrioritizedComponents<>(session);
-        for (LocalRepositoryManagerFactory factory : this.managerFactories) {
+        for (LocalRepositoryManagerFactory factory : this.localRepositoryManagerFactories.values()) {
             factories.add(factory, factory.getPriority());
         }
 

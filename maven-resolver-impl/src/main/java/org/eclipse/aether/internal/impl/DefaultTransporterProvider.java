@@ -23,10 +23,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -47,11 +46,11 @@ public final class DefaultTransporterProvider implements TransporterProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransporterProvider.class);
 
-    private final Collection<TransporterFactory> factories;
+    private final Map<String, TransporterFactory> transporterFactories;
 
     @Inject
-    public DefaultTransporterProvider(Set<TransporterFactory> transporterFactories) {
-        this.factories = Collections.unmodifiableCollection(transporterFactories);
+    public DefaultTransporterProvider(Map<String, TransporterFactory> transporterFactories) {
+        this.transporterFactories = Collections.unmodifiableMap(transporterFactories);
     }
 
     @Override
@@ -61,7 +60,7 @@ public final class DefaultTransporterProvider implements TransporterProvider {
         requireNonNull(repository, "repository cannot be null");
 
         PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<>(session);
-        for (TransporterFactory factory : this.factories) {
+        for (TransporterFactory factory : this.transporterFactories.values()) {
             factories.add(factory, factory.getPriority());
         }
 
