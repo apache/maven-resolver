@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SafeTransferListenerTest {
 
     @Test
-    public void testAllEventTypesHandled() throws Exception {
+    void testAllEventTypesHandled() throws Exception {
         Class<?> type = SafeTransferListener.class;
         for (Method method : TransferListener.class.getMethods()) {
             assertNotNull(type.getDeclaredMethod(method.getName(), method.getParameterTypes()));

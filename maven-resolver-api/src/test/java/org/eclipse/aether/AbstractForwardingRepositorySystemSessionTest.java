@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AbstractForwardingRepositorySystemSessionTest {
 
     @Test
-    public void testAllMethodsImplemented() throws Exception {
+    void testAllMethodsImplemented() throws Exception {
         for (Method method : RepositorySystemSession.class.getMethods()) {
             Method m = AbstractForwardingRepositorySystemSession.class.getDeclaredMethod(
                     method.getName(), method.getParameterTypes());

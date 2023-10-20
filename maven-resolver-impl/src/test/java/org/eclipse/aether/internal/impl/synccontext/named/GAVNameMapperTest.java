@@ -35,7 +35,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
     NameMapper mapper = GAVNameMapper.fileGav();
 
     @Test
-    public void nullsAndEmptyInputs() {
+    void nullsAndEmptyInputs() {
         Collection<String> names;
 
         names = mapper.nameLocks(session, null, null);
@@ -52,7 +52,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleArtifact() {
+    void singleArtifact() {
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
@@ -60,7 +60,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleMetadata() {
+    void singleMetadata() {
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<String> names = mapper.nameLocks(session, null, singletonList(metadata));
@@ -69,7 +69,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void oneAndOne() {
+    void oneAndOne() {
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
         DefaultMetadata metadata =
                 new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);

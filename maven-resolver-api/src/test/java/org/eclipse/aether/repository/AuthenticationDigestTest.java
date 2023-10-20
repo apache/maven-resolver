@@ -44,7 +44,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForRepository() {
+    void testForRepository() {
         final RepositorySystemSession session = newSession();
         final RemoteRepository[] repos = {null};
 
@@ -77,7 +77,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForRepository_NoAuth() {
+    void testForRepository_NoAuth() {
         RemoteRepository repo = newRepo(null, null);
 
         String digest = AuthenticationDigest.forRepository(newSession(), repo);
@@ -85,7 +85,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy() {
+    void testForProxy() {
         final RepositorySystemSession session = newSession();
         final Proxy[] proxies = {null};
 
@@ -118,7 +118,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy_NoProxy() {
+    void testForProxy_NoProxy() {
         RemoteRepository repo = newRepo(null, null);
 
         String digest = AuthenticationDigest.forProxy(newSession(), repo);
@@ -126,7 +126,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy_NoProxyAuth() {
+    void testForProxy_NoProxyAuth() {
         RemoteRepository repo = newRepo(null, newProxy(null));
 
         String digest = AuthenticationDigest.forProxy(newSession(), repo);

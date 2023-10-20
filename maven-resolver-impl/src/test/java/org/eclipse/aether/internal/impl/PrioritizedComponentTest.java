@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PrioritizedComponentTest {
 
     @Test
-    public void testIsDisabled() {
+    void testIsDisabled() {
         assertTrue(new PrioritizedComponent<>("", String.class, Float.NaN, 0).isDisabled());
         assertFalse(new PrioritizedComponent<>("", String.class, 0, 0).isDisabled());
         assertFalse(new PrioritizedComponent<>("", String.class, 1, 0).isDisabled());
@@ -33,7 +33,7 @@ public class PrioritizedComponentTest {
     }
 
     @Test
-    public void testCompareTo() {
+    void testCompareTo() {
         assertCompare(0, Float.NaN, Float.NaN);
         assertCompare(0, 0, 0);
 

@@ -93,7 +93,7 @@ public class DefaultArtifactResolverTest {
     private DefaultRemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         remoteRepositoryFilterSources = new HashMap<>();
         remoteRepositoryFilterManager = new DefaultRemoteRepositoryFilterManager(remoteRepositoryFilterSources);
 
@@ -126,14 +126,14 @@ public class DefaultArtifactResolverTest {
     }
 
     @AfterEach
-    public void teardown() throws Exception {
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
     }
 
     @Test
-    public void testResolveLocalArtifactSuccessful() throws IOException, ArtifactResolutionException {
+    void testResolveLocalArtifactSuccessful() throws IOException, ArtifactResolutionException {
         File tmpFile = TestFileUtils.createTempFile("tmp");
         Map<String, String> properties = new HashMap<>();
         properties.put(ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath());
@@ -152,7 +152,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveLocalArtifactUnsuccessful() throws IOException {
+    void testResolveLocalArtifactUnsuccessful() throws IOException {
         File tmpFile = TestFileUtils.createTempFile("tmp");
         Map<String, String> properties = new HashMap<>();
         properties.put(ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath());
@@ -182,7 +182,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveRemoteArtifact() throws ArtifactResolutionException {
+    void testResolveRemoteArtifact() throws ArtifactResolutionException {
         connector.setExpectGet(artifact);
 
         ArtifactRequest request = new ArtifactRequest(artifact, null, "");
@@ -202,7 +202,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveRemoteArtifactUnsuccessful() {
+    void testResolveRemoteArtifactUnsuccessful() {
         RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
 
             @Override
@@ -244,7 +244,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveRemoteArtifactAlwaysAcceptFilter() throws ArtifactResolutionException {
+    void testResolveRemoteArtifactAlwaysAcceptFilter() throws ArtifactResolutionException {
         remoteRepositoryFilterSources.put("filter1", Filters.neverAcceptFrom("invalid repo id"));
         remoteRepositoryFilterSources.put("filter2", Filters.alwaysAccept());
         connector.setExpectGet(artifact);
@@ -266,7 +266,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveRemoteArtifactNeverAcceptFilter() {
+    void testResolveRemoteArtifactNeverAcceptFilter() {
         remoteRepositoryFilterSources.put("filter1", Filters.neverAcceptFrom("invalid repo id"));
         remoteRepositoryFilterSources.put("filter2", Filters.neverAccept());
         // connector.setExpectGet( artifact ); // should not see it
@@ -296,7 +296,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveRemoteArtifactAlwaysAcceptFromRepoFilter() throws ArtifactResolutionException {
+    void testResolveRemoteArtifactAlwaysAcceptFromRepoFilter() throws ArtifactResolutionException {
         remoteRepositoryFilterSources.put("filter1", Filters.alwaysAcceptFrom("id"));
         connector.setExpectGet(artifact);
 
@@ -317,7 +317,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveRemoteArtifactNeverAcceptFilterFromRepo() {
+    void testResolveRemoteArtifactNeverAcceptFilterFromRepo() {
         remoteRepositoryFilterSources.put("filter1", Filters.neverAcceptFrom("id"));
         // connector.setExpectGet( artifact ); // should not see it
 
@@ -346,7 +346,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testArtifactNotFoundCache() throws Exception {
+    void testArtifactNotFoundCache() throws Exception {
         RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
             @Override
             public void get(
@@ -407,7 +407,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveFromWorkspace() throws IOException, ArtifactResolutionException {
+    void testResolveFromWorkspace() throws IOException, ArtifactResolutionException {
         WorkspaceReader workspace = new WorkspaceReader() {
 
             public WorkspaceRepository getRepository() {
@@ -447,7 +447,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testResolveFromWorkspaceFallbackToRepository() throws ArtifactResolutionException {
+    void testResolveFromWorkspaceFallbackToRepository() throws ArtifactResolutionException {
         WorkspaceReader workspace = new WorkspaceReader() {
 
             public WorkspaceRepository getRepository() {
@@ -484,7 +484,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testRepositoryEventsSuccessfulLocal() throws ArtifactResolutionException, IOException {
+    void testRepositoryEventsSuccessfulLocal() throws ArtifactResolutionException, IOException {
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener(listener);
 
@@ -510,7 +510,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testRepositoryEventsUnsuccessfulLocal() {
+    void testRepositoryEventsUnsuccessfulLocal() {
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener(listener);
 
@@ -540,7 +540,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testRepositoryEventsSuccessfulRemote() throws ArtifactResolutionException {
+    void testRepositoryEventsSuccessfulRemote() throws ArtifactResolutionException {
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener(listener);
 
@@ -573,7 +573,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testRepositoryEventsUnsuccessfulRemote() {
+    void testRepositoryEventsUnsuccessfulRemote() {
         RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
 
             @Override
@@ -626,7 +626,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testVersionResolverFails() {
+    void testVersionResolverFails() {
         resolver = setupArtifactResolver(
                 new VersionResolver() {
                     @Override
@@ -659,7 +659,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testRepositoryEventsOnVersionResolverFail() {
+    void testRepositoryEventsOnVersionResolverFail() {
         resolver = setupArtifactResolver(
                 new VersionResolver() {
                     @Override
@@ -695,7 +695,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testLocalArtifactAvailable() throws ArtifactResolutionException {
+    void testLocalArtifactAvailable() throws ArtifactResolutionException {
         session.setLocalRepositoryManager(new LocalRepositoryManager() {
 
             public LocalRepository getRepository() {
@@ -760,7 +760,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testFindInLocalRepositoryWhenVersionWasFoundInLocalRepository() throws ArtifactResolutionException {
+    void testFindInLocalRepositoryWhenVersionWasFoundInLocalRepository() throws ArtifactResolutionException {
         session.setLocalRepositoryManager(new LocalRepositoryManager() {
 
             public LocalRepository getRepository() {
@@ -829,8 +829,7 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-    public void testFindInLocalRepositoryWhenVersionRangeWasResolvedFromLocalRepository()
-            throws ArtifactResolutionException {
+    void testFindInLocalRepositoryWhenVersionRangeWasResolvedFromLocalRepository() throws ArtifactResolutionException {
         session.setLocalRepositoryManager(new LocalRepositoryManager() {
 
             public LocalRepository getRepository() {

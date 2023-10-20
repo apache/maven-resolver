@@ -44,13 +44,13 @@ public class IniArtifactDescriptorReaderTest {
     private RepositorySystemSession session;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         reader = new IniArtifactDescriptorReader("org/eclipse/aether/internal/test/util/");
         session = TestUtils.newSession();
     }
 
     @Test
-    public void testMissingDescriptor() throws ArtifactDescriptorException {
+    void testMissingDescriptor() throws ArtifactDescriptorException {
         assertThrows(ArtifactDescriptorException.class, () -> {
             Artifact art = new DefaultArtifact("missing:aid:ver:ext");
             ArtifactDescriptorRequest request = new ArtifactDescriptorRequest(art, null, "");
@@ -59,7 +59,7 @@ public class IniArtifactDescriptorReaderTest {
     }
 
     @Test
-    public void testLookup() throws ArtifactDescriptorException {
+    void testLookup() throws ArtifactDescriptorException {
         Artifact art = new DefaultArtifact("gid:aid:ext:ver");
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest(art, null, "");
         ArtifactDescriptorResult description = reader.readArtifactDescriptor(session, request);

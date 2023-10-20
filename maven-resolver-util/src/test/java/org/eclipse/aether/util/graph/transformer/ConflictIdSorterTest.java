@@ -71,7 +71,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testSimple() throws Exception {
+    void testSimple() throws Exception {
         DependencyNode node = parseResource("simple.txt");
         assertSame(node, transform(node));
 
@@ -80,7 +80,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testCycle() throws Exception {
+    void testCycle() throws Exception {
         DependencyNode node = parseResource("cycle.txt");
         assertSame(node, transform(node));
 
@@ -89,7 +89,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testCycles() throws Exception {
+    void testCycles() throws Exception {
         DependencyNode node = parseResource("cycles.txt");
         assertSame(node, transform(node));
 
@@ -98,7 +98,7 @@ public class ConflictIdSorterTest extends AbstractDependencyGraphTransformerTest
     }
 
     @Test
-    public void testNoConflicts() throws Exception {
+    void testNoConflicts() throws Exception {
         DependencyNode node = parseResource("no-conflicts.txt");
         assertSame(node, transform(node));
 

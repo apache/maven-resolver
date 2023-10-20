@@ -80,7 +80,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @BeforeEach
-    public void before() throws IOException {
+    void before() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         LocalRepository localRepository =
                 new LocalRepository(Files.createTempDirectory("test").toFile());
@@ -93,12 +93,12 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    public void justCreateAndClose() {
+    void justCreateAndClose() {
         adapter.newInstance(session, false).close();
     }
 
     @Test
-    public void justAcquire() {
+    void justAcquire() {
         try (SyncContext syncContext = adapter.newInstance(session, false)) {
             syncContext.acquire(
                     Arrays.asList(
@@ -206,7 +206,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    public void fullyConsumeLockTime() throws InterruptedException {
+    void fullyConsumeLockTime() throws InterruptedException {
         long start = System.nanoTime();
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -225,7 +225,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    public void releasedExclusiveAllowAccess() throws InterruptedException {
+    void releasedExclusiveAllowAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 1 loser
         Thread t1 = new Thread(new Access(false, winners, losers, adapter, session, null));

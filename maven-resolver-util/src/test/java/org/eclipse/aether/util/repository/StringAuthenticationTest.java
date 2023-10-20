@@ -49,7 +49,7 @@ public class StringAuthenticationTest {
     }
 
     @Test
-    public void testFill() {
+    void testFill() {
         Authentication auth = new StringAuthentication("key", "value");
         AuthenticationContext context = newContext(auth);
         assertNull(context.get("another-key"));
@@ -57,7 +57,7 @@ public class StringAuthenticationTest {
     }
 
     @Test
-    public void testDigest() {
+    void testDigest() {
         Authentication auth1 = new StringAuthentication("key", "value");
         Authentication auth2 = new StringAuthentication("key", "value");
         String digest1 = newDigest(auth1);
@@ -74,7 +74,7 @@ public class StringAuthenticationTest {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         Authentication auth1 = new StringAuthentication("key", "value");
         Authentication auth2 = new StringAuthentication("key", "value");
         Authentication auth3 = new StringAuthentication("key", "Value");
@@ -84,7 +84,7 @@ public class StringAuthenticationTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         Authentication auth1 = new StringAuthentication("key", "value");
         Authentication auth2 = new StringAuthentication("key", "value");
         assertEquals(auth1.hashCode(), auth2.hashCode());

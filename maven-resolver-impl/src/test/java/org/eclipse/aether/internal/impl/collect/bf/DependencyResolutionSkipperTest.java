@@ -52,7 +52,7 @@ public class DependencyResolutionSkipperTest {
     }
 
     @Test
-    public void testSkipVersionConflict() {
+    void testSkipVersionConflict() {
         // A -> B -> C 3.0 -> D   => C3.0 SHOULD BE SKIPPED
         // | -> E -> F -> G
         // | -> C 2.0 -> H  => C2.0 is the winner
@@ -102,7 +102,7 @@ public class DependencyResolutionSkipperTest {
     }
 
     @Test
-    public void testSkipDeeperDuplicateNode() {
+    void testSkipDeeperDuplicateNode() {
         // A -> B
         // |--> C -> B  => B here will be skipped
         // |--> D -> C  => C here will be skipped
@@ -150,7 +150,7 @@ public class DependencyResolutionSkipperTest {
     }
 
     @Test
-    public void testForceResolution() {
+    void testForceResolution() {
         // A -> B -> C -> D => 3rd D here will be force-resolved
         // |--> C -> D => 2nd D will be force-resolved
         // |--> D => 1st D to resolve

@@ -61,7 +61,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testForRepository() {
+    void testForRepository() {
         RepositorySystemSession session = newSession();
         RemoteRepository repo = newRepo(newAuth(), newProxy(newAuth()));
         AuthenticationContext context = AuthenticationContext.forRepository(session, repo);
@@ -74,7 +74,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testForRepository_NoAuth() {
+    void testForRepository_NoAuth() {
         RepositorySystemSession session = newSession();
         RemoteRepository repo = newRepo(null, newProxy(newAuth()));
         AuthenticationContext context = AuthenticationContext.forRepository(session, repo);
@@ -82,7 +82,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testForProxy() {
+    void testForProxy() {
         RepositorySystemSession session = newSession();
         Proxy proxy = newProxy(newAuth());
         RemoteRepository repo = newRepo(newAuth(), proxy);
@@ -96,7 +96,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testForProxy_NoProxy() {
+    void testForProxy_NoProxy() {
         RepositorySystemSession session = newSession();
         Proxy proxy = null;
         RemoteRepository repo = newRepo(newAuth(), proxy);
@@ -105,7 +105,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testForProxy_NoProxyAuth() {
+    void testForProxy_NoProxyAuth() {
         RepositorySystemSession session = newSession();
         Proxy proxy = newProxy(null);
         RemoteRepository repo = newRepo(newAuth(), proxy);
@@ -114,7 +114,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testGet_StringVsChars() {
+    void testGet_StringVsChars() {
         AuthenticationContext context = AuthenticationContext.forRepository(newSession(), newRepo(newAuth(), null));
         context.put("key", new char[] {'v', 'a', 'l', '1'});
         assertEquals("val1", context.get("key"));
@@ -123,7 +123,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testGet_StringVsFile() {
+    void testGet_StringVsFile() {
         AuthenticationContext context = AuthenticationContext.forRepository(newSession(), newRepo(newAuth(), null));
         context.put("key", "val1");
         assertEquals(new File("val1"), context.get("key", File.class));
@@ -132,7 +132,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testPut_EraseCharArrays() {
+    void testPut_EraseCharArrays() {
         AuthenticationContext context = AuthenticationContext.forRepository(newSession(), newRepo(newAuth(), null));
         char[] secret = {'v', 'a', 'l', 'u', 'e'};
         context.put("key", secret);
@@ -141,7 +141,7 @@ public class AuthenticationContextTest {
     }
 
     @Test
-    public void testClose_EraseCharArrays() {
+    void testClose_EraseCharArrays() {
         AuthenticationContext.close(null);
 
         AuthenticationContext context = AuthenticationContext.forRepository(newSession(), newRepo(newAuth(), null));

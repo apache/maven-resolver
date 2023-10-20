@@ -41,13 +41,13 @@ public class FatArtifactTraverserTest {
     private DependencyCollectionContext context;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         session = TestUtils.newSession();
         context = TestUtils.newCollectionContext(session, null, Collections.emptyList());
     }
 
     @AfterEach
-    public void teardown() throws Exception {
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
@@ -56,7 +56,7 @@ public class FatArtifactTraverserTest {
     }
 
     @Test
-    public void testTraverseDependency() {
+    void testTraverseDependency() {
         DependencyTraverser traverser = new FatArtifactTraverser();
         Map<String, String> props = null;
         assertTrue(traverser.traverseDependency(new Dependency(new DefaultArtifact("g:a:v:1", props), "test")));
@@ -69,13 +69,13 @@ public class FatArtifactTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser() {
+    void testDeriveChildTraverser() {
         DependencyTraverser traverser = new FatArtifactTraverser();
         assertSame(traverser, traverser.deriveChildTraverser(context));
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         DependencyTraverser traverser1 = new FatArtifactTraverser();
         DependencyTraverser traverser2 = new FatArtifactTraverser();
         assertEquals(traverser1, traverser1);
@@ -85,7 +85,7 @@ public class FatArtifactTraverserTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         DependencyTraverser traverser1 = new FatArtifactTraverser();
         DependencyTraverser traverser2 = new FatArtifactTraverser();
         assertEquals(traverser1.hashCode(), traverser2.hashCode());

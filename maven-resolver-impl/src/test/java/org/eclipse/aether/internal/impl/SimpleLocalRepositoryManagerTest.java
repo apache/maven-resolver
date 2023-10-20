@@ -46,21 +46,21 @@ public class SimpleLocalRepositoryManagerTest {
     private RepositorySystemSession session;
 
     @BeforeEach
-    public void setup() throws IOException {
+    void setup() throws IOException {
         basedir = TestFileUtils.createTempDir("simple-repo");
         manager = new SimpleLocalRepositoryManager(basedir, "simple", new DefaultLocalPathComposer());
         session = TestUtils.newSession();
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         TestFileUtils.deleteFile(basedir);
         manager = null;
         session = null;
     }
 
     @Test
-    public void testGetPathForLocalArtifact() {
+    void testGetPathForLocalArtifact() {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
         assertEquals("1.0-SNAPSHOT", artifact.getBaseVersion());
         assertEquals("g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact(artifact));
@@ -74,7 +74,7 @@ public class SimpleLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testGetPathForRemoteArtifact() {
+    void testGetPathForRemoteArtifact() {
         RemoteRepository remoteRepo = new RemoteRepository.Builder("repo", "default", "ram:/void").build();
 
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
@@ -91,7 +91,7 @@ public class SimpleLocalRepositoryManagerTest {
     }
 
     @Test
-    public void testFindArtifactUsesTimestampedVersion() throws Exception {
+    void testFindArtifactUsesTimestampedVersion() throws Exception {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
         File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
         TestFileUtils.writeString(file, "test");

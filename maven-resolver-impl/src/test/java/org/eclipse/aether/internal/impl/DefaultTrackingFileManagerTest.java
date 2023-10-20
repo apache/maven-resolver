@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DefaultTrackingFileManagerTest {
 
     @Test
-    public void testRead() throws Exception {
+    void testRead() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
@@ -55,7 +55,7 @@ public class DefaultTrackingFileManagerTest {
     }
 
     @Test
-    public void testReadNoFileLeak() throws Exception {
+    void testReadNoFileLeak() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         for (int i = 0; i < 1000; i++) {
@@ -66,7 +66,7 @@ public class DefaultTrackingFileManagerTest {
     }
 
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         // NOTE: The excessive repetitions are to check the update properly truncates the file
@@ -88,7 +88,7 @@ public class DefaultTrackingFileManagerTest {
     }
 
     @Test
-    public void testUpdateNoFileLeak() throws Exception {
+    void testUpdateNoFileLeak() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         Map<String, String> updates = new HashMap<>();
@@ -102,7 +102,7 @@ public class DefaultTrackingFileManagerTest {
     }
 
     @Test
-    public void testLockingOnCanonicalPath() throws Exception {
+    void testLockingOnCanonicalPath() throws Exception {
         final TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         final File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");

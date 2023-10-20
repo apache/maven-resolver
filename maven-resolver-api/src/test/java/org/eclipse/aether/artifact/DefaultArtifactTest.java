@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DefaultArtifactTest {
 
     @Test
-    public void testDefaultArtifactString() {
+    void testDefaultArtifactString() {
         Artifact a;
 
         a = new DefaultArtifact("gid:aid:ver");
@@ -85,17 +85,17 @@ public class DefaultArtifactTest {
     }
 
     @Test
-    public void testDefaultArtifactContainsGroupAndArtifactOnly() {
+    void testDefaultArtifactContainsGroupAndArtifactOnly() {
         assertThrows(IllegalArgumentException.class, () -> new DefaultArtifact("gid:aid"));
     }
 
     @Test
-    public void testDefaultArtifactContainsGroupOnly() {
+    void testDefaultArtifactContainsGroupOnly() {
         assertThrows(IllegalArgumentException.class, () -> new DefaultArtifact("gid"));
     }
 
     @Test
-    public void testImmutability() {
+    void testImmutability() {
         Artifact a = new DefaultArtifact("gid:aid:ext:cls:ver");
         assertNotSame(a, a.setFile(new File("file")));
         assertNotSame(a, a.setVersion("otherVersion"));
@@ -103,7 +103,7 @@ public class DefaultArtifactTest {
     }
 
     @Test
-    public void testArtifactType() {
+    void testArtifactType() {
         DefaultArtifactType type = new DefaultArtifactType("typeId", "typeExt", "typeCls", "typeLang", true, true);
 
         Artifact a = new DefaultArtifact("gid", "aid", null, null, null, null, type);
@@ -148,7 +148,7 @@ public class DefaultArtifactTest {
     }
 
     @Test
-    public void testPropertiesCopied() {
+    void testPropertiesCopied() {
         Map<String, String> props = new HashMap<>();
         props.put("key", "value1");
 
@@ -165,7 +165,7 @@ public class DefaultArtifactTest {
     }
 
     @Test
-    public void testIsSnapshot() {
+    void testIsSnapshot() {
         Artifact a = new DefaultArtifact("gid:aid:ext:cls:1.0");
         assertFalse(a.isSnapshot(), a.getVersion());
 

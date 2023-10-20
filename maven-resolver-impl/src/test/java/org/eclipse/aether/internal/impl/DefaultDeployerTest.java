@@ -74,7 +74,7 @@ public class DefaultDeployerTest {
     private RecordingRepositoryListener listener;
 
     @BeforeEach
-    public void setup() throws IOException {
+    void setup() throws IOException {
         artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
         artifact = artifact.setFile(TestFileUtils.createTempFile("artifact"));
         metadata = new DefaultMetadata(
@@ -103,7 +103,7 @@ public class DefaultDeployerTest {
     }
 
     @AfterEach
-    public void teardown() throws Exception {
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
@@ -115,7 +115,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testSuccessfulDeploy() throws DeploymentException {
+    void testSuccessfulDeploy() throws DeploymentException {
 
         connector.setExpectPut(artifact);
         connector.setExpectPut(metadata);
@@ -129,19 +129,19 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testNullArtifactFile() {
+    void testNullArtifactFile() {
         request.addArtifact(artifact.setFile(null));
         assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
     @Test
-    public void testNullMetadataFile() {
+    void testNullMetadataFile() {
         request.addMetadata(metadata.setFile(null));
         assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
     @Test
-    public void testSuccessfulArtifactEvents() throws DeploymentException {
+    void testSuccessfulArtifactEvents() throws DeploymentException {
         request.addArtifact(artifact);
 
         deployer.deploy(session, request);
@@ -161,7 +161,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testFailingArtifactEvents() {
+    void testFailingArtifactEvents() {
         connector.fail = true;
 
         request.addArtifact(artifact);
@@ -186,7 +186,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testSuccessfulMetadataEvents() throws DeploymentException {
+    void testSuccessfulMetadataEvents() throws DeploymentException {
         request.addMetadata(metadata);
 
         deployer.deploy(session, request);
@@ -206,7 +206,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testFailingMetdataEvents() {
+    void testFailingMetdataEvents() {
         connector.fail = true;
 
         request.addMetadata(metadata);
@@ -231,7 +231,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testStaleLocalMetadataCopyGetsDeletedBeforeMergeWhenMetadataIsNotCurrentlyPresentInRemoteRepo()
+    void testStaleLocalMetadataCopyGetsDeletedBeforeMergeWhenMetadataIsNotCurrentlyPresentInRemoteRepo()
             throws Exception {
         MergeableMetadata metadata = new MergeableMetadata() {
 

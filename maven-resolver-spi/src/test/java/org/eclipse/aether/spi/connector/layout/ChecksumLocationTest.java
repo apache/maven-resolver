@@ -58,7 +58,7 @@ public class ChecksumLocationTest {
     };
 
     @Test
-    public void testForLocation() {
+    void testForLocation() {
         ChecksumLocation cs = ChecksumLocation.forLocation(URI.create("dir/sub%20dir/file.txt"), SHA512);
         assertEquals(SHA512, cs.getChecksumAlgorithmFactory());
         assertEquals("dir/sub%20dir/file.txt.sha512", cs.getLocation().toString());
@@ -77,14 +77,14 @@ public class ChecksumLocationTest {
     }
 
     @Test
-    public void testForLocation_WithQueryParams() {
+    void testForLocation_WithQueryParams() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ChecksumLocation.forLocation(URI.create("file.php?param=1"), SHA1));
     }
 
     @Test
-    public void testForLocation_WithFragment() {
+    void testForLocation_WithFragment() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ChecksumLocation.forLocation(URI.create("file.html#fragment"), SHA1));

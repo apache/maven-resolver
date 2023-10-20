@@ -26,12 +26,12 @@ import org.junit.jupiter.api.Test;
  */
 public class AllResolverDemosTest {
     @Test
-    public void supplier() throws Exception {
+    void supplier() throws Exception {
         AllResolverDemos.main(new String[] {Booter.SUPPLIER});
     }
 
     @Test
-    public void sisu() throws Exception {
+    void sisu() throws Exception {
         AllResolverDemos.main(new String[] {Booter.SISU});
     }
 }

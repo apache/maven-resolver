@@ -50,12 +50,12 @@ public class ClassicDependencyManagerTest {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         session = TestUtils.newSession();
     }
 
     @Test
-    public void testManageOptional() {
+    void testManageOptional() {
         DependencyManager manager = new ClassicDependencyManager();
 
         manager = manager.deriveChildManager(newContext(new Dependency(A, null, null), new Dependency(B, null, true)));

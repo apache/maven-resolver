@@ -33,25 +33,25 @@ public class WarnChecksumPolicyTest {
     private ChecksumFailureException exception;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         policy = new WarnChecksumPolicy(new TransferResource("null", "file:/dev/null", "file.txt", null, null));
         exception = new ChecksumFailureException("test");
     }
 
     @Test
-    public void testOnTransferChecksumFailure() {
+    void testOnTransferChecksumFailure() {
         assertTrue(policy.onTransferChecksumFailure(exception));
     }
 
     @Test
-    public void testOnChecksumMatch() {
+    void testOnChecksumMatch() {
         assertTrue(policy.onChecksumMatch("SHA-1", ChecksumKind.REMOTE_EXTERNAL));
         assertTrue(policy.onChecksumMatch("SHA-1", ChecksumKind.REMOTE_INCLUDED));
         assertTrue(policy.onChecksumMatch("SHA-1", ChecksumKind.PROVIDED));
     }
 
     @Test
-    public void testOnChecksumMismatch() throws Exception {
+    void testOnChecksumMismatch() throws Exception {
         try {
             policy.onChecksumMismatch("SHA-1", ChecksumKind.REMOTE_EXTERNAL, exception);
             fail("No exception");
@@ -73,12 +73,12 @@ public class WarnChecksumPolicyTest {
     }
 
     @Test
-    public void testOnChecksumError() throws Exception {
+    void testOnChecksumError() throws Exception {
         policy.onChecksumError("SHA-1", ChecksumKind.REMOTE_EXTERNAL, exception);
     }
 
     @Test
-    public void testOnNoMoreChecksums() {
+    void testOnNoMoreChecksums() {
         try {
             policy.onNoMoreChecksums();
             fail("No exception");

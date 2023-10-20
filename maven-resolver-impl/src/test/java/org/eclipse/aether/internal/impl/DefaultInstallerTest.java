@@ -67,7 +67,7 @@ public class DefaultInstallerTest {
     private TestLocalRepositoryManager lrm;
 
     @BeforeEach
-    public void setup() throws IOException {
+    void setup() throws IOException {
         artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
         artifact = artifact.setFile(TestFileUtils.createTempFile("artifact".getBytes(), 1));
         metadata = new DefaultMetadata(
@@ -99,12 +99,12 @@ public class DefaultInstallerTest {
     }
 
     @AfterEach
-    public void teardown() throws Exception {
+    void teardown() throws Exception {
         TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
     }
 
     @Test
-    public void testSuccessfulInstall() throws InstallationException, IOException {
+    void testSuccessfulInstall() throws InstallationException, IOException {
         File artifactFile =
                 new File(session.getLocalRepositoryManager().getRepository().getBasedir(), localArtifactPath);
         File metadataFile =
@@ -139,7 +139,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testNullArtifactFile() {
+    void testNullArtifactFile() {
         InstallRequest request = new InstallRequest();
         request.addArtifact(artifact.setFile(null));
 
@@ -147,7 +147,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testNullMetadataFile() {
+    void testNullMetadataFile() {
         InstallRequest request = new InstallRequest();
         request.addMetadata(metadata.setFile(null));
 
@@ -155,7 +155,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testNonExistentArtifactFile() {
+    void testNonExistentArtifactFile() {
         InstallRequest request = new InstallRequest();
         request.addArtifact(artifact.setFile(new File("missing.txt")));
 
@@ -163,7 +163,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testNonExistentMetadataFile() {
+    void testNonExistentMetadataFile() {
         InstallRequest request = new InstallRequest();
         request.addMetadata(metadata.setFile(new File("missing.xml")));
 
@@ -171,7 +171,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testArtifactExistsAsDir() {
+    void testArtifactExistsAsDir() {
         String path = session.getLocalRepositoryManager().getPathForLocalArtifact(artifact);
         File file = new File(session.getLocalRepository().getBasedir(), path);
         assertFalse(file.isFile(), file.getAbsolutePath() + " is a file, not directory");
@@ -185,7 +185,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testMetadataExistsAsDir() {
+    void testMetadataExistsAsDir() {
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
         assertTrue(
                 new File(session.getLocalRepository().getBasedir(), path).mkdirs(),
@@ -196,7 +196,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testArtifactDestinationEqualsSource() throws IOException {
+    void testArtifactDestinationEqualsSource() throws IOException {
         String path = session.getLocalRepositoryManager().getPathForLocalArtifact(artifact);
         File file = new File(session.getLocalRepository().getBasedir(), path);
         artifact = artifact.setFile(file);
@@ -207,7 +207,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testMetadataDestinationEqualsSource() throws IOException {
+    void testMetadataDestinationEqualsSource() throws IOException {
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
         File file = new File(session.getLocalRepository().getBasedir(), path);
         metadata = metadata.setFile(file);
@@ -218,7 +218,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testSuccessfulArtifactEvents() throws InstallationException {
+    void testSuccessfulArtifactEvents() throws InstallationException {
         InstallRequest request = new InstallRequest();
         request.addArtifact(artifact);
 
@@ -227,7 +227,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testSuccessfulMetadataEvents() throws InstallationException {
+    void testSuccessfulMetadataEvents() throws InstallationException {
         InstallRequest request = new InstallRequest();
         request.addMetadata(metadata);
 
@@ -236,17 +236,17 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testFailingEventsNullArtifactFile() {
+    void testFailingEventsNullArtifactFile() {
         checkFailedEvents("null artifact file", this.artifact.setFile(null));
     }
 
     @Test
-    public void testFailingEventsNullMetadataFile() {
+    void testFailingEventsNullMetadataFile() {
         checkFailedEvents("null metadata file", this.metadata.setFile(null));
     }
 
     @Test
-    public void testFailingEventsArtifactExistsAsDir() {
+    void testFailingEventsArtifactExistsAsDir() {
         String path = session.getLocalRepositoryManager().getPathForLocalArtifact(artifact);
         assertTrue(
                 new File(session.getLocalRepository().getBasedir(), path).mkdirs(),
@@ -255,7 +255,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testFailingEventsMetadataExistsAsDir() {
+    void testFailingEventsMetadataExistsAsDir() {
         String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
         assertTrue(
                 new File(session.getLocalRepository().getBasedir(), path).mkdirs(),
@@ -324,7 +324,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testDoNotUpdateUnchangedArtifact() throws InstallationException {
+    void testDoNotUpdateUnchangedArtifact() throws InstallationException {
         request.addArtifact(artifact);
         installer.install(session, request);
 
@@ -345,7 +345,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    public void testSetArtifactTimestamps() throws InstallationException {
+    void testSetArtifactTimestamps() throws InstallationException {
         artifact.getFile().setLastModified(artifact.getFile().lastModified() - 60000);
 
         request.addArtifact(artifact);

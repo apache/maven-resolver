@@ -35,7 +35,7 @@ public class DefaultDependencyCycleTest {
     private static final Dependency BAR_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:bar:1.0"), "test");
 
     @Test
-    public void testToString() {
+    void testToString() {
         List<DependencyNode> nodes = new ArrayList<>();
         nodes.add(new DefaultDependencyNode(FOO_DEPENDENCY));
         DependencyCycle cycle = new DefaultDependencyCycle(nodes, 1, BAR_DEPENDENCY);

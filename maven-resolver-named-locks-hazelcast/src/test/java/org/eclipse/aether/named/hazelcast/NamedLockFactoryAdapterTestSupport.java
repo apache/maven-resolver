@@ -77,7 +77,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @BeforeEach
-    public void before() throws IOException {
+    void before() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         LocalRepository localRepository =
                 new LocalRepository(Files.createTempDirectory("test").toFile());
@@ -90,12 +90,12 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    public void justCreateAndClose() {
+    void justCreateAndClose() {
         adapter.newInstance(session, false).close();
     }
 
     @Test
-    public void justAcquire() {
+    void justAcquire() {
         try (SyncContext syncContext = adapter.newInstance(session, false)) {
             syncContext.acquire(
                     Arrays.asList(

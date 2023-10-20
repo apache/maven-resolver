@@ -53,37 +53,37 @@ public class JreProxySelectorTest {
     private java.net.ProxySelector original;
 
     @BeforeEach
-    public void init() {
+    void init() {
         original = java.net.ProxySelector.getDefault();
     }
 
     @AfterEach
-    public void exit() {
+    void exit() {
         java.net.ProxySelector.setDefault(original);
         Authenticator.setDefault(null);
     }
 
     @Test
-    public void testGetProxy_InvalidUrl() {
+    void testGetProxy_InvalidUrl() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://host:invalid").build();
         assertNull(selector.getProxy(repo));
     }
 
     @Test
-    public void testGetProxy_OpaqueUrl() {
+    void testGetProxy_OpaqueUrl() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "classpath:base").build();
         assertNull(selector.getProxy(repo));
     }
 
     @Test
-    public void testGetProxy_NullSelector() {
+    void testGetProxy_NullSelector() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         java.net.ProxySelector.setDefault(null);
         assertNull(selector.getProxy(repo));
     }
 
     @Test
-    public void testGetProxy_NoProxies() {
+    void testGetProxy_NoProxies() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         java.net.ProxySelector.setDefault(new AbstractProxySelector() {
             @Override
@@ -95,7 +95,7 @@ public class JreProxySelectorTest {
     }
 
     @Test
-    public void testGetProxy_DirectProxy() {
+    void testGetProxy_DirectProxy() {
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         final InetSocketAddress addr = InetSocketAddress.createUnresolved("proxy", 8080);
         java.net.ProxySelector.setDefault(new AbstractProxySelector() {
@@ -108,7 +108,7 @@ public class JreProxySelectorTest {
     }
 
     @Test
-    public void testGetProxy_HttpProxy() throws Exception {
+    void testGetProxy_HttpProxy() throws Exception {
         final RemoteRepository repo =
                 new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
         final URL url = new URL(repo.getUrl());

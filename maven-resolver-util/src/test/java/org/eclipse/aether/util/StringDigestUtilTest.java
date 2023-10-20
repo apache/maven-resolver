@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StringDigestUtilTest {
     @Test
-    public void sha1Simple() {
+    void sha1Simple() {
         assertEquals(StringDigestUtil.sha1(null), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
         assertEquals(StringDigestUtil.sha1(""), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
         assertEquals(StringDigestUtil.sha1("something"), "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29");
@@ -37,7 +37,7 @@ public class StringDigestUtilTest {
     }
 
     @Test
-    public void sha1Manual() {
+    void sha1Manual() {
         assertEquals(new StringDigestUtil("SHA-1").digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
         assertEquals(new StringDigestUtil("SHA-1").update("").digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
         assertEquals(
@@ -52,7 +52,7 @@ public class StringDigestUtilTest {
     }
 
     @Test
-    public void md5Manual() {
+    void md5Manual() {
         assertEquals(new StringDigestUtil("MD5").digest(), "d41d8cd98f00b204e9800998ecf8427e");
         assertEquals(new StringDigestUtil("MD5").update("").digest(), "d41d8cd98f00b204e9800998ecf8427e");
         assertEquals(new StringDigestUtil("MD5").update("something").digest(), "437b930db84b8079c2dd804a71936b5f");
@@ -65,7 +65,7 @@ public class StringDigestUtilTest {
     }
 
     @Test
-    public void unsupportedAlg() {
+    void unsupportedAlg() {
         try {
             new StringDigestUtil("FOO-BAR");
             fail("StringDigestUtil should throw");

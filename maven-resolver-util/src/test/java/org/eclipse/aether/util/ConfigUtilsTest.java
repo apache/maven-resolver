@@ -35,67 +35,67 @@ public class ConfigUtilsTest {
     Map<Object, Object> config = new HashMap<>();
 
     @Test
-    public void testGetObject_Default() {
+    void testGetObject_Default() {
         Object val = new Object();
         assertSame(val, ConfigUtils.getObject(config, val, "no-value"));
     }
 
     @Test
-    public void testGetObject_AlternativeKeys() {
+    void testGetObject_AlternativeKeys() {
         Object val = new Object();
         config.put("some-object", val);
         assertSame(val, ConfigUtils.getObject(config, null, "no-object", "some-object"));
     }
 
     @Test
-    public void testGetMap_Default() {
+    void testGetMap_Default() {
         Map<?, ?> val = new HashMap<Object, Object>();
         assertSame(val, ConfigUtils.getMap(config, val, "no-value"));
     }
 
     @Test
-    public void testGetMap_AlternativeKeys() {
+    void testGetMap_AlternativeKeys() {
         Map<?, ?> val = new HashMap<Object, Object>();
         config.put("some-map", val);
         assertSame(val, ConfigUtils.getMap(config, null, "no-object", "some-map"));
     }
 
     @Test
-    public void testGetList_Default() {
+    void testGetList_Default() {
         List<?> val = new ArrayList<Object>();
         assertSame(val, ConfigUtils.getList(config, val, "no-value"));
     }
 
     @Test
-    public void testGetList_AlternativeKeys() {
+    void testGetList_AlternativeKeys() {
         List<?> val = new ArrayList<Object>();
         config.put("some-list", val);
         assertSame(val, ConfigUtils.getList(config, null, "no-object", "some-list"));
     }
 
     @Test
-    public void testGetList_CollectionConversion() {
+    void testGetList_CollectionConversion() {
         Collection<?> val = Collections.singleton("item");
         config.put("some-collection", val);
         assertEquals(Arrays.asList("item"), ConfigUtils.getList(config, null, "some-collection"));
     }
 
     @Test
-    public void testGetString_Default() {
+    void testGetString_Default() {
         config.put("no-string", new Object());
         assertEquals("default", ConfigUtils.getString(config, "default", "no-value"));
         assertEquals("default", ConfigUtils.getString(config, "default", "no-string"));
     }
 
     @Test
-    public void testGetString_AlternativeKeys() {
+    void testGetString_AlternativeKeys() {
         config.put("no-string", new Object());
         config.put("some-string", "passed");
         assertEquals("passed", ConfigUtils.getString(config, "default", "no-string", "some-string"));
     }
 
     @Test
-    public void testGetBoolean_Default() {
+    void testGetBoolean_Default() {
         config.put("no-boolean", new Object());
         assertTrue(ConfigUtils.getBoolean(config, true, "no-value"));
         assertFalse(ConfigUtils.getBoolean(config, false, "no-value"));
@@ -104,7 +104,7 @@ public class ConfigUtilsTest {
     }
 
     @Test
-    public void testGetBoolean_AlternativeKeys() {
+    void testGetBoolean_AlternativeKeys() {
         config.put("no-boolean", new Object());
         config.put("some-boolean", true);
         assertTrue(ConfigUtils.getBoolean(config, false, "no-boolean", "some-boolean"));
@@ -113,7 +113,7 @@ public class ConfigUtilsTest {
     }
 
     @Test
-    public void testGetBoolean_StringConversion() {
+    void testGetBoolean_StringConversion() {
         config.put("some-boolean", "true");
         assertTrue(ConfigUtils.getBoolean(config, false, "some-boolean"));
         config.put("some-boolean", "false");
@@ -121,73 +121,73 @@ public class ConfigUtilsTest {
     }
 
     @Test
-    public void testGetInteger_Default() {
+    void testGetInteger_Default() {
         config.put("no-integer", new Object());
         assertEquals(-17, ConfigUtils.getInteger(config, -17, "no-value"));
         assertEquals(43, ConfigUtils.getInteger(config, 43, "no-integer"));
     }
 
     @Test
-    public void testGetInteger_AlternativeKeys() {
+    void testGetInteger_AlternativeKeys() {
         config.put("no-integer", "text");
         config.put("some-integer", 23);
         assertEquals(23, ConfigUtils.getInteger(config, 0, "no-integer", "some-integer"));
     }
 
     @Test
-    public void testGetInteger_StringConversion() {
+    void testGetInteger_StringConversion() {
         config.put("some-integer", "-123456");
         assertEquals(-123456, ConfigUtils.getInteger(config, 0, "some-integer"));
     }
 
     @Test
-    public void testGetInteger_NumberConversion() {
+    void testGetInteger_NumberConversion() {
         config.put("some-number", -123456.789);
         assertEquals(-123456, ConfigUtils.getInteger(config, 0, "some-number"));
     }
 
     @Test
-    public void testGetLong_Default() {
+    void testGetLong_Default() {
         config.put("no-long", new Object());
         assertEquals(-17L, ConfigUtils.getLong(config, -17L, "no-value"));
         assertEquals(43L, ConfigUtils.getLong(config, 43L, "no-long"));
     }
 
     @Test
-    public void testGetLong_AlternativeKeys() {
+    void testGetLong_AlternativeKeys() {
         config.put("no-long", "text");
         config.put("some-long", 23L);
         assertEquals(23L, ConfigUtils.getLong(config, 0, "no-long", "some-long"));
     }
 
     @Test
-    public void testGetLong_StringConversion() {
+    void testGetLong_StringConversion() {
         config.put("some-long", "-123456789012");
         assertEquals(-123456789012L, ConfigUtils.getLong(config, 0, "some-long"));
     }
 
     @Test
-    public void testGetLong_NumberConversion() {
+    void testGetLong_NumberConversion() {
         config.put("some-number", -123456789012.789);
         assertEquals(-123456789012L, ConfigUtils.getLong(config, 0, "some-number"));
     }
 
     @Test
-    public void testGetFloat_Default() {
+    void testGetFloat_Default() {
         config.put("no-float", new Object());
         assertEquals(-17.1f, ConfigUtils.getFloat(config, -17.1f, "no-value"), 0.01f);
         assertEquals(43.2f, ConfigUtils.getFloat(config, 43.2f, "no-float"), 0.01f);
     }
 
     @Test
-    public void testGetFloat_AlternativeKeys() {
+    void testGetFloat_AlternativeKeys() {
         config.put("no-float", "text");
         config.put("some-float", 12.3f);
         assertEquals(12.3f, ConfigUtils.getFloat(config, 0, "no-float", "some-float"), 0.01f);
     }
 
     @Test
-    public void testGetFloat_StringConversion() {
+    void testGetFloat_StringConversion() {
         config.put("some-float", "-12.3");
         assertEquals(-12.3f, ConfigUtils.getFloat(config, 0, "some-float"), 0.01f);
         config.put("some-float", "NaN");
@@ -195,7 +195,7 @@ public class ConfigUtilsTest {
     }
 
     @Test
-    public void testGetFloat_NumberConversion() {
+    void testGetFloat_NumberConversion() {
         config.put("some-number", -1234f);
         assertEquals(-1234f, ConfigUtils.getFloat(config, 0, "some-number"), 0.1f);
     }

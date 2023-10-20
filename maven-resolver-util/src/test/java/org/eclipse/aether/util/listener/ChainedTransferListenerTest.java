@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ChainedTransferListenerTest {
 
     @Test
-    public void testAllEventTypesHandled() throws Exception {
+    void testAllEventTypesHandled() throws Exception {
         for (Method method : TransferListener.class.getMethods()) {
             assertNotNull(
                     ChainedTransferListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));

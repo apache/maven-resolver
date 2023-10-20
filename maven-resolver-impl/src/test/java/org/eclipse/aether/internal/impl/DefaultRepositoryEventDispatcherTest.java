@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DefaultRepositoryEventDispatcherTest {
 
     @Test
-    public void testDispatchHandlesAllEventTypes() {
+    void testDispatchHandlesAllEventTypes() {
         DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher(Collections.emptySet());
 
         ListenerHandler handler = new ListenerHandler();

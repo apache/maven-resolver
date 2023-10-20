@@ -73,7 +73,7 @@ public class ChecksumUtilTest {
     }
 
     @BeforeEach
-    public void before() throws IOException {
+    void before() throws IOException {
         sums.clear();
 
         byte[] emptyBytes = new byte[0];
@@ -95,7 +95,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testEquality() throws Throwable {
+    void testEquality() throws Throwable {
         Map<String, Object> checksums;
 
         for (Map.Entry<String, File> fileEntry : files.entrySet()) {
@@ -120,7 +120,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testFileHandleLeakage() throws IOException {
+    void testFileHandleLeakage() throws IOException {
         for (File file : files.values()) {
             for (int i = 0; i < 150; i++) {
                 ChecksumUtils.calc(file, Arrays.asList("SHA-512", "SHA-256", "SHA-1", "MD5"));
@@ -130,7 +130,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testRead() throws IOException {
+    void testRead() throws IOException {
         for (Map<String, String> checksums : sums.values()) {
             String sha512 = checksums.get("SHA-512");
             String sha256 = checksums.get("SHA-256");
@@ -155,7 +155,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testReadSpaces() throws IOException {
+    void testReadSpaces() throws IOException {
         for (Map<String, String> checksums : sums.values()) {
             String sha512 = checksums.get("SHA-512");
             String sha256 = checksums.get("SHA-256");
@@ -180,7 +180,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testReadEmptyFile() throws IOException {
+    void testReadEmptyFile() throws IOException {
         File file = createTempFile("");
 
         assertEquals("", ChecksumUtils.read(file));
@@ -189,7 +189,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testToHexString() {
+    void testToHexString() {
         assertNull(ChecksumUtils.toHexString(null));
         assertEquals("", ChecksumUtils.toHexString(new byte[] {}));
         assertEquals("00", ChecksumUtils.toHexString(new byte[] {0}));
@@ -198,7 +198,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testFromHexString() {
+    void testFromHexString() {
         assertNull(ChecksumUtils.toHexString(null));
         assertArrayEquals(new byte[] {}, ChecksumUtils.fromHexString(""));
         assertArrayEquals(new byte[] {0}, ChecksumUtils.fromHexString("00"));
@@ -207,7 +207,7 @@ public class ChecksumUtilTest {
     }
 
     @Test
-    public void testCalcWithByteArray() throws Throwable {
+    void testCalcWithByteArray() throws Throwable {
         Map<String, Object> checksums;
 
         for (Map.Entry<String, byte[]> bytesEntry : bytes.entrySet()) {

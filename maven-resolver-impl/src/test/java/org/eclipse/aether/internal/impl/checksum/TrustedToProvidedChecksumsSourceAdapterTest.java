@@ -56,7 +56,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     private TrustedToProvidedChecksumsSourceAdapter adapter;
 
     @BeforeEach
-    public void before() {
+    void before() {
         HashMap<String, String> result = new HashMap<>();
         result.put(Sha1ChecksumAlgorithmFactory.NAME, "foo");
         when(trustedChecksumsSource.getTrustedArtifactChecksums(
@@ -67,7 +67,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     }
 
     @Test
-    public void testSimplePositive() {
+    void testSimplePositive() {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithChecksum);
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
@@ -76,7 +76,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     }
 
     @Test
-    public void testSimpleNegative() {
+    void testSimpleNegative() {
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithoutChecksum);
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
@@ -84,7 +84,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     }
 
     @Test
-    public void testMrmPositive() {
+    void testMrmPositive() {
         RemoteRepository mrm = new RemoteRepository.Builder("mrm", "default", "https://example.com").build();
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithChecksum);
@@ -95,7 +95,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     }
 
     @Test
-    public void testMrmNegative() {
+    void testMrmNegative() {
         RemoteRepository mrm = new RemoteRepository.Builder("mrm", "default", "https://example.com").build();
         ArtifactDownload transfer = new ArtifactDownload();
         transfer.setArtifact(artifactWithoutChecksum);

@@ -41,17 +41,17 @@ public class DefaultRepositoryCacheTest {
     }
 
     @Test
-    public void testGet_NullKey() {
+    void testGet_NullKey() {
         assertThrows(RuntimeException.class, () -> get(null));
     }
 
     @Test
-    public void testPut_NullKey() {
+    void testPut_NullKey() {
         assertThrows(RuntimeException.class, () -> put(null, "data"));
     }
 
     @Test
-    public void testGetPut() {
+    void testGetPut() {
         Object key = "key";
         assertNull(get(key));
         put(key, "value");

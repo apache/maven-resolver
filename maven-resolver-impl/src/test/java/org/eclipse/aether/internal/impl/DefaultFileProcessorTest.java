@@ -42,19 +42,19 @@ public class DefaultFileProcessorTest {
     private DefaultFileProcessor fileProcessor;
 
     @BeforeEach
-    public void setup() throws IOException {
+    void setup() throws IOException {
         targetDir = TestFileUtils.createTempDir(getClass().getSimpleName());
         fileProcessor = new DefaultFileProcessor();
     }
 
     @AfterEach
-    public void teardown() throws Exception {
+    void teardown() throws Exception {
         TestFileUtils.deleteFile(targetDir);
         fileProcessor = null;
     }
 
     @Test
-    public void testCopy() throws IOException {
+    void testCopy() throws IOException {
         String data = "testCopy\nasdf";
         File file = TestFileUtils.createTempFile(data);
         File target = new File(targetDir, "testCopy.txt");
@@ -67,7 +67,7 @@ public class DefaultFileProcessorTest {
     }
 
     @Test
-    public void testOverwrite() throws IOException {
+    void testOverwrite() throws IOException {
         String data = "testCopy\nasdf";
         File file = TestFileUtils.createTempFile(data);
 
@@ -81,7 +81,7 @@ public class DefaultFileProcessorTest {
     }
 
     @Test
-    public void testCopyEmptyFile() throws IOException {
+    void testCopyEmptyFile() throws IOException {
         File file = TestFileUtils.createTempFile("");
         File target = new File(targetDir, "testCopyEmptyFile");
         target.delete();
@@ -91,7 +91,7 @@ public class DefaultFileProcessorTest {
     }
 
     @Test
-    public void testProgressingChannel() throws IOException {
+    void testProgressingChannel() throws IOException {
         File file = TestFileUtils.createTempFile("test");
         File target = new File(targetDir, "testProgressingChannel");
         target.delete();
@@ -109,7 +109,7 @@ public class DefaultFileProcessorTest {
     }
 
     @Test
-    public void testWrite() throws IOException {
+    void testWrite() throws IOException {
         String data = "testCopy\nasdf";
         File target = new File(targetDir, "testWrite.txt");
 
@@ -124,7 +124,7 @@ public class DefaultFileProcessorTest {
      * Used ONLY when FileProcessor present, never otherwise.
      */
     @Test
-    public void testWriteStream() throws IOException {
+    void testWriteStream() throws IOException {
         String data = "testCopy\nasdf";
         File target = new File(targetDir, "testWriteStream.txt");
 

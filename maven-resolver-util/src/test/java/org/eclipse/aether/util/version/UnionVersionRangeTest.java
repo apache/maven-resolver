@@ -52,7 +52,7 @@ public class UnionVersionRangeTest {
     }
 
     @Test
-    public void testGetLowerBound() {
+    void testGetLowerBound() {
         VersionRange range = UnionVersionRange.from(Collections.<VersionRange>emptySet());
         assertBound(null, false, range.getLowerBound());
 
@@ -70,7 +70,7 @@ public class UnionVersionRangeTest {
     }
 
     @Test
-    public void testGetUpperBound() {
+    void testGetUpperBound() {
         VersionRange range = UnionVersionRange.from(Collections.<VersionRange>emptySet());
         assertBound(null, false, range.getUpperBound());
 

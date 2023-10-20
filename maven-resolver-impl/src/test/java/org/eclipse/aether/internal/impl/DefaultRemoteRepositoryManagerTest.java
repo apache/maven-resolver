@@ -49,7 +49,7 @@ public class DefaultRemoteRepositoryManagerTest {
     private DefaultRemoteRepositoryManager manager;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         session = TestUtils.newSession();
         session.setChecksumPolicy(null);
         session.setUpdatePolicy(null);
@@ -58,7 +58,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         manager = null;
         session = null;
     }
@@ -84,7 +84,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testGetPolicy() {
+    void testGetPolicy() {
         RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
                 true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         RepositoryPolicy releasePolicy =
@@ -103,7 +103,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateSimpleRepos() {
+    void testAggregateSimpleRepos() {
         RemoteRepository dominant1 = newRepo("a", "file://", false, "", "").build();
 
         RemoteRepository recessive1 = newRepo("a", "http://", true, "", "").build();
@@ -118,7 +118,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateSimpleRepos_MustKeepDisabledRecessiveRepo() {
+    void testAggregateSimpleRepos_MustKeepDisabledRecessiveRepo() {
         RemoteRepository dominant = newRepo("a", "file://", true, "", "").build();
 
         RemoteRepository recessive1 = newRepo("b", "http://", false, "", "").build();
@@ -137,7 +137,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateMirrorRepos_DominantMirrorComplete() {
+    void testAggregateMirrorRepos_DominantMirrorComplete() {
         RemoteRepository dominant1 = newRepo("a", "http://", false, "", "").build();
         RemoteRepository dominantMirror1 = newRepo("x", "file://", false, "", "")
                 .addMirroredRepository(dominant1)
@@ -158,7 +158,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateMirrorRepos_DominantMirrorIncomplete() {
+    void testAggregateMirrorRepos_DominantMirrorIncomplete() {
         RemoteRepository dominant1 = newRepo("a", "http://", false, "", "").build();
         RemoteRepository dominantMirror1 = newRepo("x", "file://", false, "", "")
                 .addMirroredRepository(dominant1)
@@ -181,7 +181,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testMirrorAuthentication() {
+    void testMirrorAuthentication() {
         final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
         final RemoteRepository mirror = newRepo("a", "http://", true, "", "")
                 .setAuthentication(
@@ -201,7 +201,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testMirrorProxy() {
+    void testMirrorProxy() {
         final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
         final RemoteRepository mirror = newRepo("a", "http://", true, "", "")
                 .setProxy(new Proxy("http", "host", 2011, null))
@@ -222,7 +222,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testProxySelector() {
+    void testProxySelector() {
         final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
         final Proxy proxy = new Proxy("http", "host", 2011, null);
         session.setProxySelector(new ProxySelector() {

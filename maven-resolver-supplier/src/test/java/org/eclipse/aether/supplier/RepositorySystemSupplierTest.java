@@ -47,7 +47,7 @@ public class RepositorySystemSupplierTest {
     }
 
     @Test
-    public void smoke() throws Exception {
+    void smoke() throws Exception {
         RepositorySystem system = subject.get();
         RepositorySystemSession session = newRepositorySystemSession(system);
 

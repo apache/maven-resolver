@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class OptionalDependencySelectorTest {
     @Test
-    public void testToString() {
+    void testToString() {
         assertEquals("OptionalDependencySelector(depth: 0)", new OptionalDependencySelector().toString());
     }
 }

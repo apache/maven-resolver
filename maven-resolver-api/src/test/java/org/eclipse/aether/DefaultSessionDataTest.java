@@ -48,17 +48,17 @@ public class DefaultSessionDataTest {
     }
 
     @Test
-    public void testGet_NullKey() {
+    void testGet_NullKey() {
         assertThrows(RuntimeException.class, () -> get(null));
     }
 
     @Test
-    public void testSet_NullKey() {
+    void testSet_NullKey() {
         assertThrows(RuntimeException.class, () -> set(null, "data"));
     }
 
     @Test
-    public void testGetSet() {
+    void testGetSet() {
         Object key = "key";
         assertNull(get(key));
         set(key, "value");
@@ -70,7 +70,7 @@ public class DefaultSessionDataTest {
     }
 
     @Test
-    public void testGetSafeSet() {
+    void testGetSafeSet() {
         Object key = "key";
         assertNull(get(key));
         assertFalse(set(key, "wrong", "value"));
@@ -92,7 +92,7 @@ public class DefaultSessionDataTest {
     }
 
     @Test
-    public void testComputeIfAbsent() {
+    void testComputeIfAbsent() {
         Object key = "key";
         assertNull(get(key));
         assertEquals("value", computeIfAbsent(key, () -> "value"));

@@ -40,7 +40,7 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
     }
 
     @Test
-    public void testDeriveOptionality() throws Exception {
+    void testDeriveOptionality() throws Exception {
         DependencyNode root = parseResource("derive.txt");
         assertSame(root, transform(root));
 
@@ -54,7 +54,7 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
     }
 
     @Test
-    public void testResolveOptionalityConflict_NonOptionalWins() throws Exception {
+    void testResolveOptionalityConflict_NonOptionalWins() throws Exception {
         DependencyNode root = parseResource("conflict.txt");
         assertSame(root, transform(root));
 
@@ -65,7 +65,7 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
     }
 
     @Test
-    public void testResolveOptionalityConflict_DirectDeclarationWins() throws Exception {
+    void testResolveOptionalityConflict_DirectDeclarationWins() throws Exception {
         DependencyNode root = parseResource("conflict-direct-dep.txt");
         assertSame(root, transform(root));
 

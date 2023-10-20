@@ -41,7 +41,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testPreOrder() throws Exception {
+    void testPreOrder() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -52,7 +52,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testPreOrderDuplicateSuppression() throws Exception {
+    void testPreOrderDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -63,7 +63,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testPostOrder() throws Exception {
+    void testPostOrder() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -74,7 +74,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testPostOrderDuplicateSuppression() throws Exception {
+    void testPostOrderDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -85,7 +85,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testLevelOrder() throws Exception {
+    void testLevelOrder() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();
@@ -97,7 +97,7 @@ public class NodeListGeneratorTest {
     }
 
     @Test
-    public void testLevelOrderDuplicateSuppression() throws Exception {
+    void testLevelOrderDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         NodeListGenerator nodeListGenerator = new NodeListGenerator();

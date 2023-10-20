@@ -97,7 +97,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         session = TestUtils.newSession();
         parser = new DependencyGraphParser("artifact-descriptions/");
         repository = new RemoteRepository.Builder("id", "default", "file:///").build();
@@ -159,7 +159,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testSimpleCollection() throws DependencyCollectionException {
+    void testSimpleCollection() throws DependencyCollectionException {
         Dependency dependency = newDep("gid:aid:ext:ver", "compile");
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
         CollectResult result = collector.collectDependencies(session, request);
@@ -179,7 +179,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testMissingDependencyDescription() {
+    void testMissingDependencyDescription() {
         CollectRequest request = new CollectRequest(newDep("missing:description:ext:ver"), singletonList(repository));
         try {
             collector.collectDependencies(session, request);
@@ -197,7 +197,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDuplicates() throws DependencyCollectionException {
+    void testDuplicates() throws DependencyCollectionException {
         Dependency dependency = newDep("duplicate:transitive:ext:dependency");
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
 
@@ -223,7 +223,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testEqualSubtree() throws IOException, DependencyCollectionException {
+    void testEqualSubtree() throws IOException, DependencyCollectionException {
         DependencyNode root = parser.parseResource("expectedSubtreeComparisonResult.txt");
         Dependency dependency = root.getDependency();
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
@@ -233,7 +233,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicDependencies() throws Exception {
+    void testCyclicDependencies() throws Exception {
         DependencyNode root = parser.parseResource("cycle.txt");
         CollectRequest request = new CollectRequest(root.getDependency(), singletonList(repository));
         CollectResult result = collector.collectDependencies(session, request);
@@ -241,7 +241,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicDependenciesBig() throws Exception {
+    void testCyclicDependenciesBig() throws Exception {
         CollectRequest request = new CollectRequest(newDep("1:2:pom:5.50-SNAPSHOT"), singletonList(repository));
         collector = setupCollector(newReader("cycle-big/"));
         CollectResult result = collector.collectDependencies(session, request);
@@ -250,7 +250,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicProjects() throws Exception {
+    void testCyclicProjects() throws Exception {
         CollectRequest request = new CollectRequest(newDep("test:a:2"), singletonList(repository));
         collector = setupCollector(newReader("versionless-cycle/"));
         CollectResult result = collector.collectDependencies(session, request);
@@ -271,7 +271,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicProjects_ConsiderLabelOfRootlessGraph() throws Exception {
+    void testCyclicProjects_ConsiderLabelOfRootlessGraph() throws Exception {
         Dependency dep = newDep("gid:aid:ver", "compile");
         CollectRequest request = new CollectRequest()
                 .addDependency(dep)
@@ -295,7 +295,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testPartialResultOnError() throws IOException {
+    void testPartialResultOnError() throws IOException {
         DependencyNode root = parser.parseResource("expectedPartialSubtreeOnError.txt");
 
         Dependency dependency = root.getDependency();
@@ -319,7 +319,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCollectMultipleDependencies() throws DependencyCollectionException {
+    void testCollectMultipleDependencies() throws DependencyCollectionException {
         Dependency root1 = newDep("gid:aid:ext:ver", "compile");
         Dependency root2 = newDep("gid:aid2:ext:ver", "compile");
         List<Dependency> dependencies = Arrays.asList(root1, root2);
@@ -338,7 +338,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testArtifactDescriptorResolutionNotRestrictedToRepoHostingSelectedVersion() throws Exception {
+    void testArtifactDescriptorResolutionNotRestrictedToRepoHostingSelectedVersion() throws Exception {
         RemoteRepository repo2 = new RemoteRepository.Builder("test", "default", "file:///").build();
 
         final List<RemoteRepository> repos = new ArrayList<>();
@@ -363,7 +363,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testManagedVersionScope() throws DependencyCollectionException {
+    void testManagedVersionScope() throws DependencyCollectionException {
         Dependency dependency = newDep("managed:aid:ext:ver");
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
 
@@ -388,7 +388,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement() throws IOException, DependencyCollectionException {
+    void testDependencyManagement() throws IOException, DependencyCollectionException {
         collector = setupCollector(newReader("managed/"));
 
         DependencyNode root = parser.parseResource("expectedSubtreeComparisonResult.txt");
@@ -412,7 +412,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_VerboseMode() throws Exception {
+    void testDependencyManagement_VerboseMode() throws Exception {
         String depId = "gid:aid2:ext";
         TestDependencyManager depMgmt = new TestDependencyManager();
         depMgmt.version(depId, "managedVersion");
@@ -439,8 +439,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_TransitiveDependencyManager()
-            throws DependencyCollectionException, IOException {
+    void testDependencyManagement_TransitiveDependencyManager() throws DependencyCollectionException, IOException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new TransitiveDependencyManager());
@@ -466,7 +465,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_DefaultDependencyManager() throws DependencyCollectionException, IOException {
+    void testDependencyManagement_DefaultDependencyManager() throws DependencyCollectionException, IOException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new DefaultDependencyManager());
@@ -493,7 +492,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testTransitiveDepsUseRangesDirtyTree() throws DependencyCollectionException, IOException {
+    void testTransitiveDepsUseRangesDirtyTree() throws DependencyCollectionException, IOException {
         // Note: DF depends on version order (ultimately the order of versions as returned by VersionRangeResolver
         // that in case of Maven, means order as in maven-metadata.xml
         // BF on the other hand explicitly sorts versions from range in descending order
@@ -510,7 +509,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     protected abstract String getTransitiveDepsUseRangesDirtyTreeResource();
 
     @Test
-    public void testTransitiveDepsUseRangesAndRelocationDirtyTree() throws DependencyCollectionException, IOException {
+    void testTransitiveDepsUseRangesAndRelocationDirtyTree() throws DependencyCollectionException, IOException {
         // Note: DF depends on version order (ultimately the order of versions as returned by VersionRangeResolver
         // that in case of Maven, means order as in maven-metadata.xml
         // BF on the other hand explicitly sorts versions from range in descending order
@@ -543,7 +542,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testVersionFilter() throws Exception {
+    void testVersionFilter() throws Exception {
         session.setVersionFilter(new HighestVersionFilter());
         CollectRequest request = new CollectRequest().setRoot(newDep("gid:aid:1"));
         CollectResult result = collector.collectDependencies(session, request);
@@ -551,7 +550,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDescriptorDependenciesEmpty() throws Exception {
+    void testDescriptorDependenciesEmpty() throws Exception {
         collector = setupCollector(newReader("dependencies-empty/"));
 
         session.setDependencyGraphTransformer(new ConflictResolver(

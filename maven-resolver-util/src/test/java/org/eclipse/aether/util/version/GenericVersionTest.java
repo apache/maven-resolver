@@ -40,12 +40,12 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testEmptyVersion() {
+    void testEmptyVersion() {
         assertOrder(X_EQ_Y, "0", "");
     }
 
     @Test
-    public void testNumericOrdering() {
+    void testNumericOrdering() {
         assertOrder(X_LT_Y, "2", "10");
         assertOrder(X_LT_Y, "1.2", "1.10");
         assertOrder(X_LT_Y, "1.0.2", "1.0.10");
@@ -55,14 +55,14 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testDelimiters() {
+    void testDelimiters() {
         assertOrder(X_EQ_Y, "1.0", "1-0");
         assertOrder(X_EQ_Y, "1.0", "1_0");
         assertOrder(X_EQ_Y, "1.a", "1a");
     }
 
     @Test
-    public void testLeadingZerosAreSemanticallyIrrelevant() {
+    void testLeadingZerosAreSemanticallyIrrelevant() {
         assertOrder(X_EQ_Y, "1", "01");
         assertOrder(X_EQ_Y, "1.2", "1.002");
         assertOrder(X_EQ_Y, "1.2.3", "1.2.0003");
@@ -70,7 +70,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testTrailingZerosAreSemanticallyIrrelevant() {
+    void testTrailingZerosAreSemanticallyIrrelevant() {
         assertOrder(X_EQ_Y, "1", "1.0.0.0.0.0.0.0.0.0.0.0.0.0");
         assertOrder(X_EQ_Y, "1", "1-0-0-0-0-0-0-0-0-0-0-0-0-0");
         assertOrder(X_EQ_Y, "1", "1.0-0.0-0.0-0.0-0.0-0.0-0.0");
@@ -79,7 +79,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testTrailingZerosBeforeQualifierAreSemanticallyIrrelevant() {
+    void testTrailingZerosBeforeQualifierAreSemanticallyIrrelevant() {
         assertOrder(X_EQ_Y, "1.0-ga", "1.0.0-ga");
         assertOrder(X_EQ_Y, "1.0.ga", "1.0.0.ga");
         assertOrder(X_EQ_Y, "1.0ga", "1.0.0ga");
@@ -97,7 +97,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testTrailingDelimitersAreSemanticallyIrrelevant() {
+    void testTrailingDelimitersAreSemanticallyIrrelevant() {
         assertOrder(X_EQ_Y, "1", "1.............");
         assertOrder(X_EQ_Y, "1", "1-------------");
         assertOrder(X_EQ_Y, "1.0", "1.............");
@@ -105,7 +105,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testInitialDelimiters() {
+    void testInitialDelimiters() {
         assertOrder(X_EQ_Y, "0.1", ".1");
         assertOrder(X_EQ_Y, "0.0.1", "..1");
         assertOrder(X_EQ_Y, "0.1", "-1");
@@ -113,7 +113,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testConsecutiveDelimiters() {
+    void testConsecutiveDelimiters() {
         assertOrder(X_EQ_Y, "1.0.1", "1..1");
         assertOrder(X_EQ_Y, "1.0.0.1", "1...1");
         assertOrder(X_EQ_Y, "1.0.1", "1--1");
@@ -121,17 +121,17 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testUnlimitedNumberOfVersionComponents() {
+    void testUnlimitedNumberOfVersionComponents() {
         assertOrder(X_GT_Y, "1.0.1.2.3.4.5.6.7.8.9.0.1.2.10", "1.0.1.2.3.4.5.6.7.8.9.0.1.2.3");
     }
 
     @Test
-    public void testUnlimitedNumberOfDigitsInNumericComponent() {
+    void testUnlimitedNumberOfDigitsInNumericComponent() {
         assertOrder(X_GT_Y, "1.1234567890123456789012345678901", "1.123456789012345678901234567891");
     }
 
     @Test
-    public void testTransitionFromDigitToLetterAndViceVersaIsEqualivantToDelimiter() {
+    void testTransitionFromDigitToLetterAndViceVersaIsEqualivantToDelimiter() {
         assertOrder(X_EQ_Y, "1alpha10", "1.alpha.10");
         assertOrder(X_EQ_Y, "1alpha10", "1-alpha-10");
 
@@ -140,7 +140,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testWellKnownQualifierOrdering() {
+    void testWellKnownQualifierOrdering() {
         assertOrder(X_EQ_Y, "1-alpha1", "1-a1");
         assertOrder(X_LT_Y, "1-alpha", "1-beta");
         assertOrder(X_EQ_Y, "1-beta1", "1-b1");
@@ -168,7 +168,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testWellKnownQualifierVersusUnknownQualifierOrdering() {
+    void testWellKnownQualifierVersusUnknownQualifierOrdering() {
         assertOrder(X_GT_Y, "1-abc", "1-alpha");
         assertOrder(X_GT_Y, "1-abc", "1-beta");
         assertOrder(X_GT_Y, "1-abc", "1-milestone");
@@ -179,7 +179,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testWellKnownSingleCharQualifiersOnlyRecognizedIfImmediatelyFollowedByNumber() {
+    void testWellKnownSingleCharQualifiersOnlyRecognizedIfImmediatelyFollowedByNumber() {
         assertOrder(X_GT_Y, "1.0a", "1.0");
         assertOrder(X_GT_Y, "1.0-a", "1.0");
         assertOrder(X_GT_Y, "1.0.a", "1.0");
@@ -209,14 +209,14 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testUnknownQualifierOrdering() {
+    void testUnknownQualifierOrdering() {
         assertOrder(X_LT_Y, "1-abc", "1-abcd");
         assertOrder(X_LT_Y, "1-abc", "1-bcd");
         assertOrder(X_GT_Y, "1-abc", "1-aac");
     }
 
     @Test
-    public void testCaseInsensitiveOrderingOfQualifiers() {
+    void testCaseInsensitiveOrderingOfQualifiers() {
         assertOrder(X_EQ_Y, "1.alpha", "1.ALPHA");
         assertOrder(X_EQ_Y, "1.alpha", "1.Alpha");
 
@@ -249,7 +249,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testCaseInsensitiveOrderingOfQualifiersIsLocaleIndependent() {
+    void testCaseInsensitiveOrderingOfQualifiersIsLocaleIndependent() {
         Locale orig = Locale.getDefault();
         try {
             Locale[] locales = {Locale.ENGLISH, new Locale("tr")};
@@ -263,7 +263,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testQualifierVersusNumberOrdering() {
+    void testQualifierVersusNumberOrdering() {
         assertOrder(X_LT_Y, "1-ga", "1-1");
         assertOrder(X_LT_Y, "1.ga", "1.1");
         assertOrder(X_EQ_Y, "1-ga", "1.0");
@@ -283,7 +283,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testVersionEvolution() {
+    void testVersionEvolution() {
         assertSequence(
                 "0.9.9-SNAPSHOT",
                 "0.9.9",
@@ -319,7 +319,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testMinimumSegment() {
+    void testMinimumSegment() {
         assertOrder(X_LT_Y, "1.min", "1.0-alpha-1");
         assertOrder(X_LT_Y, "1.min", "1.0-SNAPSHOT");
         assertOrder(X_LT_Y, "1.min", "1.0");
@@ -332,7 +332,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    public void testMaximumSegment() {
+    void testMaximumSegment() {
         assertOrder(X_GT_Y, "1.max", "1.0-alpha-1");
         assertOrder(X_GT_Y, "1.max", "1.0-SNAPSHOT");
         assertOrder(X_GT_Y, "1.max", "1.0");
@@ -352,7 +352,7 @@ public class GenericVersionTest extends AbstractVersionTest {
      * the failed array, so we can investigate more.
      */
     @Test
-    public void testCompareUuidRandom() {
+    void testCompareUuidRandom() {
         for (int j = 0; j < 32; j++) {
             ArrayList<Version> versions = new ArrayList<>();
             for (int i = 0; i < 64; i++) {
@@ -375,7 +375,7 @@ public class GenericVersionTest extends AbstractVersionTest {
      * Works on known set that failed before fix, provided by {@link #uuidVersionStringStream()}.
      */
     @Test
-    public void testCompareUuidVersionStringStream() {
+    void testCompareUuidVersionStringStream() {
         // this operation below fails with IAEx if comparison is unstable
         uuidVersionStringStream().map(this::newVersion).sorted().collect(toList());
     }

@@ -68,7 +68,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     private TrustedChecksumsSource.Writer trustedChecksumsWriter;
 
     @BeforeEach
-    public void prepareSubject() throws IOException {
+    void prepareSubject() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         // make the two artifacts, BOTH as resolved
         File tmp = Files.createTempFile("artifact", "tmp").toFile();
@@ -138,7 +138,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     // UTs below
 
     @Test
-    public void haveMatchingChecksumPass() {
+    void haveMatchingChecksumPass() {
         ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
         assertTrue(artifactResult.isResolved());
 
@@ -147,7 +147,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     }
 
     @Test
-    public void haveNoChecksumPass() {
+    void haveNoChecksumPass() {
         ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum);
         assertTrue(artifactResult.isResolved());
 
@@ -156,7 +156,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     }
 
     @Test
-    public void haveNoChecksumFailIfMissingEnabledFail() {
+    void haveNoChecksumFailIfMissingEnabledFail() {
         session.setConfigProperty(
                 "aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing", Boolean.TRUE.toString());
         ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum);
@@ -173,7 +173,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     }
 
     @Test
-    public void haveMismatchingChecksumFail() {
+    void haveMismatchingChecksumFail() {
         artifactTrustedChecksum = "foobar";
         ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
         assertTrue(artifactResult.isResolved());
@@ -190,7 +190,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     }
 
     @Test
-    public void recordCalculatedChecksum() {
+    void recordCalculatedChecksum() {
         AtomicReference<String> recordedChecksum = new AtomicReference<>(null);
         this.trustedChecksumsWriter = new Writer() {
             @Override

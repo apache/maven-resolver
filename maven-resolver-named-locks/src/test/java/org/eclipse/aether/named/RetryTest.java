@@ -33,7 +33,7 @@ public class RetryTest {
     private static final long RETRY_SLEEP_MILLIS = 250L;
 
     @Test
-    public void happy() throws InterruptedException {
+    void happy() throws InterruptedException {
         LongAdder retries = new LongAdder();
         String result = retry(
                 1L,
@@ -50,7 +50,7 @@ public class RetryTest {
     }
 
     @Test
-    public void notHappy() throws InterruptedException {
+    void notHappy() throws InterruptedException {
         LongAdder retries = new LongAdder();
         String result = retry(
                 1L,
@@ -67,7 +67,7 @@ public class RetryTest {
     }
 
     @Test
-    public void happyAfterSomeTime() throws InterruptedException {
+    void happyAfterSomeTime() throws InterruptedException {
         LongAdder retries = new LongAdder();
         String result = retry(
                 1L,
@@ -84,7 +84,7 @@ public class RetryTest {
     }
 
     @Test
-    public void happyFirstAttempt() throws InterruptedException {
+    void happyFirstAttempt() throws InterruptedException {
         LongAdder retries = new LongAdder();
         String result = retry(
                 5,
@@ -100,7 +100,7 @@ public class RetryTest {
     }
 
     @Test
-    public void notHappyAnyAttempt() throws InterruptedException {
+    void notHappyAnyAttempt() throws InterruptedException {
         LongAdder retries = new LongAdder();
         String result = retry(
                 5,
@@ -116,7 +116,7 @@ public class RetryTest {
     }
 
     @Test
-    public void happyAfterSomeAttempt() throws InterruptedException {
+    void happyAfterSomeAttempt() throws InterruptedException {
         LongAdder retries = new LongAdder();
         String result = retry(
                 5,

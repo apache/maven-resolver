@@ -40,7 +40,7 @@ public abstract class NameMapperTestSupport {
     protected RepositorySystemSession session;
 
     @BeforeEach
-    public void before() throws IOException {
+    void before() throws IOException {
         basedir = new File("/home/maven/.m2/repository").getCanonicalPath();
         configProperties = new HashMap<>();
 

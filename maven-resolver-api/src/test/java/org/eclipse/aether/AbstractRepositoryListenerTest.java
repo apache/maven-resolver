@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AbstractRepositoryListenerTest {
 
     @Test
-    public void testAllEventTypesHandled() throws Exception {
+    void testAllEventTypesHandled() throws Exception {
         for (Method method : RepositoryListener.class.getMethods()) {
             assertNotNull(
                     AbstractRepositoryListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));

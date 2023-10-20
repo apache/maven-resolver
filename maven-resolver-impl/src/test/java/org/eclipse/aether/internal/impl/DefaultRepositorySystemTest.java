@@ -50,7 +50,7 @@ public class DefaultRepositorySystemTest {
     private DefaultRepositorySystemSession session;
 
     @BeforeEach
-    public void init() {
+    void init() {
         system = new DefaultRepositorySystem(
                 new StubVersionResolver(),
                 new StubVersionRangeResolver(),
@@ -69,7 +69,7 @@ public class DefaultRepositorySystemTest {
     }
 
     @Test
-    public void testNewResolutionRepositories() {
+    void testNewResolutionRepositories() {
         Proxy proxy = new Proxy("http", "localhost", 8080);
         DefaultProxySelector proxySelector = new DefaultProxySelector();
         proxySelector.add(proxy, null);
@@ -104,7 +104,7 @@ public class DefaultRepositorySystemTest {
     }
 
     @Test
-    public void testNewDeploymentRepository() {
+    void testNewDeploymentRepository() {
         Proxy proxy = new Proxy("http", "localhost", 8080);
         DefaultProxySelector proxySelector = new DefaultProxySelector();
         proxySelector.add(proxy, null);

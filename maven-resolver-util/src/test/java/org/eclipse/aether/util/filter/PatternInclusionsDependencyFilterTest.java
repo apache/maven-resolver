@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFilterTest {
 
     @Test
-    public void acceptTestCornerCases() {
+    void acceptTestCornerCases() {
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId("testArtifact");
         DependencyNode node = builder.build();
@@ -46,7 +46,7 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
     }
 
     @Test
-    public void acceptTestMatches() {
+    void acceptTestMatches() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -89,7 +89,7 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
     }
 
     @Test
-    public void acceptTestLessToken() {
+    void acceptTestLessToken() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -105,7 +105,7 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
     }
 
     @Test
-    public void acceptTestMissmatch() {
+    void acceptTestMissmatch() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -128,7 +128,7 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
     }
 
     @Test
-    public void acceptTestMoreToken() {
+    void acceptTestMoreToken() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -142,7 +142,7 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
     }
 
     @Test
-    public void acceptTestRange() {
+    void acceptTestRange() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")

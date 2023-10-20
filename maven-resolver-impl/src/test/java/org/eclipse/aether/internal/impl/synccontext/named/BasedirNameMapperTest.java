@@ -38,7 +38,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     BasedirNameMapper mapper = new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
 
     @Test
-    public void nullsAndEmptyInputs() {
+    void nullsAndEmptyInputs() {
         Collection<String> names;
 
         names = mapper.nameLocks(session, null, null);
@@ -55,7 +55,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void defaultLocksDir() {
+    void defaultLocksDir() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", null);
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
@@ -66,7 +66,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void relativeLocksDir() {
+    void relativeLocksDir() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", "my/locks");
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
@@ -78,7 +78,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void absoluteLocksDir() throws IOException {
+    void absoluteLocksDir() throws IOException {
         String absoluteLocksDir = "/my/locks";
         String customBaseDir = new File(absoluteLocksDir).getCanonicalPath();
 
@@ -91,7 +91,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleArtifact() {
+    void singleArtifact() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
@@ -102,7 +102,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleMetadata() {
+    void singleMetadata() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultMetadata metadata =
@@ -114,7 +114,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void oneAndOne() {
+    void oneAndOne() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");

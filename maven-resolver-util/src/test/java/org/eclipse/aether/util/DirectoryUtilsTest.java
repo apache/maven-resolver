@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DirectoryUtilsTest {
     @Test
-    public void expectedCasesRelative(TestInfo testInfo) throws IOException {
+    void expectedCasesRelative(TestInfo testInfo) throws IOException {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
@@ -50,7 +50,7 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    public void expectedCasesAbsolute(TestInfo testInfo) throws IOException {
+    void expectedCasesAbsolute(TestInfo testInfo) throws IOException {
         // TODO: this test is skipped on Windows, as it is not clear which drive letter will `new File("/foo")`
         // path get. According to Windows (and  assuming Java Path does separator change OK), "\foo" file should
         // get resolved to CWD drive + "\foo" path, but seems Java 17 is different from 11 and 8 in this respect.
@@ -75,7 +75,7 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    public void existsButIsADirectory(TestInfo testInfo) throws IOException {
+    void existsButIsADirectory(TestInfo testInfo) throws IOException {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
@@ -86,7 +86,7 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    public void existsButNotADirectory(TestInfo testInfo) throws IOException {
+    void existsButNotADirectory(TestInfo testInfo) throws IOException {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
@@ -100,7 +100,7 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    public void notExistsAndIsCreated(TestInfo testInfo) throws IOException {
+    void notExistsAndIsCreated(TestInfo testInfo) throws IOException {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 

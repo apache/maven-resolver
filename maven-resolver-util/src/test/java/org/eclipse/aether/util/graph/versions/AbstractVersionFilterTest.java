@@ -41,12 +41,12 @@ public abstract class AbstractVersionFilterTest {
     protected DefaultRepositorySystemSession session;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         session = TestUtils.newSession();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         session = null;
     }
 

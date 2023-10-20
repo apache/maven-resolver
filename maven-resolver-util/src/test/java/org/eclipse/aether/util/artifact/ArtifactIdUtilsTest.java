@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ArtifactIdUtilsTest {
 
     @Test
-    public void testToIdArtifact() {
+    void testToIdArtifact() {
         Artifact artifact = null;
         assertSame(null, ArtifactIdUtils.toId(artifact));
 
@@ -41,7 +41,7 @@ public class ArtifactIdUtilsTest {
     }
 
     @Test
-    public void testToIdStrings() {
+    void testToIdStrings() {
         assertEquals(":::", ArtifactIdUtils.toId(null, null, null, null, null));
 
         assertEquals("gid:aid:ext:1", ArtifactIdUtils.toId("gid", "aid", "ext", "", "1"));
@@ -50,7 +50,7 @@ public class ArtifactIdUtilsTest {
     }
 
     @Test
-    public void testToBaseIdArtifact() {
+    void testToBaseIdArtifact() {
         Artifact artifact = null;
         assertSame(null, ArtifactIdUtils.toBaseId(artifact));
 
@@ -62,7 +62,7 @@ public class ArtifactIdUtilsTest {
     }
 
     @Test
-    public void testToVersionlessIdArtifact() {
+    void testToVersionlessIdArtifact() {
         Artifact artifact = null;
         assertSame(null, ArtifactIdUtils.toId(artifact));
 
@@ -74,7 +74,7 @@ public class ArtifactIdUtilsTest {
     }
 
     @Test
-    public void testToVersionlessIdStrings() {
+    void testToVersionlessIdStrings() {
         assertEquals("::", ArtifactIdUtils.toVersionlessId(null, null, null, null));
 
         assertEquals("gid:aid:ext", ArtifactIdUtils.toVersionlessId("gid", "aid", "ext", ""));
@@ -83,7 +83,7 @@ public class ArtifactIdUtilsTest {
     }
 
     @Test
-    public void testEqualsId() {
+    void testEqualsId() {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
         assertFalse(ArtifactIdUtils.equalsId(artifact1, artifact2));
@@ -117,7 +117,7 @@ public class ArtifactIdUtilsTest {
     }
 
     @Test
-    public void testEqualsBaseId() {
+    void testEqualsBaseId() {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
         assertFalse(ArtifactIdUtils.equalsBaseId(artifact1, artifact2));
@@ -155,7 +155,7 @@ public class ArtifactIdUtilsTest {
     }
 
     @Test
-    public void testEqualsVersionlessId() {
+    void testEqualsVersionlessId() {
         Artifact artifact1 = null;
         Artifact artifact2 = null;
         assertFalse(ArtifactIdUtils.equalsVersionlessId(artifact1, artifact2));

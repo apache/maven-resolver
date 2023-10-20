@@ -37,7 +37,7 @@ public class PlexusSupportTest {
     private TransporterFactory factory;
 
     @Test
-    public void testExistenceOfPlexusComponentMetadata() {
+    void testExistenceOfPlexusComponentMetadata() {
         assertNotNull(factory);
         assertEquals(WagonTransporterFactory.class, factory.getClass());
     }

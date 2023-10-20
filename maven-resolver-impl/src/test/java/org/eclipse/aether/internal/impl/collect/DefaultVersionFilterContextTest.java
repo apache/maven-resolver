@@ -39,7 +39,7 @@ public class DefaultVersionFilterContextTest {
     private static final Dependency BAR_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:bar:1.0"), "test");
 
     @Test
-    public void iteratorOneItem() {
+    void iteratorOneItem() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -51,7 +51,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void getCountOneItem() {
+    void getCountOneItem() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -61,7 +61,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void getOneItem() {
+    void getOneItem() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -71,7 +71,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void iteratorDelete() {
+    void iteratorDelete() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -85,7 +85,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void nextBeyondEnd() {
+    void nextBeyondEnd() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -97,7 +97,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void removeOneOfOne() {
+    void removeOneOfOne() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -111,7 +111,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void removeOneOfTwo() {
+    void removeOneOfTwo() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -126,7 +126,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void removeOneOfThree() {
+    void removeOneOfThree() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
@@ -142,7 +142,7 @@ public class DefaultVersionFilterContextTest {
     }
 
     @Test
-    public void setTwice() {
+    void setTwice() {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
         VersionRangeResult fooResult = new VersionRangeResult(new VersionRangeRequest());
         fooResult.addVersion(new TestVersion("1.0"));

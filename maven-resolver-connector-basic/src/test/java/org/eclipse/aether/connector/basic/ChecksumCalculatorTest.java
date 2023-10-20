@@ -56,12 +56,12 @@ public class ChecksumCalculatorTest {
     }
 
     @BeforeEach
-    public void init() throws Exception {
+    void init() throws Exception {
         file = TestFileUtils.createTempFile("Hello World!");
     }
 
     @Test
-    public void testNoOffset() {
+    void testNoOffset() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(0);
         calculator.update(toBuffer("Hello World!"));
@@ -77,7 +77,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testWithOffset() {
+    void testWithOffset() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(6);
         calculator.update(toBuffer("World!"));
@@ -93,7 +93,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testWithExcessiveOffset() {
+    void testWithExcessiveOffset() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(100);
         calculator.update(toBuffer("World!"));
@@ -107,14 +107,14 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testUnknownAlgorithm() {
+    void testUnknownAlgorithm() {
         // resolver now does not tolerate unknown checksums: as they may be set by user only, it is user
         // misconfiguration
         assertThrows(IllegalArgumentException.class, () -> newCalculator("unknown", SHA1));
     }
 
     @Test
-    public void testNoInitCall() {
+    void testNoInitCall() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.update(toBuffer("Hello World!"));
         Map<String, Object> digests = calculator.get();
@@ -129,7 +129,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testRestart() {
+    void testRestart() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(0);
         calculator.update(toBuffer("Ignored"));
@@ -147,7 +147,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testRestartAfterError() {
+    void testRestartAfterError() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(100);
         calculator.init(0);

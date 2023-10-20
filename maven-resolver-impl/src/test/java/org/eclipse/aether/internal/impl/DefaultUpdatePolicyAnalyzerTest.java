@@ -38,7 +38,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
     private DefaultRepositorySystemSession session;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         analyzer = new DefaultUpdatePolicyAnalyzer();
         session = TestUtils.newSession();
     }
@@ -48,7 +48,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyNever() {
+    void testIsUpdateRequired_PolicyNever() {
         String policy = RepositoryPolicy.UPDATE_POLICY_NEVER;
         assertFalse(analyzer.isUpdatedRequired(session, Long.MIN_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, Long.MAX_VALUE, policy));
@@ -58,7 +58,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyAlways() {
+    void testIsUpdateRequired_PolicyAlways() {
         String policy = RepositoryPolicy.UPDATE_POLICY_ALWAYS;
         assertTrue(analyzer.isUpdatedRequired(session, Long.MIN_VALUE, policy));
         assertTrue(analyzer.isUpdatedRequired(session, Long.MAX_VALUE, policy));
@@ -68,7 +68,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyDaily() {
+    void testIsUpdateRequired_PolicyDaily() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
@@ -85,7 +85,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyInterval() {
+    void testIsUpdateRequired_PolicyInterval() {
         String policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":5";
         assertTrue(analyzer.isUpdatedRequired(session, Long.MIN_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, Long.MAX_VALUE, policy));
@@ -99,7 +99,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testEffectivePolicy() {
+    void testEffectivePolicy() {
         assertEquals(
                 UPDATE_POLICY_ALWAYS,
                 analyzer.getEffectiveUpdatePolicy(session, UPDATE_POLICY_ALWAYS, UPDATE_POLICY_DAILY));

@@ -34,7 +34,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
     HashingNameMapper mapper = new HashingNameMapper(GAVNameMapper.gav());
 
     @Test
-    public void nullsAndEmptyInputs() {
+    void nullsAndEmptyInputs() {
         Collection<String> names;
 
         names = mapper.nameLocks(session, null, null);
@@ -51,7 +51,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleArtifact_depth0() {
+    void singleArtifact_depth0() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
@@ -60,7 +60,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleMetadata_depth0() {
+    void singleMetadata_depth0() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
@@ -70,7 +70,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void oneAndOne_depth0() {
+    void oneAndOne_depth0() {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
         DefaultMetadata metadata =
@@ -86,7 +86,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleArtifact_depth2() {
+    void singleArtifact_depth2() {
         configProperties.put("aether.syncContext.named.hashing.depth", "2");
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
@@ -96,7 +96,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void singleMetadata_depth2() {
+    void singleMetadata_depth2() {
         configProperties.put("aether.syncContext.named.hashing.depth", "2");
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
@@ -107,7 +107,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    public void oneAndOne_depth2() {
+    void oneAndOne_depth2() {
         configProperties.put("aether.syncContext.named.hashing.depth", "2");
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
         DefaultMetadata metadata =

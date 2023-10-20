@@ -45,7 +45,7 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
     private RemoteRepositoryFilterSource subject;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         remoteRepository = new RemoteRepository.Builder("test", "default", "https://irrelevant.com").build();
         session = TestUtils.newSession();
         subject = getRemoteRepositoryFilterSource(session, remoteRepository);
@@ -60,13 +60,13 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository, Artifact artifact);
 
     @Test
-    public void notEnabled() {
+    void notEnabled() {
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNull(filter);
     }
 
     @Test
-    public void acceptedArtifact() {
+    void acceptedArtifact() {
         allowArtifact(session, remoteRepository, acceptedArtifact);
         enableSource(session);
 
@@ -80,7 +80,7 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
     }
 
     @Test
-    public void notAcceptedArtifact() {
+    void notAcceptedArtifact() {
         allowArtifact(session, remoteRepository, acceptedArtifact);
         enableSource(session);
 

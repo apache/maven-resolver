@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ExclusionDependencyFilterTest {
 
     @Test
-    public void acceptTest() {
+    void acceptTest() {
 
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test").artifactId("testArtifact");

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ScopeDependencyFilterTest extends AbstractDependencyFilterTest {
 
     @Test
-    public void acceptTest() {
+    void acceptTest() {
 
         NodeBuilder builder = new NodeBuilder();
         builder.scope("compile").artifactId("test");

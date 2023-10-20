@@ -69,7 +69,7 @@ public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDel
     }
 
     @Test
-    public void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
+    void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new TransitiveDependencyManager());

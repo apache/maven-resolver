@@ -79,7 +79,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testScopeInheritanceProvided() throws Exception {
+    void testScopeInheritanceProvided() throws Exception {
         String resource = "inheritance.txt";
 
         String expected = "test";
@@ -88,7 +88,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testConflictWinningScopeGetsUsedForInheritance() throws Exception {
+    void testConflictWinningScopeGetsUsedForInheritance() throws Exception {
         DependencyNode root = parseResource("conflict-and-inheritance.txt");
         assertSame(root, transform(root));
 
@@ -97,7 +97,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testScopeOfDirectDependencyWinsConflictAndGetsUsedForInheritanceToChildrenEverywhereInGraph()
+    void testScopeOfDirectDependencyWinsConflictAndGetsUsedForInheritanceToChildrenEverywhereInGraph()
             throws Exception {
         DependencyNode root = parseResource("direct-with-conflict-and-inheritance.txt");
         assertSame(root, transform(root));
@@ -106,7 +106,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testCycleA() throws Exception {
+    void testCycleA() throws Exception {
         DependencyNode root = parseResource("cycle-a.txt");
         assertSame(root, transform(root));
 
@@ -115,7 +115,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testCycleB() throws Exception {
+    void testCycleB() throws Exception {
         DependencyNode root = parseResource("cycle-b.txt");
         assertSame(root, transform(root));
 
@@ -124,7 +124,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testCycleC() throws Exception {
+    void testCycleC() throws Exception {
         DependencyNode root = parseResource("cycle-c.txt");
         assertSame(root, transform(root));
 
@@ -135,7 +135,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testCycleD() throws Exception {
+    void testCycleD() throws Exception {
         DependencyNode root = parseResource("cycle-d.txt");
         assertSame(root, transform(root));
 
@@ -144,7 +144,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testDirectNodesAlwaysWin() throws Exception {
+    void testDirectNodesAlwaysWin() throws Exception {
 
         for (Scope directScope : Scope.values()) {
             String direct = directScope.toString();
@@ -161,7 +161,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testNonDirectMultipleInheritance() throws Exception {
+    void testNonDirectMultipleInheritance() throws Exception {
         for (Scope scope1 : Scope.values()) {
             for (Scope scope2 : Scope.values()) {
                 DependencyNode root = parseResource("multiple-inheritance.txt", scope1.toString(), scope2.toString());
@@ -178,7 +178,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     }
 
     @Test
-    public void testConflictScopeOrdering() throws Exception {
+    void testConflictScopeOrdering() throws Exception {
         for (Scope scope1 : Scope.values()) {
             for (Scope scope2 : Scope.values()) {
                 DependencyNode root = parseResource("dueling-scopes.txt", scope1.toString(), scope2.toString());
@@ -198,7 +198,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
      * obscure case (illegal maven POM).
      */
     @Test
-    public void testConflictingDirectNodes() throws Exception {
+    void testConflictingDirectNodes() throws Exception {
         for (Scope scope1 : Scope.values()) {
             for (Scope scope2 : Scope.values()) {
                 DependencyNode root =

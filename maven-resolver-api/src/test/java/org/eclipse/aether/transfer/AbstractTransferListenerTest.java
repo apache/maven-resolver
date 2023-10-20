@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AbstractTransferListenerTest {
 
     @Test
-    public void testAllEventTypesHandled() throws Exception {
+    void testAllEventTypesHandled() throws Exception {
         for (Method method : TransferListener.class.getMethods()) {
             assertNotNull(
                     AbstractTransferListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));

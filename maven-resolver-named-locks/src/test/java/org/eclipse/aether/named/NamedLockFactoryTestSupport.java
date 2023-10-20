@@ -40,7 +40,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void testFailure(TestInfo testInfo) throws InterruptedException {
+    void testFailure(TestInfo testInfo) throws InterruptedException {
         // note: set system property "aether.named.diagnostic.enabled" to "true" to have log output
         // this test does NOT assert its presence, only the proper flow
         assertThrows(IllegalStateException.class, () -> {
@@ -70,7 +70,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void refCounting(TestInfo testInfo) {
+    void refCounting(TestInfo testInfo) {
         final String name = lockName(testInfo);
         try (NamedLock one = namedLockFactory.getLock(name);
                 NamedLock two = namedLockFactory.getLock(name)) {
@@ -85,7 +85,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void unlockWoLock(TestInfo testInfo) {
+    void unlockWoLock(TestInfo testInfo) {
         assertThrows(IllegalStateException.class, () -> {
             final String name = lockName(testInfo);
             try (NamedLock one = namedLockFactory.getLock(name)) {
@@ -95,7 +95,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void wwBoxing(TestInfo testInfo) throws InterruptedException {
+    void wwBoxing(TestInfo testInfo) throws InterruptedException {
         final String name = lockName(testInfo);
         try (NamedLock one = namedLockFactory.getLock(name)) {
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
@@ -106,7 +106,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void rrBoxing(TestInfo testInfo) throws InterruptedException {
+    void rrBoxing(TestInfo testInfo) throws InterruptedException {
         final String name = lockName(testInfo);
         try (NamedLock one = namedLockFactory.getLock(name)) {
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
@@ -117,7 +117,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void wrBoxing(TestInfo testInfo) throws InterruptedException {
+    void wrBoxing(TestInfo testInfo) throws InterruptedException {
         final String name = lockName(testInfo);
         try (NamedLock one = namedLockFactory.getLock(name)) {
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
@@ -128,7 +128,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    public void rwBoxing(TestInfo testInfo) throws InterruptedException {
+    void rwBoxing(TestInfo testInfo) throws InterruptedException {
         final String name = lockName(testInfo);
         try (NamedLock one = namedLockFactory.getLock(name)) {
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));

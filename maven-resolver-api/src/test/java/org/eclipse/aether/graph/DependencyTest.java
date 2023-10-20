@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DependencyTest {
 
     @Test
-    public void testSetScope() {
+    void testSetScope() {
         Dependency d1 = new Dependency(new DefaultArtifact("gid:aid:ver"), "compile");
 
         Dependency d2 = d1.setScope(null);
@@ -44,7 +44,7 @@ public class DependencyTest {
     }
 
     @Test
-    public void testSetExclusions() {
+    void testSetExclusions() {
         Dependency d1 = new Dependency(
                 new DefaultArtifact("gid:aid:ver"),
                 "compile",

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ChainedVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test
-    public void testFilterVersions() throws Exception {
+    void testFilterVersions() throws Exception {
         VersionFilter filter =
                 ChainedVersionFilter.newInstance(new SnapshotVersionFilter(), new HighestVersionFilter());
         VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2", "3-SNAPSHOT");
@@ -40,7 +40,7 @@ public class ChainedVersionFilterTest extends AbstractVersionFilterTest {
     }
 
     @Test
-    public void testDeriveChildFilter() {
+    void testDeriveChildFilter() {
         VersionFilter filter1 = new HighestVersionFilter();
         VersionFilter filter2 = new VersionFilter() {
             public void filterVersions(VersionFilterContext context) {}
@@ -65,7 +65,7 @@ public class ChainedVersionFilterTest extends AbstractVersionFilterTest {
 
     @SuppressWarnings("EqualsWithItself")
     @Test
-    public void testEquals() {
+    void testEquals() {
         VersionFilter filter = ChainedVersionFilter.newInstance(new HighestVersionFilter());
         assertNotEquals(null, filter);
         assertEquals(filter, filter);

@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class OrDependencyFilterTest extends AbstractDependencyFilterTest {
 
     @Test
-    public void acceptTest() {
+    void acceptTest() {
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId("test");
         List<DependencyNode> parents = new LinkedList<>();

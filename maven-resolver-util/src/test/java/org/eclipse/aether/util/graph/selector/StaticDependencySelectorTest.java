@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StaticDependencySelectorTest {
     @Test
-    public void testToString() {
+    void testToString() {
         assertEquals("StaticDependencySelector(Select all)", new StaticDependencySelector(true).toString());
     }
 }

@@ -41,7 +41,7 @@ public class PreorderNodeListGeneratorTest {
     }
 
     @Test
-    public void testOrdering() throws Exception {
+    void testOrdering() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         PreorderNodeListGenerator visitor = new PreorderNodeListGenerator();
@@ -51,7 +51,7 @@ public class PreorderNodeListGeneratorTest {
     }
 
     @Test
-    public void testDuplicateSuppression() throws Exception {
+    void testDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         PreorderNodeListGenerator visitor = new PreorderNodeListGenerator();

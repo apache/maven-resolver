@@ -41,7 +41,7 @@ public class PostorderNodeListGeneratorTest {
     }
 
     @Test
-    public void testOrdering() throws Exception {
+    void testOrdering() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         PostorderNodeListGenerator visitor = new PostorderNodeListGenerator();
@@ -51,7 +51,7 @@ public class PostorderNodeListGeneratorTest {
     }
 
     @Test
-    public void testDuplicateSuppression() throws Exception {
+    void testDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         PostorderNodeListGenerator visitor = new PostorderNodeListGenerator();

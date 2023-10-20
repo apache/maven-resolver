@@ -32,7 +32,7 @@ public class TreeDependencyVisitorTest {
     }
 
     @Test
-    public void testDuplicateSuppression() throws Exception {
+    void testDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         RecordingVisitor rec = new RecordingVisitor();

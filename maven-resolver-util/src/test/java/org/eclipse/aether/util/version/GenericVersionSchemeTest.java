@@ -32,7 +32,7 @@ public class GenericVersionSchemeTest {
     private GenericVersionScheme scheme;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         scheme = new GenericVersionScheme();
     }
 
@@ -47,7 +47,7 @@ public class GenericVersionSchemeTest {
     }
 
     @Test
-    public void testEnumeratedVersions() throws InvalidVersionSpecificationException {
+    void testEnumeratedVersions() throws InvalidVersionSpecificationException {
         VersionConstraint c = scheme.parseVersionConstraint("1.0");
         assertEquals("1.0", c.getVersion().toString());
         assertTrue(c.containsVersion(new GenericVersion("1.0")));
@@ -88,14 +88,14 @@ public class GenericVersionSchemeTest {
     }
 
     @Test
-    public void testInvalid() {
+    void testInvalid() {
         parseInvalid("[1,");
         parseInvalid("[1,2],(3,");
         parseInvalid("[1,2],3");
     }
 
     @Test
-    public void testSameUpperAndLowerBound() throws InvalidVersionSpecificationException {
+    void testSameUpperAndLowerBound() throws InvalidVersionSpecificationException {
         VersionConstraint c = scheme.parseVersionConstraint("[1.0]");
         assertEquals("[1.0,1.0]", c.toString());
         VersionConstraint c2 = scheme.parseVersionConstraint(c.toString());

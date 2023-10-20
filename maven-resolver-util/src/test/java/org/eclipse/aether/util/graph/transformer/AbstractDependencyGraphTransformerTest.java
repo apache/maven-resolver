@@ -97,14 +97,14 @@ public abstract class AbstractDependencyGraphTransformerTest {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         transformer = newTransformer();
         parser = newParser();
         session = new DefaultRepositorySystemSession();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         transformer = null;
         parser = null;
         session = null;

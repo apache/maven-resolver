@@ -38,7 +38,7 @@ public class DataPoolTest {
     }
 
     @Test
-    public void testArtifactDescriptorCaching() {
+    void testArtifactDescriptorCaching() {
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
         request.setArtifact(new DefaultArtifact("gid:aid:1"));
         ArtifactDescriptorResult result = new ArtifactDescriptorResult(request);
@@ -63,7 +63,7 @@ public class DataPoolTest {
     }
 
     @Test
-    public void testConstraintKey() {
+    void testConstraintKey() {
         VersionRangeRequest request = new VersionRangeRequest();
         request.setRepositories(Collections.singletonList(
                 new RemoteRepository.Builder("some-id", "some-type", "http://www.example.com").build()));

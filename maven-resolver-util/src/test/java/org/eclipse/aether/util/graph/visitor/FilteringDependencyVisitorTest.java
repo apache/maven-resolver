@@ -35,7 +35,7 @@ public class FilteringDependencyVisitorTest {
     }
 
     @Test
-    public void testFilterCalledWithProperParentStack() throws Exception {
+    void testFilterCalledWithProperParentStack() throws Exception {
         DependencyNode root = parse("parents.txt");
 
         final StringBuilder buffer = new StringBuilder(256);

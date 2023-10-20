@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DefaultRepositorySystemSessionTest {
 
     @Test
-    public void testDefaultProxySelectorUsesExistingProxy() {
+    void testDefaultProxySelectorUsesExistingProxy() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
         RemoteRepository repo = new RemoteRepository.Builder("id", "default", "void").build();
@@ -48,7 +48,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testDefaultAuthenticationSelectorUsesExistingAuth() {
+    void testDefaultAuthenticationSelectorUsesExistingAuth() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
         RemoteRepository repo = new RemoteRepository.Builder("id", "default", "void").build();
@@ -64,7 +64,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testCopyConstructorCopiesPropertiesDeep() {
+    void testCopyConstructorCopiesPropertiesDeep() {
         DefaultRepositorySystemSession session1 = new DefaultRepositorySystemSession();
         session1.setUserProperties(System.getProperties());
         session1.setSystemProperties(System.getProperties());
@@ -81,7 +81,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testReadOnlyProperties() {
+    void testReadOnlyProperties() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
 
         try {
@@ -107,7 +107,7 @@ public class DefaultRepositorySystemSessionTest {
     }
 
     @Test
-    public void testCopyRepositorySystemSession() throws Exception {
+    void testCopyRepositorySystemSession() throws Exception {
         RepositorySystemSession session = Mockito.mock(RepositorySystemSession.class, Mockito.RETURNS_MOCKS);
 
         RepositorySystemSession newSession = new DefaultRepositorySystemSession(session);

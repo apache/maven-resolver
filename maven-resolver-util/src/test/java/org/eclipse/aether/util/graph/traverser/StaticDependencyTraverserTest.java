@@ -39,13 +39,13 @@ public class StaticDependencyTraverserTest {
     private DependencyCollectionContext context;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         session = TestUtils.newSession();
         context = TestUtils.newCollectionContext(session, null, Collections.emptyList());
     }
 
     @AfterEach
-    public void teardown() throws Exception {
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
@@ -54,7 +54,7 @@ public class StaticDependencyTraverserTest {
     }
 
     @Test
-    public void testTraverseDependency() {
+    void testTraverseDependency() {
         Dependency dependency = new Dependency(new DefaultArtifact("g:a:v:1"), "runtime");
         DependencyTraverser traverser = new StaticDependencyTraverser(true);
         assertTrue(traverser.traverseDependency(dependency));
@@ -63,13 +63,13 @@ public class StaticDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser() {
+    void testDeriveChildTraverser() {
         DependencyTraverser traverser = new StaticDependencyTraverser(true);
         assertSame(traverser, traverser.deriveChildTraverser(context));
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         DependencyTraverser traverser1 = new StaticDependencyTraverser(true);
         DependencyTraverser traverser2 = new StaticDependencyTraverser(true);
         DependencyTraverser traverser3 = new StaticDependencyTraverser(false);
@@ -81,7 +81,7 @@ public class StaticDependencyTraverserTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         DependencyTraverser traverser1 = new StaticDependencyTraverser(true);
         DependencyTraverser traverser2 = new StaticDependencyTraverser(true);
         assertEquals(traverser1.hashCode(), traverser2.hashCode());

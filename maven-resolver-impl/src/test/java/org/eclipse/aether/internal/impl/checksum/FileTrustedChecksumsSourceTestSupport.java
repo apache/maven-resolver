@@ -54,7 +54,7 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
     private boolean checksumWritten;
 
     @BeforeEach
-    public void before() throws Exception {
+    void before() throws Exception {
         session = TestUtils.newSession();
         // populate local repository
         checksumAlgorithmFactory = new Sha1ChecksumAlgorithmFactory();
@@ -82,7 +82,7 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
     protected abstract void enableSource(DefaultRepositorySystemSession session);
 
     @Test
-    public void notEnabled() {
+    void notEnabled() {
         assertNull(subject.getTrustedArtifactChecksums(
                 session,
                 ARTIFACT_WITH_CHECKSUM,
@@ -91,7 +91,7 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
     }
 
     @Test
-    public void noProvidedArtifactChecksum() {
+    void noProvidedArtifactChecksum() {
         enableSource(session);
         Map<String, String> providedChecksums = subject.getTrustedArtifactChecksums(
                 session,
@@ -103,7 +103,7 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
     }
 
     @Test
-    public void haveProvidedArtifactChecksum() {
+    void haveProvidedArtifactChecksum() {
         assumeTrue(checksumWritten);
         enableSource(session);
         Map<String, String> providedChecksums = subject.getTrustedArtifactChecksums(

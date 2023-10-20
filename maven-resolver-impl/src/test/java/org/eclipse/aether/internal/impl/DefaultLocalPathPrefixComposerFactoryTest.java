@@ -53,7 +53,7 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
             new RemoteRepository.Builder("my-repo", "default", "https://repo.maven.apache.org/maven2/").build();
 
     @Test
-    public void defaultConfigNoSplitAllNulls() {
+    void defaultConfigNoSplitAllNulls() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
@@ -75,7 +75,7 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
     }
 
     @Test
-    public void splitEnabled() {
+    void splitEnabled() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setConfigProperty("aether.enhancedLocalRepository.split", Boolean.TRUE.toString());
 
@@ -102,7 +102,7 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
     }
 
     @Test
-    public void saneConfig() {
+    void saneConfig() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setConfigProperty("aether.enhancedLocalRepository.split", Boolean.TRUE.toString());
         session.setConfigProperty("aether.enhancedLocalRepository.splitLocal", Boolean.TRUE.toString());
@@ -163,7 +163,7 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
     }
 
     @Test
-    public void fullConfig() {
+    void fullConfig() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setConfigProperty("aether.enhancedLocalRepository.split", Boolean.TRUE.toString());
         session.setConfigProperty("aether.enhancedLocalRepository.splitLocal", Boolean.TRUE.toString());

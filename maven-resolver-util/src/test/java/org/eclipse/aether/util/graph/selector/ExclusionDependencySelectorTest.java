@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ExclusionDependencySelectorTest {
     @Test
-    public void testToString() {
+    void testToString() {
         assertEquals(
                 "ExclusionDependencySelector(a:b:d:c)",
                 new ExclusionDependencySelector(Collections.singletonList(new Exclusion("a", "b", "c", "d")))

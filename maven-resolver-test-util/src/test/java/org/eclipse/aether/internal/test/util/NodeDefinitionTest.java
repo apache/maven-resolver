@@ -46,7 +46,7 @@ public class NodeDefinitionTest {
     }
 
     @Test
-    public void testPatterns() {
+    void testPatterns() {
         assertMatch("(Example-ID_0123456789)", NodeDefinition.ID, "Example-ID_0123456789");
         assertMatch("^Example-ID_0123456789", NodeDefinition.IDREF, "Example-ID_0123456789");
 
@@ -108,13 +108,13 @@ public class NodeDefinitionTest {
     }
 
     @Test
-    public void testParsing_Reference() {
+    void testParsing_Reference() {
         NodeDefinition desc = new NodeDefinition("^id");
         assertEquals("id", desc.reference);
     }
 
     @Test
-    public void testParsing_Node() {
+    void testParsing_Node() {
         NodeDefinition desc = new NodeDefinition("g:a:1");
         assertNull(desc.reference);
         assertEquals("g:a:1", desc.coords);

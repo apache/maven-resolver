@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScopeDependencySelectorTest {
     @Test
-    public void testToString() {
+    void testToString() {
         assertEquals(
                 "ScopeDependencySelector(included: [foo], excluded: [bar], transitive: false)",
                 new ScopeDependencySelector(Collections.singleton("foo"), Collections.singleton("bar")).toString());
