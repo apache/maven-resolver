@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -38,12 +39,9 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
  */
 final class Utils {
 
-    private static final String PRIORITIZED_COMPONENTS = Utils.class.getName() + ".pc";
-
     public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
-            RepositorySystemSession session, Collection<MetadataGeneratorFactory> factories) {
-        return PrioritizedComponents.reuseOrCreate(
-                session, PRIORITIZED_COMPONENTS, factories, MetadataGeneratorFactory::getPriority);
+            RepositorySystemSession session, Map<String, MetadataGeneratorFactory> factories) {
+        return PrioritizedComponents.reuseOrCreate(session, factories, MetadataGeneratorFactory::getPriority);
     }
 
     public static List<Metadata> prepareMetadata(

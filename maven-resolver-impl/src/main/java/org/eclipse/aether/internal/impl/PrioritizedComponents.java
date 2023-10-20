@@ -19,7 +19,6 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,18 +35,20 @@ final class PrioritizedComponents<T> {
     /**
      * Reuses or creates and stores (if session data does not contain yet) prioritized components under this key into
      * given session. Same session is used to configure prioritized components.
+     * <p>
+     * The {@code components} are expected to be Sisu injected {@link Map<String, C>}-like component maps. There is a
+     * simple "change detection" in place, as injected maps are dynamic, they are atomically expanded or contracted
+     * as components are dynamically discovered or unloaded.
      *
      * @since TBD
      */
     @SuppressWarnings("unchecked")
     public static <C> PrioritizedComponents<C> reuseOrCreate(
-            RepositorySystemSession session,
-            String key,
-            Collection<C> components,
-            Function<C, Float> priorityFunction) {
+            RepositorySystemSession session, Map<String, C> components, Function<C, Float> priorityFunction) {
+        String key = PrioritizedComponents.class.getName() + ".pc" + Integer.toHexString(components.hashCode());
         return (PrioritizedComponents<C>) session.getData().computeIfAbsent(key, () -> {
             PrioritizedComponents<C> newInstance = new PrioritizedComponents<>(session);
-            components.forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
+            components.values().forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
             return newInstance;
         });
     }

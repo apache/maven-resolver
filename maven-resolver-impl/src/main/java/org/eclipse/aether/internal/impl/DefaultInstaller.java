@@ -151,7 +151,7 @@ public class DefaultInstaller implements Installer {
     private List<? extends MetadataGenerator> getMetadataGenerators(
             RepositorySystemSession session, InstallRequest request) {
         PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, this.metadataFactories.values());
+                Utils.sortMetadataGeneratorFactories(session, metadataFactories);
 
         List<MetadataGenerator> generators = new ArrayList<>();
 

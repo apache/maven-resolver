@@ -234,7 +234,7 @@ public class DefaultDeployer implements Deployer {
     private List<? extends MetadataGenerator> getMetadataGenerators(
             RepositorySystemSession session, DeployRequest request) {
         PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, this.metadataFactories.values());
+                Utils.sortMetadataGeneratorFactories(session, metadataFactories);
 
         List<MetadataGenerator> generators = new ArrayList<>();
 
