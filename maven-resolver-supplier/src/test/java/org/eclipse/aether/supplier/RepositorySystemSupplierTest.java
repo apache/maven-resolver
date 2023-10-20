@@ -34,9 +34,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RepositorySystemSupplierTest {
     private final RepositorySystemSupplier subject = new RepositorySystemSupplier();
@@ -62,7 +60,7 @@ public class RepositorySystemSupplierTest {
         List<Version> versions = rangeResult.getVersions();
 
         // As of 2023-08-01, Maven Central has 33 versions of this artifact (and it will just grow)
-        assertThat(versions, hasSize(greaterThanOrEqualTo(33)));
+        assertTrue(versions.size() >= 33);
         System.out.println("Available versions " + versions);
     }
 }
