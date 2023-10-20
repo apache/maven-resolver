@@ -56,6 +56,21 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_IMPLICIT_PRIORITIES = false;
 
     /**
+     * A flag indicating whether the created ordered components should be cached or not.
+     *
+     * @see #DEFAULT_CACHED_PRIORITIES
+     * @since TBD
+     */
+    public static final String CACHED_PRIORITIES = PREFIX_PRIORITY + "cached";
+
+    /**
+     * The default caching of priority components if {@link #CACHED_PRIORITIES} isn't set. Default value is {@code true}.
+     *
+     * @since TBD
+     */
+    public static final boolean DEFAULT_CACHED_PRIORITIES = true;
+
+    /**
      * A flag indicating whether interaction with the user is allowed.
      *
      * @see #DEFAULT_INTERACTIVE

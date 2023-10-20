@@ -85,6 +85,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.metadataResolver.threads` | int | Number of threads to use in parallel for resolving metadata. | `4` | no
 `aether.offline.protocols` | String | Comma-separated list of protocols which are supposed to be resolved offline. | - | no
 `aether.offline.hosts` | String | Comma-separated list of hosts which are supposed to be resolved offline. | - | no
+`aether.priority.cached` | boolean | Whether the created ordered list of components should be cached (in session) or not. | `true` | no
 `aether.priority.<class>` | float | The priority to use for a certain extension class. `class` can either be the fully qualified name or the simple name stands for fully qualified class name. If the class name ends with `Factory` that suffix could optionally be left out. | - |  no
 `aether.priority.implicit` | boolean | Flag indicating whether the priorities of pluggable extensions are implicitly given by their iteration order such that the first extension has the highest priority. If set, an extension's built-in priority as well as any corresponding `aether.priority.<class>` configuration properties are ignored when searching for a suitable implementation among the available extensions. This priority mode is meant for cases where the application will present/inject extensions in the desired search order. | `false` | no
 `aether.remoteRepositoryFilter.groupId` | boolean | Enable `groupId` remote repository filter. | `false` | no

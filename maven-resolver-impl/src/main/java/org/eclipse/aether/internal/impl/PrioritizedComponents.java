@@ -45,12 +45,22 @@ final class PrioritizedComponents<T> {
     @SuppressWarnings("unchecked")
     public static <C> PrioritizedComponents<C> reuseOrCreate(
             RepositorySystemSession session, Map<String, C> components, Function<C, Float> priorityFunction) {
-        String key = PrioritizedComponents.class.getName() + ".pc" + Integer.toHexString(components.hashCode());
-        return (PrioritizedComponents<C>) session.getData().computeIfAbsent(key, () -> {
-            PrioritizedComponents<C> newInstance = new PrioritizedComponents<>(session);
-            components.values().forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
-            return newInstance;
-        });
+        boolean cached = ConfigUtils.getBoolean(
+                session, ConfigurationProperties.DEFAULT_CACHED_PRIORITIES, ConfigurationProperties.CACHED_PRIORITIES);
+        if (cached) {
+            String key = PrioritizedComponents.class.getName() + ".pc" + Integer.toHexString(components.hashCode());
+            return (PrioritizedComponents<C>)
+                    session.getData().computeIfAbsent(key, () -> create(session, components, priorityFunction));
+        } else {
+            return create(session, components, priorityFunction);
+        }
+    }
+
+    private static <C> PrioritizedComponents<C> create(
+            RepositorySystemSession session, Map<String, C> components, Function<C, Float> priorityFunction) {
+        PrioritizedComponents<C> newInstance = new PrioritizedComponents<>(session);
+        components.values().forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
+        return newInstance;
     }
 
     private static final String FACTORY_SUFFIX = "Factory";
