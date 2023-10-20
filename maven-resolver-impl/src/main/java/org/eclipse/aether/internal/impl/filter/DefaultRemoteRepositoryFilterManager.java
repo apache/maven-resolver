@@ -52,16 +52,6 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
 
     private final Map<String, RemoteRepositoryFilterSource> sources;
 
-    /**
-     * SL enabled ctor.
-     *
-     * @deprecated for SL and testing purposes only.
-     */
-    @Deprecated
-    public DefaultRemoteRepositoryFilterManager() {
-        this.sources = new HashMap<>();
-    }
-
     @Inject
     public DefaultRemoteRepositoryFilterManager(Map<String, RemoteRepositoryFilterSource> sources) {
         this.sources = requireNonNull(sources);

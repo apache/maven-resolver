@@ -105,7 +105,10 @@ public class HttpTransporterTest {
     void setUp(TestInfo testInfo) throws Exception {
         System.out.println("=== " + testInfo.getDisplayName() + " ===");
         session = TestUtils.newSession();
-        factory = new HttpTransporterFactory();
+        HashMap<String, ChecksumExtractor> extractors = new HashMap<>();
+        extractors.put(XChecksumChecksumExtractor.NAME, new XChecksumChecksumExtractor());
+        extractors.put(Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor());
+        factory = new HttpTransporterFactory(extractors);
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
         TestFileUtils.writeString(new File(repoDir, "dir/file.txt"), "test");
