@@ -19,9 +19,11 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -31,6 +33,20 @@ import org.eclipse.aether.util.ConfigUtils;
  * Helps to sort pluggable components by their priority.
  */
 final class PrioritizedComponents<T> {
+    /**
+     * Reuses or creates and stores (if session data does not contain yet) prioritized components under this key into
+     * given session. Same session is used to configure prioritized components.
+     *
+     * @since TBD
+     */
+    @SuppressWarnings( "unchecked" )
+    public static <C> PrioritizedComponents<C> reuseOrCreate(RepositorySystemSession session, String key, Collection<C> components, Function<C,Float> priorityFunction) {
+        return (PrioritizedComponents<C>) session.getData().computeIfAbsent(key, () -> {
+            PrioritizedComponents<C> newInstance = new PrioritizedComponents<>(session);
+            components.forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
+            return components;
+        });
+    }
 
     private static final String FACTORY_SUFFIX = "Factory";
 

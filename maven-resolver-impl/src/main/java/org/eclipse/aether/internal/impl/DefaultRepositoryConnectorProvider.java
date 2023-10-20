@@ -51,6 +51,8 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRepositoryConnectorProvider.class);
 
+    private static final String PRIORITIZED_COMPONENTS = DefaultRepositoryConnectorProvider.class.getName() + ".pc";
+
     private final Map<String, RepositoryConnectorFactory> connectorFactories;
 
     private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
@@ -77,13 +79,9 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
             }
         }
 
+        PrioritizedComponents<RepositoryConnectorFactory> factories = PrioritizedComponents.reuseOrCreate(session, PRIORITIZED_COMPONENTS, this.connectorFactories.values(), RepositoryConnectorFactory::getPriority);
+
         RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
-
-        PrioritizedComponents<RepositoryConnectorFactory> factories = new PrioritizedComponents<>(session);
-        for (RepositoryConnectorFactory factory : this.connectorFactories.values()) {
-            factories.add(factory, factory.getPriority());
-        }
-
         List<NoRepositoryConnectorException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryConnectorFactory> factory : factories.getEnabled()) {
             try {

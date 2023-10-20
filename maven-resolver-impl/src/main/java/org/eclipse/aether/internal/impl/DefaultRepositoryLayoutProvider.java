@@ -46,6 +46,8 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRepositoryLayoutProvider.class);
 
+    private static final String PRIORITIZED_COMPONENTS = DefaultRepositoryLayoutProvider.class.getName() + ".pc";
+
     private final Map<String, RepositoryLayoutFactory> layoutFactories;
 
     @Inject
@@ -59,10 +61,7 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "remote repository cannot be null");
 
-        PrioritizedComponents<RepositoryLayoutFactory> factories = new PrioritizedComponents<>(session);
-        for (RepositoryLayoutFactory factory : this.layoutFactories.values()) {
-            factories.add(factory, factory.getPriority());
-        }
+        PrioritizedComponents<RepositoryLayoutFactory> factories = PrioritizedComponents.reuseOrCreate(session, PRIORITIZED_COMPONENTS, this.layoutFactories.values(), RepositoryLayoutFactory::getPriority);
 
         List<NoRepositoryLayoutException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryLayoutFactory> factory : factories.getEnabled()) {

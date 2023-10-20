@@ -46,6 +46,8 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLocalRepositoryProvider.class);
 
+    private static final String PRIORITIZED_COMPONENTS = DefaultLocalRepositoryProvider.class.getName() + ".pc";
+
     private final Map<String, LocalRepositoryManagerFactory> localRepositoryManagerFactories;
 
     @Inject
@@ -58,10 +60,8 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
             throws NoLocalRepositoryManagerException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
-        PrioritizedComponents<LocalRepositoryManagerFactory> factories = new PrioritizedComponents<>(session);
-        for (LocalRepositoryManagerFactory factory : this.localRepositoryManagerFactories.values()) {
-            factories.add(factory, factory.getPriority());
-        }
+
+        PrioritizedComponents<LocalRepositoryManagerFactory> factories = PrioritizedComponents.reuseOrCreate(session, PRIORITIZED_COMPONENTS, this.localRepositoryManagerFactories.values(), LocalRepositoryManagerFactory::getPriority);
 
         List<NoLocalRepositoryManagerException> errors = new ArrayList<>();
         for (PrioritizedComponent<LocalRepositoryManagerFactory> factory : factories.getEnabled()) {

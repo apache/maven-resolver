@@ -46,6 +46,8 @@ public final class DefaultTransporterProvider implements TransporterProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransporterProvider.class);
 
+    private static final String PRIORITIZED_COMPONENTS = DefaultTransporterProvider.class.getName() + ".pc";
+
     private final Map<String, TransporterFactory> transporterFactories;
 
     @Inject
@@ -59,10 +61,7 @@ public final class DefaultTransporterProvider implements TransporterProvider {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<>(session);
-        for (TransporterFactory factory : this.transporterFactories.values()) {
-            factories.add(factory, factory.getPriority());
-        }
+        PrioritizedComponents<TransporterFactory> factories = PrioritizedComponents.reuseOrCreate(session, PRIORITIZED_COMPONENTS, this.transporterFactories.values(), TransporterFactory::getPriority);
 
         List<NoTransporterException> errors = new ArrayList<>();
         for (PrioritizedComponent<TransporterFactory> factory : factories.getEnabled()) {
