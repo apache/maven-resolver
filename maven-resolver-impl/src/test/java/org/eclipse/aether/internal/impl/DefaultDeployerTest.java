@@ -89,7 +89,7 @@ public class DefaultDeployerTest {
                 connectorProvider,
                 new StubRemoteRepositoryManager(),
                 new StaticUpdateCheckManager(true),
-                Collections.emptySet(),
+                Collections.emptyMap(),
                 new StubSyncContextFactory(),
                 new DefaultOfflineController());
 

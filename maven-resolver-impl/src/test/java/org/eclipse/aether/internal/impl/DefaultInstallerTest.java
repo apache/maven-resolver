@@ -87,7 +87,7 @@ public class DefaultInstallerTest {
         installer = new DefaultInstaller(
                 new TestFileProcessor(),
                 new StubRepositoryEventDispatcher(),
-                Collections.emptySet(),
+                Collections.emptyMap(),
                 new StubSyncContextFactory());
         request = new InstallRequest();
         listener = new RecordingRepositoryListener();
@@ -336,7 +336,7 @@ public class DefaultInstallerTest {
                     }
                 },
                 new StubRepositoryEventDispatcher(),
-                Collections.emptySet(),
+                Collections.emptyMap(),
                 new StubSyncContextFactory());
 
         request = new InstallRequest();

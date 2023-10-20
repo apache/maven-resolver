@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -87,7 +87,7 @@ public class DefaultDeployer implements Deployer {
 
     private final UpdateCheckManager updateCheckManager;
 
-    private final Collection<MetadataGeneratorFactory> metadataFactories;
+    private final Map<String, MetadataGeneratorFactory> metadataFactories;
 
     private final SyncContextFactory syncContextFactory;
 
@@ -101,7 +101,7 @@ public class DefaultDeployer implements Deployer {
             RepositoryConnectorProvider repositoryConnectorProvider,
             RemoteRepositoryManager remoteRepositoryManager,
             UpdateCheckManager updateCheckManager,
-            Set<MetadataGeneratorFactory> metadataFactories,
+            Map<String, MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory,
             OfflineController offlineController) {
         this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
@@ -112,7 +112,7 @@ public class DefaultDeployer implements Deployer {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
         this.updateCheckManager = requireNonNull(updateCheckManager, "update check manager cannot be null");
-        this.metadataFactories = Collections.unmodifiableCollection(metadataFactories);
+        this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
         this.offlineController = requireNonNull(offlineController, "offline controller cannot be null");
     }
@@ -234,7 +234,7 @@ public class DefaultDeployer implements Deployer {
     private List<? extends MetadataGenerator> getMetadataGenerators(
             RepositorySystemSession session, DeployRequest request) {
         PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, this.metadataFactories);
+                Utils.sortMetadataGeneratorFactories(session, this.metadataFactories.values());
 
         List<MetadataGenerator> generators = new ArrayList<>();
 

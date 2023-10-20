@@ -19,7 +19,6 @@
 package org.eclipse.aether.supplier;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -343,8 +342,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected RepositoryConnectorProvider getRepositoryConnectorProvider(
             Map<String, RepositoryConnectorFactory> repositoryConnectorFactories,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        return new DefaultRepositoryConnectorProvider(
-                new HashSet<>(repositoryConnectorFactories.values()), remoteRepositoryFilterManager);
+        return new DefaultRepositoryConnectorProvider(repositoryConnectorFactories, remoteRepositoryFilterManager);
     }
 
     protected Installer getInstaller(
@@ -353,10 +351,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             Map<String, MetadataGeneratorFactory> metadataGeneratorFactories,
             SyncContextFactory syncContextFactory) {
         return new DefaultInstaller(
-                fileProcessor,
-                repositoryEventDispatcher,
-                new HashSet<>(metadataGeneratorFactories.values()),
-                syncContextFactory);
+                fileProcessor, repositoryEventDispatcher, metadataGeneratorFactories, syncContextFactory);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -375,7 +370,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 repositoryConnectorProvider,
                 remoteRepositoryManager,
                 updateCheckManager,
-                new HashSet<>(metadataGeneratorFactories.values()),
+                metadataGeneratorFactories,
                 syncContextFactory,
                 offlineController);
     }

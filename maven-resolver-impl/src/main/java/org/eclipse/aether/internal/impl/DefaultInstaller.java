@@ -24,12 +24,11 @@ import javax.inject.Singleton;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -68,7 +67,7 @@ public class DefaultInstaller implements Installer {
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private final Collection<MetadataGeneratorFactory> metadataFactories;
+    private final Map<String, MetadataGeneratorFactory> metadataFactories;
 
     private final SyncContextFactory syncContextFactory;
 
@@ -76,12 +75,12 @@ public class DefaultInstaller implements Installer {
     public DefaultInstaller(
             FileProcessor fileProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
-            Set<MetadataGeneratorFactory> metadataFactories,
+            Map<String, MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory) {
         this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
-        this.metadataFactories = Collections.unmodifiableCollection(metadataFactories);
+        this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
     }
 
@@ -152,7 +151,7 @@ public class DefaultInstaller implements Installer {
     private List<? extends MetadataGenerator> getMetadataGenerators(
             RepositorySystemSession session, InstallRequest request) {
         PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, this.metadataFactories);
+                Utils.sortMetadataGeneratorFactories(session, this.metadataFactories.values());
 
         List<MetadataGenerator> generators = new ArrayList<>();
 
