@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -31,6 +32,36 @@ import org.eclipse.aether.util.ConfigUtils;
  * Helps to sort pluggable components by their priority.
  */
 final class PrioritizedComponents<T> {
+    /**
+     * Reuses or creates and stores (if session data does not contain yet) prioritized components under this key into
+     * given session. Same session is used to configure prioritized components.
+     * <p>
+     * The {@code components} are expected to be Sisu injected {@link Map<String, C>}-like component maps. There is a
+     * simple "change detection" in place, as injected maps are dynamic, they are atomically expanded or contracted
+     * as components are dynamically discovered or unloaded.
+     *
+     * @since TBD
+     */
+    @SuppressWarnings("unchecked")
+    public static <C> PrioritizedComponents<C> reuseOrCreate(
+            RepositorySystemSession session, Map<String, C> components, Function<C, Float> priorityFunction) {
+        boolean cached = ConfigUtils.getBoolean(
+                session, ConfigurationProperties.DEFAULT_CACHED_PRIORITIES, ConfigurationProperties.CACHED_PRIORITIES);
+        if (cached) {
+            String key = PrioritizedComponents.class.getName() + ".pc" + Integer.toHexString(components.hashCode());
+            return (PrioritizedComponents<C>)
+                    session.getData().computeIfAbsent(key, () -> create(session, components, priorityFunction));
+        } else {
+            return create(session, components, priorityFunction);
+        }
+    }
+
+    private static <C> PrioritizedComponents<C> create(
+            RepositorySystemSession session, Map<String, C> components, Function<C, Float> priorityFunction) {
+        PrioritizedComponents<C> newInstance = new PrioritizedComponents<>(session);
+        components.values().forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
+        return newInstance;
+    }
 
     private static final String FACTORY_SUFFIX = "Factory";
 

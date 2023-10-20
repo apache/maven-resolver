@@ -59,10 +59,8 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "remote repository cannot be null");
 
-        PrioritizedComponents<RepositoryLayoutFactory> factories = new PrioritizedComponents<>(session);
-        for (RepositoryLayoutFactory factory : this.layoutFactories.values()) {
-            factories.add(factory, factory.getPriority());
-        }
+        PrioritizedComponents<RepositoryLayoutFactory> factories =
+                PrioritizedComponents.reuseOrCreate(session, layoutFactories, RepositoryLayoutFactory::getPriority);
 
         List<NoRepositoryLayoutException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryLayoutFactory> factory : factories.getEnabled()) {
