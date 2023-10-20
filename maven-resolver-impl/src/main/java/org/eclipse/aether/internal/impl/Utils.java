@@ -31,8 +31,6 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 
 /**
@@ -44,7 +42,8 @@ final class Utils {
 
     public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
             RepositorySystemSession session, Collection<MetadataGeneratorFactory> factories) {
-        return PrioritizedComponents.reuseOrCreate(session, PRIORITIZED_COMPONENTS, factories, MetadataGeneratorFactory::getPriority);
+        return PrioritizedComponents.reuseOrCreate(
+                session, PRIORITIZED_COMPONENTS, factories, MetadataGeneratorFactory::getPriority);
     }
 
     public static List<Metadata> prepareMetadata(

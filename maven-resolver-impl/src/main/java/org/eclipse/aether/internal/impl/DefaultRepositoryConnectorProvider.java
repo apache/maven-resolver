@@ -79,7 +79,11 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
             }
         }
 
-        PrioritizedComponents<RepositoryConnectorFactory> factories = PrioritizedComponents.reuseOrCreate(session, PRIORITIZED_COMPONENTS, this.connectorFactories.values(), RepositoryConnectorFactory::getPriority);
+        PrioritizedComponents<RepositoryConnectorFactory> factories = PrioritizedComponents.reuseOrCreate(
+                session,
+                PRIORITIZED_COMPONENTS,
+                this.connectorFactories.values(),
+                RepositoryConnectorFactory::getPriority);
 
         RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
         List<NoRepositoryConnectorException> errors = new ArrayList<>();

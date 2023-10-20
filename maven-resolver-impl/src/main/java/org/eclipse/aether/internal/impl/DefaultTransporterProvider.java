@@ -61,7 +61,8 @@ public final class DefaultTransporterProvider implements TransporterProvider {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        PrioritizedComponents<TransporterFactory> factories = PrioritizedComponents.reuseOrCreate(session, PRIORITIZED_COMPONENTS, this.transporterFactories.values(), TransporterFactory::getPriority);
+        PrioritizedComponents<TransporterFactory> factories = PrioritizedComponents.reuseOrCreate(
+                session, PRIORITIZED_COMPONENTS, this.transporterFactories.values(), TransporterFactory::getPriority);
 
         List<NoTransporterException> errors = new ArrayList<>();
         for (PrioritizedComponent<TransporterFactory> factory : factories.getEnabled()) {

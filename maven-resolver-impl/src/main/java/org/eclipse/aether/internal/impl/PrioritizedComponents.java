@@ -39,8 +39,12 @@ final class PrioritizedComponents<T> {
      *
      * @since TBD
      */
-    @SuppressWarnings( "unchecked" )
-    public static <C> PrioritizedComponents<C> reuseOrCreate(RepositorySystemSession session, String key, Collection<C> components, Function<C,Float> priorityFunction) {
+    @SuppressWarnings("unchecked")
+    public static <C> PrioritizedComponents<C> reuseOrCreate(
+            RepositorySystemSession session,
+            String key,
+            Collection<C> components,
+            Function<C, Float> priorityFunction) {
         return (PrioritizedComponents<C>) session.getData().computeIfAbsent(key, () -> {
             PrioritizedComponents<C> newInstance = new PrioritizedComponents<>(session);
             components.forEach(c -> newInstance.add(c, priorityFunction.apply(c)));
