@@ -102,7 +102,7 @@ public final class ClassicDependencyManager implements DependencyManager {
             Object key = getKey(artifact);
 
             String version = artifact.getVersion();
-            if (version.length() > 0 && !managedVersions.containsKey(key)) {
+            if (!version.isEmpty() && !managedVersions.containsKey(key)) {
                 if (managedVersions == this.managedVersions) {
                     managedVersions = new HashMap<>(this.managedVersions);
                 }
@@ -110,7 +110,7 @@ public final class ClassicDependencyManager implements DependencyManager {
             }
 
             String scope = managedDependency.getScope();
-            if (scope.length() > 0 && !managedScopes.containsKey(key)) {
+            if (!scope.isEmpty() && !managedScopes.containsKey(key)) {
                 if (managedScopes == this.managedScopes) {
                     managedScopes = new HashMap<>(this.managedScopes);
                 }

@@ -60,7 +60,7 @@ public final class ChecksumUtils {
                     break;
                 }
                 line = line.trim();
-                if (line.length() > 0) {
+                if (!line.isEmpty()) {
                     checksum = line;
                     break;
                 }

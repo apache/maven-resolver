@@ -85,14 +85,14 @@ public final class DefaultArtifactType implements ArtifactType {
             boolean constitutesBuildPath,
             boolean includesDependencies) {
         this.id = requireNonNull(id, "type id cannot be null");
-        if (id.length() == 0) {
+        if (id.isEmpty()) {
             throw new IllegalArgumentException("type id cannot be empty");
         }
         this.extension = emptify(extension);
         this.classifier = emptify(classifier);
         Map<String, String> props = new HashMap<>();
         props.put(ArtifactProperties.TYPE, id);
-        props.put(ArtifactProperties.LANGUAGE, (language != null && language.length() > 0) ? language : "none");
+        props.put(ArtifactProperties.LANGUAGE, (language != null && !language.isEmpty()) ? language : "none");
         props.put(ArtifactProperties.INCLUDES_DEPENDENCIES, Boolean.toString(includesDependencies));
         props.put(ArtifactProperties.CONSTITUTES_BUILD_PATH, Boolean.toString(constitutesBuildPath));
         properties = Collections.unmodifiableMap(props);
@@ -108,7 +108,7 @@ public final class DefaultArtifactType implements ArtifactType {
      */
     public DefaultArtifactType(String id, String extension, String classifier, Map<String, String> properties) {
         this.id = requireNonNull(id, "type id cannot be null");
-        if (id.length() == 0) {
+        if (id.isEmpty()) {
             throw new IllegalArgumentException("type id cannot be empty");
         }
         this.extension = emptify(extension);

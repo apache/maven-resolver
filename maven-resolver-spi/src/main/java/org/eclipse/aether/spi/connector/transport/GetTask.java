@@ -223,7 +223,7 @@ public final class GetTask extends TransportTask {
             if (checksums.isEmpty()) {
                 checksums = new HashMap<>();
             }
-            if (value != null && value.length() > 0) {
+            if (value != null && !value.isEmpty()) {
                 checksums.put(algorithm, value);
             } else {
                 checksums.remove(algorithm);

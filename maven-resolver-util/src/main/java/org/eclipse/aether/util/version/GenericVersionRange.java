@@ -94,8 +94,8 @@ final class GenericVersionRange implements VersionRange {
                         range, "Invalid version range " + range + ", bounds may not contain additional ','");
             }
 
-            lowerBound = parsedLowerBound.length() > 0 ? parse(parsedLowerBound) : null;
-            upperBound = parsedUpperBound.length() > 0 ? parse(parsedUpperBound) : null;
+            lowerBound = !parsedLowerBound.isEmpty() ? parse(parsedLowerBound) : null;
+            upperBound = !parsedUpperBound.isEmpty() ? parse(parsedUpperBound) : null;
 
             if (upperBound != null && lowerBound != null) {
                 if (upperBound.compareTo(lowerBound) < 0) {

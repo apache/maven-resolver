@@ -61,7 +61,7 @@ final class ClasspathTransporter extends AbstractTransporter {
             } else {
                 base = ssp;
             }
-            if (base.length() > 0 && !base.endsWith("/")) {
+            if (!base.isEmpty() && !base.endsWith("/")) {
                 base += '/';
             }
         } catch (URISyntaxException e) {

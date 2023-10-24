@@ -133,7 +133,7 @@ public final class ArtifactIdUtils {
         if (extension != null) {
             buffer.append(extension);
         }
-        if (classifier != null && classifier.length() > 0) {
+        if (classifier != null && !classifier.isEmpty()) {
             buffer.append(SEP).append(classifier);
         }
 

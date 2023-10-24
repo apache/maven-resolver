@@ -206,7 +206,7 @@ final class GenericVersion implements Version {
         private boolean terminatedByNumber;
 
         Tokenizer(String version) {
-            this.version = (version.length() > 0) ? version : "0";
+            this.version = (!version.isEmpty()) ? version : "0";
             this.versionLength = this.version.length();
         }
 

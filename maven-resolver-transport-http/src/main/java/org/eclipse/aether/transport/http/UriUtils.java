@@ -32,7 +32,7 @@ final class UriUtils {
 
     public static URI resolve(URI base, URI ref) {
         String path = ref.getRawPath();
-        if (path != null && path.length() > 0) {
+        if (path != null && !path.isEmpty()) {
             path = base.getRawPath();
             if (path == null || !path.endsWith("/")) {
                 try {

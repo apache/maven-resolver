@@ -85,7 +85,7 @@ public final class DefaultMirrorSelector implements MirrorSelector {
 
         builder.setBlocked(mirror.blocked);
 
-        if (mirror.type != null && mirror.type.length() > 0) {
+        if (mirror.type != null && !mirror.type.isEmpty()) {
             builder.setContentType(mirror.type);
         }
 

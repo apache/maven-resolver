@@ -133,7 +133,7 @@ public final class DependencyFilterUtils {
                 String[] tokens = classpathType.split("[+,]");
                 for (String token : tokens) {
                     token = token.trim();
-                    if (token.length() > 0) {
+                    if (!token.isEmpty()) {
                         types.add(token);
                     }
                 }
