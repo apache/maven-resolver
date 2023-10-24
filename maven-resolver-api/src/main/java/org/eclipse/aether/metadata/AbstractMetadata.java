@@ -73,13 +73,13 @@ public abstract class AbstractMetadata implements Metadata {
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder(128);
-        if (getGroupId().length() > 0) {
+        if (!getGroupId().isEmpty()) {
             buffer.append(getGroupId());
         }
-        if (getArtifactId().length() > 0) {
+        if (!getArtifactId().isEmpty()) {
             buffer.append(':').append(getArtifactId());
         }
-        if (getVersion().length() > 0) {
+        if (!getVersion().isEmpty()) {
             buffer.append(':').append(getVersion());
         }
         buffer.append('/').append(getType());

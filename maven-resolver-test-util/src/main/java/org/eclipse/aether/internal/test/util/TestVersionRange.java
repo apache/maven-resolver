@@ -86,8 +86,8 @@ final class TestVersionRange implements VersionRange {
                         range, "Invalid version range " + range + ", bounds may not contain additional ','");
             }
 
-            lowerBound = parsedLowerBound.length() > 0 ? new TestVersion(parsedLowerBound) : null;
-            upperBound = parsedUpperBound.length() > 0 ? new TestVersion(parsedUpperBound) : null;
+            lowerBound = !parsedLowerBound.isEmpty() ? new TestVersion(parsedLowerBound) : null;
+            upperBound = !parsedUpperBound.isEmpty() ? new TestVersion(parsedUpperBound) : null;
 
             if (upperBound != null && lowerBound != null) {
                 if (upperBound.compareTo(lowerBound) < 0) {

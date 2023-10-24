@@ -60,7 +60,7 @@ final class SecretAuthentication implements Authentication {
 
     private SecretAuthentication(char[] value, String key) {
         this.key = requireNonNull(key, "authentication key cannot be null");
-        if (key.length() == 0) {
+        if (key.isEmpty()) {
             throw new IllegalArgumentException("authentication key cannot be empty");
         }
         this.secretHash = Arrays.hashCode(value) ^ KEYS[0].hashCode();

@@ -69,12 +69,12 @@ final class TestVersionScheme implements VersionScheme {
 
             process = process.substring(index + 1).trim();
 
-            if (process.length() > 0 && process.startsWith(",")) {
+            if (process.startsWith(",")) {
                 process = process.substring(1).trim();
             }
         }
 
-        if (process.length() > 0 && !ranges.isEmpty()) {
+        if (!process.isEmpty() && !ranges.isEmpty()) {
             throw new InvalidVersionSpecificationException(
                     constraint, "Invalid version range " + constraint + ", expected [ or ( but got " + process);
         }

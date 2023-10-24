@@ -222,7 +222,7 @@ class IniArtifactDataReader {
     }
 
     private static boolean isEmpty(String line) {
-        return line == null || line.length() == 0;
+        return line == null || line.isEmpty();
     }
 
     private static String cutComment(String line) {

@@ -134,7 +134,7 @@ public abstract class AbstractArtifact implements Artifact {
         buffer.append(getGroupId());
         buffer.append(':').append(getArtifactId());
         buffer.append(':').append(getExtension());
-        if (getClassifier().length() > 0) {
+        if (!getClassifier().isEmpty()) {
             buffer.append(':').append(getClassifier());
         }
         buffer.append(':').append(getVersion());

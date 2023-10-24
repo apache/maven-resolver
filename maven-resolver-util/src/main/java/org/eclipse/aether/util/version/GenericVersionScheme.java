@@ -98,7 +98,7 @@ public final class GenericVersionScheme implements VersionScheme {
             }
         }
 
-        if (process.length() > 0 && !ranges.isEmpty()) {
+        if (!process.isEmpty() && !ranges.isEmpty()) {
             throw new InvalidVersionSpecificationException(
                     constraint, "Invalid version range " + constraint + ", expected [ or ( but got " + process);
         }

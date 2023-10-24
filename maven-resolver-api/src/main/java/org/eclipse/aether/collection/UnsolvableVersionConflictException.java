@@ -89,7 +89,7 @@ public class UnsolvableVersionConflictException extends RepositoryException {
             buffer.append(artifact.getGroupId());
             buffer.append(':').append(artifact.getArtifactId());
             buffer.append(':').append(artifact.getExtension());
-            if (artifact.getClassifier().length() > 0) {
+            if (!artifact.getClassifier().isEmpty()) {
                 buffer.append(':').append(artifact.getClassifier());
             }
             buffer.append(':').append(node.getVersionConstraint());

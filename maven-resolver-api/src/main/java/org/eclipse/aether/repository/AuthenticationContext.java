@@ -242,7 +242,7 @@ public final class AuthenticationContext implements Closeable {
      */
     public <T> T get(String key, Map<String, String> data, Class<T> type) {
         requireNonNull(key, "authentication key cannot be null");
-        if (key.length() == 0) {
+        if (key.isEmpty()) {
             throw new IllegalArgumentException("authentication key cannot be empty");
         }
 
@@ -304,7 +304,7 @@ public final class AuthenticationContext implements Closeable {
      */
     public void put(String key, Object value) {
         requireNonNull(key, "authentication key cannot be null");
-        if (key.length() == 0) {
+        if (key.isEmpty()) {
             throw new IllegalArgumentException("authentication key cannot be empty");
         }
 
