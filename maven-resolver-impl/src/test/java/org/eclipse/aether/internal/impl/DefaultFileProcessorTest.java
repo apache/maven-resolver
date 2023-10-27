@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.NoSuchFileException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
@@ -138,8 +137,7 @@ public class DefaultFileProcessorTest {
 
     @Test
     void testReadChecksumNonExistentFile() {
-        // This is NIO2 exception, maybe assert only IOEx is enough?
-        assertThrows(NoSuchFileException.class, () -> fileProcessor.readChecksum(new File("non existent")));
+        assertThrows(IOException.class, () -> fileProcessor.readChecksum(new File("non existent")));
     }
 
     @Test
