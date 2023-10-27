@@ -20,14 +20,14 @@ package org.eclipse.aether.util.graph.transformer;
 
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter.ConflictId;
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter.RootQueue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RootQueueTest {
 
     @Test
-    public void testIsEmpty() {
+    void testIsEmpty() {
         ConflictId id = new ConflictId("a", 0);
         RootQueue queue = new RootQueue(10);
         assertTrue(queue.isEmpty());
@@ -38,7 +38,7 @@ public class RootQueueTest {
     }
 
     @Test
-    public void testAddSortsByDepth() {
+    void testAddSortsByDepth() {
         ConflictId id1 = new ConflictId("a", 0);
         ConflictId id2 = new ConflictId("b", 1);
         ConflictId id3 = new ConflictId("c", 2);
@@ -66,7 +66,7 @@ public class RootQueueTest {
     }
 
     @Test
-    public void testAddWithArrayCompact() {
+    void testAddWithArrayCompact() {
         ConflictId id = new ConflictId("a", 0);
 
         RootQueue queue = new RootQueue(10);
@@ -82,7 +82,7 @@ public class RootQueueTest {
     }
 
     @Test
-    public void testAddMinimumAfterSomeRemoves() {
+    void testAddMinimumAfterSomeRemoves() {
         ConflictId id1 = new ConflictId("a", 0);
         ConflictId id2 = new ConflictId("b", 1);
         ConflictId id3 = new ConflictId("c", 2);

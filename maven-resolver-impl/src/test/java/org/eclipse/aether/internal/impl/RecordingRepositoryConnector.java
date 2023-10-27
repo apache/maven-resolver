@@ -38,7 +38,7 @@ import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.transfer.TransferResource;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * A repository connector recording all get/put-requests and faking the results.
@@ -84,6 +84,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
 
     public RecordingRepositoryConnector() {}
 
+    @Override
     public void get(
             Collection<? extends ArtifactDownload> artifactDownloads,
             Collection<? extends MetadataDownload> metadataDownloads) {
@@ -119,6 +120,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
         }
     }
 
+    @Override
     public void put(
             Collection<? extends ArtifactUpload> artifactUploads,
             Collection<? extends MetadataUpload> metadataUploads) {
@@ -184,6 +186,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
         }
     }
 
+    @Override
     public void close() {}
 
     public void assertSeenExpected() {
@@ -198,10 +201,10 @@ class RecordingRepositoryConnector implements RepositoryConnector {
             expected = new Object[0];
         }
 
-        assertEquals("different number of expected and actual elements:\n", expected.length, actual.size());
+        assertEquals(expected.length, actual.size(), "different number of expected and actual elements:");
         int idx = 0;
         for (Object actualObject : actual) {
-            assertEquals("seen object differs", expected[idx++], actualObject);
+            assertEquals(expected[idx++], actualObject, "seen object differs");
         }
     }
 

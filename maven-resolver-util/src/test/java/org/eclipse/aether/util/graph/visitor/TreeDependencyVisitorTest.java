@@ -21,9 +21,9 @@ package org.eclipse.aether.util.graph.visitor;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TreeDependencyVisitorTest {
 
@@ -32,7 +32,7 @@ public class TreeDependencyVisitorTest {
     }
 
     @Test
-    public void testDuplicateSuppression() throws Exception {
+    void testDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         RecordingVisitor rec = new RecordingVisitor();

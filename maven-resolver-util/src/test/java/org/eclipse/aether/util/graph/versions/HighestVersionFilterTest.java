@@ -20,14 +20,14 @@ package org.eclipse.aether.util.graph.versions;
 
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HighestVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test
-    public void testFilterVersions() {
+    void testFilterVersions() {
         HighestVersionFilter filter = new HighestVersionFilter();
         VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2", "3", "4", "5", "6", "7", "8", "9");
         filter.filterVersions(ctx);
@@ -35,14 +35,14 @@ public class HighestVersionFilterTest extends AbstractVersionFilterTest {
     }
 
     @Test
-    public void testDeriveChildFilter() {
+    void testDeriveChildFilter() {
         HighestVersionFilter filter = new HighestVersionFilter();
         assertSame(filter, derive(filter, "g:a:1"));
     }
 
     @SuppressWarnings("EqualsWithItself")
     @Test
-    public void testEquals() {
+    void testEquals() {
         HighestVersionFilter filter = new HighestVersionFilter();
         assertNotEquals(null, filter);
         assertEquals(filter, filter);

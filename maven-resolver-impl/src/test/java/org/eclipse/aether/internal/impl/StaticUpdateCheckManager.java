@@ -32,9 +32,9 @@ import static java.util.Objects.requireNonNull;
 
 class StaticUpdateCheckManager implements UpdateCheckManager {
 
-    private boolean checkRequired;
+    private final boolean checkRequired;
 
-    private boolean localUpToDate;
+    private final boolean localUpToDate;
 
     public StaticUpdateCheckManager(boolean checkRequired) {
         this(checkRequired, !checkRequired);
@@ -45,16 +45,19 @@ class StaticUpdateCheckManager implements UpdateCheckManager {
         this.localUpToDate = localUpToDate;
     }
 
+    @Override
     public void touchMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
     }
 
+    @Override
     public void touchArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
     }
 
+    @Override
     public void checkMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
@@ -68,6 +71,7 @@ class StaticUpdateCheckManager implements UpdateCheckManager {
         }
     }
 
+    @Override
     public void checkArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");

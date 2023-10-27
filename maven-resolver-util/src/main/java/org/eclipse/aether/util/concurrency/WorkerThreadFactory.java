@@ -44,7 +44,7 @@ public final class WorkerThreadFactory implements ThreadFactory {
     public WorkerThreadFactory(String namePrefix) {
         this.factory = Executors.defaultThreadFactory();
         this.namePrefix =
-                ((namePrefix != null && namePrefix.length() > 0) ? namePrefix : getCallerSimpleClassName() + '-')
+                ((namePrefix != null && !namePrefix.isEmpty()) ? namePrefix : getCallerSimpleClassName() + '-')
                         + POOL_INDEX.getAndIncrement()
                         + '-';
         threadIndex = new AtomicInteger();

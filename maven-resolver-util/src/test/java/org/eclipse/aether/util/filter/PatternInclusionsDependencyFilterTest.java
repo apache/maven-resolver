@@ -25,14 +25,14 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.VersionScheme;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFilterTest {
 
     @Test
-    public void acceptTestCornerCases() {
+    void acceptTestCornerCases() {
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId("testArtifact");
         DependencyNode node = builder.build();
@@ -46,7 +46,7 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
     }
 
     @Test
-    public void acceptTestMatches() {
+    void acceptTestMatches() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -55,41 +55,41 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
         DependencyNode node = builder.build();
 
         // full match
-        assertTrue("com.example.test:testArtifact:jar:1.0.3", accept(node, "com.example.test:testArtifact:jar:1.0.3"));
+        assertTrue(accept(node, "com.example.test:testArtifact:jar:1.0.3"), "com.example.test:testArtifact:jar:1.0.3");
 
         // single wildcard
-        assertTrue("*:testArtifact:jar:1.0.3", accept(node, "*:testArtifact:jar:1.0.3"));
-        assertTrue("com.example.test:*:jar:1.0.3", accept(node, "com.example.test:*:jar:1.0.3"));
-        assertTrue("com.example.test:testArtifact:*:1.0.3", accept(node, "com.example.test:testArtifact:*:1.0.3"));
-        assertTrue("com.example.test:testArtifact:*:1.0.3", accept(node, "com.example.test:testArtifact:*:1.0.3"));
+        assertTrue(accept(node, "*:testArtifact:jar:1.0.3"), "*:testArtifact:jar:1.0.3");
+        assertTrue(accept(node, "com.example.test:*:jar:1.0.3"), "com.example.test:*:jar:1.0.3");
+        assertTrue(accept(node, "com.example.test:testArtifact:*:1.0.3"), "com.example.test:testArtifact:*:1.0.3");
+        assertTrue(accept(node, "com.example.test:testArtifact:*:1.0.3"), "com.example.test:testArtifact:*:1.0.3");
 
         // implicit wildcard
-        assertTrue(":testArtifact:jar:1.0.3", accept(node, ":testArtifact:jar:1.0.3"));
-        assertTrue("com.example.test::jar:1.0.3", accept(node, "com.example.test::jar:1.0.3"));
-        assertTrue("com.example.test:testArtifact::1.0.3", accept(node, "com.example.test:testArtifact::1.0.3"));
-        assertTrue("com.example.test:testArtifact:jar:", accept(node, "com.example.test:testArtifact:jar:"));
+        assertTrue(accept(node, ":testArtifact:jar:1.0.3"), ":testArtifact:jar:1.0.3");
+        assertTrue(accept(node, "com.example.test::jar:1.0.3"), "com.example.test::jar:1.0.3");
+        assertTrue(accept(node, "com.example.test:testArtifact::1.0.3"), "com.example.test:testArtifact::1.0.3");
+        assertTrue(accept(node, "com.example.test:testArtifact:jar:"), "com.example.test:testArtifact:jar:");
 
         // multi wildcards
-        assertTrue("*:*:jar:1.0.3", accept(node, "*:*:jar:1.0.3"));
-        assertTrue("com.example.test:*:*:1.0.3", accept(node, "com.example.test:*:*:1.0.3"));
-        assertTrue("com.example.test:testArtifact:*:*", accept(node, "com.example.test:testArtifact:*:*"));
-        assertTrue("*:testArtifact:jar:*", accept(node, "*:testArtifact:jar:*"));
-        assertTrue("*:*:jar:*", accept(node, "*:*:jar:*"));
-        assertTrue(":*:jar:", accept(node, ":*:jar:"));
+        assertTrue(accept(node, "*:*:jar:1.0.3"), "*:*:jar:1.0.3");
+        assertTrue(accept(node, "com.example.test:*:*:1.0.3"), "com.example.test:*:*:1.0.3");
+        assertTrue(accept(node, "com.example.test:testArtifact:*:*"), "com.example.test:testArtifact:*:*");
+        assertTrue(accept(node, "*:testArtifact:jar:*"), "*:testArtifact:jar:*");
+        assertTrue(accept(node, "*:*:jar:*"), "*:*:jar:*");
+        assertTrue(accept(node, ":*:jar:"), ":*:jar:");
 
         // partial wildcards
-        assertTrue("*.example.test:testArtifact:jar:1.0.3", accept(node, "*.example.test:testArtifact:jar:1.0.3"));
-        assertTrue("com.example.test:testArtifact:*ar:1.0.*", accept(node, "com.example.test:testArtifact:*ar:1.0.*"));
-        assertTrue("com.example.test:testArtifact:jar:1.0.*", accept(node, "com.example.test:testArtifact:jar:1.0.*"));
-        assertTrue("*.example.*:testArtifact:jar:1.0.3", accept(node, "*.example.*:testArtifact:jar:1.0.3"));
+        assertTrue(accept(node, "*.example.test:testArtifact:jar:1.0.3"), "*.example.test:testArtifact:jar:1.0.3");
+        assertTrue(accept(node, "com.example.test:testArtifact:*ar:1.0.*"), "com.example.test:testArtifact:*ar:1.0.*");
+        assertTrue(accept(node, "com.example.test:testArtifact:jar:1.0.*"), "com.example.test:testArtifact:jar:1.0.*");
+        assertTrue(accept(node, "*.example.*:testArtifact:jar:1.0.3"), "*.example.*:testArtifact:jar:1.0.3");
 
         // wildcard as empty string
         assertTrue(
-                "com.example.test*:testArtifact:jar:1.0.3", accept(node, "com.example.test*:testArtifact:jar:1.0.3"));
+                accept(node, "com.example.test*:testArtifact:jar:1.0.3"), "com.example.test*:testArtifact:jar:1.0.3");
     }
 
     @Test
-    public void acceptTestLessToken() {
+    void acceptTestLessToken() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -97,15 +97,15 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
                 .version("1.0.3");
         DependencyNode node = builder.build();
 
-        assertTrue("com.example.test:testArtifact:jar", accept(node, "com.example.test:testArtifact:jar"));
-        assertTrue("com.example.test:testArtifact", accept(node, "com.example.test:testArtifact"));
-        assertTrue("com.example.test", accept(node, "com.example.test"));
+        assertTrue(accept(node, "com.example.test:testArtifact:jar"), "com.example.test:testArtifact:jar");
+        assertTrue(accept(node, "com.example.test:testArtifact"), "com.example.test:testArtifact");
+        assertTrue(accept(node, "com.example.test"), "com.example.test");
 
-        assertFalse("com.example.foo", accept(node, "com.example.foo"));
+        assertFalse(accept(node, "com.example.foo"), "com.example.foo");
     }
 
     @Test
-    public void acceptTestMissmatch() {
+    void acceptTestMissmatch() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -113,22 +113,22 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
                 .version("1.0.3");
         DependencyNode node = builder.build();
 
-        assertFalse("OTHER.GROUP.ID:testArtifact:jar:1.0.3", accept(node, "OTHER.GROUP.ID:testArtifact:jar:1.0.3"));
+        assertFalse(accept(node, "OTHER.GROUP.ID:testArtifact:jar:1.0.3"), "OTHER.GROUP.ID:testArtifact:jar:1.0.3");
         assertFalse(
-                "com.example.test:OTHER_ARTIFACT:jar:1.0.3", accept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"));
+                accept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"), "com.example.test:OTHER_ARTIFACT:jar:1.0.3");
         assertFalse(
-                "com.example.test:OTHER_ARTIFACT:jar:1.0.3", accept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"));
-        assertFalse("com.example.test:testArtifact:WAR:1.0.3", accept(node, "com.example.test:testArtifact:WAR:1.0.3"));
+                accept(node, "com.example.test:OTHER_ARTIFACT:jar:1.0.3"), "com.example.test:OTHER_ARTIFACT:jar:1.0.3");
+        assertFalse(accept(node, "com.example.test:testArtifact:WAR:1.0.3"), "com.example.test:testArtifact:WAR:1.0.3");
         assertFalse(
-                "com.example.test:testArtifact:jar:SNAPSHOT",
-                accept(node, "com.example.test:testArtifact:jar:SNAPSHOT"));
+                accept(node, "com.example.test:testArtifact:jar:SNAPSHOT"),
+                "com.example.test:testArtifact:jar:SNAPSHOT");
 
-        assertFalse("*:*:war:*", accept(node, "*:*:war:*"));
-        assertFalse("OTHER.GROUP.ID", accept(node, "OTHER.GROUP.ID"));
+        assertFalse(accept(node, "*:*:war:*"), "*:*:war:*");
+        assertFalse(accept(node, "OTHER.GROUP.ID"), "OTHER.GROUP.ID");
     }
 
     @Test
-    public void acceptTestMoreToken() {
+    void acceptTestMoreToken() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -137,12 +137,12 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
 
         DependencyNode node = builder.build();
         assertFalse(
-                "com.example.test:testArtifact:jar:1.0.3:foo",
-                accept(node, "com.example.test:testArtifact:jar:1.0.3:foo"));
+                accept(node, "com.example.test:testArtifact:jar:1.0.3:foo"),
+                "com.example.test:testArtifact:jar:1.0.3:foo");
     }
 
     @Test
-    public void acceptTestRange() {
+    void acceptTestRange() {
         NodeBuilder builder = new NodeBuilder();
         builder.groupId("com.example.test")
                 .artifactId("testArtifact")
@@ -152,28 +152,28 @@ public class PatternInclusionsDependencyFilterTest extends AbstractDependencyFil
 
         String prefix = "com.example.test:testArtifact:jar:";
 
-        assertTrue(prefix + "[1.0.3,1.0.4)", acceptVersionRange(node, prefix + "[1.0.3,1.0.4)"));
-        assertTrue(prefix + "[1.0.3,)", acceptVersionRange(node, prefix + "[1.0.3,)"));
-        assertTrue(prefix + "[1.0.3,]", acceptVersionRange(node, prefix + "[1.0.3,]"));
-        assertTrue(prefix + "(,1.0.3]", acceptVersionRange(node, prefix + "(,1.0.3]"));
-        assertTrue(prefix + "[1.0,]", acceptVersionRange(node, prefix + "[1.0,]"));
-        assertTrue(prefix + "[1,4]", acceptVersionRange(node, prefix + "[1,4]"));
-        assertTrue(prefix + "(1,4)", acceptVersionRange(node, prefix + "(1,4)"));
+        assertTrue(acceptVersionRange(node, prefix + "[1.0.3,1.0.4)"), prefix + "[1.0.3,1.0.4)");
+        assertTrue(acceptVersionRange(node, prefix + "[1.0.3,)"), prefix + "[1.0.3,)");
+        assertTrue(acceptVersionRange(node, prefix + "[1.0.3,]"), prefix + "[1.0.3,]");
+        assertTrue(acceptVersionRange(node, prefix + "(,1.0.3]"), prefix + "(,1.0.3]");
+        assertTrue(acceptVersionRange(node, prefix + "[1.0,]"), prefix + "[1.0,]");
+        assertTrue(acceptVersionRange(node, prefix + "[1,4]"), prefix + "[1,4]");
+        assertTrue(acceptVersionRange(node, prefix + "(1,4)"), prefix + "(1,4)");
 
-        assertTrue(prefix + "(1.0.2,1.0.3]", acceptVersionRange(node, prefix + "(1.0.2,1.0.3]", prefix + "(1.1,)"));
+        assertTrue(acceptVersionRange(node, prefix + "(1.0.2,1.0.3]", prefix + "(1.1,)"), prefix + "(1.0.2,1.0.3]");
 
-        assertFalse(prefix + "(1.0.3,2.0]", acceptVersionRange(node, prefix + "(1.0.3,2.0]"));
-        assertFalse(prefix + "(1,1.0.2]", acceptVersionRange(node, prefix + "(1,1.0.2]"));
+        assertFalse(acceptVersionRange(node, prefix + "(1.0.3,2.0]"), prefix + "(1.0.3,2.0]");
+        assertFalse(acceptVersionRange(node, prefix + "(1,1.0.2]"), prefix + "(1,1.0.2]");
 
-        assertFalse(prefix + "(1.0.2,1.0.3)", acceptVersionRange(node, prefix + "(1.0.2,1.0.3)", prefix + "(1.0.3,)"));
+        assertFalse(acceptVersionRange(node, prefix + "(1.0.2,1.0.3)", prefix + "(1.0.3,)"), prefix + "(1.0.2,1.0.3)");
     }
 
     public boolean accept(DependencyNode node, String expression) {
-        return new PatternInclusionsDependencyFilter(expression).accept(node, new LinkedList<DependencyNode>());
+        return new PatternInclusionsDependencyFilter(expression).accept(node, new LinkedList<>());
     }
 
     public boolean acceptVersionRange(DependencyNode node, String... expression) {
         return new PatternInclusionsDependencyFilter(new GenericVersionScheme(), expression)
-                .accept(node, new LinkedList<DependencyNode>());
+                .accept(node, new LinkedList<>());
     }
 }

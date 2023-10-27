@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver-demos</artifactId>
-    <version>1.9.14-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>resolver-demo-maven-plugin</artifactId>
@@ -33,7 +33,7 @@
   <description>A simple Maven plugin using Maven Artifact Resolver with Maven repositories.</description>
 
   <prerequisites>
-    <maven>${mavenVersion}</maven>
+    <maven>${minimalMavenBuildVersion}</maven>
   </prerequisites>
 
   <dependencies>

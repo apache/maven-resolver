@@ -54,24 +54,42 @@ public abstract class NamedLockSupport implements NamedLock {
 
     @Override
     public boolean lockShared(long time, TimeUnit unit) throws InterruptedException {
+        Deque<String> steps = null;
         if (diagnosticState != null) {
-            diagnosticState
-                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
-                    .push("shared");
+            steps = diagnosticState.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>());
         }
-        return doLockShared(time, unit);
+        if (steps != null) {
+            steps.push("wait-shared");
+        }
+        boolean result = doLockShared(time, unit);
+        if (steps != null) {
+            steps.pop();
+            if (result) {
+                steps.push("shared");
+            }
+        }
+        return result;
     }
 
     protected abstract boolean doLockShared(long time, TimeUnit unit) throws InterruptedException;
 
     @Override
     public boolean lockExclusively(long time, TimeUnit unit) throws InterruptedException {
+        Deque<String> steps = null;
         if (diagnosticState != null) {
-            diagnosticState
-                    .computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>())
-                    .push("exclusive");
+            steps = diagnosticState.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>());
         }
-        return doLockExclusively(time, unit);
+        if (steps != null) {
+            steps.push("wait-exclusive");
+        }
+        boolean result = doLockExclusively(time, unit);
+        if (steps != null) {
+            steps.pop();
+            if (result) {
+                steps.push("exclusive");
+            }
+        }
+        return result;
     }
 
     protected abstract boolean doLockExclusively(long time, TimeUnit unit) throws InterruptedException;

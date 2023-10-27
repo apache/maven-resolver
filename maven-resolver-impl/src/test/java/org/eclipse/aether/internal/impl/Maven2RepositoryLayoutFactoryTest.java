@@ -35,10 +35,11 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySupport
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Maven2RepositoryLayoutFactoryTest {
     private final ChecksumAlgorithmFactory SHA512 = new ChecksumAlgorithmFactorySupport("SHA-512", "sha512") {
@@ -97,20 +98,20 @@ public class Maven2RepositoryLayoutFactoryTest {
         }
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         session = TestUtils.newSession();
-        factory = new Maven2RepositoryLayoutFactory();
+        factory = new Maven2RepositoryLayoutFactory(checksumsSelector());
         layout = factory.newInstance(session, newRepo("default"));
     }
 
-    @Test(expected = NoRepositoryLayoutException.class)
-    public void testBadLayout() throws Exception {
-        factory.newInstance(session, newRepo("DEFAULT"));
+    @Test
+    void testBadLayout() {
+        assertThrows(NoRepositoryLayoutException.class, () -> factory.newInstance(session, newRepo("DEFAULT")));
     }
 
     @Test
-    public void testChecksumAlgorithmNames() {
+    void testChecksumAlgorithmNames() {
         assertEquals(
                 Arrays.asList("SHA-1", "MD5"),
                 layout.getChecksumAlgorithmFactories().stream()
@@ -119,7 +120,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testArtifactLocation_Release() {
+    void testArtifactLocation_Release() {
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0");
         URI uri = layout.getLocation(artifact, false);
         assertEquals("g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext", uri.toString());
@@ -128,7 +129,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testArtifactLocation_Snapshot() {
+    void testArtifactLocation_Snapshot() {
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0-20110329.221805-4");
         URI uri = layout.getLocation(artifact, false);
         assertEquals("g/i/d/a-i.d/1.0-SNAPSHOT/a-i.d-1.0-20110329.221805-4-cls.ext", uri.toString());
@@ -137,7 +138,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testMetadataLocation_RootLevel() {
+    void testMetadataLocation_RootLevel() {
         DefaultMetadata metadata = new DefaultMetadata("archetype-catalog.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         URI uri = layout.getLocation(metadata, false);
         assertEquals("archetype-catalog.xml", uri.toString());
@@ -146,7 +147,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testMetadataLocation_GroupLevel() {
+    void testMetadataLocation_GroupLevel() {
         DefaultMetadata metadata = new DefaultMetadata(
                 "org.apache.maven.plugins", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         URI uri = layout.getLocation(metadata, false);
@@ -156,7 +157,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testMetadataLocation_ArtifactLevel() {
+    void testMetadataLocation_ArtifactLevel() {
         DefaultMetadata metadata = new DefaultMetadata(
                 "org.apache.maven.plugins",
                 "maven-jar-plugin",
@@ -169,7 +170,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testMetadataLocation_VersionLevel() {
+    void testMetadataLocation_VersionLevel() {
         DefaultMetadata metadata = new DefaultMetadata(
                 "org.apache.maven.plugins",
                 "maven-jar-plugin",
@@ -183,7 +184,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testArtifactChecksums_Download() {
+    void testArtifactChecksums_Download() {
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0");
         URI uri = layout.getLocation(artifact, false);
         List<ChecksumLocation> checksums = layout.getChecksumLocations(artifact, false, uri);
@@ -193,7 +194,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testArtifactChecksums_DownloadWithCustomAlgorithms() throws NoRepositoryLayoutException {
+    void testArtifactChecksums_DownloadWithCustomAlgorithms() throws NoRepositoryLayoutException {
         session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, "SHA-256,SHA-1");
         layout = factory.newInstance(session, newRepo("default"));
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0");
@@ -204,14 +205,14 @@ public class Maven2RepositoryLayoutFactoryTest {
         assertChecksum(checksums.get(1), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", SHA1);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testArtifactChecksums_DownloadWithUnsupportedAlgorithms() throws NoRepositoryLayoutException {
+    @Test
+    void testArtifactChecksums_DownloadWithUnsupportedAlgorithms() throws NoRepositoryLayoutException {
         session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, "FOO,SHA-1");
-        layout = factory.newInstance(session, newRepo("default"));
+        assertThrows(IllegalArgumentException.class, () -> factory.newInstance(session, newRepo("default")));
     }
 
     @Test
-    public void testArtifactChecksums_Upload() {
+    void testArtifactChecksums_Upload() {
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0");
         URI uri = layout.getLocation(artifact, true);
         List<ChecksumLocation> checksums = layout.getChecksumLocations(artifact, true, uri);
@@ -221,7 +222,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testArtifactChecksums_UploadWithCustomAlgorithms() throws NoRepositoryLayoutException {
+    void testArtifactChecksums_UploadWithCustomAlgorithms() throws NoRepositoryLayoutException {
         session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, "SHA-512,MD5");
         layout = factory.newInstance(session, newRepo("default"));
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0");
@@ -233,7 +234,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testMetadataChecksums_Download() {
+    void testMetadataChecksums_Download() {
         DefaultMetadata metadata = new DefaultMetadata(
                 "org.apache.maven.plugins",
                 "maven-jar-plugin",
@@ -247,7 +248,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testMetadataChecksums_Upload() {
+    void testMetadataChecksums_Upload() {
         DefaultMetadata metadata = new DefaultMetadata(
                 "org.apache.maven.plugins",
                 "maven-jar-plugin",
@@ -261,7 +262,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testSignatureChecksums_Download() {
+    void testSignatureChecksums_Download() {
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "asc", "1.0");
         URI uri = layout.getLocation(artifact, false);
         List<ChecksumLocation> checksums = layout.getChecksumLocations(artifact, false, uri);
@@ -274,7 +275,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testSignatureChecksums_Upload() {
+    void testSignatureChecksums_Upload() {
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "asc", "1.0");
         URI uri = layout.getLocation(artifact, true);
         List<ChecksumLocation> checksums = layout.getChecksumLocations(artifact, true, uri);
@@ -287,7 +288,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testSignatureChecksums_Force() throws Exception {
+    void testSignatureChecksums_Force() throws Exception {
         session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, "");
         layout = factory.newInstance(session, newRepo("default"));
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "jar.asc", "1.0");
@@ -297,7 +298,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testCustomChecksumsIgnored() throws Exception {
+    void testCustomChecksumsIgnored() throws Exception {
         session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,.foo");
         layout = factory.newInstance(session, newRepo("default"));
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "jar.foo", "1.0");
@@ -307,7 +308,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testNotConfiguredButSupportedChecksumsHandledAsChecksums() throws Exception {
+    void testNotConfiguredButSupportedChecksumsHandledAsChecksums() throws Exception {
         layout = factory.newInstance(session, newRepo("default"));
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "jar.sha512", "1.0");
         URI uri = layout.getLocation(artifact, true);
@@ -316,7 +317,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    public void testCustomChecksumsIgnored_IllegalInout() throws Exception {
+    void testCustomChecksumsIgnored_IllegalInout() throws Exception {
         session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,foo");
         try {
             layout = factory.newInstance(session, newRepo("default"));
@@ -324,7 +325,7 @@ public class Maven2RepositoryLayoutFactoryTest {
         } catch (IllegalArgumentException e) {
             String message = e.getMessage();
             assertTrue(
-                    message, message.contains(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS));
+                    message.contains(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS), message);
         }
     }
 }

@@ -18,11 +18,8 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -51,17 +48,12 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
-import org.eclipse.aether.transform.FileTransformer;
-import org.eclipse.aether.util.artifact.SubArtifact;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultDeployerTest {
 
@@ -81,8 +73,8 @@ public class DefaultDeployerTest {
 
     private RecordingRepositoryListener listener;
 
-    @Before
-    public void setup() throws IOException {
+    @BeforeEach
+    void setup() throws IOException {
         artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
         artifact = artifact.setFile(TestFileUtils.createTempFile("artifact"));
         metadata = new DefaultMetadata(
@@ -91,14 +83,15 @@ public class DefaultDeployerTest {
         session = TestUtils.newSession();
         connectorProvider = new StubRepositoryConnectorProvider();
 
-        deployer = new DefaultDeployer();
-        deployer.setRepositoryConnectorProvider(connectorProvider);
-        deployer.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
-        deployer.setRepositoryEventDispatcher(new StubRepositoryEventDispatcher());
-        deployer.setUpdateCheckManager(new StaticUpdateCheckManager(true));
-        deployer.setFileProcessor(new TestFileProcessor());
-        deployer.setSyncContextFactory(new StubSyncContextFactory());
-        deployer.setOfflineController(new DefaultOfflineController());
+        deployer = new DefaultDeployer(
+                new TestFileProcessor(),
+                new StubRepositoryEventDispatcher(),
+                connectorProvider,
+                new StubRemoteRepositoryManager(),
+                new StaticUpdateCheckManager(true),
+                Collections.emptyMap(),
+                new StubSyncContextFactory(),
+                new DefaultOfflineController());
 
         request = new DeployRequest();
         request.setRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
@@ -109,8 +102,8 @@ public class DefaultDeployerTest {
         session.setRepositoryListener(listener);
     }
 
-    @After
-    public void teardown() throws Exception {
+    @AfterEach
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
@@ -122,7 +115,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testSuccessfulDeploy() throws DeploymentException {
+    void testSuccessfulDeploy() throws DeploymentException {
 
         connector.setExpectPut(artifact);
         connector.setExpectPut(metadata);
@@ -135,20 +128,20 @@ public class DefaultDeployerTest {
         connector.assertSeenExpected();
     }
 
-    @Test(expected = DeploymentException.class)
-    public void testNullArtifactFile() throws DeploymentException {
+    @Test
+    void testNullArtifactFile() {
         request.addArtifact(artifact.setFile(null));
-        deployer.deploy(session, request);
-    }
-
-    @Test(expected = DeploymentException.class)
-    public void testNullMetadataFile() throws DeploymentException {
-        request.addArtifact(artifact.setFile(null));
-        deployer.deploy(session, request);
+        assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
     @Test
-    public void testSuccessfulArtifactEvents() throws DeploymentException {
+    void testNullMetadataFile() {
+        request.addMetadata(metadata.setFile(null));
+        assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
+    }
+
+    @Test
+    void testSuccessfulArtifactEvents() throws DeploymentException {
         request.addArtifact(artifact);
 
         deployer.deploy(session, request);
@@ -168,7 +161,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testFailingArtifactEvents() {
+    void testFailingArtifactEvents() {
         connector.fail = true;
 
         request.addArtifact(artifact);
@@ -193,7 +186,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testSuccessfulMetadataEvents() throws DeploymentException {
+    void testSuccessfulMetadataEvents() throws DeploymentException {
         request.addMetadata(metadata);
 
         deployer.deploy(session, request);
@@ -213,7 +206,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testFailingMetdataEvents() {
+    void testFailingMetdataEvents() {
         connector.fail = true;
 
         request.addMetadata(metadata);
@@ -238,7 +231,7 @@ public class DefaultDeployerTest {
     }
 
     @Test
-    public void testStaleLocalMetadataCopyGetsDeletedBeforeMergeWhenMetadataIsNotCurrentlyPresentInRemoteRepo()
+    void testStaleLocalMetadataCopyGetsDeletedBeforeMergeWhenMetadataIsNotCurrentlyPresentInRemoteRepo()
             throws Exception {
         MergeableMetadata metadata = new MergeableMetadata() {
 
@@ -337,33 +330,6 @@ public class DefaultDeployerTest {
 
         props = new Properties();
         TestFileUtils.readProps(metadataFile, props);
-        assertNull(props.toString(), props.get("old"));
-    }
-
-    @Test
-    public void testFileTransformer() throws Exception {
-        final Artifact transformedArtifact = new SubArtifact(artifact, null, "raj");
-        FileTransformer transformer = new FileTransformer() {
-            @Override
-            public InputStream transformData(File file) {
-                return new ByteArrayInputStream("transformed data".getBytes(StandardCharsets.UTF_8));
-            }
-
-            @Override
-            public Artifact transformArtifact(Artifact artifact) {
-                return transformedArtifact;
-            }
-        };
-
-        StubFileTransformerManager fileTransformerManager = new StubFileTransformerManager();
-        fileTransformerManager.addFileTransformer("jar", transformer);
-        session.setFileTransformerManager(fileTransformerManager);
-
-        request = new DeployRequest();
-        request.addArtifact(artifact);
-        deployer.deploy(session, request);
-
-        Artifact putArtifact = connector.getActualArtifactPutRequests().get(0);
-        assertEquals(transformedArtifact, putArtifact);
+        assertNull(props.get("old"), props.toString());
     }
 }

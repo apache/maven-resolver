@@ -23,9 +23,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
@@ -37,8 +37,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,52 +47,23 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultRepositoryConnectorProvider implements RepositoryConnectorProvider, Service {
+public class DefaultRepositoryConnectorProvider implements RepositoryConnectorProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRepositoryConnectorProvider.class);
 
-    private Collection<RepositoryConnectorFactory> connectorFactories = new ArrayList<>();
+    private final Map<String, RepositoryConnectorFactory> connectorFactories;
 
-    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
-
-    public DefaultRepositoryConnectorProvider() {
-        // enables default constructor
-    }
+    private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
     @Inject
-    DefaultRepositoryConnectorProvider(
-            Set<RepositoryConnectorFactory> connectorFactories,
+    public DefaultRepositoryConnectorProvider(
+            Map<String, RepositoryConnectorFactory> connectorFactories,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        setRepositoryConnectorFactories(connectorFactories);
-        setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setRepositoryConnectorFactories(locator.getServices(RepositoryConnectorFactory.class));
-        setRemoteRepositoryFilterManager(locator.getService(RemoteRepositoryFilterManager.class));
-    }
-
-    public DefaultRepositoryConnectorProvider addRepositoryConnectorFactory(RepositoryConnectorFactory factory) {
-        connectorFactories.add(requireNonNull(factory, "repository connector factory cannot be null"));
-        return this;
-    }
-
-    public DefaultRepositoryConnectorProvider setRepositoryConnectorFactories(
-            Collection<RepositoryConnectorFactory> factories) {
-        if (factories == null) {
-            this.connectorFactories = new ArrayList<>();
-        } else {
-            this.connectorFactories = factories;
-        }
-        return this;
-    }
-
-    public DefaultRepositoryConnectorProvider setRemoteRepositoryFilterManager(
-            RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
+        this.connectorFactories = Collections.unmodifiableMap(connectorFactories);
         this.remoteRepositoryFilterManager = requireNonNull(remoteRepositoryFilterManager);
-        return this;
     }
 
+    @Override
     public RepositoryConnector newRepositoryConnector(RepositorySystemSession session, RemoteRepository repository)
             throws NoRepositoryConnectorException {
         requireNonNull(repository, "remote repository cannot be null");
@@ -108,13 +77,10 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
             }
         }
 
+        PrioritizedComponents<RepositoryConnectorFactory> factories = PrioritizedComponents.reuseOrCreate(
+                session, connectorFactories, RepositoryConnectorFactory::getPriority);
+
         RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
-
-        PrioritizedComponents<RepositoryConnectorFactory> factories = new PrioritizedComponents<>(session);
-        for (RepositoryConnectorFactory factory : this.connectorFactories) {
-            factories.add(factory, factory.getPriority());
-        }
-
         List<NoRepositoryConnectorException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryConnectorFactory> factory : factories.getEnabled()) {
             try {

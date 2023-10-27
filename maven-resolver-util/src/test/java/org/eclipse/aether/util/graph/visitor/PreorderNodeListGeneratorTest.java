@@ -22,9 +22,9 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PreorderNodeListGeneratorTest {
 
@@ -33,18 +33,15 @@ public class PreorderNodeListGeneratorTest {
     }
 
     private void assertSequence(List<DependencyNode> actual, String... expected) {
-        assertEquals(actual.toString(), expected.length, actual.size());
+        assertEquals(expected.length, actual.size(), actual.toString());
         for (int i = 0; i < expected.length; i++) {
             DependencyNode node = actual.get(i);
-            assertEquals(
-                    actual.toString(),
-                    expected[i],
-                    node.getDependency().getArtifact().getArtifactId());
+            assertEquals(expected[i], node.getDependency().getArtifact().getArtifactId(), actual.toString());
         }
     }
 
     @Test
-    public void testOrdering() throws Exception {
+    void testOrdering() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         PreorderNodeListGenerator visitor = new PreorderNodeListGenerator();
@@ -54,7 +51,7 @@ public class PreorderNodeListGeneratorTest {
     }
 
     @Test
-    public void testDuplicateSuppression() throws Exception {
+    void testDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
         PreorderNodeListGenerator visitor = new PreorderNodeListGenerator();

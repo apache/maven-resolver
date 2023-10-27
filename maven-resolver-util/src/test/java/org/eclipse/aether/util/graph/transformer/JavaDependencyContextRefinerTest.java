@@ -21,9 +21,9 @@ package org.eclipse.aether.util.graph.transformer;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -40,7 +40,7 @@ public class JavaDependencyContextRefinerTest extends AbstractDependencyGraphTra
     }
 
     @Test
-    public void testDoNotRefineOtherContext() throws Exception {
+    void testDoNotRefineOtherContext() throws Exception {
         DependencyNode node = parseLiteral("gid:aid:cls:ver");
         node.setRequestContext("otherContext");
 
@@ -49,7 +49,7 @@ public class JavaDependencyContextRefinerTest extends AbstractDependencyGraphTra
     }
 
     @Test
-    public void testRefineToCompile() throws Exception {
+    void testRefineToCompile() throws Exception {
         String expected = "project/compile";
 
         DependencyNode node = parseLiteral("gid:aid:ver compile");
@@ -69,7 +69,7 @@ public class JavaDependencyContextRefinerTest extends AbstractDependencyGraphTra
     }
 
     @Test
-    public void testRefineToTest() throws Exception {
+    void testRefineToTest() throws Exception {
         String expected = "project/test";
 
         DependencyNode node = parseLiteral("gid:aid:ver test");
@@ -79,7 +79,7 @@ public class JavaDependencyContextRefinerTest extends AbstractDependencyGraphTra
     }
 
     @Test
-    public void testRefineToRuntime() throws Exception {
+    void testRefineToRuntime() throws Exception {
         String expected = "project/runtime";
 
         DependencyNode node = parseLiteral("gid:aid:ver runtime");
@@ -89,7 +89,7 @@ public class JavaDependencyContextRefinerTest extends AbstractDependencyGraphTra
     }
 
     @Test
-    public void testDoNotRefineUnknownScopes() throws Exception {
+    void testDoNotRefineUnknownScopes() throws Exception {
         String expected = "project";
 
         DependencyNode node = parseLiteral("gid:aid:ver unknownScope");

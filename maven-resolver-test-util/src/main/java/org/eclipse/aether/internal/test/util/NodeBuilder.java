@@ -122,13 +122,13 @@ public class NodeBuilder {
 
     public DependencyNode build() {
         Dependency dependency = null;
-        if (artifactId != null && artifactId.length() > 0) {
+        if (artifactId != null && !artifactId.isEmpty()) {
             Artifact artifact =
                     new DefaultArtifact(groupId, artifactId, classifier, ext, version, properties, (File) null);
             dependency = new Dependency(artifact, scope, optional);
         }
         DefaultDependencyNode node = new DefaultDependencyNode(dependency);
-        if (artifactId != null && artifactId.length() > 0) {
+        if (artifactId != null && !artifactId.isEmpty()) {
             try {
                 node.setVersion(versionScheme.parseVersion(version));
                 node.setVersionConstraint(versionScheme.parseVersionConstraint(range != null ? range : version));

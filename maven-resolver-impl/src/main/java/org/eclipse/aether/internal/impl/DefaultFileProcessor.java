@@ -21,20 +21,13 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.FileUtils;
 
 /**
@@ -53,6 +46,7 @@ public class DefaultFileProcessor implements FileProcessor {
      * @return {@code true} if and only if the directory was created, along with all necessary parent directories;
      * {@code false} otherwise
      */
+    @Override
     public boolean mkdirs(File directory) {
         if (directory == null) {
             return false;
@@ -76,18 +70,22 @@ public class DefaultFileProcessor implements FileProcessor {
         return (parentDir != null && (mkdirs(parentDir) || parentDir.exists()) && canonDir.mkdir());
     }
 
+    @Override
     public void write(File target, String data) throws IOException {
         FileUtils.writeFile(target.toPath(), p -> Files.write(p, data.getBytes(StandardCharsets.UTF_8)));
     }
 
+    @Override
     public void write(File target, InputStream source) throws IOException {
         FileUtils.writeFile(target.toPath(), p -> Files.copy(source, p, StandardCopyOption.REPLACE_EXISTING));
     }
 
+    @Override
     public void copy(File source, File target) throws IOException {
         copy(source, target, null);
     }
 
+    @Override
     public long copy(File source, File target, ProgressListener listener) throws IOException {
         try (InputStream in = new BufferedInputStream(Files.newInputStream(source.toPath()));
                 FileUtils.CollocatedTempFile tempTarget = FileUtils.newTempFile(target.toPath());
@@ -123,6 +121,7 @@ public class DefaultFileProcessor implements FileProcessor {
         return total;
     }
 
+    @Override
     public void move(File source, File target) throws IOException {
         if (!source.renameTo(target)) {
             copy(source, target);
@@ -136,7 +135,34 @@ public class DefaultFileProcessor implements FileProcessor {
     @Override
     public String readChecksum(final File checksumFile) throws IOException {
         // for now do exactly same as happened before, but FileProcessor is a component and can be replaced
-        return ChecksumUtils.read(checksumFile);
+        String checksum = "";
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(Files.newInputStream(checksumFile.toPath()), StandardCharsets.UTF_8), 512)) {
+            while (true) {
+                String line = br.readLine();
+                if (line == null) {
+                    break;
+                }
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    checksum = line;
+                    break;
+                }
+            }
+        }
+
+        if (checksum.matches(".+= [0-9A-Fa-f]+")) {
+            int lastSpacePos = checksum.lastIndexOf(' ');
+            checksum = checksum.substring(lastSpacePos + 1);
+        } else {
+            int spacePos = checksum.indexOf(' ');
+
+            if (spacePos != -1) {
+                checksum = checksum.substring(0, spacePos);
+            }
+        }
+
+        return checksum;
     }
 
     @Override

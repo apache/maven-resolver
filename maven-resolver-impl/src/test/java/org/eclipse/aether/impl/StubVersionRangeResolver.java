@@ -26,6 +26,7 @@ import static java.util.Objects.requireNonNull;
 
 public class StubVersionRangeResolver implements VersionRangeResolver {
 
+    @Override
     public VersionRangeResult resolveVersionRange(RepositorySystemSession session, VersionRangeRequest request) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");

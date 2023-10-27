@@ -19,24 +19,19 @@
 package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Runs all demos at once as part of UT.
  */
 public class AllResolverDemosTest {
     @Test
-    public void serviceLocator() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.SERVICE_LOCATOR});
+    void supplier() throws Exception {
+        AllResolverDemos.main(new String[] {Booter.SUPPLIER});
     }
 
     @Test
-    public void guice() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.GUICE});
-    }
-
-    @Test
-    public void sisu() throws Exception {
+    void sisu() throws Exception {
         AllResolverDemos.main(new String[] {Booter.SISU});
     }
 }

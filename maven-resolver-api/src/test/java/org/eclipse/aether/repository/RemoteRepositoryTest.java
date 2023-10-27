@@ -18,16 +18,16 @@
  */
 package org.eclipse.aether.repository;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
 public class RemoteRepositoryTest {
 
     @Test
-    public void testGetProtocol() {
+    void testGetProtocol() {
         RemoteRepository.Builder builder = new RemoteRepository.Builder("id", "type", "");
         RemoteRepository repo = builder.build();
         assertEquals("", repo.getProtocol());
@@ -58,7 +58,7 @@ public class RemoteRepositoryTest {
     }
 
     @Test
-    public void testGetHost() {
+    void testGetHost() {
         RemoteRepository.Builder builder = new RemoteRepository.Builder("id", "type", "");
         RemoteRepository repo = builder.build();
         assertEquals("", repo.getHost());

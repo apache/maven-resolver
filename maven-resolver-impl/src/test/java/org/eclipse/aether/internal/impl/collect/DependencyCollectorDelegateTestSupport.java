@@ -64,18 +64,12 @@ import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Common tests for various {@link DependencyCollectorDelegate} implementations.
@@ -102,15 +96,15 @@ public abstract class DependencyCollectorDelegateTestSupport {
         return new Dependency(new DefaultArtifact(coords), scope);
     }
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         session = TestUtils.newSession();
         parser = new DependencyGraphParser("artifact-descriptions/");
         repository = new RemoteRepository.Builder("id", "default", "file:///").build();
-        setupCollector();
+        collector = setupCollector(newReader(""));
     }
 
-    protected abstract void setupCollector();
+    protected abstract DependencyCollectorDelegate setupCollector(ArtifactDescriptorReader artifactDescriptorReader);
 
     private static void assertEqualSubtree(DependencyNode expected, DependencyNode actual) {
         assertEqualSubtree(expected, actual, new LinkedList<>());
@@ -118,7 +112,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
 
     private static void assertEqualSubtree(
             DependencyNode expected, DependencyNode actual, LinkedList<DependencyNode> parents) {
-        assertEquals("path: " + parents, expected.getDependency(), actual.getDependency());
+        assertEquals(expected.getDependency(), actual.getDependency(), "path: " + parents);
 
         if (actual.getDependency() != null) {
             Artifact artifact = actual.getDependency().getArtifact();
@@ -133,9 +127,9 @@ public abstract class DependencyCollectorDelegateTestSupport {
         parents.addLast(expected);
 
         assertEquals(
-                "path: " + parents + ", expected: " + expected.getChildren() + ", actual: " + actual.getChildren(),
                 expected.getChildren().size(),
-                actual.getChildren().size());
+                actual.getChildren().size(),
+                "path: " + parents + ", expected: " + expected.getChildren() + ", actual: " + actual.getChildren());
 
         Iterator<DependencyNode> iterator1 = expected.getChildren().iterator();
         Iterator<DependencyNode> iterator2 = actual.getChildren().iterator();
@@ -165,7 +159,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testSimpleCollection() throws DependencyCollectionException {
+    void testSimpleCollection() throws DependencyCollectionException {
         Dependency dependency = newDep("gid:aid:ext:ver", "compile");
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
         CollectResult result = collector.collectDependencies(session, request);
@@ -185,7 +179,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testMissingDependencyDescription() {
+    void testMissingDependencyDescription() {
         CollectRequest request = new CollectRequest(newDep("missing:description:ext:ver"), singletonList(repository));
         try {
             collector.collectDependencies(session, request);
@@ -203,7 +197,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDuplicates() throws DependencyCollectionException {
+    void testDuplicates() throws DependencyCollectionException {
         Dependency dependency = newDep("duplicate:transitive:ext:dependency");
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
 
@@ -229,7 +223,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testEqualSubtree() throws IOException, DependencyCollectionException {
+    void testEqualSubtree() throws IOException, DependencyCollectionException {
         DependencyNode root = parser.parseResource("expectedSubtreeComparisonResult.txt");
         Dependency dependency = root.getDependency();
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
@@ -239,7 +233,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicDependencies() throws Exception {
+    void testCyclicDependencies() throws Exception {
         DependencyNode root = parser.parseResource("cycle.txt");
         CollectRequest request = new CollectRequest(root.getDependency(), singletonList(repository));
         CollectResult result = collector.collectDependencies(session, request);
@@ -247,18 +241,18 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicDependenciesBig() throws Exception {
+    void testCyclicDependenciesBig() throws Exception {
         CollectRequest request = new CollectRequest(newDep("1:2:pom:5.50-SNAPSHOT"), singletonList(repository));
-        collector.setArtifactDescriptorReader(newReader("cycle-big/"));
+        collector = setupCollector(newReader("cycle-big/"));
         CollectResult result = collector.collectDependencies(session, request);
         assertNotNull(result.getRoot());
         // we only care about the performance here, this test must not hang or run out of mem
     }
 
     @Test
-    public void testCyclicProjects() throws Exception {
+    void testCyclicProjects() throws Exception {
         CollectRequest request = new CollectRequest(newDep("test:a:2"), singletonList(repository));
-        collector.setArtifactDescriptorReader(newReader("versionless-cycle/"));
+        collector = setupCollector(newReader("versionless-cycle/"));
         CollectResult result = collector.collectDependencies(session, request);
         DependencyNode root = result.getRoot();
         DependencyNode a1 = path(root, 0, 0);
@@ -277,7 +271,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicProjects_ConsiderLabelOfRootlessGraph() throws Exception {
+    void testCyclicProjects_ConsiderLabelOfRootlessGraph() throws Exception {
         Dependency dep = newDep("gid:aid:ver", "compile");
         CollectRequest request = new CollectRequest()
                 .addDependency(dep)
@@ -301,7 +295,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testPartialResultOnError() throws IOException {
+    void testPartialResultOnError() throws IOException {
         DependencyNode root = parser.parseResource("expectedPartialSubtreeOnError.txt");
 
         Dependency dependency = root.getDependency();
@@ -309,7 +303,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
 
         CollectResult result;
         try {
-            result = collector.collectDependencies(session, request);
+            collector.collectDependencies(session, request);
             fail("expected exception ");
         } catch (DependencyCollectionException e) {
             result = e.getResult();
@@ -325,7 +319,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCollectMultipleDependencies() throws DependencyCollectionException {
+    void testCollectMultipleDependencies() throws DependencyCollectionException {
         Dependency root1 = newDep("gid:aid:ext:ver", "compile");
         Dependency root2 = newDep("gid:aid2:ext:ver", "compile");
         List<Dependency> dependencies = Arrays.asList(root1, root2);
@@ -344,12 +338,13 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testArtifactDescriptorResolutionNotRestrictedToRepoHostingSelectedVersion() throws Exception {
+    void testArtifactDescriptorResolutionNotRestrictedToRepoHostingSelectedVersion() throws Exception {
         RemoteRepository repo2 = new RemoteRepository.Builder("test", "default", "file:///").build();
 
         final List<RemoteRepository> repos = new ArrayList<>();
 
-        collector.setArtifactDescriptorReader(new ArtifactDescriptorReader() {
+        collector = setupCollector(new ArtifactDescriptorReader() {
+            @Override
             public ArtifactDescriptorResult readArtifactDescriptor(
                     RepositorySystemSession session, ArtifactDescriptorRequest request) {
                 repos.addAll(request.getRepositories());
@@ -368,7 +363,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testManagedVersionScope() throws DependencyCollectionException {
+    void testManagedVersionScope() throws DependencyCollectionException {
         Dependency dependency = newDep("managed:aid:ext:ver");
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
 
@@ -393,8 +388,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement() throws IOException, DependencyCollectionException {
-        collector.setArtifactDescriptorReader(newReader("managed/"));
+    void testDependencyManagement() throws IOException, DependencyCollectionException {
+        collector = setupCollector(newReader("managed/"));
 
         DependencyNode root = parser.parseResource("expectedSubtreeComparisonResult.txt");
         TestDependencyManager depMgmt = new TestDependencyManager();
@@ -417,7 +412,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_VerboseMode() throws Exception {
+    void testDependencyManagement_VerboseMode() throws Exception {
         String depId = "gid:aid2:ext";
         TestDependencyManager depMgmt = new TestDependencyManager();
         depMgmt.version(depId, "managedVersion");
@@ -444,9 +439,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_TransitiveDependencyManager()
-            throws DependencyCollectionException, IOException {
-        collector.setArtifactDescriptorReader(newReader("managed/"));
+    void testDependencyManagement_TransitiveDependencyManager() throws DependencyCollectionException, IOException {
+        collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new TransitiveDependencyManager());
         final Dependency root = newDep("gid:root:ext:ver", "compile");
@@ -471,8 +465,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_DefaultDependencyManager() throws DependencyCollectionException, IOException {
-        collector.setArtifactDescriptorReader(newReader("managed/"));
+    void testDependencyManagement_DefaultDependencyManager() throws DependencyCollectionException, IOException {
+        collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new DefaultDependencyManager());
         final Dependency root = newDep("gid:root:ext:ver", "compile");
@@ -498,7 +492,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testTransitiveDepsUseRangesDirtyTree() throws DependencyCollectionException, IOException {
+    void testTransitiveDepsUseRangesDirtyTree() throws DependencyCollectionException, IOException {
         // Note: DF depends on version order (ultimately the order of versions as returned by VersionRangeResolver
         // that in case of Maven, means order as in maven-metadata.xml
         // BF on the other hand explicitly sorts versions from range in descending order
@@ -514,10 +508,27 @@ public abstract class DependencyCollectorDelegateTestSupport {
 
     protected abstract String getTransitiveDepsUseRangesDirtyTreeResource();
 
+    @Test
+    void testTransitiveDepsUseRangesAndRelocationDirtyTree() throws DependencyCollectionException, IOException {
+        // Note: DF depends on version order (ultimately the order of versions as returned by VersionRangeResolver
+        // that in case of Maven, means order as in maven-metadata.xml
+        // BF on the other hand explicitly sorts versions from range in descending order
+        //
+        // Hence, the "dirty tree" of two will not match.
+        DependencyNode root = parser.parseResource(getTransitiveDepsUseRangesAndRelocationDirtyTreeResource());
+        Dependency dependency = root.getDependency();
+        CollectRequest request = new CollectRequest(dependency, singletonList(repository));
+
+        CollectResult result = collector.collectDependencies(session, request);
+        assertEqualSubtree(root, result.getRoot());
+    }
+
+    protected abstract String getTransitiveDepsUseRangesAndRelocationDirtyTreeResource();
+
     private DependencyNode toDependencyResult(
             final DependencyNode root, final String rootScope, final Boolean optional) {
-        // Make the root artifact resultion result a dependency resolution result for the subtree check.
-        assertNull("Expected root artifact resolution result.", root.getDependency());
+        // Make the root artifact resolution result a dependency resolution result for the subtree check.
+        assertNull(root.getDependency(), "Expected root artifact resolution result.");
         final DefaultDependencyNode defaultNode =
                 new DefaultDependencyNode(new Dependency(root.getArtifact(), rootScope));
 
@@ -531,7 +542,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testVersionFilter() throws Exception {
+    void testVersionFilter() throws Exception {
         session.setVersionFilter(new HighestVersionFilter());
         CollectRequest request = new CollectRequest().setRoot(newDep("gid:aid:1"));
         CollectResult result = collector.collectDependencies(session, request);
@@ -539,8 +550,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDescriptorDependenciesEmpty() throws Exception {
-        collector.setArtifactDescriptorReader(newReader("dependencies-empty/"));
+    void testDescriptorDependenciesEmpty() throws Exception {
+        collector = setupCollector(newReader("dependencies-empty/"));
 
         session.setDependencyGraphTransformer(new ConflictResolver(
                 new NearestVersionSelector(),

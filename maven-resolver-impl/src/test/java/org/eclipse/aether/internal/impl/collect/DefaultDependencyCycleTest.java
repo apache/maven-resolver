@@ -26,16 +26,16 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
 import org.eclipse.aether.graph.DependencyNode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultDependencyCycleTest {
     private static final Dependency FOO_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:foo:1.0"), "test");
     private static final Dependency BAR_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:bar:1.0"), "test");
 
     @Test
-    public void testToString() {
+    void testToString() {
         List<DependencyNode> nodes = new ArrayList<>();
         nodes.add(new DefaultDependencyNode(FOO_DEPENDENCY));
         DependencyCycle cycle = new DefaultDependencyCycle(nodes, 1, BAR_DEPENDENCY);

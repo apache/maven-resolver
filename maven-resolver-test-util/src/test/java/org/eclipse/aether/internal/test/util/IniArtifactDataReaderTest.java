@@ -27,10 +27,10 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -38,13 +38,13 @@ public class IniArtifactDataReaderTest {
 
     private IniArtifactDataReader parser;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         this.parser = new IniArtifactDataReader("org/eclipse/aether/internal/test/util/");
     }
 
     @Test
-    public void testRelocation() throws IOException {
+    void testRelocation() throws IOException {
         String def = "[relocation]\ngid:aid:ext:ver";
 
         ArtifactDescription description = parser.parseLiteral(def);
@@ -58,7 +58,7 @@ public class IniArtifactDataReaderTest {
     }
 
     @Test
-    public void testDependencies() throws IOException {
+    void testDependencies() throws IOException {
         String def = "[dependencies]\ngid:aid:ext:ver\n-exclusion:aid\ngid2:aid2:ext2:ver2";
 
         ArtifactDescription description = parser.parseLiteral(def);
@@ -97,7 +97,7 @@ public class IniArtifactDataReaderTest {
     }
 
     @Test
-    public void testManagedDependencies() throws IOException {
+    void testManagedDependencies() throws IOException {
         String def = "[managed-dependencies]\ngid:aid:ext:ver\n-exclusion:aid\ngid2:aid2:ext2:ver2:runtime";
 
         ArtifactDescription description = parser.parseLiteral(def);
@@ -139,7 +139,7 @@ public class IniArtifactDataReaderTest {
     }
 
     @Test
-    public void testResource() throws IOException {
+    void testResource() throws IOException {
         ArtifactDescription description = parser.parse("ArtifactDataReaderTest.ini");
 
         Artifact artifact = description.getRelocation();

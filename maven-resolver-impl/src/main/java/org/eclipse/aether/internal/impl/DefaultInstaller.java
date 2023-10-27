@@ -23,13 +23,12 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
+import java.util.Map;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -50,12 +49,7 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.eclipse.aether.transform.FileTransformer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -63,71 +57,29 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultInstaller implements Installer, Service {
+public class DefaultInstaller implements Installer {
+    private final FileProcessor fileProcessor;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultInstaller.class);
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private FileProcessor fileProcessor;
+    private final Map<String, MetadataGeneratorFactory> metadataFactories;
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
-
-    private Collection<MetadataGeneratorFactory> metadataFactories = new ArrayList<>();
-
-    private SyncContextFactory syncContextFactory;
-
-    public DefaultInstaller() {
-        // enables default constructor
-    }
+    private final SyncContextFactory syncContextFactory;
 
     @Inject
-    DefaultInstaller(
+    public DefaultInstaller(
             FileProcessor fileProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
-            Set<MetadataGeneratorFactory> metadataFactories,
+            Map<String, MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory) {
-        setFileProcessor(fileProcessor);
-        setRepositoryEventDispatcher(repositoryEventDispatcher);
-        setMetadataGeneratorFactories(metadataFactories);
-        setSyncContextFactory(syncContextFactory);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setFileProcessor(locator.getService(FileProcessor.class));
-        setRepositoryEventDispatcher(locator.getService(RepositoryEventDispatcher.class));
-        setMetadataGeneratorFactories(locator.getServices(MetadataGeneratorFactory.class));
-        setSyncContextFactory(locator.getService(SyncContextFactory.class));
-    }
-
-    public DefaultInstaller setFileProcessor(FileProcessor fileProcessor) {
         this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
-        return this;
-    }
-
-    public DefaultInstaller setRepositoryEventDispatcher(RepositoryEventDispatcher repositoryEventDispatcher) {
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
-        return this;
-    }
-
-    public DefaultInstaller addMetadataGeneratorFactory(MetadataGeneratorFactory factory) {
-        metadataFactories.add(requireNonNull(factory, "metadata generator factory cannot be null"));
-        return this;
-    }
-
-    public DefaultInstaller setMetadataGeneratorFactories(Collection<MetadataGeneratorFactory> metadataFactories) {
-        if (metadataFactories == null) {
-            this.metadataFactories = new ArrayList<>();
-        } else {
-            this.metadataFactories = metadataFactories;
-        }
-        return this;
-    }
-
-    public DefaultInstaller setSyncContextFactory(SyncContextFactory syncContextFactory) {
+        this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
-        return this;
     }
 
+    @Override
     public InstallResult install(RepositorySystemSession session, InstallRequest request) throws InstallationException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");
@@ -194,7 +146,7 @@ public class DefaultInstaller implements Installer, Service {
     private List<? extends MetadataGenerator> getMetadataGenerators(
             RepositorySystemSession session, InstallRequest request) {
         PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, this.metadataFactories);
+                Utils.sortMetadataGeneratorFactories(session, metadataFactories);
 
         List<MetadataGenerator> generators = new ArrayList<>();
 
@@ -210,39 +162,11 @@ public class DefaultInstaller implements Installer, Service {
 
     private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact)
             throws InstallationException {
-        LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+        final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+        final File srcFile = artifact.getFile();
+        final File dstFile = new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact(artifact));
 
-        File srcFile = artifact.getFile();
-
-        Collection<FileTransformer> fileTransformers =
-                session.getFileTransformerManager().getTransformersForArtifact(artifact);
-        if (fileTransformers.isEmpty()) {
-            install(session, trace, artifact, lrm, srcFile, null);
-        } else {
-            for (FileTransformer fileTransformer : fileTransformers) {
-                install(session, trace, artifact, lrm, srcFile, fileTransformer);
-            }
-        }
-    }
-
-    private void install(
-            RepositorySystemSession session,
-            RequestTrace trace,
-            Artifact artifact,
-            LocalRepositoryManager lrm,
-            File srcFile,
-            FileTransformer fileTransformer)
-            throws InstallationException {
-        final Artifact targetArtifact;
-        if (fileTransformer != null) {
-            targetArtifact = fileTransformer.transformArtifact(artifact);
-        } else {
-            targetArtifact = artifact;
-        }
-
-        File dstFile = new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact(targetArtifact));
-
-        artifactInstalling(session, trace, targetArtifact, dstFile);
+        artifactInstalling(session, trace, artifact, dstFile);
 
         Exception exception = null;
         try {
@@ -250,29 +174,14 @@ public class DefaultInstaller implements Installer, Service {
                 throw new IllegalStateException("cannot install " + dstFile + " to same path");
             }
 
-            boolean copy = "pom".equals(targetArtifact.getExtension())
-                    || srcFile.lastModified() != dstFile.lastModified()
-                    || srcFile.length() != dstFile.length()
-                    || !srcFile.exists();
-
-            if (!copy) {
-                LOGGER.debug("Skipped re-installing {} to {}, seems unchanged", srcFile, dstFile);
-            } else if (fileTransformer != null) {
-                try (InputStream is = fileTransformer.transformData(srcFile)) {
-                    fileProcessor.write(dstFile, is);
-                    dstFile.setLastModified(srcFile.lastModified());
-                }
-            } else {
-                fileProcessor.copy(srcFile, dstFile);
-                dstFile.setLastModified(srcFile.lastModified());
-            }
-
-            lrm.add(session, new LocalArtifactRegistration(targetArtifact));
+            fileProcessor.copy(srcFile, dstFile);
+            dstFile.setLastModified(srcFile.lastModified());
+            lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;
-            throw new InstallationException("Failed to install artifact " + targetArtifact + ": " + e.getMessage(), e);
+            throw new InstallationException("Failed to install artifact " + artifact + ": " + e.getMessage(), e);
         } finally {
-            artifactInstalled(session, trace, targetArtifact, dstFile, exception);
+            artifactInstalled(session, trace, artifact, dstFile, exception);
         }
     }
 

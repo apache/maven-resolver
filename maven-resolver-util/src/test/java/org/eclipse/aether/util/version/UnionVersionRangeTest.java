@@ -22,9 +22,9 @@ import java.util.Collections;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionRange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UnionVersionRangeTest {
 
@@ -52,7 +52,7 @@ public class UnionVersionRangeTest {
     }
 
     @Test
-    public void testGetLowerBound() {
+    void testGetLowerBound() {
         VersionRange range = UnionVersionRange.from(Collections.<VersionRange>emptySet());
         assertBound(null, false, range.getLowerBound());
 
@@ -70,7 +70,7 @@ public class UnionVersionRangeTest {
     }
 
     @Test
-    public void testGetUpperBound() {
+    void testGetUpperBound() {
         VersionRange range = UnionVersionRange.from(Collections.<VersionRange>emptySet());
         assertBound(null, false, range.getUpperBound());
 

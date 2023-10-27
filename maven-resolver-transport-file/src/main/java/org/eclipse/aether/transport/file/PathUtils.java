@@ -52,7 +52,7 @@ final class PathUtils {
 
         String retValue = null;
 
-        if (protocol.length() > 0) {
+        if (!protocol.isEmpty()) {
             retValue = url.substring(protocol.length() + 1);
         } else {
             retValue = url;

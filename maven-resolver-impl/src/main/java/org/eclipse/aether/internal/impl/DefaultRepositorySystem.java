@@ -25,8 +25,12 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
@@ -39,6 +43,7 @@ import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.ArtifactResolver;
@@ -77,11 +82,12 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
-import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
+import org.eclipse.aether.util.graph.visitor.LevelOrderDependencyNodeConsumerVisitor;
+import org.eclipse.aether.util.graph.visitor.PostorderDependencyNodeConsumerVisitor;
+import org.eclipse.aether.util.graph.visitor.PreorderDependencyNodeConsumerVisitor;
 
 import static java.util.Objects.requireNonNull;
 
@@ -90,41 +96,36 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultRepositorySystem implements RepositorySystem, Service {
+public class DefaultRepositorySystem implements RepositorySystem {
     private final AtomicBoolean shutdown;
 
-    private VersionResolver versionResolver;
+    private final VersionResolver versionResolver;
 
-    private VersionRangeResolver versionRangeResolver;
+    private final VersionRangeResolver versionRangeResolver;
 
-    private ArtifactResolver artifactResolver;
+    private final ArtifactResolver artifactResolver;
 
-    private MetadataResolver metadataResolver;
+    private final MetadataResolver metadataResolver;
 
-    private ArtifactDescriptorReader artifactDescriptorReader;
+    private final ArtifactDescriptorReader artifactDescriptorReader;
 
-    private DependencyCollector dependencyCollector;
+    private final DependencyCollector dependencyCollector;
 
-    private Installer installer;
+    private final Installer installer;
 
-    private Deployer deployer;
+    private final Deployer deployer;
 
-    private LocalRepositoryProvider localRepositoryProvider;
+    private final LocalRepositoryProvider localRepositoryProvider;
 
-    private SyncContextFactory syncContextFactory;
+    private final SyncContextFactory syncContextFactory;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private RepositorySystemLifecycle repositorySystemLifecycle;
-
-    public DefaultRepositorySystem() {
-        // enables default constructor
-        this.shutdown = new AtomicBoolean(false);
-    }
+    private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
-    DefaultRepositorySystem(
+    public DefaultRepositorySystem(
             VersionResolver versionResolver,
             VersionRangeResolver versionRangeResolver,
             ArtifactResolver artifactResolver,
@@ -138,107 +139,22 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
             RemoteRepositoryManager remoteRepositoryManager,
             RepositorySystemLifecycle repositorySystemLifecycle) {
         this.shutdown = new AtomicBoolean(false);
-        setVersionResolver(versionResolver);
-        setVersionRangeResolver(versionRangeResolver);
-        setArtifactResolver(artifactResolver);
-        setMetadataResolver(metadataResolver);
-        setArtifactDescriptorReader(artifactDescriptorReader);
-        setDependencyCollector(dependencyCollector);
-        setInstaller(installer);
-        setDeployer(deployer);
-        setLocalRepositoryProvider(localRepositoryProvider);
-        setSyncContextFactory(syncContextFactory);
-        setRemoteRepositoryManager(remoteRepositoryManager);
-        setRepositorySystemLifecycle(repositorySystemLifecycle);
-    }
-
-    @Override
-    public void initService(ServiceLocator locator) {
-        setVersionResolver(locator.getService(VersionResolver.class));
-        setVersionRangeResolver(locator.getService(VersionRangeResolver.class));
-        setArtifactResolver(locator.getService(ArtifactResolver.class));
-        setMetadataResolver(locator.getService(MetadataResolver.class));
-        setArtifactDescriptorReader(locator.getService(ArtifactDescriptorReader.class));
-        setDependencyCollector(locator.getService(DependencyCollector.class));
-        setInstaller(locator.getService(Installer.class));
-        setDeployer(locator.getService(Deployer.class));
-        setLocalRepositoryProvider(locator.getService(LocalRepositoryProvider.class));
-        setRemoteRepositoryManager(locator.getService(RemoteRepositoryManager.class));
-        setSyncContextFactory(locator.getService(SyncContextFactory.class));
-        setRepositorySystemLifecycle(locator.getService(RepositorySystemLifecycle.class));
-    }
-
-    /**
-     * @deprecated not used any more since MRESOLVER-36 move to slf4j, added back in MRESOLVER-64 for compatibility
-     */
-    @Deprecated
-    public DefaultRepositorySystem setLoggerFactory(org.eclipse.aether.spi.log.LoggerFactory loggerFactory) {
-        // this.logger = NullLoggerFactory.getSafeLogger( loggerFactory, getClass() );
-        return this;
-    }
-
-    public DefaultRepositorySystem setVersionResolver(VersionResolver versionResolver) {
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setVersionRangeResolver(VersionRangeResolver versionRangeResolver) {
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setArtifactResolver(ArtifactResolver artifactResolver) {
         this.artifactResolver = requireNonNull(artifactResolver, "artifact resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setMetadataResolver(MetadataResolver metadataResolver) {
         this.metadataResolver = requireNonNull(metadataResolver, "metadata resolver cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setArtifactDescriptorReader(ArtifactDescriptorReader artifactDescriptorReader) {
         this.artifactDescriptorReader =
                 requireNonNull(artifactDescriptorReader, "artifact descriptor reader cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setDependencyCollector(DependencyCollector dependencyCollector) {
         this.dependencyCollector = requireNonNull(dependencyCollector, "dependency collector cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setInstaller(Installer installer) {
         this.installer = requireNonNull(installer, "installer cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setDeployer(Deployer deployer) {
         this.deployer = requireNonNull(deployer, "deployer cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setLocalRepositoryProvider(LocalRepositoryProvider localRepositoryProvider) {
         this.localRepositoryProvider =
                 requireNonNull(localRepositoryProvider, "local repository provider cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setSyncContextFactory(SyncContextFactory syncContextFactory) {
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setRemoteRepositoryManager(RemoteRepositoryManager remoteRepositoryManager) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
-        return this;
-    }
-
-    public DefaultRepositorySystem setRepositorySystemLifecycle(RepositorySystemLifecycle repositorySystemLifecycle) {
         this.repositorySystemLifecycle =
                 requireNonNull(repositorySystemLifecycle, "repository system lifecycle cannot be null");
-        return this;
     }
 
     @Override
@@ -336,17 +252,26 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
             throw new NullPointerException("dependency node and collect request cannot be null");
         }
 
-        ArtifactRequestBuilder builder = new ArtifactRequestBuilder(trace);
+        final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
+        DependencyVisitor builder = getDependencyVisitor(session, dependencyNodes::add);
         DependencyFilter filter = request.getFilter();
         DependencyVisitor visitor = (filter != null) ? new FilteringDependencyVisitor(builder, filter) : builder;
-        visitor = new TreeDependencyVisitor(visitor);
-
         if (result.getRoot() != null) {
             result.getRoot().accept(visitor);
         }
 
-        List<ArtifactRequest> requests = builder.getRequests();
-
+        final List<ArtifactRequest> requests = dependencyNodes.stream()
+                .map(n -> {
+                    if (n.getDependency() != null) {
+                        ArtifactRequest artifactRequest = new ArtifactRequest(n);
+                        artifactRequest.setTrace(trace);
+                        return artifactRequest;
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         List<ArtifactResult> results;
         try {
             results = artifactResolver.resolveArtifacts(session, requests);
@@ -354,6 +279,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
             are = e;
             results = e.getResults();
         }
+        result.setDependencyNodeResults(dependencyNodes);
         result.setArtifactResults(results);
 
         updateNodesWithResolvedArtifacts(results);
@@ -365,6 +291,34 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         }
 
         return result;
+    }
+
+    @Override
+    public List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root) {
+        validateSession(session);
+        requireNonNull(root, "root cannot be null");
+
+        final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
+        root.accept(getDependencyVisitor(session, dependencyNodes::add));
+        return dependencyNodes;
+    }
+
+    private DependencyVisitor getDependencyVisitor(
+            RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
+        String strategy = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR,
+                ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR);
+        switch (strategy) {
+            case PreorderDependencyNodeConsumerVisitor.NAME:
+                return new PreorderDependencyNodeConsumerVisitor(nodeConsumer);
+            case PostorderDependencyNodeConsumerVisitor.NAME:
+                return new PostorderDependencyNodeConsumerVisitor(nodeConsumer);
+            case LevelOrderDependencyNodeConsumerVisitor.NAME:
+                return new LevelOrderDependencyNodeConsumerVisitor(nodeConsumer);
+            default:
+                throw new IllegalArgumentException("Invalid dependency visitor strategy: " + strategy);
+        }
     }
 
     private void updateNodesWithResolvedArtifacts(List<ArtifactResult> results) {
@@ -417,8 +371,7 @@ public class DefaultRepositorySystem implements RepositorySystem, Service {
         validateSession(session);
         validateRepositories(repositories);
 
-        repositories = remoteRepositoryManager.aggregateRepositories(
-                session, new ArrayList<RemoteRepository>(), repositories, true);
+        repositories = remoteRepositoryManager.aggregateRepositories(session, new ArrayList<>(), repositories, true);
         return repositories;
     }
 

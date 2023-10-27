@@ -91,7 +91,7 @@ public final class Exclusion {
                 + getArtifactId()
                 + ':'
                 + getExtension()
-                + (getClassifier().length() > 0 ? ':' + getClassifier() : "");
+                + (!getClassifier().isEmpty() ? ':' + getClassifier() : "");
     }
 
     @Override

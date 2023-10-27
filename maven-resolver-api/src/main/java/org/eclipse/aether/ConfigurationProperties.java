@@ -56,6 +56,21 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_IMPLICIT_PRIORITIES = false;
 
     /**
+     * A flag indicating whether the created ordered components should be cached or not.
+     *
+     * @see #DEFAULT_CACHED_PRIORITIES
+     * @since TBD
+     */
+    public static final String CACHED_PRIORITIES = PREFIX_PRIORITY + "cached";
+
+    /**
+     * The default caching of priority components if {@link #CACHED_PRIORITIES} isn't set. Default value is {@code true}.
+     *
+     * @since TBD
+     */
+    public static final boolean DEFAULT_CACHED_PRIORITIES = true;
+
+    /**
      * A flag indicating whether interaction with the user is allowed.
      *
      * @see #DEFAULT_INTERACTIVE
@@ -145,6 +160,60 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
+     * The initial retry interval of request to a remote server should be waited in case of "too many requests"
+     * (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if remote server does not use
+     * {@code Retry-After} header, in which case Server value is obeyed.
+     *
+     * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL
+     * @since 1.9.16
+     */
+    public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_CONNECTOR + "http.retryHandler.interval";
+
+    /**
+     * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
+     * Default value 5000ms.
+     *
+     * @since 1.9.16
+     */
+    public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL = 5000L;
+
+    /**
+     * The maximum retry interval of request to a remote server above which the request should be aborted instead.
+     * In theory, a malicious server could tell Maven "come back after 100 years" that would stall the build for
+     * some. Using this parameter Maven will fail the request instead, if interval is above this value.
+     *
+     * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX
+     * @since 1.9.16
+     */
+    public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_CONNECTOR + "http.retryHandler.intervalMax";
+
+    /**
+     * The default retry interval maximum to use if {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX} isn't set.
+     * Default value 5 minutes.
+     *
+     * @since 1.9.16
+     */
+    public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX = 300_000L;
+
+    /**
+     * The HTTP codes of remote server responses that should be handled as "too many requests"
+     * (examples: HTTP codes 429 and 503). Accepts comma separated list of HTTP response codes.
+     *
+     * @see #DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
+     * @since 1.9.16
+     */
+    public static final String HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE =
+            PREFIX_CONNECTOR + "http.retryHandler.serviceUnavailable";
+
+    /**
+     * The default HTTP codes of remote server responses that should be handled as "too many requests".
+     * Default value: "429,503".
+     *
+     * @since 1.9.16
+     */
+    public static final String DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE = "429,503";
+
+    /**
      * Should HTTP client use preemptive auth (w/ BASIC) or not?
      *
      * @see #DEFAULT_HTTP_PREEMPTIVE_AUTH
@@ -175,7 +244,8 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_HTTP_REUSE_CONNECTIONS = true;
 
     /**
-     * Time to live in seconds for an HTTP connection, after that time, the connection will be dropped.
+     * Total time to live in seconds for an HTTP connection, after that time, the connection will be dropped
+     * (no matter for how long it was idle).
      *
      * @see #DEFAULT_HTTP_CONNECTION_MAX_TTL
      * @since 1.9.8
@@ -183,11 +253,11 @@ public final class ConfigurationProperties {
     public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_CONNECTOR + "http.connectionMaxTtl";
 
     /**
-     * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (600 seconds).
+     * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (300 seconds).
      *
      * @since 1.9.8
      */
-    public static final int DEFAULT_HTTP_CONNECTION_MAX_TTL = 600;
+    public static final int DEFAULT_HTTP_CONNECTION_MAX_TTL = 300;
 
     /**
      * The maximum concurrent connections per route HTTP client is allowed to use.
@@ -240,6 +310,23 @@ public final class ConfigurationProperties {
      * The default checksum persistence mode if {@link #PERSISTED_CHECKSUMS} isn't set.
      */
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
+
+    /**
+     * A flag indicating which visitor should be used to "flatten" the dependency graph into list. Default is
+     * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
+     *
+     * @see #DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR
+     * @since TBD
+     */
+    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR =
+            PREFIX_AETHER + "system.resolveDependencies.visitor";
+
+    /**
+     * The default visitor strategy "preOrder".
+     *
+     * @since TBD
+     */
+    public static final String DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR = "preOrder";
 
     private ConfigurationProperties() {
         // hide constructor

@@ -52,7 +52,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
@@ -65,21 +64,11 @@ import org.eclipse.aether.version.Version;
  */
 @Singleton
 @Named(DfDependencyCollector.NAME)
-public class DfDependencyCollector extends DependencyCollectorDelegate implements Service {
+public class DfDependencyCollector extends DependencyCollectorDelegate {
     public static final String NAME = "df";
 
-    /**
-     * Default ctor for SL.
-     *
-     * @deprecated Will be dropped once SL gone.
-     */
-    @Deprecated
-    public DfDependencyCollector() {
-        // enables default constructor
-    }
-
     @Inject
-    DfDependencyCollector(
+    public DfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
             VersionRangeResolver versionRangeResolver) {

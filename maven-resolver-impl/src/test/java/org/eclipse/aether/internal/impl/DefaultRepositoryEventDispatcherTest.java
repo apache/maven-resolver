@@ -21,23 +21,24 @@ package org.eclipse.aether.internal.impl;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Collections;
 import java.util.Locale;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
 public class DefaultRepositoryEventDispatcherTest {
 
     @Test
-    public void testDispatchHandlesAllEventTypes() {
-        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher();
+    void testDispatchHandlesAllEventTypes() {
+        DefaultRepositoryEventDispatcher dispatcher = new DefaultRepositoryEventDispatcher(Collections.emptyMap());
 
         ListenerHandler handler = new ListenerHandler();
 
@@ -54,12 +55,12 @@ public class DefaultRepositoryEventDispatcherTest {
 
             dispatcher.dispatch(event);
 
-            assertNotNull("not handled: " + type, handler.methodName);
+            assertNotNull(handler.methodName, "not handled: " + type);
 
             assertEquals(
-                    "badly handled: " + type,
                     type.name().replace("_", "").toLowerCase(Locale.ENGLISH),
-                    handler.methodName.toLowerCase(Locale.ENGLISH));
+                    handler.methodName.toLowerCase(Locale.ENGLISH),
+                    "badly handled: " + type);
         }
     }
 

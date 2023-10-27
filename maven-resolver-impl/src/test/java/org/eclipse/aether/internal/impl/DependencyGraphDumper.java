@@ -168,7 +168,7 @@ public class DependencyGraphDumper {
                     writer.print(")");
                 }
                 writer.print(dependency.getArtifact());
-                if (dependency.getScope().length() > 0) {
+                if (!dependency.getScope().isEmpty()) {
                     writer.print(":");
                     writer.print(dependency.getScope());
                 }

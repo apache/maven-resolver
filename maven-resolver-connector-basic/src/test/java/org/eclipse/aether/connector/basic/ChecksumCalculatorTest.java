@@ -28,14 +28,14 @@ import java.util.Map;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA256;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA512;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChecksumCalculatorTest {
 
@@ -55,13 +55,13 @@ public class ChecksumCalculatorTest {
         return ByteBuffer.wrap(data.getBytes(StandardCharsets.UTF_8));
     }
 
-    @Before
-    public void init() throws Exception {
+    @BeforeEach
+    void init() throws Exception {
         file = TestFileUtils.createTempFile("Hello World!");
     }
 
     @Test
-    public void testNoOffset() {
+    void testNoOffset() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(0);
         calculator.update(toBuffer("Hello World!"));
@@ -77,7 +77,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testWithOffset() {
+    void testWithOffset() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(6);
         calculator.update(toBuffer("World!"));
@@ -93,7 +93,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testWithExcessiveOffset() {
+    void testWithExcessiveOffset() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(100);
         calculator.update(toBuffer("World!"));
@@ -106,15 +106,15 @@ public class ChecksumCalculatorTest {
         assertEquals(4, digests.size());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testUnknownAlgorithm() {
+    @Test
+    void testUnknownAlgorithm() {
         // resolver now does not tolerate unknown checksums: as they may be set by user only, it is user
         // misconfiguration
-        newCalculator("unknown", SHA1);
+        assertThrows(IllegalArgumentException.class, () -> newCalculator("unknown", SHA1));
     }
 
     @Test
-    public void testNoInitCall() {
+    void testNoInitCall() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.update(toBuffer("Hello World!"));
         Map<String, Object> digests = calculator.get();
@@ -129,7 +129,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testRestart() {
+    void testRestart() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(0);
         calculator.update(toBuffer("Ignored"));
@@ -147,7 +147,7 @@ public class ChecksumCalculatorTest {
     }
 
     @Test
-    public void testRestartAfterError() {
+    void testRestartAfterError() {
         ChecksumCalculator calculator = newCalculator(SHA512, SHA256, SHA1, MD5);
         calculator.init(100);
         calculator.init(0);

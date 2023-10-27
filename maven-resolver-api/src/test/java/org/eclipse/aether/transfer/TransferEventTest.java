@@ -22,9 +22,9 @@ import java.nio.ByteBuffer;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -35,7 +35,7 @@ public class TransferEventTest {
     private static RepositorySystemSession session = new DefaultRepositorySystemSession();
 
     @Test
-    public void testByteArrayConversion() {
+    void testByteArrayConversion() {
         byte[] buffer = new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         int length = buffer.length - 2;
         int offset = 1;
@@ -53,7 +53,7 @@ public class TransferEventTest {
     }
 
     @Test
-    public void testRepeatableReadingOfDataBuffer() {
+    void testRepeatableReadingOfDataBuffer() {
         byte[] data = {0, 1, 2, 3, 4, 5, 6, 7};
         ByteBuffer buffer = ByteBuffer.wrap(data);
 

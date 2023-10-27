@@ -128,17 +128,8 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                 Path summaryFile = summaryFile(
                         basedir, originAware, artifactRepository.getId(), checksumAlgorithmFactory.getFileExtension());
-                ConcurrentHashMap<String, String> algorithmChecksums = checksums.computeIfAbsent(summaryFile, f -> {
-                    ConcurrentHashMap<String, String> loaded = loadProvidedChecksums(summaryFile);
-                    if (Files.isRegularFile(summaryFile)) {
-                        LOGGER.info(
-                                "Loaded {} {} trusted checksums for remote repository {}",
-                                loaded.size(),
-                                checksumAlgorithmFactory.getName(),
-                                artifactRepository.getId());
-                    }
-                    return loaded;
-                });
+                ConcurrentHashMap<String, String> algorithmChecksums =
+                        checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
                 String checksum = algorithmChecksums.get(artifactPath);
                 if (checksum != null) {
                     result.put(checksumAlgorithmFactory.getName(), checksum);
@@ -205,6 +196,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+            LOGGER.info("Loaded {} trusted checksums from {}", result.size(), summaryFile);
         }
         return result;
     }

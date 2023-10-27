@@ -28,45 +28,45 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
 public class DefaultTrackingFileManagerTest {
 
     @Test
-    public void testRead() throws Exception {
+    void testRead() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
         Properties props = tfm.read(propFile);
 
         assertNotNull(props);
-        assertEquals(String.valueOf(props), 2, props.size());
+        assertEquals(2, props.size(), String.valueOf(props));
         assertEquals("value1", props.get("key1"));
         assertEquals("value2", props.get("key2"));
 
-        assertTrue("Leaked file: " + propFile, propFile.delete());
+        assertTrue(propFile.delete(), "Leaked file: " + propFile);
 
         props = tfm.read(propFile);
-        assertNull(String.valueOf(props), props);
+        assertNull(props, String.valueOf(props));
     }
 
     @Test
-    public void testReadNoFileLeak() throws Exception {
+    void testReadNoFileLeak() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         for (int i = 0; i < 1000; i++) {
             File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
             assertNotNull(tfm.read(propFile));
-            assertTrue("Leaked file: " + propFile, propFile.delete());
+            assertTrue(propFile.delete(), "Leaked file: " + propFile);
         }
     }
 
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         // NOTE: The excessive repetitions are to check the update properly truncates the file
@@ -82,13 +82,13 @@ public class DefaultTrackingFileManagerTest {
         Properties props = tfm.read(propFile);
 
         assertNotNull(props);
-        assertEquals(String.valueOf(props), 1, props.size());
+        assertEquals(1, props.size(), String.valueOf(props));
         assertEquals("v", props.get("key1"));
-        assertNull(String.valueOf(props.get("key2")), props.get("key2"));
+        assertNull(props.get("key2"), String.valueOf(props.get("key2")));
     }
 
     @Test
-    public void testUpdateNoFileLeak() throws Exception {
+    void testUpdateNoFileLeak() throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         Map<String, String> updates = new HashMap<>();
@@ -97,12 +97,12 @@ public class DefaultTrackingFileManagerTest {
         for (int i = 0; i < 1000; i++) {
             File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
             assertNotNull(tfm.update(propFile, updates));
-            assertTrue("Leaked file: " + propFile, propFile.delete());
+            assertTrue(propFile.delete(), "Leaked file: " + propFile);
         }
     }
 
     @Test
-    public void testLockingOnCanonicalPath() throws Exception {
+    void testLockingOnCanonicalPath() throws Exception {
         final TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         final File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");

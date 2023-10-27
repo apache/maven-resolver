@@ -21,9 +21,9 @@ package org.eclipse.aether.util.version;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionRange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GenericVersionRangeTest {
 
@@ -49,15 +49,15 @@ public class GenericVersionRangeTest {
     }
 
     private void assertContains(VersionRange range, String version) {
-        assertTrue(range + " should contain " + version, range.containsVersion(newVersion(version)));
+        assertTrue(range.containsVersion(newVersion(version)), range + " should contain " + version);
     }
 
     private void assertNotContains(VersionRange range, String version) {
-        assertFalse(range + " should not contain " + version, range.containsVersion(newVersion(version)));
+        assertFalse(range.containsVersion(newVersion(version)), range + " should not contain " + version);
     }
 
     @Test
-    public void testLowerBoundInclusiveUpperBoundInclusive() {
+    void testLowerBoundInclusiveUpperBoundInclusive() {
         VersionRange range = parseValid("[1,2]");
         assertContains(range, "1");
         assertContains(range, "1.1-SNAPSHOT");
@@ -66,7 +66,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    public void testLowerBoundInclusiveUpperBoundExclusive() {
+    void testLowerBoundInclusiveUpperBoundExclusive() {
         VersionRange range = parseValid("[1.2.3.4.5,1.2.3.4.6)");
         assertContains(range, "1.2.3.4.5");
         assertNotContains(range, "1.2.3.4.6");
@@ -74,7 +74,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    public void testLowerBoundExclusiveUpperBoundInclusive() {
+    void testLowerBoundExclusiveUpperBoundInclusive() {
         VersionRange range = parseValid("(1a,1b]");
         assertNotContains(range, "1a");
         assertContains(range, "1b");
@@ -82,7 +82,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    public void testLowerBoundExclusiveUpperBoundExclusive() {
+    void testLowerBoundExclusiveUpperBoundExclusive() {
         VersionRange range = parseValid("(1,3)");
         assertNotContains(range, "1");
         assertContains(range, "2-SNAPSHOT");
@@ -91,7 +91,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    public void testSingleVersion() {
+    void testSingleVersion() {
         VersionRange range = parseValid("[1]");
         assertContains(range, "1");
         assertEquals(range, parseValid(range.toString()));
@@ -102,7 +102,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    public void testSingleWildcardVersion() {
+    void testSingleWildcardVersion() {
         VersionRange range = parseValid("[1.2.*]");
         assertContains(range, "1.2-alpha-1");
         assertContains(range, "1.2-SNAPSHOT");
@@ -113,24 +113,24 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    public void testMissingOpenCloseDelimiter() {
+    void testMissingOpenCloseDelimiter() {
         parseInvalid("1.0");
     }
 
     @Test
-    public void testMissingOpenDelimiter() {
+    void testMissingOpenDelimiter() {
         parseInvalid("1.0]");
         parseInvalid("1.0)");
     }
 
     @Test
-    public void testMissingCloseDelimiter() {
+    void testMissingCloseDelimiter() {
         parseInvalid("[1.0");
         parseInvalid("(1.0");
     }
 
     @Test
-    public void testTooManyVersions() {
+    void testTooManyVersions() {
         parseInvalid("[1,2,3]");
         parseInvalid("(1,2,3)");
         parseInvalid("[1,2,3)");

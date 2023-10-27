@@ -41,16 +41,11 @@ import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UT for {@link TrustedChecksumsArtifactResolverPostProcessor}.
@@ -72,8 +67,8 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
 
     private TrustedChecksumsSource.Writer trustedChecksumsWriter;
 
-    @Before
-    public void prepareSubject() throws IOException {
+    @BeforeEach
+    void prepareSubject() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         // make the two artifacts, BOTH as resolved
         File tmp = Files.createTempFile("artifact", "tmp").toFile();
@@ -143,55 +138,59 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     // UTs below
 
     @Test
-    public void haveMatchingChecksumPass() {
+    void haveMatchingChecksumPass() {
         ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
     }
 
     @Test
-    public void haveNoChecksumPass() {
+    void haveNoChecksumPass() {
         ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum);
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
     }
 
     @Test
-    public void haveNoChecksumFailIfMissingEnabledFail() {
+    void haveNoChecksumFailIfMissingEnabledFail() {
         session.setConfigProperty(
                 "aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing", Boolean.TRUE.toString());
         ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum);
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
-        assertThat(artifactResult.isResolved(), equalTo(false));
-        assertThat(artifactResult.getExceptions(), not(empty()));
-        assertThat(
-                artifactResult.getExceptions().get(0).getMessage(),
-                containsString("Missing from " + TRUSTED_SOURCE_NAME + " trusted"));
+        assertFalse(artifactResult.isResolved());
+        assertFalse(artifactResult.getExceptions().isEmpty());
+        assertTrue(artifactResult
+                .getExceptions()
+                .get(0)
+                .getMessage()
+                .contains("Missing from " + TRUSTED_SOURCE_NAME + " trusted"));
     }
 
     @Test
-    public void haveMismatchingChecksumFail() {
+    void haveMismatchingChecksumFail() {
         artifactTrustedChecksum = "foobar";
         ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
-        assertThat(artifactResult.isResolved(), equalTo(false));
-        assertThat(artifactResult.getExceptions(), not(empty()));
-        assertThat(artifactResult.getExceptions().get(0).getMessage(), containsString("trusted checksum mismatch"));
-        assertThat(
-                artifactResult.getExceptions().get(0).getMessage(),
-                containsString(TRUSTED_SOURCE_NAME + "=" + artifactTrustedChecksum));
+        assertFalse(artifactResult.isResolved());
+        assertFalse(artifactResult.getExceptions().isEmpty());
+        assertTrue(artifactResult.getExceptions().get(0).getMessage().contains("trusted checksum mismatch"));
+        assertTrue(artifactResult
+                .getExceptions()
+                .get(0)
+                .getMessage()
+                .contains(TRUSTED_SOURCE_NAME + "=" + artifactTrustedChecksum));
     }
 
     @Test
-    public void recordCalculatedChecksum() {
+    void recordCalculatedChecksum() {
         AtomicReference<String> recordedChecksum = new AtomicReference<>(null);
         this.trustedChecksumsWriter = new Writer() {
             @Override
@@ -206,13 +205,13 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
         session.setConfigProperty(
                 "aether.artifactResolver.postProcessor.trustedChecksums.record", Boolean.TRUE.toString());
         ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
-        assertThat(artifactResult.isResolved(), equalTo(true));
+        assertTrue(artifactResult.isResolved());
 
         String checksum = recordedChecksum.get();
-        assertThat(checksum, notNullValue());
-        assertThat(checksum, equalTo(artifactTrustedChecksum));
+        assertNotNull(checksum);
+        assertEquals(checksum, artifactTrustedChecksum);
     }
 }

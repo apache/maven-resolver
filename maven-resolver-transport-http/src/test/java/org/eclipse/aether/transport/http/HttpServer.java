@@ -25,7 +25,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -35,7 +37,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.aether.util.ChecksumUtils;
+import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Request;
@@ -44,9 +47,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.util.B64Code;
 import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
@@ -113,7 +114,7 @@ public class HttpServer {
 
     private final AtomicInteger connectionsToClose = new AtomicInteger(0);
 
-    private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<LogEntry>());
+    private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
 
     public String getHost() {
         return "localhost";
@@ -334,12 +335,12 @@ public class HttpServer {
                             "bytes " + offset + "-" + (file.length() - 1L) + "/" + file.length());
                 }
                 if (checksumHeader != null) {
-                    Map<String, Object> checksums = ChecksumUtils.calc(file, Collections.singleton("SHA-1"));
+                    Map<String, String> checksums = ChecksumAlgorithmHelper.calculate(
+                            file, Collections.singletonList(new Sha1ChecksumAlgorithmFactory()));
                     if (checksumHeader == ChecksumHeader.NEXUS) {
                         response.setHeader(HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get("SHA-1") + "}}");
                     } else if (checksumHeader == ChecksumHeader.XCHECKSUM) {
-                        response.setHeader(
-                                "x-checksum-sha1", checksums.get("SHA-1").toString());
+                        response.setHeader("x-checksum-sha1", checksums.get(Sha1ChecksumAlgorithmFactory.NAME));
                     }
                 }
                 if (HttpMethod.HEAD.is(req.getMethod())) {
@@ -484,7 +485,7 @@ public class HttpServer {
                 String method = credentials.substring(0, space);
                 if ("basic".equalsIgnoreCase(method)) {
                     credentials = credentials.substring(space + 1);
-                    credentials = B64Code.decode(credentials, StringUtil.__ISO_8859_1);
+                    credentials = new String(Base64.getDecoder().decode(credentials), StandardCharsets.ISO_8859_1);
                     int i = credentials.indexOf(':');
                     if (i > 0) {
                         String user = credentials.substring(0, i);

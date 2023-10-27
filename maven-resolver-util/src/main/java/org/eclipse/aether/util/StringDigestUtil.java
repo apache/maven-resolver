@@ -63,7 +63,7 @@ public final class StringDigestUtil {
      * @see MessageDigest#digest()
      */
     public String digest() {
-        return ChecksumUtils.toHexString(digest.digest());
+        return toHexString(digest.digest());
     }
 
     /**
@@ -78,5 +78,60 @@ public final class StringDigestUtil {
      */
     public static String sha1(final String string) {
         return sha1().update(string).digest();
+    }
+
+    /**
+     * Creates a hexadecimal representation of the specified bytes. Each byte is converted into a two-digit hex number
+     * and appended to the result with no separator between consecutive bytes.
+     *
+     * @param bytes The bytes to represent in hex notation, may be {@code null}.
+     * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
+     * @since 2.0.0
+     */
+    @SuppressWarnings("checkstyle:magicnumber")
+    public static String toHexString(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
+
+        StringBuilder buffer = new StringBuilder(bytes.length * 2);
+
+        for (byte aByte : bytes) {
+            int b = aByte & 0xFF;
+            if (b < 0x10) {
+                buffer.append('0');
+            }
+            buffer.append(Integer.toHexString(b));
+        }
+
+        return buffer.toString();
+    }
+
+    /**
+     * Creates a byte array out of hexadecimal representation of the specified bytes. If input string is {@code null},
+     * {@code null} is returned. Input value must have even length (due hex encoding = 2 chars one byte).
+     *
+     * @param hexString The hexString to convert to byte array, may be {@code null}.
+     * @return The byte array of the input or {@code null} if the input was {@code null}.
+     * @since 2.0.0
+     */
+    @SuppressWarnings("checkstyle:magicnumber")
+    public static byte[] fromHexString(String hexString) {
+        if (hexString == null) {
+            return null;
+        }
+        if (hexString.isEmpty()) {
+            return new byte[] {};
+        }
+        int len = hexString.length();
+        if (len % 2 != 0) {
+            throw new IllegalArgumentException("hexString length not even");
+        }
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte)
+                    ((Character.digit(hexString.charAt(i), 16) << 4) + Character.digit(hexString.charAt(i + 1), 16));
+        }
+        return data;
     }
 }

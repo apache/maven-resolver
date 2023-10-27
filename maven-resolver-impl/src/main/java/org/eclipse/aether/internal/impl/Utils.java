@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -39,12 +40,8 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
 final class Utils {
 
     public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
-            RepositorySystemSession session, Collection<? extends MetadataGeneratorFactory> factories) {
-        PrioritizedComponents<MetadataGeneratorFactory> result = new PrioritizedComponents<>(session);
-        for (MetadataGeneratorFactory factory : factories) {
-            result.add(factory, factory.getPriority());
-        }
-        return result;
+            RepositorySystemSession session, Map<String, MetadataGeneratorFactory> factories) {
+        return PrioritizedComponents.reuseOrCreate(session, factories, MetadataGeneratorFactory::getPriority);
     }
 
     public static List<Metadata> prepareMetadata(

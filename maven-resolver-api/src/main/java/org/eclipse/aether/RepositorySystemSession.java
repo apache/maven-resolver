@@ -36,7 +36,6 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transform.FileTransformerManager;
 
 /**
  * Defines settings and components that control the repository system. Once initialized, the session object itself is
@@ -94,15 +93,41 @@ public interface RepositorySystemSession {
     String getChecksumPolicy();
 
     /**
-     * Gets the global update policy. If set, the global update policy overrides the update policies of the remote
+     * Gets the global update policy, or {@code null} if not set.
+     * <p>
+     * This method is meant for code that does not want to distinguish between artifact and metadata policies.
+     * Note: applications should either use get/set updatePolicy (this method and
+     * {@link DefaultRepositorySystemSession#setUpdatePolicy(String)}) or also distinguish between artifact and
+     * metadata update policies (and use other methods), but <em>should not mix the two!</em>
+     *
+     * @see #getArtifactUpdatePolicy()
+     * @see #getMetadataUpdatePolicy()
+     */
+    String getUpdatePolicy();
+
+    /**
+     * Gets the global artifact update policy. If set, the global update policy overrides the update policies of the
+     * remote repositories being used for resolution.
+     *
+     * @return The global update policy or {@code null}/empty if not set and the per-repository policies apply.
+     * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
+     * @see RepositoryPolicy#UPDATE_POLICY_DAILY
+     * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
+     */
+    String getArtifactUpdatePolicy();
+
+    /**
+     * Gets the global metadata update policy. If set, the global update policy overrides the update policies of the remote
      * repositories being used for resolution.
      *
      * @return The global update policy or {@code null}/empty if not set and the per-repository policies apply.
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
      */
-    String getUpdatePolicy();
+    String getMetadataUpdatePolicy();
 
     /**
      * Gets the local repository used during this session. This is a convenience method for
@@ -258,14 +283,4 @@ public interface RepositorySystemSession {
      * @return The repository cache or {@code null} if none.
      */
     RepositoryCache getCache();
-
-    /**
-     * Get the file transformer manager
-     *
-     * @return the manager, never {@code null}
-     * @deprecated Without any direct replacement for now. This API is OOM-prone, and also lacks a lot of context about
-     * transforming.
-     */
-    @Deprecated
-    FileTransformerManager getFileTransformerManager();
 }

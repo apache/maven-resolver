@@ -39,8 +39,6 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, Service {
+public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
     private static final class LoggedMirror {
 
@@ -79,36 +77,18 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRepositoryManager.class);
 
-    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
+    private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
-    private ChecksumPolicyProvider checksumPolicyProvider;
-
-    public DefaultRemoteRepositoryManager() {
-        // enables default constructor
-    }
+    private final ChecksumPolicyProvider checksumPolicyProvider;
 
     @Inject
-    DefaultRemoteRepositoryManager(
+    public DefaultRemoteRepositoryManager(
             UpdatePolicyAnalyzer updatePolicyAnalyzer, ChecksumPolicyProvider checksumPolicyProvider) {
-        setUpdatePolicyAnalyzer(updatePolicyAnalyzer);
-        setChecksumPolicyProvider(checksumPolicyProvider);
-    }
-
-    public void initService(ServiceLocator locator) {
-        setUpdatePolicyAnalyzer(locator.getService(UpdatePolicyAnalyzer.class));
-        setChecksumPolicyProvider(locator.getService(ChecksumPolicyProvider.class));
-    }
-
-    public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer(UpdatePolicyAnalyzer updatePolicyAnalyzer) {
         this.updatePolicyAnalyzer = requireNonNull(updatePolicyAnalyzer, "update policy analyzer cannot be null");
-        return this;
-    }
-
-    public DefaultRemoteRepositoryManager setChecksumPolicyProvider(ChecksumPolicyProvider checksumPolicyProvider) {
         this.checksumPolicyProvider = requireNonNull(checksumPolicyProvider, "checksum policy provider cannot be null");
-        return this;
     }
 
+    @Override
     public List<RemoteRepository> aggregateRepositories(
             RepositorySystemSession session,
             List<RemoteRepository> dominantRepositories,
@@ -240,6 +220,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
         return merged.setReleasePolicy(releases).setSnapshotPolicy(snapshots).build();
     }
 
+    @Override
     public RepositoryPolicy getPolicy(
             RepositorySystemSession session, RemoteRepository repository, boolean releases, boolean snapshots) {
         requireNonNull(session, "session cannot be null");
@@ -255,25 +236,41 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
         if (policy2 == null) {
             if (globalPolicy) {
-                policy = merge(policy1, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy1,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy1;
             }
         } else if (policy1 == null) {
             if (globalPolicy) {
-                policy = merge(policy2, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy2,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy2;
             }
         } else if (!policy2.isEnabled()) {
             if (globalPolicy) {
-                policy = merge(policy1, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy1,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy1;
             }
         } else if (!policy1.isEnabled()) {
             if (globalPolicy) {
-                policy = merge(policy2, session.getUpdatePolicy(), session.getChecksumPolicy());
+                policy = merge(
+                        policy2,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
             } else {
                 policy = policy2;
             }
@@ -287,32 +284,44 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
                         session, policy1.getChecksumPolicy(), policy2.getChecksumPolicy());
             }
 
-            String updates = session.getUpdatePolicy();
+            String artifactUpdates = session.getArtifactUpdatePolicy();
             //noinspection StatementWithEmptyBody
-            if (globalPolicy && updates != null && !updates.isEmpty()) {
+            if (globalPolicy && artifactUpdates != null && !artifactUpdates.isEmpty()) {
                 // use global override
             } else {
-                updates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
-                        session, policy1.getUpdatePolicy(), policy2.getUpdatePolicy());
+                artifactUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
+                        session, policy1.getArtifactUpdatePolicy(), policy2.getArtifactUpdatePolicy());
+            }
+            String metadataUpdates = session.getMetadataUpdatePolicy();
+            if (globalPolicy && metadataUpdates != null && !metadataUpdates.isEmpty()) {
+                // use global override
+            } else {
+                metadataUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
+                        session, policy1.getMetadataUpdatePolicy(), policy2.getMetadataUpdatePolicy());
             }
 
-            policy = new RepositoryPolicy(true, updates, checksums);
+            policy = new RepositoryPolicy(true, artifactUpdates, metadataUpdates, checksums);
         }
 
         return policy;
     }
 
-    private RepositoryPolicy merge(RepositoryPolicy policy, String updates, String checksums) {
+    private RepositoryPolicy merge(
+            RepositoryPolicy policy, String artifactUpdates, String metadataUpdates, String checksums) {
         if (policy != null) {
-            if (updates == null || updates.isEmpty()) {
-                updates = policy.getUpdatePolicy();
+            if (artifactUpdates == null || artifactUpdates.isEmpty()) {
+                artifactUpdates = policy.getArtifactUpdatePolicy();
+            }
+            if (metadataUpdates == null || metadataUpdates.isEmpty()) {
+                metadataUpdates = policy.getMetadataUpdatePolicy();
             }
             if (checksums == null || checksums.isEmpty()) {
                 checksums = policy.getChecksumPolicy();
             }
-            if (!policy.getUpdatePolicy().equals(updates)
+            if (!policy.getArtifactUpdatePolicy().equals(artifactUpdates)
+                    || !policy.getMetadataUpdatePolicy().equals(metadataUpdates)
                     || !policy.getChecksumPolicy().equals(checksums)) {
-                policy = new RepositoryPolicy(policy.isEnabled(), updates, checksums);
+                policy = new RepositoryPolicy(policy.isEnabled(), artifactUpdates, metadataUpdates, checksums);
             }
         }
         return policy;

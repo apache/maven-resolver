@@ -25,9 +25,9 @@ import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
@@ -38,7 +38,7 @@ public class SubArtifactTest {
     }
 
     @Test
-    public void testMainArtifactFileNotRetained() {
+    void testMainArtifactFileNotRetained() {
         Artifact a = newMainArtifact("gid:aid:ver").setFile(new File(""));
         assertNotNull(a.getFile());
         a = new SubArtifact(a, "", "pom");
@@ -46,7 +46,7 @@ public class SubArtifactTest {
     }
 
     @Test
-    public void testMainArtifactPropertiesNotRetained() {
+    void testMainArtifactPropertiesNotRetained() {
         Artifact a = newMainArtifact("gid:aid:ver").setProperties(Collections.singletonMap("key", "value"));
         assertEquals(1, a.getProperties().size());
         a = new SubArtifact(a, "", "pom");
@@ -54,13 +54,13 @@ public class SubArtifactTest {
         assertSame(null, a.getProperty("key", null));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testMainArtifactMissing() {
-        new SubArtifact(null, "", "pom");
+    @Test
+    void testMainArtifactMissing() {
+        assertThrows(NullPointerException.class, () -> new SubArtifact(null, "", "pom"));
     }
 
     @Test
-    public void testEmptyClassifier() {
+    void testEmptyClassifier() {
         Artifact main = newMainArtifact("gid:aid:ext:cls:ver");
         Artifact sub = new SubArtifact(main, "", "pom");
         assertEquals("", sub.getClassifier());
@@ -69,7 +69,7 @@ public class SubArtifactTest {
     }
 
     @Test
-    public void testEmptyExtension() {
+    void testEmptyExtension() {
         Artifact main = newMainArtifact("gid:aid:ext:cls:ver");
         Artifact sub = new SubArtifact(main, "tests", "");
         assertEquals("", sub.getExtension());
@@ -78,21 +78,21 @@ public class SubArtifactTest {
     }
 
     @Test
-    public void testSameClassifier() {
+    void testSameClassifier() {
         Artifact main = newMainArtifact("gid:aid:ext:cls:ver");
         Artifact sub = new SubArtifact(main, "*", "pom");
         assertEquals("cls", sub.getClassifier());
     }
 
     @Test
-    public void testSameExtension() {
+    void testSameExtension() {
         Artifact main = newMainArtifact("gid:aid:ext:cls:ver");
         Artifact sub = new SubArtifact(main, "tests", "*");
         assertEquals("ext", sub.getExtension());
     }
 
     @Test
-    public void testDerivedClassifier() {
+    void testDerivedClassifier() {
         Artifact main = newMainArtifact("gid:aid:ext:cls:ver");
         Artifact sub = new SubArtifact(main, "*-tests", "pom");
         assertEquals("cls-tests", sub.getClassifier());
@@ -107,7 +107,7 @@ public class SubArtifactTest {
     }
 
     @Test
-    public void testDerivedExtension() {
+    void testDerivedExtension() {
         Artifact main = newMainArtifact("gid:aid:ext:cls:ver");
         Artifact sub = new SubArtifact(main, "", "*.asc");
         assertEquals("ext.asc", sub.getExtension());
@@ -116,7 +116,7 @@ public class SubArtifactTest {
     }
 
     @Test
-    public void testImmutability() {
+    void testImmutability() {
         Artifact a = new SubArtifact(newMainArtifact("gid:aid:ver"), "", "pom");
         assertNotSame(a, a.setFile(new File("file")));
         assertNotSame(a, a.setVersion("otherVersion"));
@@ -124,7 +124,7 @@ public class SubArtifactTest {
     }
 
     @Test
-    public void testPropertiesCopied() {
+    void testPropertiesCopied() {
         Map<String, String> props = new HashMap<>();
         props.put("key", "value1");
 

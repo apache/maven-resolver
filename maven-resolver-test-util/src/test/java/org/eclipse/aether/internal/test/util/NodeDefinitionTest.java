@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class NodeDefinitionTest {
 
@@ -33,9 +33,9 @@ public class NodeDefinitionTest {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
         assertTrue(matcher.matches());
-        assertTrue(groups.length + " vs " + matcher.groupCount(), groups.length <= matcher.groupCount());
+        assertTrue(groups.length <= matcher.groupCount(), groups.length + " vs " + matcher.groupCount());
         for (int i = 1; i <= groups.length; i++) {
-            assertEquals("Mismatch for group " + i, groups[i - 1], matcher.group(i));
+            assertEquals(groups[i - 1], matcher.group(i), "Mismatch for group " + i);
         }
     }
 
@@ -46,7 +46,7 @@ public class NodeDefinitionTest {
     }
 
     @Test
-    public void testPatterns() {
+    void testPatterns() {
         assertMatch("(Example-ID_0123456789)", NodeDefinition.ID, "Example-ID_0123456789");
         assertMatch("^Example-ID_0123456789", NodeDefinition.IDREF, "Example-ID_0123456789");
 
@@ -108,13 +108,13 @@ public class NodeDefinitionTest {
     }
 
     @Test
-    public void testParsing_Reference() {
+    void testParsing_Reference() {
         NodeDefinition desc = new NodeDefinition("^id");
         assertEquals("id", desc.reference);
     }
 
     @Test
-    public void testParsing_Node() {
+    void testParsing_Node() {
         NodeDefinition desc = new NodeDefinition("g:a:1");
         assertNull(desc.reference);
         assertEquals("g:a:1", desc.coords);

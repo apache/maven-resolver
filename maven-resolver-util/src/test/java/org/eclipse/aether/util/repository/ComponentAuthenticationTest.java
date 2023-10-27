@@ -24,9 +24,9 @@ import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ComponentAuthenticationTest {
 
@@ -51,7 +51,7 @@ public class ComponentAuthenticationTest {
     }
 
     @Test
-    public void testFill() {
+    void testFill() {
         Component comp = new Component();
         Authentication auth = new ComponentAuthentication("key", comp);
         AuthenticationContext context = newContext(auth);
@@ -60,7 +60,7 @@ public class ComponentAuthenticationTest {
     }
 
     @Test
-    public void testDigest() {
+    void testDigest() {
         Authentication auth1 = new ComponentAuthentication("key", new Component());
         Authentication auth2 = new ComponentAuthentication("key", new Component());
         String digest1 = newDigest(auth1);
@@ -77,7 +77,7 @@ public class ComponentAuthenticationTest {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         Authentication auth1 = new ComponentAuthentication("key", new Component());
         Authentication auth2 = new ComponentAuthentication("key", new Component());
         Authentication auth3 = new ComponentAuthentication("key", new Object());
@@ -87,7 +87,7 @@ public class ComponentAuthenticationTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         Authentication auth1 = new ComponentAuthentication("key", new Component());
         Authentication auth2 = new ComponentAuthentication("key", new Component());
         assertEquals(auth1.hashCode(), auth2.hashCode());

@@ -21,9 +21,16 @@ package org.eclipse.aether.util.graph.visitor;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Generates a sequence of dependency nodes from a dependeny graph by traversing the graph in postorder. This visitor
+ * Generates a sequence of dependency nodes from a dependency graph by traversing the graph in postorder. This visitor
  * visits each node exactly once regardless how many paths within the dependency graph lead to the node such that the
  * resulting node sequence is free of duplicates.
+ * <p>
+ * The newer classes {@link AbstractDependencyNodeConsumerVisitor} and {@link NodeListGenerator} offer
+ * similar capabilities but are pluggable. Use of this class, while not deprecated, is discouraged. This class
+ * is not used in Resolver and is kept only for backward compatibility reasons.
+ *
+ * @see PostorderDependencyNodeConsumerVisitor
+ * @see NodeListGenerator
  */
 public final class PostorderNodeListGenerator extends AbstractDepthFirstNodeListGenerator {
 

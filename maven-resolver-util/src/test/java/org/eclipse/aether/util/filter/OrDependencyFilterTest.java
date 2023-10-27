@@ -25,14 +25,14 @@ import java.util.List;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OrDependencyFilterTest extends AbstractDependencyFilterTest {
 
     @Test
-    public void acceptTest() {
+    void acceptTest() {
         NodeBuilder builder = new NodeBuilder();
         builder.artifactId("test");
         List<DependencyNode> parents = new LinkedList<>();

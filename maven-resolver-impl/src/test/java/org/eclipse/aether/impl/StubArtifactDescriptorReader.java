@@ -25,6 +25,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
 public class StubArtifactDescriptorReader implements ArtifactDescriptorReader {
 
+    @Override
     public ArtifactDescriptorResult readArtifactDescriptor(
             RepositorySystemSession session, ArtifactDescriptorRequest request) throws ArtifactDescriptorException {
         return new ArtifactDescriptorResult(request);

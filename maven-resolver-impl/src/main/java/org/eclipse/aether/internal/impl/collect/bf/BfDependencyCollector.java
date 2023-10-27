@@ -69,7 +69,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.concurrency.ExecutorUtils;
@@ -85,7 +84,7 @@ import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.fi
  */
 @Singleton
 @Named(BfDependencyCollector.NAME)
-public class BfDependencyCollector extends DependencyCollectorDelegate implements Service {
+public class BfDependencyCollector extends DependencyCollectorDelegate {
     public static final String NAME = "bf";
 
     /**
@@ -110,18 +109,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
      */
     static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
 
-    /**
-     * Default ctor for SL.
-     *
-     * @deprecated Will be dropped once SL gone.
-     */
-    @Deprecated
-    public BfDependencyCollector() {
-        // enables default constructor
-    }
-
     @Inject
-    BfDependencyCollector(
+    public BfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
             VersionRangeResolver versionRangeResolver) {
@@ -143,7 +132,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
             List<Dependency> managedDependencies,
             Results results) {
         boolean useSkip = ConfigUtils.getBoolean(session, CONFIG_PROP_SKIPPER_DEFAULT, CONFIG_PROP_SKIPPER);
-        int nThreads = ExecutorUtils.threadCount(session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads");
+        int nThreads = ExecutorUtils.threadCount(session, 5, CONFIG_PROP_THREADS);
         logger.debug("Using thread pool with {} threads to resolve descriptors.", nThreads);
 
         if (useSkip) {
@@ -554,7 +543,14 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
 
         DescriptorResolutionResult(
                 VersionRangeResult rangeResult, Version version, ArtifactDescriptorResult descriptor) {
-            this(descriptor.getArtifact(), rangeResult);
+            // NOTE: In case of A1 -> A2 relocation this happens:
+            // ArtifactDescriptorResult read by ArtifactDescriptorResultReader for A1
+            // will return instance that will have artifact = A2 (as RelocatedArtifact).
+            // So to properly "key" this instance, we need to use "originally requested" A1 instead!
+            // In short:
+            // ArtifactDescriptorRequest.artifact != ArtifactDescriptorResult.artifact WHEN relocation in play
+            // otherwise (no relocation), they are EQUAL.
+            this(descriptor.getRequest().getArtifact(), rangeResult);
             this.descriptors.put(version, descriptor);
         }
 

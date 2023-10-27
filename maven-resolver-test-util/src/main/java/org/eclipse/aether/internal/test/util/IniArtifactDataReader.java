@@ -118,7 +118,7 @@ class IniArtifactDataReader {
                         String name = line.substring(1, line.length() - 1);
                         name = name.replace("-", "").toUpperCase(Locale.ENGLISH);
                         state = State.valueOf(name);
-                        sections.put(state, new ArrayList<String>());
+                        sections.put(state, new ArrayList<>());
                     } catch (IllegalArgumentException e) {
                         throw new IOException("unknown section: " + line);
                     }
@@ -222,7 +222,7 @@ class IniArtifactDataReader {
     }
 
     private static boolean isEmpty(String line) {
-        return line == null || line.length() == 0;
+        return line == null || line.isEmpty();
     }
 
     private static String cutComment(String line) {

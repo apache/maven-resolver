@@ -27,12 +27,12 @@ import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AndDependencyTraverserTest {
 
@@ -70,14 +70,14 @@ public class AndDependencyTraverserTest {
     private RepositorySystemSession session;
     private DependencyCollectionContext context;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         session = TestUtils.newSession();
         context = TestUtils.newCollectionContext(session, null, Collections.emptyList());
     }
 
-    @After
-    public void teardown() throws Exception {
+    @AfterEach
+    void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
         }
@@ -86,7 +86,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testNewInstance() {
+    void testNewInstance() {
         assertNull(AndDependencyTraverser.newInstance(null, null));
         DependencyTraverser traverser = new DummyDependencyTraverser();
         assertSame(traverser, AndDependencyTraverser.newInstance(traverser, null));
@@ -96,7 +96,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testTraverseDependency() {
+    void testTraverseDependency() {
         Dependency dependency = new Dependency(new DefaultArtifact("g:a:v:1"), "runtime");
 
         DependencyTraverser traverser = new AndDependencyTraverser();
@@ -114,7 +114,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser_Unchanged() {
+    void testDeriveChildTraverser_Unchanged() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true);
         DependencyTraverser other2 = new DummyDependencyTraverser(false);
         DependencyTraverser traverser = new AndDependencyTraverser(other1, other2);
@@ -122,7 +122,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser_OneRemaining() {
+    void testDeriveChildTraverser_OneRemaining() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true);
         DependencyTraverser other2 = new DummyDependencyTraverser(false, null);
         DependencyTraverser traverser = new AndDependencyTraverser(other1, other2);
@@ -130,7 +130,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser_ZeroRemaining() {
+    void testDeriveChildTraverser_ZeroRemaining() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true, null);
         DependencyTraverser other2 = new DummyDependencyTraverser(false, null);
         DependencyTraverser traverser = new AndDependencyTraverser(other1, other2);
@@ -138,7 +138,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true);
         DependencyTraverser other2 = new DummyDependencyTraverser(false);
         DependencyTraverser traverser1 = new AndDependencyTraverser(other1, other2);
@@ -152,7 +152,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true);
         DependencyTraverser other2 = new DummyDependencyTraverser(false);
         DependencyTraverser traverser1 = new AndDependencyTraverser(other1, other2);

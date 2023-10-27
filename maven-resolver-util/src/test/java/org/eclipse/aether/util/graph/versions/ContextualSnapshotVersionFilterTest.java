@@ -22,14 +22,14 @@ import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
 import org.eclipse.aether.util.graph.version.ContextualSnapshotVersionFilter;
 import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextualSnapshotVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test
-    public void testFilterVersions() throws Exception {
+    void testFilterVersions() throws Exception {
         VersionFilter filter = new ContextualSnapshotVersionFilter();
         VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2-SNAPSHOT");
         filter.filterVersions(ctx);
@@ -46,7 +46,7 @@ public class ContextualSnapshotVersionFilterTest extends AbstractVersionFilterTe
     }
 
     @Test
-    public void testDeriveChildFilter() {
+    void testDeriveChildFilter() {
         ContextualSnapshotVersionFilter filter = new ContextualSnapshotVersionFilter();
         assertTrue(derive(filter, "g:a:1") instanceof SnapshotVersionFilter);
         assertSame(null, derive(filter, "g:a:1-SNAPSHOT"));
@@ -56,7 +56,7 @@ public class ContextualSnapshotVersionFilterTest extends AbstractVersionFilterTe
 
     @SuppressWarnings("EqualsWithItself")
     @Test
-    public void testEquals() {
+    void testEquals() {
         ContextualSnapshotVersionFilter filter = new ContextualSnapshotVersionFilter();
         assertNotEquals(null, filter);
         assertEquals(filter, filter);

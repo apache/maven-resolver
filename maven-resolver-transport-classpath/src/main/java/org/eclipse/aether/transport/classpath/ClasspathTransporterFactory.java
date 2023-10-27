@@ -36,8 +36,9 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * <em>Note:</em> Such repositories are read-only and uploads to them are generally not supported.
  */
-@Named("classpath")
+@Named(ClasspathTransporterFactory.NAME)
 public final class ClasspathTransporterFactory implements TransporterFactory {
+    public static final String NAME = "classpath";
 
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
@@ -47,15 +48,6 @@ public final class ClasspathTransporterFactory implements TransporterFactory {
     public static final String CONFIG_PROP_CLASS_LOADER = "aether.connector.classpath.loader";
 
     private float priority;
-
-    /**
-     * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
-     * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
-     * will occur.
-     */
-    public ClasspathTransporterFactory() {
-        // enables default constructor
-    }
 
     public float getPriority() {
         return priority;

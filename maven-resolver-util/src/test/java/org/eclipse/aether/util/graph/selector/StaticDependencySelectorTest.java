@@ -18,13 +18,13 @@
  */
 package org.eclipse.aether.util.graph.selector;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StaticDependencySelectorTest {
     @Test
-    public void testToString() {
+    void testToString() {
         assertEquals("StaticDependencySelector(Select all)", new StaticDependencySelector(true).toString());
     }
 }

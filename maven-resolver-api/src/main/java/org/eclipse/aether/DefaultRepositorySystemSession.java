@@ -18,12 +18,10 @@
  */
 package org.eclipse.aether;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -44,8 +42,6 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.transform.FileTransformer;
-import org.eclipse.aether.transform.FileTransformerManager;
 
 import static java.util.Objects.requireNonNull;
 
@@ -71,11 +67,11 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private String checksumPolicy;
 
-    private String updatePolicy;
+    private String artifactUpdatePolicy;
+
+    private String metadataUpdatePolicy;
 
     private LocalRepositoryManager localRepositoryManager;
-
-    private FileTransformerManager fileTransformerManager;
 
     private WorkspaceReader workspaceReader;
 
@@ -133,7 +129,6 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         proxySelector = NullProxySelector.INSTANCE;
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
-        fileTransformerManager = NullFileTransformerManager.INSTANCE;
         data = new DefaultSessionData();
     }
 
@@ -154,6 +149,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setArtifactDescriptorPolicy(session.getArtifactDescriptorPolicy());
         setChecksumPolicy(session.getChecksumPolicy());
         setUpdatePolicy(session.getUpdatePolicy());
+        setMetadataUpdatePolicy(session.getMetadataUpdatePolicy());
         setLocalRepositoryManager(session.getLocalRepositoryManager());
         setWorkspaceReader(session.getWorkspaceReader());
         setRepositoryListener(session.getRepositoryListener());
@@ -170,7 +166,6 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setDependencySelector(session.getDependencySelector());
         setVersionFilter(session.getVersionFilter());
         setDependencyGraphTransformer(session.getDependencyGraphTransformer());
-        setFileTransformerManager(session.getFileTransformerManager());
         setData(session.getData());
         setCache(session.getCache());
     }
@@ -274,22 +269,74 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     @Override
     public String getUpdatePolicy() {
-        return updatePolicy;
+        return getArtifactUpdatePolicy();
     }
 
     /**
      * Sets the global update policy. If set, the global update policy overrides the update policies of the remote
      * repositories being used for resolution.
+     * <p>
+     * This method is meant for code that does not want to distinguish between artifact and metadata policies.
+     * Note: applications should either use get/set updatePolicy (this method and
+     * {@link RepositorySystemSession#getUpdatePolicy()}) or also distinguish between artifact and
+     * metadata update policies (and use other methods), but <em>should not mix the two!</em>
      *
      * @param updatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
      * @return This session for chaining, never {@code null}.
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @see #setArtifactUpdatePolicy(String)
+     * @see #setMetadataUpdatePolicy(String)
      */
     public DefaultRepositorySystemSession setUpdatePolicy(String updatePolicy) {
         verifyStateForMutation();
-        this.updatePolicy = updatePolicy;
+        setArtifactUpdatePolicy(updatePolicy);
+        setMetadataUpdatePolicy(updatePolicy);
+        return this;
+    }
+
+    @Override
+    public String getArtifactUpdatePolicy() {
+        return artifactUpdatePolicy;
+    }
+
+    /**
+     * Sets the global artifact update policy. If set, the global update policy overrides the artifact update policies
+     * of the remote repositories being used for resolution.
+     *
+     * @param artifactUpdatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
+     * @return This session for chaining, never {@code null}.
+     * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
+     * @see RepositoryPolicy#UPDATE_POLICY_DAILY
+     * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
+     */
+    public DefaultRepositorySystemSession setArtifactUpdatePolicy(String artifactUpdatePolicy) {
+        verifyStateForMutation();
+        this.artifactUpdatePolicy = artifactUpdatePolicy;
+        return this;
+    }
+
+    @Override
+    public String getMetadataUpdatePolicy() {
+        return metadataUpdatePolicy;
+    }
+
+    /**
+     * Sets the global metadata update policy. If set, the global update policy overrides the metadata update policies
+     * of the remote repositories being used for resolution.
+     *
+     * @param metadataUpdatePolicy The global update policy, may be {@code null}/empty to apply the per-repository policies.
+     * @return This session for chaining, never {@code null}.
+     * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
+     * @see RepositoryPolicy#UPDATE_POLICY_DAILY
+     * @see RepositoryPolicy#UPDATE_POLICY_NEVER
+     * @since TBD
+     */
+    public DefaultRepositorySystemSession setMetadataUpdatePolicy(String metadataUpdatePolicy) {
+        verifyStateForMutation();
+        this.metadataUpdatePolicy = metadataUpdatePolicy;
         return this;
     }
 
@@ -313,20 +360,6 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     public DefaultRepositorySystemSession setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager) {
         verifyStateForMutation();
         this.localRepositoryManager = localRepositoryManager;
-        return this;
-    }
-
-    @Override
-    public FileTransformerManager getFileTransformerManager() {
-        return fileTransformerManager;
-    }
-
-    public DefaultRepositorySystemSession setFileTransformerManager(FileTransformerManager fileTransformerManager) {
-        verifyStateForMutation();
-        this.fileTransformerManager = fileTransformerManager;
-        if (this.fileTransformerManager == null) {
-            this.fileTransformerManager = NullFileTransformerManager.INSTANCE;
-        }
         return this;
     }
 
@@ -787,15 +820,6 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
         public ArtifactType get(String typeId) {
             return null;
-        }
-    }
-
-    static final class NullFileTransformerManager implements FileTransformerManager {
-        public static final FileTransformerManager INSTANCE = new NullFileTransformerManager();
-
-        @Override
-        public Collection<FileTransformer> getTransformersForArtifact(Artifact artifact) {
-            return Collections.emptyList();
         }
     }
 }

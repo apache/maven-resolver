@@ -27,8 +27,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 
 import static java.util.Objects.requireNonNull;
 
@@ -36,25 +34,23 @@ import static java.util.Objects.requireNonNull;
  * Creates local repository managers for repository type {@code "simple"}.
  */
 @Singleton
-@Named("simple")
-public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManagerFactory, Service {
+@Named(SimpleLocalRepositoryManagerFactory.NAME)
+public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManagerFactory {
+    public static final String NAME = "simple";
     private float priority;
 
-    private LocalPathComposer localPathComposer;
+    private final LocalPathComposer localPathComposer;
 
+    /**
+     * No-arg constructor, as "simple" local repository is meant mainly for use in tests.
+     */
     public SimpleLocalRepositoryManagerFactory() {
-        // enable no-arg constructor
-        this.localPathComposer = new DefaultLocalPathComposer(); // maven UTs needs this
+        this.localPathComposer = new DefaultLocalPathComposer();
     }
 
     @Inject
     public SimpleLocalRepositoryManagerFactory(final LocalPathComposer localPathComposer) {
         this.localPathComposer = requireNonNull(localPathComposer);
-    }
-
-    @Override
-    public void initService(final ServiceLocator locator) {
-        this.localPathComposer = requireNonNull(locator.getService(LocalPathComposer.class));
     }
 
     @Override

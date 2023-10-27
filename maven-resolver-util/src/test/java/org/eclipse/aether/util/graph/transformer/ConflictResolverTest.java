@@ -32,18 +32,13 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConflictResolverTest {
     @Test
-    public void noTransformationRequired() throws RepositoryException {
+    void noTransformationRequired() throws RepositoryException {
         ConflictResolver resolver = makeDefaultResolver();
 
         // Foo -> Bar
@@ -60,7 +55,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionClash() throws RepositoryException {
+    void versionClash() throws RepositoryException {
         ConflictResolver resolver = makeDefaultResolver();
 
         // Foo -> Bar -> Baz 2.0
@@ -83,7 +78,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionClashForkedStandardVerbose() throws RepositoryException {
+    void versionClashForkedStandardVerbose() throws RepositoryException {
 
         // root -> impl1 -> api:1
         //  |----> impl2 -> api:2
@@ -110,7 +105,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashAscOrder() throws RepositoryException {
+    void versionRangeClashAscOrder() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -130,7 +125,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashAscOrderStandardVerbose() throws RepositoryException {
+    void versionRangeClashAscOrderStandardVerbose() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -151,7 +146,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashAscOrderFullVerbose() throws RepositoryException {
+    void versionRangeClashAscOrderFullVerbose() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -174,7 +169,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashDescOrder() throws RepositoryException {
+    void versionRangeClashDescOrder() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -194,7 +189,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashDescOrderStandardVerbose() throws RepositoryException {
+    void versionRangeClashDescOrderStandardVerbose() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -215,7 +210,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashDescOrderFullVerbose() throws RepositoryException {
+    void versionRangeClashDescOrderFullVerbose() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -238,7 +233,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashMixedOrder() throws RepositoryException {
+    void versionRangeClashMixedOrder() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -258,7 +253,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashMixedOrderStandardVerbose() throws RepositoryException {
+    void versionRangeClashMixedOrderStandardVerbose() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -279,7 +274,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashMixedOrderStandardVerboseLeavesOne() throws RepositoryException {
+    void versionRangeClashMixedOrderStandardVerboseLeavesOne() throws RepositoryException {
         // This is a bit different then others, is related to MRESOLVER-357 and makes sure that
         // ConflictResolver fulfils the promise of "leaving 1 loser"
         //
@@ -309,7 +304,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void versionRangeClashMixedOrderFullVerbose() throws RepositoryException {
+    void versionRangeClashMixedOrderFullVerbose() throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -373,7 +368,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void derivedScopeChange() throws RepositoryException {
+    void derivedScopeChange() throws RepositoryException {
         ConflictResolver resolver = makeDefaultResolver();
 
         // Foo -> Bar (test) -> Jaz
@@ -402,7 +397,7 @@ public class ConflictResolverTest {
     }
 
     @Test
-    public void derivedOptionalStatusChange() throws RepositoryException {
+    void derivedOptionalStatusChange() throws RepositoryException {
         ConflictResolver resolver = makeDefaultResolver();
 
         // Foo -> Bar (optional) -> Jaz

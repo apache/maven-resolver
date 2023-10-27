@@ -24,16 +24,11 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.transfer.TransferResource;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultChecksumPolicyProviderTest {
 
@@ -47,16 +42,16 @@ public class DefaultChecksumPolicyProviderTest {
 
     private TransferResource resource;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         session = TestUtils.newSession();
         provider = new DefaultChecksumPolicyProvider();
         repository = new RemoteRepository.Builder("test", "default", "file:/void").build();
         resource = new TransferResource(repository.getId(), repository.getUrl(), "file.txt", null, null);
     }
 
-    @After
-    public void teardown() {
+    @AfterEach
+    void teardown() {
         provider = null;
         session = null;
         repository = null;
@@ -64,7 +59,7 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testNewChecksumPolicy_Fail() {
+    void testNewChecksumPolicy_Fail() {
         ChecksumPolicy policy =
                 provider.newChecksumPolicy(session, repository, resource, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
         assertNotNull(policy);
@@ -72,7 +67,7 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testNewChecksumPolicy_Warn() {
+    void testNewChecksumPolicy_Warn() {
         ChecksumPolicy policy =
                 provider.newChecksumPolicy(session, repository, resource, RepositoryPolicy.CHECKSUM_POLICY_WARN);
         assertNotNull(policy);
@@ -80,33 +75,33 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testNewChecksumPolicy_Ignore() {
+    void testNewChecksumPolicy_Ignore() {
         ChecksumPolicy policy =
                 provider.newChecksumPolicy(session, repository, resource, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         assertNull(policy);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewChecksumPolicy_Unknown() {
-        ChecksumPolicy policy = provider.newChecksumPolicy(session, repository, resource, CHECKSUM_POLICY_UNKNOWN);
-        assertNotNull(policy);
-        assertEquals(WarnChecksumPolicy.class, policy.getClass());
+    @Test
+    void testNewChecksumPolicy_Unknown() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> provider.newChecksumPolicy(session, repository, resource, CHECKSUM_POLICY_UNKNOWN));
     }
 
     @Test
-    public void testGetEffectiveChecksumPolicy_EqualPolicies() {
+    void testGetEffectiveChecksumPolicy_EqualPolicies() {
         String[] policies = {
             RepositoryPolicy.CHECKSUM_POLICY_FAIL,
             RepositoryPolicy.CHECKSUM_POLICY_WARN,
             RepositoryPolicy.CHECKSUM_POLICY_IGNORE
         };
         for (String policy : policies) {
-            assertEquals(policy, policy, provider.getEffectiveChecksumPolicy(session, policy, policy));
+            assertEquals(policy, provider.getEffectiveChecksumPolicy(session, policy, policy), policy);
         }
     }
 
     @Test
-    public void testGetEffectiveChecksumPolicy_DifferentPolicies() {
+    void testGetEffectiveChecksumPolicy_DifferentPolicies() {
         String[][] testCases = {
             {RepositoryPolicy.CHECKSUM_POLICY_WARN, RepositoryPolicy.CHECKSUM_POLICY_FAIL},
             {RepositoryPolicy.CHECKSUM_POLICY_IGNORE, RepositoryPolicy.CHECKSUM_POLICY_FAIL},
@@ -114,18 +109,18 @@ public class DefaultChecksumPolicyProviderTest {
         };
         for (String[] testCase : testCases) {
             assertEquals(
-                    testCase[0] + " vs " + testCase[1],
                     testCase[0],
-                    provider.getEffectiveChecksumPolicy(session, testCase[0], testCase[1]));
+                    provider.getEffectiveChecksumPolicy(session, testCase[0], testCase[1]),
+                    testCase[0] + " vs " + testCase[1]);
             assertEquals(
-                    testCase[0] + " vs " + testCase[1],
                     testCase[0],
-                    provider.getEffectiveChecksumPolicy(session, testCase[1], testCase[0]));
+                    provider.getEffectiveChecksumPolicy(session, testCase[1], testCase[0]),
+                    testCase[0] + " vs " + testCase[1]);
         }
     }
 
     @Test
-    public void testGetEffectiveChecksumPolicy_UnknownPolicies() {
+    void testGetEffectiveChecksumPolicy_UnknownPolicies() {
         String[][] testCases = {
             {RepositoryPolicy.CHECKSUM_POLICY_WARN, RepositoryPolicy.CHECKSUM_POLICY_FAIL},
             {RepositoryPolicy.CHECKSUM_POLICY_WARN, RepositoryPolicy.CHECKSUM_POLICY_WARN},
@@ -135,11 +130,11 @@ public class DefaultChecksumPolicyProviderTest {
             IllegalArgumentException e = assertThrows(
                     IllegalArgumentException.class,
                     () -> provider.getEffectiveChecksumPolicy(session, CHECKSUM_POLICY_UNKNOWN, testCase[1]));
-            assertThat(e.getMessage(), is("Unsupported policy: unknown"));
+            assertEquals(e.getMessage(), "Unsupported policy: unknown");
             e = assertThrows(
                     IllegalArgumentException.class,
                     () -> provider.getEffectiveChecksumPolicy(session, testCase[1], CHECKSUM_POLICY_UNKNOWN));
-            assertThat(e.getMessage(), is("Unsupported policy: unknown"));
+            assertEquals(e.getMessage(), "Unsupported policy: unknown");
         }
     }
 }

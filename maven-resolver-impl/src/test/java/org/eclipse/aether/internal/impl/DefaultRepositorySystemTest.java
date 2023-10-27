@@ -22,6 +22,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.impl.ArtifactResolver;
+import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.impl.Deployer;
+import org.eclipse.aether.impl.Installer;
+import org.eclipse.aether.impl.LocalRepositoryProvider;
+import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.StubArtifactDescriptorReader;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
@@ -30,10 +37,11 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.util.repository.DefaultAuthenticationSelector;
 import org.eclipse.aether.util.repository.DefaultMirrorSelector;
 import org.eclipse.aether.util.repository.DefaultProxySelector;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 public class DefaultRepositorySystemTest {
 
@@ -41,16 +49,27 @@ public class DefaultRepositorySystemTest {
 
     private DefaultRepositorySystemSession session;
 
-    @Before
-    public void init() {
-        DefaultRemoteRepositoryManager remoteRepoManager = new DefaultRemoteRepositoryManager();
-        system = new DefaultRepositorySystem();
-        system.setRemoteRepositoryManager(remoteRepoManager);
+    @BeforeEach
+    void init() {
+        system = new DefaultRepositorySystem(
+                new StubVersionResolver(),
+                new StubVersionRangeResolver(),
+                mock(ArtifactResolver.class),
+                mock(MetadataResolver.class),
+                new StubArtifactDescriptorReader(),
+                mock(DependencyCollector.class),
+                mock(Installer.class),
+                mock(Deployer.class),
+                mock(LocalRepositoryProvider.class),
+                new StubSyncContextFactory(),
+                new DefaultRemoteRepositoryManager(
+                        new DefaultUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider()),
+                new DefaultRepositorySystemLifecycle());
         session = TestUtils.newSession();
     }
 
     @Test
-    public void testNewResolutionRepositories() {
+    void testNewResolutionRepositories() {
         Proxy proxy = new Proxy("http", "localhost", 8080);
         DefaultProxySelector proxySelector = new DefaultProxySelector();
         proxySelector.add(proxy, null);
@@ -63,7 +82,7 @@ public class DefaultRepositorySystemTest {
         session.setAuthenticationSelector(authSelector);
 
         DefaultMirrorSelector mirrorSelector = new DefaultMirrorSelector();
-        mirrorSelector.add("mirror", "http:void", "default", false, "test-1", null);
+        mirrorSelector.add("mirror", "http:void", "default", false, false, "test-1", null);
         session.setMirrorSelector(mirrorSelector);
 
         RemoteRepository rawRepo1 = new RemoteRepository.Builder("test-1", "default", "http://void").build();
@@ -85,7 +104,7 @@ public class DefaultRepositorySystemTest {
     }
 
     @Test
-    public void testNewDeploymentRepository() {
+    void testNewDeploymentRepository() {
         Proxy proxy = new Proxy("http", "localhost", 8080);
         DefaultProxySelector proxySelector = new DefaultProxySelector();
         proxySelector.add(proxy, null);
@@ -97,7 +116,7 @@ public class DefaultRepositorySystemTest {
         session.setAuthenticationSelector(authSelector);
 
         DefaultMirrorSelector mirrorSelector = new DefaultMirrorSelector();
-        mirrorSelector.add("mirror", "file:void", "default", false, "*", null);
+        mirrorSelector.add("mirror", "file:void", "default", false, false, "*", null);
         session.setMirrorSelector(mirrorSelector);
 
         RemoteRepository rawRepo = new RemoteRepository.Builder("test", "default", "http://void").build();

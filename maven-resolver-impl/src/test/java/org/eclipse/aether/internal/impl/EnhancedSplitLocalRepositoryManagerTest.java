@@ -21,9 +21,9 @@ package org.eclipse.aether.internal.impl;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalRepositoryManagerTest {
 

@@ -38,7 +38,7 @@ final class ComponentAuthentication implements Authentication {
 
     ComponentAuthentication(String key, Object value) {
         this.key = requireNonNull(key, "authentication key cannot be null");
-        if (key.length() == 0) {
+        if (key.isEmpty()) {
             throw new IllegalArgumentException("authentication key cannot be empty");
         }
         this.value = value;

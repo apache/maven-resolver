@@ -19,12 +19,12 @@
 package org.eclipse.aether.named;
 
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 public class LocalReadWriteLockNamedLockFactoryTest extends NamedLockFactoryTestSupport {
 
-    @BeforeClass
-    public static void createNamedLockFactory() {
+    @BeforeAll
+    static void createNamedLockFactory() {
         namedLockFactory = new LocalReadWriteLockNamedLockFactory();
     }
 }

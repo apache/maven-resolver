@@ -100,7 +100,7 @@ public final class TransitiveDependencyManager implements DependencyManager {
             Object key = getKey(artifact);
 
             String version = artifact.getVersion();
-            if (version.length() > 0 && !versions.containsKey(key)) {
+            if (!version.isEmpty() && !versions.containsKey(key)) {
                 if (versions == managedVersions) {
                     versions = new HashMap<>(managedVersions);
                 }
@@ -108,7 +108,7 @@ public final class TransitiveDependencyManager implements DependencyManager {
             }
 
             String scope = managedDependency.getScope();
-            if (scope.length() > 0 && !scopes.containsKey(key)) {
+            if (!scope.isEmpty() && !scopes.containsKey(key)) {
                 if (scopes == this.managedScopes) {
                     scopes = new HashMap<>(this.managedScopes);
                 }

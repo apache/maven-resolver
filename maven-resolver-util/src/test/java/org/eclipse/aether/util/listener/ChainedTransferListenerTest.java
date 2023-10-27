@@ -21,16 +21,16 @@ package org.eclipse.aether.util.listener;
 import java.lang.reflect.Method;
 
 import org.eclipse.aether.transfer.TransferListener;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
 public class ChainedTransferListenerTest {
 
     @Test
-    public void testAllEventTypesHandled() throws Exception {
+    void testAllEventTypesHandled() throws Exception {
         for (Method method : TransferListener.class.getMethods()) {
             assertNotNull(
                     ChainedTransferListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));
