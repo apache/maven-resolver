@@ -134,4 +134,39 @@ public class DefaultFileProcessorTest {
 
         target.delete();
     }
+
+    @Test
+    void testReadChecksumNonExistentFile() {
+        assertThrows(IOException.class, () -> fileProcessor.readChecksum(new File("non existent")));
+    }
+
+    @Test
+    void testReadChecksumEmptyFile() throws IOException {
+        File emptyFile = TestFileUtils.createTempFile("");
+        String read = fileProcessor.readChecksum(emptyFile);
+        assertEquals("", read);
+    }
+
+    @Test
+    void testReadChecksum() throws IOException {
+        String checksum = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+        File checksumFile = TestFileUtils.createTempFile(checksum);
+        String read = fileProcessor.readChecksum(checksumFile);
+        assertEquals(checksum, read);
+    }
+
+    @Test
+    void testReadChecksumWhitespace() throws IOException {
+        String checksum = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+        File checksumFile;
+        String read;
+
+        checksumFile = TestFileUtils.createTempFile("foobar(alg) = " + checksum);
+        read = fileProcessor.readChecksum(checksumFile);
+        assertEquals(checksum, read);
+
+        checksumFile = TestFileUtils.createTempFile(checksum + " foobar");
+        read = fileProcessor.readChecksum(checksumFile);
+        assertEquals(checksum, read);
+    }
 }

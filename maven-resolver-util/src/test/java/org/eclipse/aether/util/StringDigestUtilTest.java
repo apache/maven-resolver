@@ -20,6 +20,8 @@ package org.eclipse.aether.util;
 
 import org.junit.jupiter.api.Test;
 
+import static org.eclipse.aether.util.StringDigestUtil.fromHexString;
+import static org.eclipse.aether.util.StringDigestUtil.toHexString;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class StringDigestUtilTest {
@@ -72,5 +74,23 @@ public class StringDigestUtilTest {
         } catch (IllegalStateException e) {
             // good
         }
+    }
+
+    @Test
+    void testToHexString() {
+        assertNull(toHexString(null));
+        assertEquals("", toHexString(new byte[] {}));
+        assertEquals("00", toHexString(new byte[] {0}));
+        assertEquals("ff", toHexString(new byte[] {-1}));
+        assertEquals("00017f", toHexString(new byte[] {0, 1, 127}));
+    }
+
+    @Test
+    void testFromHexString() {
+        assertNull(fromHexString(null));
+        assertArrayEquals(new byte[] {}, fromHexString(""));
+        assertArrayEquals(new byte[] {0}, fromHexString("00"));
+        assertArrayEquals(new byte[] {-1}, fromHexString("ff"));
+        assertArrayEquals(new byte[] {0, 1, 127}, fromHexString("00017f"));
     }
 }

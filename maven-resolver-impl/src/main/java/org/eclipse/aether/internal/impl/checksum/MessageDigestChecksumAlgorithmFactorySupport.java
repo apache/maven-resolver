@@ -25,7 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySupport;
-import org.eclipse.aether.util.ChecksumUtils;
+import org.eclipse.aether.util.StringDigestUtil;
 
 /**
  * Support class to implement {@link ChecksumAlgorithmFactory} based on Java {@link MessageDigest}.
@@ -49,7 +49,7 @@ public abstract class MessageDigestChecksumAlgorithmFactorySupport extends Check
 
                 @Override
                 public String checksum() {
-                    return ChecksumUtils.toHexString(messageDigest.digest());
+                    return StringDigestUtil.toHexString(messageDigest.digest());
                 }
             };
         } catch (NoSuchAlgorithmException e) {
