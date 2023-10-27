@@ -347,21 +347,6 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    void testMissingSourceFails() {
-        artifact = artifact.setFile(new File("nonexistent artifact"));
-        request.addArtifact(artifact);
-        assertThrows(InstallationException.class, () -> installer.install(session, request));
-    }
-
-    @Test
-    void testMissingSourceSilentlySkippedIfSet() throws InstallationException {
-        session.setConfigProperty(DefaultInstaller.CONFIG_PROP_IGNORE_MISSING_FILE_INSTALL, true);
-        artifact = artifact.setFile(new File("nonexistent artifact"));
-        request.addArtifact(artifact);
-        installer.install(session, request);
-    }
-
-    @Test
     void testSetArtifactTimestamps() throws InstallationException {
         artifact.getFile().setLastModified(artifact.getFile().lastModified() - 60000);
 

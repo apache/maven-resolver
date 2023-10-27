@@ -50,9 +50,6 @@ import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.eclipse.aether.util.ConfigUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -61,25 +58,6 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultInstaller implements Installer {
-
-    /**
-     * The key in the repository session's {@link RepositorySystemSession#getConfigProperties()
-     * configuration properties} used to restore legacy 1.x behaviour: ignore install request that has source
-     * file missing.
-     *
-     * @since 2.0.0
-     */
-    static final String CONFIG_PROP_IGNORE_MISSING_FILE_INSTALL = "aether.installer.ignoreMissingFileInstall";
-
-    /**
-     * The default value for {@link #CONFIG_PROP_IGNORE_MISSING_FILE_INSTALL}, {@code false}.
-     *
-     * @since 2.0.0
-     */
-    static final boolean CONFIG_PROP_IGNORE_MISSING_FILE_INSTALL_DEFAULT = false;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultInstaller.class);
-
     private final FileProcessor fileProcessor;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
@@ -112,9 +90,6 @@ public class DefaultInstaller implements Installer {
 
     private InstallResult install(SyncContext syncContext, RepositorySystemSession session, InstallRequest request)
             throws InstallationException {
-        boolean ignoreMissingFileInstall = ConfigUtils.getBoolean(
-                session, CONFIG_PROP_IGNORE_MISSING_FILE_INSTALL_DEFAULT, CONFIG_PROP_IGNORE_MISSING_FILE_INSTALL);
-
         InstallResult result = new InstallResult(request);
 
         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
@@ -144,7 +119,7 @@ public class DefaultInstaller implements Installer {
 
             iterator.set(artifact);
 
-            install(ignoreMissingFileInstall, session, trace, artifact);
+            install(session, trace, artifact);
             result.addArtifact(artifact);
         }
 
@@ -185,8 +160,7 @@ public class DefaultInstaller implements Installer {
         return generators;
     }
 
-    private void install(
-            boolean ignoreMissingFileInstall, RepositorySystemSession session, RequestTrace trace, Artifact artifact)
+    private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact)
             throws InstallationException {
         final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         final File srcFile = artifact.getFile();
@@ -200,13 +174,8 @@ public class DefaultInstaller implements Installer {
                 throw new IllegalStateException("cannot install " + dstFile + " to same path");
             }
 
-            if (ignoreMissingFileInstall && !srcFile.exists()) {
-                LOGGER.debug("Skipped installing {} to {}, source is missing", srcFile, dstFile);
-            } else {
-                fileProcessor.copy(srcFile, dstFile);
-                dstFile.setLastModified(srcFile.lastModified());
-            }
-
+            fileProcessor.copy(srcFile, dstFile);
+            dstFile.setLastModified(srcFile.lastModified());
             lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;
