@@ -34,7 +34,10 @@ import java.util.Map;
 
 /**
  * A utility class to assist in the verification and generation of checksums.
+ *
+ * @deprecated The use of class should be avoided, see {@link StringDigestUtil} and file processor in SPI module.
  */
+@Deprecated
 public final class ChecksumUtils {
 
     private ChecksumUtils() {
@@ -147,21 +150,7 @@ public final class ChecksumUtils {
      */
     @SuppressWarnings("checkstyle:magicnumber")
     public static String toHexString(byte[] bytes) {
-        if (bytes == null) {
-            return null;
-        }
-
-        StringBuilder buffer = new StringBuilder(bytes.length * 2);
-
-        for (byte aByte : bytes) {
-            int b = aByte & 0xFF;
-            if (b < 0x10) {
-                buffer.append('0');
-            }
-            buffer.append(Integer.toHexString(b));
-        }
-
-        return buffer.toString();
+        return StringDigestUtil.toHexString(bytes);
     }
 
     /**
@@ -174,21 +163,6 @@ public final class ChecksumUtils {
      */
     @SuppressWarnings("checkstyle:magicnumber")
     public static byte[] fromHexString(String hexString) {
-        if (hexString == null) {
-            return null;
-        }
-        if (hexString.isEmpty()) {
-            return new byte[] {};
-        }
-        int len = hexString.length();
-        if (len % 2 != 0) {
-            throw new IllegalArgumentException("hexString length not even");
-        }
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte)
-                    ((Character.digit(hexString.charAt(i), 16) << 4) + Character.digit(hexString.charAt(i + 1), 16));
-        }
-        return data;
+        return StringDigestUtil.fromHexString(hexString);
     }
 }
