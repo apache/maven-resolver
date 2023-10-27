@@ -325,7 +325,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
-    @Disabled("Change detection is removed")
+    @Disabled("Naive change detection is removed (MRESOLVER-392)")
     void testDoNotUpdateUnchangedArtifact() throws InstallationException {
         request.addArtifact(artifact);
         installer.install(session, request);
