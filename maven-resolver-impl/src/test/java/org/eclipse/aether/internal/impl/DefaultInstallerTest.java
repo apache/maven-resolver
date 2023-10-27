@@ -40,6 +40,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -324,6 +325,7 @@ public class DefaultInstallerTest {
     }
 
     @Test
+    @Disabled("Naive change detection is removed (MRESOLVER-392)")
     void testDoNotUpdateUnchangedArtifact() throws InstallationException {
         request.addArtifact(artifact);
         installer.install(session, request);

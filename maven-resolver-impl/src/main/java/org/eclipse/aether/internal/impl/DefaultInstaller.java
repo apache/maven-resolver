@@ -50,8 +50,6 @@ import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -60,9 +58,6 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultInstaller implements Installer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultInstaller.class);
-
     private final FileProcessor fileProcessor;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
@@ -179,18 +174,8 @@ public class DefaultInstaller implements Installer {
                 throw new IllegalStateException("cannot install " + dstFile + " to same path");
             }
 
-            boolean copy = "pom".equals(artifact.getExtension())
-                    || srcFile.lastModified() != dstFile.lastModified()
-                    || srcFile.length() != dstFile.length()
-                    || !srcFile.exists();
-
-            if (!copy) {
-                LOGGER.debug("Skipped re-installing {} to {}, seems unchanged", srcFile, dstFile);
-            } else {
-                fileProcessor.copy(srcFile, dstFile);
-                dstFile.setLastModified(srcFile.lastModified());
-            }
-
+            fileProcessor.copy(srcFile, dstFile);
+            dstFile.setLastModified(srcFile.lastModified());
             lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;
