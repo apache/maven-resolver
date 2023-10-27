@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.aether.internal.test.util.TestChecksumUtils;
+import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Request;
@@ -334,12 +335,12 @@ public class HttpServer {
                             "bytes " + offset + "-" + (file.length() - 1L) + "/" + file.length());
                 }
                 if (checksumHeader != null) {
-                    Map<String, Object> checksums = TestChecksumUtils.calc(file, Collections.singleton("SHA-1"));
+                    Map<String, String> checksums = ChecksumAlgorithmHelper.calculate(
+                            file, Collections.singletonList(new Sha1ChecksumAlgorithmFactory()));
                     if (checksumHeader == ChecksumHeader.NEXUS) {
                         response.setHeader(HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get("SHA-1") + "}}");
                     } else if (checksumHeader == ChecksumHeader.XCHECKSUM) {
-                        response.setHeader(
-                                "x-checksum-sha1", checksums.get("SHA-1").toString());
+                        response.setHeader("x-checksum-sha1", checksums.get(Sha1ChecksumAlgorithmFactory.NAME));
                     }
                 }
                 if (HttpMethod.HEAD.is(req.getMethod())) {

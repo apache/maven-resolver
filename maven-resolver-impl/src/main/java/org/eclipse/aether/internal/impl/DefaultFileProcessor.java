@@ -135,14 +135,6 @@ public class DefaultFileProcessor implements FileProcessor {
     @Override
     public String readChecksum(final File checksumFile) throws IOException {
         // for now do exactly same as happened before, but FileProcessor is a component and can be replaced
-        return read(checksumFile);
-    }
-
-    /**
-     * Extracts the checksum from the specified file, applies several tricks to be able to read GNU Coreutils format.
-     * Code copied in unmodified form from ChecksumUtils that is deprecated.
-     */
-    private static String read(File checksumFile) throws IOException {
         String checksum = "";
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(Files.newInputStream(checksumFile.toPath()), StandardCharsets.UTF_8), 512)) {
