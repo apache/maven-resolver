@@ -390,12 +390,15 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.6.0</version>
           <configuration>
             <detectOfflineLinks>false</detectOfflineLinks>
             <linksource>true</linksource>
             <notimestamp>true</notimestamp>
+            <legacyMode>true</legacyMode>
+            <release>11</release>
             <links>
-              <link>https://download.oracle.com/javase/${javaVersion}/docs/api/</link>
+              <link>https://download.oracle.com/javase/11/docs/api/</link>
             </links>
             <tags>
               <tag>
