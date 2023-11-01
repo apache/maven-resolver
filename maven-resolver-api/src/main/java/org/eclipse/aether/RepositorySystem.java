@@ -147,7 +147,7 @@ public interface RepositorySystem {
             throws DependencyResolutionException;
 
     /**
-     * Flattens the provided graph as {@link DependencyNode} into a {@link List<DependencyNode>} according to session
+     * Flattens the provided graph as {@link DependencyNode} into a {@link List}{@code <DependencyNode>} according to session
      * configuration.
      *
      * @param session The repository session, must not be {@code null}.
