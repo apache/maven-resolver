@@ -31,7 +31,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Node list generator usable with different traversing strategies. It is wrapped {@link List<DependencyNode>} but
+ * Node list generator usable with different traversing strategies. It is wrapped {@link List}{@code <DependencyNode>} but
  * offers several transformations, that are handy.
  *
  * @since TBD
