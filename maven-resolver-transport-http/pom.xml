@@ -34,7 +34,7 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.transport.http</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-    <jettyVersion>9.4.52.v20230823</jettyVersion>
+    <jettyVersion>9.4.53.v20231009</jettyVersion>
   </properties>
 
   <dependencies>
