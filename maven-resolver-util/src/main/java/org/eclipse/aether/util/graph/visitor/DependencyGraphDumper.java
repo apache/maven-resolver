@@ -34,7 +34,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A dependency visitor that dumps the graph to any {@link Consumer<String>}. Meant for diagnostic and testing, as
+ * A dependency visitor that dumps the graph to any {@link Consumer}{@code <String>}. Meant for diagnostic and testing, as
  * it may output the graph to standard output, error or even some logging interface.
  *
  * @since 1.9.8
