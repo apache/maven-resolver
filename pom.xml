@@ -88,6 +88,8 @@
   <properties>
     <javaVersion>8</javaVersion>
     <maven.compiler.release>${javaVersion}</maven.compiler.release>
+    <maven.compiler.target>${javaVersion}</maven.compiler.target>
+    <maven.compiler.source>${javaVersion}</maven.compiler.source>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
