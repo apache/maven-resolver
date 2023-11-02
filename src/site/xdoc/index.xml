@@ -29,7 +29,6 @@
   <body>
 
     <section name="Apache Maven Artifact Resolver">
-      <p style="font-size: 14pt; font-style: bold">Since version 1.7.0 Maven Resolver requires Java 8 to run. For a Maven 3.8.x compatible version read <a href="./maven-3.8.x.html">here</a>.</p>
       <p>Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.</p>
       <p>Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports, and artifact resolution. It is expected to be extended by a concrete repository implementation, such as
         <a href="/ref/current/maven-resolver-provider/">Maven Artifact Resolver Provider</a> for Maven repositories
