@@ -389,6 +389,8 @@ final class JdkHttpTransporter extends AbstractTransporter {
                             .connectTimeout(Duration.ofMillis(connectTimeout))
                             .sslContext(sslContext);
 
+                    JdkHttpTransporterCustomizer.customize(session, repository, builder);
+
                     if (repository.getProxy() != null) {
                         ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
                                 repository.getProxy().getHost(),

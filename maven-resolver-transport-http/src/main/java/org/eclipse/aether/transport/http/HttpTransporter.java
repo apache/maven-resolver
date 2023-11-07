@@ -106,12 +106,6 @@ import static java.util.Objects.requireNonNull;
  */
 final class HttpTransporter extends AbstractTransporter {
 
-    static final String BIND_ADDRESS = "aether.connector.bind.address";
-
-    static final String SUPPORT_WEBDAV = "aether.connector.http.supportWebDav";
-
-    static final String PREEMPTIVE_PUT_AUTH = "aether.connector.http.preemptivePutAuth";
-
     static final String USE_SYSTEM_PROPERTIES = "aether.connector.http.useSystemProperties";
 
     static final String HTTP_RETRY_HANDLER_NAME = "aether.connector.http.retryHandler.name";
@@ -211,11 +205,16 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
                 ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
                 ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
-        this.preemptivePutAuth = // defaults to true: Wagon does same
-                ConfigUtils.getBoolean(
-                        session, true, PREEMPTIVE_PUT_AUTH + "." + repository.getId(), PREEMPTIVE_PUT_AUTH);
-        this.supportWebDav = // defaults to false: who needs it will enable it
-                ConfigUtils.getBoolean(session, false, SUPPORT_WEBDAV + "." + repository.getId(), SUPPORT_WEBDAV);
+        this.preemptivePutAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
+        this.supportWebDav = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_SUPPORT_WEBDAV,
+                ConfigurationProperties.HTTP_SUPPORT_WEBDAV + "." + repository.getId(),
+                ConfigurationProperties.HTTP_SUPPORT_WEBDAV);
         String credentialEncoding = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
@@ -277,7 +276,7 @@ final class HttpTransporter extends AbstractTransporter {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
-                .setLocalAddress(getBindAddress(session, repository))
+                .setLocalAddress(getHttpLocalAddress(session, repository))
                 .setSocketTimeout(requestTimeout)
                 .build();
 
@@ -338,9 +337,12 @@ final class HttpTransporter extends AbstractTransporter {
     /**
      * Returns non-null {@link InetAddress} if set in configuration, {@code null} otherwise.
      */
-    private InetAddress getBindAddress(RepositorySystemSession session, RemoteRepository repository) {
-        String bindAddress =
-                ConfigUtils.getString(session, null, BIND_ADDRESS + "." + repository.getId(), BIND_ADDRESS);
+    private InetAddress getHttpLocalAddress(RepositorySystemSession session, RemoteRepository repository) {
+        String bindAddress = ConfigUtils.getString(
+                session,
+                null,
+                ConfigurationProperties.HTTP_LOCAL_ADDRESS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_LOCAL_ADDRESS);
         if (bindAddress == null) {
             return null;
         }
@@ -591,7 +593,7 @@ final class HttpTransporter extends AbstractTransporter {
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
-    private <T extends HttpUriRequest> T resume(T request, GetTask task) {
+    private <T extends HttpUriRequest> void resume(T request, GetTask task) {
         long resumeOffset = task.getResumeOffset();
         if (resumeOffset > 0L && task.getDataFile() != null) {
             request.setHeader(HttpHeaders.RANGE, "bytes=" + resumeOffset + '-');
@@ -600,7 +602,6 @@ final class HttpTransporter extends AbstractTransporter {
                     DateUtils.formatDate(new Date(task.getDataFile().lastModified() - 60L * 1000L)));
             request.setHeader(HttpHeaders.ACCEPT_ENCODING, "identity");
         }
-        return request;
     }
 
     @SuppressWarnings("checkstyle:magicnumber")

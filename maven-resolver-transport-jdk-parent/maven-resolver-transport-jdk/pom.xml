@@ -108,6 +108,25 @@
               </artifactItems>
             </configuration>
           </execution>
+          <execution>
+            <id>java19</id>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.apache.maven.resolver</groupId>
+                  <artifactId>maven-resolver-transport-jdk-19</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <outputDirectory>${project.build.directory}/generated-resources/META-INF/versions/19</outputDirectory>
+                  <includes>**/*.class</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>
