@@ -100,7 +100,7 @@
     <!-- used by supplier and demo only -->
     <mavenVersion>4.0.0-alpha-8</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
-    <minimalJavaBuildVersion>[11.0.16,)</minimalJavaBuildVersion>
+    <minimalJavaBuildVersion>[21.0.1,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-11-02T11:01:10Z</project.build.outputTimestamp>
   </properties>
 
