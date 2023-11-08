@@ -37,6 +37,9 @@
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
 
     <javaVersion>21</javaVersion>
+    <!-- Different workarounds for site -->
+    <maven.javadoc.skip>true</maven.javadoc.skip>
+    <pmd.skip>true</pmd.skip>
   </properties>
 
   <dependencies>
