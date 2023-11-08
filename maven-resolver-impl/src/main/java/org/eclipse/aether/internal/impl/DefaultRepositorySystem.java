@@ -99,7 +99,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRepositorySystem implements RepositorySystem {
-    private final AtomicBoolean closed;
+    private final AtomicBoolean shutdown;
 
     private final AtomicInteger sessionIdCounter;
 
@@ -142,7 +142,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
             SyncContextFactory syncContextFactory,
             RemoteRepositoryManager remoteRepositoryManager,
             RepositorySystemLifecycle repositorySystemLifecycle) {
-        this.closed = new AtomicBoolean(false);
+        this.shutdown = new AtomicBoolean(false);
         this.sessionIdCounter = new AtomicInteger(0);
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
@@ -395,18 +395,20 @@ public class DefaultRepositorySystem implements RepositorySystem {
 
     @Override
     public void addOnSystemEndedHandler(Runnable handler) {
+        validateSystem();
         repositorySystemLifecycle.addOnSystemEndedHandler(handler);
     }
 
     @Override
     public RepositorySystemSession.SessionBuilder createSessionBuilder() {
+        validateSystem();
         return new DefaultSessionBuilder(
                 this, repositorySystemLifecycle, "id-" + sessionIdCounter.incrementAndGet(), null);
     }
 
     @Override
     public void shutdown() {
-        if (closed.compareAndSet(false, true)) {
+        if (shutdown.compareAndSet(false, true)) {
             repositorySystemLifecycle.systemEnded();
         }
     }
@@ -422,7 +424,11 @@ public class DefaultRepositorySystem implements RepositorySystem {
         invalidSession(session.getAuthenticationSelector(), "authentication selector");
         invalidSession(session.getArtifactTypeRegistry(), "artifact type registry");
         invalidSession(session.getData(), "data");
-        if (closed.get()) {
+        validateSystem();
+    }
+
+    private void validateSystem() {
+        if (shutdown.get()) {
             throw new IllegalStateException("repository system is already shut down");
         }
     }
