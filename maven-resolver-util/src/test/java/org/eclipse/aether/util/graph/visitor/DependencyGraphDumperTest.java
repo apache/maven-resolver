@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,6 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.visitor;
 
-asfMavenTlpStdBuild( 'jdks' : [ "21" ] )
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
+import org.junit.jupiter.api.Test;
 
+public class DependencyGraphDumperTest {
+
+    private DependencyNode parse(String resource) throws Exception {
+        return new DependencyGraphParser("visitor/ordered-list/").parseResource(resource);
+    }
+
+    @Test
+    void dumpSimple() throws Exception {
+        DependencyNode root = parse("simple.txt");
+        root.accept(new DependencyGraphDumper(System.out::println));
+    }
+
+    @Test
+    void dumpCycles() throws Exception {
+        DependencyNode root = parse("cycles.txt");
+        root.accept(new TreeDependencyVisitor(new DependencyGraphDumper(System.out::println)));
+    }
+}
