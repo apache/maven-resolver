@@ -52,15 +52,15 @@ import org.eclipse.aether.transfer.TransferListener;
 public interface RepositorySystemSession {
 
     /**
-     * Immutable session that is closeable, can have onClose handlers registered and should be handled as a resource.
-     * These session instances can be created with {@link SessionBuilder}.
+     * Immutable session that is closeable, should be handled as a resource. These session instances can be
+     * created with {@link SessionBuilder}.
      *
      * @since TBD
      */
     interface CloseableRepositorySystemSession extends RepositorySystemSession, Closeable {
         /**
          * Returns the ID of this closeable session instance. Each closeable session has different ID, unique within
-         * repository system, that they were created for.
+         * repository system they were created with.
          *
          * @return The session ID that is never {@code null}.
          */
@@ -89,8 +89,7 @@ public interface RepositorySystemSession {
 
     /**
      * Builder for building {@link CloseableRepositorySystemSession} instances. Builder instances can be created with
-     * {@link RepositorySystem#createSessionBuilder()} method, and built sessions must be handled as resources
-     * (closed once done with them).
+     * {@link RepositorySystem#createSessionBuilder()} method.
      *
      * @since TBD
      */
