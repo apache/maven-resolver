@@ -30,7 +30,7 @@ do not depend (directly or indirectly) on **deprecated** classes from Resolver
 Maven Resolver 2.x introduced "onSessionEnd" hooks, that became required for
 some of the new features (like HTTP/2 transports are). While existing "Resolver 1.x"
 way of handling session will still work, it may produce resource leaks.
-Client code **managing Resolver** (like Maven) os strongly advised to upgrade
+Client code **managing Resolver** (like Maven) is strongly advised to upgrade
 session handling. Client code **using Resolver** (like Maven Mojos) 
 do not have to change anything, they should be able to continue to 
 function in very same way as before (as with Resolver 1.x).
