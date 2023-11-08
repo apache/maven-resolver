@@ -23,6 +23,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,8 +55,21 @@ public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecyc
 
     @Override
     public void systemEnded() {
+        final ArrayList<Exception> exceptions = new ArrayList<>();
         if (shutdown.compareAndSet(false, true)) {
-            final ArrayList<Exception> exceptions = new ArrayList<>();
+            for (Map.Entry<String, CopyOnWriteArrayList<Runnable>> sessionEndedHandlers :
+                    onSessionEndedHandlers.entrySet()) {
+                IllegalStateException sessionNotClosed =
+                        new IllegalStateException("Session " + sessionEndedHandlers.getKey() + " not closed");
+                exceptions.add(sessionNotClosed);
+                for (Runnable onCloseHandler : sessionEndedHandlers.getValue()) {
+                    try {
+                        onCloseHandler.run();
+                    } catch (Exception e) {
+                        sessionNotClosed.addSuppressed(e);
+                    }
+                }
+            }
             for (Runnable onCloseHandler : onSystemEndedHandlers) {
                 try {
                     onCloseHandler.run();
