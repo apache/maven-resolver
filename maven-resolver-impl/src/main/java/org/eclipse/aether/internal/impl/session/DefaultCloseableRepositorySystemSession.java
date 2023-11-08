@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryListener;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableRepositorySystemSession;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -49,9 +50,9 @@ import static java.util.Objects.requireNonNull;
  * A default implementation of repository system session that is immutable.
  */
 public final class DefaultCloseableRepositorySystemSession implements CloseableRepositorySystemSession {
-    private final AtomicBoolean closed;
-
     private final String sessionId;
+
+    private final AtomicBoolean closed;
 
     private final boolean offline;
 
@@ -103,11 +104,14 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
 
     private final RepositoryCache cache;
 
+    private final RepositorySystem repositorySystem;
+
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     @SuppressWarnings("checkstyle:parameternumber")
     public DefaultCloseableRepositorySystemSession(
             String sessionId,
+            AtomicBoolean closed,
             boolean offline,
             boolean ignoreArtifactDescriptorRepositories,
             ResolutionErrorPolicy resolutionErrorPolicy,
@@ -133,9 +137,10 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
             DependencyGraphTransformer dependencyGraphTransformer,
             SessionData data,
             RepositoryCache cache,
+            RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
-        this.closed = new AtomicBoolean(false);
         this.sessionId = requireNonNull(sessionId);
+        this.closed = closed == null ? new AtomicBoolean(false) : closed;
         this.offline = offline;
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
         this.resolutionErrorPolicy = resolutionErrorPolicy;
@@ -161,14 +166,24 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
         this.dependencyGraphTransformer = dependencyGraphTransformer;
         this.data = requireNonNull(data);
         this.cache = cache;
+
+        this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
 
-        repositorySystemLifecycle.sessionStarted(this);
+        if (closed == null) {
+            repositorySystemLifecycle.sessionStarted(this);
+        }
     }
 
     @Override
     public String sessionId() {
         return sessionId;
+    }
+
+    @Override
+    public SessionBuilder copy() {
+        return new DefaultSessionBuilder(repositorySystem, repositorySystemLifecycle, sessionId, closed)
+                .withRepositorySystemSession(this);
     }
 
     @Override

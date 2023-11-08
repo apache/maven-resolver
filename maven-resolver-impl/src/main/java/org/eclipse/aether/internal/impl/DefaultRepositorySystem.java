@@ -400,7 +400,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
 
     @Override
     public RepositorySystemSession.SessionBuilder createSessionBuilder() {
-        return new DefaultSessionBuilder(this, repositorySystemLifecycle, "id-" + sessionIdCounter.incrementAndGet());
+        return new DefaultSessionBuilder(
+                this, repositorySystemLifecycle, "id-" + sessionIdCounter.incrementAndGet(), null);
     }
 
     @Override

@@ -67,6 +67,19 @@ public interface RepositorySystemSession {
         String sessionId();
 
         /**
+         * Copies this session into a pre-populated builder, effectively making a mutable copy of itself, builder builds
+         * <em>same session</em>. Important: this session <em>remains unchanged</em> upon return of this method but
+         * this session and returned builder created session will have <em>same identity</em>. It is up to client code,
+         * will it close only the original (this) session or new session, or both. Important is, that at least one of
+         * the sessions must be closed, and consequence is that once either one is closed, the other session is closed
+         * as well.
+         * <p>
+         * This pattern should be applied in "filter" like constructs, when code needs to alter the incoming session and
+         * subsequently pass it downstream.
+         */
+        SessionBuilder copy();
+
+        /**
          * Closes the session. The session should be closed by its creator. A closed session should not be used anymore.
          * This method may be invoked multiple times, but close will act only once (first time).
          */
@@ -639,7 +652,7 @@ public interface RepositorySystemSession {
      * While they will function with Resolver 1.x sessions, they may produce resource leaks.
      *
      * @param handler the handler, never {@code null}.
-     * @return {@code true} if handler registered, otherwise false.
+     * @return {@code true} if handler successfully registered, {@code false} otherwise.
      * @since TBD
      */
     boolean addOnSessionEndedHandler(Runnable handler);

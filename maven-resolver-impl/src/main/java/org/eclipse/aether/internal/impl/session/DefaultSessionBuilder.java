@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.RepositoryCache;
@@ -67,6 +68,8 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     private final String sessionId;
+
+    private final AtomicBoolean closed;
 
     private final ArrayList<Runnable> onCloseHandler;
 
@@ -121,10 +124,14 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     private RepositoryCache cache;
 
     public DefaultSessionBuilder(
-            RepositorySystem repositorySystem, RepositorySystemLifecycle repositorySystemLifecycle, String sessionId) {
+            RepositorySystem repositorySystem,
+            RepositorySystemLifecycle repositorySystemLifecycle,
+            String sessionId,
+            AtomicBoolean closed) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.sessionId = requireNonNull(sessionId);
+        this.closed = closed;
         this.onCloseHandler = new ArrayList<>();
     }
 
@@ -514,6 +521,7 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     public CloseableRepositorySystemSession build() {
         CloseableRepositorySystemSession result = new DefaultCloseableRepositorySystemSession(
                 sessionId,
+                closed,
                 offline,
                 ignoreArtifactDescriptorRepositories,
                 resolutionErrorPolicy,
@@ -539,6 +547,7 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
                 dependencyGraphTransformer,
                 data,
                 cache,
+                repositorySystem,
                 repositorySystemLifecycle);
         onCloseHandler.forEach(result::addOnSessionEndedHandler);
         return result;
