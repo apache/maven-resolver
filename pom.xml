@@ -399,7 +399,7 @@
             <linksource>true</linksource>
             <notimestamp>true</notimestamp>
             <legacyMode>true</legacyMode>
-            <release>11</release>
+            <release>21</release>
             <links>
               <link>https://docs.oracle.com/en/java/javase/21/docs/api/</link>
             </links>
