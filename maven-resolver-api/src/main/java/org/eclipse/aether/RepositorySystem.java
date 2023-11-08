@@ -314,27 +314,18 @@ public interface RepositorySystem extends Closeable {
      * When shutdown happens, all the registered on-close handlers will be invoked (even if some throws), and at end
      * of operation a {@link MultiRuntimeException} may be thrown, signaling that some handler(s) failed. This exception
      * may be ignored, is at the discretion of caller.
-     * <p>
-     * Note: this method actually just calls {@link #close()}.
      *
      * @since 1.9.0
-     * @deprecated Use {@link #close()} instead.
      */
-    @Deprecated
     void shutdown();
 
     /**
-     * Signals to repository system to shut down. Shut down instance is not usable anymore.
-     * <p>
-     * Repository system may perform some resource cleanup, if applicable. Not using this method may cause leaks or
-     * unclean shutdown of some subsystem.
-     * <p>
-     * When shutdown happens, all the registered on-close handlers will be invoked (even if some throws), and at end
-     * of operation a {@link MultiRuntimeException} may be thrown, signaling that some handler(s) failed. This exception
-     * may be ignored, is at the discretion of caller.
+     * Closes this instance, invokes {@link #shutdown()}.
      *
      * @since TBD
      */
     @Override
-    void close();
+    default void close() {
+        shutdown();
+    }
 }

@@ -406,11 +406,6 @@ public class DefaultRepositorySystem implements RepositorySystem {
 
     @Override
     public void shutdown() {
-        close();
-    }
-
-    @Override
-    public void close() {
         if (closed.compareAndSet(false, true)) {
             repositorySystemLifecycle.systemEnded();
         }
