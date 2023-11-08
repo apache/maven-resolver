@@ -335,5 +335,6 @@ public interface RepositorySystem extends Closeable {
      *
      * @since TBD
      */
+    @Override
     void close();
 }
