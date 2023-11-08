@@ -389,6 +389,8 @@ final class JdkHttpTransporter extends AbstractTransporter {
                             .connectTimeout(Duration.ofMillis(connectTimeout))
                             .sslContext(sslContext);
 
+                    JdkHttpTransporterCustomizer.customizeBuilder(session, repository, builder);
+
                     if (repository.getProxy() != null) {
                         ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
                                 repository.getProxy().getHost(),
@@ -417,7 +419,9 @@ final class JdkHttpTransporter extends AbstractTransporter {
                         });
                     }
 
-                    return builder.build();
+                    HttpClient result = builder.build();
+                    JdkHttpTransporterCustomizer.customizeHttpClient(session, repository, result);
+                    return result;
                 } catch (NoSuchAlgorithmException e) {
                     throw new WrapperEx(e);
                 }
