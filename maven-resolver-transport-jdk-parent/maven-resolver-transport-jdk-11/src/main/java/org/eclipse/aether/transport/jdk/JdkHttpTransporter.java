@@ -61,6 +61,8 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JDK Transport using {@link HttpClient}.
@@ -350,6 +352,8 @@ final class JdkHttpTransporter extends AbstractTransporter {
      */
     static final String HTTP_INSTANCE_KEY_PREFIX = JdkTransporterFactory.class.getName() + ".http.";
 
+    static final Logger LOGGER = LoggerFactory.getLogger(JdkHttpTransporter.class);
+
     private static HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         final String instanceKey = HTTP_INSTANCE_KEY_PREFIX + repository.getId();
@@ -417,7 +421,14 @@ final class JdkHttpTransporter extends AbstractTransporter {
                         });
                     }
 
-                    return builder.build();
+                    HttpClient result = builder.build();
+                    // Only possible in Java21
+                    // if (!session.addOnSessionEndedHandler(result::close)) {
+                    //     LOGGER.warn(
+                    //             "Using Resolver 2 feature without Resolver 2 session handling, you may leak
+                    // resources.");
+                    // }
+                    return result;
                 } catch (NoSuchAlgorithmException e) {
                     throw new WrapperEx(e);
                 }

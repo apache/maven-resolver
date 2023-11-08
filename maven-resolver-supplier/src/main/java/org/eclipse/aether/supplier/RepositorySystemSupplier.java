@@ -130,7 +130,7 @@ import org.eclipse.aether.version.VersionScheme;
 
 /**
  * A simple {@link Supplier} of {@link org.eclipse.aether.RepositorySystem} instances, that on each call supplies newly
- * constructed instance. For proper shut down, use {@link RepositorySystem#shutdown()} method on supplied instance(s).
+ * constructed instance. For proper shut down, use {@link RepositorySystem#close()} method on supplied instance(s).
  * <p>
  * Extend this class and override methods to customize, if needed.
  *

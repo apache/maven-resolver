@@ -23,10 +23,12 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.MultiRuntimeException;
+import org.eclipse.aether.RepositorySystemSession.CloseableRepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 
 import static java.util.Objects.requireNonNull;
@@ -41,10 +43,13 @@ public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecyc
 
     private final CopyOnWriteArrayList<Runnable> onSystemEndedHandlers;
 
+    private final ConcurrentHashMap<String, CopyOnWriteArrayList<Runnable>> onSessionEndedHandlers;
+
     @Inject
     public DefaultRepositorySystemLifecycle() {
         this.shutdown = new AtomicBoolean(false);
         this.onSystemEndedHandlers = new CopyOnWriteArrayList<>();
+        this.onSessionEndedHandlers = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -67,6 +72,59 @@ public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecyc
         requireNonNull(handler, "handler cannot be null");
         requireNotShutdown();
         onSystemEndedHandlers.add(0, handler);
+    }
+
+    @Override
+    public void sessionStarted(CloseableRepositorySystemSession session) {
+        requireNonNull(session, "session cannot be null");
+        requireNotShutdown();
+        String sessionId = session.sessionId();
+        onSessionEndedHandlers.compute(sessionId, (k, v) -> {
+            if (v != null) {
+                throw new IllegalStateException("session instance already registered");
+            }
+            return new CopyOnWriteArrayList<>();
+        });
+    }
+
+    @Override
+    public void sessionEnded(CloseableRepositorySystemSession session) {
+        requireNonNull(session, "session cannot be null");
+        requireNotShutdown();
+        String sessionId = session.sessionId();
+        ArrayList<Runnable> handlers = new ArrayList<>();
+        onSessionEndedHandlers.compute(sessionId, (k, v) -> {
+            if (v == null) {
+                throw new IllegalStateException("session instance not registered");
+            }
+            handlers.addAll(v);
+            return null;
+        });
+
+        ArrayList<Exception> exceptions = new ArrayList<>();
+        for (Runnable handler : handlers) {
+            try {
+                handler.run();
+            } catch (Exception e) {
+                exceptions.add(e);
+            }
+        }
+        MultiRuntimeException.mayThrow("sessionEnded handler issue(s)", exceptions);
+    }
+
+    @Override
+    public void addOnSessionEndedHandle(CloseableRepositorySystemSession session, Runnable handler) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(handler, "handler cannot be null");
+        requireNotShutdown();
+        String sessionId = session.sessionId();
+        onSessionEndedHandlers.compute(sessionId, (k, v) -> {
+            if (v == null) {
+                throw new IllegalStateException("session instance not registered");
+            }
+            v.add(handler);
+            return v;
+        });
     }
 
     private void requireNotShutdown() {

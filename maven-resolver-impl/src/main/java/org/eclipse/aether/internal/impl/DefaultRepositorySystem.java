@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,7 @@ import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
+import org.eclipse.aether.internal.impl.session.DefaultSessionBuilder;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -97,7 +99,9 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRepositorySystem implements RepositorySystem {
-    private final AtomicBoolean shutdown;
+    private final AtomicBoolean closed;
+
+    private final AtomicInteger sessionIdCounter;
 
     private final VersionResolver versionResolver;
 
@@ -138,7 +142,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
             SyncContextFactory syncContextFactory,
             RemoteRepositoryManager remoteRepositoryManager,
             RepositorySystemLifecycle repositorySystemLifecycle) {
-        this.shutdown = new AtomicBoolean(false);
+        this.closed = new AtomicBoolean(false);
+        this.sessionIdCounter = new AtomicInteger(0);
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
         this.artifactResolver = requireNonNull(artifactResolver, "artifact resolver cannot be null");
@@ -394,8 +399,18 @@ public class DefaultRepositorySystem implements RepositorySystem {
     }
 
     @Override
+    public RepositorySystemSession.SessionBuilder createSessionBuilder() {
+        return new DefaultSessionBuilder(this, repositorySystemLifecycle, "id-" + sessionIdCounter.incrementAndGet());
+    }
+
+    @Override
     public void shutdown() {
-        if (shutdown.compareAndSet(false, true)) {
+        close();
+    }
+
+    @Override
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
             repositorySystemLifecycle.systemEnded();
         }
     }
@@ -411,7 +426,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         invalidSession(session.getAuthenticationSelector(), "authentication selector");
         invalidSession(session.getArtifactTypeRegistry(), "artifact type registry");
         invalidSession(session.getData(), "data");
-        if (shutdown.get()) {
+        if (closed.get()) {
             throw new IllegalStateException("repository system is already shut down");
         }
     }
