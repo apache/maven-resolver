@@ -100,6 +100,7 @@
     <!-- used by supplier and demo only -->
     <mavenVersion>4.0.0-alpha-8</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
+    <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21.0.1,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-11-02T11:01:10Z</project.build.outputTimestamp>
   </properties>
@@ -400,7 +401,7 @@
             <legacyMode>true</legacyMode>
             <release>11</release>
             <links>
-              <link>https://docs.oracle.com/en/java/javase/11/docs/api/</link>
+              <link>https://docs.oracle.com/en/java/javase/21/docs/api/</link>
             </links>
             <tags>
               <tag>
