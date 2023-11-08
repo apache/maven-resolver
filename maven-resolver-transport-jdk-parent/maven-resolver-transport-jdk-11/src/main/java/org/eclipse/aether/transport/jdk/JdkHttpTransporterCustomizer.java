@@ -31,5 +31,8 @@ import org.eclipse.aether.repository.RemoteRepository;
 final class JdkHttpTransporterCustomizer {
     private JdkHttpTransporterCustomizer() {}
 
-    static void customize(RepositorySystemSession session, RemoteRepository repository, HttpClient.Builder builder) {}
+    static void customizeBuilder(
+            RepositorySystemSession session, RemoteRepository repository, HttpClient.Builder builder) {}
+
+    static void customizeHttpClient(RepositorySystemSession session, RemoteRepository repository, HttpClient client) {}
 }

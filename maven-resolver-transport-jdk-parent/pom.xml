@@ -35,19 +35,9 @@
   <modules>
     <module>maven-resolver-transport-jdk-8</module>
     <module>maven-resolver-transport-jdk-11</module>
+    <module>maven-resolver-transport-jdk-19</module>
+    <module>maven-resolver-transport-jdk-21</module>
     <module>maven-resolver-transport-jdk</module>
   </modules>
-
-  <profiles>
-    <profile>
-      <id>jdk19</id>
-      <activation>
-        <jdk>[19,)</jdk>
-      </activation>
-      <modules>
-        <module>maven-resolver-transport-jdk-19</module>
-      </modules>
-    </profile>
-  </profiles>
 
 </project>

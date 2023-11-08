@@ -43,7 +43,9 @@ final class JdkHttpTransporterCustomizer {
         }
     }
 
-    static void customizeHttpClient(RepositorySystemSession session, RemoteRepository repository, HttpClient client) {}
+    static void customizeHttpClient(RepositorySystemSession session, RemoteRepository repository, HttpClient client) {
+        // TODO: register client.close(); once onSessionClose feature present
+    }
 
     /**
      * Returns non-null {@link InetAddress} if set in configuration, {@code null} otherwise.
