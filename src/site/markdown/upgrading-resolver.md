@@ -28,22 +28,22 @@ do not depend (directly or indirectly) on **deprecated** classes from Resolver
 ## Session handling changes
 
 Maven Resolver 2.x introduced "onSessionEnd" hooks, that became required for
-some new features (like HTTP/2 transports are). While existing "Resolver 1.x"
-way of handling session will still work, they may produce resource leaks,
-and client code "managing" Resolver (like Maven) are strongly advised to upgrade
-their session handling. Client code "using" Resolver (like Maven Mojos) 
-does not have to change anything, they should be able to continue to 
-function in very same way as before.
+some of the new features (like HTTP/2 transports are). While existing "Resolver 1.x"
+way of handling session will still work, it may produce resource leaks.
+Client code **managing Resolver** (like Maven) os strongly advised to upgrade
+session handling. Client code **using Resolver** (like Maven Mojos) 
+do not have to change anything, they should be able to continue to 
+function in very same way as before (as with Resolver 1.x).
 
 What changed on surface:
 * introduction of `RepositorySystemSession` nested interfaces `CloseableRepositorySystemSession` and `SessionBuilder`.
 * introduction of `RepositorySystem` new method `createSessionBuilder` that creates `SessionBuilder` instances.
-* deprecation of `DefaultRepositorySystemSession` default constructor, this construct is actually the "Resolver 1.x way" of using sessions.
+* deprecation of `DefaultRepositorySystemSession` default constructor, this constructor is actually the "Resolver 1.x way" of using sessions.
 
-Required changes in client code managing Resolver 2.x:
+Required changes in **client code managing Resolver 2.x**:
 * do not use `DefaultRepositorySystemSession` default constructor anymore.
 * instead, use `RepositorySystem#createSessionBuilder` to create `SessionBuilder` and out of it `CloseableRepositorySystemSession` instances.
 * handle sessions as resources: each created instance should be closed once finished their use.
 * session instances created by given `RepositorySystem` should be used only with that same instance.
-* to shallow-copy session instances without needing to close them, using existing `DefaultRepositorySystemSession` copy constructor is acceptable (this is what Mojos do usually).
-* to shallow-copy existing sessions use `SessionBuilder#withRepositorySystemSession` (this is a new way, instead of `DefaultRepositorySystemSession` copy constructor, when you want new session lifecycle as well).
+* to shallow-copy session instances using existing `DefaultRepositorySystemSession` copy constructor is acceptable (this is what Mojos do).
+* to shallow-copy session instances but have new lifecycle as well, use `SessionBuilder#withRepositorySystemSession`.
