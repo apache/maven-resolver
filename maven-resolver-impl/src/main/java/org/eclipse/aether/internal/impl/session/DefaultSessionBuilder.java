@@ -487,11 +487,11 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
         if (basedir.length == 0) {
             throw new IllegalArgumentException("empty basedir");
         }
-        ArrayList<LocalRepository> localRepositories = new ArrayList<>(basedir.length);
-        for (File b : basedir) {
-            localRepositories.add(new LocalRepository(b));
+        LocalRepository[] localRepositories = new LocalRepository[basedir.length];
+        for (int i = 0; i < basedir.length; i++) {
+            localRepositories[i] = new LocalRepository(basedir[i]);
         }
-        this.localRepositoryManager = newLocalRepositoryManager(localRepositories.toArray(new LocalRepository[0]));
+        this.localRepositoryManager = newLocalRepositoryManager(localRepositories);
         return this;
     }
 
