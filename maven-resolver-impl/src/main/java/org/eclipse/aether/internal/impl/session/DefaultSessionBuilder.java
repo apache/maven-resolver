@@ -19,7 +19,6 @@
 package org.eclipse.aether.internal.impl.session;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -91,7 +90,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private LocalRepositoryManager localRepositoryManager;
 
-    private List<LocalRepository> localRepositories = new ArrayList<>();
+    private List<LocalRepository> localRepositories;
 
     private WorkspaceReader workspaceReader;
 
