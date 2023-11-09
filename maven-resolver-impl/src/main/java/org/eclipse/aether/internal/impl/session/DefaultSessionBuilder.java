@@ -93,6 +93,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private LocalRepositoryManager localRepositoryManager;
 
+    private List<LocalRepository> localRepositories = new ArrayList<>();
+
     private WorkspaceReader workspaceReader;
 
     private RepositoryListener repositoryListener;
@@ -484,15 +486,25 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
-    public SessionBuilder withLocalRepository(File... basedir) {
-        return withLocalRepository(Arrays.asList(basedir));
+    public SessionBuilder withLocalRepositoryBasedir(File... basedir) {
+        return withLocalRepositoryBasedir(Arrays.asList(basedir));
     }
 
     @Override
-    public SessionBuilder withLocalRepository(List<File> basedir) {
+    public SessionBuilder withLocalRepositoryBasedir(List<File> basedir) {
         requireNonNull(basedir, "null basedir");
-        this.localRepositoryManager = newLocalRepositoryManager(
-                basedir.stream().map(LocalRepository::new).collect(toList()));
+        return withLocalRepository(basedir.stream().map(LocalRepository::new).collect(toList()));
+    }
+
+    @Override
+    public SessionBuilder withLocalRepository(LocalRepository... localRepository) {
+        return withLocalRepository(Arrays.asList(localRepository));
+    }
+
+    @Override
+    public SessionBuilder withLocalRepository(List<LocalRepository> localRepositories) {
+        requireNonNull(localRepositories, "null localRepositories");
+        this.localRepositories = localRepositories;
         return this;
     }
 
@@ -560,7 +572,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 checksumPolicy,
                 artifactUpdatePolicy,
                 metadataUpdatePolicy,
-                localRepositoryManager,
+                getOrCreateLocalRepositoryManager(),
                 workspaceReader,
                 repositoryListener,
                 transferListener,
@@ -582,6 +594,16 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 repositorySystemLifecycle);
         onCloseHandler.forEach(result::addOnSessionEndedHandler);
         return result;
+    }
+
+    private LocalRepositoryManager getOrCreateLocalRepositoryManager() {
+        if (localRepositoryManager != null) {
+            return localRepositoryManager;
+        } else if (localRepositories != null) {
+            return newLocalRepositoryManager(localRepositories);
+        } else {
+            throw new IllegalStateException("No local repository manager or local repositories set on session");
+        }
     }
 
     @SuppressWarnings("checkstyle:magicnumber")

@@ -401,7 +401,7 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          * @see #newLocalRepositoryManager(LocalRepository...)
          */
-        SessionBuilder withLocalRepository(File... basedir);
+        SessionBuilder withLocalRepositoryBasedir(File... basedir);
 
         /**
          * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
@@ -412,7 +412,29 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          * @see #newLocalRepositoryManager(LocalRepository...)
          */
-        SessionBuilder withLocalRepository(List<File> basedir);
+        SessionBuilder withLocalRepositoryBasedir(List<File> basedir);
+
+        /**
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link LocalRepository} passed in this method. In case multiple local repositories, session builder will
+         * use chained local repository manager.
+         *
+         * @param localRepository The local repositories.
+         * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
+         */
+        SessionBuilder withLocalRepository(LocalRepository... localRepository);
+
+        /**
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link LocalRepository} present in passed in list. In case multiple local repositories, session builder will
+         * use chained local repository manager.
+         *
+         * @param basedir The local repository base directories.
+         * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
+         */
+        SessionBuilder withLocalRepository(List<LocalRepository> basedir);
 
         /**
          * Shortcut method to shallow-copy passed in session into current builder.
