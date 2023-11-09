@@ -398,26 +398,15 @@ public interface RepositorySystemSession {
         SessionBuilder setCache(RepositoryCache cache);
 
         /**
-         * Shortcut method to set up local repository manager.
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link File} passed in this method. In case multiple files, session builder will use chained local repository
+         * manager.
          *
-         * @param basedir The local repository base directory, may be {@code null} if none.
+         * @param basedir The local repository base directories.
          * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
          */
-        SessionBuilder withLocalRepository(File basedir);
-
-        /**
-         * Creates a new manager for the specified local repository. If the specified local repository has no type, the
-         * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
-         * invocation is one of the last steps of setting up a new session, in particular any configuration properties
-         * should have been set already.
-         *
-         * @param localRepository The local repository to create a manager for, must not be {@code null}.
-         * @return The local repository manager, never {@code null}.
-         * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
-         *                                  given.
-         * @see RepositorySystem#newLocalRepositoryManager(RepositorySystemSession, LocalRepository)
-         */
-        LocalRepositoryManager newLocalRepositoryManager(LocalRepository localRepository);
+        SessionBuilder withLocalRepository(File... basedir);
 
         /**
          * Shortcut method to shallow-copy passed in session into current builder.
@@ -426,6 +415,17 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          */
         SessionBuilder withRepositorySystemSession(RepositorySystemSession session);
+
+        /**
+         * Factory method that creates local repository manager using configuration from this builder. The created
+         * manager may be chained, if more than one local repository is passed in.
+         *
+         * @param localRepositories The ordered local repositories to create manager for, must not be
+         *                          {@code null} nor empty, at least one member must be present.
+         * @return The local repository manager, never {@code null}.
+         * @throws IllegalArgumentException If the specified repository type is not recognized.
+         */
+        LocalRepositoryManager newLocalRepositoryManager(LocalRepository... localRepositories);
 
         /**
          * Creates a session instance.

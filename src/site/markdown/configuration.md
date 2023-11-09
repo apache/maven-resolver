@@ -26,7 +26,8 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms` | String | Comma-separated list of checksum algorithms with which `trustedChecksums` should operate (validate or record). | `"SHA-1"` | no 
 `aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing` | boolean | Makes `trustedChecksums` fail validation if a trusted checksum for an artifact is missing. | `false` | no 
 `aether.artifactResolver.postProcessor.trustedChecksums.record` | boolean | Makes `trustedChecksums` calculate and record checksums. | `false` | no 
-`aether.artifactResolver.postProcessor.trustedChecksums.snapshots` | boolean | Enables or disables snapshot processing in `trustedChecksums` post processor. | `false` | no 
+`aether.artifactResolver.postProcessor.trustedChecksums.snapshots` | boolean | Enables or disables snapshot processing in `trustedChecksums` post processor. | `false` | no
+`aether.chainedLocalRepository.ignoreTailAvailability` | boolean | When chained local repository is used, whether the tail availability should be ignored or not. | `true` | no
 `aether.checksums.omitChecksumsForExtensions` | String | Comma-separated list of extensions with leading dot (example `.asc`) that should have checksums omitted. These are applied to sub-artifacts only. Note: to achieve 1.7.x `aether.checksums.forSignature=true` behaviour, pass empty string as value for this property. | `.asc,.sigstore` | no
 `aether.checksums.algorithms` | String | Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated (uploaded). Resolver by default supports following algorithms: `MD5`, `SHA-1`, `SHA-256` and `SHA-512`. New algorithms can be added by implementing `ChecksumAlgorithmFactory` component. | `"SHA-1,MD5"` | yes
 `aether.conflictResolver.verbose` | boolean | Flag controlling the conflict resolver's verbose mode. | `false` | no

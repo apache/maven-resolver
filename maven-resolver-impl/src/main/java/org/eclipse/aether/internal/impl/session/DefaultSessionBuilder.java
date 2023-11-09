@@ -20,7 +20,9 @@ package org.eclipse.aether.internal.impl.session;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,6 +50,7 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
 
@@ -480,15 +483,16 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     }
 
     @Override
-    public SessionBuilder withLocalRepository(File basedir) {
-        LocalRepository localRepository = new LocalRepository(basedir, "default");
-        this.localRepositoryManager = repositorySystem.newLocalRepositoryManager(this, localRepository);
+    public SessionBuilder withLocalRepository(File... basedir) {
+        if (basedir.length == 0) {
+            throw new IllegalArgumentException("empty basedir");
+        }
+        ArrayList<LocalRepository> localRepositories = new ArrayList<>(basedir.length);
+        for (File b : basedir) {
+            localRepositories.add(new LocalRepository(b));
+        }
+        this.localRepositoryManager = newLocalRepositoryManager(localRepositories.toArray(new LocalRepository[0]));
         return this;
-    }
-
-    @Override
-    public LocalRepositoryManager newLocalRepositoryManager(LocalRepository localRepository) {
-        return repositorySystem.newLocalRepositoryManager(this, localRepository);
     }
 
     @Override
@@ -520,6 +524,23 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
         setData(session.getData());
         setCache(session.getCache());
         return this;
+    }
+
+    @Override
+    public LocalRepositoryManager newLocalRepositoryManager(LocalRepository... localReposes) {
+        List<LocalRepository> localRepositories = Arrays.asList(localReposes);
+        if (localRepositories.isEmpty()) {
+            throw new IllegalArgumentException("empty local repositories");
+        } else if (localRepositories.size() == 1) {
+            return repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
+        } else {
+            LocalRepositoryManager head = repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
+            ArrayList<LocalRepositoryManager> tail = new ArrayList<>(localRepositories.size() - 1);
+            for (LocalRepository localRepository : localRepositories.subList(1, localRepositories.size())) {
+                tail.add(repositorySystem.newLocalRepositoryManager(this, localRepository));
+            }
+            return new ChainedLocalRepositoryManager(head, tail, this);
+        }
     }
 
     @Override

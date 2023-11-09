@@ -35,6 +35,7 @@ import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -50,6 +51,10 @@ import static java.util.stream.Collectors.toList;
  * @since 1.9.2
  */
 public final class ChainedLocalRepositoryManager implements LocalRepositoryManager {
+    public static final String IGNORE_TAIL_AVAILABILITY = "aether.chainedLocalRepository.ignoreTailAvailability";
+
+    private static final boolean DEFAULT_IGNORE_TAIL_AVAILABILITY = true;
+
     private final LocalRepositoryManager head;
 
     private final List<LocalRepositoryManager> tail;
@@ -61,6 +66,14 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
         this.head = requireNonNull(head, "head cannot be null");
         this.tail = requireNonNull(tail, "tail cannot be null");
         this.ignoreTailAvailability = ignoreTailAvailability;
+    }
+
+    public ChainedLocalRepositoryManager(
+            LocalRepositoryManager head, List<LocalRepositoryManager> tail, RepositorySystemSession session) {
+        this.head = requireNonNull(head, "head cannot be null");
+        this.tail = requireNonNull(tail, "tail cannot be null");
+        this.ignoreTailAvailability =
+                ConfigUtils.getBoolean(session, DEFAULT_IGNORE_TAIL_AVAILABILITY, IGNORE_TAIL_AVAILABILITY);
     }
 
     @Override
