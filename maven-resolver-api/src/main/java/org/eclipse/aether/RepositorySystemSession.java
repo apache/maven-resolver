@@ -100,7 +100,7 @@ public interface RepositorySystemSession {
      *
      * @since TBD
      */
-    interface SessionBuilder extends RepositorySystemSession {
+    interface SessionBuilder {
         /**
          * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
          * repositories.

@@ -58,7 +58,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * A default implementation of session builder. Is not immutable nor thread-safe.
  */
-public final class DefaultSessionBuilder implements SessionBuilder {
+public final class DefaultSessionBuilder implements SessionBuilder, RepositorySystemSession {
     private static final MirrorSelector NULL_MIRROR_SELECTOR = r -> null;
 
     private static final ProxySelector NULL_PROXY_SELECTOR = RemoteRepository::getProxy;
