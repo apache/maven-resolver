@@ -490,7 +490,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     @Override
     public SessionBuilder withLocalRepository(List<File> basedir) {
-        requireNonNull(basedir, "null basedir list");
+        requireNonNull(basedir, "null basedir");
         this.localRepositoryManager = newLocalRepositoryManager(
                 basedir.stream().map(LocalRepository::new).collect(toList()));
         return this;
@@ -536,7 +536,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public LocalRepositoryManager newLocalRepositoryManager(List<LocalRepository> localRepositories) {
         requireNonNull(localRepositories, "null localRepositories");
         if (localRepositories.isEmpty()) {
-            throw new IllegalArgumentException("empty local repositories");
+            throw new IllegalArgumentException("empty localRepositories");
         } else if (localRepositories.size() == 1) {
             return repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
         } else {
