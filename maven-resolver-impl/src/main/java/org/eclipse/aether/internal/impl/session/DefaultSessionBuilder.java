@@ -484,9 +484,6 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
 
     @Override
     public SessionBuilder withLocalRepository(File... basedir) {
-        if (basedir.length == 0) {
-            throw new IllegalArgumentException("empty basedir");
-        }
         LocalRepository[] localRepositories = new LocalRepository[basedir.length];
         for (int i = 0; i < basedir.length; i++) {
             localRepositories[i] = new LocalRepository(basedir[i]);
