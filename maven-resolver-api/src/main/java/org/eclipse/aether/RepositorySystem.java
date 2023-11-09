@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.List;
 
@@ -65,7 +66,7 @@ import org.eclipse.aether.resolution.VersionResult;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RepositorySystem {
+public interface RepositorySystem extends Closeable {
 
     /**
      * Expands a version range to a list of matching versions, in ascending order. For example, resolves "[3.8,4.0)" to
@@ -277,7 +278,7 @@ public interface RepositorySystem {
      * {@link #deploy(RepositorySystemSession, DeployRequest) deploy()} is used as is and expected to already carry any
      * required authentication or proxy configuration. This method can be used to apply the authentication/proxy
      * configuration from a session to a bare repository definition to obtain the complete repository definition for use
-     * in the deploy request.
+     * in the deployment request.
      *
      * @param session    The repository system session from which to configure the repository, must not be {@code null}.
      * @param repository The repository prototype from which to derive the deployment repository, must not be
@@ -296,6 +297,15 @@ public interface RepositorySystem {
     void addOnSystemEndedHandler(Runnable handler);
 
     /**
+     * Creates a brand-new session builder instance that produces "top level" (root) session. Top level sessions are
+     * associated with its creator {@link RepositorySystem} instance, and may be used only with that given instance and
+     * only within the lifespan of it, and after use should be closed.
+     *
+     * @since TBD
+     */
+    RepositorySystemSession.SessionBuilder createSessionBuilder();
+
+    /**
      * Signals to repository system to shut down. Shut down instance is not usable anymore.
      * <p>
      * Repository system may perform some resource cleanup, if applicable. Not using this method may cause leaks or
@@ -308,4 +318,14 @@ public interface RepositorySystem {
      * @since 1.9.0
      */
     void shutdown();
+
+    /**
+     * Closes this instance, invokes {@link #shutdown()}.
+     *
+     * @since TBD
+     */
+    @Override
+    default void close() {
+        shutdown();
+    }
 }

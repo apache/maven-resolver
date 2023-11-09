@@ -25,6 +25,8 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -36,6 +38,8 @@ import static java.util.Objects.requireNonNull;
 @Named(JdkTransporterFactory.NAME)
 public final class JdkTransporterFactory implements TransporterFactory {
     public static final String NAME = "jdk";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporterFactory.class);
 
     private float priority = Float.MIN_VALUE;
 
@@ -55,6 +59,7 @@ public final class JdkTransporterFactory implements TransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
+        LOGGER.debug("Needs Java11+ to function");
         throw new NoTransporterException(repository, "JDK Transport needs Java11+");
     }
 }

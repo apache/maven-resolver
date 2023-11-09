@@ -21,6 +21,7 @@ package org.eclipse.aether;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -51,10 +52,9 @@ import static java.util.Objects.requireNonNull;
  * <strong>Note:</strong> This class is not thread-safe. It is assumed that the mutators get only called during an
  * initialization phase and that the session itself is not changed once initialized and being used by the repository
  * system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to prevent
- * accidental manipulation of it afterwards.
+ * accidental manipulation of it afterward.
  */
 public final class DefaultRepositorySystemSession implements RepositorySystemSession {
-
     private boolean readOnly;
 
     private boolean offline;
@@ -113,11 +113,18 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private RepositoryCache cache;
 
+    private final Function<Runnable, Boolean> onSessionEndedRegistrar;
+
     /**
      * Creates an uninitialized session. <em>Note:</em> The new session is not ready to use, as a bare minimum,
      * {@link #setLocalRepositoryManager(LocalRepositoryManager)} needs to be called but usually other settings also
      * need to be customized to achieve meaningful behavior.
+     *
+     * @deprecated This way of creating session should be avoided, is in place just to offer backward binary
+     * compatibility with Resolver 1.x using code, but offers reduced functionality.
+     * Use {@link RepositorySystem#createSessionBuilder()} instead.
      */
+    @Deprecated
     public DefaultRepositorySystemSession() {
         systemProperties = new HashMap<>();
         systemPropertiesView = Collections.unmodifiableMap(systemProperties);
@@ -130,6 +137,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
         data = new DefaultSessionData();
+        onSessionEndedRegistrar = h -> false;
     }
 
     /**
@@ -168,6 +176,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setDependencyGraphTransformer(session.getDependencyGraphTransformer());
         setData(session.getData());
         setCache(session.getCache());
+        this.onSessionEndedRegistrar = session::addOnSessionEndedHandler;
     }
 
     @Override
@@ -764,6 +773,17 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         verifyStateForMutation();
         this.cache = cache;
         return this;
+    }
+
+    /**
+     * Registers onSessionEnded handler, if able to.
+     *
+     * @param handler The handler to register
+     * @return Return {@code true} if registration was possible, otherwise {@code false}.
+     */
+    @Override
+    public boolean addOnSessionEndedHandler(Runnable handler) {
+        return onSessionEndedRegistrar.apply(handler);
     }
 
     /**

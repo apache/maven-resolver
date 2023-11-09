@@ -26,6 +26,8 @@ import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JDK Transport customizer.
@@ -33,6 +35,8 @@ import org.eclipse.aether.util.ConfigUtils;
  * @since TBD
  */
 final class JdkHttpTransporterCustomizer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JdkHttpTransporterCustomizer.class);
+
     private JdkHttpTransporterCustomizer() {}
 
     static void customizeBuilder(
@@ -44,7 +48,9 @@ final class JdkHttpTransporterCustomizer {
     }
 
     static void customizeHttpClient(RepositorySystemSession session, RemoteRepository repository, HttpClient client) {
-        // TODO: register client.close(); once onSessionClose feature present
+        if (!session.addOnSessionEndedHandler(client::close)) {
+            LOGGER.warn("Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
+        }
     }
 
     /**

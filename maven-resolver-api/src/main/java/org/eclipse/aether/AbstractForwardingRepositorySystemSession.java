@@ -190,4 +190,9 @@ public abstract class AbstractForwardingRepositorySystemSession implements Repos
     public RepositoryCache getCache() {
         return getSession().getCache();
     }
+
+    @Override
+    public boolean addOnSessionEndedHandler(Runnable handler) {
+        return getSession().addOnSessionEndedHandler(handler);
+    }
 }
