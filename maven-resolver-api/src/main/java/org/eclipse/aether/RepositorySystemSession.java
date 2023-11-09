@@ -93,14 +93,14 @@ public interface RepositorySystemSession {
 
     /**
      * Builder for building {@link CloseableSession} instances. Builder instances can be created with
-     * {@link RepositorySystem#createSessionBuilder()} method.
+     * {@link RepositorySystem#createSessionBuilder()} method. Instances are not thread-safe nor immutable.
      *
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
      *
      * @since TBD
      */
-    interface SessionBuilder {
+    interface SessionBuilder extends RepositorySystemSession {
         /**
          * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
          * repositories.
