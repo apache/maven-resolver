@@ -93,12 +93,6 @@ public interface RepositorySystemSession {
     /**
      * Builder for building {@link CloseableSession} instances. Builder instances can be created with
      * {@link RepositorySystem#createSessionBuilder()} method.
-     * <p>
-     * Note: while this interface extend {@link RepositorySystemSession}, it should NOT be used as such, it is just
-     * a helper ability, to make possible uses like {@link #withLocalRepository(File)} method is, where
-     * "chicken or egg" situation would appear (you need session for not-yet-built session). This class is NOT
-     * immutable nor thread safe. It is highly recommended that upon configuring builder is done, invoke
-     * {@link #build()} method and use resulting <em>immutable session</em> throughout your code.
      *
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
