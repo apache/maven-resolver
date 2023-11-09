@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession.CloseableRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -47,9 +47,9 @@ import org.eclipse.aether.transfer.TransferListener;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A default implementation of repository system session that is immutable.
+ * A default implementation of repository system session that is immutable and thread-safe.
  */
-public final class DefaultCloseableRepositorySystemSession implements CloseableRepositorySystemSession {
+public final class DefaultCloseableSession implements CloseableSession {
     private final String sessionId;
 
     private final AtomicBoolean closed;
@@ -109,7 +109,7 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     @SuppressWarnings("checkstyle:parameternumber")
-    public DefaultCloseableRepositorySystemSession(
+    public DefaultCloseableSession(
             String sessionId,
             AtomicBoolean closed,
             boolean offline,

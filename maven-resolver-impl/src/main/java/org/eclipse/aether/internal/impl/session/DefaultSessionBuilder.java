@@ -52,14 +52,9 @@ import org.eclipse.aether.transfer.TransferListener;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A default implementation of session builder.
- * <p>
- * Note: while this class implements {@link RepositorySystemSession}, it should NOT be used as such, it is just
- * an internal technical detail to allow this class some more functional helper abilities, like
- * {@link #withLocalRepository(File)} method is, where "chicken or egg" situation would be present. This class is
- * NOT immutable nor thread safe.
+ * A default implementation of session builder. Is not immutable nor thread-safe.
  */
-public final class DefaultSessionBuilder implements SessionBuilder, RepositorySystemSession {
+public final class DefaultSessionBuilder implements SessionBuilder {
     private static final MirrorSelector NULL_MIRROR_SELECTOR = r -> null;
 
     private static final ProxySelector NULL_PROXY_SELECTOR = RemoteRepository::getProxy;
@@ -523,8 +518,8 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     }
 
     @Override
-    public CloseableRepositorySystemSession build() {
-        CloseableRepositorySystemSession result = new DefaultCloseableRepositorySystemSession(
+    public CloseableSession build() {
+        CloseableSession result = new DefaultCloseableSession(
                 sessionId,
                 closed,
                 offline,

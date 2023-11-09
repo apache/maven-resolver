@@ -57,7 +57,7 @@ public interface RepositorySystemSession {
      *
      * @since TBD
      */
-    interface CloseableRepositorySystemSession extends RepositorySystemSession, Closeable {
+    interface CloseableSession extends RepositorySystemSession, Closeable {
         /**
          * Returns the ID of this closeable session instance. Each closeable session has different ID, unique within
          * repository system they were created with.
@@ -88,12 +88,18 @@ public interface RepositorySystemSession {
     }
 
     /**
-     * Builder for building {@link CloseableRepositorySystemSession} instances. Builder instances can be created with
+     * Builder for building {@link CloseableSession} instances. Builder instances can be created with
      * {@link RepositorySystem#createSessionBuilder()} method.
+     * <p>
+     * Note: while this interface extend {@link RepositorySystemSession}, it should NOT be used as such, it is just
+     * a helper ability, to make possible uses like {@link #withLocalRepository(File)} method is, where
+     * "chicken or egg" situation would appear (you need session for not-yet-built session). This class is NOT
+     * immutable nor thread safe. It is highly recommended that upon configuring builder is done, invoke
+     * {@link #build()} method and use resulting <em>immutable session</em> throughout your code.
      *
      * @since TBD
      */
-    interface SessionBuilder {
+    interface SessionBuilder extends RepositorySystemSession {
         /**
          * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
          * repositories.
@@ -404,7 +410,7 @@ public interface RepositorySystemSession {
         /**
          * Creates a session instance.
          */
-        CloseableRepositorySystemSession build();
+        CloseableSession build();
     }
 
     /**
