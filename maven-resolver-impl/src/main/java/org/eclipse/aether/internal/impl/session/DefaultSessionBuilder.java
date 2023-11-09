@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.RepositoryCache;
@@ -484,11 +485,14 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
 
     @Override
     public SessionBuilder withLocalRepository(File... basedir) {
-        LocalRepository[] localRepositories = new LocalRepository[basedir.length];
-        for (int i = 0; i < basedir.length; i++) {
-            localRepositories[i] = new LocalRepository(basedir[i]);
-        }
-        this.localRepositoryManager = newLocalRepositoryManager(localRepositories);
+        return withLocalRepository(Arrays.asList(basedir));
+    }
+
+    @Override
+    public SessionBuilder withLocalRepository(List<File> basedir) {
+        requireNonNull(basedir, "null basedir list");
+        this.localRepositoryManager = newLocalRepositoryManager(
+                basedir.stream().map(LocalRepository::new).collect(Collectors.toList()));
         return this;
     }
 
@@ -524,8 +528,13 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     }
 
     @Override
-    public LocalRepositoryManager newLocalRepositoryManager(LocalRepository... localReposes) {
-        List<LocalRepository> localRepositories = Arrays.asList(localReposes);
+    public LocalRepositoryManager newLocalRepositoryManager(LocalRepository... localRepositories) {
+        return newLocalRepositoryManager(Arrays.asList(localRepositories));
+    }
+
+    @Override
+    public LocalRepositoryManager newLocalRepositoryManager(List<LocalRepository> localRepositories) {
+        requireNonNull(localRepositories, "null localRepositories");
         if (localRepositories.isEmpty()) {
             throw new IllegalArgumentException("empty local repositories");
         } else if (localRepositories.size() == 1) {

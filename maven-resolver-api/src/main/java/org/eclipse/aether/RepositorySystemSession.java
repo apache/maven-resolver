@@ -20,6 +20,7 @@ package org.eclipse.aether;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -403,6 +404,17 @@ public interface RepositorySystemSession {
         SessionBuilder withLocalRepository(File... basedir);
 
         /**
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link File} present in passed in list. In case multiple files, session builder will use chained local
+         * repository manager.
+         *
+         * @param basedir The local repository base directories.
+         * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
+         */
+        SessionBuilder withLocalRepository(List<File> basedir);
+
+        /**
          * Shortcut method to shallow-copy passed in session into current builder.
          *
          * @param session The session to shallow-copy from.
@@ -420,6 +432,17 @@ public interface RepositorySystemSession {
          * @throws IllegalArgumentException If the specified repository type is not recognized.
          */
         LocalRepositoryManager newLocalRepositoryManager(LocalRepository... localRepositories);
+
+        /**
+         * Factory method that creates local repository manager using configuration from this builder. The created
+         * manager may be chained, if more than one local repository is passed in.
+         *
+         * @param localRepositories The ordered local repositories to create manager for, must not be
+         *                          {@code null} nor empty, at least one member must be present.
+         * @return The local repository manager, never {@code null}.
+         * @throws IllegalArgumentException If the specified repository type is not recognized.
+         */
+        LocalRepositoryManager newLocalRepositoryManager(List<LocalRepository> localRepositories);
 
         /**
          * Creates a session instance.
