@@ -29,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.MultiRuntimeException;
-import org.eclipse.aether.RepositorySystemSession.CloseableRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 
 import static java.util.Objects.requireNonNull;
@@ -89,7 +89,7 @@ public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecyc
     }
 
     @Override
-    public void sessionStarted(CloseableRepositorySystemSession session) {
+    public void sessionStarted(CloseableSession session) {
         requireNonNull(session, "session cannot be null");
         requireNotShutdown();
         String sessionId = session.sessionId();
@@ -102,7 +102,7 @@ public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecyc
     }
 
     @Override
-    public void sessionEnded(CloseableRepositorySystemSession session) {
+    public void sessionEnded(CloseableSession session) {
         requireNonNull(session, "session cannot be null");
         requireNotShutdown();
         String sessionId = session.sessionId();
@@ -127,7 +127,7 @@ public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecyc
     }
 
     @Override
-    public void addOnSessionEndedHandle(CloseableRepositorySystemSession session, Runnable handler) {
+    public void addOnSessionEndedHandle(CloseableSession session, Runnable handler) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(handler, "handler cannot be null");
         requireNotShutdown();

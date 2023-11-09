@@ -19,8 +19,9 @@
 package org.eclipse.aether.internal.impl.session;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,6 +30,7 @@ import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -50,16 +52,12 @@ import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
- * A default implementation of session builder.
- * <p>
- * Note: while this class implements {@link RepositorySystemSession}, it should NOT be used as such, it is just
- * an internal technical detail to allow this class some more functional helper abilities, like
- * {@link #withLocalRepository(File)} method is, where "chicken or egg" situation would be present. This class is
- * NOT immutable nor thread safe.
+ * A default implementation of session builder. Is not immutable nor thread-safe.
  */
-public final class DefaultSessionBuilder implements SessionBuilder, RepositorySystemSession {
+public final class DefaultSessionBuilder implements SessionBuilder {
     private static final MirrorSelector NULL_MIRROR_SELECTOR = r -> null;
 
     private static final ProxySelector NULL_PROXY_SELECTOR = RemoteRepository::getProxy;
@@ -76,8 +74,6 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
 
     private final AtomicBoolean closed;
 
-    private final ArrayList<Runnable> onCloseHandler;
-
     private boolean offline;
 
     private boolean ignoreArtifactDescriptorRepositories;
@@ -93,6 +89,8 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     private String metadataUpdatePolicy;
 
     private LocalRepositoryManager localRepositoryManager;
+
+    private List<LocalRepository> localRepositories;
 
     private WorkspaceReader workspaceReader;
 
@@ -137,149 +135,6 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.sessionId = requireNonNull(sessionId);
         this.closed = closed;
-        this.onCloseHandler = new ArrayList<>();
-    }
-
-    @Override
-    public boolean isOffline() {
-        return offline;
-    }
-
-    @Override
-    public boolean isIgnoreArtifactDescriptorRepositories() {
-        return ignoreArtifactDescriptorRepositories;
-    }
-
-    @Override
-    public ResolutionErrorPolicy getResolutionErrorPolicy() {
-        return resolutionErrorPolicy;
-    }
-
-    @Override
-    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
-        return artifactDescriptorPolicy;
-    }
-
-    @Override
-    public String getChecksumPolicy() {
-        return checksumPolicy;
-    }
-
-    @Override
-    public String getUpdatePolicy() {
-        return getArtifactUpdatePolicy();
-    }
-
-    @Override
-    public String getArtifactUpdatePolicy() {
-        return artifactUpdatePolicy;
-    }
-
-    @Override
-    public String getMetadataUpdatePolicy() {
-        return metadataUpdatePolicy;
-    }
-
-    @Override
-    public LocalRepository getLocalRepository() {
-        return localRepositoryManager.getRepository();
-    }
-
-    @Override
-    public LocalRepositoryManager getLocalRepositoryManager() {
-        return localRepositoryManager;
-    }
-
-    @Override
-    public WorkspaceReader getWorkspaceReader() {
-        return workspaceReader;
-    }
-
-    @Override
-    public RepositoryListener getRepositoryListener() {
-        return repositoryListener;
-    }
-
-    @Override
-    public TransferListener getTransferListener() {
-        return transferListener;
-    }
-
-    @Override
-    public Map<String, String> getSystemProperties() {
-        return systemProperties;
-    }
-
-    @Override
-    public Map<String, String> getUserProperties() {
-        return userProperties;
-    }
-
-    @Override
-    public Map<String, Object> getConfigProperties() {
-        return configProperties;
-    }
-
-    @Override
-    public MirrorSelector getMirrorSelector() {
-        return mirrorSelector;
-    }
-
-    @Override
-    public ProxySelector getProxySelector() {
-        return proxySelector;
-    }
-
-    @Override
-    public AuthenticationSelector getAuthenticationSelector() {
-        return authenticationSelector;
-    }
-
-    @Override
-    public ArtifactTypeRegistry getArtifactTypeRegistry() {
-        return artifactTypeRegistry;
-    }
-
-    @Override
-    public DependencyTraverser getDependencyTraverser() {
-        return dependencyTraverser;
-    }
-
-    @Override
-    public DependencyManager getDependencyManager() {
-        return dependencyManager;
-    }
-
-    @Override
-    public DependencySelector getDependencySelector() {
-        return dependencySelector;
-    }
-
-    @Override
-    public VersionFilter getVersionFilter() {
-        return versionFilter;
-    }
-
-    @Override
-    public DependencyGraphTransformer getDependencyGraphTransformer() {
-        return dependencyGraphTransformer;
-    }
-
-    @Override
-    public SessionData getData() {
-        return data;
-    }
-
-    @Override
-    public RepositoryCache getCache() {
-        return cache;
-    }
-
-    @Override
-    public boolean addOnSessionEndedHandler(Runnable handler) {
-        requireNonNull(handler, "null handler");
-        onCloseHandler.add(handler);
-        return true;
     }
 
     @Override
@@ -485,9 +340,26 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     }
 
     @Override
-    public SessionBuilder withLocalRepository(File basedir) {
-        LocalRepository localRepository = new LocalRepository(basedir, "default");
-        this.localRepositoryManager = repositorySystem.newLocalRepositoryManager(this, localRepository);
+    public SessionBuilder withLocalRepositoryBaseDirectories(File... baseDirectories) {
+        return withLocalRepositoryBaseDirectories(Arrays.asList(baseDirectories));
+    }
+
+    @Override
+    public SessionBuilder withLocalRepositoryBaseDirectories(List<File> baseDirectories) {
+        requireNonNull(baseDirectories, "null baseDirectories");
+        return withLocalRepositories(
+                baseDirectories.stream().map(LocalRepository::new).collect(toList()));
+    }
+
+    @Override
+    public SessionBuilder withLocalRepositories(LocalRepository... localRepositories) {
+        return withLocalRepositories(Arrays.asList(localRepositories));
+    }
+
+    @Override
+    public SessionBuilder withLocalRepositories(List<LocalRepository> localRepositories) {
+        requireNonNull(localRepositories, "null localRepositories");
+        this.localRepositories = localRepositories;
         return this;
     }
 
@@ -523,8 +395,8 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     }
 
     @Override
-    public CloseableRepositorySystemSession build() {
-        CloseableRepositorySystemSession result = new DefaultCloseableRepositorySystemSession(
+    public CloseableSession build() {
+        return new DefaultCloseableSession(
                 sessionId,
                 closed,
                 offline,
@@ -535,6 +407,7 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
                 artifactUpdatePolicy,
                 metadataUpdatePolicy,
                 localRepositoryManager,
+                localRepositories,
                 workspaceReader,
                 repositoryListener,
                 transferListener,
@@ -554,8 +427,6 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
                 cache,
                 repositorySystem,
                 repositorySystemLifecycle);
-        onCloseHandler.forEach(result::addOnSessionEndedHandler);
-        return result;
     }
 
     @SuppressWarnings("checkstyle:magicnumber")

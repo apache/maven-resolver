@@ -19,13 +19,14 @@
 package org.eclipse.aether.internal.impl.session;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession.CloseableRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -43,13 +44,15 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
- * A default implementation of repository system session that is immutable.
+ * A default implementation of repository system session that is immutable and thread-safe.
  */
-public final class DefaultCloseableRepositorySystemSession implements CloseableRepositorySystemSession {
+public final class DefaultCloseableSession implements CloseableSession {
     private final String sessionId;
 
     private final AtomicBoolean closed;
@@ -109,7 +112,7 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     @SuppressWarnings("checkstyle:parameternumber")
-    public DefaultCloseableRepositorySystemSession(
+    public DefaultCloseableSession(
             String sessionId,
             AtomicBoolean closed,
             boolean offline,
@@ -120,6 +123,7 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
             String artifactUpdatePolicy,
             String metadataUpdatePolicy,
             LocalRepositoryManager localRepositoryManager,
+            List<LocalRepository> localRepositories,
             WorkspaceReader workspaceReader,
             RepositoryListener repositoryListener,
             TransferListener transferListener,
@@ -148,7 +152,6 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
         this.checksumPolicy = checksumPolicy;
         this.artifactUpdatePolicy = artifactUpdatePolicy;
         this.metadataUpdatePolicy = metadataUpdatePolicy;
-        this.localRepositoryManager = requireNonNull(localRepositoryManager);
         this.workspaceReader = workspaceReader;
         this.repositoryListener = repositoryListener;
         this.transferListener = transferListener;
@@ -170,8 +173,32 @@ public final class DefaultCloseableRepositorySystemSession implements CloseableR
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
 
+        this.localRepositoryManager = getOrCreateLocalRepositoryManager(localRepositoryManager, localRepositories);
+
         if (closed == null) {
             repositorySystemLifecycle.sessionStarted(this);
+        }
+    }
+
+    private LocalRepositoryManager getOrCreateLocalRepositoryManager(
+            LocalRepositoryManager localRepositoryManager, List<LocalRepository> localRepositories) {
+        if (localRepositoryManager != null) {
+            return localRepositoryManager;
+        } else if (localRepositories != null) {
+            if (localRepositories.isEmpty()) {
+                throw new IllegalArgumentException("empty localRepositories");
+            } else if (localRepositories.size() == 1) {
+                return repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
+            } else {
+                LocalRepositoryManager head =
+                        repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
+                List<LocalRepositoryManager> tail = localRepositories.subList(1, localRepositories.size()).stream()
+                        .map(l -> repositorySystem.newLocalRepositoryManager(this, l))
+                        .collect(toList());
+                return new ChainedLocalRepositoryManager(head, tail, this);
+            }
+        } else {
+            throw new IllegalStateException("No local repository manager or local repositories set on session");
         }
     }
 

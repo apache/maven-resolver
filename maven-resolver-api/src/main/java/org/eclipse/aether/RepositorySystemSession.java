@@ -20,6 +20,7 @@ package org.eclipse.aether;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -55,9 +56,12 @@ public interface RepositorySystemSession {
      * Immutable session that is closeable, should be handled as a resource. These session instances can be
      * created with {@link SessionBuilder}.
      *
+     * @noimplement This interface is not intended to be implemented by clients.
+     * @noextend This interface is not intended to be extended by clients.
+     *
      * @since TBD
      */
-    interface CloseableRepositorySystemSession extends RepositorySystemSession, Closeable {
+    interface CloseableSession extends RepositorySystemSession, Closeable {
         /**
          * Returns the ID of this closeable session instance. Each closeable session has different ID, unique within
          * repository system they were created with.
@@ -88,8 +92,11 @@ public interface RepositorySystemSession {
     }
 
     /**
-     * Builder for building {@link CloseableRepositorySystemSession} instances. Builder instances can be created with
-     * {@link RepositorySystem#createSessionBuilder()} method.
+     * Builder for building {@link CloseableSession} instances. Builder instances can be created with
+     * {@link RepositorySystem#createSessionBuilder()} method. Instances are not thread-safe nor immutable.
+     *
+     * @noimplement This interface is not intended to be implemented by clients.
+     * @noextend This interface is not intended to be extended by clients.
      *
      * @since TBD
      */
@@ -386,12 +393,48 @@ public interface RepositorySystemSession {
         SessionBuilder setCache(RepositoryCache cache);
 
         /**
-         * Shortcut method to set up local repository manager.
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link File} passed in this method. In case multiple files, session builder will use chained local repository
+         * manager.
          *
-         * @param basedir The local repository base directory, may be {@code null} if none.
+         * @param baseDirectories The local repository base directories.
          * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
          */
-        SessionBuilder withLocalRepository(File basedir);
+        SessionBuilder withLocalRepositoryBaseDirectories(File... baseDirectories);
+
+        /**
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link File} present in passed in list. In case multiple files, session builder will use chained local
+         * repository manager.
+         *
+         * @param baseDirectories The local repository base directories.
+         * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
+         */
+        SessionBuilder withLocalRepositoryBaseDirectories(List<File> baseDirectories);
+
+        /**
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link LocalRepository} passed in this method. In case multiple local repositories, session builder will
+         * use chained local repository manager.
+         *
+         * @param localRepositories The local repositories.
+         * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
+         */
+        SessionBuilder withLocalRepositories(LocalRepository... localRepositories);
+
+        /**
+         * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
+         * {@link LocalRepository} present in passed in list. In case multiple local repositories, session builder will
+         * use chained local repository manager.
+         *
+         * @param localRepositories The local repositories.
+         * @return This session for chaining, never {@code null}.
+         * @see #newLocalRepositoryManager(LocalRepository...)
+         */
+        SessionBuilder withLocalRepositories(List<LocalRepository> localRepositories);
 
         /**
          * Shortcut method to shallow-copy passed in session into current builder.
@@ -404,7 +447,7 @@ public interface RepositorySystemSession {
         /**
          * Creates a session instance.
          */
-        CloseableRepositorySystemSession build();
+        CloseableSession build();
     }
 
     /**
