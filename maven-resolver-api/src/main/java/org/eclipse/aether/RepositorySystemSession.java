@@ -55,6 +55,9 @@ public interface RepositorySystemSession {
      * Immutable session that is closeable, should be handled as a resource. These session instances can be
      * created with {@link SessionBuilder}.
      *
+     * @noimplement This interface is not intended to be implemented by clients.
+     * @noextend This interface is not intended to be extended by clients.
+     *
      * @since TBD
      */
     interface CloseableSession extends RepositorySystemSession, Closeable {
@@ -97,9 +100,12 @@ public interface RepositorySystemSession {
      * immutable nor thread safe. It is highly recommended that upon configuring builder is done, invoke
      * {@link #build()} method and use resulting <em>immutable session</em> throughout your code.
      *
+     * @noimplement This interface is not intended to be implemented by clients.
+     * @noextend This interface is not intended to be extended by clients.
+     *
      * @since TBD
      */
-    interface SessionBuilder extends RepositorySystemSession {
+    interface SessionBuilder {
         /**
          * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
          * repositories.
@@ -398,6 +404,20 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          */
         SessionBuilder withLocalRepository(File basedir);
+
+        /**
+         * Creates a new manager for the specified local repository. If the specified local repository has no type, the
+         * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
+         * invocation is one of the last steps of setting up a new session, in particular any configuration properties
+         * should have been set already.
+         *
+         * @param localRepository The local repository to create a manager for, must not be {@code null}.
+         * @return The local repository manager, never {@code null}.
+         * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
+         *                                  given.
+         * @see RepositorySystem#newLocalRepositoryManager(RepositorySystemSession, LocalRepository)
+         */
+        LocalRepositoryManager newLocalRepositoryManager(LocalRepository localRepository);
 
         /**
          * Shortcut method to shallow-copy passed in session into current builder.

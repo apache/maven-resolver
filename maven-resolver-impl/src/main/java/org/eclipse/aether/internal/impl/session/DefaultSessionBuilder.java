@@ -54,7 +54,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A default implementation of session builder. Is not immutable nor thread-safe.
  */
-public final class DefaultSessionBuilder implements SessionBuilder {
+public final class DefaultSessionBuilder implements SessionBuilder, RepositorySystemSession {
     private static final MirrorSelector NULL_MIRROR_SELECTOR = r -> null;
 
     private static final ProxySelector NULL_PROXY_SELECTOR = RemoteRepository::getProxy;
@@ -484,6 +484,11 @@ public final class DefaultSessionBuilder implements SessionBuilder {
         LocalRepository localRepository = new LocalRepository(basedir, "default");
         this.localRepositoryManager = repositorySystem.newLocalRepositoryManager(this, localRepository);
         return this;
+    }
+
+    @Override
+    public LocalRepositoryManager newLocalRepositoryManager(LocalRepository localRepository) {
+        return repositorySystem.newLocalRepositoryManager(this, localRepository);
     }
 
     @Override
