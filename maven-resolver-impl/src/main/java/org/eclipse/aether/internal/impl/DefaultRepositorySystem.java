@@ -356,6 +356,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
             RepositorySystemSession session, LocalRepository localRepository) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(localRepository, "localRepository cannot be null");
+        validateSystem();
 
         try {
             return localRepositoryProvider.newLocalRepositoryManager(session, localRepository);
