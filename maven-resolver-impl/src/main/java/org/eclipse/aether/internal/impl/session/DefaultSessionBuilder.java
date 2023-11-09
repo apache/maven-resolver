@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.RepositoryCache;
@@ -54,6 +53,7 @@ import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A default implementation of session builder. Is not immutable nor thread-safe.
@@ -492,7 +492,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public SessionBuilder withLocalRepository(List<File> basedir) {
         requireNonNull(basedir, "null basedir list");
         this.localRepositoryManager = newLocalRepositoryManager(
-                basedir.stream().map(LocalRepository::new).collect(Collectors.toList()));
+                basedir.stream().map(LocalRepository::new).collect(toList()));
         return this;
     }
 
@@ -541,10 +541,9 @@ public final class DefaultSessionBuilder implements SessionBuilder {
             return repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
         } else {
             LocalRepositoryManager head = repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
-            ArrayList<LocalRepositoryManager> tail = new ArrayList<>(localRepositories.size() - 1);
-            for (LocalRepository localRepository : localRepositories.subList(1, localRepositories.size())) {
-                tail.add(repositorySystem.newLocalRepositoryManager(this, localRepository));
-            }
+            List<LocalRepositoryManager> tail = localRepositories.subList(1, localRepositories.size()).stream()
+                    .map(l -> repositorySystem.newLocalRepositoryManager(this, l))
+                    .collect(toList());
             return new ChainedLocalRepositoryManager(head, tail, this);
         }
     }
