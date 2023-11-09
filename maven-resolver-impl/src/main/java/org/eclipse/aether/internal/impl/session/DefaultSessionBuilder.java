@@ -31,6 +31,7 @@ import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -50,7 +51,6 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -58,7 +58,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * A default implementation of session builder. Is not immutable nor thread-safe.
  */
-public final class DefaultSessionBuilder implements SessionBuilder, RepositorySystemSession {
+public final class DefaultSessionBuilder implements SessionBuilder {
     private static final MirrorSelector NULL_MIRROR_SELECTOR = r -> null;
 
     private static final ProxySelector NULL_PROXY_SELECTOR = RemoteRepository::getProxy;
@@ -74,8 +74,6 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     private final String sessionId;
 
     private final AtomicBoolean closed;
-
-    private final ArrayList<Runnable> onCloseHandler;
 
     private boolean offline;
 
@@ -138,149 +136,6 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.sessionId = requireNonNull(sessionId);
         this.closed = closed;
-        this.onCloseHandler = new ArrayList<>();
-    }
-
-    @Override
-    public boolean isOffline() {
-        return offline;
-    }
-
-    @Override
-    public boolean isIgnoreArtifactDescriptorRepositories() {
-        return ignoreArtifactDescriptorRepositories;
-    }
-
-    @Override
-    public ResolutionErrorPolicy getResolutionErrorPolicy() {
-        return resolutionErrorPolicy;
-    }
-
-    @Override
-    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
-        return artifactDescriptorPolicy;
-    }
-
-    @Override
-    public String getChecksumPolicy() {
-        return checksumPolicy;
-    }
-
-    @Override
-    public String getUpdatePolicy() {
-        return getArtifactUpdatePolicy();
-    }
-
-    @Override
-    public String getArtifactUpdatePolicy() {
-        return artifactUpdatePolicy;
-    }
-
-    @Override
-    public String getMetadataUpdatePolicy() {
-        return metadataUpdatePolicy;
-    }
-
-    @Override
-    public LocalRepository getLocalRepository() {
-        return localRepositoryManager.getRepository();
-    }
-
-    @Override
-    public LocalRepositoryManager getLocalRepositoryManager() {
-        return localRepositoryManager;
-    }
-
-    @Override
-    public WorkspaceReader getWorkspaceReader() {
-        return workspaceReader;
-    }
-
-    @Override
-    public RepositoryListener getRepositoryListener() {
-        return repositoryListener;
-    }
-
-    @Override
-    public TransferListener getTransferListener() {
-        return transferListener;
-    }
-
-    @Override
-    public Map<String, String> getSystemProperties() {
-        return systemProperties;
-    }
-
-    @Override
-    public Map<String, String> getUserProperties() {
-        return userProperties;
-    }
-
-    @Override
-    public Map<String, Object> getConfigProperties() {
-        return configProperties;
-    }
-
-    @Override
-    public MirrorSelector getMirrorSelector() {
-        return mirrorSelector;
-    }
-
-    @Override
-    public ProxySelector getProxySelector() {
-        return proxySelector;
-    }
-
-    @Override
-    public AuthenticationSelector getAuthenticationSelector() {
-        return authenticationSelector;
-    }
-
-    @Override
-    public ArtifactTypeRegistry getArtifactTypeRegistry() {
-        return artifactTypeRegistry;
-    }
-
-    @Override
-    public DependencyTraverser getDependencyTraverser() {
-        return dependencyTraverser;
-    }
-
-    @Override
-    public DependencyManager getDependencyManager() {
-        return dependencyManager;
-    }
-
-    @Override
-    public DependencySelector getDependencySelector() {
-        return dependencySelector;
-    }
-
-    @Override
-    public VersionFilter getVersionFilter() {
-        return versionFilter;
-    }
-
-    @Override
-    public DependencyGraphTransformer getDependencyGraphTransformer() {
-        return dependencyGraphTransformer;
-    }
-
-    @Override
-    public SessionData getData() {
-        return data;
-    }
-
-    @Override
-    public RepositoryCache getCache() {
-        return cache;
-    }
-
-    @Override
-    public boolean addOnSessionEndedHandler(Runnable handler) {
-        requireNonNull(handler, "null handler");
-        onCloseHandler.add(handler);
-        return true;
     }
 
     @Override
@@ -486,23 +341,24 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     }
 
     @Override
-    public SessionBuilder withLocalRepositoryBasedir(File... basedir) {
-        return withLocalRepositoryBasedir(Arrays.asList(basedir));
+    public SessionBuilder withLocalRepositoryBaseDirectories(File... baseDirectories) {
+        return withLocalRepositoryBaseDirectories(Arrays.asList(baseDirectories));
     }
 
     @Override
-    public SessionBuilder withLocalRepositoryBasedir(List<File> basedir) {
-        requireNonNull(basedir, "null basedir");
-        return withLocalRepository(basedir.stream().map(LocalRepository::new).collect(toList()));
+    public SessionBuilder withLocalRepositoryBaseDirectories(List<File> baseDirectories) {
+        requireNonNull(baseDirectories, "null baseDirectories");
+        return withLocalRepositories(
+                baseDirectories.stream().map(LocalRepository::new).collect(toList()));
     }
 
     @Override
-    public SessionBuilder withLocalRepository(LocalRepository... localRepository) {
-        return withLocalRepository(Arrays.asList(localRepository));
+    public SessionBuilder withLocalRepositories(LocalRepository... localRepositories) {
+        return withLocalRepositories(Arrays.asList(localRepositories));
     }
 
     @Override
-    public SessionBuilder withLocalRepository(List<LocalRepository> localRepositories) {
+    public SessionBuilder withLocalRepositories(List<LocalRepository> localRepositories) {
         requireNonNull(localRepositories, "null localRepositories");
         this.localRepositories = localRepositories;
         return this;
@@ -540,29 +396,8 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
     }
 
     @Override
-    public LocalRepositoryManager newLocalRepositoryManager(LocalRepository... localRepositories) {
-        return newLocalRepositoryManager(Arrays.asList(localRepositories));
-    }
-
-    @Override
-    public LocalRepositoryManager newLocalRepositoryManager(List<LocalRepository> localRepositories) {
-        requireNonNull(localRepositories, "null localRepositories");
-        if (localRepositories.isEmpty()) {
-            throw new IllegalArgumentException("empty localRepositories");
-        } else if (localRepositories.size() == 1) {
-            return repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
-        } else {
-            LocalRepositoryManager head = repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
-            List<LocalRepositoryManager> tail = localRepositories.subList(1, localRepositories.size()).stream()
-                    .map(l -> repositorySystem.newLocalRepositoryManager(this, l))
-                    .collect(toList());
-            return new ChainedLocalRepositoryManager(head, tail, this);
-        }
-    }
-
-    @Override
     public CloseableSession build() {
-        CloseableSession result = new DefaultCloseableSession(
+        return new DefaultCloseableSession(
                 sessionId,
                 closed,
                 offline,
@@ -572,7 +407,8 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
                 checksumPolicy,
                 artifactUpdatePolicy,
                 metadataUpdatePolicy,
-                getOrCreateLocalRepositoryManager(),
+                localRepositoryManager,
+                localRepositories,
                 workspaceReader,
                 repositoryListener,
                 transferListener,
@@ -592,18 +428,6 @@ public final class DefaultSessionBuilder implements SessionBuilder, RepositorySy
                 cache,
                 repositorySystem,
                 repositorySystemLifecycle);
-        onCloseHandler.forEach(result::addOnSessionEndedHandler);
-        return result;
-    }
-
-    private LocalRepositoryManager getOrCreateLocalRepositoryManager() {
-        if (localRepositoryManager != null) {
-            return localRepositoryManager;
-        } else if (localRepositories != null) {
-            return newLocalRepositoryManager(localRepositories);
-        } else {
-            throw new IllegalStateException("No local repository manager or local repositories set on session");
-        }
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
