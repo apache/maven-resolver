@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * A transfer listener that delegates to zero or more other listeners (multicast). The list of target listeners is
  * thread-safe, i.e. target listeners can be added or removed by any thread at any time.
  */
-public final class ChainedTransferListener extends AbstractTransferListener {
+public class ChainedTransferListener extends AbstractTransferListener {
 
     private final List<TransferListener> listeners = new CopyOnWriteArrayList<>();
 
@@ -111,6 +111,9 @@ public final class ChainedTransferListener extends AbstractTransferListener {
         }
     }
 
+    /**
+     * Invoked when any listener throws, by default is no op, extend if required.
+     */
     @SuppressWarnings("EmptyMethod")
     protected void handleError(TransferEvent event, TransferListener listener, RuntimeException error) {
         // default just swallows errors
