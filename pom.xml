@@ -253,7 +253,7 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.18.3</version>
+          <version>0.18.1</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->
@@ -319,9 +319,6 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
-                    <!-- MRESOLVER-431 Fixing chained repository and transfer listeners -->
-                    <exclude>org.eclipse.aether.util.listener.ChainedRepositoryListener#handleError(org.eclipse.aether.RepositoryEvent,org.eclipse.aether.RepositoryListener,java.lang.RuntimeException)</exclude>
-                    <exclude>org.eclipse.aether.util.listener.ChainedTransferListener#handleError(org.eclipse.aether.transfer.TransferEvent,org.eclipse.aether.transfer.TransferListener,java.lang.RuntimeException)</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -363,9 +360,6 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
-                    <!-- MRESOLVER-431 Fixing chained repository and transfer listeners -->
-                    <exclude>org.eclipse.aether.util.listener.ChainedRepositoryListener#handleError(org.eclipse.aether.RepositoryEvent,org.eclipse.aether.RepositoryListener,java.lang.RuntimeException)</exclude>
-                    <exclude>org.eclipse.aether.util.listener.ChainedTransferListener#handleError(org.eclipse.aether.transfer.TransferEvent,org.eclipse.aether.transfer.TransferListener,java.lang.RuntimeException)</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
