@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -35,8 +36,13 @@ import static java.util.Objects.requireNonNull;
  * thread-safe, i.e. target listeners can be added or removed by any thread at any time.
  */
 public final class ChainedTransferListener extends AbstractTransferListener {
+    public abstract static class ErrorHandler {
+        public abstract void handleError(TransferEvent event, TransferListener listener, RuntimeException error);
+    }
 
     private final List<TransferListener> listeners = new CopyOnWriteArrayList<>();
+
+    private final AtomicReference<ErrorHandler> errorHandlerRef = new AtomicReference<>(null);
 
     /**
      * Creates a new multicast listener that delegates to the specified listeners. In contrast to the constructor, this
@@ -111,9 +117,21 @@ public final class ChainedTransferListener extends AbstractTransferListener {
         }
     }
 
-    @SuppressWarnings("EmptyMethod")
-    protected void handleError(TransferEvent event, TransferListener listener, RuntimeException error) {
-        // default just swallows errors
+    /**
+     * Sets the {@link ErrorHandler} on this instance, may be {@code null} (no error handling, also is default).
+     *
+     * @param errorHandler The error handler or {@code null}.
+     * @since 2.0.0
+     */
+    public void setErrorHandler(ErrorHandler errorHandler) {
+        errorHandlerRef.set(errorHandler);
+    }
+
+    private void handleError(TransferEvent event, TransferListener listener, RuntimeException error) {
+        ErrorHandler errorHandler = errorHandlerRef.get();
+        if (errorHandler != null) {
+            errorHandler.handleError(event, listener, error);
+        }
     }
 
     @Override
