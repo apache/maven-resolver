@@ -67,6 +67,10 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private static final ArtifactTypeRegistry NULL_ARTIFACT_TYPE_REGISTRY = t -> null;
 
+    private static final Supplier<SessionData> DEFAULT_SESSION_DATA_SUPPLIER = DefaultSessionData::new;
+
+    private static final Supplier<RepositoryCache> DEFAULT_REPOSITORY_CACHE_SUPPLIER = () -> null;
+
     private final RepositorySystem repositorySystem;
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
@@ -123,9 +127,9 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private DependencyGraphTransformer dependencyGraphTransformer;
 
-    private SessionData data;
+    private Supplier<SessionData> sessionDataSupplier = DEFAULT_SESSION_DATA_SUPPLIER;
 
-    private RepositoryCache cache;
+    private Supplier<RepositoryCache> repositoryCacheSupplier = DEFAULT_REPOSITORY_CACHE_SUPPLIER;
 
     /**
      * Constructor for "top level" builders.
@@ -344,16 +348,25 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     @Override
     public DefaultSessionBuilder setData(SessionData data) {
-        this.data = data;
-        if (this.data == null) {
-            this.data = new DefaultSessionData();
-        }
+        return setSessionDataSupplier(() -> data);
+    }
+
+    @Override
+    public DefaultSessionBuilder setSessionDataSupplier(Supplier<SessionData> dataSupplier) {
+        requireNonNull(dataSupplier, "null dataSupplier");
+        this.sessionDataSupplier = dataSupplier;
         return this;
     }
 
     @Override
     public DefaultSessionBuilder setCache(RepositoryCache cache) {
-        this.cache = cache;
+        return setRepositoryCacheSupplier(() -> cache);
+    }
+
+    @Override
+    public DefaultSessionBuilder setRepositoryCacheSupplier(Supplier<RepositoryCache> cacheSupplier) {
+        requireNonNull(cacheSupplier, "null cacheSupplier");
+        this.repositoryCacheSupplier = cacheSupplier;
         return this;
     }
 
@@ -441,8 +454,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 dependencySelector,
                 versionFilter,
                 dependencyGraphTransformer,
-                data != null ? data : new DefaultSessionData(),
-                cache,
+                sessionDataSupplier.get(),
+                repositoryCacheSupplier.get(),
                 repositorySystem,
                 repositorySystemLifecycle);
     }

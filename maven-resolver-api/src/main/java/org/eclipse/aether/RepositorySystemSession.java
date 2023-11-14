@@ -22,6 +22,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -97,7 +98,8 @@ public interface RepositorySystemSession {
      * <p>
      * Important: if you set a stateful member on builder (for example {@link SessionData} or {@link RepositoryCache}),
      * the builder will create session instances using same provided stateful members, that may lead to unexpected side
-     * effects. Solution for these cases is to not reuse builder instances.
+     * effects. Solution for these cases is to not reuse builder instances, or, keep reconfiguring it, or ultimately
+     * provide suppliers that create new instance per each call.
      *
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
@@ -389,12 +391,28 @@ public interface RepositorySystemSession {
         SessionBuilder setData(SessionData data);
 
         /**
+         * Sets the custom session data supplier associated with this session.
+         *
+         * @param dataSupplier The session data supplier, may not be {@code null}.
+         * @return This session for chaining, never {@code null}.
+         */
+        SessionBuilder setSessionDataSupplier(Supplier<SessionData> dataSupplier);
+
+        /**
          * Sets the cache the repository system may use to save data for future reuse during the session.
          *
          * @param cache The repository cache, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
         SessionBuilder setCache(RepositoryCache cache);
+
+        /**
+         * Sets the cache supplier for the repository system may use to save data for future reuse during the session.
+         *
+         * @param cacheSupplier The repository cache supplier, may not be {@code null}.
+         * @return This session for chaining, never {@code null}.
+         */
+        SessionBuilder setRepositoryCacheSupplier(Supplier<RepositoryCache> cacheSupplier);
 
         /**
          * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
