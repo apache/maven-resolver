@@ -94,6 +94,10 @@ public interface RepositorySystemSession {
     /**
      * Builder for building {@link CloseableSession} instances. Builder instances can be created with
      * {@link RepositorySystem#createSessionBuilder()} method. Instances are not thread-safe nor immutable.
+     * <p>
+     * Important: if you set a stateful member on builder (for example {@link SessionData} or {@link RepositoryCache}),
+     * the builder will create session instances using same provided stateful members, that may lead to unexpected side
+     * effects. Solution for these cases is to not reuse builder instances.
      *
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
@@ -399,7 +403,7 @@ public interface RepositorySystemSession {
          *
          * @param baseDirectories The local repository base directories.
          * @return This session for chaining, never {@code null}.
-         * @see #newLocalRepositoryManager(LocalRepository...)
+         * @see #withLocalRepositories(LocalRepository...)
          */
         SessionBuilder withLocalRepositoryBaseDirectories(File... baseDirectories);
 
@@ -410,7 +414,7 @@ public interface RepositorySystemSession {
          *
          * @param baseDirectories The local repository base directories.
          * @return This session for chaining, never {@code null}.
-         * @see #newLocalRepositoryManager(LocalRepository...)
+         * @see #withLocalRepositories(List)
          */
         SessionBuilder withLocalRepositoryBaseDirectories(List<File> baseDirectories);
 
@@ -421,7 +425,6 @@ public interface RepositorySystemSession {
          *
          * @param localRepositories The local repositories.
          * @return This session for chaining, never {@code null}.
-         * @see #newLocalRepositoryManager(LocalRepository...)
          */
         SessionBuilder withLocalRepositories(LocalRepository... localRepositories);
 
@@ -432,7 +435,6 @@ public interface RepositorySystemSession {
          *
          * @param localRepositories The local repositories.
          * @return This session for chaining, never {@code null}.
-         * @see #newLocalRepositoryManager(LocalRepository...)
          */
         SessionBuilder withLocalRepositories(List<LocalRepository> localRepositories);
 
