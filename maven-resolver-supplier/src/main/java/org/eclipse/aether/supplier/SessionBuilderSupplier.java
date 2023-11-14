@@ -64,13 +64,6 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         this.repositorySystem = requireNonNull(repositorySystem);
     }
 
-    @Override
-    public SessionBuilder get() {
-        SessionBuilder builder = repositorySystem.createSessionBuilder();
-        configureSessionBuilder(builder);
-        return builder;
-    }
-
     protected void configureSessionBuilder(SessionBuilder session) {
         session.setDependencyTraverser(getDependencyTraverser());
         session.setDependencyManager(getDependencyManager());
@@ -122,5 +115,22 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
         return new SimpleArtifactDescriptorPolicy(true, true);
+    }
+
+    /**
+     * Creates a new Maven-like repository system session by initializing the session with values typical for
+     * Maven-based resolution. In more detail, this method configures settings relevant for the processing of dependency
+     * graphs, most other settings remain at their generic default value. Use the various setters to further configure
+     * the session with authentication, mirror, proxy and other information required for your environment. At least,
+     * local repository manager needs to be configured to make session be able to create session instance.
+     *
+     * @return SessionBuilder configured with minimally required things for "Maven-based resolution". At least LRM must
+     * be set on builder to make it able to create session instances.
+     */
+    @Override
+    public SessionBuilder get() {
+        SessionBuilder builder = repositorySystem.createSessionBuilder();
+        configureSessionBuilder(builder);
+        return builder;
     }
 }
