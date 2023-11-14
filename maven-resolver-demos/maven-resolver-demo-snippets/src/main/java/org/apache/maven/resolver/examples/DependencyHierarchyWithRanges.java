@@ -22,8 +22,9 @@ import java.io.File;
 import java.util.Collections;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
+import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -51,34 +52,34 @@ public class DependencyHierarchyWithRanges {
         System.out.println("------------------------------------------------------------");
         System.out.println(DependencyHierarchyWithRanges.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
+            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
+            sessionBuilder.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE); // to not bother with checksums
+            sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
+            sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
+            try (CloseableSession session = sessionBuilder.build()) {
+                // this artifact is in "remote" repository in src/main/remote-repository
+                Artifact artifact = new DefaultArtifact("org.apache.maven.resolver.demo.mresolver345:a:1.0");
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
+                File remoteRepoBasedir = new File("src/main/remote-repository");
 
-        session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE); // to not bother with checksums
-        session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
-        session.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
+                ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+                descriptorRequest.setArtifact(artifact);
+                descriptorRequest.setRepositories(Collections.singletonList(new RemoteRepository.Builder(
+                                "remote", "default", remoteRepoBasedir.toURI().toASCIIString())
+                        .build()));
+                ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor(session, descriptorRequest);
 
-        // this artifact is in "remote" repository in src/main/remote-repository
-        Artifact artifact = new DefaultArtifact("org.apache.maven.resolver.demo.mresolver345:a:1.0");
+                CollectRequest collectRequest = new CollectRequest();
+                collectRequest.setRootArtifact(descriptorResult.getArtifact());
+                collectRequest.setDependencies(descriptorResult.getDependencies());
+                collectRequest.setManagedDependencies(descriptorResult.getManagedDependencies());
+                collectRequest.setRepositories(descriptorRequest.getRepositories());
 
-        File remoteRepoBasedir = new File("src/main/remote-repository");
+                CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
-        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-        descriptorRequest.setArtifact(artifact);
-        descriptorRequest.setRepositories(Collections.singletonList(new RemoteRepository.Builder(
-                        "remote", "default", remoteRepoBasedir.toURI().toASCIIString())
-                .build()));
-        ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor(session, descriptorRequest);
-
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRootArtifact(descriptorResult.getArtifact());
-        collectRequest.setDependencies(descriptorResult.getDependencies());
-        collectRequest.setManagedDependencies(descriptorResult.getManagedDependencies());
-        collectRequest.setRepositories(descriptorRequest.getRepositories());
-
-        CollectResult collectResult = system.collectDependencies(session, collectRequest);
-
-        collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+                collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+            }
+        }
     }
 }

@@ -22,7 +22,7 @@ import java.io.File;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
@@ -42,20 +42,20 @@ public class InstallArtifacts {
         System.out.println("------------------------------------------------------------");
         System.out.println(InstallArtifacts.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+                CloseableSession session =
+                        Booter.newRepositorySystemSession(system).build()) {
+            Artifact jarArtifact =
+                    new DefaultArtifact("test", "org.apache.maven.resolver.examples", "", "jar", "0.1-SNAPSHOT");
+            jarArtifact = jarArtifact.setFile(new File("src/main/data/demo.jar"));
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession(system);
+            Artifact pomArtifact = new SubArtifact(jarArtifact, "", "pom");
+            pomArtifact = pomArtifact.setFile(new File("pom.xml"));
 
-        Artifact jarArtifact =
-                new DefaultArtifact("test", "org.apache.maven.resolver.examples", "", "jar", "0.1-SNAPSHOT");
-        jarArtifact = jarArtifact.setFile(new File("src/main/data/demo.jar"));
+            InstallRequest installRequest = new InstallRequest();
+            installRequest.addArtifact(jarArtifact).addArtifact(pomArtifact);
 
-        Artifact pomArtifact = new SubArtifact(jarArtifact, "", "pom");
-        pomArtifact = pomArtifact.setFile(new File("pom.xml"));
-
-        InstallRequest installRequest = new InstallRequest();
-        installRequest.addArtifact(jarArtifact).addArtifact(pomArtifact);
-
-        system.install(session, installRequest);
+            system.install(session, installRequest);
+        }
     }
 }

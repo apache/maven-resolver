@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.RepositoryCache;
@@ -70,7 +71,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
-    private final String sessionId;
+    private final Supplier<String> sessionIdSupplier;
 
     private final AtomicBoolean closed;
 
@@ -122,18 +123,35 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private DependencyGraphTransformer dependencyGraphTransformer;
 
-    private SessionData data = new DefaultSessionData();
+    private SessionData data;
 
     private RepositoryCache cache;
 
+    /**
+     * Constructor for "top level" builders.
+     */
     public DefaultSessionBuilder(
+            RepositorySystem repositorySystem,
+            RepositorySystemLifecycle repositorySystemLifecycle,
+            Supplier<String> sessionIdSupplier) {
+        this.repositorySystem = requireNonNull(repositorySystem);
+        this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
+        this.sessionIdSupplier = requireNonNull(sessionIdSupplier);
+        this.closed = null;
+    }
+
+    /**
+     * "Copy constructor" used by {@link DefaultCloseableSession#copy()}. It carries over session ID and builder will
+     * create same ID sessions.
+     */
+    DefaultSessionBuilder(
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle,
             String sessionId,
             AtomicBoolean closed) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
-        this.sessionId = requireNonNull(sessionId);
+        this.sessionIdSupplier = () -> sessionId;
         this.closed = closed;
     }
 
@@ -397,7 +415,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     @Override
     public CloseableSession build() {
         return new DefaultCloseableSession(
-                sessionId,
+                sessionIdSupplier.get(),
                 closed,
                 offline,
                 ignoreArtifactDescriptorRepositories,
@@ -423,7 +441,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 dependencySelector,
                 versionFilter,
                 dependencyGraphTransformer,
-                data,
+                data != null ? data : new DefaultSessionData(),
                 cache,
                 repositorySystem,
                 repositorySystemLifecycle);
