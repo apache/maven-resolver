@@ -260,6 +260,60 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE = 50;
 
     /**
+     * The local address (interface) to use with HTTP transport. Not all transport supports this option.
+     *
+     * @since 2.0.0
+     */
+    public static final String HTTP_LOCAL_ADDRESS = PREFIX_CONNECTOR + "http.localAddress";
+
+    /**
+     * Boolean flag should the HTTP transport support WebDAV remote. Not all transport support this option.
+     *
+     * @see #DEFAULT_HTTP_SUPPORT_WEBDAV
+     * @since 2.0.0 (moved out from maven-resolver-transport-http).
+     */
+    public static final String HTTP_SUPPORT_WEBDAV = PREFIX_CONNECTOR + "http.supportWebDav";
+
+    /**
+     * Default value to use if {@link #HTTP_SUPPORT_WEBDAV} is not set: {@code false}.
+     *
+     * @since 2.0.0
+     */
+    public static final boolean DEFAULT_HTTP_SUPPORT_WEBDAV = false;
+
+    /**
+     * Boolean flag should the HTTP transport use preemptive-auth for PUT requests. Not all transport support this
+     * option.
+     *
+     * @see #DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH
+     * @since 2.0.0 (moved out from maven-resolver-transport-http).
+     */
+    public static final String HTTP_PREEMPTIVE_PUT_AUTH = PREFIX_CONNECTOR + "http.preemptivePutAuth";
+
+    /**
+     * Default value if {@link #HTTP_PREEMPTIVE_PUT_AUTH} is not set: {@code true}.
+     *
+     * @since 2.0.0
+     */
+    public static final boolean DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH = true;
+
+    /**
+     * Boolean flag should the HTTP transport use expect-continue handshake for PUT requests. Not all transport support
+     * this option. This option may be needed for some broken HTTP servers.
+     *
+     * @see #DEFAULT_HTTP_EXPECT_CONTINUE
+     * @since 2.0.0
+     */
+    public static final String HTTP_EXPECT_CONTINUE = PREFIX_CONNECTOR + "http.expectContinue";
+
+    /**
+     * Default value if {@link #HTTP_EXPECT_CONTINUE} is not set: {@code true}.
+     *
+     * @since 2.0.0
+     */
+    public static final boolean DEFAULT_HTTP_EXPECT_CONTINUE = true;
+
+    /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
      * hostname verification). The default value is {@link #HTTPS_SECURITY_MODE_DEFAULT}.
      *
