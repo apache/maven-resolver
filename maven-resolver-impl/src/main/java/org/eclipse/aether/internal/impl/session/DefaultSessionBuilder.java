@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.RepositoryCache;
@@ -66,11 +67,15 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private static final ArtifactTypeRegistry NULL_ARTIFACT_TYPE_REGISTRY = t -> null;
 
+    private static final Supplier<SessionData> DEFAULT_SESSION_DATA_SUPPLIER = DefaultSessionData::new;
+
+    private static final Supplier<RepositoryCache> DEFAULT_REPOSITORY_CACHE_SUPPLIER = () -> null;
+
     private final RepositorySystem repositorySystem;
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
-    private final String sessionId;
+    private final Supplier<String> sessionIdSupplier;
 
     private final AtomicBoolean closed;
 
@@ -122,18 +127,35 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private DependencyGraphTransformer dependencyGraphTransformer;
 
-    private SessionData data = new DefaultSessionData();
+    private Supplier<SessionData> sessionDataSupplier = DEFAULT_SESSION_DATA_SUPPLIER;
 
-    private RepositoryCache cache;
+    private Supplier<RepositoryCache> repositoryCacheSupplier = DEFAULT_REPOSITORY_CACHE_SUPPLIER;
 
+    /**
+     * Constructor for "top level" builders.
+     */
     public DefaultSessionBuilder(
+            RepositorySystem repositorySystem,
+            RepositorySystemLifecycle repositorySystemLifecycle,
+            Supplier<String> sessionIdSupplier) {
+        this.repositorySystem = requireNonNull(repositorySystem);
+        this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
+        this.sessionIdSupplier = requireNonNull(sessionIdSupplier);
+        this.closed = null;
+    }
+
+    /**
+     * "Copy constructor" used by {@link DefaultCloseableSession#copy()}. It carries over session ID and builder will
+     * create same ID sessions.
+     */
+    DefaultSessionBuilder(
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle,
             String sessionId,
             AtomicBoolean closed) {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
-        this.sessionId = requireNonNull(sessionId);
+        this.sessionIdSupplier = () -> sessionId;
         this.closed = closed;
     }
 
@@ -326,16 +348,25 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     @Override
     public DefaultSessionBuilder setData(SessionData data) {
-        this.data = data;
-        if (this.data == null) {
-            this.data = new DefaultSessionData();
-        }
+        return setSessionDataSupplier(() -> data);
+    }
+
+    @Override
+    public DefaultSessionBuilder setSessionDataSupplier(Supplier<SessionData> dataSupplier) {
+        requireNonNull(dataSupplier, "null dataSupplier");
+        this.sessionDataSupplier = dataSupplier;
         return this;
     }
 
     @Override
     public DefaultSessionBuilder setCache(RepositoryCache cache) {
-        this.cache = cache;
+        return setRepositoryCacheSupplier(() -> cache);
+    }
+
+    @Override
+    public DefaultSessionBuilder setRepositoryCacheSupplier(Supplier<RepositoryCache> cacheSupplier) {
+        requireNonNull(cacheSupplier, "null cacheSupplier");
+        this.repositoryCacheSupplier = cacheSupplier;
         return this;
     }
 
@@ -397,7 +428,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     @Override
     public CloseableSession build() {
         return new DefaultCloseableSession(
-                sessionId,
+                sessionIdSupplier.get(),
                 closed,
                 offline,
                 ignoreArtifactDescriptorRepositories,
@@ -411,9 +442,9 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 workspaceReader,
                 repositoryListener,
                 transferListener,
-                systemProperties,
-                userProperties,
-                configProperties,
+                copySafe(systemProperties, String.class),
+                copySafe(userProperties, String.class),
+                copySafe(configProperties, Object.class),
                 mirrorSelector,
                 proxySelector,
                 authenticationSelector,
@@ -423,8 +454,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 dependencySelector,
                 versionFilter,
                 dependencyGraphTransformer,
-                data,
-                cache,
+                sessionDataSupplier.get(),
+                repositoryCacheSupplier.get(),
                 repositorySystem,
                 repositorySystemLifecycle);
     }

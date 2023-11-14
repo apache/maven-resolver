@@ -19,8 +19,9 @@
 package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RepositoryPolicy;
@@ -41,40 +42,42 @@ public class ResolveArtifact {
         System.out.println("------------------------------------------------------------");
         System.out.println(ResolveArtifact.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
+            RepositorySystemSession.SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
+            Artifact artifact;
+            ArtifactRequest artifactRequest;
+            ArtifactResult artifactResult;
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
+            try (CloseableSession session = sessionBuilder.build()) {
+                artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:1.3.3");
 
-        Artifact artifact;
-        ArtifactRequest artifactRequest;
-        ArtifactResult artifactResult;
+                artifactRequest = new ArtifactRequest();
+                artifactRequest.setArtifact(artifact);
+                artifactRequest.setRepositories(Booter.newRepositories(system, session));
 
-        // artifact
-        artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:1.3.3");
+                artifactResult = system.resolveArtifact(session, artifactRequest);
 
-        artifactRequest = new ArtifactRequest();
-        artifactRequest.setArtifact(artifact);
-        artifactRequest.setRepositories(Booter.newRepositories(system, session));
+                artifact = artifactResult.getArtifact();
 
-        artifactResult = system.resolveArtifact(session, artifactRequest);
+                System.out.println(artifact + " resolved to  " + artifact.getFile());
+            }
 
-        artifact = artifactResult.getArtifact();
+            // signature
+            sessionBuilder.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_FAIL);
 
-        System.out.println(artifact + " resolved to  " + artifact.getFile());
+            try (CloseableSession session = sessionBuilder.build()) {
+                artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:jar.asc:1.3.3");
 
-        // signature
-        session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+                artifactRequest = new ArtifactRequest();
+                artifactRequest.setArtifact(artifact);
+                artifactRequest.setRepositories(Booter.newRepositories(system, session));
 
-        artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:jar.asc:1.3.3");
+                artifactResult = system.resolveArtifact(session, artifactRequest);
 
-        artifactRequest = new ArtifactRequest();
-        artifactRequest.setArtifact(artifact);
-        artifactRequest.setRepositories(Booter.newRepositories(system, session));
+                artifact = artifactResult.getArtifact();
 
-        artifactResult = system.resolveArtifact(session, artifactRequest);
-
-        artifact = artifactResult.getArtifact();
-
-        System.out.println(artifact + " resolved signature to  " + artifact.getFile());
+                System.out.println(artifact + " resolved signature to  " + artifact.getFile());
+            }
+        }
     }
 }

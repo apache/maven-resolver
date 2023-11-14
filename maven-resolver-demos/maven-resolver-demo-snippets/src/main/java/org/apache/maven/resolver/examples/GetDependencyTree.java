@@ -20,7 +20,7 @@ package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -41,18 +41,18 @@ public class GetDependencyTree {
         System.out.println("------------------------------------------------------------");
         System.out.println(GetDependencyTree.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+                CloseableSession session =
+                        Booter.newRepositorySystemSession(system).build()) {
+            Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession(system);
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setRoot(new Dependency(artifact, ""));
+            collectRequest.setRepositories(Booter.newRepositories(system, session));
 
-        Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
+            CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRoot(new Dependency(artifact, ""));
-        collectRequest.setRepositories(Booter.newRepositories(system, session));
-
-        CollectResult collectResult = system.collectDependencies(session, collectRequest);
-
-        collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+            collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+        }
     }
 }

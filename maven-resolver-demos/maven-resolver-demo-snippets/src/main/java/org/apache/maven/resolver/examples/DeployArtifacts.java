@@ -22,7 +22,7 @@ import java.io.File;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
@@ -43,27 +43,27 @@ public class DeployArtifacts {
         System.out.println("------------------------------------------------------------");
         System.out.println(DeployArtifacts.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+                CloseableSession session =
+                        Booter.newRepositorySystemSession(system).build()) {
+            Artifact jarArtifact =
+                    new DefaultArtifact("test", "org.apache.maven.aether.examples", "", "jar", "0.1-SNAPSHOT");
+            jarArtifact = jarArtifact.setFile(new File("src/main/data/demo.jar"));
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession(system);
+            Artifact pomArtifact = new SubArtifact(jarArtifact, "", "pom");
+            pomArtifact = pomArtifact.setFile(new File("pom.xml"));
 
-        Artifact jarArtifact =
-                new DefaultArtifact("test", "org.apache.maven.aether.examples", "", "jar", "0.1-SNAPSHOT");
-        jarArtifact = jarArtifact.setFile(new File("src/main/data/demo.jar"));
+            RemoteRepository distRepo = new RemoteRepository.Builder(
+                            "org.apache.maven.aether.examples",
+                            "default",
+                            new File("target/dist-repo").toURI().toString())
+                    .build();
 
-        Artifact pomArtifact = new SubArtifact(jarArtifact, "", "pom");
-        pomArtifact = pomArtifact.setFile(new File("pom.xml"));
+            DeployRequest deployRequest = new DeployRequest();
+            deployRequest.addArtifact(jarArtifact).addArtifact(pomArtifact);
+            deployRequest.setRepository(distRepo);
 
-        RemoteRepository distRepo = new RemoteRepository.Builder(
-                        "org.apache.maven.aether.examples",
-                        "default",
-                        new File("target/dist-repo").toURI().toString())
-                .build();
-
-        DeployRequest deployRequest = new DeployRequest();
-        deployRequest.addArtifact(jarArtifact).addArtifact(pomArtifact);
-        deployRequest.setRepository(distRepo);
-
-        system.deploy(session, deployRequest);
+            system.deploy(session, deployRequest);
+        }
     }
 }

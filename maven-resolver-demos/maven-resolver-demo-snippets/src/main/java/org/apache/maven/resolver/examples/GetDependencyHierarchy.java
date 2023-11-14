@@ -19,8 +19,9 @@
 package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
+import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -44,28 +45,28 @@ public class GetDependencyHierarchy {
         System.out.println("------------------------------------------------------------");
         System.out.println(GetDependencyHierarchy.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
+            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
+            sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
+            sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
+            try (CloseableSession session = sessionBuilder.build()) {
+                Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
+                ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+                descriptorRequest.setArtifact(artifact);
+                descriptorRequest.setRepositories(Booter.newRepositories(system, session));
+                ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor(session, descriptorRequest);
 
-        session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
-        session.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
+                CollectRequest collectRequest = new CollectRequest();
+                collectRequest.setRootArtifact(descriptorResult.getArtifact());
+                collectRequest.setDependencies(descriptorResult.getDependencies());
+                collectRequest.setManagedDependencies(descriptorResult.getManagedDependencies());
+                collectRequest.setRepositories(descriptorRequest.getRepositories());
 
-        Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
+                CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
-        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-        descriptorRequest.setArtifact(artifact);
-        descriptorRequest.setRepositories(Booter.newRepositories(system, session));
-        ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor(session, descriptorRequest);
-
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRootArtifact(descriptorResult.getArtifact());
-        collectRequest.setDependencies(descriptorResult.getDependencies());
-        collectRequest.setManagedDependencies(descriptorResult.getManagedDependencies());
-        collectRequest.setRepositories(descriptorRequest.getRepositories());
-
-        CollectResult collectResult = system.collectDependencies(session, collectRequest);
-
-        collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+                collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+            }
+        }
     }
 }

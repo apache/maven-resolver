@@ -18,16 +18,14 @@
  */
 package org.eclipse.aether.supplier;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -39,28 +37,25 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RepositorySystemSupplierTest {
     private final RepositorySystemSupplier subject = new RepositorySystemSupplier();
 
-    public static DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
-        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-        LocalRepository localRepo = new LocalRepository("target/local-repo");
-        session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
-        return session;
-    }
-
     @Test
     void smoke() throws Exception {
-        RepositorySystem system = subject.get();
-        RepositorySystemSession session = newRepositorySystemSession(system);
+        try (RepositorySystem system = subject.get();
+                CloseableSession session = new SessionBuilderSupplier(system)
+                        .get()
+                        .withLocalRepositoryBaseDirectories(new File("target/local-repo"))
+                        .build()) {
+            Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:[0,)");
+            VersionRangeRequest rangeRequest = new VersionRangeRequest();
+            rangeRequest.setArtifact(artifact);
+            rangeRequest.setRepositories(Collections.singletonList(
+                    new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/")
+                            .build()));
+            VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest);
+            List<Version> versions = rangeResult.getVersions();
 
-        Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:[0,)");
-        VersionRangeRequest rangeRequest = new VersionRangeRequest();
-        rangeRequest.setArtifact(artifact);
-        rangeRequest.setRepositories(Collections.singletonList(
-                new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/").build()));
-        VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest);
-        List<Version> versions = rangeResult.getVersions();
-
-        // As of 2023-08-01, Maven Central has 33 versions of this artifact (and it will just grow)
-        assertTrue(versions.size() >= 33);
-        System.out.println("Available versions " + versions);
+            // As of 2023-11-14, Maven Central has 36 versions of this artifact (and it will just grow)
+            assertTrue(versions.size() >= 36);
+            System.out.println("Available " + versions.size() + " versions: " + versions);
+        }
     }
 }

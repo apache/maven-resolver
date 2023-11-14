@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -47,26 +47,26 @@ public class ResolveTransitiveDependencies {
         System.out.println("------------------------------------------------------------");
         System.out.println(ResolveTransitiveDependencies.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+                CloseableSession session =
+                        Booter.newRepositorySystemSession(system).build()) {
+            Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-impl:1.3.3");
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession(system);
+            DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
 
-        Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-impl:1.3.3");
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setRoot(new Dependency(artifact, JavaScopes.COMPILE));
+            collectRequest.setRepositories(Booter.newRepositories(system, session));
 
-        DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
+            DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, classpathFlter);
 
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRoot(new Dependency(artifact, JavaScopes.COMPILE));
-        collectRequest.setRepositories(Booter.newRepositories(system, session));
+            List<ArtifactResult> artifactResults =
+                    system.resolveDependencies(session, dependencyRequest).getArtifactResults();
 
-        DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, classpathFlter);
-
-        List<ArtifactResult> artifactResults =
-                system.resolveDependencies(session, dependencyRequest).getArtifactResults();
-
-        for (ArtifactResult artifactResult : artifactResults) {
-            System.out.println(artifactResult.getArtifact() + " resolved to "
-                    + artifactResult.getArtifact().getFile());
+            for (ArtifactResult artifactResult : artifactResults) {
+                System.out.println(artifactResult.getArtifact() + " resolved to "
+                        + artifactResult.getArtifact().getFile());
+            }
         }
     }
 }
