@@ -20,11 +20,13 @@ package org.eclipse.aether.util;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
 
@@ -34,6 +36,10 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public final class FileUtils {
+    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we fsync on directories or not
+    private static final boolean IS_WINDOWS =
+            System.getProperty("os.name", "unknown").startsWith("Windows");
+
     private FileUtils() {
         // hide constructor
     }
@@ -53,7 +59,10 @@ public final class FileUtils {
      */
     public interface CollocatedTempFile extends TempFile {
         /**
-         * Atomically moves temp file to target file it is collocated with.
+         * Upon close, atomically moves temp file to target file it is collocated with overwriting target (if exists).
+         * Invocation of this method merely signals that caller ultimately wants temp file to replace the target
+         * file, but when this method returns, the move operation did not yet happen, it will happen when this
+         * instance is closed.
          */
         void move() throws IOException;
     }
@@ -99,25 +108,57 @@ public final class FileUtils {
         Path tempFile = parent.resolve(file.getFileName() + "."
                 + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
         return new CollocatedTempFile() {
+            private final AtomicBoolean wantsMove = new AtomicBoolean(false);
+
             @Override
             public Path getPath() {
                 return tempFile;
             }
 
             @Override
-            public void move() throws IOException {
-                try {
-                    Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
-                } catch (AccessDeniedException e) {
-                    Files.move(tempFile, file, StandardCopyOption.REPLACE_EXISTING);
-                }
+            public void move() {
+                wantsMove.set(true);
             }
 
             @Override
             public void close() throws IOException {
+                if (wantsMove.get() && Files.isReadable(tempFile)) {
+                    fsyncFile(tempFile);
+                    Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+                    if (!IS_WINDOWS) {
+                        fsyncParent(tempFile);
+                    }
+                }
                 Files.deleteIfExists(tempFile);
             }
         };
+    }
+
+    /**
+     * Performs fsync: makes sure no OS "dirty buffers" exist for given file.
+     *
+     * @param target Path that must not be {@code null}, must exist as plain file.
+     */
+    private static void fsyncFile(Path target) throws IOException {
+        try (FileChannel file = FileChannel.open(target, StandardOpenOption.WRITE)) {
+            file.force(true);
+        }
+    }
+
+    /**
+     * Performs directory fsync: not usable on Windows, but some other OSes may also throw, hence thrown IO exception
+     * is just ignored.
+     *
+     * @param target Path that must not be {@code null}, must exist as plain file, and must have parent.
+     */
+    private static void fsyncParent(Path target) throws IOException {
+        try (FileChannel parent = FileChannel.open(target.getParent(), StandardOpenOption.READ)) {
+            try {
+                parent.force(true);
+            } catch (IOException e) {
+                // ignore
+            }
+        }
     }
 
     /**
