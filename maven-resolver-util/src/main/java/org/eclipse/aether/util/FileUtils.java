@@ -20,6 +20,7 @@ package org.eclipse.aether.util;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -105,7 +106,11 @@ public final class FileUtils {
 
             @Override
             public void move() throws IOException {
-                Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+                try {
+                    Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+                } catch (AccessDeniedException e) {
+                    Files.move(tempFile, file, StandardCopyOption.REPLACE_EXISTING);
+                }
             }
 
             @Override
