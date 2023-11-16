@@ -276,6 +276,7 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_HTTP_EXPECT_CONTINUE = true;
 
     /**
+     * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
      * hostname verification). The default value is {@link #HTTPS_SECURITY_MODE_DEFAULT}.
      *
      * @see #HTTPS_SECURITY_MODE_DEFAULT
