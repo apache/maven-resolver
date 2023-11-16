@@ -20,6 +20,9 @@ package org.eclipse.aether.util;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -123,15 +126,35 @@ public final class FileUtils {
             @Override
             public void close() throws IOException {
                 if (wantsMove.get() && Files.isReadable(tempFile)) {
-                    fsyncFile(tempFile);
-                    Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
-                    if (!IS_WINDOWS) {
+                    if (IS_WINDOWS) {
+                        copy(tempFile, file);
+                    } else {
+                        fsyncFile(tempFile);
+                        Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
                         fsyncParent(tempFile);
                     }
                 }
                 Files.deleteIfExists(tempFile);
             }
         };
+    }
+
+    /**
+     * On Windows we use pre-NIO2 way to copy files, as for some reason it works. Beat me why.
+     */
+    private static void copy(Path source, Path target) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(1024 * 32);
+        byte[] array = buffer.array();
+        try (InputStream is = Files.newInputStream(source);
+                OutputStream os = Files.newOutputStream(target)) {
+            while (true) {
+                int bytes = is.read(array);
+                if (bytes < 0) {
+                    break;
+                }
+                os.write(array, 0, bytes);
+            }
+        }
     }
 
     /**
