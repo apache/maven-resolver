@@ -260,44 +260,6 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE = 50;
 
     /**
-     * The local address (interface) to use with HTTP transport. Not all transport supports this option.
-     *
-     * @since 1.9.17
-     */
-    public static final String HTTP_LOCAL_ADDRESS = PREFIX_CONNECTOR + "http.localAddress";
-
-    /**
-     * Boolean flag should the HTTP transport support WebDAV remote. Not all transport support this option.
-     *
-     * @see #DEFAULT_HTTP_SUPPORT_WEBDAV
-     * @since 1.9.17 (moved out from maven-resolver-transport-http).
-     */
-    public static final String HTTP_SUPPORT_WEBDAV = PREFIX_CONNECTOR + "http.supportWebDav";
-
-    /**
-     * Default value to use if {@link #HTTP_SUPPORT_WEBDAV} is not set: {@code false}.
-     *
-     * @since 1.9.17
-     */
-    public static final boolean DEFAULT_HTTP_SUPPORT_WEBDAV = false;
-
-    /**
-     * Boolean flag should the HTTP transport use preemptive-auth for PUT requests. Not all transport support this
-     * option.
-     *
-     * @see #DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH
-     * @since 1.9.17 (moved out from maven-resolver-transport-http).
-     */
-    public static final String HTTP_PREEMPTIVE_PUT_AUTH = PREFIX_CONNECTOR + "http.preemptivePutAuth";
-
-    /**
-     * Default value if {@link #HTTP_PREEMPTIVE_PUT_AUTH} is not set: {@code true}.
-     *
-     * @since 1.9.17
-     */
-    public static final boolean DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH = true;
-
-    /**
      * Boolean flag should the HTTP transport use expect-continue handshake for PUT requests. Not all transport support
      * this option. This option may be needed for some broken HTTP servers.
      *
