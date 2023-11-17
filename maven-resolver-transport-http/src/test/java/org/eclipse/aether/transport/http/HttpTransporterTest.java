@@ -729,6 +729,27 @@ public class HttpTransporterTest {
     }
 
     @Test
+    public void testPut_Authenticated_ExpectContinueDisabled() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.HTTP_EXPECT_CONTINUE, false);
+        httpServer.setAuthentication("testuser", "testpass");
+        httpServer.setExpectSupport(HttpServer.ExpectContinue.FAIL); // if transport tries Expect/Continue explode
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        newTransporter(httpServer.getHttpUrl());
+        RecordingTransportListener listener = new RecordingTransportListener();
+        PutTask task =
+                new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataString("upload");
+        transporter.put(task);
+        assertEquals(0L, listener.dataOffset);
+        assertEquals(6L, listener.dataLength);
+        assertEquals(1, listener.startedCount); // w/ expectContinue enabled would have here 2
+        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+    }
+
+    @Test
     public void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {
         Map<String, String> headers = new HashMap<>();
         headers.put("Expect", "100-continue");

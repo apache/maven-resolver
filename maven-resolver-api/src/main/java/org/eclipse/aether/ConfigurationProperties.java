@@ -260,6 +260,22 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE = 50;
 
     /**
+     * Boolean flag should the HTTP transport use expect-continue handshake for PUT requests. Not all transport support
+     * this option. This option may be needed for some broken HTTP servers.
+     *
+     * @see #DEFAULT_HTTP_EXPECT_CONTINUE
+     * @since 1.9.17
+     */
+    public static final String HTTP_EXPECT_CONTINUE = PREFIX_CONNECTOR + "http.expectContinue";
+
+    /**
+     * Default value if {@link #HTTP_EXPECT_CONTINUE} is not set: {@code true}.
+     *
+     * @since 1.9.17
+     */
+    public static final boolean DEFAULT_HTTP_EXPECT_CONTINUE = true;
+
+    /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
      * hostname verification). The default value is {@link #HTTPS_SECURITY_MODE_DEFAULT}.
      *
