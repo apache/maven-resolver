@@ -23,12 +23,16 @@ import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.Authenticator;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -46,6 +50,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,6 +66,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
+import org.slf4j.LoggerFactory;
 
 /**
  * JDK Transport using {@link HttpClient}.
@@ -68,6 +74,10 @@ import org.eclipse.aether.util.FileUtils;
  * @since TBD
  */
 final class JdkHttpTransporter extends AbstractTransporter {
+    private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
+                    "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
+            .withZone(ZoneId.of("GMT"));
+
     private static final int MULTIPLE_CHOICES = 300;
 
     private static final int NOT_FOUND = 404;
@@ -305,10 +315,10 @@ final class JdkHttpTransporter extends AbstractTransporter {
 
     @Override
     protected void implClose() {
-        // nop
+        // no-op
     }
 
-    private static Map<String, String> extractXChecksums(HttpResponse<?> response) {
+    private Map<String, String> extractXChecksums(HttpResponse<?> response) {
         String value;
         HashMap<String, String> result = new HashMap<>();
         // Central style: x-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
@@ -338,7 +348,7 @@ final class JdkHttpTransporter extends AbstractTransporter {
         return result.isEmpty() ? null : result;
     }
 
-    private static Map<String, String> extractNexus2Checksums(HttpResponse<?> response) {
+    private Map<String, String> extractNexus2Checksums(HttpResponse<?> response) {
         // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
         String etag = response.headers().firstValue("ETag").orElse(null);
         if (etag != null) {
@@ -350,19 +360,36 @@ final class JdkHttpTransporter extends AbstractTransporter {
         return null;
     }
 
-    private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
-                    "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
-            .withZone(ZoneId.of("GMT"));
+    private InetAddress getHttpLocalAddress(RepositorySystemSession session, RemoteRepository repository) {
+        String bindAddress = ConfigUtils.getString(
+                session,
+                null,
+                ConfigurationProperties.HTTP_LOCAL_ADDRESS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_LOCAL_ADDRESS);
+        if (bindAddress == null) {
+            return null;
+        }
+        try {
+            return InetAddress.getByName(bindAddress);
+        } catch (UnknownHostException uhe) {
+            throw new IllegalArgumentException(
+                    "Given bind address (" + bindAddress + ") cannot be resolved for remote repository " + repository,
+                    uhe);
+        }
+    }
 
     /**
      * Visible for testing.
      */
     static final String HTTP_INSTANCE_KEY_PREFIX = JdkTransporterFactory.class.getName() + ".http.";
 
-    private static HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
+    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         final String instanceKey = HTTP_INSTANCE_KEY_PREFIX + repository.getId();
 
+        // todo: normally a single client per JVM is sufficient - in particular cause part of the config
+        //       is global and not per instance so we should create a client only when conf changes for a repo
+        //       else fallback on a global client
         try {
             return (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
                 HashMap<Authenticator.RequestorType, PasswordAuthentication> authentications = new HashMap<>();
@@ -393,12 +420,16 @@ final class JdkHttpTransporter extends AbstractTransporter {
                             ConfigurationProperties.CONNECT_TIMEOUT);
 
                     HttpClient.Builder builder = HttpClient.newBuilder()
-                            .version(HttpClient.Version.HTTP_2)
+                            .version(HttpClient.Version.valueOf(ConfigUtils.getString(
+                                    session,
+                                    "HTTP_1_1", // v2 is not safe yet in the wild
+                                    "http.version." + repository.getId(),
+                                    "http.version")))
                             .followRedirects(HttpClient.Redirect.NORMAL)
                             .connectTimeout(Duration.ofMillis(connectTimeout))
                             .sslContext(sslContext);
 
-                    JdkHttpTransporterCustomizer.customizeBuilder(session, repository, builder);
+                    setLocalAddress(builder, () -> getHttpLocalAddress(session, repository));
 
                     if (repository.getProxy() != null) {
                         ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
@@ -429,7 +460,20 @@ final class JdkHttpTransporter extends AbstractTransporter {
                     }
 
                     HttpClient result = builder.build();
-                    JdkHttpTransporterCustomizer.customizeHttpClient(session, repository, result);
+                    if (!session.addOnSessionEndedHandler(() -> {
+                        if (result instanceof AutoCloseable) {
+                            try {
+                                ((AutoCloseable) client).close();
+                            } catch (final Exception e) {
+                                throw new IllegalStateException(e);
+                            }
+                        }
+                    })) {
+                        LoggerFactory.getLogger(JdkHttpTransporter.class)
+                                .warn(
+                                        "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
+                    }
+
                     return result;
                 } catch (NoSuchAlgorithmException e) {
                     throw new WrapperEx(e);
@@ -437,6 +481,27 @@ final class JdkHttpTransporter extends AbstractTransporter {
             });
         } catch (WrapperEx e) {
             throw new NoTransporterException(repository, e.getCause());
+        }
+    }
+
+    private void setLocalAddress(HttpClient.Builder builder, Supplier<InetAddress> addressSupplier) {
+        try {
+            final InetAddress address = addressSupplier.get();
+            if (address == null) {
+                return;
+            }
+
+            final Method mtd = builder.getClass().getDeclaredMethod("localAddress", InetAddress.class);
+            if (!mtd.canAccess(builder)) {
+                mtd.setAccessible(true);
+            }
+            mtd.invoke(builder, address);
+        } catch (final NoSuchMethodException nsme) {
+            // skip, not yet in the API
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException(e.getTargetException());
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
         }
     }
 
