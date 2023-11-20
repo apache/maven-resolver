@@ -66,6 +66,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -73,7 +74,12 @@ import org.slf4j.LoggerFactory;
  *
  * @since TBD
  */
-final class JdkHttpTransporter extends AbstractTransporter {
+@SuppressWarnings({"checkstyle:magicnumber"})
+final class JdkTransporter extends AbstractTransporter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporter.class);
+
+    private static final String HTTP_VERSION = "aether.connector.http.version";
+
     private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
                     "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
             .withZone(ZoneId.of("GMT"));
@@ -113,9 +119,10 @@ final class JdkHttpTransporter extends AbstractTransporter {
 
     private final int requestTimeout;
 
-    private final boolean expectContinue;
+    private final Boolean expectContinue;
 
-    JdkHttpTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
+    JdkTransporter(RepositorySystemSession session, RemoteRepository repository, int javaVersion)
+            throws NoTransporterException {
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
@@ -161,11 +168,21 @@ final class JdkHttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                 ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
                 ConfigurationProperties.REQUEST_TIMEOUT);
-        this.expectContinue = ConfigUtils.getBoolean(
+        String expectContinueConf = ConfigUtils.getString(
                 session,
-                ConfigurationProperties.DEFAULT_HTTP_EXPECT_CONTINUE,
+                null,
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE + "." + repository.getId(),
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE);
+        if (javaVersion > 19) {
+            this.expectContinue = expectContinueConf == null ? null : Boolean.parseBoolean(expectContinueConf);
+        } else {
+            this.expectContinue = null;
+            if (expectContinueConf != null) {
+                LOGGER.warn(
+                        "Configuration for Expect-Continue set but is ignored on Java versions below 20 (current java version is {}) due https://bugs.openjdk.org/browse/JDK-8286171",
+                        javaVersion);
+            }
+        }
 
         this.headers = headers;
         this.client = getOrCreateClient(session, repository);
@@ -177,7 +194,7 @@ final class JdkHttpTransporter extends AbstractTransporter {
 
     @Override
     public int classify(Throwable error) {
-        if (error instanceof JdkHttpException && ((JdkHttpException) error).getStatusCode() == NOT_FOUND) {
+        if (error instanceof JdkException && ((JdkException) error).getStatusCode() == NOT_FOUND) {
             return ERROR_NOT_FOUND;
         }
         return ERROR_OTHER;
@@ -192,7 +209,7 @@ final class JdkHttpTransporter extends AbstractTransporter {
         headers.forEach(request::setHeader);
         HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
         if (response.statusCode() >= MULTIPLE_CHOICES) {
-            throw new JdkHttpException(response.statusCode());
+            throw new JdkException(response.statusCode());
         }
     }
 
@@ -224,7 +241,7 @@ final class JdkHttpTransporter extends AbstractTransporter {
                     resume = false;
                     continue;
                 }
-                throw new JdkHttpException(response.statusCode());
+                throw new JdkException(response.statusCode());
             }
             break;
         }
@@ -297,10 +314,11 @@ final class JdkHttpTransporter extends AbstractTransporter {
 
     @Override
     protected void implPut(PutTask task) throws Exception {
-        HttpRequest.Builder request = HttpRequest.newBuilder()
-                .uri(resolve(task))
-                .timeout(Duration.ofMillis(requestTimeout))
-                .expectContinue(expectContinue);
+        HttpRequest.Builder request =
+                HttpRequest.newBuilder().uri(resolve(task)).timeout(Duration.ofMillis(requestTimeout));
+        if (expectContinue != null) {
+            request = request.expectContinue(expectContinue);
+        }
         headers.forEach(request::setHeader);
         try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
             utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
@@ -308,7 +326,7 @@ final class JdkHttpTransporter extends AbstractTransporter {
 
             HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
-                throw new JdkHttpException(response.statusCode());
+                throw new JdkException(response.statusCode());
             }
         }
     }
@@ -422,9 +440,9 @@ final class JdkHttpTransporter extends AbstractTransporter {
                     HttpClient.Builder builder = HttpClient.newBuilder()
                             .version(HttpClient.Version.valueOf(ConfigUtils.getString(
                                     session,
-                                    "HTTP_1_1", // v2 is not safe yet in the wild
-                                    "http.version." + repository.getId(),
-                                    "http.version")))
+                                    HttpClient.Version.HTTP_2.name(), // v2 is default
+                                    HTTP_VERSION + "." + repository.getId(),
+                                    HTTP_VERSION)))
                             .followRedirects(HttpClient.Redirect.NORMAL)
                             .connectTimeout(Duration.ofMillis(connectTimeout))
                             .sslContext(sslContext);
@@ -469,9 +487,8 @@ final class JdkHttpTransporter extends AbstractTransporter {
                             }
                         }
                     })) {
-                        LoggerFactory.getLogger(JdkHttpTransporter.class)
-                                .warn(
-                                        "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
+                        LOGGER.warn(
+                                "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
                     }
 
                     return result;

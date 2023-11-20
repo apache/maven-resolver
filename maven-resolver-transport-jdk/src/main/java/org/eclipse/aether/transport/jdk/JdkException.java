@@ -19,14 +19,14 @@
 package org.eclipse.aether.transport.jdk;
 
 /**
- * Exception thrown by {@link JdkHttpTransporter} in case of errors.
+ * Exception thrown by {@link JdkTransporter} in case of errors.
  *
  * @since TBD
  */
-final class JdkHttpException extends Exception {
+final class JdkException extends Exception {
     private final int statusCode;
 
-    JdkHttpException(int statusCode) {
+    JdkException(int statusCode) {
         super("HTTP Status: " + statusCode);
         this.statusCode = statusCode;
     }

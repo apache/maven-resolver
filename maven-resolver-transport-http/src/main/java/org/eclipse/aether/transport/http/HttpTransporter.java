@@ -322,13 +322,13 @@ final class HttpTransporter extends AbstractTransporter {
             builder.useSystemProperties();
         }
 
-        final boolean expectContinue = ConfigUtils.getBoolean(
+        final String expectContinue = ConfigUtils.getString(
                 session,
-                ConfigurationProperties.DEFAULT_HTTP_EXPECT_CONTINUE,
+                null,
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE + "." + repository.getId(),
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE);
-        if (expectContinue != ConfigurationProperties.DEFAULT_HTTP_EXPECT_CONTINUE) {
-            state.setExpectContinue(expectContinue);
+        if (expectContinue != null) {
+            state.setExpectContinue(Boolean.parseBoolean(expectContinue));
         }
 
         final boolean reuseConnections = ConfigUtils.getBoolean(
