@@ -57,7 +57,7 @@
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-jetty</module>
-    <module>maven-resolver-transport-jdk-parent</module>
+    <module>maven-resolver-transport-jdk</module>
     <module>maven-resolver-transport-http</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-supplier</module>
@@ -101,7 +101,7 @@
     <mavenVersion>4.0.0-alpha-8</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
-    <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
+    <minimalJavaBuildVersion>[11,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-11-15T14:56:04Z</project.build.outputTimestamp>
   </properties>
 
