@@ -56,7 +56,8 @@ public final class JdkTransporterFactory implements TransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        if (javaVersion() < 11) {
+        int javaVersion = javaVersion();
+        if (javaVersion < 11) {
             LoggerFactory.getLogger(JdkTransporterFactory.class).debug("Needs Java11+ to function");
             throw new NoTransporterException(repository, "JDK Transport needs Java11+");
         }
@@ -65,10 +66,10 @@ public final class JdkTransporterFactory implements TransporterFactory {
             throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
         }
 
-        return new JdkTransporter(session, repository);
+        return new JdkTransporter(session, repository, javaVersion);
     }
 
-    static int javaVersion() {
+    private static int javaVersion() {
         try {
             final String version = System.getProperty("java.version", "11" /* default must pass */);
             final int dot = version.indexOf('.');

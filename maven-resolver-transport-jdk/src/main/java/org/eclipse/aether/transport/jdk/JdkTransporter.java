@@ -121,7 +121,7 @@ final class JdkTransporter extends AbstractTransporter {
 
     private final Boolean expectContinue;
 
-    JdkTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
+    JdkTransporter(RepositorySystemSession session, RemoteRepository repository, int javaVersion) throws NoTransporterException {
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
@@ -172,7 +172,6 @@ final class JdkTransporter extends AbstractTransporter {
                 null,
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE + "." + repository.getId(),
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE);
-        int javaVersion = JdkTransporterFactory.javaVersion();
         if (javaVersion > 19) {
             this.expectContinue = expectContinueConf == null ? null : Boolean.parseBoolean(expectContinueConf);
         } else {
