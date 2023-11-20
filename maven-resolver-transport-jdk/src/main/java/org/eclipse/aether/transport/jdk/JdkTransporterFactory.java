@@ -65,16 +65,15 @@ public final class JdkTransporterFactory implements TransporterFactory {
             throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
         }
 
-        return new JdkHttpTransporter(session, repository);
+        return new JdkTransporter(session, repository);
     }
 
-    // simple heuristic
-    private int javaVersion() {
+    static int javaVersion() {
         try {
             final String version = System.getProperty("java.version", "11" /* default must pass */);
             final int dot = version.indexOf('.');
-            final int iphen = version.indexOf('-');
-            final int sep = (dot > 0 && dot < iphen || iphen < 0) ? dot : iphen;
+            final int hyphen = version.indexOf('-');
+            final int sep = (dot > 0 && dot < hyphen || hyphen < 0) ? dot : hyphen;
             return Integer.parseInt(sep > 0 ? version.substring(0, sep) : version);
         } catch (final NumberFormatException nfe) {
             return 11; // unlikely to be a pre-java 11 version so let it pass
