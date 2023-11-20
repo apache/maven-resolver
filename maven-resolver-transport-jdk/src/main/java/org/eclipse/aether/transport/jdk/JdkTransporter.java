@@ -78,7 +78,7 @@ import org.slf4j.LoggerFactory;
 final class JdkTransporter extends AbstractTransporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporter.class);
 
-    private static final String HTTP_VERSION = "aether.connector.http.version";
+    private static final String HTTP_VERSION = "aether.transport.jdk.version";
 
     private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
                     "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)

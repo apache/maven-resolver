@@ -66,13 +66,13 @@ import static java.util.Objects.requireNonNull;
  */
 final class WagonTransporter implements Transporter {
 
-    private static final String CONFIG_PROP_CONFIG = "aether.connector.wagon.config";
+    private static final String CONFIG_PROP_CONFIG = "aether.transport.wagon.config";
 
-    private static final String CONFIG_PROP_FILE_MODE = "aether.connector.perms.fileMode";
+    private static final String CONFIG_PROP_FILE_MODE = "aether.transport.wagon.perms.fileMode";
 
-    private static final String CONFIG_PROP_DIR_MODE = "aether.connector.perms.dirMode";
+    private static final String CONFIG_PROP_DIR_MODE = "aether.transport.wagon.perms.dirMode";
 
-    private static final String CONFIG_PROP_GROUP = "aether.connector.perms.group";
+    private static final String CONFIG_PROP_GROUP = "aether.transport.wagon.perms.group";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WagonTransporter.class);
 

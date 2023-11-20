@@ -27,6 +27,8 @@ public final class ConfigurationProperties {
 
     private static final String PREFIX_AETHER = "aether.";
 
+    private static final String PREFIX_TRANSPORT = PREFIX_AETHER + "transport.";
+
     private static final String PREFIX_CONNECTOR = PREFIX_AETHER + "connector.";
 
     /**
@@ -87,7 +89,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_USER_AGENT
      */
-    public static final String USER_AGENT = PREFIX_CONNECTOR + "userAgent";
+    public static final String USER_AGENT = PREFIX_TRANSPORT + "userAgent";
 
     /**
      * The default user agent to use if {@link #USER_AGENT} isn't set.
@@ -100,7 +102,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_CONNECT_TIMEOUT
      */
-    public static final String CONNECT_TIMEOUT = PREFIX_CONNECTOR + "connectTimeout";
+    public static final String CONNECT_TIMEOUT = PREFIX_TRANSPORT + "connectTimeout";
 
     /**
      * The default connect timeout to use if {@link #CONNECT_TIMEOUT} isn't set.
@@ -114,7 +116,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_REQUEST_TIMEOUT
      */
-    public static final String REQUEST_TIMEOUT = PREFIX_CONNECTOR + "requestTimeout";
+    public static final String REQUEST_TIMEOUT = PREFIX_TRANSPORT + "requestTimeout";
 
     /**
      * The default request timeout to use if {@link #REQUEST_TIMEOUT} isn't set.
@@ -128,7 +130,7 @@ public final class ConfigurationProperties {
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
      * the general headers map.
      */
-    public static final String HTTP_HEADERS = PREFIX_CONNECTOR + "http.headers";
+    public static final String HTTP_HEADERS = PREFIX_TRANSPORT + "http.headers";
 
     /**
      * The encoding/charset to use when exchanging credentials with HTTP servers. Besides this general key, clients may
@@ -137,7 +139,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_HTTP_CREDENTIAL_ENCODING
      */
-    public static final String HTTP_CREDENTIAL_ENCODING = PREFIX_CONNECTOR + "http.credentialEncoding";
+    public static final String HTTP_CREDENTIAL_ENCODING = PREFIX_TRANSPORT + "http.credentialEncoding";
 
     /**
      * The default encoding/charset to use if {@link #HTTP_CREDENTIAL_ENCODING} isn't set.
@@ -150,7 +152,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_RETRY_HANDLER_COUNT
      * @since 1.9.6
      */
-    public static final String HTTP_RETRY_HANDLER_COUNT = PREFIX_CONNECTOR + "http.retryHandler.count";
+    public static final String HTTP_RETRY_HANDLER_COUNT = PREFIX_TRANSPORT + "http.retryHandler.count";
 
     /**
      * The default number of retries to use if {@link #HTTP_RETRY_HANDLER_COUNT} isn't set.
@@ -167,7 +169,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL
      * @since 1.9.16
      */
-    public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_CONNECTOR + "http.retryHandler.interval";
+    public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_TRANSPORT + "http.retryHandler.interval";
 
     /**
      * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
@@ -185,7 +187,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX
      * @since 1.9.16
      */
-    public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_CONNECTOR + "http.retryHandler.intervalMax";
+    public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_TRANSPORT + "http.retryHandler.intervalMax";
 
     /**
      * The default retry interval maximum to use if {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX} isn't set.
@@ -203,7 +205,7 @@ public final class ConfigurationProperties {
      * @since 1.9.16
      */
     public static final String HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE =
-            PREFIX_CONNECTOR + "http.retryHandler.serviceUnavailable";
+            PREFIX_TRANSPORT + "http.retryHandler.serviceUnavailable";
 
     /**
      * The default HTTP codes of remote server responses that should be handled as "too many requests".
@@ -219,7 +221,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_PREEMPTIVE_AUTH
      * @since 1.9.6
      */
-    public static final String HTTP_PREEMPTIVE_AUTH = PREFIX_CONNECTOR + "http.preemptiveAuth";
+    public static final String HTTP_PREEMPTIVE_AUTH = PREFIX_TRANSPORT + "http.preemptiveAuth";
 
     /**
      * The default value to use if {@link #HTTP_PREEMPTIVE_AUTH} isn't set (false).
@@ -234,7 +236,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_REUSE_CONNECTIONS
      * @since 1.9.8
      */
-    public static final String HTTP_REUSE_CONNECTIONS = PREFIX_CONNECTOR + "http.reuseConnections";
+    public static final String HTTP_REUSE_CONNECTIONS = PREFIX_TRANSPORT + "http.reuseConnections";
 
     /**
      * The default value to use if {@link #HTTP_REUSE_CONNECTIONS} isn't set (true).
@@ -250,7 +252,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_CONNECTION_MAX_TTL
      * @since 1.9.8
      */
-    public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_CONNECTOR + "http.connectionMaxTtl";
+    public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_TRANSPORT + "http.connectionMaxTtl";
 
     /**
      * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (300 seconds).
@@ -265,7 +267,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE
      * @since 1.9.8
      */
-    public static final String HTTP_MAX_CONNECTIONS_PER_ROUTE = PREFIX_CONNECTOR + "http.maxConnectionsPerRoute";
+    public static final String HTTP_MAX_CONNECTIONS_PER_ROUTE = PREFIX_TRANSPORT + "http.maxConnectionsPerRoute";
 
     /**
      * The default value to use if {@link #HTTP_MAX_CONNECTIONS_PER_ROUTE} isn't set (50 connections).
@@ -279,7 +281,7 @@ public final class ConfigurationProperties {
      *
      * @since 2.0.0
      */
-    public static final String HTTP_LOCAL_ADDRESS = PREFIX_CONNECTOR + "http.localAddress";
+    public static final String HTTP_LOCAL_ADDRESS = PREFIX_TRANSPORT + "http.localAddress";
 
     /**
      * Boolean flag should the HTTP transport support WebDAV remote. Not all transport support this option.
@@ -287,7 +289,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_SUPPORT_WEBDAV
      * @since 2.0.0 (moved out from maven-resolver-transport-http).
      */
-    public static final String HTTP_SUPPORT_WEBDAV = PREFIX_CONNECTOR + "http.supportWebDav";
+    public static final String HTTP_SUPPORT_WEBDAV = PREFIX_TRANSPORT + "http.supportWebDav";
 
     /**
      * Default value to use if {@link #HTTP_SUPPORT_WEBDAV} is not set: {@code false}.
@@ -303,7 +305,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH
      * @since 2.0.0 (moved out from maven-resolver-transport-http).
      */
-    public static final String HTTP_PREEMPTIVE_PUT_AUTH = PREFIX_CONNECTOR + "http.preemptivePutAuth";
+    public static final String HTTP_PREEMPTIVE_PUT_AUTH = PREFIX_TRANSPORT + "http.preemptivePutAuth";
 
     /**
      * Default value if {@link #HTTP_PREEMPTIVE_PUT_AUTH} is not set: {@code true}.
@@ -320,7 +322,7 @@ public final class ConfigurationProperties {
      *
      * @since 2.0.0
      */
-    public static final String HTTP_EXPECT_CONTINUE = PREFIX_CONNECTOR + "http.expectContinue";
+    public static final String HTTP_EXPECT_CONTINUE = PREFIX_TRANSPORT + "http.expectContinue";
 
     /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
@@ -330,7 +332,7 @@ public final class ConfigurationProperties {
      * @see #HTTPS_SECURITY_MODE_INSECURE
      * @since 1.9.6
      */
-    public static final String HTTPS_SECURITY_MODE = PREFIX_CONNECTOR + "https.securityMode";
+    public static final String HTTPS_SECURITY_MODE = PREFIX_TRANSPORT + "https.securityMode";
 
     /**
      * The default HTTPS security mode.

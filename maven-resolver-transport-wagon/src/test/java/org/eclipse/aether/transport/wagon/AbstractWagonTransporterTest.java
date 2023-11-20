@@ -379,7 +379,7 @@ public abstract class AbstractWagonTransporterTest {
 
     @Test
     void testInit_Configuration() throws Exception {
-        session.setConfigProperty("aether.connector.wagon.config.test", "passed");
+        session.setConfigProperty("aether.transport.wagon.config.test", "passed");
         newTransporter("mem://" + id + "?config=passed");
         transporter.peek(new PeekTask(URI.create("file.txt")));
     }
