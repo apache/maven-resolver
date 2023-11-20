@@ -314,19 +314,13 @@ public final class ConfigurationProperties {
 
     /**
      * Boolean flag should the HTTP transport use expect-continue handshake for PUT requests. Not all transport support
-     * this option. This option may be needed for some broken HTTP servers.
+     * this option. This option may be needed for some broken HTTP servers. Default value corresponds to given
+     * transport default one (resolver does not override those), but if configuration IS given, it will replace
+     * given transport own default value.
      *
-     * @see #DEFAULT_HTTP_EXPECT_CONTINUE
      * @since 2.0.0
      */
     public static final String HTTP_EXPECT_CONTINUE = PREFIX_CONNECTOR + "http.expectContinue";
-
-    /**
-     * Default value if {@link #HTTP_EXPECT_CONTINUE} is not set: {@code true}.
-     *
-     * @since 2.0.0
-     */
-    public static final boolean DEFAULT_HTTP_EXPECT_CONTINUE = true;
 
     /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,

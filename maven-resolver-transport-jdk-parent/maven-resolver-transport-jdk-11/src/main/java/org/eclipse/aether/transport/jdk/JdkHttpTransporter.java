@@ -103,7 +103,7 @@ final class JdkHttpTransporter extends AbstractTransporter {
 
     private final int requestTimeout;
 
-    private final boolean expectContinue;
+    private final Boolean expectContinue;
 
     JdkHttpTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
         try {
@@ -151,11 +151,12 @@ final class JdkHttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                 ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
                 ConfigurationProperties.REQUEST_TIMEOUT);
-        this.expectContinue = ConfigUtils.getBoolean(
+        String expectContinueConf = ConfigUtils.getString(
                 session,
-                ConfigurationProperties.DEFAULT_HTTP_EXPECT_CONTINUE,
+                null,
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE + "." + repository.getId(),
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE);
+        this.expectContinue = expectContinueConf == null ? null : Boolean.parseBoolean(expectContinueConf);
 
         this.headers = headers;
         this.client = getOrCreateClient(session, repository);
@@ -289,8 +290,10 @@ final class JdkHttpTransporter extends AbstractTransporter {
     protected void implPut(PutTask task) throws Exception {
         HttpRequest.Builder request = HttpRequest.newBuilder()
                 .uri(resolve(task))
-                .timeout(Duration.ofMillis(requestTimeout))
-                .expectContinue(expectContinue);
+                .timeout(Duration.ofMillis(requestTimeout));
+        if (expectContinue != null) {
+            request = request.expectContinue(expectContinue);
+        }
         headers.forEach(request::setHeader);
         try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
             utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
