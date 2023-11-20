@@ -121,7 +121,8 @@ final class JdkTransporter extends AbstractTransporter {
 
     private final Boolean expectContinue;
 
-    JdkTransporter(RepositorySystemSession session, RemoteRepository repository, int javaVersion) throws NoTransporterException {
+    JdkTransporter(RepositorySystemSession session, RemoteRepository repository, int javaVersion)
+            throws NoTransporterException {
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
