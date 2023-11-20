@@ -288,9 +288,8 @@ final class JdkHttpTransporter extends AbstractTransporter {
 
     @Override
     protected void implPut(PutTask task) throws Exception {
-        HttpRequest.Builder request = HttpRequest.newBuilder()
-                .uri(resolve(task))
-                .timeout(Duration.ofMillis(requestTimeout));
+        HttpRequest.Builder request =
+                HttpRequest.newBuilder().uri(resolve(task)).timeout(Duration.ofMillis(requestTimeout));
         if (expectContinue != null) {
             request = request.expectContinue(expectContinue);
         }
