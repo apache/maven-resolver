@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.Artifact;
@@ -73,7 +74,8 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         }
     };
 
-    static final String CONFIG_PROP_SESSION_STATE = "aether.updateCheckManager.sessionState";
+    static final String CONFIG_PROP_SESSION_STATE =
+            ConfigurationProperties.PREFIX_AETHER + "updateCheckManager.sessionState";
 
     private static final int STATE_ENABLED = 0;
 

@@ -106,16 +106,19 @@ import static java.util.Objects.requireNonNull;
  */
 final class HttpTransporter extends AbstractTransporter {
 
-    static final String USE_SYSTEM_PROPERTIES = "aether.transport.apache.useSystemProperties";
+    private static final String CONFIG_PROPS_PREFIX =
+            ConfigurationProperties.PREFIX_TRANSPORT + HttpTransporterFactory.NAME + ".";
 
-    static final String HTTP_RETRY_HANDLER_NAME = "aether.transport.apache.retryHandler.name";
+    static final String CONFIG_PROP_USE_SYSTEM_PROPERTIES = CONFIG_PROPS_PREFIX + "useSystemProperties";
+
+    static final String CONFIG_PROP_HTTP_RETRY_HANDLER_NAME = CONFIG_PROPS_PREFIX + "retryHandler.name";
 
     private static final String HTTP_RETRY_HANDLER_NAME_STANDARD = "standard";
 
     private static final String HTTP_RETRY_HANDLER_NAME_DEFAULT = "default";
 
-    static final String HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED =
-            "aether.transport.apache.retryHandler.requestSentEnabled";
+    static final String CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED =
+            CONFIG_PROPS_PREFIX + "retryHandler.requestSentEnabled";
 
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
@@ -253,13 +256,13 @@ final class HttpTransporter extends AbstractTransporter {
         String retryHandlerName = ConfigUtils.getString(
                 session,
                 HTTP_RETRY_HANDLER_NAME_STANDARD,
-                HTTP_RETRY_HANDLER_NAME + "." + repository.getId(),
-                HTTP_RETRY_HANDLER_NAME);
+                CONFIG_PROP_HTTP_RETRY_HANDLER_NAME + "." + repository.getId(),
+                CONFIG_PROP_HTTP_RETRY_HANDLER_NAME);
         boolean retryHandlerRequestSentEnabled = ConfigUtils.getBoolean(
                 session,
                 false,
-                HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED + "." + repository.getId(),
-                HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED);
+                CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED + "." + repository.getId(),
+                CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED);
         String userAgent = ConfigUtils.getString(
                 session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
 
@@ -287,7 +290,7 @@ final class HttpTransporter extends AbstractTransporter {
             retryHandler = new DefaultHttpRequestRetryHandler(retryCount, retryHandlerRequestSentEnabled);
         } else {
             throw new IllegalArgumentException(
-                    "Unsupported parameter " + HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
+                    "Unsupported parameter " + CONFIG_PROP_HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
         }
         Set<Integer> serviceUnavailableCodes = new HashSet<>();
         try {
@@ -314,7 +317,10 @@ final class HttpTransporter extends AbstractTransporter {
                 .setDefaultCredentialsProvider(toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext))
                 .setProxy(proxy);
         final boolean useSystemProperties = ConfigUtils.getBoolean(
-                session, false, USE_SYSTEM_PROPERTIES + "." + repository.getId(), USE_SYSTEM_PROPERTIES);
+                session,
+                false,
+                CONFIG_PROP_USE_SYSTEM_PROPERTIES + "." + repository.getId(),
+                CONFIG_PROP_USE_SYSTEM_PROPERTIES);
         if (useSystemProperties) {
             LOGGER.warn(
                     "Transport used Apache HttpClient is instructed to use system properties: this may yield in unwanted side-effects!");

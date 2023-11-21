@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -73,8 +74,9 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultMetadataResolver implements MetadataResolver {
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "metadataResolver.";
 
-    private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
+    private static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
 

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -88,18 +89,20 @@ import static java.util.Objects.requireNonNull;
 @Named
 public class DefaultArtifactResolver implements ArtifactResolver {
 
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "artifactResolver.";
+
     /**
      * Configuration to enable "snapshot normalization", downloaded snapshots from remote with timestamped file names
      * will have file names converted back to baseVersion. Default: {@code true}.
      */
-    private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
+    private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = CONFIG_PROPS_PREFIX + "snapshotNormalization";
 
     /**
      * Configuration to enable "interoperability" with Simple LRM, but this breaks RRF feature, hence this configuration
      * is IGNORED when RRF is used, and is warmly recommended to leave it disabled even if no RRF is being used.
      * Default: {@code false}.
      */
-    private static final String CONFIG_PROP_SIMPLE_LRM_INTEROP = "aether.artifactResolver.simpleLrmInterop";
+    private static final String CONFIG_PROP_SIMPLE_LRM_INTEROP = CONFIG_PROPS_PREFIX + "simpleLrmInterop";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultArtifactResolver.class);
 

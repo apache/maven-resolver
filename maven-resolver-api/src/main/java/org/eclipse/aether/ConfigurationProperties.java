@@ -406,8 +406,7 @@ public final class ConfigurationProperties {
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER
      * @since TBD
      */
-    public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR =
-            PREFIX_SYSTEM + "dependencyVisitor";
+    public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR = PREFIX_SYSTEM + "dependencyVisitor";
 
     /**
      * The visitor strategy "preOrder".

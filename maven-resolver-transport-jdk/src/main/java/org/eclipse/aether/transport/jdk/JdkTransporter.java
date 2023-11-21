@@ -78,7 +78,10 @@ import org.slf4j.LoggerFactory;
 final class JdkTransporter extends AbstractTransporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporter.class);
 
-    private static final String HTTP_VERSION = "aether.transport.jdk.version";
+    private static final String CONFIG_PROPS_PREFIX =
+            ConfigurationProperties.PREFIX_TRANSPORT + JdkTransporterFactory.NAME + ".";
+
+    private static final String CONFIG_PROP_HTTP_VERSION = CONFIG_PROPS_PREFIX + "httpVersion";
 
     private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
                     "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
@@ -441,8 +444,8 @@ final class JdkTransporter extends AbstractTransporter {
                             .version(HttpClient.Version.valueOf(ConfigUtils.getString(
                                     session,
                                     HttpClient.Version.HTTP_2.name(), // v2 is default
-                                    HTTP_VERSION + "." + repository.getId(),
-                                    HTTP_VERSION)))
+                                    CONFIG_PROP_HTTP_VERSION + "." + repository.getId(),
+                                    CONFIG_PROP_HTTP_VERSION)))
                             .followRedirects(HttpClient.Redirect.NORMAL)
                             .connectTimeout(Duration.ofMillis(connectTimeout))
                             .sslContext(sslContext);

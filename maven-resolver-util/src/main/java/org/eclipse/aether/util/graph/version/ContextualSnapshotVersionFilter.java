@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.version;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -32,13 +33,12 @@ import org.eclipse.aether.util.ConfigUtils;
  * {@code true}.
  */
 public final class ContextualSnapshotVersionFilter implements VersionFilter {
-
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
      * properties} used to store a {@link Boolean} flag whether this filter should be forced to ban snapshots. By
      * default, snapshots are only filtered if the root artifact is not a snapshot.
      */
-    public static final String CONFIG_PROP_ENABLE = "aether.snapshotFilter";
+    public static final String CONFIG_PROP_ENABLE = ConfigurationProperties.PREFIX_AETHER + "snapshotFilter";
 
     private final SnapshotVersionFilter filter;
 
