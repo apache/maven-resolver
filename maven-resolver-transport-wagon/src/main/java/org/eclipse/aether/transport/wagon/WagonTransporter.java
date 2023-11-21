@@ -68,7 +68,7 @@ final class WagonTransporter implements Transporter {
     private static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_TRANSPORT + WagonTransporterFactory.NAME + ".";
 
-    private static final String CONFIG_PROP_CONFIG = CONFIG_PROPS_PREFIX + "config";
+    static final String CONFIG_PROP_CONFIG = CONFIG_PROPS_PREFIX + "config";
 
     private static final String CONFIG_PROP_FILE_MODE = CONFIG_PROPS_PREFIX + "perms.fileMode";
 

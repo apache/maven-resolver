@@ -40,7 +40,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
      *
      * @since 1.9.11
      */
-    private static final boolean DIAGNOSTIC_ENABLED = Boolean.getBoolean("aether.named.diagnostic.enabled");
+    private static final boolean SYSTEM_PROP_DIAGNOSTIC_ENABLED = Boolean.getBoolean("aether.named.diagnostic.enabled");
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -49,7 +49,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     private final boolean diagnosticEnabled;
 
     public NamedLockFactorySupport() {
-        this(DIAGNOSTIC_ENABLED);
+        this(SYSTEM_PROP_DIAGNOSTIC_ENABLED);
     }
 
     public NamedLockFactorySupport(boolean diagnosticEnabled) {

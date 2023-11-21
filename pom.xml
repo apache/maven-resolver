@@ -325,6 +325,9 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
+                    <!-- MRESOLVER-440 Move properties to their place and cleanup -->
+                    <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
+                    <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -366,6 +369,9 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
+                    <!-- MRESOLVER-440 Move properties to their place and cleanup -->
+                    <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
+                    <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>

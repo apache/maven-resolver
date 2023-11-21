@@ -52,11 +52,13 @@ import org.eclipse.aether.version.VersionConstraint;
  * Internal helper class for collector implementations.
  */
 public final class DataPool {
-    private static final String CONFIG_PROP_COLLECTOR_POOL_ARTIFACT = "aether.dependencyCollector.pool.artifact";
+    private static final String CONFIG_PROPS_PREFIX = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "pool.";
 
-    private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY = "aether.dependencyCollector.pool.dependency";
+    private static final String CONFIG_PROP_COLLECTOR_POOL_ARTIFACT = CONFIG_PROPS_PREFIX + "artifact";
 
-    private static final String CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR = "aether.dependencyCollector.pool.descriptor";
+    private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY = CONFIG_PROPS_PREFIX + "dependency";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR = CONFIG_PROPS_PREFIX + "descriptor";
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 

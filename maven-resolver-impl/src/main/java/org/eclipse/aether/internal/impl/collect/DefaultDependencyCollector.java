@@ -24,6 +24,7 @@ import javax.inject.Singleton;
 
 import java.util.Map;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
@@ -39,7 +40,10 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultDependencyCollector implements DependencyCollector {
-    private static final String CONFIG_PROP_COLLECTOR_IMPL = "aether.dependencyCollector.impl";
+
+    public static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "dependencyCollector.";
+
+    private static final String CONFIG_PROP_COLLECTOR_IMPL = CONFIG_PROPS_PREFIX + "impl";
 
     private static final String DEFAULT_COLLECTOR_IMPL =
             org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector.NAME;

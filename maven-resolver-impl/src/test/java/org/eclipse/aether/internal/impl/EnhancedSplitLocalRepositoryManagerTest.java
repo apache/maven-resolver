@@ -29,7 +29,7 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
 
     @Override
     protected EnhancedLocalRepositoryManager getManager() {
-        session.setConfigProperty("aether.enhancedLocalRepository.split", Boolean.TRUE.toString());
+        session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONF_PROP_SPLIT, Boolean.TRUE.toString());
         return new EnhancedLocalRepositoryManager(
                 basedir,
                 new DefaultLocalPathComposer(),

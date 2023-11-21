@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.resolution;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.util.ConfigUtils;
@@ -33,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public abstract class ArtifactResolverPostProcessorSupport implements ArtifactResolverPostProcessor {
-    private static final String CONFIG_PROP_PREFIX = "aether.artifactResolver.postProcessor.";
+    private static final String CONFIG_PROP_PREFIX = DefaultArtifactResolver.CONFIG_PROPS_PREFIX + "postProcessor.";
 
     private final String name;
 

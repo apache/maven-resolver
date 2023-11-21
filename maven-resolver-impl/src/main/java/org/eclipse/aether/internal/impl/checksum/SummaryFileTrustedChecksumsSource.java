@@ -140,7 +140,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
     }
 
     @Override
-    protected SummaryFileWriter doGetTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
+    protected Writer doGetTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
         if (onShutdownHandlerRegistered.compareAndSet(false, true)) {
             repositorySystemLifecycle.addOnSystemEndedHandler(this::saveRecordedLines);
         }

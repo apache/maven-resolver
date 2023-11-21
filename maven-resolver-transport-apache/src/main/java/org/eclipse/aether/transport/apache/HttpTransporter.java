@@ -106,7 +106,7 @@ import static java.util.Objects.requireNonNull;
  */
 final class HttpTransporter extends AbstractTransporter {
 
-    private static final String CONFIG_PROPS_PREFIX =
+    static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_TRANSPORT + HttpTransporterFactory.NAME + ".";
 
     static final String CONFIG_PROP_USE_SYSTEM_PROPERTIES = CONFIG_PROPS_PREFIX + "useSystemProperties";

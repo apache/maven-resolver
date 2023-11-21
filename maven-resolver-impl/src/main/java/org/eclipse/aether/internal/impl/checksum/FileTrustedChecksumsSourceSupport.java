@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -54,7 +55,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSource {
-    private static final String CONFIG_PROP_PREFIX = "aether.trustedChecksumsSource.";
+    private static final String CONFIG_PROP_PREFIX = ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
 
     private static final String CONF_NAME_BASEDIR = "basedir";
 
@@ -124,7 +125,7 @@ abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSour
     /**
      * To be used by underlying implementations to form configuration property keys properly scoped.
      */
-    protected String configPropKey(String name) {
+    private String configPropKey(String name) {
         requireNonNull(name);
         return CONFIG_PROP_PREFIX + this.name + "." + name;
     }

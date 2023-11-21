@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
@@ -48,7 +49,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepositoryFilterSource {
-    private static final String CONFIG_PROP_PREFIX = "aether.remoteRepositoryFilter.";
+    private static final String CONFIG_PROP_PREFIX = ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
 
     private static final String CONF_NAME_BASEDIR = "basedir";
 

@@ -89,7 +89,7 @@ import static java.util.Objects.requireNonNull;
 @Named
 public class DefaultArtifactResolver implements ArtifactResolver {
 
-    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "artifactResolver.";
+    public static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "artifactResolver.";
 
     /**
      * Configuration to enable "snapshot normalization", downloaded snapshots from remote with timestamped file names

@@ -24,6 +24,7 @@ import javax.net.ssl.SSLContext;
 import java.util.Arrays;
 import java.util.Objects;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.util.ConfigUtils;
@@ -71,7 +72,7 @@ final class ConnMgrConfig {
     }
 
     private static String get(RepositorySystemSession session, String key) {
-        String value = ConfigUtils.getString(session, null, "aether.connector." + key, key);
+        String value = ConfigUtils.getString(session, null, ConfigurationProperties.PREFIX_TRANSPORT + key, key);
         if (value == null) {
             value = System.getProperty(key);
         }

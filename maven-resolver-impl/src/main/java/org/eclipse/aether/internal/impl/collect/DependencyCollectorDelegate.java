@@ -67,11 +67,12 @@ import static java.util.Objects.requireNonNull;
  * @since 1.8.0
  */
 public abstract class DependencyCollectorDelegate implements DependencyCollector {
-    protected static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
+    protected static final String CONFIG_PROP_MAX_EXCEPTIONS =
+            DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "maxExceptions";
 
     protected static final int CONFIG_PROP_MAX_EXCEPTIONS_DEFAULT = 50;
 
-    protected static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
+    protected static final String CONFIG_PROP_MAX_CYCLES = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "maxCycles";
 
     protected static final int CONFIG_PROP_MAX_CYCLES_DEFAULT = 10;
 

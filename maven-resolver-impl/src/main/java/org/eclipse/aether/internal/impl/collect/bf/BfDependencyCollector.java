@@ -60,6 +60,7 @@ import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.internal.impl.collect.DataPool;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollectionContext;
+import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
@@ -87,13 +88,15 @@ import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.fi
 public class BfDependencyCollector extends DependencyCollectorDelegate {
     public static final String NAME = "bf";
 
+    private static final String CONFIG_PROPS_PREFIX = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + NAME + ".";
+
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip mode.
      *
      * @since 1.8.0
      */
-    static final String CONFIG_PROP_SKIPPER = "aether.dependencyCollector.bf.skipper";
+    static final String CONFIG_PROP_SKIPPER = CONFIG_PROPS_PREFIX + "skipper";
 
     /**
      * The default value for {@link #CONFIG_PROP_SKIPPER}, {@code true}.
@@ -107,7 +110,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
      *
      * @since 1.9.0
      */
-    static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
+    static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
 
     @Inject
     public BfDependencyCollector(
