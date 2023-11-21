@@ -35,7 +35,7 @@ import org.eclipse.aether.graph.DependencyNode;
 public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
     public static final String NAME =
-            ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_LEVELORDER;
+            ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER;
 
     private final HashMap<Integer, ArrayList<DependencyNode>> nodesPerLevel;
 

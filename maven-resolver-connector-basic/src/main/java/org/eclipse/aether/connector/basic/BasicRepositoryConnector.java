@@ -72,12 +72,13 @@ import static java.util.Objects.requireNonNull;
  *
  */
 final class BasicRepositoryConnector implements RepositoryConnector {
+    private static final String CONFIG_PROP_PREFIX = ConfigurationProperties.PREFIX_CONNECTOR + "basic.";
 
-    private static final String CONFIG_PROP_THREADS = "aether.connector.basic.threads";
+    private static final String CONFIG_PROP_THREADS = CONFIG_PROP_PREFIX + "threads";
 
-    private static final String CONFIG_PROP_SMART_CHECKSUMS = "aether.connector.smartChecksums";
+    private static final String CONFIG_PROP_PARALLEL_PUT = CONFIG_PROP_PREFIX + "parallelPut";
 
-    private static final String CONFIG_PROP_PARALLEL_PUT = "aether.connector.basic.parallelPut";
+    private static final String CONFIG_PROP_SMART_CHECKSUMS = CONFIG_PROP_PREFIX + "smartChecksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicRepositoryConnector.class);
 

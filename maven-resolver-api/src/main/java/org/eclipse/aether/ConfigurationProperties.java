@@ -401,20 +401,20 @@ public final class ConfigurationProperties {
      * A flag indicating which visitor should be used to "flatten" the dependency graph into list. Default is
      * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
      *
-     * @see #REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_PREORDER
-     * @see #REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_POSTORDER
-     * @see #REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_LEVELORDER
+     * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER
+     * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_POSTORDER
+     * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER
      * @since TBD
      */
-    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR =
-            PREFIX_SYSTEM + "resolveDependencies.visitor";
+    public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR =
+            PREFIX_SYSTEM + "dependencyVisitor";
 
     /**
      * The visitor strategy "preOrder".
      *
      * @since TBD
      */
-    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_PREORDER = "preOrder";
+    public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER = "preOrder";
 
     /**
      * The visitor strategy "postOrder". This was the only one supported in Resolver 1.x and is hence the
@@ -422,14 +422,14 @@ public final class ConfigurationProperties {
      *
      * @since TBD
      */
-    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_POSTORDER = "postOrder";
+    public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_POSTORDER = "postOrder";
 
     /**
      * The visitor strategy "levelOrder".
      *
      * @since TBD
      */
-    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_LEVELORDER = "levelOrder";
+    public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER = "levelOrder";
 
     private ConfigurationProperties() {
         // hide constructor

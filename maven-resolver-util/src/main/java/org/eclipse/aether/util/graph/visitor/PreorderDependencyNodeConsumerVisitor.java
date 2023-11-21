@@ -32,7 +32,7 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public final class PreorderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
-    public static final String NAME = ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_PREORDER;
+    public static final String NAME = ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER;
 
     /**
      * Creates a new preorder list generator.
