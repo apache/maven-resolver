@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -42,7 +43,10 @@ import static java.util.Objects.requireNonNull;
 @Named(EnhancedLocalRepositoryManagerFactory.NAME)
 public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryManagerFactory {
     public static final String NAME = "enhanced";
-    private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
+
+    static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LRM + NAME + ".";
+
+    private static final String CONFIG_PROP_TRACKING_FILENAME = CONFIG_PROPS_PREFIX + "trackingFilename";
 
     private static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 

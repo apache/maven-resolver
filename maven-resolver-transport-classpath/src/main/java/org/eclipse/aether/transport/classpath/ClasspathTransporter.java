@@ -86,6 +86,7 @@ final class ClasspathTransporter extends AbstractTransporter {
         return url;
     }
 
+    @Override
     public int classify(Throwable error) {
         if (error instanceof ResourceNotFoundException) {
             return ERROR_NOT_FOUND;

@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public class HashingNameMapper implements NameMapper {
-    private static final String CONFIG_PROP_DEPTH = "aether.syncContext.named.hashing.depth";
+    private static final String CONFIG_PROP_DEPTH = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "hashing.depth";
 
     private final NameMapper delegate;
 
@@ -72,7 +72,7 @@ public class HashingNameMapper implements NameMapper {
         if (depth == 0) {
             return hashedName;
         }
-        StringBuilder prefix = new StringBuilder("");
+        StringBuilder prefix = new StringBuilder();
         int i = 0;
         while (i < hashedName.length() && i / 2 < depth) {
             prefix.append(hashedName, i, i + 2).append("/");

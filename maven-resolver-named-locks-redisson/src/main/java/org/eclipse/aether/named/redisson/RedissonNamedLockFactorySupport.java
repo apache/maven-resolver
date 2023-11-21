@@ -41,7 +41,7 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
 
     private static final String DEFAULT_CLIENT_NAME = "maven-resolver";
 
-    private static final String CONFIG_PROP_CONFIG_FILE = "aether.syncContext.named.redisson.configFile";
+    private static final String SYSTEM_PROP_CONFIG_FILE = "aether.syncContext.named.redisson.configFile";
 
     protected final RedissonClient redissonClient;
 
@@ -58,7 +58,7 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
     private RedissonClient createRedissonClient() {
         Path configFilePath = null;
 
-        String configFile = System.getProperty(CONFIG_PROP_CONFIG_FILE);
+        String configFile = System.getProperty(SYSTEM_PROP_CONFIG_FILE);
         if (configFile != null && !configFile.isEmpty()) {
             configFilePath = Paths.get(configFile);
             if (Files.notExists(configFilePath)) {

@@ -47,12 +47,14 @@ public class DiscriminatingNameMapper implements NameMapper {
     /**
      * Configuration property to pass in discriminator
      */
-    private static final String CONFIG_PROP_DISCRIMINATOR = "aether.syncContext.named.discriminating.discriminator";
+    private static final String CONFIG_PROP_DISCRIMINATOR =
+            NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "discriminating.discriminator";
 
     /**
      * Configuration property to pass in hostname
      */
-    private static final String CONFIG_PROP_HOSTNAME = "aether.syncContext.named.discriminating.hostname";
+    private static final String CONFIG_PROP_HOSTNAME =
+            NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "discriminating.hostname";
 
     private static final String DEFAULT_DISCRIMINATOR_DIGEST = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 

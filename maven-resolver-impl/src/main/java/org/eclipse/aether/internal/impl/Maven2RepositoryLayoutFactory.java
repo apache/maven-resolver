@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -52,12 +53,14 @@ import static java.util.Objects.requireNonNull;
 public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFactory {
     public static final String NAME = "maven2";
 
-    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LAYOUT + NAME + ".";
+
+    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = CONFIG_PROPS_PREFIX + "checksumAlgorithms";
 
     private static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
     public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
-            "aether.checksums.omitChecksumsForExtensions";
+            CONFIG_PROPS_PREFIX + "omitChecksumsForExtensions";
 
     private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
 

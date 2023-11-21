@@ -39,7 +39,8 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public class BasedirNameMapper implements NameMapper {
-    private static final String CONFIG_PROP_LOCKS_DIR = "aether.syncContext.named.basedir.locksDir";
+    private static final String CONFIG_PROP_LOCKS_DIR =
+            NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "basedir.locksDir";
 
     private final NameMapper delegate;
 

@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
@@ -41,19 +42,21 @@ import static java.util.Objects.requireNonNull;
  * Adapter to adapt {@link NamedLockFactory} and {@link NamedLock} to {@link SyncContext}.
  */
 public final class NamedLockFactoryAdapter {
-    public static final String TIME_KEY = "aether.syncContext.named.time";
+    public static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_SYNC_CONTEXT + "named.";
+
+    public static final String TIME_KEY = CONFIG_PROPS_PREFIX + "time";
 
     public static final long DEFAULT_TIME = 30L;
 
-    public static final String TIME_UNIT_KEY = "aether.syncContext.named.time.unit";
+    public static final String TIME_UNIT_KEY = CONFIG_PROPS_PREFIX + "time.unit";
 
     public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.SECONDS;
 
-    public static final String RETRY_KEY = "aether.syncContext.named.retry";
+    public static final String RETRY_KEY = CONFIG_PROPS_PREFIX + "retry";
 
     public static final int DEFAULT_RETRY = 1;
 
-    public static final String RETRY_WAIT_KEY = "aether.syncContext.named.retry.wait";
+    public static final String RETRY_WAIT_KEY = CONFIG_PROPS_PREFIX + "retry.wait";
 
     public static final long DEFAULT_RETRY_WAIT = 200L;
 

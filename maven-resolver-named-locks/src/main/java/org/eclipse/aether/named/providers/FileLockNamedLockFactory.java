@@ -56,7 +56,7 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
      *
      * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
      */
-    private static final boolean DELETE_LOCK_FILES =
+    private static final boolean SYSTEM_PROP_DELETE_LOCK_FILES =
             Boolean.parseBoolean(System.getProperty("aether.named.file-lock.deleteLockFiles", Boolean.TRUE.toString()));
 
     /**
@@ -66,13 +66,14 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
      *
      * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
      */
-    private static final int ATTEMPTS = Integer.parseInt(System.getProperty("aether.named.file-lock.attempts", "5"));
+    private static final int SYSTEM_PROP_ATTEMPTS =
+            Integer.parseInt(System.getProperty("aether.named.file-lock.attempts", "5"));
 
     /**
-     * Tweak: When {@link #ATTEMPTS} used, the amount of milliseconds to sleep between subsequent retries. Default
+     * Tweak: When {@link #SYSTEM_PROP_ATTEMPTS} used, the amount of milliseconds to sleep between subsequent retries. Default
      * value is 50 milliseconds.
      */
-    private static final long SLEEP_MILLIS =
+    private static final long SYSTEM_PROP_SLEEP_MILLIS =
             Long.parseLong(System.getProperty("aether.named.file-lock.sleepMillis", "50"));
 
     private final ConcurrentMap<String, FileChannel> fileChannels;
@@ -88,11 +89,11 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
             try {
                 Files.createDirectories(path.getParent());
                 FileChannel channel = retry(
-                        ATTEMPTS,
-                        SLEEP_MILLIS,
+                        SYSTEM_PROP_ATTEMPTS,
+                        SYSTEM_PROP_SLEEP_MILLIS,
                         () -> {
                             try {
-                                if (DELETE_LOCK_FILES) {
+                                if (SYSTEM_PROP_DELETE_LOCK_FILES) {
                                     return FileChannel.open(
                                             path,
                                             StandardOpenOption.READ,
@@ -114,8 +115,8 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
                         null);
 
                 if (channel == null) {
-                    throw new IllegalStateException("Could not open file channel for '" + name + "' after " + ATTEMPTS
-                            + " attempts; giving up");
+                    throw new IllegalStateException("Could not open file channel for '" + name + "' after "
+                            + SYSTEM_PROP_ATTEMPTS + " attempts; giving up");
                 }
                 return channel;
             } catch (InterruptedException e) {

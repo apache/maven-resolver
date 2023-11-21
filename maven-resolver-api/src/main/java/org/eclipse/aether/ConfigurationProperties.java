@@ -40,11 +40,32 @@ public final class ConfigurationProperties {
     public static final String PREFIX_SYSTEM = PREFIX_AETHER + "system.";
 
     /**
+     * Prefix for sync context related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_SYNC_CONTEXT = PREFIX_AETHER + "syncContext.";
+
+    /**
      * Prefix for connector related configurations. <em>For internal use only.</em>
      *
      * @since 2.0.0
      */
     public static final String PREFIX_CONNECTOR = PREFIX_AETHER + "connector.";
+
+    /**
+     * Prefix for layout related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_LAYOUT = PREFIX_AETHER + "layout.";
+
+    /**
+     * Prefix for local repository manager related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_LRM = PREFIX_AETHER + "lrm.";
 
     /**
      * Prefix for transport related configurations. <em>For internal use only.</em>
