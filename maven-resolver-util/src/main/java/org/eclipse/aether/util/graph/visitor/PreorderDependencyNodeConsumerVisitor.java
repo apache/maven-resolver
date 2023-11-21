@@ -20,6 +20,7 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.function.Consumer;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -31,7 +32,7 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public final class PreorderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
-    public static final String NAME = "preOrder";
+    public static final String NAME = ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_PREORDER;
 
     /**
      * Creates a new preorder list generator.

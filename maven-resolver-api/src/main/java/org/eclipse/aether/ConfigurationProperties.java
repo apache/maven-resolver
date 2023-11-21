@@ -25,11 +25,47 @@ package org.eclipse.aether;
  */
 public final class ConfigurationProperties {
 
-    private static final String PREFIX_AETHER = "aether.";
+    /**
+     * Prefix for all configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_AETHER = "aether.";
 
-    private static final String PREFIX_TRANSPORT = PREFIX_AETHER + "transport.";
+    /**
+     * Prefix for repository system related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_SYSTEM = PREFIX_AETHER + "system.";
 
-    private static final String PREFIX_CONNECTOR = PREFIX_AETHER + "connector.";
+    /**
+     * Prefix for connector related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_CONNECTOR = PREFIX_AETHER + "connector.";
+
+    /**
+     * Prefix for transport related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_TRANSPORT = PREFIX_AETHER + "transport.";
+
+    /**
+     * Prefix for HTTP protocol related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_TRANSPORT_HTTP = PREFIX_TRANSPORT + "http.";
+
+    /**
+     * Prefix for HTTPS protocol related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_TRANSPORT_HTTPS = PREFIX_TRANSPORT + "https.";
 
     /**
      * The prefix for properties that control the priority of pluggable extensions like transporters. For example, for
@@ -89,7 +125,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_USER_AGENT
      */
-    public static final String USER_AGENT = PREFIX_TRANSPORT + "userAgent";
+    public static final String USER_AGENT = PREFIX_TRANSPORT_HTTP + "userAgent";
 
     /**
      * The default user agent to use if {@link #USER_AGENT} isn't set.
@@ -102,7 +138,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_CONNECT_TIMEOUT
      */
-    public static final String CONNECT_TIMEOUT = PREFIX_TRANSPORT + "connectTimeout";
+    public static final String CONNECT_TIMEOUT = PREFIX_TRANSPORT_HTTP + "connectTimeout";
 
     /**
      * The default connect timeout to use if {@link #CONNECT_TIMEOUT} isn't set.
@@ -116,7 +152,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_REQUEST_TIMEOUT
      */
-    public static final String REQUEST_TIMEOUT = PREFIX_TRANSPORT + "requestTimeout";
+    public static final String REQUEST_TIMEOUT = PREFIX_TRANSPORT_HTTP + "requestTimeout";
 
     /**
      * The default request timeout to use if {@link #REQUEST_TIMEOUT} isn't set.
@@ -130,7 +166,7 @@ public final class ConfigurationProperties {
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
      * the general headers map.
      */
-    public static final String HTTP_HEADERS = PREFIX_TRANSPORT + "http.headers";
+    public static final String HTTP_HEADERS = PREFIX_TRANSPORT_HTTP + "headers";
 
     /**
      * The encoding/charset to use when exchanging credentials with HTTP servers. Besides this general key, clients may
@@ -139,7 +175,7 @@ public final class ConfigurationProperties {
      *
      * @see #DEFAULT_HTTP_CREDENTIAL_ENCODING
      */
-    public static final String HTTP_CREDENTIAL_ENCODING = PREFIX_TRANSPORT + "http.credentialEncoding";
+    public static final String HTTP_CREDENTIAL_ENCODING = PREFIX_TRANSPORT_HTTP + "credentialEncoding";
 
     /**
      * The default encoding/charset to use if {@link #HTTP_CREDENTIAL_ENCODING} isn't set.
@@ -152,7 +188,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_RETRY_HANDLER_COUNT
      * @since 1.9.6
      */
-    public static final String HTTP_RETRY_HANDLER_COUNT = PREFIX_TRANSPORT + "http.retryHandler.count";
+    public static final String HTTP_RETRY_HANDLER_COUNT = PREFIX_TRANSPORT_HTTP + "retryHandler.count";
 
     /**
      * The default number of retries to use if {@link #HTTP_RETRY_HANDLER_COUNT} isn't set.
@@ -169,7 +205,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL
      * @since 1.9.16
      */
-    public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_TRANSPORT + "http.retryHandler.interval";
+    public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_TRANSPORT_HTTP + "retryHandler.interval";
 
     /**
      * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
@@ -187,7 +223,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX
      * @since 1.9.16
      */
-    public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_TRANSPORT + "http.retryHandler.intervalMax";
+    public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_TRANSPORT_HTTP + "retryHandler.intervalMax";
 
     /**
      * The default retry interval maximum to use if {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX} isn't set.
@@ -205,7 +241,7 @@ public final class ConfigurationProperties {
      * @since 1.9.16
      */
     public static final String HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE =
-            PREFIX_TRANSPORT + "http.retryHandler.serviceUnavailable";
+            PREFIX_TRANSPORT_HTTP + "retryHandler.serviceUnavailable";
 
     /**
      * The default HTTP codes of remote server responses that should be handled as "too many requests".
@@ -221,7 +257,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_PREEMPTIVE_AUTH
      * @since 1.9.6
      */
-    public static final String HTTP_PREEMPTIVE_AUTH = PREFIX_TRANSPORT + "http.preemptiveAuth";
+    public static final String HTTP_PREEMPTIVE_AUTH = PREFIX_TRANSPORT_HTTP + "preemptiveAuth";
 
     /**
      * The default value to use if {@link #HTTP_PREEMPTIVE_AUTH} isn't set (false).
@@ -236,7 +272,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_REUSE_CONNECTIONS
      * @since 1.9.8
      */
-    public static final String HTTP_REUSE_CONNECTIONS = PREFIX_TRANSPORT + "http.reuseConnections";
+    public static final String HTTP_REUSE_CONNECTIONS = PREFIX_TRANSPORT_HTTP + "reuseConnections";
 
     /**
      * The default value to use if {@link #HTTP_REUSE_CONNECTIONS} isn't set (true).
@@ -252,7 +288,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_CONNECTION_MAX_TTL
      * @since 1.9.8
      */
-    public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_TRANSPORT + "http.connectionMaxTtl";
+    public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_TRANSPORT_HTTP + "connectionMaxTtl";
 
     /**
      * The default value to use if {@link #HTTP_CONNECTION_MAX_TTL} isn't set (300 seconds).
@@ -267,7 +303,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE
      * @since 1.9.8
      */
-    public static final String HTTP_MAX_CONNECTIONS_PER_ROUTE = PREFIX_TRANSPORT + "http.maxConnectionsPerRoute";
+    public static final String HTTP_MAX_CONNECTIONS_PER_ROUTE = PREFIX_TRANSPORT_HTTP + "maxConnectionsPerRoute";
 
     /**
      * The default value to use if {@link #HTTP_MAX_CONNECTIONS_PER_ROUTE} isn't set (50 connections).
@@ -281,7 +317,7 @@ public final class ConfigurationProperties {
      *
      * @since 2.0.0
      */
-    public static final String HTTP_LOCAL_ADDRESS = PREFIX_TRANSPORT + "http.localAddress";
+    public static final String HTTP_LOCAL_ADDRESS = PREFIX_TRANSPORT_HTTP + "localAddress";
 
     /**
      * Boolean flag should the HTTP transport support WebDAV remote. Not all transport support this option.
@@ -289,7 +325,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_SUPPORT_WEBDAV
      * @since 2.0.0 (moved out from maven-resolver-transport-http).
      */
-    public static final String HTTP_SUPPORT_WEBDAV = PREFIX_TRANSPORT + "http.supportWebDav";
+    public static final String HTTP_SUPPORT_WEBDAV = PREFIX_TRANSPORT_HTTP + "supportWebDav";
 
     /**
      * Default value to use if {@link #HTTP_SUPPORT_WEBDAV} is not set: {@code false}.
@@ -305,7 +341,7 @@ public final class ConfigurationProperties {
      * @see #DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH
      * @since 2.0.0 (moved out from maven-resolver-transport-http).
      */
-    public static final String HTTP_PREEMPTIVE_PUT_AUTH = PREFIX_TRANSPORT + "http.preemptivePutAuth";
+    public static final String HTTP_PREEMPTIVE_PUT_AUTH = PREFIX_TRANSPORT_HTTP + "preemptivePutAuth";
 
     /**
      * Default value if {@link #HTTP_PREEMPTIVE_PUT_AUTH} is not set: {@code true}.
@@ -322,7 +358,7 @@ public final class ConfigurationProperties {
      *
      * @since 2.0.0
      */
-    public static final String HTTP_EXPECT_CONTINUE = PREFIX_TRANSPORT + "http.expectContinue";
+    public static final String HTTP_EXPECT_CONTINUE = PREFIX_TRANSPORT_HTTP + "expectContinue";
 
     /**
      * The mode that sets HTTPS transport "security mode": to ignore any SSL errors (certificate validity checks,
@@ -332,7 +368,7 @@ public final class ConfigurationProperties {
      * @see #HTTPS_SECURITY_MODE_INSECURE
      * @since 1.9.6
      */
-    public static final String HTTPS_SECURITY_MODE = PREFIX_TRANSPORT + "https.securityMode";
+    public static final String HTTPS_SECURITY_MODE = PREFIX_TRANSPORT_HTTPS + "securityMode";
 
     /**
      * The default HTTPS security mode.
@@ -365,18 +401,35 @@ public final class ConfigurationProperties {
      * A flag indicating which visitor should be used to "flatten" the dependency graph into list. Default is
      * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
      *
-     * @see #DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR
+     * @see #REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_PREORDER
+     * @see #REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_POSTORDER
+     * @see #REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_LEVELORDER
      * @since TBD
      */
     public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR =
-            PREFIX_AETHER + "system.resolveDependencies.visitor";
+            PREFIX_SYSTEM + "resolveDependencies.visitor";
 
     /**
-     * The default visitor strategy "preOrder".
+     * The visitor strategy "preOrder".
      *
      * @since TBD
      */
-    public static final String DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR = "preOrder";
+    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_PREORDER = "preOrder";
+
+    /**
+     * The visitor strategy "postOrder". This was the only one supported in Resolver 1.x and is hence the
+     * default as well.
+     *
+     * @since TBD
+     */
+    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_POSTORDER = "postOrder";
+
+    /**
+     * The visitor strategy "levelOrder".
+     *
+     * @since TBD
+     */
+    public static final String REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_LEVELORDER = "levelOrder";
 
     private ConfigurationProperties() {
         // hide constructor

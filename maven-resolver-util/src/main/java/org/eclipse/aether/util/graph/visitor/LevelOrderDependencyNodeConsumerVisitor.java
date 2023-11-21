@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -33,7 +34,8 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
-    public static final String NAME = "levelOrder";
+    public static final String NAME =
+            ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_LEVELORDER;
 
     private final HashMap<Integer, ArrayList<DependencyNode>> nodesPerLevel;
 

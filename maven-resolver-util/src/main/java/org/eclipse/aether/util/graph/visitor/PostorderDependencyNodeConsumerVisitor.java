@@ -20,6 +20,7 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.function.Consumer;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -31,7 +32,7 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public final class PostorderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
-    public static final String NAME = "postOrder";
+    public static final String NAME = ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR_POSTORDER;
 
     private final Stack<Boolean> visits;
 
