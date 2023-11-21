@@ -72,7 +72,9 @@ import static java.util.Objects.requireNonNull;
  *
  */
 final class BasicRepositoryConnector implements RepositoryConnector {
-    private static final String CONFIG_PROP_PREFIX = ConfigurationProperties.PREFIX_CONNECTOR + "basic.";
+    private static final String CONFIG_PROP_PREFIX = ConfigurationProperties.PREFIX_CONNECTOR + BasicRepositoryConnectorFactory.NAME + ".";
+
+    private static final String CONFIG_PROP_PERSISTED_CHECKSUMS = CONFIG_PROP_PREFIX + "persistedChecksums";
 
     private static final String CONFIG_PROP_THREADS = CONFIG_PROP_PREFIX + "threads";
 
@@ -141,8 +143,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 session, true, CONFIG_PROP_PARALLEL_PUT + "." + repository.getId(), CONFIG_PROP_PARALLEL_PUT);
         persistedChecksums = ConfigUtils.getBoolean(
                 session,
-                ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
-                ConfigurationProperties.PERSISTED_CHECKSUMS);
+                true,
+                CONFIG_PROP_PERSISTED_CHECKSUMS);
     }
 
     private Executor getExecutor(int tasks) {

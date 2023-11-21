@@ -385,19 +385,6 @@ public final class ConfigurationProperties {
     public static final String HTTPS_SECURITY_MODE_INSECURE = "insecure";
 
     /**
-     * A flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
-     * local filesystem next to the file they provide the checksum for.
-     *
-     * @see #DEFAULT_PERSISTED_CHECKSUMS
-     */
-    public static final String PERSISTED_CHECKSUMS = PREFIX_CONNECTOR + "persistedChecksums";
-
-    /**
-     * The default checksum persistence mode if {@link #PERSISTED_CHECKSUMS} isn't set.
-     */
-    public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
-
-    /**
      * A flag indicating which visitor should be used to "flatten" the dependency graph into list. Default is
      * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
      *
