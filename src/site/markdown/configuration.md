@@ -38,7 +38,7 @@ Option | Type | Description | Default Value | Supports Repo ID Suffix
 `aether.connector.http.cacheState` | boolean | Flag indicating whether a memory-based cache is used for user tokens, connection managers, expect continue requests and authentication schemes. | `true` | no
 `aether.connector.http.connectionMaxTtl` | int | Total time to live in seconds for an HTTP connection, after that time, the connection will be dropped (no matter for how long it was idle). | `300` | yes
 `aether.connector.http.credentialEncoding` | String | The encoding/charset to use when exchanging credentials with HTTP servers. | `"ISO-8859-1"` | yes
-`aether.connector.http.expectContinue` | boolean | Whether to use expect/continue handshake during PUTs. Some broken HTTP servers needs this disabled. | `true` | yes
+`aether.connector.http.expectContinue` | boolean | Whether to use expect/continue handshake during PUTs. Some broken HTTP servers needs this disabled. Default value depends on given transport default value. | Default value depends on HTTP transport being in use. | yes
 `aether.connector.http.headers` | `Map<String, String>` | The request headers to use for HTTP-based repository connectors. The headers are specified using a map of strings mapping a header name to its value. The repository-specific headers map is supposed to be complete, i.e. is not merged with the general headers map. | - | yes
 `aether.connector.http.maxConnectionsPerRoute` | int | The maximum concurrent connections per route HTTP client is allowed to use. | `50` | yes
 `aether.connector.http.preemptiveAuth` | boolean | Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default is disabled, as it is considered less secure. | `false` | yes
