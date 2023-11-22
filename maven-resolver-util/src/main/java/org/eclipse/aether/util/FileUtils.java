@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public final class FileUtils {
-    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we fsync on directories or not
+    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we "atomic move" or not
     private static final boolean IS_WINDOWS =
             System.getProperty("os.name", "unknown").startsWith("Windows");
 
