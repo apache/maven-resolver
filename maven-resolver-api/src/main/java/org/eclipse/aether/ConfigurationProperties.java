@@ -377,7 +377,7 @@ public final class ConfigurationProperties {
      * transport default one (resolver does not override those), but if configuration IS given, it will replace
      * given transport own default value.
      *
-     * @since 2.0.0
+     * @since 1.9.17
      */
     public static final String HTTP_EXPECT_CONTINUE = PREFIX_TRANSPORT_HTTP + "expectContinue";
 
