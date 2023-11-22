@@ -36,85 +36,86 @@ import org.eclipse.aether.util.ConfigUtils;
  * @since 1.8.1
  */
 public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory {
-    protected static final String CONF_PROP_SPLIT = EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "split";
+    protected static final String CONFIG_PROP_SPLIT =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "split";
 
     protected static final boolean DEFAULT_SPLIT = false;
 
-    protected static final String CONF_PROP_LOCAL_PREFIX =
+    protected static final String CONFIG_PROP_LOCAL_PREFIX =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "localPrefix";
 
     protected static final String DEFAULT_LOCAL_PREFIX = "installed";
 
-    protected static final String CONF_PROP_SPLIT_LOCAL =
+    protected static final String CONFIG_PROP_SPLIT_LOCAL =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitLocal";
 
     protected static final boolean DEFAULT_SPLIT_LOCAL = false;
 
-    protected static final String CONF_PROP_REMOTE_PREFIX =
+    protected static final String CONFIG_PROP_REMOTE_PREFIX =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "remotePrefix";
 
     protected static final String DEFAULT_REMOTE_PREFIX = "cached";
 
-    protected static final String CONF_PROP_SPLIT_REMOTE =
+    protected static final String CONFIG_PROP_SPLIT_REMOTE =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitRemote";
 
     protected static final boolean DEFAULT_SPLIT_REMOTE = false;
 
-    protected static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY =
+    protected static final String CONFIG_PROP_SPLIT_REMOTE_REPOSITORY =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitRemoteRepository";
 
     protected static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY = false;
 
-    protected static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST =
+    protected static final String CONFIG_PROP_SPLIT_REMOTE_REPOSITORY_LAST =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitRemoteRepositoryLast";
 
     protected static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST = false;
 
-    protected static final String CONF_PROP_RELEASES_PREFIX =
+    protected static final String CONFIG_PROP_RELEASES_PREFIX =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "releasesPrefix";
 
     protected static final String DEFAULT_RELEASES_PREFIX = "releases";
 
-    protected static final String CONF_PROP_SNAPSHOTS_PREFIX =
+    protected static final String CONFIG_PROP_SNAPSHOTS_PREFIX =
             EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "snapshotsPrefix";
 
     protected static final String DEFAULT_SNAPSHOTS_PREFIX = "snapshots";
 
     protected boolean isSplit(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT, CONF_PROP_SPLIT);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT, CONFIG_PROP_SPLIT);
     }
 
     protected String getLocalPrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_LOCAL_PREFIX, CONF_PROP_LOCAL_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_LOCAL_PREFIX, CONFIG_PROP_LOCAL_PREFIX);
     }
 
     protected boolean isSplitLocal(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_LOCAL, CONF_PROP_SPLIT_LOCAL);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_LOCAL, CONFIG_PROP_SPLIT_LOCAL);
     }
 
     protected String getRemotePrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_REMOTE_PREFIX, CONF_PROP_REMOTE_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_REMOTE_PREFIX, CONFIG_PROP_REMOTE_PREFIX);
     }
 
     protected boolean isSplitRemote(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE, CONF_PROP_SPLIT_REMOTE);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE, CONFIG_PROP_SPLIT_REMOTE);
     }
 
     protected boolean isSplitRemoteRepository(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE_REPOSITORY, CONF_PROP_SPLIT_REMOTE_REPOSITORY);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE_REPOSITORY, CONFIG_PROP_SPLIT_REMOTE_REPOSITORY);
     }
 
     protected boolean isSplitRemoteRepositoryLast(RepositorySystemSession session) {
         return ConfigUtils.getBoolean(
-                session, DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST, CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST);
+                session, DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST, CONFIG_PROP_SPLIT_REMOTE_REPOSITORY_LAST);
     }
 
     protected String getReleasesPrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_RELEASES_PREFIX, CONF_PROP_RELEASES_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_RELEASES_PREFIX, CONFIG_PROP_RELEASES_PREFIX);
     }
 
     protected String getSnapshotsPrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_SNAPSHOTS_PREFIX, CONF_PROP_SNAPSHOTS_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_SNAPSHOTS_PREFIX, CONFIG_PROP_SNAPSHOTS_PREFIX);
     }
 
     /**
