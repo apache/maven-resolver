@@ -64,6 +64,11 @@ public final class FileUtils {
          * Invocation of this method merely signals that caller ultimately wants temp file to replace the target
          * file, but when this method returns, the move operation did not yet happen, it will happen when this
          * instance is closed.
+         * <p>
+         * Invoking this method <em>without writing to temp file</em> {@link #getPath()} (thus, not creating a temp
+         * file to be moved) is considered a bug, a mistake of the caller. Caller of this method should ensure
+         * that this method is invoked ONLY when the temp file is created and moving it to its final place is
+         * required.
          */
         void move() throws IOException;
     }
@@ -123,7 +128,7 @@ public final class FileUtils {
 
             @Override
             public void close() throws IOException {
-                if (wantsMove.get() && Files.isReadable(tempFile)) {
+                if (wantsMove.get()) {
                     if (IS_WINDOWS) {
                         copy(tempFile, file);
                     } else {
