@@ -72,16 +72,16 @@ import static java.util.Objects.requireNonNull;
  *
  */
 final class BasicRepositoryConnector implements RepositoryConnector {
-    private static final String CONFIG_PROP_PREFIX =
+    private static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_CONNECTOR + BasicRepositoryConnectorFactory.NAME + ".";
 
-    private static final String CONFIG_PROP_PERSISTED_CHECKSUMS = CONFIG_PROP_PREFIX + "persistedChecksums";
+    private static final String CONFIG_PROP_PERSISTED_CHECKSUMS = CONFIG_PROPS_PREFIX + "persistedChecksums";
 
-    private static final String CONFIG_PROP_THREADS = CONFIG_PROP_PREFIX + "threads";
+    private static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
 
-    private static final String CONFIG_PROP_PARALLEL_PUT = CONFIG_PROP_PREFIX + "parallelPut";
+    private static final String CONFIG_PROP_PARALLEL_PUT = CONFIG_PROPS_PREFIX + "parallelPut";
 
-    private static final String CONFIG_PROP_SMART_CHECKSUMS = CONFIG_PROP_PREFIX + "smartChecksums";
+    private static final String CONFIG_PROP_SMART_CHECKSUMS = CONFIG_PROPS_PREFIX + "smartChecksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicRepositoryConnector.class);
 

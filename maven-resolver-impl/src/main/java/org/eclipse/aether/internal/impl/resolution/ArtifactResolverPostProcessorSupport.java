@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public abstract class ArtifactResolverPostProcessorSupport implements ArtifactResolverPostProcessor {
-    private static final String CONFIG_PROP_PREFIX = DefaultArtifactResolver.CONFIG_PROPS_PREFIX + "postProcessor.";
+    private static final String CONFIG_PROPS_PREFIX = DefaultArtifactResolver.CONFIG_PROPS_PREFIX + "postProcessor.";
 
     private final String name;
 
@@ -59,7 +59,7 @@ public abstract class ArtifactResolverPostProcessorSupport implements ArtifactRe
      */
     protected String configPropKey(String name) {
         requireNonNull(name);
-        return CONFIG_PROP_PREFIX + this.name + "." + name;
+        return CONFIG_PROPS_PREFIX + this.name + "." + name;
     }
 
     /**
@@ -68,6 +68,6 @@ public abstract class ArtifactResolverPostProcessorSupport implements ArtifactRe
      * Default value is {@code false}.
      */
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_PREFIX + this.name);
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROPS_PREFIX + this.name);
     }
 }

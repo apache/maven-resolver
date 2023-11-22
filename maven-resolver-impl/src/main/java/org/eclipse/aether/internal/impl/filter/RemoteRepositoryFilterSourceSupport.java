@@ -49,7 +49,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepositoryFilterSource {
-    private static final String CONFIG_PROP_PREFIX = ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
 
     private static final String CONF_NAME_BASEDIR = "basedir";
 
@@ -65,7 +65,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
      * Utility method to create scoped configuration property key of given name.
      */
     protected String configPropKey(String name) {
-        return CONFIG_PROP_PREFIX + this.name + "." + name;
+        return CONFIG_PROPS_PREFIX + this.name + "." + name;
     }
 
     /**
@@ -74,7 +74,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
      * Default is {@code false}.
      */
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_PREFIX + this.name);
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROPS_PREFIX + this.name);
     }
 
     /**

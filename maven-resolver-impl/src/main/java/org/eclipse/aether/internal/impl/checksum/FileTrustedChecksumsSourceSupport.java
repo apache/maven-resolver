@@ -55,7 +55,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSource {
-    private static final String CONFIG_PROP_PREFIX = ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
 
     private static final String CONF_NAME_BASEDIR = "basedir";
 
@@ -127,7 +127,7 @@ abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSour
      */
     private String configPropKey(String name) {
         requireNonNull(name);
-        return CONFIG_PROP_PREFIX + this.name + "." + name;
+        return CONFIG_PROPS_PREFIX + this.name + "." + name;
     }
 
     /**
@@ -136,7 +136,7 @@ abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSour
      * Default value is {@code false}.
      */
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_PREFIX + this.name);
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROPS_PREFIX + this.name);
     }
 
     /**
