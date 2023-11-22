@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
 /**
  * JDK Transport using {@link HttpClient}.
  *
- * @since TBD
+ * @since 2.0.0
  */
 @SuppressWarnings({"checkstyle:magicnumber"})
 final class JdkTransporter extends AbstractTransporter {

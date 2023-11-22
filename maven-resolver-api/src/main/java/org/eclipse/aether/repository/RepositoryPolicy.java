@@ -90,7 +90,7 @@ public final class RepositoryPolicy {
      * @param metadataUpdatePolicy The update interval after which locally cached metadata from the repository is considered stale
      *            and should be re-fetched, may be {@code null}.
      * @param checksumPolicy The way checksum verification should be handled, may be {@code null}.
-     * @since TBD
+     * @since 2.0.0
      */
     public RepositoryPolicy(
             boolean enabled, String artifactUpdatePolicy, String metadataUpdatePolicy, String checksumPolicy) {
@@ -128,7 +128,7 @@ public final class RepositoryPolicy {
      * Gets the update policy for locally cached artifacts from the repository.
      *
      * @return The update policy, never {@code null}.
-     * @since TBD
+     * @since 2.0.0
      */
     public String getArtifactUpdatePolicy() {
         return artifactUpdatePolicy;
@@ -138,7 +138,7 @@ public final class RepositoryPolicy {
      * Gets the update policy for locally cached metadata from the repository.
      *
      * @return The update policy, never {@code null}.
-     * @since TBD
+     * @since 2.0.0
      */
     public String getMetadataUpdatePolicy() {
         return metadataUpdatePolicy;

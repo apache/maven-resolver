@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Abstract base class for dependency tree traverses that feed {@link Consumer<DependencyNode>}.
  *
- * @since TBD
+ * @since 2.0.0
  */
 abstract class AbstractDependencyNodeConsumerVisitor implements DependencyVisitor {
     protected final Consumer<DependencyNode> nodeConsumer;

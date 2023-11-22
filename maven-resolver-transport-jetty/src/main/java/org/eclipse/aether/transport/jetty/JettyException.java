@@ -21,7 +21,7 @@ package org.eclipse.aether.transport.jetty;
 /**
  * Exception thrown by {@link JettyTransporter} in case of errors.
  *
- * @since TBD
+ * @since 2.0.0
  */
 final class JettyException extends Exception {
     private final int statusCode;

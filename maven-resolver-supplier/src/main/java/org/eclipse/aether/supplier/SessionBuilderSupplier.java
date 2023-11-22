@@ -55,7 +55,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Extend this class and override methods to customize, if needed.
  *
- * @since TBD
+ * @since 2.0.0
  */
 public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected final RepositorySystem repositorySystem;

@@ -21,6 +21,6 @@
  * Support for downloads/uploads via the HTTP and HTTPS protocols. The implementation is backed by
  * <a href="https://eclipse.dev/jetty/">Eclipse Jetty</a>.
  *
- * @since TBD
+ * @since 2.0.0
  */
 package org.eclipse.aether.transport.jetty;

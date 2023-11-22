@@ -47,7 +47,7 @@ public interface RepositorySystemLifecycle {
      * <p>
      * <em>Same session instance can be started only once.</em>
      *
-     * @since TBD
+     * @since 2.0.0
      */
     void sessionStarted(CloseableSession session);
 
@@ -58,7 +58,7 @@ public interface RepositorySystemLifecycle {
      * <p>
      * <em>Same session instance can be ended only once.</em>
      *
-     * @since TBD
+     * @since 2.0.0
      */
     void sessionEnded(CloseableSession session);
 
@@ -67,7 +67,7 @@ public interface RepositorySystemLifecycle {
      * <p>
      * Throws if session was not passed to {@link #sessionStarted(CloseableSession)} beforehand.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     void addOnSessionEndedHandle(CloseableSession session, Runnable handler);
 }

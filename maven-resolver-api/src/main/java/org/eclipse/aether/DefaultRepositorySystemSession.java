@@ -319,7 +319,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
-     * @since TBD
+     * @since 2.0.0
      */
     public DefaultRepositorySystemSession setArtifactUpdatePolicy(String artifactUpdatePolicy) {
         verifyStateForMutation();
@@ -341,7 +341,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
-     * @since TBD
+     * @since 2.0.0
      */
     public DefaultRepositorySystemSession setMetadataUpdatePolicy(String metadataUpdatePolicy) {
         verifyStateForMutation();

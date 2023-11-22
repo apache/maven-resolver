@@ -34,7 +34,7 @@ import static java.util.stream.Collectors.toList;
  * Node list generator usable with different traversing strategies. It is wrapped {@link List}{@code <DependencyNode>} but
  * offers several transformations, that are handy.
  *
- * @since TBD
+ * @since 2.0.0
  */
 public final class NodeListGenerator implements Consumer<DependencyNode> {
 

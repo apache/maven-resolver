@@ -118,14 +118,14 @@ public final class ConfigurationProperties {
      * A flag indicating whether the created ordered components should be cached or not.
      *
      * @see #DEFAULT_CACHED_PRIORITIES
-     * @since TBD
+     * @since 2.0.0
      */
     public static final String CACHED_PRIORITIES = PREFIX_PRIORITY + "cached";
 
     /**
      * The default caching of priority components if {@link #CACHED_PRIORITIES} isn't set. Default value is {@code true}.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     public static final boolean DEFAULT_CACHED_PRIORITIES = true;
 
@@ -412,14 +412,14 @@ public final class ConfigurationProperties {
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_POSTORDER
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER
-     * @since TBD
+     * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR = PREFIX_SYSTEM + "dependencyVisitor";
 
     /**
      * The visitor strategy "preOrder".
      *
-     * @since TBD
+     * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER = "preOrder";
 
@@ -427,14 +427,14 @@ public final class ConfigurationProperties {
      * The visitor strategy "postOrder". This was the only one supported in Resolver 1.x and is hence the
      * default as well.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_POSTORDER = "postOrder";
 
     /**
      * The visitor strategy "levelOrder".
      *
-     * @since TBD
+     * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER = "levelOrder";
 

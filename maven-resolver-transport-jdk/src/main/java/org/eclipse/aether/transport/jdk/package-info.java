@@ -21,6 +21,6 @@
  * Support for downloads/uploads via the HTTP and HTTPS protocols. The implementation is backed by
  * Java 11 {@link java.net.http.HttpClient}.
  *
- * @since TBD
+ * @since 2.0.0
  */
 package org.eclipse.aether.transport.jdk;

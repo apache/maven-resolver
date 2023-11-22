@@ -21,7 +21,7 @@ package org.eclipse.aether.transport.jdk;
 /**
  * Exception thrown by {@link JdkTransporter} in case of errors.
  *
- * @since TBD
+ * @since 2.0.0
  */
 final class JdkException extends Exception {
     private final int statusCode;

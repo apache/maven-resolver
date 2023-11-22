@@ -40,7 +40,7 @@ final class PrioritizedComponents<T> {
      * simple "change detection" in place, as injected maps are dynamic, they are atomically expanded or contracted
      * as components are dynamically discovered or unloaded.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     @SuppressWarnings("unchecked")
     public static <C> PrioritizedComponents<C> reuseOrCreate(
