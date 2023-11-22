@@ -23,11 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -39,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public final class FileUtils {
-    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we fsync on directories or not
+    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we "atomic move" or not
     private static final boolean IS_WINDOWS =
             System.getProperty("os.name", "unknown").startsWith("Windows");
 
@@ -66,6 +64,11 @@ public final class FileUtils {
          * Invocation of this method merely signals that caller ultimately wants temp file to replace the target
          * file, but when this method returns, the move operation did not yet happen, it will happen when this
          * instance is closed.
+         * <p>
+         * Invoking this method <em>without writing to temp file</em> {@link #getPath()} (thus, not creating a temp
+         * file to be moved) is considered a bug, a mistake of the caller. Caller of this method should ensure
+         * that this method is invoked ONLY when the temp file is created and moving it to its final place is
+         * required.
          */
         void move() throws IOException;
     }
@@ -125,13 +128,11 @@ public final class FileUtils {
 
             @Override
             public void close() throws IOException {
-                if (wantsMove.get() && Files.isReadable(tempFile)) {
+                if (wantsMove.get()) {
                     if (IS_WINDOWS) {
                         copy(tempFile, file);
                     } else {
-                        fsyncFile(tempFile);
                         Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
-                        fsyncParent(tempFile);
                     }
                 }
                 Files.deleteIfExists(tempFile);
@@ -153,33 +154,6 @@ public final class FileUtils {
                     break;
                 }
                 os.write(array, 0, bytes);
-            }
-        }
-    }
-
-    /**
-     * Performs fsync: makes sure no OS "dirty buffers" exist for given file.
-     *
-     * @param target Path that must not be {@code null}, must exist as plain file.
-     */
-    private static void fsyncFile(Path target) throws IOException {
-        try (FileChannel file = FileChannel.open(target, StandardOpenOption.WRITE)) {
-            file.force(true);
-        }
-    }
-
-    /**
-     * Performs directory fsync: not usable on Windows, but some other OSes may also throw, hence thrown IO exception
-     * is just ignored.
-     *
-     * @param target Path that must not be {@code null}, must exist as plain file, and must have parent.
-     */
-    private static void fsyncParent(Path target) throws IOException {
-        try (FileChannel parent = FileChannel.open(target.getParent(), StandardOpenOption.READ)) {
-            try {
-                parent.force(true);
-            } catch (IOException e) {
-                // ignore
             }
         }
     }
