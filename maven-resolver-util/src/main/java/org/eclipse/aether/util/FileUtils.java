@@ -23,11 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -129,9 +127,7 @@ public final class FileUtils {
                     if (IS_WINDOWS) {
                         copy(tempFile, file);
                     } else {
-                        fsyncFile(tempFile);
                         Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
-                        fsyncParent(tempFile);
                     }
                 }
                 Files.deleteIfExists(tempFile);
@@ -153,33 +149,6 @@ public final class FileUtils {
                     break;
                 }
                 os.write(array, 0, bytes);
-            }
-        }
-    }
-
-    /**
-     * Performs fsync: makes sure no OS "dirty buffers" exist for given file.
-     *
-     * @param target Path that must not be {@code null}, must exist as plain file.
-     */
-    private static void fsyncFile(Path target) throws IOException {
-        try (FileChannel file = FileChannel.open(target, StandardOpenOption.WRITE)) {
-            file.force(true);
-        }
-    }
-
-    /**
-     * Performs directory fsync: not usable on Windows, but some other OSes may also throw, hence thrown IO exception
-     * is just ignored.
-     *
-     * @param target Path that must not be {@code null}, must exist as plain file, and must have parent.
-     */
-    private static void fsyncParent(Path target) throws IOException {
-        try (FileChannel parent = FileChannel.open(target.getParent(), StandardOpenOption.READ)) {
-            try {
-                parent.force(true);
-            } catch (IOException e) {
-                // ignore
             }
         }
     }
