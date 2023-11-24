@@ -108,7 +108,7 @@ public class ApacheTransporterTest {
         HashMap<String, ChecksumExtractor> extractors = new HashMap<>();
         extractors.put(XChecksumChecksumExtractor.NAME, new XChecksumChecksumExtractor());
         extractors.put(Nexus2ChecksumExtractor.NAME, new Nexus2ChecksumExtractor());
-        factory = new HttpTransporterFactory(extractors);
+        factory = new ApacheTransporterFactory(extractors);
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
         TestFileUtils.writeString(new File(repoDir, "dir/file.txt"), "test");
@@ -451,7 +451,7 @@ public class ApacheTransporterTest {
         httpServer.setWebDav(true);
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/dir/file.txt")).setListener(listener);
-        ((HttpTransporter) transporter).getState().setWebDav(true);
+        ((ApacheTransporter) transporter).getState().setWebDav(true);
         transporter.get(task);
         assertEquals("test", task.getDataString());
         assertEquals(0L, listener.dataOffset);
@@ -1202,7 +1202,7 @@ public class ApacheTransporterTest {
             assertEquals("test", task.getDataString());
         }
         PoolStats stats = ((ConnPoolControl<?>)
-                        ((HttpTransporter) transporter).getState().getConnectionManager())
+                        ((ApacheTransporter) transporter).getState().getConnectionManager())
                 .getTotalStats();
         assertEquals(1, stats.getAvailable(), stats.toString());
     }
@@ -1219,7 +1219,7 @@ public class ApacheTransporterTest {
             assertEquals("test", task.getDataString());
         }
         PoolStats stats = ((ConnPoolControl<?>)
-                        ((HttpTransporter) transporter).getState().getConnectionManager())
+                        ((ApacheTransporter) transporter).getState().getConnectionManager())
                 .getTotalStats();
         assertEquals(0, stats.getAvailable(), stats.toString());
     }

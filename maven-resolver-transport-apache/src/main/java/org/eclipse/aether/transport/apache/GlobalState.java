@@ -89,7 +89,7 @@ final class GlobalState implements Closeable {
 
     private static final String KEY = GlobalState.class.getName();
 
-    private static final String CONFIG_PROP_CACHE_STATE = HttpTransporter.CONFIG_PROPS_PREFIX + "cacheState";
+    private static final String CONFIG_PROP_CACHE_STATE = ApacheTransporter.CONFIG_PROPS_PREFIX + "cacheState";
 
     private final ConcurrentMap<ConnMgrConfig, HttpClientConnectionManager> connectionManagers;
 

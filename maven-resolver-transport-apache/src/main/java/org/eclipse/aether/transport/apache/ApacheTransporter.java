@@ -104,10 +104,10 @@ import static java.util.Objects.requireNonNull;
 /**
  * A transporter for HTTP/HTTPS.
  */
-final class HttpTransporter extends AbstractTransporter {
+final class ApacheTransporter extends AbstractTransporter {
 
     static final String CONFIG_PROPS_PREFIX =
-            ConfigurationProperties.PREFIX_TRANSPORT + HttpTransporterFactory.NAME + ".";
+            ConfigurationProperties.PREFIX_TRANSPORT + ApacheTransporterFactory.NAME + ".";
 
     static final String CONFIG_PROP_USE_SYSTEM_PROPERTIES = CONFIG_PROPS_PREFIX + "useSystemProperties";
 
@@ -123,7 +123,7 @@ final class HttpTransporter extends AbstractTransporter {
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpTransporter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApacheTransporter.class);
 
     private final Map<String, ChecksumExtractor> checksumExtractors;
 
@@ -150,7 +150,7 @@ final class HttpTransporter extends AbstractTransporter {
     private final boolean supportWebDav;
 
     @SuppressWarnings("checkstyle:methodlength")
-    HttpTransporter(
+    ApacheTransporter(
             Map<String, ChecksumExtractor> checksumExtractors,
             RemoteRepository repository,
             RepositorySystemSession session)
