@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.metadata.Metadata;
@@ -67,22 +66,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PARALLEL_PUT;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PERSISTED_CHECKSUMS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_SMART_CHECKSUMS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_THREADS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PARALLEL_PUT;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PERSISTED_CHECKSUMS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_SMART_CHECKSUMS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_THREADS;
 
 /**
  *
  */
 final class BasicRepositoryConnector implements RepositoryConnector {
-    private static final String CONFIG_PROPS_PREFIX =
-            ConfigurationProperties.PREFIX_CONNECTOR + BasicRepositoryConnectorFactory.NAME + ".";
-
-    private static final String CONFIG_PROP_PERSISTED_CHECKSUMS = CONFIG_PROPS_PREFIX + "persistedChecksums";
-
-    private static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
-
-    private static final String CONFIG_PROP_PARALLEL_PUT = CONFIG_PROPS_PREFIX + "parallelPut";
-
-    private static final String CONFIG_PROP_SMART_CHECKSUMS = CONFIG_PROPS_PREFIX + "smartChecksums";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicRepositoryConnector.class);
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
@@ -138,11 +134,15 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         this.providedChecksumsSources = providedChecksumsSources;
         this.closed = new AtomicBoolean(false);
 
-        maxThreads = ExecutorUtils.threadCount(session, 5, CONFIG_PROP_THREADS, "maven.artifact.threads");
-        smartChecksums = ConfigUtils.getBoolean(session, true, CONFIG_PROP_SMART_CHECKSUMS);
+        maxThreads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
+        smartChecksums = ConfigUtils.getBoolean(session, DEFAULT_SMART_CHECKSUMS, CONFIG_PROP_SMART_CHECKSUMS);
         parallelPut = ConfigUtils.getBoolean(
-                session, true, CONFIG_PROP_PARALLEL_PUT + "." + repository.getId(), CONFIG_PROP_PARALLEL_PUT);
-        persistedChecksums = ConfigUtils.getBoolean(session, true, CONFIG_PROP_PERSISTED_CHECKSUMS);
+                session,
+                DEFAULT_PARALLEL_PUT,
+                CONFIG_PROP_PARALLEL_PUT + "." + repository.getId(),
+                CONFIG_PROP_PARALLEL_PUT);
+        persistedChecksums =
+                ConfigUtils.getBoolean(session, DEFAULT_PERSISTED_CHECKSUMS, CONFIG_PROP_PERSISTED_CHECKSUMS);
     }
 
     private Executor getExecutor(int tasks) {

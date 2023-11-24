@@ -105,7 +105,10 @@ public final class ConfigurationProperties {
      * implementation among the available extensions. This priority mode is meant for cases where the application will
      * present/inject extensions in the desired search order.
      *
-     * @see #DEFAULT_IMPLICIT_PRIORITIES
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_IMPLICIT_PRIORITIES}
+     * @configurationRepoIdSuffix No
      */
     public static final String IMPLICIT_PRIORITIES = PREFIX_PRIORITY + "implicit";
 
@@ -115,10 +118,13 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_IMPLICIT_PRIORITIES = false;
 
     /**
-     * A flag indicating whether the created ordered components should be cached or not.
+     * A flag indicating whether the created ordered components should be cached in session.
      *
-     * @see #DEFAULT_CACHED_PRIORITIES
      * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_CACHED_PRIORITIES}
+     * @configurationRepoIdSuffix No
      */
     public static final String CACHED_PRIORITIES = PREFIX_PRIORITY + "cached";
 
@@ -132,7 +138,11 @@ public final class ConfigurationProperties {
     /**
      * A flag indicating whether interaction with the user is allowed.
      *
-     * @see #DEFAULT_INTERACTIVE
+     * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_INTERACTIVE}
+     * @configurationRepoIdSuffix No
      */
     public static final String INTERACTIVE = PREFIX_AETHER + "interactive";
 
@@ -144,7 +154,10 @@ public final class ConfigurationProperties {
     /**
      * The user agent that repository connectors should report to servers.
      *
-     * @see #DEFAULT_USER_AGENT
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_USER_AGENT}
+     * @configurationRepoIdSuffix No
      */
     public static final String USER_AGENT = PREFIX_TRANSPORT_HTTP + "userAgent";
 
@@ -157,7 +170,10 @@ public final class ConfigurationProperties {
      * The maximum amount of time (in milliseconds) to wait for a successful connection to a remote server. Non-positive
      * values indicate no timeout.
      *
-     * @see #DEFAULT_CONNECT_TIMEOUT
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_CONNECT_TIMEOUT}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String CONNECT_TIMEOUT = PREFIX_TRANSPORT_HTTP + "connectTimeout";
 
@@ -171,7 +187,10 @@ public final class ConfigurationProperties {
      * this timeout does not restrict the overall duration of a request, it only restricts the duration of inactivity
      * between consecutive data packets. Non-positive values indicate no timeout.
      *
-     * @see #DEFAULT_REQUEST_TIMEOUT
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_REQUEST_TIMEOUT}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String REQUEST_TIMEOUT = PREFIX_TRANSPORT_HTTP + "requestTimeout";
 
@@ -186,6 +205,10 @@ public final class ConfigurationProperties {
      * specify headers for a specific remote repository by appending the suffix {@code .<repoId>} to this key when
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
      * the general headers map.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.util.Map}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_HEADERS = PREFIX_TRANSPORT_HTTP + "headers";
 
@@ -194,7 +217,10 @@ public final class ConfigurationProperties {
      * also specify the encoding for a specific remote repository by appending the suffix {@code .<repoId>} to this key
      * when storing the charset name.
      *
-     * @see #DEFAULT_HTTP_CREDENTIAL_ENCODING
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_CREDENTIAL_ENCODING}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_CREDENTIAL_ENCODING = PREFIX_TRANSPORT_HTTP + "credentialEncoding";
 
@@ -206,8 +232,11 @@ public final class ConfigurationProperties {
     /**
      * The maximum number of times a request to a remote server should be retried in case of an error.
      *
-     * @see #DEFAULT_HTTP_RETRY_HANDLER_COUNT
      * @since 1.9.6
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_RETRY_HANDLER_COUNT}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_RETRY_HANDLER_COUNT = PREFIX_TRANSPORT_HTTP + "retryHandler.count";
 
@@ -219,12 +248,15 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
-     * The initial retry interval of request to a remote server should be waited in case of "too many requests"
-     * (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if remote server does not use
-     * {@code Retry-After} header, in which case Server value is obeyed.
+     * The initial retry interval in millis of request to a remote server should be waited in case of
+     * "too many requests" (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if remote server
+     * does not use {@code Retry-After} header, in which case Server value is obeyed.
      *
-     * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL
      * @since 1.9.16
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Long}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_TRANSPORT_HTTP + "retryHandler.interval";
 
@@ -237,12 +269,15 @@ public final class ConfigurationProperties {
     public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL = 5000L;
 
     /**
-     * The maximum retry interval of request to a remote server above which the request should be aborted instead.
-     * In theory, a malicious server could tell Maven "come back after 100 years" that would stall the build for
-     * some. Using this parameter Maven will fail the request instead, if interval is above this value.
+     * The maximum retry interval in millis of request to a remote server above which the request should be aborted
+     * instead. In theory, a malicious server could tell Maven "come back after 100 years" that would stall the build
+     * for some. Using this parameter Maven will fail the request instead, if interval is above this value.
      *
-     * @see #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX
      * @since 1.9.16
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Long}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_TRANSPORT_HTTP + "retryHandler.intervalMax";
 
@@ -258,8 +293,11 @@ public final class ConfigurationProperties {
      * The HTTP codes of remote server responses that should be handled as "too many requests"
      * (examples: HTTP codes 429 and 503). Accepts comma separated list of HTTP response codes.
      *
-     * @see #DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
      * @since 1.9.16
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE =
             PREFIX_TRANSPORT_HTTP + "retryHandler.serviceUnavailable";
@@ -273,10 +311,14 @@ public final class ConfigurationProperties {
     public static final String DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE = "429,503";
 
     /**
-     * Should HTTP client use preemptive auth (w/ BASIC) or not?
+     * Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default, is
+     * disabled, as it is considered less secure.
      *
-     * @see #DEFAULT_HTTP_PREEMPTIVE_AUTH
      * @since 1.9.6
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_PREEMPTIVE_AUTH}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_PREEMPTIVE_AUTH = PREFIX_TRANSPORT_HTTP + "preemptiveAuth";
 
@@ -290,8 +332,11 @@ public final class ConfigurationProperties {
     /**
      * Should HTTP client reuse connections (in other words, pool connections) or not?
      *
-     * @see #DEFAULT_HTTP_REUSE_CONNECTIONS
      * @since 1.9.8
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_REUSE_CONNECTIONS}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_REUSE_CONNECTIONS = PREFIX_TRANSPORT_HTTP + "reuseConnections";
 
@@ -306,8 +351,11 @@ public final class ConfigurationProperties {
      * Total time to live in seconds for an HTTP connection, after that time, the connection will be dropped
      * (no matter for how long it was idle).
      *
-     * @see #DEFAULT_HTTP_CONNECTION_MAX_TTL
      * @since 1.9.8
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_CONNECTION_MAX_TTL}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_CONNECTION_MAX_TTL = PREFIX_TRANSPORT_HTTP + "connectionMaxTtl";
 
@@ -321,8 +369,11 @@ public final class ConfigurationProperties {
     /**
      * The maximum concurrent connections per route HTTP client is allowed to use.
      *
-     * @see #DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE
      * @since 1.9.8
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_MAX_CONNECTIONS_PER_ROUTE = PREFIX_TRANSPORT_HTTP + "maxConnectionsPerRoute";
 
@@ -337,14 +388,20 @@ public final class ConfigurationProperties {
      * The local address (interface) to use with HTTP transport. Not all transport supports this option.
      *
      * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_LOCAL_ADDRESS = PREFIX_TRANSPORT_HTTP + "localAddress";
 
     /**
      * Boolean flag should the HTTP transport support WebDAV remote. Not all transport support this option.
      *
-     * @see #DEFAULT_HTTP_SUPPORT_WEBDAV
      * @since 2.0.0 (moved out from maven-resolver-transport-http).
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_SUPPORT_WEBDAV}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_SUPPORT_WEBDAV = PREFIX_TRANSPORT_HTTP + "supportWebDav";
 
@@ -359,8 +416,11 @@ public final class ConfigurationProperties {
      * Boolean flag should the HTTP transport use preemptive-auth for PUT requests. Not all transport support this
      * option.
      *
-     * @see #DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH
      * @since 2.0.0 (moved out from maven-resolver-transport-http).
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_PREEMPTIVE_PUT_AUTH = PREFIX_TRANSPORT_HTTP + "preemptivePutAuth";
 
@@ -378,6 +438,10 @@ public final class ConfigurationProperties {
      * given transport own default value.
      *
      * @since 1.9.17
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue Transport default.
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_EXPECT_CONTINUE = PREFIX_TRANSPORT_HTTP + "expectContinue";
 
@@ -388,6 +452,10 @@ public final class ConfigurationProperties {
      * @see #HTTPS_SECURITY_MODE_DEFAULT
      * @see #HTTPS_SECURITY_MODE_INSECURE
      * @since 1.9.6
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #HTTPS_SECURITY_MODE_DEFAULT}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String HTTPS_SECURITY_MODE = PREFIX_TRANSPORT_HTTPS + "securityMode";
 
@@ -413,6 +481,10 @@ public final class ConfigurationProperties {
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_POSTORDER
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER
      * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER}
+     * @configurationRepoIdSuffix No
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR = PREFIX_SYSTEM + "dependencyVisitor";
 

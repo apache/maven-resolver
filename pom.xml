@@ -62,6 +62,7 @@
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-supplier</module>
     <module>maven-resolver-demos</module>
+    <module>maven-resolver-tools</module>
   </modules>
 
   <scm>
@@ -445,6 +446,27 @@
                 <name>provisional</name>
                 <placement>a</placement>
                 <head>Provisional:</head>
+              </tag>
+              <!-- Configuration related -->
+              <tag>
+                <name>configurationSource</name>
+                <placement>a</placement>
+                <head>Sourced from:</head>
+              </tag>
+              <tag>
+                <name>configurationType</name>
+                <placement>a</placement>
+                <head>Value type:</head>
+              </tag>
+              <tag>
+                <name>configurationDefaultValue</name>
+                <placement>a</placement>
+                <head>Default value:</head>
+              </tag>
+              <tag>
+                <name>configurationRepoIdSuffix</name>
+                <placement>a</placement>
+                <head>Supports Repo ID Suffix:</head>
               </tag>
             </tags>
             <groups>
