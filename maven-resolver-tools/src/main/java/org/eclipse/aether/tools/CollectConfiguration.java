@@ -40,6 +40,9 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 public class CollectConfiguration {
     public static void main(String[] args) throws Exception {
         Path start = Paths.get(args.length > 0 ? args[0] : ".");
+        System.out.println("|Key|Type|Description|Default value|Since|Supports Repo ID suffix|FQN|Source|");
+        System.out.println("|--|--|--|--|--|--|--|--|");
+
         Files.walk(start)
                 .map(Path::toAbsolutePath)
                 .filter(p -> p.getFileName().toString().endsWith(".java"))
@@ -64,21 +67,14 @@ public class CollectConfiguration {
                                         } else if (defValue == null) {
                                             defValue = "n/a";
                                         }
+                                        String fqName = f.getOrigin().getCanonicalName() + "." + name;
+                                        String description = f.getJavaDoc().getText();
+                                        String since = nvl(getSince(f), "");
+                                        String source = getTag(f, "@configurationSource");
+                                        String configurationType = getConfigurationType(f);
+                                        String repoIdSuffix = nvl(getTag(f, "@configurationRepoIdSuffix"), "No");
 
-                                        System.out.println("Key: " + key);
-                                        System.out.println(
-                                                "FQName: " + f.getOrigin().getCanonicalName() + "." + name);
-                                        System.out.println(
-                                                "Description: " + f.getJavaDoc().getText());
-                                        System.out.println("Since: " + nvl(getSince(f), ""));
-                                        System.out.println(
-                                                "Value source: " + nvl(getTag(f, "@configurationSource"), "n/a"));
-                                        System.out.println("Value type: " + getConfigurationType(f));
-                                        System.out.println("Default value: " + defValue);
-                                        System.out.println(
-                                                "RepoID suffix: " + nvl(getTag(f, "@configurationRepoIdSuffix"), "No"));
-
-                                        System.out.println();
+                                        System.out.printf("|%s|%s|%s|%s|%s|%s|%s|%s|%n", key, configurationType, description, defValue, since, repoIdSuffix, fqName, source);
                                     });
                         }
                     } catch (Exception e) {
