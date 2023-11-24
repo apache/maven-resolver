@@ -48,15 +48,16 @@ public class CollectConfiguration {
                 .filter(p -> p.getFileName().toString().endsWith(".java"))
                 .filter(p -> p.toString().contains("/src/main/java/"))
                 .forEach(p -> {
-                    Map<String, String> constants = extractConstants(Paths.get(p.toString()
-                            .replace("/src/main/java/", "/target/classes/")
-                            .replace(".java", ".class")));
                     try {
                         JavaType<?> type = Roaster.parse(p.toFile());
                         if (type instanceof JavaClassSource javaClassSource) {
                             javaClassSource.getFields().stream()
                                     .filter(CollectConfiguration::hasConfigurationSource)
                                     .forEach(f -> {
+                                        Map<String, String> constants = extractConstants(Paths.get(p.toString()
+                                                .replace("/src/main/java/", "/target/classes/")
+                                                .replace(".java", ".class")));
+
                                         String name = f.getName();
                                         String key = constants.get(name);
                                         String defValue = getTag(f, "@configurationDefaultValue");
