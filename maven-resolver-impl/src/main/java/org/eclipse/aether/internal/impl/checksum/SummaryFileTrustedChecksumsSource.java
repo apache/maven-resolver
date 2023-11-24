@@ -43,6 +43,7 @@ import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +90,37 @@ import static java.util.stream.Collectors.toList;
 public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksumsSourceSupport {
     public static final String NAME = "summaryFile";
 
-    private static final String CHECKSUMS_FILE_PREFIX = "checksums";
+    private static final String CONFIG_PROPS_PREFIX =
+            FileTrustedChecksumsSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
+
+    /**
+     * Is checksum source enabled?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_ENABLED = FileTrustedChecksumsSourceSupport.CONFIG_PROPS_PREFIX + NAME;
+
+    /**
+     * The basedir where checksums are. If relative, is resolved from local repository root.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #LOCAL_REPO_PREFIX_DIR}
+     */
+    public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
+
+    /**
+     * Is source origin aware?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue true
+     */
+    public static final String CONFIG_PROP_ORIGIN_AWARE = CONFIG_PROPS_PREFIX + "originAware";
+
+    public static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SummaryFileTrustedChecksumsSource.class);
 
@@ -106,12 +137,20 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
     @Inject
     public SummaryFileTrustedChecksumsSource(
             LocalPathComposer localPathComposer, RepositorySystemLifecycle repositorySystemLifecycle) {
-        super(NAME);
         this.localPathComposer = requireNonNull(localPathComposer);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.checksums = new ConcurrentHashMap<>();
         this.changedChecksums = new ConcurrentHashMap<>();
         this.onShutdownHandlerRegistered = new AtomicBoolean(false);
+    }
+
+    @Override
+    protected boolean isEnabled(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
+    }
+
+    private boolean isOriginAware(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, true, CONFIG_PROP_ORIGIN_AWARE);
     }
 
     @Override
@@ -121,7 +160,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             ArtifactRepository artifactRepository,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         final HashMap<String, String> result = new HashMap<>();
-        final Path basedir = getBasedir(session, false);
+        final Path basedir = getBasedir(session, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             final String artifactPath = localPathComposer.getPathForArtifact(artifact, false);
             final boolean originAware = isOriginAware(session);
@@ -144,7 +183,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
         if (onShutdownHandlerRegistered.compareAndSet(false, true)) {
             repositorySystemLifecycle.addOnSystemEndedHandler(this::saveRecordedLines);
         }
-        return new SummaryFileWriter(checksums, getBasedir(session, true), isOriginAware(session));
+        return new SummaryFileWriter(checksums, getBasedir(session, CONFIG_PROP_BASEDIR, true), isOriginAware(session));
     }
 
     /**

@@ -75,7 +75,35 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
         implements ArtifactResolverPostProcessor {
     public static final String NAME = "groupId";
 
-    private static final String CONF_NAME_RECORD = "record";
+    private static final String CONFIG_PROPS_PREFIX =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
+
+    /**
+     * Is filter enabled?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_ENABLED = RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME;
+
+    /**
+     * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #LOCAL_REPO_PREFIX_DIR}
+     */
+    public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
+
+    /**
+     * Should filter go into "record" mode (and collect encountered artifacts)?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_RECORD = CONFIG_PROPS_PREFIX + "record";
 
     static final String GROUP_ID_FILE_PREFIX = "groupId-";
 
@@ -93,11 +121,15 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     @Inject
     public GroupIdRemoteRepositoryFilterSource(RepositorySystemLifecycle repositorySystemLifecycle) {
-        super(NAME);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.rules = new ConcurrentHashMap<>();
         this.changedRules = new ConcurrentHashMap<>();
         this.onShutdownHandlerRegistered = new AtomicBoolean(false);
+    }
+
+    @Override
+    protected boolean isEnabled(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
     }
 
     @Override
@@ -117,7 +149,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
             for (ArtifactResult artifactResult : artifactResults) {
                 if (artifactResult.isResolved() && artifactResult.getRepository() instanceof RemoteRepository) {
                     Path filePath = filePath(
-                            getBasedir(session, false),
+                            getBasedir(session, CONFIG_PROP_BASEDIR, false),
                             artifactResult.getRepository().getId());
                     boolean newGroupId = rules.computeIfAbsent(
                                     filePath, f -> Collections.synchronizedSet(new TreeSet<>()))
@@ -138,7 +170,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private Set<String> cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        Path filePath = filePath(getBasedir(session, false), remoteRepository.getId());
+        Path filePath = filePath(getBasedir(session, CONFIG_PROP_BASEDIR, false), remoteRepository.getId());
         return rules.computeIfAbsent(filePath, r -> {
             Set<String> rules = loadRepositoryRules(filePath);
             if (rules != NOT_PRESENT) {
@@ -206,7 +238,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
      * Returns {@code true} if given session is recording.
      */
     private boolean isRecord(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_RECORD));
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_RECORD);
     }
 
     /**

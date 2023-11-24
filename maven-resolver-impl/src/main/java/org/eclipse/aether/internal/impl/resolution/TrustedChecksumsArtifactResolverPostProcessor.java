@@ -77,15 +77,55 @@ import static java.util.Objects.requireNonNull;
 public final class TrustedChecksumsArtifactResolverPostProcessor extends ArtifactResolverPostProcessorSupport {
     public static final String NAME = "trustedChecksums";
 
-    private static final String CONF_NAME_CHECKSUM_ALGORITHMS = "checksumAlgorithms";
+    private static final String CONFIG_PROPS_PREFIX =
+            ArtifactResolverPostProcessorSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
-    private static final String DEFAULT_CHECKSUM_ALGORITHMS = "SHA-1";
+    /**
+     * Is post processor enabled.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_ENABLED = ArtifactResolverPostProcessorSupport.CONFIG_PROPS_PREFIX + NAME;
 
-    private static final String CONF_NAME_FAIL_IF_MISSING = "failIfMissing";
+    /**
+     * The checksum algorithms to apply during post-processing as comma separated list.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_CHECKSUM_ALGORITHMS}
+     */
+    public static final String CONFIG_PROP_CHECKSUM_ALGORITHMS = CONFIG_PROPS_PREFIX + "checksumAlgorithms";
 
-    private static final String CONF_NAME_SNAPSHOTS = "snapshots";
+    public static final String DEFAULT_CHECKSUM_ALGORITHMS = "SHA-1";
 
-    private static final String CONF_NAME_RECORD = "record";
+    /**
+     * Should post processor fail resolution if checksum is missing?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_FAIL_IF_MISSING = CONFIG_PROPS_PREFIX + "failIfMissing";
+
+    /**
+     * Should post processor process snapshots as well?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_SNAPSHOTS = CONFIG_PROPS_PREFIX + "snapshots";
+
+    /**
+     * Should post processor go into "record" mode (and collect checksums instead of validate them)?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_RECORD = CONFIG_PROPS_PREFIX + "record";
 
     private static final String CHECKSUM_ALGORITHMS_CACHE_KEY =
             TrustedChecksumsArtifactResolverPostProcessor.class.getName() + ".checksumAlgorithms";
@@ -98,9 +138,13 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
     public TrustedChecksumsArtifactResolverPostProcessor(
             ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
             Map<String, TrustedChecksumsSource> trustedChecksumsSources) {
-        super(NAME);
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
         this.trustedChecksumsSources = requireNonNull(trustedChecksumsSources);
+    }
+
+    @Override
+    protected boolean isEnabled(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
     }
 
     @SuppressWarnings("unchecked")
@@ -111,13 +155,11 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                         CHECKSUM_ALGORITHMS_CACHE_KEY,
                         () -> checksumAlgorithmFactorySelector.selectList(
                                 ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                                        session,
-                                        DEFAULT_CHECKSUM_ALGORITHMS,
-                                        configPropKey(CONF_NAME_CHECKSUM_ALGORITHMS)))));
+                                        session, DEFAULT_CHECKSUM_ALGORITHMS, CONFIG_PROP_CHECKSUM_ALGORITHMS))));
 
-        final boolean failIfMissing = ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_FAIL_IF_MISSING));
-        final boolean record = ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_RECORD));
-        final boolean snapshots = ConfigUtils.getBoolean(session, false, configPropKey(CONF_NAME_SNAPSHOTS));
+        final boolean failIfMissing = ConfigUtils.getBoolean(session, false, CONFIG_PROP_FAIL_IF_MISSING);
+        final boolean record = ConfigUtils.getBoolean(session, false, CONFIG_PROP_RECORD);
+        final boolean snapshots = ConfigUtils.getBoolean(session, false, CONFIG_PROP_SNAPSHOTS);
 
         for (ArtifactResult artifactResult : artifactResults) {
             if (artifactResult.getArtifact().isSnapshot() && !snapshots) {

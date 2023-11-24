@@ -26,6 +26,8 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.spi.ToolProvider;
@@ -40,9 +42,8 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 public class CollectConfiguration {
     public static void main(String[] args) throws Exception {
         Path start = Paths.get(args.length > 0 ? args[0] : ".");
-        System.out.println("|Key|Type|Description|Default value|Since|Supports Repo ID suffix|Source|");
-        System.out.println("|--|--|--|--|--|--|--|");
 
+        TreeMap<String, ConfigurationKey> discoveredKeys = new TreeMap<>();
         Files.walk(start)
                 .map(Path::toAbsolutePath)
                 .filter(p -> p.getFileName().toString().endsWith(".java"))
@@ -68,29 +69,54 @@ public class CollectConfiguration {
                                         } else if (defValue == null) {
                                             defValue = "n/a";
                                         }
-                                        String fqName = f.getOrigin().getCanonicalName() + "." + name;
-                                        String description = f.getJavaDoc().getText();
-                                        String since = nvl(getSince(f), "");
-                                        String source = getConfigurationSource(f);
-                                        String configurationType = getConfigurationType(f);
-                                        String repoIdSuffix = nvl(getTag(f, "@configurationRepoIdSuffix"), "No");
-
-                                        System.out.printf(
-                                                "|`%s`|`%s`|%s|`%s`|%s|%s|%s|%n",
+                                        discoveredKeys.put(
                                                 key,
-                                                configurationType,
-                                                description,
-                                                defValue,
-                                                since,
-                                                repoIdSuffix,
-                                                source);
+                                                new ConfigurationKey(
+                                                        key,
+                                                        defValue,
+                                                        f.getOrigin().getCanonicalName() + "." + name,
+                                                        f.getJavaDoc().getText(),
+                                                        nvl(getSince(f), ""),
+                                                        getConfigurationSource(f),
+                                                        getConfigurationType(f),
+                                                        toBoolean(getTag(f, "@configurationRepoIdSuffix"))));
                                     });
                         }
                     } catch (Exception e) {
                         System.err.println(p + ": " + e.getMessage());
                     }
                 });
+
+        System.out.println("|No|Key|Type|Description|Default value|Since|Supports Repo ID suffix|Source|");
+        System.out.println("|--|--|--|--|--|--|--|--|");
+        AtomicInteger counter = new AtomicInteger();
+        discoveredKeys
+                .values()
+                .forEach(r -> System.out.printf(
+                        "|%s.|`%s`|`%s`|%s|`%s`|%s|%s|%s|%n",
+                        counter.incrementAndGet(),
+                        r.key,
+                        r.configurationType,
+                        r.description,
+                        r.defaultValue,
+                        r.since,
+                        r.supportRepoIdSuffix ? "Yes" : "No",
+                        r.configurationSource));
     }
+
+    private static boolean toBoolean(String value) {
+        return ("yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value));
+    }
+
+    private record ConfigurationKey(
+            String key,
+            String defaultValue,
+            String fqName,
+            String description,
+            String since,
+            String configurationSource,
+            String configurationType,
+            boolean supportRepoIdSuffix) {}
 
     private static String nvl(String string, String def) {
         return string == null ? def : string;

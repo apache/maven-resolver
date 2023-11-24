@@ -26,7 +26,6 @@ import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
-import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -49,33 +48,17 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepositoryFilterSource {
-    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
+    protected static final String CONFIG_PROPS_PREFIX =
+            ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
 
-    private static final String CONF_NAME_BASEDIR = "basedir";
-
-    static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
-
-    private final String name;
-
-    protected RemoteRepositoryFilterSourceSupport(String name) {
-        this.name = requireNonNull(name);
-    }
-
-    /**
-     * Utility method to create scoped configuration property key of given name.
-     */
-    protected String configPropKey(String name) {
-        return CONFIG_PROPS_PREFIX + this.name + "." + name;
-    }
+    public static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
 
     /**
      * Returns {@code true} if session configuration contains this name set to {@code true}.
      * <p>
      * Default is {@code false}.
      */
-    protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROPS_PREFIX + this.name);
-    }
+    protected abstract boolean isEnabled(RepositorySystemSession session);
 
     /**
      * Uses common {@link DirectoryUtils#resolveDirectory(RepositorySystemSession, String, String, boolean)} to
@@ -86,10 +69,9 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
      *
      * @return The {@link Path} of basedir, never {@code null}.
      */
-    protected Path getBasedir(RepositorySystemSession session, boolean mayCreate) {
+    protected Path getBasedir(RepositorySystemSession session, String configPropKey, boolean mayCreate) {
         try {
-            return DirectoryUtils.resolveDirectory(
-                    session, LOCAL_REPO_PREFIX_DIR, configPropKey(CONF_NAME_BASEDIR), mayCreate);
+            return DirectoryUtils.resolveDirectory(session, LOCAL_REPO_PREFIX_DIR, configPropKey, mayCreate);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

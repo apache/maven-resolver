@@ -43,6 +43,7 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +78,27 @@ import static java.util.stream.Collectors.toList;
 public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepositoryFilterSourceSupport {
     public static final String NAME = "prefixes";
 
+    private static final String CONFIG_PROPS_PREFIX =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
+
+    /**
+     * Is filter enabled?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_ENABLED = RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME;
+
+    /**
+     * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #LOCAL_REPO_PREFIX_DIR}
+     */
+    public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
+
     static final String PREFIXES_FILE_PREFIX = "prefixes-";
 
     static final String PREFIXES_FILE_SUFFIX = ".txt";
@@ -91,16 +113,20 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     @Inject
     public PrefixesRemoteRepositoryFilterSource(RepositoryLayoutProvider repositoryLayoutProvider) {
-        super(NAME);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
         this.prefixes = new ConcurrentHashMap<>();
         this.layouts = new ConcurrentHashMap<>();
     }
 
     @Override
+    protected boolean isEnabled(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
+    }
+
+    @Override
     public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
         if (isEnabled(session)) {
-            return new PrefixesFilter(session, getBasedir(session, false));
+            return new PrefixesFilter(session, getBasedir(session, CONFIG_PROP_BASEDIR, false));
         }
         return null;
     }

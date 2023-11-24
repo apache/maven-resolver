@@ -24,9 +24,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
-import org.eclipse.aether.util.ConfigUtils;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Support class to implement {@link ArtifactResolverPostProcessor}.
@@ -34,13 +31,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public abstract class ArtifactResolverPostProcessorSupport implements ArtifactResolverPostProcessor {
-    private static final String CONFIG_PROPS_PREFIX = DefaultArtifactResolver.CONFIG_PROPS_PREFIX + "postProcessor.";
-
-    private final String name;
-
-    protected ArtifactResolverPostProcessorSupport(String name) {
-        this.name = requireNonNull(name);
-    }
+    protected static final String CONFIG_PROPS_PREFIX = DefaultArtifactResolver.CONFIG_PROPS_PREFIX + "postProcessor.";
 
     /**
      * This implementation will call into underlying code only if enabled.
@@ -55,19 +46,9 @@ public abstract class ArtifactResolverPostProcessorSupport implements ArtifactRe
     protected abstract void doPostProcess(RepositorySystemSession session, List<ArtifactResult> artifactResults);
 
     /**
-     * To be used by underlying implementations to form configuration property keys properly scoped.
-     */
-    protected String configPropKey(String name) {
-        requireNonNull(name);
-        return CONFIG_PROPS_PREFIX + this.name + "." + name;
-    }
-
-    /**
      * Returns {@code true} if session configuration marks this instance as enabled.
      * <p>
      * Default value is {@code false}.
      */
-    protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROPS_PREFIX + this.name);
-    }
+    protected abstract boolean isEnabled(RepositorySystemSession session);
 }
