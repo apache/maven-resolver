@@ -101,26 +101,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_DEFAULT;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
 
 /**
  * A transporter for HTTP/HTTPS.
  */
 final class ApacheTransporter extends AbstractTransporter {
-
-    static final String CONFIG_PROPS_PREFIX =
-            ConfigurationProperties.PREFIX_TRANSPORT + ApacheTransporterFactory.NAME + ".";
-
-    static final String CONFIG_PROP_USE_SYSTEM_PROPERTIES = CONFIG_PROPS_PREFIX + "useSystemProperties";
-
-    static final String CONFIG_PROP_HTTP_RETRY_HANDLER_NAME = CONFIG_PROPS_PREFIX + "retryHandler.name";
-
-    private static final String HTTP_RETRY_HANDLER_NAME_STANDARD = "standard";
-
-    private static final String HTTP_RETRY_HANDLER_NAME_DEFAULT = "default";
-
-    static final String CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED =
-            CONFIG_PROPS_PREFIX + "retryHandler.requestSentEnabled";
-
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
 
@@ -254,7 +246,7 @@ final class ApacheTransporter extends AbstractTransporter {
                 CONFIG_PROP_HTTP_RETRY_HANDLER_NAME);
         boolean retryHandlerRequestSentEnabled = ConfigUtils.getBoolean(
                 session,
-                false,
+                DEFAULT_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED,
                 CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED + "." + repository.getId(),
                 CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED);
         String userAgent = ConfigUtils.getString(
@@ -312,7 +304,7 @@ final class ApacheTransporter extends AbstractTransporter {
                 .setProxy(proxy);
         final boolean useSystemProperties = ConfigUtils.getBoolean(
                 session,
-                false,
+                DEFAULT_USE_SYSTEM_PROPERTIES,
                 CONFIG_PROP_USE_SYSTEM_PROPERTIES + "." + repository.getId(),
                 CONFIG_PROP_USE_SYSTEM_PROPERTIES);
         if (useSystemProperties) {

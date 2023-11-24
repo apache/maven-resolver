@@ -46,6 +46,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.eclipse.aether.transport.wagon.WagonTransporterConfigurationKeys.CONFIG_PROP_CONFIG;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -379,7 +380,7 @@ public abstract class AbstractWagonTransporterTest {
 
     @Test
     void testInit_Configuration() throws Exception {
-        session.setConfigProperty(WagonTransporter.CONFIG_PROP_CONFIG + ".test", "passed");
+        session.setConfigProperty(CONFIG_PROP_CONFIG + ".test", "passed");
         newTransporter("mem://" + id + "?config=passed");
         transporter.peek(new PeekTask(URI.create("file.txt")));
     }

@@ -45,6 +45,9 @@ public final class ClasspathTransporterFactory implements TransporterFactory {
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
      * properties} used to store a {@link ClassLoader} from which resources should be retrieved. If unspecified, the
      * {@link Thread#getContextClassLoader() context class loader} of the current thread will be used.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.ClassLoader}
      */
     public static final String CONFIG_PROP_CLASS_LOADER = ConfigurationProperties.PREFIX_TRANSPORT + NAME + ".loader";
 

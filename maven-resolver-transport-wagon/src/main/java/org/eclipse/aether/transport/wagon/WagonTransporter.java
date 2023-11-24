@@ -60,22 +60,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.transport.wagon.WagonTransporterConfigurationKeys.CONFIG_PROP_CONFIG;
+import static org.eclipse.aether.transport.wagon.WagonTransporterConfigurationKeys.CONFIG_PROP_DIR_MODE;
+import static org.eclipse.aether.transport.wagon.WagonTransporterConfigurationKeys.CONFIG_PROP_FILE_MODE;
+import static org.eclipse.aether.transport.wagon.WagonTransporterConfigurationKeys.CONFIG_PROP_GROUP;
 
 /**
  * A transporter using Maven Wagon.
  */
 final class WagonTransporter implements Transporter {
-    private static final String CONFIG_PROPS_PREFIX =
-            ConfigurationProperties.PREFIX_TRANSPORT + WagonTransporterFactory.NAME + ".";
-
-    static final String CONFIG_PROP_CONFIG = CONFIG_PROPS_PREFIX + "config";
-
-    private static final String CONFIG_PROP_FILE_MODE = CONFIG_PROPS_PREFIX + "perms.fileMode";
-
-    private static final String CONFIG_PROP_DIR_MODE = CONFIG_PROPS_PREFIX + "perms.dirMode";
-
-    private static final String CONFIG_PROP_GROUP = CONFIG_PROPS_PREFIX + "perms.group";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(WagonTransporter.class);
 
     private final RemoteRepository repository;

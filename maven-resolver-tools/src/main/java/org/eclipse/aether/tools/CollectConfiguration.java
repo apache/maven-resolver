@@ -57,7 +57,9 @@ public class CollectConfiguration {
                                         String name = f.getName();
                                         String key = constants.get(name);
                                         String defValue = getTag(f, "@configurationDefaultValue");
-                                        if (defValue != null && defValue.startsWith("{@link #") && defValue.endsWith("}")) {
+                                        if (defValue != null
+                                                && defValue.startsWith("{@link #")
+                                                && defValue.endsWith("}")) {
                                             defValue = constants.get(defValue.substring(8, defValue.length() - 1));
                                         } else if (defValue == null) {
                                             defValue = "n/a";
@@ -71,10 +73,10 @@ public class CollectConfiguration {
                                         System.out.println("Since: " + nvl(getSince(f), ""));
                                         System.out.println(
                                                 "Value source: " + nvl(getTag(f, "@configurationSource"), "n/a"));
-                                        System.out.println(
-                                                "Value type: " + getConfigurationType(f));
+                                        System.out.println("Value type: " + getConfigurationType(f));
                                         System.out.println("Default value: " + defValue);
-                                        System.out.println("RepoID suffix: " + nvl(getTag(f, "@configurationRepoIdSuffix"), "No"));
+                                        System.out.println(
+                                                "RepoID suffix: " + nvl(getTag(f, "@configurationRepoIdSuffix"), "No"));
 
                                         System.out.println();
                                     });
@@ -97,7 +99,7 @@ public class CollectConfiguration {
         String type = getTag(javaDocCapable, "@configurationType");
         if (type != null) {
             if (type.startsWith("{@link ") && type.endsWith("}")) {
-                type = type.substring(7, type.length()-1);
+                type = type.substring(7, type.length() - 1);
             }
         }
         return nvl(type, "n/a");
@@ -138,16 +140,16 @@ public class CollectConfiguration {
         return null;
     }
 
-    private static final Pattern constantPattern = Pattern.compile(".*static final.* ([A-Z_]+) = (.*);");
+    private static final Pattern CONSTANT_PATTERN = Pattern.compile(".*static final.* ([A-Z_]+) = (.*);");
 
-    private static final ToolProvider javap = ToolProvider.findFirst("javap").orElseThrow();
+    private static final ToolProvider JAVAP = ToolProvider.findFirst("javap").orElseThrow();
 
     private static Map<String, String> extractConstants(Path file) {
         StringWriter out = new StringWriter();
-        javap.run(new PrintWriter(out), new PrintWriter(System.err), "-constants", file.toString());
+        JAVAP.run(new PrintWriter(out), new PrintWriter(System.err), "-constants", file.toString());
         Map<String, String> result = new HashMap<>();
         out.getBuffer().toString().lines().forEach(l -> {
-            Matcher matcher = constantPattern.matcher(l);
+            Matcher matcher = CONSTANT_PATTERN.matcher(l);
             if (matcher.matches()) {
                 result.put(matcher.group(1), matcher.group(2));
             }
