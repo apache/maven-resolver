@@ -18,10 +18,7 @@
  */
 package org.eclipse.aether.transport.apache;
 
-import javax.inject.Inject;
 import javax.inject.Named;
-
-import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -40,18 +37,6 @@ public final class ApacheTransporterFactory implements TransporterFactory {
     public static final String NAME = "apache";
 
     private float priority = 5.0f;
-
-    private final Map<String, ChecksumExtractor> extractors;
-
-    /**
-     * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
-     * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
-     * will occur.
-     */
-    @Inject
-    public ApacheTransporterFactory(Map<String, ChecksumExtractor> extractors) {
-        this.extractors = requireNonNull(extractors);
-    }
 
     @Override
     public float getPriority() {
@@ -75,6 +60,6 @@ public final class ApacheTransporterFactory implements TransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        return new ApacheTransporter(extractors, repository, session);
+        return new ApacheTransporter(repository, session);
     }
 }
