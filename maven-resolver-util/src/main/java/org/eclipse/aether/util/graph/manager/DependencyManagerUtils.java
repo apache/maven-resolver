@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 
@@ -35,6 +36,10 @@ public final class DependencyManagerUtils {
      * configuration properties} used to store a {@link Boolean} flag controlling the verbose mode for dependency
      * management. If enabled, the original attributes of a dependency before its update due to dependency management
      * will be recorded * in the node's {@link DependencyNode#getData() custom data} when building a dependency graph.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
      */
     public static final String CONFIG_PROP_VERBOSE =
             ConfigurationProperties.PREFIX_AETHER + "dependencyManager.verbose";

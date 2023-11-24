@@ -60,6 +60,10 @@ public final class ConflictResolver implements DependencyGraphTransformer {
      * configuration properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
      * Accepted values are {@link Boolean} type, {@link String} type (where "true" would be interpreted as {@code true}
      * or {@link Verbosity} enum instances.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue "NONE"
      */
     public static final String CONFIG_PROP_VERBOSE = ConfigurationProperties.PREFIX_AETHER + "conflictResolver.verbose";
 

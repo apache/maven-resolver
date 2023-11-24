@@ -37,6 +37,10 @@ public final class ContextualSnapshotVersionFilter implements VersionFilter {
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
      * properties} used to store a {@link Boolean} flag whether this filter should be forced to ban snapshots. By
      * default, snapshots are only filtered if the root artifact is not a snapshot.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
      */
     public static final String CONFIG_PROP_ENABLE = ConfigurationProperties.PREFIX_AETHER + "snapshotFilter";
 

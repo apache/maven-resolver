@@ -54,9 +54,16 @@ import static java.util.stream.Collectors.toList;
 public final class ChainedLocalRepositoryManager implements LocalRepositoryManager {
     private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "chainedLocalRepository.";
 
+    /**
+     * When using chained local repository, should be the artifact availability ignored in tail.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_IGNORE_TAIL_AVAILABILITY}
+     */
     public static final String CONFIG_PROP_IGNORE_TAIL_AVAILABILITY = CONFIG_PROPS_PREFIX + "ignoreTailAvailability";
 
-    private static final boolean DEFAULT_IGNORE_TAIL_AVAILABILITY = true;
+    public static final boolean DEFAULT_IGNORE_TAIL_AVAILABILITY = true;
 
     private final LocalRepositoryManager head;
 
