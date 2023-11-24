@@ -34,6 +34,9 @@
   <properties>
     <javaVersion>21</javaVersion>
     <maven.deploy.skip>true</maven.deploy.skip>
+
+    <Automatic-Module-Name>org.apache.maven.resolver.tools</Automatic-Module-Name>
+    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
   </properties>
 
   <dependencies>
