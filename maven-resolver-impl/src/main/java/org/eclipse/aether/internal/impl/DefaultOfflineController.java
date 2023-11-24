@@ -38,11 +38,23 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultOfflineController implements OfflineController {
-    static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "offline.";
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "offline.";
 
-    static final String CONFIG_PROP_OFFLINE_PROTOCOLS = CONFIG_PROPS_PREFIX + "protocols";
+    /**
+     * Comma-separated list of protocols which are supposed to be resolved offline.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     */
+    public static final String CONFIG_PROP_OFFLINE_PROTOCOLS = CONFIG_PROPS_PREFIX + "protocols";
 
-    static final String CONFIG_PROP_OFFLINE_HOSTS = CONFIG_PROPS_PREFIX + "hosts";
+    /**
+     * Comma-separated list of hosts which are supposed to be resolved offline.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     */
+    public static final String CONFIG_PROP_OFFLINE_HOSTS = CONFIG_PROPS_PREFIX + "hosts";
 
     private static final Pattern SEP = Pattern.compile("\\s*,\\s*");
 

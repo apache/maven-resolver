@@ -43,9 +43,20 @@ public class DefaultDependencyCollector implements DependencyCollector {
 
     public static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "dependencyCollector.";
 
-    private static final String CONFIG_PROP_COLLECTOR_IMPL = CONFIG_PROPS_PREFIX + "impl";
+    /**
+     * The name of the dependency collector implementation to use: depth-first (original) named "df", and
+     * breadth-first (new in 1.8.0) named "bf". Both collectors produce equivalent results, but they may differ
+     * performance wise, depending on project being applied to. Our experience shows that existing "df" is well
+     * suited for smaller to medium size projects, while "bf" may perform better on huge projects with many
+     * dependencies. Experiment (and come back to us!) to figure out which one suits you the better.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_COLLECTOR_IMPL}
+     */
+    public static final String CONFIG_PROP_COLLECTOR_IMPL = CONFIG_PROPS_PREFIX + "impl";
 
-    private static final String DEFAULT_COLLECTOR_IMPL =
+    public static final String DEFAULT_COLLECTOR_IMPL =
             org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector.NAME;
 
     private final Map<String, DependencyCollectorDelegate> delegates;

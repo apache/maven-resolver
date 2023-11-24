@@ -39,8 +39,16 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public class BasedirNameMapper implements NameMapper {
-    private static final String CONFIG_PROP_LOCKS_DIR =
-            NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "basedir.locksDir";
+    /**
+     * The location of the directory toi use for locks. If relative path, it is resolved from the local repository root.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_LOCKS_DIR}
+     */
+    public static final String CONFIG_PROP_LOCKS_DIR = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "basedir.locksDir";
+
+    public static final String DEFAULT_LOCKS_DIR = ".locks";
 
     private final NameMapper delegate;
 
@@ -59,7 +67,8 @@ public class BasedirNameMapper implements NameMapper {
             final Collection<? extends Artifact> artifacts,
             final Collection<? extends Metadata> metadatas) {
         try {
-            final Path basedir = DirectoryUtils.resolveDirectory(session, ".locks", CONFIG_PROP_LOCKS_DIR, false);
+            final Path basedir =
+                    DirectoryUtils.resolveDirectory(session, DEFAULT_LOCKS_DIR, CONFIG_PROP_LOCKS_DIR, false);
 
             return delegate.nameLocks(session, artifacts, metadatas).stream()
                     .map(name -> basedir.resolve(name).toAbsolutePath().toString())

@@ -40,7 +40,16 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public class HashingNameMapper implements NameMapper {
-    private static final String CONFIG_PROP_DEPTH = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "hashing.depth";
+    /**
+     * The depth how many levels should adapter create. Acceptable values are 0-4 (inclusive).
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_DEPTH}
+     */
+    public static final String CONFIG_PROP_DEPTH = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "hashing.depth";
+
+    public static final int DEFAULT_DEPTH = 2;
 
     private final NameMapper delegate;
 
@@ -58,7 +67,7 @@ public class HashingNameMapper implements NameMapper {
             RepositorySystemSession session,
             Collection<? extends Artifact> artifacts,
             Collection<? extends Metadata> metadatas) {
-        final int depth = ConfigUtils.getInteger(session, 2, CONFIG_PROP_DEPTH);
+        final int depth = ConfigUtils.getInteger(session, DEFAULT_DEPTH, CONFIG_PROP_DEPTH);
         if (depth < 0 || depth > 4) {
             throw new IllegalArgumentException("allowed depth value is between 0 and 4 (inclusive)");
         }

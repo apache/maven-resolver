@@ -74,8 +74,20 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         }
     };
 
-    static final String CONFIG_PROP_SESSION_STATE =
+    /**
+     * Manages the session state, i.e. influences if the same download requests to artifacts/metadata will happen
+     * multiple times within the same RepositorySystemSession. If "enabled" will enable the session state. If "bypass"
+     * will enable bypassing (i.e. store all artifact ids/metadata ids which have been updates but not evaluating
+     * those). All other values lead to disabling the session state completely.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_SESSION_STATE}
+     */
+    public static final String CONFIG_PROP_SESSION_STATE =
             ConfigurationProperties.PREFIX_AETHER + "updateCheckManager.sessionState";
+
+    public static final String DEFAULT_SESSION_STATE = "enabled";
 
     private static final int STATE_ENABLED = 0;
 
@@ -402,7 +414,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
     }
 
     private int getSessionState(RepositorySystemSession session) {
-        String mode = ConfigUtils.getString(session, "enabled", CONFIG_PROP_SESSION_STATE);
+        String mode = ConfigUtils.getString(session, DEFAULT_SESSION_STATE, CONFIG_PROP_SESSION_STATE);
         if (Boolean.parseBoolean(mode) || "enabled".equalsIgnoreCase(mode)) {
             // perform update check at most once per session, regardless of update policy
             return STATE_ENABLED;

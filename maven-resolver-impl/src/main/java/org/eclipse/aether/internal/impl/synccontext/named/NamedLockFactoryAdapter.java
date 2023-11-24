@@ -44,19 +44,47 @@ import static java.util.Objects.requireNonNull;
 public final class NamedLockFactoryAdapter {
     public static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_SYNC_CONTEXT + "named.";
 
-    public static final String TIME_KEY = CONFIG_PROPS_PREFIX + "time";
+    /**
+     * The maximum of time amount to be blocked to obtain lock.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Long}
+     * @configurationDefaultValue {@link #DEFAULT_TIME}
+     */
+    public static final String CONFIG_PROP_TIME = CONFIG_PROPS_PREFIX + "time";
 
     public static final long DEFAULT_TIME = 30L;
 
-    public static final String TIME_UNIT_KEY = CONFIG_PROPS_PREFIX + "time.unit";
+    /**
+     * The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_TIME_UNIT}
+     */
+    public static final String CONFIG_PROP_TIME_UNIT = CONFIG_PROPS_PREFIX + "time.unit";
 
-    public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.SECONDS;
+    public static final String DEFAULT_TIME_UNIT = TimeUnit.SECONDS.name();
 
-    public static final String RETRY_KEY = CONFIG_PROPS_PREFIX + "retry";
+    /**
+     * The amount of retries on time-out.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_RETRY}
+     */
+    public static final String CONFIG_PROP_RETRY = CONFIG_PROPS_PREFIX + "retry";
 
     public static final int DEFAULT_RETRY = 1;
 
-    public static final String RETRY_WAIT_KEY = CONFIG_PROPS_PREFIX + "retry.wait";
+    /**
+     * The amount of milliseconds to wait between retries on time-out.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Long}
+     * @configurationDefaultValue {@link #DEFAULT_RETRY_WAIT}
+     */
+    public static final String CONFIG_PROP_RETRY_WAIT = CONFIG_PROPS_PREFIX + "retry.wait";
 
     public static final long DEFAULT_RETRY_WAIT = 200L;
 
@@ -136,30 +164,30 @@ public final class NamedLockFactoryAdapter {
             this.locks = new ArrayDeque<>();
 
             if (time < 0L) {
-                throw new IllegalArgumentException(TIME_KEY + " value cannot be negative");
+                throw new IllegalArgumentException(CONFIG_PROP_TIME + " value cannot be negative");
             }
             if (retry < 0L) {
-                throw new IllegalArgumentException(RETRY_KEY + " value cannot be negative");
+                throw new IllegalArgumentException(CONFIG_PROP_RETRY + " value cannot be negative");
             }
             if (retryWait < 0L) {
-                throw new IllegalArgumentException(RETRY_WAIT_KEY + " value cannot be negative");
+                throw new IllegalArgumentException(CONFIG_PROP_RETRY_WAIT + " value cannot be negative");
             }
         }
 
         private long getTime(final RepositorySystemSession session) {
-            return ConfigUtils.getLong(session, DEFAULT_TIME, TIME_KEY);
+            return ConfigUtils.getLong(session, DEFAULT_TIME, CONFIG_PROP_TIME);
         }
 
         private TimeUnit getTimeUnit(final RepositorySystemSession session) {
-            return TimeUnit.valueOf(ConfigUtils.getString(session, DEFAULT_TIME_UNIT.name(), TIME_UNIT_KEY));
+            return TimeUnit.valueOf(ConfigUtils.getString(session, DEFAULT_TIME_UNIT, CONFIG_PROP_TIME_UNIT));
         }
 
         private int getRetry(final RepositorySystemSession session) {
-            return ConfigUtils.getInteger(session, DEFAULT_RETRY, RETRY_KEY);
+            return ConfigUtils.getInteger(session, DEFAULT_RETRY, CONFIG_PROP_RETRY);
         }
 
         private long getRetryWait(final RepositorySystemSession session) {
-            return ConfigUtils.getLong(session, DEFAULT_RETRY_WAIT, RETRY_WAIT_KEY);
+            return ConfigUtils.getLong(session, DEFAULT_RETRY_WAIT, CONFIG_PROP_RETRY_WAIT);
         }
 
         @Override

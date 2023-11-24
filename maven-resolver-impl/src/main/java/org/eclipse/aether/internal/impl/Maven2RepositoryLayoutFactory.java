@@ -55,14 +55,32 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
     private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LAYOUT + NAME + ".";
 
+    /**
+     * Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated
+     * (uploaded) with this layout. Resolver by default supports following algorithms: MD5, SHA-1, SHA-256 and
+     * SHA-512. New algorithms can be added by implementing ChecksumAlgorithmFactory component.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_CHECKSUMS_ALGORITHMS}
+     */
     public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = CONFIG_PROPS_PREFIX + "checksumAlgorithms";
 
-    private static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+    public static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
+    /**
+     * Comma-separated list of extensions with leading dot (example ".asc") that should have checksums omitted.
+     * These are applied to sub-artifacts only. Note: to achieve 1.7.x aether.checksums.forSignature=true behaviour,
+     * pass empty string as value for this property.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS}
+     */
     public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
             CONFIG_PROPS_PREFIX + "omitChecksumsForExtensions";
 
-    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
+    public static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
 
     private float priority;
 

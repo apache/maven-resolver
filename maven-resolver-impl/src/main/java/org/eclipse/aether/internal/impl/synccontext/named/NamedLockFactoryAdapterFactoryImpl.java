@@ -51,13 +51,28 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory {
-    private static final String DEFAULT_FACTORY_NAME = LocalReadWriteLockNamedLockFactory.NAME;
+    public static final String DEFAULT_FACTORY_NAME = LocalReadWriteLockNamedLockFactory.NAME;
 
-    private static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.GAV_NAME;
+    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.GAV_NAME;
 
-    protected static final String FACTORY_KEY = "aether.syncContext.named.factory";
+    /**
+     * Name of the lock factory to use in session.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_FACTORY_NAME}
+     */
+    public static final String CONFIG_PROP_FACTORY_KEY = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "factory";
 
-    protected static final String NAME_MAPPER_KEY = "aether.syncContext.named.nameMapper";
+    /**
+     * Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "file-gav",
+     * "file-hgav", "file-static" and "discriminating".
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_NAME_MAPPER_NAME}
+     */
+    public static final String CONFIG_PROP_NAME_MAPPER_KEY = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "nameMapper";
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -119,7 +134,7 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
      * Returns the selected (user configured or default) named lock factory name, never {@code null}.
      */
     protected String getFactoryName(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, getDefaultFactoryName(), FACTORY_KEY);
+        return ConfigUtils.getString(session, getDefaultFactoryName(), CONFIG_PROP_FACTORY_KEY);
     }
 
     /**
@@ -133,7 +148,7 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
      * Returns the selected (user configured or default) name mapper name, never {@code null}.
      */
     protected String getNameMapperName(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, getDefaultNameMapperName(), NAME_MAPPER_KEY);
+        return ConfigUtils.getString(session, getDefaultNameMapperName(), CONFIG_PROP_NAME_MAPPER_KEY);
     }
 
     /**

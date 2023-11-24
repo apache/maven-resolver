@@ -40,8 +40,8 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 public class CollectConfiguration {
     public static void main(String[] args) throws Exception {
         Path start = Paths.get(args.length > 0 ? args[0] : ".");
-        System.out.println("|Key|Type|Description|Default value|Since|Supports Repo ID suffix|FQN|Source|");
-        System.out.println("|--|--|--|--|--|--|--|--|");
+        System.out.println("|Key|Type|Description|Default value|Since|Supports Repo ID suffix|Source|");
+        System.out.println("|--|--|--|--|--|--|--|");
 
         Files.walk(start)
                 .map(Path::toAbsolutePath)
@@ -71,11 +71,19 @@ public class CollectConfiguration {
                                         String fqName = f.getOrigin().getCanonicalName() + "." + name;
                                         String description = f.getJavaDoc().getText();
                                         String since = nvl(getSince(f), "");
-                                        String source = getTag(f, "@configurationSource");
+                                        String source = getConfigurationSource(f);
                                         String configurationType = getConfigurationType(f);
                                         String repoIdSuffix = nvl(getTag(f, "@configurationRepoIdSuffix"), "No");
 
-                                        System.out.printf("|%s|%s|%s|%s|%s|%s|%s|%s|%n", key, configurationType, description, defValue, since, repoIdSuffix, fqName, source);
+                                        System.out.printf(
+                                                "|`%s`|`%s`|%s|`%s`|%s|%s|%s|%n",
+                                                key,
+                                                configurationType,
+                                                description,
+                                                defValue,
+                                                since,
+                                                repoIdSuffix,
+                                                source);
                                     });
                         }
                     } catch (Exception e) {
@@ -100,6 +108,17 @@ public class CollectConfiguration {
             }
         }
         return nvl(type, "n/a");
+    }
+
+    private static String getConfigurationSource(JavaDocCapable<?> javaDocCapable) {
+        String source = getTag(javaDocCapable, "@configurationSource");
+        if ("{@link RepositorySystemSession#getConfigProperties()}".equals(source)) {
+            return "Session Configuration";
+        } else if ("{@link System#getProperty(String,String)}".equals(source)) {
+            return "Java System Properties";
+        } else {
+            return source;
+        }
     }
 
     private static String getSince(JavaDocCapable<?> javaDocCapable) {

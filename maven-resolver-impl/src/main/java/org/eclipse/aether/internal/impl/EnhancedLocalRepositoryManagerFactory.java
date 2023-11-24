@@ -46,9 +46,16 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LRM + NAME + ".";
 
-    private static final String CONFIG_PROP_TRACKING_FILENAME = CONFIG_PROPS_PREFIX + "trackingFilename";
+    /**
+     * Filename of the file in which to track the remote repositories.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_TRACKING_FILENAME}
+     */
+    public static final String CONFIG_PROP_TRACKING_FILENAME = CONFIG_PROPS_PREFIX + "trackingFilename";
 
-    private static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
+    public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 
     private float priority = 10.0f;
 
