@@ -76,7 +76,8 @@ public class CollectConfiguration {
                                                 constants.get(defValue.substring(8, defValue.length() - 1));
                                         if (lookupValue == null) {
                                             // currently we hard fail if javadoc cannot be looked up
-                                            // workaround: at cost of redundancy, but declare constants in situ for now (in same class)
+                                            // workaround: at cost of redundancy, but declare constants in situ for now
+                                            // (in same class)
                                             throw new IllegalArgumentException(
                                                     "Could not look up " + defValue + " for configuration " + fqName);
                                         }
