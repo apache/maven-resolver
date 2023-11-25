@@ -73,4 +73,24 @@ public final class ApacheTransporterConfigurationKeys {
             CONFIG_PROPS_PREFIX + "retryHandler.requestSentEnabled";
 
     public static final boolean DEFAULT_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED = false;
+
+    /**
+     * Comma-separated list of
+     * <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#ciphersuites">Cipher
+     * Suites</a> which are enabled for HTTPS connections.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     */
+    public static final String CONFIG_PROP_CIPHER_SUITES = CONFIG_PROPS_PREFIX + "https.cipherSuites";
+
+    /**
+     * Comma-separated list of
+     * <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#jssenames">Protocols
+     * </a> which are enabled for HTTPS connections.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     */
+    public static final String CONFIG_PROP_PROTOCOLS = CONFIG_PROPS_PREFIX + "https.protocols";
 }

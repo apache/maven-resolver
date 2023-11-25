@@ -51,8 +51,6 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     protected static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
 
-    public static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
-
     /**
      * Returns {@code true} if session configuration contains this name set to {@code true}.
      * <p>

@@ -24,7 +24,6 @@ import javax.net.ssl.SSLContext;
 import java.util.Arrays;
 import java.util.Objects;
 
-import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.util.ConfigUtils;
@@ -35,8 +34,14 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 final class ConnMgrConfig {
 
+    /**
+     * Comma-separated list of <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#ciphersuites">Cipher Suites</a> which are enabled for HTTPS connections.
+     */
     private static final String CIPHER_SUITES = "https.cipherSuites";
 
+    /**
+     * Comma-separated list of <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#jssenames">Protocols</a> which are enabled for HTTPS connections.
+     */
     private static final String PROTOCOLS = "https.protocols";
 
     final SSLContext context;
@@ -64,17 +69,27 @@ final class ConnMgrConfig {
                 ? authContext.get(AuthenticationContext.SSL_HOSTNAME_VERIFIER, HostnameVerifier.class)
                 : null;
 
-        cipherSuites = split(get(session, CIPHER_SUITES));
-        protocols = split(get(session, PROTOCOLS));
+        cipherSuites = split(getCipherSuites(session));
+        protocols = split(getProtocols(session));
         this.httpsSecurityMode = httpsSecurityMode;
         this.connectionMaxTtlSeconds = connectionMaxTtlSeconds;
         this.maxConnectionsPerRoute = maxConnectionsPerRoute;
     }
 
-    private static String get(RepositorySystemSession session, String key) {
-        String value = ConfigUtils.getString(session, null, ConfigurationProperties.PREFIX_TRANSPORT + key, key);
+    private static String getCipherSuites(RepositorySystemSession session) {
+        String value = ConfigUtils.getString(
+                session, null, ApacheTransporterConfigurationKeys.CONFIG_PROP_CIPHER_SUITES, CIPHER_SUITES);
         if (value == null) {
-            value = System.getProperty(key);
+            value = System.getProperty(CIPHER_SUITES);
+        }
+        return value;
+    }
+
+    private static String getProtocols(RepositorySystemSession session) {
+        String value = ConfigUtils.getString(
+                session, null, ApacheTransporterConfigurationKeys.CONFIG_PROP_PROTOCOLS, PROTOCOLS);
+        if (value == null) {
+            value = System.getProperty(PROTOCOLS);
         }
         return value;
     }

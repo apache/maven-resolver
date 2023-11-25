@@ -18,20 +18,26 @@
  */
 package org.eclipse.aether.tools;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.spi.ToolProvider;
 
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.JavaDocCapable;
 import org.jboss.forge.roaster.model.JavaDocTag;
@@ -42,6 +48,7 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 public class CollectConfiguration {
     public static void main(String[] args) throws Exception {
         Path start = Paths.get(args.length > 0 ? args[0] : ".");
+        Path output = Paths.get(args.length > 1 ? args[1] : "output");
 
         TreeMap<String, ConfigurationKey> discoveredKeys = new TreeMap<>();
         Files.walk(start)
@@ -49,79 +56,142 @@ public class CollectConfiguration {
                 .filter(p -> p.getFileName().toString().endsWith(".java"))
                 .filter(p -> p.toString().contains("/src/main/java/"))
                 .forEach(p -> {
-                    try {
-                        JavaType<?> type = Roaster.parse(p.toFile());
-                        if (type instanceof JavaClassSource javaClassSource) {
-                            javaClassSource.getFields().stream()
-                                    .filter(CollectConfiguration::hasConfigurationSource)
-                                    .forEach(f -> {
-                                        Map<String, String> constants = extractConstants(Paths.get(p.toString()
-                                                .replace("/src/main/java/", "/target/classes/")
-                                                .replace(".java", ".class")));
+                    JavaType<?> type = parse(p);
+                    if (type instanceof JavaClassSource javaClassSource) {
+                        javaClassSource.getFields().stream()
+                                .filter(CollectConfiguration::hasConfigurationSource)
+                                .forEach(f -> {
+                                    Map<String, String> constants = extractConstants(Paths.get(p.toString()
+                                            .replace("/src/main/java/", "/target/classes/")
+                                            .replace(".java", ".class")));
 
-                                        String name = f.getName();
-                                        String key = constants.get(name);
-                                        String configurationType = getConfigurationType(f);
-                                        String defValue = getTag(f, "@configurationDefaultValue");
-                                        if (defValue != null
-                                                && defValue.startsWith("{@link #")
-                                                && defValue.endsWith("}")) {
-                                            defValue = constants.get(defValue.substring(8, defValue.length() - 1));
-                                        } else if (defValue == null) {
-                                            defValue = "n/a";
+                                    String name = f.getName();
+                                    String key = constants.get(name);
+                                    String fqName = f.getOrigin().getCanonicalName() + "." + name;
+                                    String configurationType = getConfigurationType(f);
+                                    String defValue = getTag(f, "@configurationDefaultValue");
+                                    if (defValue != null && defValue.startsWith("{@link #") && defValue.endsWith("}")) {
+                                        // constant "lookup"
+                                        String lookupValue =
+                                                constants.get(defValue.substring(8, defValue.length() - 1));
+                                        if (lookupValue == null) {
+                                            // currently we hard fail if javadoc cannot be looked up
+                                            // workaround: at cost of redundancy, but declare constants in situ for now (in same class)
+                                            throw new IllegalArgumentException(
+                                                    "Could not look up " + defValue + " for configuration " + fqName);
                                         }
-                                        if ("java.lang.Long".equals(configurationType)
-                                                && (defValue.endsWith("l") || defValue.endsWith("L"))) {
-                                            defValue = defValue.substring(0, defValue.length() - 1);
-                                        }
-                                        discoveredKeys.put(
-                                                key,
-                                                new ConfigurationKey(
-                                                        key,
-                                                        defValue,
-                                                        f.getOrigin().getCanonicalName() + "." + name,
-                                                        f.getJavaDoc().getText(),
-                                                        nvl(getSince(f), ""),
-                                                        getConfigurationSource(f),
-                                                        configurationType,
-                                                        toBoolean(getTag(f, "@configurationRepoIdSuffix"))));
-                                    });
-                        }
-                    } catch (Exception e) {
-                        System.err.println(p + ": " + e.getMessage());
+                                        defValue = lookupValue;
+                                    }
+                                    if ("java.lang.Long".equals(configurationType)
+                                            && (defValue.endsWith("l") || defValue.endsWith("L"))) {
+                                        defValue = defValue.substring(0, defValue.length() - 1);
+                                    }
+                                    discoveredKeys.put(
+                                            key,
+                                            new ConfigurationKey(
+                                                    key,
+                                                    defValue,
+                                                    fqName,
+                                                    f.getJavaDoc().getText(),
+                                                    nvl(getSince(f), ""),
+                                                    getConfigurationSource(f),
+                                                    configurationType,
+                                                    toBoolean(getTag(f, "@configurationRepoIdSuffix"))));
+                                });
                     }
                 });
 
-        System.out.println("|No|Key|Type|Description|Default value|Since|Supports Repo ID suffix|Source|");
-        System.out.println("|--|--|--|--|--|--|--|--|");
-        AtomicInteger counter = new AtomicInteger();
-        discoveredKeys
-                .values()
-                .forEach(r -> System.out.printf(
-                        "|%s.|`%s`|`%s`|%s|`%s`|%s|%s|%s|%n",
-                        counter.incrementAndGet(),
-                        r.key,
-                        r.configurationType,
-                        r.description,
-                        r.defaultValue,
-                        r.since,
-                        r.supportRepoIdSuffix ? "Yes" : "No",
-                        r.configurationSource));
+        VelocityEngine velocityEngine = new VelocityEngine();
+        Properties properties = new Properties();
+        properties.setProperty("resource.loaders", "classpath");
+        properties.setProperty("resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
+        velocityEngine.init(properties);
+
+        VelocityContext context = new VelocityContext();
+        context.put("keys", discoveredKeys.values());
+
+        try (BufferedWriter fileWriter = Files.newBufferedWriter(output)) {
+            velocityEngine.getTemplate("page.vm").merge(context, fileWriter);
+        }
+    }
+
+    private static JavaType<?> parse(Path path) {
+        try {
+            return Roaster.parse(path.toFile());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private static boolean toBoolean(String value) {
         return ("yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value));
     }
 
-    private record ConfigurationKey(
-            String key,
-            String defaultValue,
-            String fqName,
-            String description,
-            String since,
-            String configurationSource,
-            String configurationType,
-            boolean supportRepoIdSuffix) {}
+    /**
+     * Would be record, but... Velocity have no idea what it is nor how to handle it.
+     */
+    public static class ConfigurationKey {
+        private final String key;
+        private final String defaultValue;
+        private final String fqName;
+        private final String description;
+        private final String since;
+        private final String configurationSource;
+        private final String configurationType;
+        private final boolean supportRepoIdSuffix;
+
+        @SuppressWarnings("checkstyle:parameternumber")
+        public ConfigurationKey(
+                String key,
+                String defaultValue,
+                String fqName,
+                String description,
+                String since,
+                String configurationSource,
+                String configurationType,
+                boolean supportRepoIdSuffix) {
+            this.key = key;
+            this.defaultValue = defaultValue;
+            this.fqName = fqName;
+            this.description = description;
+            this.since = since;
+            this.configurationSource = configurationSource;
+            this.configurationType = configurationType;
+            this.supportRepoIdSuffix = supportRepoIdSuffix;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getDefaultValue() {
+            return defaultValue;
+        }
+
+        public String getFqName() {
+            return fqName;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getSince() {
+            return since;
+        }
+
+        public String getConfigurationSource() {
+            return configurationSource;
+        }
+
+        public String getConfigurationType() {
+            return configurationType;
+        }
+
+        public boolean isSupportRepoIdSuffix() {
+            return supportRepoIdSuffix;
+        }
+    }
 
     private static String nvl(String string, String def) {
         return string == null ? def : string;
@@ -191,6 +261,14 @@ public class CollectConfiguration {
 
     private static final ToolProvider JAVAP = ToolProvider.findFirst("javap").orElseThrow();
 
+    /**
+     * Builds "constant table" for one single class.
+     *
+     * Limitations:
+     * - works only for single class (no inherited constants)
+     * - does not work for fields that are Enum.name()
+     * - more to come
+     */
     private static Map<String, String> extractConstants(Path file) {
         StringWriter out = new StringWriter();
         JAVAP.run(new PrintWriter(out), new PrintWriter(System.err), "-constants", file.toString());
