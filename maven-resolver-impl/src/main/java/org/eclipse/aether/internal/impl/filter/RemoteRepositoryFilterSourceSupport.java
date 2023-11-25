@@ -69,9 +69,10 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
      *
      * @return The {@link Path} of basedir, never {@code null}.
      */
-    protected Path getBasedir(RepositorySystemSession session, String configPropKey, boolean mayCreate) {
+    protected Path getBasedir(
+            RepositorySystemSession session, String defaultValue, String configPropKey, boolean mayCreate) {
         try {
-            return DirectoryUtils.resolveDirectory(session, LOCAL_REPO_PREFIX_DIR, configPropKey, mayCreate);
+            return DirectoryUtils.resolveDirectory(session, defaultValue, configPropKey, mayCreate);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

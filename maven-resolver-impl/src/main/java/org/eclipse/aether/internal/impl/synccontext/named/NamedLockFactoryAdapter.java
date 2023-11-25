@@ -64,7 +64,7 @@ public final class NamedLockFactoryAdapter {
      */
     public static final String CONFIG_PROP_TIME_UNIT = CONFIG_PROPS_PREFIX + "time.unit";
 
-    public static final String DEFAULT_TIME_UNIT = TimeUnit.SECONDS.name();
+    public static final String DEFAULT_TIME_UNIT = "SECONDS";
 
     /**
      * The amount of retries on time-out.

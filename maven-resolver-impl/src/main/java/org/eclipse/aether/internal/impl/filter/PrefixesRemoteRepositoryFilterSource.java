@@ -99,6 +99,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      */
     public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
 
+    public static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
+
     static final String PREFIXES_FILE_PREFIX = "prefixes-";
 
     static final String PREFIXES_FILE_SUFFIX = ".txt";
@@ -126,7 +128,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     @Override
     public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
         if (isEnabled(session)) {
-            return new PrefixesFilter(session, getBasedir(session, CONFIG_PROP_BASEDIR, false));
+            return new PrefixesFilter(session, getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false));
         }
         return null;
     }

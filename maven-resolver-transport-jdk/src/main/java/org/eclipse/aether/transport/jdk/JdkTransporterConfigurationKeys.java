@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.transport.jdk;
 
-import java.net.http.HttpClient;
-
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -44,5 +42,5 @@ public final class JdkTransporterConfigurationKeys {
      */
     public static final String CONFIG_PROP_HTTP_VERSION = CONFIG_PROPS_PREFIX + "httpVersion";
 
-    public static final String DEFAULT_HTTP_VERSION = HttpClient.Version.HTTP_2.name();
+    public static final String DEFAULT_HTTP_VERSION = "HTTP_2";
 }

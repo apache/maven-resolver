@@ -85,6 +85,8 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
      */
     public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
 
+    public static final String LOCAL_REPO_PREFIX_DIR = ".checksums";
+
     /**
      * Is source origin aware?
      *
@@ -123,7 +125,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         final boolean originAware = isOriginAware(session);
         final HashMap<String, String> checksums = new HashMap<>();
-        Path basedir = getBasedir(session, CONFIG_PROP_BASEDIR, false);
+        Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                 Path checksumPath = basedir.resolve(
@@ -156,7 +158,8 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
 
     @Override
     protected Writer doGetTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
-        return new SparseDirectoryWriter(getBasedir(session, CONFIG_PROP_BASEDIR, true), isOriginAware(session));
+        return new SparseDirectoryWriter(
+                getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true), isOriginAware(session));
     }
 
     private String calculateArtifactPath(

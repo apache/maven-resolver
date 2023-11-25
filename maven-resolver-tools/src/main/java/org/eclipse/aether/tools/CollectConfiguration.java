@@ -61,6 +61,7 @@ public class CollectConfiguration {
 
                                         String name = f.getName();
                                         String key = constants.get(name);
+                                        String configurationType = getConfigurationType(f);
                                         String defValue = getTag(f, "@configurationDefaultValue");
                                         if (defValue != null
                                                 && defValue.startsWith("{@link #")
@@ -68,6 +69,10 @@ public class CollectConfiguration {
                                             defValue = constants.get(defValue.substring(8, defValue.length() - 1));
                                         } else if (defValue == null) {
                                             defValue = "n/a";
+                                        }
+                                        if ("java.lang.Long".equals(configurationType)
+                                                && (defValue.endsWith("l") || defValue.endsWith("L"))) {
+                                            defValue = defValue.substring(0, defValue.length() - 1);
                                         }
                                         discoveredKeys.put(
                                                 key,
@@ -78,7 +83,7 @@ public class CollectConfiguration {
                                                         f.getJavaDoc().getText(),
                                                         nvl(getSince(f), ""),
                                                         getConfigurationSource(f),
-                                                        getConfigurationType(f),
+                                                        configurationType,
                                                         toBoolean(getTag(f, "@configurationRepoIdSuffix"))));
                                     });
                         }

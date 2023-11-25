@@ -96,6 +96,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
      */
     public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
 
+    public static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
+
     /**
      * Should filter go into "record" mode (and collect encountered artifacts)?
      *
@@ -149,7 +151,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
             for (ArtifactResult artifactResult : artifactResults) {
                 if (artifactResult.isResolved() && artifactResult.getRepository() instanceof RemoteRepository) {
                     Path filePath = filePath(
-                            getBasedir(session, CONFIG_PROP_BASEDIR, false),
+                            getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false),
                             artifactResult.getRepository().getId());
                     boolean newGroupId = rules.computeIfAbsent(
                                     filePath, f -> Collections.synchronizedSet(new TreeSet<>()))
@@ -170,7 +172,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private Set<String> cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        Path filePath = filePath(getBasedir(session, CONFIG_PROP_BASEDIR, false), remoteRepository.getId());
+        Path filePath = filePath(
+                getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false), remoteRepository.getId());
         return rules.computeIfAbsent(filePath, r -> {
             Set<String> rules = loadRepositoryRules(filePath);
             if (rules != NOT_PRESENT) {

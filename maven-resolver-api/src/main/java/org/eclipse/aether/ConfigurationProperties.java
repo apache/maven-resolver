@@ -440,7 +440,6 @@ public final class ConfigurationProperties {
      * @since 1.9.17
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
-     * @configurationDefaultValue Transport default.
      * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_EXPECT_CONTINUE = PREFIX_TRANSPORT_HTTP + "expectContinue";

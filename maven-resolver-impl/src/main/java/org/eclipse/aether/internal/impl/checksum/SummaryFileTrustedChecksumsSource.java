@@ -111,6 +111,8 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
      */
     public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
 
+    public static final String LOCAL_REPO_PREFIX_DIR = ".checksums";
+
     /**
      * Is source origin aware?
      *
@@ -160,7 +162,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             ArtifactRepository artifactRepository,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         final HashMap<String, String> result = new HashMap<>();
-        final Path basedir = getBasedir(session, CONFIG_PROP_BASEDIR, false);
+        final Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             final String artifactPath = localPathComposer.getPathForArtifact(artifact, false);
             final boolean originAware = isOriginAware(session);
@@ -183,7 +185,10 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
         if (onShutdownHandlerRegistered.compareAndSet(false, true)) {
             repositorySystemLifecycle.addOnSystemEndedHandler(this::saveRecordedLines);
         }
-        return new SummaryFileWriter(checksums, getBasedir(session, CONFIG_PROP_BASEDIR, true), isOriginAware(session));
+        return new SummaryFileWriter(
+                checksums,
+                getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
+                isOriginAware(session));
     }
 
     /**

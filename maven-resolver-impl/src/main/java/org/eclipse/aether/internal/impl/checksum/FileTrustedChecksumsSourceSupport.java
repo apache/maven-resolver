@@ -58,11 +58,6 @@ abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSour
             ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
 
     /**
-     * Visible for testing.
-     */
-    public static final String LOCAL_REPO_PREFIX_DIR = ".checksums";
-
-    /**
      * This implementation will call into underlying code only if enabled, and will enforce non-{@code null} return
      * value. In worst case, empty map should be returned, meaning "no trusted checksums available".
      */
@@ -128,9 +123,10 @@ abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSour
      *
      * @return The {@link Path} of basedir, never {@code null}.
      */
-    protected Path getBasedir(RepositorySystemSession session, String configPropKey, boolean mayCreate) {
+    protected Path getBasedir(
+            RepositorySystemSession session, String defaultValue, String configPropKey, boolean mayCreate) {
         try {
-            return DirectoryUtils.resolveDirectory(session, LOCAL_REPO_PREFIX_DIR, configPropKey, mayCreate);
+            return DirectoryUtils.resolveDirectory(session, defaultValue, configPropKey, mayCreate);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
