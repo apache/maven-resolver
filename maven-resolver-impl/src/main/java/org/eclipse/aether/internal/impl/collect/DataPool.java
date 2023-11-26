@@ -59,6 +59,7 @@ public final class DataPool {
      * heap consumption. By default, uses “weak” references (consume less heap). Using “hard” will make it much
      * more memory aggressive and possibly faster (system and Java dependent). Supported values: "hard", "weak".
      *
+     * @since 1.9.5
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #WEAK}
@@ -70,6 +71,7 @@ public final class DataPool {
      * heap consumption. By default, uses “weak” references (consume less heap). Using “hard” will make it much
      * more memory aggressive and possibly faster (system and Java dependent). Supported values: "hard", "weak".
      *
+     * @since 1.9.5
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #WEAK}
@@ -81,6 +83,7 @@ public final class DataPool {
      * matters for heap consumption. By default, uses “weak” references (consume less heap). Using “hard” will make it
      * much more memory aggressive and possibly faster (system and Java dependent). Supported values: "hard", "weak".
      *
+     * @since 1.9.5
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #HARD}

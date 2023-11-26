@@ -79,6 +79,7 @@ public class DefaultMetadataResolver implements MetadataResolver {
     /**
      * Number of threads to use in parallel for resolving metadata.
      *
+     * @since 0.9.0.M4
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Integer}
      * @configurationDefaultValue {@link #DEFAULT_THREADS}

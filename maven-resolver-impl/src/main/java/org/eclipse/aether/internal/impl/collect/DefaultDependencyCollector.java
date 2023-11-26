@@ -50,6 +50,7 @@ public class DefaultDependencyCollector implements DependencyCollector {
      * suited for smaller to medium size projects, while "bf" may perform better on huge projects with many
      * dependencies. Experiment (and come back to us!) to figure out which one suits you the better.
      *
+     * @since 1.8.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_COLLECTOR_IMPL}

@@ -79,6 +79,7 @@ public final class ApacheTransporterConfigurationKeys {
      * <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#ciphersuites">Cipher
      * Suites</a> which are enabled for HTTPS connections.
      *
+     * @since 2.0.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      */
@@ -89,6 +90,7 @@ public final class ApacheTransporterConfigurationKeys {
      * <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#jssenames">Protocols
      * </a> which are enabled for HTTPS connections.
      *
+     * @since 2.0.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      */

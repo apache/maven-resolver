@@ -138,7 +138,6 @@ public final class ConfigurationProperties {
     /**
      * A flag indicating whether interaction with the user is allowed.
      *
-     * @since 2.0.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_INTERACTIVE}

@@ -47,6 +47,7 @@ public class DiscriminatingNameMapper implements NameMapper {
     /**
      * Configuration property to pass in discriminator, if needed. If not present, it is auto-calculated.
      *
+     * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      */
@@ -57,6 +58,7 @@ public class DiscriminatingNameMapper implements NameMapper {
      * Configuration property to pass in hostname, if needed. If not present, hostname as reported by system will be
      * used.
      *
+     * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      */

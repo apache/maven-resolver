@@ -60,6 +60,7 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
      * (uploaded) with this layout. Resolver by default supports following algorithms: MD5, SHA-1, SHA-256 and
      * SHA-512. New algorithms can be added by implementing ChecksumAlgorithmFactory component.
      *
+     * @since 1.8.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_CHECKSUMS_ALGORITHMS}
@@ -73,6 +74,7 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
      * These are applied to sub-artifacts only. Note: to achieve 1.7.x aether.checksums.forSignature=true behaviour,
      * pass empty string as value for this property.
      *
+     * @since 1.8.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS}

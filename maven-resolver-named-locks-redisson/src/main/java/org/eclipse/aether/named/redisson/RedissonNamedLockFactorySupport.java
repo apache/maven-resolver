@@ -44,6 +44,7 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
     /**
      * Path to a Redisson configuration file in YAML format. Read official documentation for details.
      *
+     * @since 1.7.0
      * @configurationSource {@link System#getProperty(String, String)}
      * @configurationType {@link java.lang.String}
      */

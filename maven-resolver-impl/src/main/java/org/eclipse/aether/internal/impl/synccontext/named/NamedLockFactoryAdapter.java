@@ -47,6 +47,7 @@ public final class NamedLockFactoryAdapter {
     /**
      * The maximum of time amount to be blocked to obtain lock.
      *
+     * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Long}
      * @configurationDefaultValue {@link #DEFAULT_TIME}
@@ -58,6 +59,7 @@ public final class NamedLockFactoryAdapter {
     /**
      * The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names.
      *
+     * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_TIME_UNIT}
@@ -69,6 +71,7 @@ public final class NamedLockFactoryAdapter {
     /**
      * The amount of retries on time-out.
      *
+     * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Integer}
      * @configurationDefaultValue {@link #DEFAULT_RETRY}
@@ -80,6 +83,7 @@ public final class NamedLockFactoryAdapter {
     /**
      * The amount of milliseconds to wait between retries on time-out.
      *
+     * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Long}
      * @configurationDefaultValue {@link #DEFAULT_RETRY_WAIT}
