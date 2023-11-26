@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -51,9 +52,18 @@ import static java.util.stream.Collectors.toList;
  * @since 1.9.2
  */
 public final class ChainedLocalRepositoryManager implements LocalRepositoryManager {
-    public static final String IGNORE_TAIL_AVAILABILITY = "aether.chainedLocalRepository.ignoreTailAvailability";
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "chainedLocalRepository.";
 
-    private static final boolean DEFAULT_IGNORE_TAIL_AVAILABILITY = true;
+    /**
+     * When using chained local repository, should be the artifact availability ignored in tail.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_IGNORE_TAIL_AVAILABILITY}
+     */
+    public static final String CONFIG_PROP_IGNORE_TAIL_AVAILABILITY = CONFIG_PROPS_PREFIX + "ignoreTailAvailability";
+
+    public static final boolean DEFAULT_IGNORE_TAIL_AVAILABILITY = true;
 
     private final LocalRepositoryManager head;
 
@@ -73,7 +83,7 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
         this.head = requireNonNull(head, "head cannot be null");
         this.tail = requireNonNull(tail, "tail cannot be null");
         this.ignoreTailAvailability =
-                ConfigUtils.getBoolean(session, DEFAULT_IGNORE_TAIL_AVAILABILITY, IGNORE_TAIL_AVAILABILITY);
+                ConfigUtils.getBoolean(session, DEFAULT_IGNORE_TAIL_AVAILABILITY, CONFIG_PROP_IGNORE_TAIL_AVAILABILITY);
     }
 
     @Override

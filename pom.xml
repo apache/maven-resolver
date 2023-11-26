@@ -58,10 +58,11 @@
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-jdk</module>
-    <module>maven-resolver-transport-http</module>
+    <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-supplier</module>
     <module>maven-resolver-demos</module>
+    <module>maven-resolver-tools</module>
   </modules>
 
   <scm>
@@ -325,6 +326,9 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
+                    <!-- MRESOLVER-440 Move properties to their place and cleanup -->
+                    <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
+                    <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -366,6 +370,9 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
+                    <!-- MRESOLVER-440 Move properties to their place and cleanup -->
+                    <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
+                    <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
@@ -439,6 +446,27 @@
                 <name>provisional</name>
                 <placement>a</placement>
                 <head>Provisional:</head>
+              </tag>
+              <!-- Configuration related -->
+              <tag>
+                <name>configurationSource</name>
+                <placement>a</placement>
+                <head>Sourced from:</head>
+              </tag>
+              <tag>
+                <name>configurationType</name>
+                <placement>a</placement>
+                <head>Value type:</head>
+              </tag>
+              <tag>
+                <name>configurationDefaultValue</name>
+                <placement>a</placement>
+                <head>Default value:</head>
+              </tag>
+              <tag>
+                <name>configurationRepoIdSuffix</name>
+                <placement>a</placement>
+                <head>Supports Repo ID Suffix:</head>
               </tag>
             </tags>
             <groups>

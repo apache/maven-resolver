@@ -145,7 +145,7 @@ public final class DependencyResult {
      * Gets the resolution results for the dependency nodes that matched {@link DependencyRequest#getFilter()}.
      *
      * @return The resolution results for the dependency nodes, never {@code null}.
-     * @since TBD
+     * @since 2.0.0
      */
     public List<DependencyNode> getDependencyNodeResults() {
         return dependencyNodeResults;
@@ -156,7 +156,7 @@ public final class DependencyResult {
      *
      * @param results The resolution results for the dependency nodes, may be {@code null}.
      * @return This result for chaining, never {@code null}.
-     * @since TBD
+     * @since 2.0.0
      */
     public DependencyResult setDependencyNodeResults(List<DependencyNode> results) {
         if (results == null) {

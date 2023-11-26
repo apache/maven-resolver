@@ -87,8 +87,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         session = mock(RepositorySystemSession.class);
         when(session.getLocalRepository()).thenReturn(localRepository);
         HashMap<String, Object> config = new HashMap<>();
-        config.put(NamedLockFactoryAdapter.TIME_KEY, String.valueOf(ADAPTER_TIME));
-        config.put(NamedLockFactoryAdapter.TIME_UNIT_KEY, ADAPTER_TIME_UNIT.name());
+        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME, String.valueOf(ADAPTER_TIME));
+        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME_UNIT, ADAPTER_TIME_UNIT.name());
         when(session.getConfigProperties()).thenReturn(config);
     }
 

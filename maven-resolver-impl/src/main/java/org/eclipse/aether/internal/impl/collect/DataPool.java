@@ -52,11 +52,43 @@ import org.eclipse.aether.version.VersionConstraint;
  * Internal helper class for collector implementations.
  */
 public final class DataPool {
-    private static final String CONFIG_PROP_COLLECTOR_POOL_ARTIFACT = "aether.dependencyCollector.pool.artifact";
+    public static final String CONFIG_PROPS_PREFIX = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "pool.";
 
-    private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY = "aether.dependencyCollector.pool.dependency";
+    /**
+     * Flag controlling interning data pool type used by dependency collector for Artifact instances, matters for
+     * heap consumption. By default, uses “weak” references (consume less heap). Using “hard” will make it much
+     * more memory aggressive and possibly faster (system and Java dependent). Supported values: "hard", "weak".
+     *
+     * @since 1.9.5
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #WEAK}
+     */
+    public static final String CONFIG_PROP_COLLECTOR_POOL_ARTIFACT = CONFIG_PROPS_PREFIX + "artifact";
 
-    private static final String CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR = "aether.dependencyCollector.pool.descriptor";
+    /**
+     * Flag controlling interning data pool type used by dependency collector for Dependency instances, matters for
+     * heap consumption. By default, uses “weak” references (consume less heap). Using “hard” will make it much
+     * more memory aggressive and possibly faster (system and Java dependent). Supported values: "hard", "weak".
+     *
+     * @since 1.9.5
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #WEAK}
+     */
+    public static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY = CONFIG_PROPS_PREFIX + "dependency";
+
+    /**
+     * Flag controlling interning data pool type used by dependency collector for ArtifactDescriptor (POM) instances,
+     * matters for heap consumption. By default, uses “weak” references (consume less heap). Using “hard” will make it
+     * much more memory aggressive and possibly faster (system and Java dependent). Supported values: "hard", "weak".
+     *
+     * @since 1.9.5
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #HARD}
+     */
+    public static final String CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR = CONFIG_PROPS_PREFIX + "descriptor";
 
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 
@@ -410,9 +442,9 @@ public final class DataPool {
         }
     }
 
-    private static final String HARD = "hard";
+    public static final String HARD = "hard";
 
-    private static final String WEAK = "weak";
+    public static final String WEAK = "weak";
 
     private interface InternPool<K, V> {
         V get(K key);

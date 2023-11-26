@@ -1,0 +1,74 @@
+##
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##  http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing,
+## software distributed under the License is distributed on an
+## "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+## KIND, either express or implied.  See the License for the
+## specific language governing permissions and limitations
+## under the License.
+##
+#[[
+# Configuration Options
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+]]#
+
+#macro(yesno $val)
+  #if ($val) Yes #else No #end
+#end
+
+#macro(value $val)
+#if ($val) `$val` #else - #end
+#end
+
+| No | Key | Type | Description | Default Value | Since | Supports Repo ID suffix | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+#foreach($key in $keys)
+| $foreach.count. | `$key.key` | `$key.configurationType` | $key.description | #value( $key.defaultValue ) | $key.since | #yesno( $key.supportRepoIdSuffix ) | $key.configurationSource |
+#end
+
+#[[
+All properties which have `yes` in the column `Supports Repo ID Suffix` can be optionally configured specifically for a repository id. In that case the configuration property needs to be suffixed with a period followed by the repository id of the repository to configure, e.g. `aether.connector.http.headers.central` for repository with id `central`.
+
+## Property Type Conversion
+
+If the value is not given in the target type the following conversions are applied.
+
+From | To | With
+--- | --- | ---
+`String` | `boolean` | [`Boolean.parseBoolean(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String))
+`String` | `int` | [`Integer.parseInt(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#parseInt(java.lang.String))
+`String` | `long` | [`Long.parseLong(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Long.html#parseLong(java.lang.String))
+`String` | `float` | [`Float.parseFloat(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Float.html#parseFloat(java.lang.String))
+
+## Set Configuration from Apache Maven
+
+To set one of the configuration options from above just use system variables. As system variables only support String values the type conversion mentioned above needs to be leveraged.
+Sometimes Maven uses different default values than the Maven Resolver itself or tries to extract certain values from the `settings.xml`. For details refer to <https://github.com/apache/maven/blob/master/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java>.
+]]#

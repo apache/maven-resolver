@@ -69,16 +69,17 @@ import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_HTTP_VERSION;
+import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_HTTP_VERSION;
+
 /**
  * JDK Transport using {@link HttpClient}.
  *
- * @since TBD
+ * @since 2.0.0
  */
 @SuppressWarnings({"checkstyle:magicnumber"})
 final class JdkTransporter extends AbstractTransporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporter.class);
-
-    private static final String HTTP_VERSION = "aether.connector.http.version";
 
     private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
                     "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
@@ -440,9 +441,9 @@ final class JdkTransporter extends AbstractTransporter {
                     HttpClient.Builder builder = HttpClient.newBuilder()
                             .version(HttpClient.Version.valueOf(ConfigUtils.getString(
                                     session,
-                                    HttpClient.Version.HTTP_2.name(), // v2 is default
-                                    HTTP_VERSION + "." + repository.getId(),
-                                    HTTP_VERSION)))
+                                    DEFAULT_HTTP_VERSION,
+                                    CONFIG_PROP_HTTP_VERSION + "." + repository.getId(),
+                                    CONFIG_PROP_HTTP_VERSION)))
                             .followRedirects(HttpClient.Redirect.NORMAL)
                             .connectTimeout(Duration.ofMillis(connectTimeout))
                             .sslContext(sslContext);

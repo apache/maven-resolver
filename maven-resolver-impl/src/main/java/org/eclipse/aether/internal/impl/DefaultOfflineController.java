@@ -23,6 +23,7 @@ import javax.inject.Singleton;
 
 import java.util.regex.Pattern;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -37,10 +38,23 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultOfflineController implements OfflineController {
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "offline.";
 
-    static final String CONFIG_PROP_OFFLINE_PROTOCOLS = "aether.offline.protocols";
+    /**
+     * Comma-separated list of protocols which are supposed to be resolved offline.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     */
+    public static final String CONFIG_PROP_OFFLINE_PROTOCOLS = CONFIG_PROPS_PREFIX + "protocols";
 
-    static final String CONFIG_PROP_OFFLINE_HOSTS = "aether.offline.hosts";
+    /**
+     * Comma-separated list of hosts which are supposed to be resolved offline.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     */
+    public static final String CONFIG_PROP_OFFLINE_HOSTS = CONFIG_PROPS_PREFIX + "hosts";
 
     private static final Pattern SEP = Pattern.compile("\\s*,\\s*");
 

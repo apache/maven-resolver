@@ -154,7 +154,7 @@ public interface RepositorySystem extends Closeable {
      * @param session The repository session, must not be {@code null}.
      * @param root The dependency node root of the graph, must not be {@code null}.
      * @return The flattened list of dependency nodes, never {@code null}.
-     * @since TBD
+     * @since 2.0.0
      */
     List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root);
 
@@ -301,7 +301,7 @@ public interface RepositorySystem extends Closeable {
      * associated with its creator {@link RepositorySystem} instance, and may be used only with that given instance and
      * only within the lifespan of it, and after use should be closed.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     RepositorySystemSession.SessionBuilder createSessionBuilder();
 
@@ -322,7 +322,7 @@ public interface RepositorySystem extends Closeable {
     /**
      * Closes this instance, invokes {@link #shutdown()}.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     @Override
     default void close() {

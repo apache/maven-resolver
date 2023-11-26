@@ -20,6 +20,7 @@ package org.eclipse.aether.util.graph.transformer;
 
 import java.util.*;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -57,10 +58,14 @@ public final class ConflictResolver implements DependencyGraphTransformer {
     /**
      * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the transformer's verbose mode.
-     * Accepted values are {@link Boolean} type, {@link String} type (where "true" would be interpreted as {@code true}
-     * or {@link Verbosity} enum instances.
+     * Accepted values are Boolean types, String type (where "true" would be interpreted as {@code true})
+     * or Verbosity enum instances.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Object}
+     * @configurationDefaultValue "NONE"
      */
-    public static final String CONFIG_PROP_VERBOSE = "aether.conflictResolver.verbose";
+    public static final String CONFIG_PROP_VERBOSE = ConfigurationProperties.PREFIX_AETHER + "conflictResolver.verbose";
 
     /**
      * The enum representing verbosity levels of conflict resolver.

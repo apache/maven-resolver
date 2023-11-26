@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A transporter for HTTP/HTTPS.
  *
- * @since TBD
+ * @since 2.0.0
  */
 final class JettyTransporter extends AbstractTransporter {
     private static final int MULTIPLE_CHOICES = 300;

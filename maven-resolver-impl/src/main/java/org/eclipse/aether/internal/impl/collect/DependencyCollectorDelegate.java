@@ -67,13 +67,29 @@ import static java.util.Objects.requireNonNull;
  * @since 1.8.0
  */
 public abstract class DependencyCollectorDelegate implements DependencyCollector {
-    protected static final String CONFIG_PROP_MAX_EXCEPTIONS = "aether.dependencyCollector.maxExceptions";
+    /**
+     * Only exceptions up to the number given in this configuration property are emitted. Exceptions which exceed
+     * that number are swallowed.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_MAX_EXCEPTIONS}
+     */
+    public static final String CONFIG_PROP_MAX_EXCEPTIONS =
+            DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "maxExceptions";
 
-    protected static final int CONFIG_PROP_MAX_EXCEPTIONS_DEFAULT = 50;
+    public static final int DEFAULT_MAX_EXCEPTIONS = 50;
 
-    protected static final String CONFIG_PROP_MAX_CYCLES = "aether.dependencyCollector.maxCycles";
+    /**
+     * Only up to the given amount cyclic dependencies are emitted.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_MAX_CYCLES}
+     */
+    public static final String CONFIG_PROP_MAX_CYCLES = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "maxCycles";
 
-    protected static final int CONFIG_PROP_MAX_CYCLES_DEFAULT = 10;
+    public static final int DEFAULT_MAX_CYCLES = 10;
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -440,10 +456,9 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         public Results(CollectResult result, RepositorySystemSession session) {
             this.result = result;
 
-            maxExceptions =
-                    ConfigUtils.getInteger(session, CONFIG_PROP_MAX_EXCEPTIONS_DEFAULT, CONFIG_PROP_MAX_EXCEPTIONS);
+            maxExceptions = ConfigUtils.getInteger(session, DEFAULT_MAX_EXCEPTIONS, CONFIG_PROP_MAX_EXCEPTIONS);
 
-            maxCycles = ConfigUtils.getInteger(session, CONFIG_PROP_MAX_CYCLES_DEFAULT, CONFIG_PROP_MAX_CYCLES);
+            maxCycles = ConfigUtils.getInteger(session, DEFAULT_MAX_CYCLES, CONFIG_PROP_MAX_CYCLES);
         }
 
         public String getErrorPath() {

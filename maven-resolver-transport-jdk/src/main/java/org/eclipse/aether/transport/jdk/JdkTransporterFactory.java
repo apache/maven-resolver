@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * JDK Transport factory.
  *
- * @since TBD
+ * @since 2.0.0
  */
 @Named(JdkTransporterFactory.NAME)
 public final class JdkTransporterFactory implements TransporterFactory {

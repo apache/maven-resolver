@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -88,18 +89,33 @@ import static java.util.Objects.requireNonNull;
 @Named
 public class DefaultArtifactResolver implements ArtifactResolver {
 
+    public static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "artifactResolver.";
+
     /**
      * Configuration to enable "snapshot normalization", downloaded snapshots from remote with timestamped file names
-     * will have file names converted back to baseVersion. Default: {@code true}.
+     * will have file names converted back to baseVersion. It replaces the timestamped snapshot file name with a
+     * filename containing the SNAPSHOT qualifier only. This only affects resolving/retrieving artifacts but not
+     * uploading those.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SNAPSHOT_NORMALIZATION}
      */
-    private static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = "aether.artifactResolver.snapshotNormalization";
+    public static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = CONFIG_PROPS_PREFIX + "snapshotNormalization";
+
+    public static final boolean DEFAULT_SNAPSHOT_NORMALIZATION = true;
 
     /**
      * Configuration to enable "interoperability" with Simple LRM, but this breaks RRF feature, hence this configuration
      * is IGNORED when RRF is used, and is warmly recommended to leave it disabled even if no RRF is being used.
-     * Default: {@code false}.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SIMPLE_LRM_INTEROP}
      */
-    private static final String CONFIG_PROP_SIMPLE_LRM_INTEROP = "aether.artifactResolver.simpleLrmInterop";
+    public static final String CONFIG_PROP_SIMPLE_LRM_INTEROP = CONFIG_PROPS_PREFIX + "simpleLrmInterop";
+
+    public static final boolean DEFAULT_SIMPLE_LRM_INTEROP = false;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultArtifactResolver.class);
 
@@ -197,7 +213,8 @@ public class DefaultArtifactResolver implements ArtifactResolver {
 
                 boolean failures = false;
                 final List<ArtifactResult> results = new ArrayList<>(requests.size());
-                final boolean simpleLrmInterop = ConfigUtils.getBoolean(session, false, CONFIG_PROP_SIMPLE_LRM_INTEROP);
+                final boolean simpleLrmInterop =
+                        ConfigUtils.getBoolean(session, DEFAULT_SIMPLE_LRM_INTEROP, CONFIG_PROP_SIMPLE_LRM_INTEROP);
                 final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
                 final WorkspaceReader workspace = session.getWorkspaceReader();
                 final List<ResolutionGroup> groups = new ArrayList<>();
@@ -421,7 +438,8 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             throws ArtifactTransferException {
         if (artifact.isSnapshot()
                 && !artifact.getVersion().equals(artifact.getBaseVersion())
-                && ConfigUtils.getBoolean(session, true, CONFIG_PROP_SNAPSHOT_NORMALIZATION)) {
+                && ConfigUtils.getBoolean(
+                        session, DEFAULT_SNAPSHOT_NORMALIZATION, CONFIG_PROP_SNAPSHOT_NORMALIZATION)) {
             String name = file.getName().replace(artifact.getVersion(), artifact.getBaseVersion());
             File dst = new File(file.getParent(), name);
 

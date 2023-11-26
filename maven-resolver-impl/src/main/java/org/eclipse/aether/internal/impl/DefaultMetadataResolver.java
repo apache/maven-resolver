@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -73,8 +74,19 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultMetadataResolver implements MetadataResolver {
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "metadataResolver.";
 
-    private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
+    /**
+     * Number of threads to use in parallel for resolving metadata.
+     *
+     * @since 0.9.0.M4
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_THREADS}
+     */
+    public static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
+
+    public static final int DEFAULT_THREADS = 4;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
 
@@ -288,7 +300,7 @@ public class DefaultMetadataResolver implements MetadataResolver {
                 }
 
                 if (!tasks.isEmpty()) {
-                    int threads = ExecutorUtils.threadCount(session, 4, CONFIG_PROP_THREADS);
+                    int threads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
                     Executor executor = ExecutorUtils.executor(
                             Math.min(tasks.size(), threads), getClass().getSimpleName() + '-');
                     try {

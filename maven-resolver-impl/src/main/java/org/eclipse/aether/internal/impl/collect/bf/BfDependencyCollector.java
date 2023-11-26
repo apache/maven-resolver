@@ -60,6 +60,7 @@ import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.internal.impl.collect.DataPool;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollectionContext;
+import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
@@ -87,27 +88,42 @@ import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.fi
 public class BfDependencyCollector extends DependencyCollectorDelegate {
     public static final String NAME = "bf";
 
+    private static final String CONFIG_PROPS_PREFIX = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + NAME + ".";
+
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip mode.
      *
      * @since 1.8.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SKIPPER}
      */
-    static final String CONFIG_PROP_SKIPPER = "aether.dependencyCollector.bf.skipper";
+    public static final String CONFIG_PROP_SKIPPER = CONFIG_PROPS_PREFIX + "skipper";
 
     /**
      * The default value for {@link #CONFIG_PROP_SKIPPER}, {@code true}.
      *
      * @since 1.8.0
      */
-    static final boolean CONFIG_PROP_SKIPPER_DEFAULT = true;
+    public static final boolean DEFAULT_SKIPPER = true;
 
     /**
-     * The count of threads to be used when collecting POMs in parallel, default value 5.
+     * The count of threads to be used when collecting POMs in parallel.
+     *
+     * @since 1.9.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_THREADS}
+     */
+    public static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
+
+    /**
+     * The default value for {@link #CONFIG_PROP_THREADS}, default value 5.
      *
      * @since 1.9.0
      */
-    static final String CONFIG_PROP_THREADS = "aether.dependencyCollector.bf.threads";
+    public static final int DEFAULT_THREADS = 5;
 
     @Inject
     public BfDependencyCollector(
@@ -131,8 +147,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             List<Dependency> dependencies,
             List<Dependency> managedDependencies,
             Results results) {
-        boolean useSkip = ConfigUtils.getBoolean(session, CONFIG_PROP_SKIPPER_DEFAULT, CONFIG_PROP_SKIPPER);
-        int nThreads = ExecutorUtils.threadCount(session, 5, CONFIG_PROP_THREADS);
+        boolean useSkip = ConfigUtils.getBoolean(session, DEFAULT_SKIPPER, CONFIG_PROP_SKIPPER);
+        int nThreads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
         logger.debug("Using thread pool with {} threads to resolve descriptors.", nThreads);
 
         if (useSkip) {

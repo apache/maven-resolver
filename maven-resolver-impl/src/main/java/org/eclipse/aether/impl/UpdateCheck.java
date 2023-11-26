@@ -153,7 +153,7 @@ public final class UpdateCheck<T, E extends RepositoryException> {
      *
      * @return The policy to use for the artifact check.
      * @see org.eclipse.aether.repository.RepositoryPolicy
-     * @since TBD
+     * @since 2.0.0
      */
     public String getArtifactPolicy() {
         return artifactPolicy;
@@ -164,7 +164,7 @@ public final class UpdateCheck<T, E extends RepositoryException> {
      *
      * @return The policy to use for the metadata check.
      * @see org.eclipse.aether.repository.RepositoryPolicy
-     * @since TBD
+     * @since 2.0.0
      */
     public String getMetadataPolicy() {
         return metadataPolicy;
@@ -176,7 +176,7 @@ public final class UpdateCheck<T, E extends RepositoryException> {
      * @param artifactPolicy The policy to use for the artifact check, may be {@code null}.
      * @return This object for chaining.
      * @see org.eclipse.aether.repository.RepositoryPolicy
-     * @since TBD
+     * @since 2.0.0
      */
     public UpdateCheck<T, E> setArtifactPolicy(String artifactPolicy) {
         this.artifactPolicy = artifactPolicy;
@@ -189,7 +189,7 @@ public final class UpdateCheck<T, E extends RepositoryException> {
      * @param metadataPolicy The policy to use for the metadata check, may be {@code null}.
      * @return This object for chaining.
      * @see org.eclipse.aether.repository.RepositoryPolicy
-     * @since TBD
+     * @since 2.0.0
      */
     public UpdateCheck<T, E> setMetadataPolicy(String metadataPolicy) {
         this.metadataPolicy = metadataPolicy;

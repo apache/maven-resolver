@@ -28,7 +28,7 @@ import org.eclipse.aether.util.ConfigUtils;
  * Support class for {@link LocalPathPrefixComposerFactory} implementations: it predefines and makes re-usable
  * common configuration getters, and defines a support class for {@link LocalPathPrefixComposer} carrying same
  * configuration and providing default implementation for all methods.
- *
+ * <p>
  * Implementors should extend this class to implement custom split strategies. If one needs to alter default
  * configuration, they should override any configuration getter from this class.
  *
@@ -36,79 +36,150 @@ import org.eclipse.aether.util.ConfigUtils;
  * @since 1.8.1
  */
 public abstract class LocalPathPrefixComposerFactorySupport implements LocalPathPrefixComposerFactory {
-    protected static final String CONF_PROP_SPLIT = "aether.enhancedLocalRepository.split";
 
-    protected static final boolean DEFAULT_SPLIT = false;
+    /**
+     * Whether LRM should split local and remote artifacts.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SPLIT}
+     */
+    public static final String CONFIG_PROP_SPLIT = EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "split";
 
-    protected static final String CONF_PROP_LOCAL_PREFIX = "aether.enhancedLocalRepository.localPrefix";
+    public static final boolean DEFAULT_SPLIT = false;
 
-    protected static final String DEFAULT_LOCAL_PREFIX = "installed";
+    /**
+     * The prefix to use for locally installed artifacts.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_LOCAL_PREFIX}
+     */
+    public static final String CONFIG_PROP_LOCAL_PREFIX =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "localPrefix";
 
-    protected static final String CONF_PROP_SPLIT_LOCAL = "aether.enhancedLocalRepository.splitLocal";
+    public static final String DEFAULT_LOCAL_PREFIX = "installed";
 
-    protected static final boolean DEFAULT_SPLIT_LOCAL = false;
+    /**
+     * Whether locally installed artifacts should be split by version (release/snapshot).
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SPLIT_LOCAL}
+     */
+    public static final String CONFIG_PROP_SPLIT_LOCAL =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitLocal";
 
-    protected static final String CONF_PROP_REMOTE_PREFIX = "aether.enhancedLocalRepository.remotePrefix";
+    public static final boolean DEFAULT_SPLIT_LOCAL = false;
 
-    protected static final String DEFAULT_REMOTE_PREFIX = "cached";
+    /**
+     * The prefix to use for remotely cached artifacts.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REMOTE_PREFIX}
+     */
+    public static final String CONFIG_PROP_REMOTE_PREFIX =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "remotePrefix";
 
-    protected static final String CONF_PROP_SPLIT_REMOTE = "aether.enhancedLocalRepository.splitRemote";
+    public static final String DEFAULT_REMOTE_PREFIX = "cached";
 
-    protected static final boolean DEFAULT_SPLIT_REMOTE = false;
+    /**
+     * Whether cached artifacts should be split by version (release/snapshot).
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SPLIT_REMOTE}
+     */
+    public static final String CONFIG_PROP_SPLIT_REMOTE =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitRemote";
 
-    protected static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY =
-            "aether.enhancedLocalRepository.splitRemoteRepository";
+    public static final boolean DEFAULT_SPLIT_REMOTE = false;
 
-    protected static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY = false;
+    /**
+     * Whether cached artifacts should be split by origin repository (repository ID).
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SPLIT_REMOTE_REPOSITORY}
+     */
+    public static final String CONFIG_PROP_SPLIT_REMOTE_REPOSITORY =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitRemoteRepository";
 
-    protected static final String CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST =
-            "aether.enhancedLocalRepository.splitRemoteRepositoryLast";
+    public static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY = false;
 
-    protected static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST = false;
+    /**
+     * For cached artifacts, if both splitRemote and splitRemoteRepository are set to true sets the splitting order:
+     * by default it is repositoryId/version (false) or version/repositoryId (true)
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST}
+     */
+    public static final String CONFIG_PROP_SPLIT_REMOTE_REPOSITORY_LAST =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "splitRemoteRepositoryLast";
 
-    protected static final String CONF_PROP_RELEASES_PREFIX = "aether.enhancedLocalRepository.releasesPrefix";
+    public static final boolean DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST = false;
 
-    protected static final String DEFAULT_RELEASES_PREFIX = "releases";
+    /**
+     * The prefix to use for release artifacts.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_RELEASES_PREFIX}
+     */
+    public static final String CONFIG_PROP_RELEASES_PREFIX =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "releasesPrefix";
 
-    protected static final String CONF_PROP_SNAPSHOTS_PREFIX = "aether.enhancedLocalRepository.snapshotsPrefix";
+    public static final String DEFAULT_RELEASES_PREFIX = "releases";
 
-    protected static final String DEFAULT_SNAPSHOTS_PREFIX = "snapshots";
+    /**
+     * The prefix to use for snapshot artifacts.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_SNAPSHOTS_PREFIX}
+     */
+    public static final String CONFIG_PROP_SNAPSHOTS_PREFIX =
+            EnhancedLocalRepositoryManagerFactory.CONFIG_PROPS_PREFIX + "snapshotsPrefix";
+
+    public static final String DEFAULT_SNAPSHOTS_PREFIX = "snapshots";
 
     protected boolean isSplit(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT, CONF_PROP_SPLIT);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT, CONFIG_PROP_SPLIT);
     }
 
     protected String getLocalPrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_LOCAL_PREFIX, CONF_PROP_LOCAL_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_LOCAL_PREFIX, CONFIG_PROP_LOCAL_PREFIX);
     }
 
     protected boolean isSplitLocal(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_LOCAL, CONF_PROP_SPLIT_LOCAL);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_LOCAL, CONFIG_PROP_SPLIT_LOCAL);
     }
 
     protected String getRemotePrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_REMOTE_PREFIX, CONF_PROP_REMOTE_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_REMOTE_PREFIX, CONFIG_PROP_REMOTE_PREFIX);
     }
 
     protected boolean isSplitRemote(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE, CONF_PROP_SPLIT_REMOTE);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE, CONFIG_PROP_SPLIT_REMOTE);
     }
 
     protected boolean isSplitRemoteRepository(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE_REPOSITORY, CONF_PROP_SPLIT_REMOTE_REPOSITORY);
+        return ConfigUtils.getBoolean(session, DEFAULT_SPLIT_REMOTE_REPOSITORY, CONFIG_PROP_SPLIT_REMOTE_REPOSITORY);
     }
 
     protected boolean isSplitRemoteRepositoryLast(RepositorySystemSession session) {
         return ConfigUtils.getBoolean(
-                session, DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST, CONF_PROP_SPLIT_REMOTE_REPOSITORY_LAST);
+                session, DEFAULT_SPLIT_REMOTE_REPOSITORY_LAST, CONFIG_PROP_SPLIT_REMOTE_REPOSITORY_LAST);
     }
 
     protected String getReleasesPrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_RELEASES_PREFIX, CONF_PROP_RELEASES_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_RELEASES_PREFIX, CONFIG_PROP_RELEASES_PREFIX);
     }
 
     protected String getSnapshotsPrefix(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, DEFAULT_SNAPSHOTS_PREFIX, CONF_PROP_SNAPSHOTS_PREFIX);
+        return ConfigUtils.getString(session, DEFAULT_SNAPSHOTS_PREFIX, CONFIG_PROP_SNAPSHOTS_PREFIX);
     }
 
     /**

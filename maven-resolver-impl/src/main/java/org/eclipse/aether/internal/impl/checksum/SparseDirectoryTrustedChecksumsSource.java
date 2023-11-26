@@ -36,6 +36,7 @@ import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,38 @@ import static java.util.Objects.requireNonNull;
 public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChecksumsSourceSupport {
     public static final String NAME = "sparseDirectory";
 
+    private static final String CONFIG_PROPS_PREFIX =
+            FileTrustedChecksumsSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
+
+    /**
+     * Is checksum source enabled?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
+     */
+    public static final String CONFIG_PROP_ENABLED = FileTrustedChecksumsSourceSupport.CONFIG_PROPS_PREFIX + NAME;
+
+    /**
+     * The basedir where checksums are. If relative, is resolved from local repository root.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #LOCAL_REPO_PREFIX_DIR}
+     */
+    public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
+
+    public static final String LOCAL_REPO_PREFIX_DIR = ".checksums";
+
+    /**
+     * Is source origin aware?
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue true
+     */
+    public static final String CONFIG_PROP_ORIGIN_AWARE = CONFIG_PROPS_PREFIX + "originAware";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SparseDirectoryTrustedChecksumsSource.class);
 
     private final FileProcessor fileProcessor;
@@ -71,9 +104,17 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
 
     @Inject
     public SparseDirectoryTrustedChecksumsSource(FileProcessor fileProcessor, LocalPathComposer localPathComposer) {
-        super(NAME);
         this.fileProcessor = requireNonNull(fileProcessor);
         this.localPathComposer = requireNonNull(localPathComposer);
+    }
+
+    @Override
+    protected boolean isEnabled(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
+    }
+
+    private boolean isOriginAware(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, true, CONFIG_PROP_ORIGIN_AWARE);
     }
 
     @Override
@@ -84,7 +125,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         final boolean originAware = isOriginAware(session);
         final HashMap<String, String> checksums = new HashMap<>();
-        Path basedir = getBasedir(session, false);
+        Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                 Path checksumPath = basedir.resolve(
@@ -116,8 +157,9 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
     }
 
     @Override
-    protected SparseDirectoryWriter doGetTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
-        return new SparseDirectoryWriter(getBasedir(session, true), isOriginAware(session));
+    protected Writer doGetTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
+        return new SparseDirectoryWriter(
+                getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true), isOriginAware(session));
     }
 
     private String calculateArtifactPath(

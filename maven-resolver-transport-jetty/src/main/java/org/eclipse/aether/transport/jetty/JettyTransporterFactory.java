@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A transporter factory for repositories using the {@code http:} or {@code https:} protocol.
  *
- * @since TBD
+ * @since 2.0.0
  */
 @Named(JettyTransporterFactory.NAME)
 public final class JettyTransporterFactory implements TransporterFactory {

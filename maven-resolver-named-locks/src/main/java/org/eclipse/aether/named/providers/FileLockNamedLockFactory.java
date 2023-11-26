@@ -55,9 +55,14 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
      * with 0 byte sized lock files that are never cleaned up. Default value is {@code true}.
      *
      * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
+     * @configurationSource {@link System#getProperty(String, String)}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue true
      */
+    public static final String SYSTEM_PROP_DELETE_LOCK_FILES = "aether.named.file-lock.deleteLockFiles";
+
     private static final boolean DELETE_LOCK_FILES =
-            Boolean.parseBoolean(System.getProperty("aether.named.file-lock.deleteLockFiles", Boolean.TRUE.toString()));
+            Boolean.parseBoolean(System.getProperty(SYSTEM_PROP_DELETE_LOCK_FILES, Boolean.TRUE.toString()));
 
     /**
      * Tweak: on Windows, the presence of {@link StandardOpenOption#DELETE_ON_CLOSE} causes concurrency issues. This
@@ -65,15 +70,25 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
      * 5 attempts (will retry 4 times).
      *
      * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
+     * @configurationSource {@link System#getProperty(String, String)}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue 5
      */
-    private static final int ATTEMPTS = Integer.parseInt(System.getProperty("aether.named.file-lock.attempts", "5"));
+    public static final String SYSTEM_PROP_ATTEMPTS = "aether.named.file-lock.attempts";
+
+    private static final int ATTEMPTS = Integer.parseInt(System.getProperty(SYSTEM_PROP_ATTEMPTS, "5"));
 
     /**
-     * Tweak: When {@link #ATTEMPTS} used, the amount of milliseconds to sleep between subsequent retries. Default
+     * Tweak: When {@link #SYSTEM_PROP_ATTEMPTS} used, the amount of milliseconds to sleep between subsequent retries. Default
      * value is 50 milliseconds.
+     *
+     * @configurationSource {@link System#getProperty(String, String)}
+     * @configurationType {@link java.lang.Long}
+     * @configurationDefaultValue 50
      */
-    private static final long SLEEP_MILLIS =
-            Long.parseLong(System.getProperty("aether.named.file-lock.sleepMillis", "50"));
+    public static final String SYSTEM_PROP_SLEEP_MILLIS = "aether.named.file-lock.sleepMillis";
+
+    private static final long SLEEP_MILLIS = Long.parseLong(System.getProperty(SYSTEM_PROP_SLEEP_MILLIS, "50"));
 
     private final ConcurrentMap<String, FileChannel> fileChannels;
 
@@ -114,8 +129,8 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
                         null);
 
                 if (channel == null) {
-                    throw new IllegalStateException("Could not open file channel for '" + name + "' after " + ATTEMPTS
-                            + " attempts; giving up");
+                    throw new IllegalStateException("Could not open file channel for '" + name + "' after "
+                            + SYSTEM_PROP_ATTEMPTS + " attempts; giving up");
                 }
                 return channel;
             } catch (InterruptedException e) {

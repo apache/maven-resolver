@@ -60,7 +60,7 @@ public interface RepositorySystemSession {
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     interface CloseableSession extends RepositorySystemSession, Closeable {
         /**
@@ -104,7 +104,7 @@ public interface RepositorySystemSession {
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
      *
-     * @since TBD
+     * @since 2.0.0
      */
     interface SessionBuilder {
         /**
@@ -185,7 +185,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
          * @see RepositoryPolicy#UPDATE_POLICY_DAILY
          * @see RepositoryPolicy#UPDATE_POLICY_NEVER
-         * @since TBD
+         * @since 2.0.0
          */
         SessionBuilder setArtifactUpdatePolicy(String artifactUpdatePolicy);
 
@@ -198,7 +198,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
          * @see RepositoryPolicy#UPDATE_POLICY_DAILY
          * @see RepositoryPolicy#UPDATE_POLICY_NEVER
-         * @since TBD
+         * @since 2.0.0
          */
         SessionBuilder setMetadataUpdatePolicy(String metadataUpdatePolicy);
 
@@ -535,7 +535,7 @@ public interface RepositorySystemSession {
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
-     * @since TBD
+     * @since 2.0.0
      */
     String getArtifactUpdatePolicy();
 
@@ -547,7 +547,7 @@ public interface RepositorySystemSession {
      * @see RepositoryPolicy#UPDATE_POLICY_ALWAYS
      * @see RepositoryPolicy#UPDATE_POLICY_DAILY
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
-     * @since TBD
+     * @since 2.0.0
      */
     String getMetadataUpdatePolicy();
 
@@ -715,7 +715,7 @@ public interface RepositorySystemSession {
      *
      * @param handler the handler, never {@code null}.
      * @return {@code true} if handler successfully registered, {@code false} otherwise.
-     * @since TBD
+     * @since 2.0.0
      */
     boolean addOnSessionEndedHandler(Runnable handler);
 }
