@@ -286,7 +286,7 @@ public final class DefaultDependencyNode implements DependencyNode {
     }
 
     public boolean accept(DependencyVisitor visitor) {
-        if (Thread.interrupted()) {
+        if (Thread.currentThread().isInterrupted()) {
             throw new RuntimeException("Thread interrupted");
         }
         if (visitor.visitEnter(this)) {

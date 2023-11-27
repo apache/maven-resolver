@@ -59,5 +59,6 @@ public class DefaultDependencyNodeTest {
         t.join();
 
         assertTrue(thrown.get() instanceof RuntimeException, String.valueOf(thrown.get()));
+        assertTrue(t.isInterrupted());
     }
 }
