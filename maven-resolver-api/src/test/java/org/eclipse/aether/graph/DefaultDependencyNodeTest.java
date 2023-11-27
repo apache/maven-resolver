@@ -59,7 +59,9 @@ public class DefaultDependencyNodeTest {
         t.join();
 
         assertTrue(thrown.get() instanceof RuntimeException, String.valueOf(thrown.get()));
-        assertTrue(( (RuntimeException) thrown.get() ).getCause() instanceof InterruptedException, String.valueOf(thrown.get()));
+        assertTrue(
+                ((RuntimeException) thrown.get()).getCause() instanceof InterruptedException,
+                String.valueOf(thrown.get()));
         assertTrue(t.isInterrupted());
     }
 }
