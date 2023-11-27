@@ -39,6 +39,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,6 +49,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
@@ -146,7 +148,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             List<RemoteRepository> repositories,
             List<Dependency> dependencies,
             List<Dependency> managedDependencies,
-            Results results) {
+            Results results)
+            throws DependencyCollectionException {
         boolean useSkip = ConfigUtils.getBoolean(session, DEFAULT_SKIPPER, CONFIG_PROP_SKIPPER);
         int nThreads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
         logger.debug("Using thread pool with {} threads to resolve descriptors.", nThreads);
@@ -200,6 +203,11 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                 processDependency(
                         args, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(), false);
             }
+
+            if (args.interruptedException.get() != null) {
+                throw new DependencyCollectionException(
+                        results.getResult(), "Collection interrupted", args.interruptedException.get());
+            }
         }
     }
 
@@ -210,6 +218,12 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             DependencyProcessingContext context,
             List<Artifact> relocations,
             boolean disableVersionManagement) {
+        if (Thread.interrupted()) {
+            args.interruptedException.set(new InterruptedException());
+        }
+        if (args.interruptedException.get() != null) {
+            return;
+        }
         Dependency dependency = context.dependency;
         PremanagedDependency preManaged = context.premanagedDependency;
 
@@ -603,6 +617,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
         final ParallelDescriptorResolver resolver;
 
+        final AtomicReference<InterruptedException> interruptedException;
+
         Args(
                 RepositorySystemSession session,
                 DataPool pool,
@@ -620,6 +636,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             this.versionContext = versionContext;
             this.skipper = skipper;
             this.resolver = resolver;
+            this.interruptedException = new AtomicReference<>(null);
         }
     }
 }

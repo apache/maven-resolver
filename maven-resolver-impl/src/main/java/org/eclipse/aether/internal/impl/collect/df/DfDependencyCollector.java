@@ -24,11 +24,13 @@ import javax.inject.Singleton;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
@@ -88,7 +90,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             List<RemoteRepository> repositories,
             List<Dependency> dependencies,
             List<Dependency> managedDependencies,
-            Results results) {
+            Results results)
+            throws DependencyCollectionException {
         NodeStack nodes = new NodeStack();
         nodes.push(node);
 
@@ -110,6 +113,11 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                         ? session.getDependencyTraverser().deriveChildTraverser(context)
                         : null,
                 session.getVersionFilter() != null ? session.getVersionFilter().deriveChildFilter(context) : null);
+
+        if (args.interruptedException.get() != null) {
+            throw new DependencyCollectionException(
+                    results.getResult(), "Collection interrupted", args.interruptedException.get());
+        }
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -123,6 +131,12 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             DependencyManager depManager,
             DependencyTraverser depTraverser,
             VersionFilter verFilter) {
+        if (Thread.interrupted()) {
+            args.interruptedException.set(new InterruptedException());
+        }
+        if (args.interruptedException.get() != null) {
+            return;
+        }
         for (Dependency dependency : dependencies) {
             processDependency(
                     args, trace, results, repositories, depSelector, depManager, depTraverser, verFilter, dependency);
@@ -401,6 +415,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
 
         final CollectRequest request;
 
+        final AtomicReference<InterruptedException> interruptedException;
+
         Args(
                 RepositorySystemSession session,
                 DataPool pool,
@@ -416,6 +432,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             this.nodes = nodes;
             this.collectionContext = collectionContext;
             this.versionContext = versionContext;
+            this.interruptedException = new AtomicReference<>(null);
         }
     }
 }
