@@ -281,7 +281,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             List<RemoteRepository> repositories,
             List<Dependency> dependencies,
             List<Dependency> managedDependencies,
-            Results results);
+            Results results)
+            throws DependencyCollectionException;
 
     protected RepositorySystemSession optimizeSession(RepositorySystemSession session) {
         DefaultRepositorySystemSession optimized = new DefaultRepositorySystemSession(session);
@@ -459,6 +460,10 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             maxExceptions = ConfigUtils.getInteger(session, DEFAULT_MAX_EXCEPTIONS, CONFIG_PROP_MAX_EXCEPTIONS);
 
             maxCycles = ConfigUtils.getInteger(session, DEFAULT_MAX_CYCLES, CONFIG_PROP_MAX_CYCLES);
+        }
+
+        public CollectResult getResult() {
+            return result;
         }
 
         public String getErrorPath() {
