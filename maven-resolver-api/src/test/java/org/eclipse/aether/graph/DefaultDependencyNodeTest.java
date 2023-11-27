@@ -45,7 +45,7 @@ public class DefaultDependencyNodeTest {
                 return true;
             }
         };
-        AtomicReference<Object> thrown = new AtomicReference<>(null);
+        AtomicReference<Exception> thrown = new AtomicReference<>(null);
         Thread t = new Thread(() -> {
             Thread.currentThread().interrupt();
             try {
@@ -59,9 +59,7 @@ public class DefaultDependencyNodeTest {
         t.join();
 
         assertTrue(thrown.get() instanceof RuntimeException, String.valueOf(thrown.get()));
-        assertTrue(
-                ((RuntimeException) thrown.get()).getCause() instanceof InterruptedException,
-                String.valueOf(thrown.get()));
+        assertTrue(thrown.get().getCause() instanceof InterruptedException, String.valueOf(thrown.get()));
         assertTrue(t.isInterrupted());
     }
 }
