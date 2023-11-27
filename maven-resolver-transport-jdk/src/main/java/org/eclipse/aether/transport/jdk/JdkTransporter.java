@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Authenticator;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
@@ -193,6 +194,12 @@ final class JdkTransporter extends AbstractTransporter {
         return baseUri.resolve(task.getLocation());
     }
 
+    private ConnectException enhance(ConnectException connectException) {
+        ConnectException result = new ConnectException("Connection to " + baseUri.toASCIIString() + " refused");
+        result.initCause(connectException);
+        return result;
+    }
+
     @Override
     public int classify(Throwable error) {
         if (error instanceof JdkException && ((JdkException) error).getStatusCode() == NOT_FOUND) {
@@ -208,9 +215,13 @@ final class JdkTransporter extends AbstractTransporter {
                 .timeout(Duration.ofMillis(requestTimeout))
                 .method("HEAD", HttpRequest.BodyPublishers.noBody());
         headers.forEach(request::setHeader);
-        HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
-        if (response.statusCode() >= MULTIPLE_CHOICES) {
-            throw new JdkException(response.statusCode());
+        try {
+            HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
+            if (response.statusCode() >= MULTIPLE_CHOICES) {
+                throw new JdkException(response.statusCode());
+            }
+        } catch (ConnectException e) {
+            throw enhance(e);
         }
     }
 
@@ -236,13 +247,17 @@ final class JdkTransporter extends AbstractTransporter {
                 request.header(ACCEPT_ENCODING, "identity");
             }
 
-            response = client.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
-            if (response.statusCode() >= MULTIPLE_CHOICES) {
-                if (resume && response.statusCode() == PRECONDITION_FAILED) {
-                    resume = false;
-                    continue;
+            try {
+                response = client.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                if (response.statusCode() >= MULTIPLE_CHOICES) {
+                    if (resume && response.statusCode() == PRECONDITION_FAILED) {
+                        resume = false;
+                        continue;
+                    }
+                    throw new JdkException(response.statusCode());
                 }
-                throw new JdkException(response.statusCode());
+            } catch (ConnectException e) {
+                throw enhance(e);
             }
             break;
         }
@@ -325,9 +340,13 @@ final class JdkTransporter extends AbstractTransporter {
             utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
             request.method("PUT", HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
-            HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
-            if (response.statusCode() >= MULTIPLE_CHOICES) {
-                throw new JdkException(response.statusCode());
+            try {
+                HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
+                if (response.statusCode() >= MULTIPLE_CHOICES) {
+                    throw new JdkException(response.statusCode());
+                }
+            } catch (ConnectException e) {
+                throw enhance(e);
             }
         }
     }
