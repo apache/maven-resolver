@@ -35,6 +35,7 @@ public final class WagonTransporterConfigurationKeys {
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Object}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_CONFIG = CONFIG_PROPS_PREFIX + "config";
 
@@ -44,6 +45,7 @@ public final class WagonTransporterConfigurationKeys {
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_FILE_MODE = CONFIG_PROPS_PREFIX + "perms.fileMode";
 
@@ -53,6 +55,7 @@ public final class WagonTransporterConfigurationKeys {
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_DIR_MODE = CONFIG_PROPS_PREFIX + "perms.dirMode";
 
@@ -61,6 +64,7 @@ public final class WagonTransporterConfigurationKeys {
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_GROUP = CONFIG_PROPS_PREFIX + "perms.group";
 }
