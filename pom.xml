@@ -102,7 +102,7 @@
     <mavenVersion>4.0.0-alpha-8</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
-    <minimalJavaBuildVersion>[11,)</minimalJavaBuildVersion>
+    <minimalJavaBuildVersion>[17,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-11-15T14:56:04Z</project.build.outputTimestamp>
   </properties>
 
@@ -183,7 +183,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.10.0</version>
+        <version>5.10.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -237,7 +237,7 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-testing</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
       </dependency>
 
       <dependency>
