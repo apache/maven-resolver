@@ -22,22 +22,21 @@
 
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
-    <artifactId>maven-resolver</artifactId>
+    <artifactId>maven-resolver-transport-jdk-parent</artifactId>
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-jdk</artifactId>
+  <artifactId>maven-resolver-transport-jdk-8</artifactId>
   <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Transport JDK</name>
+  <name>Maven Artifact Resolver Transport JDK 8</name>
   <description>Maven Artifact Transport JDK Java 11+.</description>
 
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.transport.jdk</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
 
-    <!-- SPI stays java 8 but rest is java11+ -->
-    <javaVersion>11</javaVersion>
+    <javaVersion>8</javaVersion>
   </properties>
 
   <dependencies>
@@ -63,21 +62,6 @@
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-test-util</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-impl</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
@@ -98,33 +82,6 @@
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>force-java8-spi</id>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <phase>compile</phase>
-            <configuration>
-              <release>8</release>
-              <includes>**/JdkTransporterFactory.java</includes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>default-compile</id>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <phase>compile</phase>
-            <configuration>
-              <excludes>**/JdkTransporterFactory.java</excludes>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

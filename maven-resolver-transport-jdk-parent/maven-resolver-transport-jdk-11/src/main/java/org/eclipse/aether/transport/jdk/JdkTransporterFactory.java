@@ -25,12 +25,11 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * JDK Transport factory.
+ * JDK Transport factory: on Java11+ it works.
  *
  * @since 2.0.0
  */
@@ -56,17 +55,11 @@ public final class JdkTransporterFactory implements TransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        int javaVersion = javaVersion();
-        if (javaVersion < 11) {
-            LoggerFactory.getLogger(JdkTransporterFactory.class).debug("Needs Java11+ to function");
-            throw new NoTransporterException(repository, "JDK Transport needs Java11+");
-        }
-
         if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
             throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
         }
 
-        return new JdkTransporter(session, repository, javaVersion);
+        return new JdkTransporter(session, repository, javaVersion());
     }
 
     private static int javaVersion() {
@@ -77,7 +70,7 @@ public final class JdkTransporterFactory implements TransporterFactory {
             final int sep = (dot > 0 && dot < hyphen || hyphen < 0) ? dot : hyphen;
             return Integer.parseInt(sep > 0 ? version.substring(0, sep) : version);
         } catch (final NumberFormatException nfe) {
-            return 11; // unlikely to be a pre-java 11 version so let it pass
+            return 11; // cannot be a pre-java 11 version so let it pass
         }
     }
 }
