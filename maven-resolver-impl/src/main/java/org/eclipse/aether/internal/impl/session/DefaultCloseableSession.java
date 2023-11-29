@@ -44,10 +44,8 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 /**
  * A default implementation of repository system session that is immutable and thread-safe.
@@ -185,18 +183,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         if (localRepositoryManager != null) {
             return localRepositoryManager;
         } else if (localRepositories != null) {
-            if (localRepositories.isEmpty()) {
-                throw new IllegalArgumentException("empty localRepositories");
-            } else if (localRepositories.size() == 1) {
-                return repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
-            } else {
-                LocalRepositoryManager head =
-                        repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
-                List<LocalRepositoryManager> tail = localRepositories.subList(1, localRepositories.size()).stream()
-                        .map(l -> repositorySystem.newLocalRepositoryManager(this, l))
-                        .collect(toList());
-                return new ChainedLocalRepositoryManager(head, tail, this);
-            }
+            return repositorySystem.newLocalRepositoryManager(this, localRepositories);
         } else {
             throw new IllegalStateException("No local repository manager or local repositories set on session");
         }

@@ -23,6 +23,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -90,8 +91,10 @@ import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.LevelOrderDependencyNodeConsumerVisitor;
 import org.eclipse.aether.util.graph.visitor.PostorderDependencyNodeConsumerVisitor;
 import org.eclipse.aether.util.graph.visitor.PreorderDependencyNodeConsumerVisitor;
+import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  *
@@ -358,6 +361,46 @@ public class DefaultRepositorySystem implements RepositorySystem {
         requireNonNull(localRepository, "localRepository cannot be null");
         validateSystem();
 
+        return createLocalRepositoryManager(session, localRepository);
+    }
+
+    @Override
+    public LocalRepositoryManager newLocalRepositoryManager(
+            RepositorySystemSession session, LocalRepository... localRepositories) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(localRepositories, "localRepositories cannot be null");
+        validateSystem();
+
+        return createLocalRepositoryManager(session, Arrays.asList(localRepositories));
+    }
+
+    @Override
+    public LocalRepositoryManager newLocalRepositoryManager(
+            RepositorySystemSession session, List<LocalRepository> localRepositories) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(localRepositories, "localRepositories cannot be null");
+        validateSystem();
+
+        return createLocalRepositoryManager(session, localRepositories);
+    }
+
+    private LocalRepositoryManager createLocalRepositoryManager(
+            RepositorySystemSession session, List<LocalRepository> localRepositories) {
+        if (localRepositories.isEmpty()) {
+            throw new IllegalArgumentException("empty localRepositories");
+        } else if (localRepositories.size() == 1) {
+            return createLocalRepositoryManager(session, localRepositories.get(0));
+        } else {
+            LocalRepositoryManager head = createLocalRepositoryManager(session, localRepositories.get(0));
+            List<LocalRepositoryManager> tail = localRepositories.subList(1, localRepositories.size()).stream()
+                    .map(l -> createLocalRepositoryManager(session, l))
+                    .collect(toList());
+            return new ChainedLocalRepositoryManager(head, tail, session);
+        }
+    }
+
+    private LocalRepositoryManager createLocalRepositoryManager(
+            RepositorySystemSession session, LocalRepository localRepository) {
         try {
             return localRepositoryProvider.newLocalRepositoryManager(session, localRepository);
         } catch (NoLocalRepositoryManagerException e) {

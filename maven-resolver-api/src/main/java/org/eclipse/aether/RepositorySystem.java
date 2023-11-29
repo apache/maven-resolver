@@ -241,6 +241,42 @@ public interface RepositorySystem extends Closeable {
     LocalRepositoryManager newLocalRepositoryManager(RepositorySystemSession session, LocalRepository localRepository);
 
     /**
+     * Creates a new manager for the specified local repositories. If the specified local repository has no type, the
+     * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
+     * invocation is one of the last steps of setting up a new session, in particular any configuration properties
+     * should have been set already. <em>Note:</em> this method accepts multiple local repositories, in which case
+     * it creates chained local repository.
+     *
+     * @param session         The repository system session from which to configure the manager, must not be
+     *                        {@code null}.
+     * @param localRepositories The local repositories to create a manager for, must not be {@code null} nor empty array.
+     * @return The local repository manager, never {@code null}.
+     * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
+     *                                  given.
+     * @since 2.0.0
+     */
+    LocalRepositoryManager newLocalRepositoryManager(
+            RepositorySystemSession session, LocalRepository... localRepositories);
+
+    /**
+     * Creates a new manager for the specified local repositories. If the specified local repository has no type, the
+     * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
+     * invocation is one of the last steps of setting up a new session, in particular any configuration properties
+     * should have been set already. <em>Note:</em> this method accepts multiple local repositories, in which case
+     * it creates chained local repository.
+     *
+     * @param session         The repository system session from which to configure the manager, must not be
+     *                        {@code null}.
+     * @param localRepositories The local repositories to create a manager for, must not be {@code null} nor empty.
+     * @return The local repository manager, never {@code null}.
+     * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
+     *                                  given.
+     * @since 2.0.0
+     */
+    LocalRepositoryManager newLocalRepositoryManager(
+            RepositorySystemSession session, List<LocalRepository> localRepositories);
+
+    /**
      * Creates a new synchronization context.
      *
      * @param session The repository session during which the context will be used, must not be {@code null}.
