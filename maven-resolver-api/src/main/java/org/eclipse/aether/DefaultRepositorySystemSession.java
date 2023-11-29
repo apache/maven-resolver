@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.eclipse.aether.RepositorySystemSession.MutableSession;
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -54,7 +55,8 @@ import static java.util.Objects.requireNonNull;
  * system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to prevent
  * accidental manipulation of it afterward.
  */
-public final class DefaultRepositorySystemSession implements RepositorySystemSession {
+public final class DefaultRepositorySystemSession
+        implements RepositorySystemSession, MutableSession<DefaultRepositorySystemSession> {
     private boolean readOnly;
 
     private boolean offline;
@@ -191,6 +193,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param offline {@code true} if the repository system is in offline mode, {@code false} otherwise.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setOffline(boolean offline) {
         verifyStateForMutation();
         this.offline = offline;
@@ -211,6 +214,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      *                                             specified repositories.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setIgnoreArtifactDescriptorRepositories(
             boolean ignoreArtifactDescriptorRepositories) {
         verifyStateForMutation();
@@ -230,6 +234,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      *                              errors should generally not be cached.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy) {
         verifyStateForMutation();
         this.resolutionErrorPolicy = resolutionErrorPolicy;
@@ -248,6 +253,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      *                                 errors should generally not be tolerated.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setArtifactDescriptorPolicy(
             ArtifactDescriptorPolicy artifactDescriptorPolicy) {
         verifyStateForMutation();
@@ -270,6 +276,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @see RepositoryPolicy#CHECKSUM_POLICY_IGNORE
      * @see RepositoryPolicy#CHECKSUM_POLICY_WARN
      */
+    @Override
     public DefaultRepositorySystemSession setChecksumPolicy(String checksumPolicy) {
         verifyStateForMutation();
         this.checksumPolicy = checksumPolicy;
@@ -298,6 +305,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @see #setArtifactUpdatePolicy(String)
      * @see #setMetadataUpdatePolicy(String)
      */
+    @Override
     public DefaultRepositorySystemSession setUpdatePolicy(String updatePolicy) {
         verifyStateForMutation();
         setArtifactUpdatePolicy(updatePolicy);
@@ -321,6 +329,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
      * @since 2.0.0
      */
+    @Override
     public DefaultRepositorySystemSession setArtifactUpdatePolicy(String artifactUpdatePolicy) {
         verifyStateForMutation();
         this.artifactUpdatePolicy = artifactUpdatePolicy;
@@ -343,6 +352,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @see RepositoryPolicy#UPDATE_POLICY_NEVER
      * @since 2.0.0
      */
+    @Override
     public DefaultRepositorySystemSession setMetadataUpdatePolicy(String metadataUpdatePolicy) {
         verifyStateForMutation();
         this.metadataUpdatePolicy = metadataUpdatePolicy;
@@ -355,6 +365,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         return (lrm != null) ? lrm.getRepository() : null;
     }
 
+    @Override
     public LocalRepositoryManager getLocalRepositoryManager() {
         return localRepositoryManager;
     }
@@ -366,6 +377,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param localRepositoryManager The local repository manager used during this session, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager) {
         verifyStateForMutation();
         this.localRepositoryManager = localRepositoryManager;
@@ -384,6 +396,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param workspaceReader The workspace reader for this session, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setWorkspaceReader(WorkspaceReader workspaceReader) {
         verifyStateForMutation();
         this.workspaceReader = workspaceReader;
@@ -401,6 +414,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param repositoryListener The repository listener, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setRepositoryListener(RepositoryListener repositoryListener) {
         verifyStateForMutation();
         this.repositoryListener = repositoryListener;
@@ -418,6 +432,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param transferListener The transfer listener, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setTransferListener(TransferListener transferListener) {
         verifyStateForMutation();
         this.transferListener = transferListener;
@@ -459,6 +474,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param systemProperties The system properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setSystemProperties(Map<?, ?> systemProperties) {
         verifyStateForMutation();
         this.systemProperties = copySafe(systemProperties, String.class);
@@ -473,6 +489,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setSystemProperty(String key, String value) {
         verifyStateForMutation();
         if (value != null) {
@@ -499,6 +516,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param userProperties The user properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setUserProperties(Map<?, ?> userProperties) {
         verifyStateForMutation();
         this.userProperties = copySafe(userProperties, String.class);
@@ -513,6 +531,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setUserProperty(String key, String value) {
         verifyStateForMutation();
         if (value != null) {
@@ -538,6 +557,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param configProperties The configuration properties, may be {@code null} or empty if none.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setConfigProperties(Map<?, ?> configProperties) {
         verifyStateForMutation();
         this.configProperties = copySafe(configProperties, Object.class);
@@ -552,6 +572,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param value The property value, may be {@code null} to remove/unset the property.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setConfigProperty(String key, Object value) {
         verifyStateForMutation();
         if (value != null) {
@@ -575,6 +596,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param mirrorSelector The mirror selector to use, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setMirrorSelector(MirrorSelector mirrorSelector) {
         verifyStateForMutation();
         this.mirrorSelector = mirrorSelector;
@@ -598,6 +620,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @return This session for chaining, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getProxy()
      */
+    @Override
     public DefaultRepositorySystemSession setProxySelector(ProxySelector proxySelector) {
         verifyStateForMutation();
         this.proxySelector = proxySelector;
@@ -621,6 +644,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @return This session for chaining, never {@code null}.
      * @see org.eclipse.aether.repository.RemoteRepository#getAuthentication()
      */
+    @Override
     public DefaultRepositorySystemSession setAuthenticationSelector(AuthenticationSelector authenticationSelector) {
         verifyStateForMutation();
         this.authenticationSelector = authenticationSelector;
@@ -641,6 +665,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param artifactTypeRegistry The artifact type registry, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry) {
         verifyStateForMutation();
         this.artifactTypeRegistry = artifactTypeRegistry;
@@ -661,6 +686,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param dependencyTraverser The dependency traverser to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setDependencyTraverser(DependencyTraverser dependencyTraverser) {
         verifyStateForMutation();
         this.dependencyTraverser = dependencyTraverser;
@@ -678,6 +704,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param dependencyManager The dependency manager to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setDependencyManager(DependencyManager dependencyManager) {
         verifyStateForMutation();
         this.dependencyManager = dependencyManager;
@@ -695,6 +722,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param dependencySelector The dependency selector to use for building dependency graphs, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setDependencySelector(DependencySelector dependencySelector) {
         verifyStateForMutation();
         this.dependencySelector = dependencySelector;
@@ -713,6 +741,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      *                      versions.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setVersionFilter(VersionFilter versionFilter) {
         verifyStateForMutation();
         this.versionFilter = versionFilter;
@@ -731,6 +760,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      *                                   {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setDependencyGraphTransformer(
             DependencyGraphTransformer dependencyGraphTransformer) {
         verifyStateForMutation();
@@ -749,6 +779,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param data The session data, may be {@code null}.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setData(SessionData data) {
         verifyStateForMutation();
         this.data = data;
@@ -769,6 +800,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * @param cache The repository cache, may be {@code null} if none.
      * @return This session for chaining, never {@code null}.
      */
+    @Override
     public DefaultRepositorySystemSession setCache(RepositoryCache cache) {
         verifyStateForMutation();
         this.cache = cache;
