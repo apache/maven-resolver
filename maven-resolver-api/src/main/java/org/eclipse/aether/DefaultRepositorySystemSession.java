@@ -817,6 +817,12 @@ public final class DefaultRepositorySystemSession implements MutableSession {
         return onSessionEndedRegistrar.apply(handler);
     }
 
+    @Override
+    public RepositorySystemSession build() {
+        setReadOnly();
+        return this;
+    }
+
     /**
      * Marks this session as read-only such that any future attempts to call its mutators will fail with an exception.
      * Marking an already read-only session as read-only has no effect. The session's data and cache remain writable

@@ -96,7 +96,7 @@ public interface RepositorySystemSession {
      * A mutable repository system session. Use of this class in everyday operations is discouraged, use
      * {@link CloseableSession} instead. The sole purpose of this class is to bridge between
      * {@link SessionBuilder} and {@link DefaultRepositorySystemSession} that both represent mutable session.
-     * No implementation of this interface is thread safe.
+     * No implementation of this interface is thread safe. To get immutable session, use {@link #build()} method.
      *
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
@@ -394,6 +394,13 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          */
         MutableSession setCache(RepositoryCache cache);
+
+        /**
+         * Creates immutable session out this mutable instance.
+         *
+         * @return Immutable session, never {@code null}.
+         */
+        RepositorySystemSession build();
     }
 
     /**
@@ -565,7 +572,9 @@ public interface RepositorySystemSession {
         SessionBuilder withRepositorySystemSession(RepositorySystemSession session);
 
         /**
-         * Creates a session instance.
+         * Creates immutable closeable session out this builder instance.
+         *
+         * @return Immutable closeable session, never {@code null}.
          */
         CloseableSession build();
     }
