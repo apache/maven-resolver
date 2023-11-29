@@ -102,9 +102,8 @@ public interface RepositorySystemSession {
      * @noextend This interface is not intended to be extended by clients.
      *
      * @since 2.0.0
-     * @param <T> The actual class implementing mutable session.
      */
-    interface MutableSession<T extends MutableSession<T>> extends RepositorySystemSession {
+    interface MutableSession extends RepositorySystemSession {
         /**
          * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
          * repositories.
@@ -112,7 +111,7 @@ public interface RepositorySystemSession {
          * @param offline {@code true} if the repository system is in offline mode, {@code false} otherwise.
          * @return This session for chaining, never {@code null}.
          */
-        T setOffline(boolean offline);
+        MutableSession setOffline(boolean offline);
 
         /**
          * Controls whether repositories declared in artifact descriptors should be ignored during transitive dependency
@@ -123,7 +122,7 @@ public interface RepositorySystemSession {
          *                                             specified repositories.
          * @return This session for chaining, never {@code null}.
          */
-        T setIgnoreArtifactDescriptorRepositories(boolean ignoreArtifactDescriptorRepositories);
+        MutableSession setIgnoreArtifactDescriptorRepositories(boolean ignoreArtifactDescriptorRepositories);
 
         /**
          * Sets the policy which controls whether resolutions errors from remote repositories should be cached.
@@ -132,7 +131,7 @@ public interface RepositorySystemSession {
          *                              errors should generally not be cached.
          * @return This session for chaining, never {@code null}.
          */
-        T setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy);
+        MutableSession setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy);
 
         /**
          * Sets the policy which controls how errors related to reading artifact descriptors should be handled.
@@ -141,7 +140,7 @@ public interface RepositorySystemSession {
          *                                 errors should generally not be tolerated.
          * @return This session for chaining, never {@code null}.
          */
-        T setArtifactDescriptorPolicy(ArtifactDescriptorPolicy artifactDescriptorPolicy);
+        MutableSession setArtifactDescriptorPolicy(ArtifactDescriptorPolicy artifactDescriptorPolicy);
 
         /**
          * Sets the global checksum policy. If set, the global checksum policy overrides the checksum policies of the remote
@@ -153,7 +152,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#CHECKSUM_POLICY_IGNORE
          * @see RepositoryPolicy#CHECKSUM_POLICY_WARN
          */
-        T setChecksumPolicy(String checksumPolicy);
+        MutableSession setChecksumPolicy(String checksumPolicy);
 
         /**
          * Sets the global update policy. If set, the global update policy overrides the update policies of the remote
@@ -172,7 +171,7 @@ public interface RepositorySystemSession {
          * @see #setArtifactUpdatePolicy(String)
          * @see #setMetadataUpdatePolicy(String)
          */
-        T setUpdatePolicy(String updatePolicy);
+        MutableSession setUpdatePolicy(String updatePolicy);
 
         /**
          * Sets the global artifact update policy. If set, the global update policy overrides the artifact update policies
@@ -185,7 +184,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#UPDATE_POLICY_NEVER
          * @since 2.0.0
          */
-        T setArtifactUpdatePolicy(String artifactUpdatePolicy);
+        MutableSession setArtifactUpdatePolicy(String artifactUpdatePolicy);
 
         /**
          * Sets the global metadata update policy. If set, the global update policy overrides the metadata update policies
@@ -198,7 +197,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#UPDATE_POLICY_NEVER
          * @since 2.0.0
          */
-        T setMetadataUpdatePolicy(String metadataUpdatePolicy);
+        MutableSession setMetadataUpdatePolicy(String metadataUpdatePolicy);
 
         /**
          * Sets the local repository manager used during this session. <em>Note:</em> Eventually, a valid session must have
@@ -207,7 +206,7 @@ public interface RepositorySystemSession {
          * @param localRepositoryManager The local repository manager used during this session, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager);
+        MutableSession setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager);
 
         /**
          * Sets the workspace reader used during this session. If set, the workspace reader will usually be consulted first
@@ -216,7 +215,7 @@ public interface RepositorySystemSession {
          * @param workspaceReader The workspace reader for this session, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        T setWorkspaceReader(WorkspaceReader workspaceReader);
+        MutableSession setWorkspaceReader(WorkspaceReader workspaceReader);
 
         /**
          * Sets the listener being notified of actions in the repository system.
@@ -224,7 +223,7 @@ public interface RepositorySystemSession {
          * @param repositoryListener The repository listener, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        T setRepositoryListener(RepositoryListener repositoryListener);
+        MutableSession setRepositoryListener(RepositoryListener repositoryListener);
 
         /**
          * Sets the listener being notified of uploads/downloads by the repository system.
@@ -232,7 +231,7 @@ public interface RepositorySystemSession {
          * @param transferListener The transfer listener, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        T setTransferListener(TransferListener transferListener);
+        MutableSession setTransferListener(TransferListener transferListener);
 
         /**
          * Sets the system properties to use, e.g. for processing of artifact descriptors. System properties are usually
@@ -244,7 +243,7 @@ public interface RepositorySystemSession {
          * @param systemProperties The system properties, may be {@code null} or empty if none.
          * @return This session for chaining, never {@code null}.
          */
-        T setSystemProperties(Map<?, ?> systemProperties);
+        MutableSession setSystemProperties(Map<?, ?> systemProperties);
 
         /**
          * Sets the specified system property.
@@ -253,7 +252,7 @@ public interface RepositorySystemSession {
          * @param value The property value, may be {@code null} to remove/unset the property.
          * @return This session for chaining, never {@code null}.
          */
-        T setSystemProperty(String key, String value);
+        MutableSession setSystemProperty(String key, String value);
 
         /**
          * Sets the user properties to use, e.g. for processing of artifact descriptors. User properties are similar to
@@ -266,7 +265,7 @@ public interface RepositorySystemSession {
          * @param userProperties The user properties, may be {@code null} or empty if none.
          * @return This session for chaining, never {@code null}.
          */
-        T setUserProperties(Map<?, ?> userProperties);
+        MutableSession setUserProperties(Map<?, ?> userProperties);
 
         /**
          * Sets the specified user property.
@@ -275,7 +274,7 @@ public interface RepositorySystemSession {
          * @param value The property value, may be {@code null} to remove/unset the property.
          * @return This session for chaining, never {@code null}.
          */
-        T setUserProperty(String key, String value);
+        MutableSession setUserProperty(String key, String value);
 
         /**
          * Sets the configuration properties used to tweak internal aspects of the repository system (e.g. thread pooling,
@@ -287,7 +286,7 @@ public interface RepositorySystemSession {
          * @param configProperties The configuration properties, may be {@code null} or empty if none.
          * @return This session for chaining, never {@code null}.
          */
-        T setConfigProperties(Map<?, ?> configProperties);
+        MutableSession setConfigProperties(Map<?, ?> configProperties);
 
         /**
          * Sets the specified configuration property.
@@ -296,7 +295,7 @@ public interface RepositorySystemSession {
          * @param value The property value, may be {@code null} to remove/unset the property.
          * @return This session for chaining, never {@code null}.
          */
-        T setConfigProperty(String key, Object value);
+        MutableSession setConfigProperty(String key, Object value);
 
         /**
          * Sets the mirror selector to use for repositories discovered in artifact descriptors. Note that this selector is
@@ -306,7 +305,7 @@ public interface RepositorySystemSession {
          * @param mirrorSelector The mirror selector to use, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setMirrorSelector(MirrorSelector mirrorSelector);
+        MutableSession setMirrorSelector(MirrorSelector mirrorSelector);
 
         /**
          * Sets the proxy selector to use for repositories discovered in artifact descriptors. Note that this selector is
@@ -317,7 +316,7 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          * @see RemoteRepository#getProxy()
          */
-        T setProxySelector(ProxySelector proxySelector);
+        MutableSession setProxySelector(ProxySelector proxySelector);
 
         /**
          * Sets the authentication selector to use for repositories discovered in artifact descriptors. Note that this
@@ -328,7 +327,7 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          * @see RemoteRepository#getAuthentication()
          */
-        T setAuthenticationSelector(AuthenticationSelector authenticationSelector);
+        MutableSession setAuthenticationSelector(AuthenticationSelector authenticationSelector);
 
         /**
          * Sets the registry of artifact types recognized by this session.
@@ -336,7 +335,7 @@ public interface RepositorySystemSession {
          * @param artifactTypeRegistry The artifact type registry, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry);
+        MutableSession setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry);
 
         /**
          * Sets the dependency traverser to use for building dependency graphs.
@@ -344,7 +343,7 @@ public interface RepositorySystemSession {
          * @param dependencyTraverser The dependency traverser to use for building dependency graphs, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setDependencyTraverser(DependencyTraverser dependencyTraverser);
+        MutableSession setDependencyTraverser(DependencyTraverser dependencyTraverser);
 
         /**
          * Sets the dependency manager to use for building dependency graphs.
@@ -352,7 +351,7 @@ public interface RepositorySystemSession {
          * @param dependencyManager The dependency manager to use for building dependency graphs, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setDependencyManager(DependencyManager dependencyManager);
+        MutableSession setDependencyManager(DependencyManager dependencyManager);
 
         /**
          * Sets the dependency selector to use for building dependency graphs.
@@ -360,7 +359,7 @@ public interface RepositorySystemSession {
          * @param dependencySelector The dependency selector to use for building dependency graphs, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setDependencySelector(DependencySelector dependencySelector);
+        MutableSession setDependencySelector(DependencySelector dependencySelector);
 
         /**
          * Sets the version filter to use for building dependency graphs.
@@ -369,7 +368,7 @@ public interface RepositorySystemSession {
          *                      versions.
          * @return This session for chaining, never {@code null}.
          */
-        T setVersionFilter(VersionFilter versionFilter);
+        MutableSession setVersionFilter(VersionFilter versionFilter);
 
         /**
          * Sets the dependency graph transformer to use for building dependency graphs.
@@ -378,7 +377,7 @@ public interface RepositorySystemSession {
          *                                   {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setDependencyGraphTransformer(DependencyGraphTransformer dependencyGraphTransformer);
+        MutableSession setDependencyGraphTransformer(DependencyGraphTransformer dependencyGraphTransformer);
 
         /**
          * Sets the custom data associated with this session.
@@ -386,7 +385,7 @@ public interface RepositorySystemSession {
          * @param data The session data, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        T setData(SessionData data);
+        MutableSession setData(SessionData data);
 
         /**
          * Sets the cache the repository system may use to save data for future reuse during the session.
@@ -394,7 +393,7 @@ public interface RepositorySystemSession {
          * @param cache The repository cache, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        T setCache(RepositoryCache cache);
+        MutableSession setCache(RepositoryCache cache);
     }
 
     /**
@@ -411,7 +410,94 @@ public interface RepositorySystemSession {
      *
      * @since 2.0.0
      */
-    interface SessionBuilder extends MutableSession<SessionBuilder> {
+    interface SessionBuilder extends MutableSession {
+        @Override
+        SessionBuilder setOffline(boolean offline);
+
+        @Override
+        SessionBuilder setIgnoreArtifactDescriptorRepositories(boolean ignoreArtifactDescriptorRepositories);
+
+        @Override
+        SessionBuilder setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy);
+
+        @Override
+        SessionBuilder setArtifactDescriptorPolicy(ArtifactDescriptorPolicy artifactDescriptorPolicy);
+
+        @Override
+        SessionBuilder setChecksumPolicy(String checksumPolicy);
+
+        @Override
+        SessionBuilder setUpdatePolicy(String updatePolicy);
+
+        @Override
+        SessionBuilder setArtifactUpdatePolicy(String artifactUpdatePolicy);
+
+        @Override
+        SessionBuilder setMetadataUpdatePolicy(String metadataUpdatePolicy);
+
+        @Override
+        SessionBuilder setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager);
+
+        @Override
+        SessionBuilder setWorkspaceReader(WorkspaceReader workspaceReader);
+
+        @Override
+        SessionBuilder setRepositoryListener(RepositoryListener repositoryListener);
+
+        @Override
+        SessionBuilder setTransferListener(TransferListener transferListener);
+
+        @Override
+        SessionBuilder setSystemProperties(Map<?, ?> systemProperties);
+
+        @Override
+        SessionBuilder setSystemProperty(String key, String value);
+
+        @Override
+        SessionBuilder setUserProperties(Map<?, ?> userProperties);
+
+        @Override
+        SessionBuilder setUserProperty(String key, String value);
+
+        @Override
+        SessionBuilder setConfigProperties(Map<?, ?> configProperties);
+
+        @Override
+        SessionBuilder setConfigProperty(String key, Object value);
+
+        @Override
+        SessionBuilder setMirrorSelector(MirrorSelector mirrorSelector);
+
+        @Override
+        SessionBuilder setProxySelector(ProxySelector proxySelector);
+
+        @Override
+        SessionBuilder setAuthenticationSelector(AuthenticationSelector authenticationSelector);
+
+        @Override
+        SessionBuilder setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry);
+
+        @Override
+        SessionBuilder setDependencyTraverser(DependencyTraverser dependencyTraverser);
+
+        @Override
+        SessionBuilder setDependencyManager(DependencyManager dependencyManager);
+
+        @Override
+        SessionBuilder setDependencySelector(DependencySelector dependencySelector);
+
+        @Override
+        SessionBuilder setVersionFilter(VersionFilter versionFilter);
+
+        @Override
+        SessionBuilder setDependencyGraphTransformer(DependencyGraphTransformer dependencyGraphTransformer);
+
+        @Override
+        SessionBuilder setData(SessionData data);
+
+        @Override
+        SessionBuilder setCache(RepositoryCache cache);
+
         /**
          * Sets the custom session data supplier associated with this session.
          *

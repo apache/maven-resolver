@@ -55,8 +55,7 @@ import static java.util.Objects.requireNonNull;
  * system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to prevent
  * accidental manipulation of it afterward.
  */
-public final class DefaultRepositorySystemSession
-        implements RepositorySystemSession, MutableSession<DefaultRepositorySystemSession> {
+public final class DefaultRepositorySystemSession implements MutableSession {
     private boolean readOnly;
 
     private boolean offline;
