@@ -112,7 +112,6 @@ public final class DefaultCloseableSession implements CloseableSession {
     @SuppressWarnings("checkstyle:parameternumber")
     public DefaultCloseableSession(
             String sessionId,
-            AtomicBoolean closed,
             boolean offline,
             boolean ignoreArtifactDescriptorRepositories,
             ResolutionErrorPolicy resolutionErrorPolicy,
@@ -142,7 +141,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
         this.sessionId = requireNonNull(sessionId);
-        this.closed = closed == null ? new AtomicBoolean(false) : closed;
+        this.closed = new AtomicBoolean(false);
         this.offline = offline;
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
         this.resolutionErrorPolicy = resolutionErrorPolicy;
@@ -173,9 +172,7 @@ public final class DefaultCloseableSession implements CloseableSession {
 
         this.localRepositoryManager = getOrCreateLocalRepositoryManager(localRepositoryManager, localRepositories);
 
-        if (closed == null) {
-            repositorySystemLifecycle.sessionStarted(this);
-        }
+        repositorySystemLifecycle.sessionStarted(this);
     }
 
     private LocalRepositoryManager getOrCreateLocalRepositoryManager(
@@ -192,12 +189,6 @@ public final class DefaultCloseableSession implements CloseableSession {
     @Override
     public String sessionId() {
         return sessionId;
-    }
-
-    @Override
-    public SessionBuilder copy() {
-        return new DefaultSessionBuilder(repositorySystem, repositorySystemLifecycle, sessionId, closed)
-                .withRepositorySystemSession(this);
     }
 
     @Override

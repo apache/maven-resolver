@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultSessionData;
@@ -31,6 +30,7 @@ import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -75,8 +75,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     private final Supplier<String> sessionIdSupplier;
-
-    private final AtomicBoolean closed;
 
     private boolean offline;
 
@@ -140,162 +138,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.sessionIdSupplier = requireNonNull(sessionIdSupplier);
-        this.closed = null;
-    }
-
-    /**
-     * "Copy constructor" used by {@link DefaultCloseableSession#copy()}. It carries over session ID and builder will
-     * create same ID sessions.
-     */
-    DefaultSessionBuilder(
-            RepositorySystem repositorySystem,
-            RepositorySystemLifecycle repositorySystemLifecycle,
-            String sessionId,
-            AtomicBoolean closed) {
-        this.repositorySystem = requireNonNull(repositorySystem);
-        this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
-        this.sessionIdSupplier = () -> sessionId;
-        this.closed = closed;
-    }
-
-    @Override
-    public boolean isOffline() {
-        return offline;
-    }
-
-    @Override
-    public boolean isIgnoreArtifactDescriptorRepositories() {
-        return ignoreArtifactDescriptorRepositories;
-    }
-
-    @Override
-    public ResolutionErrorPolicy getResolutionErrorPolicy() {
-        return resolutionErrorPolicy;
-    }
-
-    @Override
-    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
-        return artifactDescriptorPolicy;
-    }
-
-    @Override
-    public String getChecksumPolicy() {
-        return checksumPolicy;
-    }
-
-    @Override
-    public String getUpdatePolicy() {
-        return getArtifactUpdatePolicy();
-    }
-
-    @Override
-    public String getArtifactUpdatePolicy() {
-        return artifactUpdatePolicy;
-    }
-
-    @Override
-    public String getMetadataUpdatePolicy() {
-        return metadataUpdatePolicy;
-    }
-
-    @Override
-    public LocalRepository getLocalRepository() {
-        return localRepositoryManager != null ? localRepositoryManager.getRepository() : null;
-    }
-
-    @Override
-    public LocalRepositoryManager getLocalRepositoryManager() {
-        return localRepositoryManager;
-    }
-
-    @Override
-    public WorkspaceReader getWorkspaceReader() {
-        return workspaceReader;
-    }
-
-    @Override
-    public RepositoryListener getRepositoryListener() {
-        return repositoryListener;
-    }
-
-    @Override
-    public TransferListener getTransferListener() {
-        return transferListener;
-    }
-
-    @Override
-    public Map<String, String> getSystemProperties() {
-        return systemProperties;
-    }
-
-    @Override
-    public Map<String, String> getUserProperties() {
-        return userProperties;
-    }
-
-    @Override
-    public Map<String, Object> getConfigProperties() {
-        return configProperties;
-    }
-
-    @Override
-    public MirrorSelector getMirrorSelector() {
-        return mirrorSelector;
-    }
-
-    @Override
-    public ProxySelector getProxySelector() {
-        return proxySelector;
-    }
-
-    @Override
-    public AuthenticationSelector getAuthenticationSelector() {
-        return authenticationSelector;
-    }
-
-    @Override
-    public ArtifactTypeRegistry getArtifactTypeRegistry() {
-        return artifactTypeRegistry;
-    }
-
-    @Override
-    public DependencyTraverser getDependencyTraverser() {
-        return dependencyTraverser;
-    }
-
-    @Override
-    public DependencyManager getDependencyManager() {
-        return dependencyManager;
-    }
-
-    @Override
-    public DependencySelector getDependencySelector() {
-        return dependencySelector;
-    }
-
-    @Override
-    public VersionFilter getVersionFilter() {
-        return versionFilter;
-    }
-
-    @Override
-    public DependencyGraphTransformer getDependencyGraphTransformer() {
-        return dependencyGraphTransformer;
-    }
-
-    @Override
-    public SessionData getData() {
-        return sessionDataSupplier != null ? sessionDataSupplier.get() : null;
-    }
-
-    @Override
-    public RepositoryCache getCache() {
-        return repositoryCacheSupplier != null ? repositoryCacheSupplier.get() : null;
-    }
-
-    @Override
-    public boolean addOnSessionEndedHandler(Runnable handler) {
-        return false;
     }
 
     @Override
@@ -568,7 +410,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public CloseableSession build() {
         return new DefaultCloseableSession(
                 sessionIdSupplier.get(),
-                closed,
                 offline,
                 ignoreArtifactDescriptorRepositories,
                 resolutionErrorPolicy,

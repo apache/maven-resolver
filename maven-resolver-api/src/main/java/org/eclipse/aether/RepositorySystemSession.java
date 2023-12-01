@@ -72,19 +72,6 @@ public interface RepositorySystemSession {
         String sessionId();
 
         /**
-         * Copies this session into a pre-populated builder, effectively making a mutable copy of itself, builder builds
-         * <em>same session</em>. Important: this session <em>remains unchanged</em> upon return of this method but
-         * this session and returned builder created session will have <em>same identity</em>. It is up to client code,
-         * will it close only the original (this) session or new session, or both. Important is, that at least one of
-         * the sessions must be closed, and consequence is that once either one is closed, the other session is closed
-         * as well.
-         * <p>
-         * This pattern should be applied in "filter" like constructs, when code needs to alter the incoming session and
-         * subsequently pass it downstream.
-         */
-        SessionBuilder copy();
-
-        /**
          * Closes the session. The session should be closed by its creator. A closed session should not be used anymore.
          * This method may be invoked multiple times, but close will act only once (first time).
          */
@@ -93,17 +80,20 @@ public interface RepositorySystemSession {
     }
 
     /**
-     * A mutable repository system session. Use of this class in everyday operations is discouraged, use
-     * {@link CloseableSession} instead. The sole purpose of this class is to bridge between
-     * {@link SessionBuilder} and {@link DefaultRepositorySystemSession} that both represent mutable session.
-     * No implementation of this interface is thread safe. To get immutable session, use {@link #build()} method.
+     * Builder for building {@link CloseableSession} instances. Builder instances can be created with
+     * {@link RepositorySystem#createSessionBuilder()} method. Instances are not thread-safe nor immutable.
+     * <p>
+     * Important: if you set a stateful member on builder (for example {@link SessionData} or {@link RepositoryCache}),
+     * the builder will create session instances using same provided stateful members, that may lead to unexpected side
+     * effects. Solution for these cases is to not reuse builder instances, or, keep reconfiguring it, or ultimately
+     * provide suppliers that create new instance per each call.
      *
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
      *
      * @since 2.0.0
      */
-    interface MutableSession extends RepositorySystemSession {
+    interface SessionBuilder {
         /**
          * Controls whether the repository system operates in offline mode and avoids/refuses any access to remote
          * repositories.
@@ -111,7 +101,7 @@ public interface RepositorySystemSession {
          * @param offline {@code true} if the repository system is in offline mode, {@code false} otherwise.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setOffline(boolean offline);
+        SessionBuilder setOffline(boolean offline);
 
         /**
          * Controls whether repositories declared in artifact descriptors should be ignored during transitive dependency
@@ -122,7 +112,7 @@ public interface RepositorySystemSession {
          *                                             specified repositories.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setIgnoreArtifactDescriptorRepositories(boolean ignoreArtifactDescriptorRepositories);
+        SessionBuilder setIgnoreArtifactDescriptorRepositories(boolean ignoreArtifactDescriptorRepositories);
 
         /**
          * Sets the policy which controls whether resolutions errors from remote repositories should be cached.
@@ -131,7 +121,7 @@ public interface RepositorySystemSession {
          *                              errors should generally not be cached.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy);
+        SessionBuilder setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy);
 
         /**
          * Sets the policy which controls how errors related to reading artifact descriptors should be handled.
@@ -140,7 +130,7 @@ public interface RepositorySystemSession {
          *                                 errors should generally not be tolerated.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setArtifactDescriptorPolicy(ArtifactDescriptorPolicy artifactDescriptorPolicy);
+        SessionBuilder setArtifactDescriptorPolicy(ArtifactDescriptorPolicy artifactDescriptorPolicy);
 
         /**
          * Sets the global checksum policy. If set, the global checksum policy overrides the checksum policies of the remote
@@ -152,7 +142,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#CHECKSUM_POLICY_IGNORE
          * @see RepositoryPolicy#CHECKSUM_POLICY_WARN
          */
-        MutableSession setChecksumPolicy(String checksumPolicy);
+        SessionBuilder setChecksumPolicy(String checksumPolicy);
 
         /**
          * Sets the global update policy. If set, the global update policy overrides the update policies of the remote
@@ -171,7 +161,7 @@ public interface RepositorySystemSession {
          * @see #setArtifactUpdatePolicy(String)
          * @see #setMetadataUpdatePolicy(String)
          */
-        MutableSession setUpdatePolicy(String updatePolicy);
+        SessionBuilder setUpdatePolicy(String updatePolicy);
 
         /**
          * Sets the global artifact update policy. If set, the global update policy overrides the artifact update policies
@@ -184,7 +174,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#UPDATE_POLICY_NEVER
          * @since 2.0.0
          */
-        MutableSession setArtifactUpdatePolicy(String artifactUpdatePolicy);
+        SessionBuilder setArtifactUpdatePolicy(String artifactUpdatePolicy);
 
         /**
          * Sets the global metadata update policy. If set, the global update policy overrides the metadata update policies
@@ -197,7 +187,7 @@ public interface RepositorySystemSession {
          * @see RepositoryPolicy#UPDATE_POLICY_NEVER
          * @since 2.0.0
          */
-        MutableSession setMetadataUpdatePolicy(String metadataUpdatePolicy);
+        SessionBuilder setMetadataUpdatePolicy(String metadataUpdatePolicy);
 
         /**
          * Sets the local repository manager used during this session. <em>Note:</em> Eventually, a valid session must have
@@ -206,7 +196,7 @@ public interface RepositorySystemSession {
          * @param localRepositoryManager The local repository manager used during this session, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager);
+        SessionBuilder setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager);
 
         /**
          * Sets the workspace reader used during this session. If set, the workspace reader will usually be consulted first
@@ -215,7 +205,7 @@ public interface RepositorySystemSession {
          * @param workspaceReader The workspace reader for this session, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setWorkspaceReader(WorkspaceReader workspaceReader);
+        SessionBuilder setWorkspaceReader(WorkspaceReader workspaceReader);
 
         /**
          * Sets the listener being notified of actions in the repository system.
@@ -223,7 +213,7 @@ public interface RepositorySystemSession {
          * @param repositoryListener The repository listener, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setRepositoryListener(RepositoryListener repositoryListener);
+        SessionBuilder setRepositoryListener(RepositoryListener repositoryListener);
 
         /**
          * Sets the listener being notified of uploads/downloads by the repository system.
@@ -231,7 +221,7 @@ public interface RepositorySystemSession {
          * @param transferListener The transfer listener, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setTransferListener(TransferListener transferListener);
+        SessionBuilder setTransferListener(TransferListener transferListener);
 
         /**
          * Sets the system properties to use, e.g. for processing of artifact descriptors. System properties are usually
@@ -243,7 +233,7 @@ public interface RepositorySystemSession {
          * @param systemProperties The system properties, may be {@code null} or empty if none.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setSystemProperties(Map<?, ?> systemProperties);
+        SessionBuilder setSystemProperties(Map<?, ?> systemProperties);
 
         /**
          * Sets the specified system property.
@@ -252,7 +242,7 @@ public interface RepositorySystemSession {
          * @param value The property value, may be {@code null} to remove/unset the property.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setSystemProperty(String key, String value);
+        SessionBuilder setSystemProperty(String key, String value);
 
         /**
          * Sets the user properties to use, e.g. for processing of artifact descriptors. User properties are similar to
@@ -265,7 +255,7 @@ public interface RepositorySystemSession {
          * @param userProperties The user properties, may be {@code null} or empty if none.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setUserProperties(Map<?, ?> userProperties);
+        SessionBuilder setUserProperties(Map<?, ?> userProperties);
 
         /**
          * Sets the specified user property.
@@ -274,7 +264,7 @@ public interface RepositorySystemSession {
          * @param value The property value, may be {@code null} to remove/unset the property.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setUserProperty(String key, String value);
+        SessionBuilder setUserProperty(String key, String value);
 
         /**
          * Sets the configuration properties used to tweak internal aspects of the repository system (e.g. thread pooling,
@@ -286,7 +276,7 @@ public interface RepositorySystemSession {
          * @param configProperties The configuration properties, may be {@code null} or empty if none.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setConfigProperties(Map<?, ?> configProperties);
+        SessionBuilder setConfigProperties(Map<?, ?> configProperties);
 
         /**
          * Sets the specified configuration property.
@@ -295,7 +285,7 @@ public interface RepositorySystemSession {
          * @param value The property value, may be {@code null} to remove/unset the property.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setConfigProperty(String key, Object value);
+        SessionBuilder setConfigProperty(String key, Object value);
 
         /**
          * Sets the mirror selector to use for repositories discovered in artifact descriptors. Note that this selector is
@@ -305,7 +295,7 @@ public interface RepositorySystemSession {
          * @param mirrorSelector The mirror selector to use, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setMirrorSelector(MirrorSelector mirrorSelector);
+        SessionBuilder setMirrorSelector(MirrorSelector mirrorSelector);
 
         /**
          * Sets the proxy selector to use for repositories discovered in artifact descriptors. Note that this selector is
@@ -316,7 +306,7 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          * @see RemoteRepository#getProxy()
          */
-        MutableSession setProxySelector(ProxySelector proxySelector);
+        SessionBuilder setProxySelector(ProxySelector proxySelector);
 
         /**
          * Sets the authentication selector to use for repositories discovered in artifact descriptors. Note that this
@@ -327,7 +317,7 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          * @see RemoteRepository#getAuthentication()
          */
-        MutableSession setAuthenticationSelector(AuthenticationSelector authenticationSelector);
+        SessionBuilder setAuthenticationSelector(AuthenticationSelector authenticationSelector);
 
         /**
          * Sets the registry of artifact types recognized by this session.
@@ -335,7 +325,7 @@ public interface RepositorySystemSession {
          * @param artifactTypeRegistry The artifact type registry, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry);
+        SessionBuilder setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry);
 
         /**
          * Sets the dependency traverser to use for building dependency graphs.
@@ -343,7 +333,7 @@ public interface RepositorySystemSession {
          * @param dependencyTraverser The dependency traverser to use for building dependency graphs, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setDependencyTraverser(DependencyTraverser dependencyTraverser);
+        SessionBuilder setDependencyTraverser(DependencyTraverser dependencyTraverser);
 
         /**
          * Sets the dependency manager to use for building dependency graphs.
@@ -351,7 +341,7 @@ public interface RepositorySystemSession {
          * @param dependencyManager The dependency manager to use for building dependency graphs, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setDependencyManager(DependencyManager dependencyManager);
+        SessionBuilder setDependencyManager(DependencyManager dependencyManager);
 
         /**
          * Sets the dependency selector to use for building dependency graphs.
@@ -359,7 +349,7 @@ public interface RepositorySystemSession {
          * @param dependencySelector The dependency selector to use for building dependency graphs, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setDependencySelector(DependencySelector dependencySelector);
+        SessionBuilder setDependencySelector(DependencySelector dependencySelector);
 
         /**
          * Sets the version filter to use for building dependency graphs.
@@ -368,7 +358,7 @@ public interface RepositorySystemSession {
          *                      versions.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setVersionFilter(VersionFilter versionFilter);
+        SessionBuilder setVersionFilter(VersionFilter versionFilter);
 
         /**
          * Sets the dependency graph transformer to use for building dependency graphs.
@@ -377,7 +367,7 @@ public interface RepositorySystemSession {
          *                                   {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setDependencyGraphTransformer(DependencyGraphTransformer dependencyGraphTransformer);
+        SessionBuilder setDependencyGraphTransformer(DependencyGraphTransformer dependencyGraphTransformer);
 
         /**
          * Sets the custom data associated with this session.
@@ -385,7 +375,7 @@ public interface RepositorySystemSession {
          * @param data The session data, may be {@code null}.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setData(SessionData data);
+        SessionBuilder setData(SessionData data);
 
         /**
          * Sets the cache the repository system may use to save data for future reuse during the session.
@@ -393,116 +383,6 @@ public interface RepositorySystemSession {
          * @param cache The repository cache, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
          */
-        MutableSession setCache(RepositoryCache cache);
-
-        /**
-         * Creates immutable session out this mutable instance.
-         *
-         * @return Immutable session, never {@code null}.
-         */
-        RepositorySystemSession build();
-    }
-
-    /**
-     * Builder for building {@link CloseableSession} instances. Builder instances can be created with
-     * {@link RepositorySystem#createSessionBuilder()} method. Instances are not thread-safe nor immutable.
-     * <p>
-     * Important: if you set a stateful member on builder (for example {@link SessionData} or {@link RepositoryCache}),
-     * the builder will create session instances using same provided stateful members, that may lead to unexpected side
-     * effects. Solution for these cases is to not reuse builder instances, or, keep reconfiguring it, or ultimately
-     * provide suppliers that create new instance per each call.
-     *
-     * @noimplement This interface is not intended to be implemented by clients.
-     * @noextend This interface is not intended to be extended by clients.
-     *
-     * @since 2.0.0
-     */
-    interface SessionBuilder extends MutableSession {
-        @Override
-        SessionBuilder setOffline(boolean offline);
-
-        @Override
-        SessionBuilder setIgnoreArtifactDescriptorRepositories(boolean ignoreArtifactDescriptorRepositories);
-
-        @Override
-        SessionBuilder setResolutionErrorPolicy(ResolutionErrorPolicy resolutionErrorPolicy);
-
-        @Override
-        SessionBuilder setArtifactDescriptorPolicy(ArtifactDescriptorPolicy artifactDescriptorPolicy);
-
-        @Override
-        SessionBuilder setChecksumPolicy(String checksumPolicy);
-
-        @Override
-        SessionBuilder setUpdatePolicy(String updatePolicy);
-
-        @Override
-        SessionBuilder setArtifactUpdatePolicy(String artifactUpdatePolicy);
-
-        @Override
-        SessionBuilder setMetadataUpdatePolicy(String metadataUpdatePolicy);
-
-        @Override
-        SessionBuilder setLocalRepositoryManager(LocalRepositoryManager localRepositoryManager);
-
-        @Override
-        SessionBuilder setWorkspaceReader(WorkspaceReader workspaceReader);
-
-        @Override
-        SessionBuilder setRepositoryListener(RepositoryListener repositoryListener);
-
-        @Override
-        SessionBuilder setTransferListener(TransferListener transferListener);
-
-        @Override
-        SessionBuilder setSystemProperties(Map<?, ?> systemProperties);
-
-        @Override
-        SessionBuilder setSystemProperty(String key, String value);
-
-        @Override
-        SessionBuilder setUserProperties(Map<?, ?> userProperties);
-
-        @Override
-        SessionBuilder setUserProperty(String key, String value);
-
-        @Override
-        SessionBuilder setConfigProperties(Map<?, ?> configProperties);
-
-        @Override
-        SessionBuilder setConfigProperty(String key, Object value);
-
-        @Override
-        SessionBuilder setMirrorSelector(MirrorSelector mirrorSelector);
-
-        @Override
-        SessionBuilder setProxySelector(ProxySelector proxySelector);
-
-        @Override
-        SessionBuilder setAuthenticationSelector(AuthenticationSelector authenticationSelector);
-
-        @Override
-        SessionBuilder setArtifactTypeRegistry(ArtifactTypeRegistry artifactTypeRegistry);
-
-        @Override
-        SessionBuilder setDependencyTraverser(DependencyTraverser dependencyTraverser);
-
-        @Override
-        SessionBuilder setDependencyManager(DependencyManager dependencyManager);
-
-        @Override
-        SessionBuilder setDependencySelector(DependencySelector dependencySelector);
-
-        @Override
-        SessionBuilder setVersionFilter(VersionFilter versionFilter);
-
-        @Override
-        SessionBuilder setDependencyGraphTransformer(DependencyGraphTransformer dependencyGraphTransformer);
-
-        @Override
-        SessionBuilder setData(SessionData data);
-
-        @Override
         SessionBuilder setCache(RepositoryCache cache);
 
         /**
