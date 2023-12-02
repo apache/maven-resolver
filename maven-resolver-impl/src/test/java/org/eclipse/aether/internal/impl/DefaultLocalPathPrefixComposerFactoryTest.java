@@ -77,7 +77,7 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
     @Test
     void splitEnabled() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
-        session.setConfigProperty("aether.enhancedLocalRepository.split", Boolean.TRUE.toString());
+        session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
         LocalPathPrefixComposer composer = factory.createComposer(session);
@@ -104,9 +104,11 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
     @Test
     void saneConfig() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
-        session.setConfigProperty("aether.enhancedLocalRepository.split", Boolean.TRUE.toString());
-        session.setConfigProperty("aether.enhancedLocalRepository.splitLocal", Boolean.TRUE.toString());
-        session.setConfigProperty("aether.enhancedLocalRepository.splitRemoteRepository", Boolean.TRUE.toString());
+        session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
+        session.setConfigProperty(
+                DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_LOCAL, Boolean.TRUE.toString());
+        session.setConfigProperty(
+                DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE_REPOSITORY, Boolean.TRUE.toString());
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
         LocalPathPrefixComposer composer = factory.createComposer(session);
@@ -165,10 +167,13 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
     @Test
     void fullConfig() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
-        session.setConfigProperty("aether.enhancedLocalRepository.split", Boolean.TRUE.toString());
-        session.setConfigProperty("aether.enhancedLocalRepository.splitLocal", Boolean.TRUE.toString());
-        session.setConfigProperty("aether.enhancedLocalRepository.splitRemote", Boolean.TRUE.toString());
-        session.setConfigProperty("aether.enhancedLocalRepository.splitRemoteRepository", Boolean.TRUE.toString());
+        session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
+        session.setConfigProperty(
+                DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_LOCAL, Boolean.TRUE.toString());
+        session.setConfigProperty(
+                DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE, Boolean.TRUE.toString());
+        session.setConfigProperty(
+                DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE_REPOSITORY, Boolean.TRUE.toString());
 
         LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
         LocalPathPrefixComposer composer = factory.createComposer(session);

@@ -20,10 +20,14 @@ package org.eclipse.aether.util;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
 
@@ -33,6 +37,10 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public final class FileUtils {
+    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we "atomic move" or not
+    private static final boolean IS_WINDOWS =
+            System.getProperty("os.name", "unknown").startsWith("Windows");
+
     private FileUtils() {
         // hide constructor
     }
@@ -52,7 +60,15 @@ public final class FileUtils {
      */
     public interface CollocatedTempFile extends TempFile {
         /**
-         * Atomically moves temp file to target file it is collocated with.
+         * Upon close, atomically moves temp file to target file it is collocated with overwriting target (if exists).
+         * Invocation of this method merely signals that caller ultimately wants temp file to replace the target
+         * file, but when this method returns, the move operation did not yet happen, it will happen when this
+         * instance is closed.
+         * <p>
+         * Invoking this method <em>without writing to temp file</em> {@link #getPath()} (thus, not creating a temp
+         * file to be moved) is considered a bug, a mistake of the caller. Caller of this method should ensure
+         * that this method is invoked ONLY when the temp file is created and moving it to its final place is
+         * required.
          */
         void move() throws IOException;
     }
@@ -98,21 +114,48 @@ public final class FileUtils {
         Path tempFile = parent.resolve(file.getFileName() + "."
                 + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
         return new CollocatedTempFile() {
+            private final AtomicBoolean wantsMove = new AtomicBoolean(false);
+
             @Override
             public Path getPath() {
                 return tempFile;
             }
 
             @Override
-            public void move() throws IOException {
-                Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+            public void move() {
+                wantsMove.set(true);
             }
 
             @Override
             public void close() throws IOException {
+                if (wantsMove.get()) {
+                    if (IS_WINDOWS) {
+                        copy(tempFile, file);
+                    } else {
+                        Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+                    }
+                }
                 Files.deleteIfExists(tempFile);
             }
         };
+    }
+
+    /**
+     * On Windows we use pre-NIO2 way to copy files, as for some reason it works. Beat me why.
+     */
+    private static void copy(Path source, Path target) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(1024 * 32);
+        byte[] array = buffer.array();
+        try (InputStream is = Files.newInputStream(source);
+                OutputStream os = Files.newOutputStream(target)) {
+            while (true) {
+                int bytes = is.read(array);
+                if (bytes < 0) {
+                    break;
+                }
+                os.write(array, 0, bytes);
+            }
+        }
     }
 
     /**

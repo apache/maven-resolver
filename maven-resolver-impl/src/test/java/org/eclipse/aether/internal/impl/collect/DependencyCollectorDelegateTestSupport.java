@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
@@ -156,6 +157,25 @@ public abstract class DependencyCollectorDelegateTestSupport {
         } catch (IndexOutOfBoundsException | NullPointerException e) {
             throw new IllegalArgumentException("illegal coordinates for child", e);
         }
+    }
+
+    @Test
+    void testInterruption() throws Exception {
+        Dependency dependency = newDep("gid:aid:ext:ver", "compile");
+        CollectRequest request = new CollectRequest(dependency, singletonList(repository));
+        AtomicReference<Object> cause = new AtomicReference<>(null);
+        Thread t = new Thread(() -> {
+            Thread.currentThread().interrupt();
+            try {
+                collector.collectDependencies(session, request);
+                fail("We should throw");
+            } catch (DependencyCollectionException e) {
+                cause.set(e.getCause());
+            }
+        });
+        t.start();
+        t.join();
+        assertTrue(cause.get() instanceof InterruptedException, String.valueOf(cause.get()));
     }
 
     @Test

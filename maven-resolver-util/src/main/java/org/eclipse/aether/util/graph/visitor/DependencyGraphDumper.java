@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.util.graph.visitor;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -34,7 +34,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A dependency visitor that dumps the graph to any {@link Consumer<String>}. Meant for diagnostic and testing, as
+ * A dependency visitor that dumps the graph to any {@link Consumer}{@code <String>}. Meant for diagnostic and testing, as
  * it may output the graph to standard output, error or even some logging interface.
  *
  * @since 1.9.8
@@ -43,7 +43,7 @@ public class DependencyGraphDumper implements DependencyVisitor {
 
     private final Consumer<String> consumer;
 
-    private final List<ChildInfo> childInfos = new ArrayList<>();
+    private final Deque<DependencyNode> nodes = new ArrayDeque<>();
 
     public DependencyGraphDumper(Consumer<String> consumer) {
         this.consumer = requireNonNull(consumer);
@@ -51,24 +51,50 @@ public class DependencyGraphDumper implements DependencyVisitor {
 
     @Override
     public boolean visitEnter(DependencyNode node) {
-        consumer.accept(formatIndentation() + formatNode(node));
-        childInfos.add(new ChildInfo(node.getChildren().size()));
+        nodes.push(node);
+        consumer.accept(formatLine(nodes));
         return true;
     }
 
-    private String formatIndentation() {
+    @Override
+    public boolean visitLeave(DependencyNode node) {
+        if (!nodes.isEmpty()) {
+            nodes.pop();
+        }
+        return true;
+    }
+
+    protected String formatLine(Deque<DependencyNode> nodes) {
+        return formatIndentation(nodes) + formatNode(nodes);
+    }
+
+    protected String formatIndentation(Deque<DependencyNode> nodes) {
         StringBuilder buffer = new StringBuilder(128);
-        for (Iterator<ChildInfo> it = childInfos.iterator(); it.hasNext(); ) {
-            buffer.append(it.next().formatIndentation(!it.hasNext()));
+        Iterator<DependencyNode> iter = nodes.descendingIterator();
+        DependencyNode parent = iter.hasNext() ? iter.next() : null;
+        DependencyNode child = iter.hasNext() ? iter.next() : null;
+        while (parent != null && child != null) {
+            boolean lastChild = parent.getChildren().get(parent.getChildren().size() - 1) == child;
+            boolean end = child == nodes.peekFirst();
+            String indent;
+            if (end) {
+                indent = lastChild ? "\\- " : "+- ";
+            } else {
+                indent = lastChild ? "   " : "|  ";
+            }
+            buffer.append(indent);
+            parent = child;
+            child = iter.hasNext() ? iter.next() : null;
         }
         return buffer.toString();
     }
 
-    private String formatNode(DependencyNode node) {
+    protected String formatNode(Deque<DependencyNode> nodes) {
+        DependencyNode node = requireNonNull(nodes.peek(), "bug: should not happen");
         StringBuilder buffer = new StringBuilder(128);
         Artifact a = node.getArtifact();
-        Dependency d = node.getDependency();
         buffer.append(a);
+        Dependency d = node.getDependency();
         if (d != null && !d.getScope().isEmpty()) {
             buffer.append(" [").append(d.getScope());
             if (d.isOptional()) {
@@ -101,35 +127,5 @@ public class DependencyGraphDumper implements DependencyVisitor {
             }
         }
         return buffer.toString();
-    }
-
-    @Override
-    public boolean visitLeave(DependencyNode node) {
-        if (!childInfos.isEmpty()) {
-            childInfos.remove(childInfos.size() - 1);
-        }
-        if (!childInfos.isEmpty()) {
-            childInfos.get(childInfos.size() - 1).index++;
-        }
-        return true;
-    }
-
-    private static class ChildInfo {
-
-        final int count;
-
-        int index;
-
-        ChildInfo(int count) {
-            this.count = count;
-        }
-
-        public String formatIndentation(boolean end) {
-            boolean last = index + 1 >= count;
-            if (end) {
-                return last ? "\\- " : "+- ";
-            }
-            return last ? "   " : "|  ";
-        }
     }
 }

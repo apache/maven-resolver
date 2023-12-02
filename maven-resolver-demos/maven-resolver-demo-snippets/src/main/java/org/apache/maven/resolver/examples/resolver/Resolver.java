@@ -24,7 +24,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -62,11 +61,11 @@ public class Resolver {
     }
 
     private RepositorySystemSession newSession() {
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(repositorySystem);
-        session.setLocalRepositoryManager(repositorySystem.newLocalRepositoryManager(session, localRepository));
-        session.setTransferListener(null);
-        session.setRepositoryListener(null);
-        return session;
+        return Booter.newRepositorySystemSession(repositorySystem)
+                .withLocalRepositories(localRepository)
+                .setRepositoryListener(null)
+                .setTransferListener(null)
+                .build();
     }
 
     public ResolverResult resolve(String groupId, String artifactId, String version)

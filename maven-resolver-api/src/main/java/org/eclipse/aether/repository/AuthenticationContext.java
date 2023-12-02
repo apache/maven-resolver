@@ -142,7 +142,7 @@ public final class AuthenticationContext implements Closeable {
     /**
      * Gets an authentication context for the specified repository.
      *
-     * @param session The repository system session during which the repository is accessed, must not be {@code null}.
+     * @param session The repository system session during which the repository is accessed, may be {@code null}.
      * @param repository The repository for which to create an authentication context, must not be {@code null}.
      * @return An authentication context for the repository or {@code null} if no authentication is configured for it.
      */
@@ -153,7 +153,7 @@ public final class AuthenticationContext implements Closeable {
     /**
      * Gets an authentication context for the proxy of the specified repository.
      *
-     * @param session The repository system session during which the repository is accessed, must not be {@code null}.
+     * @param session The repository system session during which the repository is accessed, may be {@code null}.
      * @param repository The repository for whose proxy to create an authentication context, must not be {@code null}.
      * @return An authentication context for the proxy or {@code null} if no proxy is set or no authentication is
      *         configured for it.
@@ -173,17 +173,17 @@ public final class AuthenticationContext implements Closeable {
 
     private AuthenticationContext(
             RepositorySystemSession session, RemoteRepository repository, Proxy proxy, Authentication auth) {
-        this.session = requireNonNull(session, "repository system session cannot be null");
-        this.repository = repository;
+        this.session = session;
+        this.repository = requireNonNull(repository, "null repository");
         this.proxy = proxy;
         this.auth = auth;
         authData = new HashMap<>();
     }
 
     /**
-     * Gets the repository system session during which the authentication happens.
+     * Gets the repository system session during which the authentication happens (if within session).
      *
-     * @return The repository system session, never {@code null}.
+     * @return The repository system session, may be {@code null} if context is created outside of session.
      */
     public RepositorySystemSession getSession() {
         return session;

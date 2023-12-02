@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * A repository listener that delegates to zero or more other listeners (multicast). The list of target listeners is
  * thread-safe, i.e. target listeners can be added or removed by any thread at any time.
  */
-public final class ChainedRepositoryListener extends AbstractRepositoryListener {
+public class ChainedRepositoryListener extends AbstractRepositoryListener {
 
     private final List<RepositoryListener> listeners = new CopyOnWriteArrayList<>();
 
@@ -110,6 +110,9 @@ public final class ChainedRepositoryListener extends AbstractRepositoryListener 
         }
     }
 
+    /**
+     * Invoked when any listener throws, by default is no op, extend if required.
+     */
     @SuppressWarnings("EmptyMethod")
     protected void handleError(RepositoryEvent event, RepositoryListener listener, RuntimeException error) {
         // default just swallows errors

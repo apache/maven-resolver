@@ -29,15 +29,21 @@
   <artifactId>maven-resolver-transport-jdk-8</artifactId>
   <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Transport JDK (8)</name>
+  <name>Maven Artifact Resolver Transport JDK 8</name>
   <description>Maven Artifact Transport JDK Java 11+.</description>
 
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.transport.jdk</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+
+    <javaVersion>8</javaVersion>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
@@ -79,5 +85,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

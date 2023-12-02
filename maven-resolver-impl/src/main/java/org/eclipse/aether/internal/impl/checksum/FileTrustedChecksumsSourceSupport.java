@@ -24,12 +24,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -54,22 +54,8 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSource {
-    private static final String CONFIG_PROP_PREFIX = "aether.trustedChecksumsSource.";
-
-    private static final String CONF_NAME_BASEDIR = "basedir";
-
-    private static final String CONF_NAME_ORIGIN_AWARE = "originAware";
-
-    /**
-     * Visible for testing.
-     */
-    static final String LOCAL_REPO_PREFIX_DIR = ".checksums";
-
-    private final String name;
-
-    FileTrustedChecksumsSourceSupport(String name) {
-        this.name = requireNonNull(name);
-    }
+    protected static final String CONFIG_PROPS_PREFIX =
+            ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
 
     /**
      * This implementation will call into underlying code only if enabled, and will enforce non-{@code null} return
@@ -122,30 +108,11 @@ abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSour
     }
 
     /**
-     * To be used by underlying implementations to form configuration property keys properly scoped.
-     */
-    protected String configPropKey(String name) {
-        requireNonNull(name);
-        return CONFIG_PROP_PREFIX + this.name + "." + name;
-    }
-
-    /**
      * Returns {@code true} if session configuration marks this instance as enabled.
      * <p>
      * Default value is {@code false}.
      */
-    protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_PREFIX + this.name);
-    }
-
-    /**
-     * Returns {@code true} if session configuration marks this instance as origin aware.
-     * <p>
-     * Default value is {@code true}.
-     */
-    protected boolean isOriginAware(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, true, configPropKey(CONF_NAME_ORIGIN_AWARE));
-    }
+    protected abstract boolean isEnabled(RepositorySystemSession session);
 
     /**
      * Uses utility {@link DirectoryUtils#resolveDirectory(RepositorySystemSession, String, String, boolean)} to
@@ -156,10 +123,10 @@ abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSour
      *
      * @return The {@link Path} of basedir, never {@code null}.
      */
-    protected Path getBasedir(RepositorySystemSession session, boolean mayCreate) {
+    protected Path getBasedir(
+            RepositorySystemSession session, String defaultValue, String configPropKey, boolean mayCreate) {
         try {
-            return DirectoryUtils.resolveDirectory(
-                    session, LOCAL_REPO_PREFIX_DIR, configPropKey(CONF_NAME_BASEDIR), mayCreate);
+            return DirectoryUtils.resolveDirectory(session, defaultValue, configPropKey, mayCreate);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

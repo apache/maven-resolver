@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>40</version>
+    <version>41</version>
     <relativePath />
   </parent>
 
@@ -58,10 +58,11 @@
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-jdk-parent</module>
-    <module>maven-resolver-transport-http</module>
+    <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-supplier</module>
     <module>maven-resolver-demos</module>
+    <module>maven-resolver-tools</module>
   </modules>
 
   <scm>
@@ -88,6 +89,8 @@
   <properties>
     <javaVersion>8</javaVersion>
     <maven.compiler.release>${javaVersion}</maven.compiler.release>
+    <maven.compiler.target>${javaVersion}</maven.compiler.target>
+    <maven.compiler.source>${javaVersion}</maven.compiler.source>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
@@ -98,8 +101,9 @@
     <!-- used by supplier and demo only -->
     <mavenVersion>4.0.0-alpha-8</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
-    <minimalJavaBuildVersion>[11.0.16,)</minimalJavaBuildVersion>
-    <project.build.outputTimestamp>2023-10-10T21:40:45Z</project.build.outputTimestamp>
+    <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
+    <minimalJavaBuildVersion>[17,)</minimalJavaBuildVersion>
+    <project.build.outputTimestamp>2023-11-28T14:39:10Z</project.build.outputTimestamp>
   </properties>
 
   <dependencyManagement>
@@ -156,7 +160,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-transport-http</artifactId>
+        <artifactId>maven-resolver-transport-apache</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -179,7 +183,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.10.0</version>
+        <version>5.10.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -190,10 +194,16 @@
         <scope>test</scope>
       </dependency>
 
+      <!-- we need override plexus-util/xml versions from parent -->
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>3.5.1</version>
+        <version>4.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-xml</artifactId>
+        <version>4.0.2</version>
       </dependency>
 
       <dependency>
@@ -227,7 +237,7 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-testing</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
       </dependency>
 
       <dependency>
@@ -316,6 +326,9 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
+                    <!-- MRESOLVER-440 Move properties to their place and cleanup -->
+                    <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
+                    <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -357,6 +370,9 @@
                     <!-- MRESOLVER-157 Dropping ServiceLocator -->
                     <exclude>org.eclipse.aether.spi.locator.Service</exclude>
                     <exclude>org.eclipse.aether.spi.locator.ServiceLocator</exclude>
+                    <!-- MRESOLVER-440 Move properties to their place and cleanup -->
+                    <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
+                    <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
@@ -390,12 +406,15 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.6.0</version>
           <configuration>
             <detectOfflineLinks>false</detectOfflineLinks>
             <linksource>true</linksource>
             <notimestamp>true</notimestamp>
+            <legacyMode>true</legacyMode>
+            <release>21</release>
             <links>
-              <link>https://download.oracle.com/javase/${javaVersion}/docs/api/</link>
+              <link>https://docs.oracle.com/en/java/javase/21/docs/api/</link>
             </links>
             <tags>
               <tag>
@@ -427,6 +446,27 @@
                 <name>provisional</name>
                 <placement>a</placement>
                 <head>Provisional:</head>
+              </tag>
+              <!-- Configuration related -->
+              <tag>
+                <name>configurationSource</name>
+                <placement>a</placement>
+                <head>Sourced from:</head>
+              </tag>
+              <tag>
+                <name>configurationType</name>
+                <placement>a</placement>
+                <head>Value type:</head>
+              </tag>
+              <tag>
+                <name>configurationDefaultValue</name>
+                <placement>a</placement>
+                <head>Default value:</head>
+              </tag>
+              <tag>
+                <name>configurationRepoIdSuffix</name>
+                <placement>a</placement>
+                <head>Supports Repo ID Suffix:</head>
               </tag>
             </tags>
             <groups>
@@ -552,38 +592,6 @@
                 <Automatic-Module-Name>${Automatic-Module-Name}</Automatic-Module-Name>
               </manifestEntries>
             </archive>
-          </configuration>
-        </plugin>
-        <!-- Remove when Parent 41 used -->
-        <plugin>
-          <groupId>com.diffplug.spotless</groupId>
-          <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.40.0</version>
-          <configuration>
-            <java>
-              <!-- orders of used formatters are important MPOM-376 -->
-              <!-- eg. palantir override importOrder, so should be first -->
-              <palantirJavaFormat>
-                <version>2.38.0</version>
-              </palantirJavaFormat>
-              <removeUnusedImports />
-              <importOrder>
-                <file>config/maven-eclipse-importorder.txt</file>
-              </importOrder>
-              <licenseHeader>
-                <file>config/maven-header-plain.txt</file>
-              </licenseHeader>
-            </java>
-            <pom>
-              <sortPom>
-                <expandEmptyElements>false</expandEmptyElements>
-                <!-- https://issues.apache.org/jira/browse/MRELEASE-1111 -->
-                <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
-              </sortPom>
-            </pom>
-            <upToDateChecking>
-              <enabled>true</enabled>
-            </upToDateChecking>
           </configuration>
         </plugin>
       </plugins>

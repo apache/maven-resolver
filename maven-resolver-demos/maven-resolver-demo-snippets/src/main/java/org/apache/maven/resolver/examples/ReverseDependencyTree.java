@@ -20,8 +20,9 @@ package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.apache.maven.resolver.examples.util.ReverseTreeRepositoryListener;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
+import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -45,34 +46,34 @@ public class ReverseDependencyTree {
         System.out.println("------------------------------------------------------------");
         System.out.println(ReverseDependencyTree.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
+            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
+            try (CloseableSession session = sessionBuilder.build()) {
+                sessionBuilder.setRepositoryListener(new ChainedRepositoryListener(
+                        session.getRepositoryListener(), new ReverseTreeRepositoryListener()));
+            }
+            sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
+            sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
+            try (CloseableSession session = sessionBuilder.build()) {
+                Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
-        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
+                ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+                descriptorRequest.setArtifact(artifact);
+                descriptorRequest.setRepositories(Booter.newRepositories(system, session));
+                ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor(session, descriptorRequest);
 
-        // install the listener into session
-        session.setRepositoryListener(
-                new ChainedRepositoryListener(session.getRepositoryListener(), new ReverseTreeRepositoryListener()));
+                CollectRequest collectRequest = new CollectRequest();
+                collectRequest.setRequestContext("demo");
+                collectRequest.setRootArtifact(descriptorResult.getArtifact());
+                collectRequest.setDependencies(descriptorResult.getDependencies());
+                collectRequest.setManagedDependencies(descriptorResult.getManagedDependencies());
+                collectRequest.setRepositories(descriptorRequest.getRepositories());
 
-        session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
-        session.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
+                system.collectDependencies(session, collectRequest);
 
-        Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
-
-        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-        descriptorRequest.setArtifact(artifact);
-        descriptorRequest.setRepositories(Booter.newRepositories(system, session));
-        ArtifactDescriptorResult descriptorResult = system.readArtifactDescriptor(session, descriptorRequest);
-
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRequestContext("demo");
-        collectRequest.setRootArtifact(descriptorResult.getArtifact());
-        collectRequest.setDependencies(descriptorResult.getDependencies());
-        collectRequest.setManagedDependencies(descriptorResult.getManagedDependencies());
-        collectRequest.setRepositories(descriptorRequest.getRepositories());
-
-        system.collectDependencies(session, collectRequest);
-
-        // in this demo we are not interested in collect result,
-        // as all the "demo work" is done by installed ReverseTreeRepositoryListener
+                // in this demo we are not interested in collect result,
+                // as all the "demo work" is done by installed ReverseTreeRepositoryListener
+            }
+        }
     }
 }

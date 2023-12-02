@@ -18,16 +18,16 @@
  */
 package org.apache.maven.resolver.examples.util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.supplier.SessionBuilderSupplier;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 
 /**
@@ -60,19 +60,14 @@ public class Booter {
         }
     }
 
-    public static DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
-        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-
-        LocalRepository localRepo = new LocalRepository("target/local-repo");
-        session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
-
-        session.setTransferListener(new ConsoleTransferListener());
-        session.setRepositoryListener(new ConsoleRepositoryListener());
-
+    public static SessionBuilder newRepositorySystemSession(RepositorySystem system) {
+        return new SessionBuilderSupplier(system)
+                .get()
+                .withLocalRepositoryBaseDirectories(new File("target/local-repo"))
+                .setRepositoryListener(new ConsoleRepositoryListener())
+                .setTransferListener(new ConsoleTransferListener());
         // uncomment to generate dirty trees
         // session.setDependencyGraphTransformer( null );
-
-        return session;
     }
 
     public static List<RemoteRepository> newRepositories(RepositorySystem system, RepositorySystemSession session) {

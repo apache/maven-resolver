@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -29,11 +30,11 @@ import org.eclipse.aether.graph.DependencyNode;
  * regardless how many paths within the dependency graph lead to the node such that the resulting node sequence is
  * free of duplicates.
  *
- * @since TBD
+ * @since 2.0.0
  */
 public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 
-    public static final String NAME = "levelOrder";
+    public static final String NAME = ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER;
 
     private final HashMap<Integer, ArrayList<DependencyNode>> nodesPerLevel;
 

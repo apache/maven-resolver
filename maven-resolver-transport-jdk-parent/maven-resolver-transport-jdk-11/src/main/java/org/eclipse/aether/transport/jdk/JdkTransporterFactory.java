@@ -29,9 +29,9 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import static java.util.Objects.requireNonNull;
 
 /**
- * JDK Transport factory.
+ * JDK Transport factory: on Java11+ it works.
  *
- * @since TBD
+ * @since 2.0.0
  */
 @Named(JdkTransporterFactory.NAME)
 public final class JdkTransporterFactory implements TransporterFactory {
@@ -59,6 +59,18 @@ public final class JdkTransporterFactory implements TransporterFactory {
             throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
         }
 
-        return new JdkHttpTransporter(session, repository);
+        return new JdkTransporter(session, repository, javaVersion());
+    }
+
+    private static int javaVersion() {
+        try {
+            final String version = System.getProperty("java.version", "11" /* default must pass */);
+            final int dot = version.indexOf('.');
+            final int hyphen = version.indexOf('-');
+            final int sep = (dot > 0 && dot < hyphen || hyphen < 0) ? dot : hyphen;
+            return Integer.parseInt(sep > 0 ? version.substring(0, sep) : version);
+        } catch (final NumberFormatException nfe) {
+            return 11; // cannot be a pre-java 11 version so let it pass
+        }
     }
 }

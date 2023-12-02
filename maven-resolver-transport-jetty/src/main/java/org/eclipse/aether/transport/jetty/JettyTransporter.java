@@ -62,11 +62,13 @@ import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A transporter for HTTP/HTTPS.
  *
- * @since TBD
+ * @since 2.0.0
  */
 final class JettyTransporter extends AbstractTransporter {
     private static final int MULTIPLE_CHOICES = 300;
@@ -346,6 +348,8 @@ final class JettyTransporter extends AbstractTransporter {
      */
     static final String JETTY_INSTANCE_KEY_PREFIX = JettyTransporterFactory.class.getName() + ".jetty.";
 
+    static final Logger LOGGER = LoggerFactory.getLogger(JettyTransporter.class);
+
     @SuppressWarnings("checkstyle:methodlength")
     private static HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
@@ -430,6 +434,16 @@ final class JettyTransporter extends AbstractTransporter {
                                 httpClient.getAuthenticationStore().addAuthentication(proxyAuthentication);
                             }
                         }
+                    }
+                    if (!session.addOnSessionEndedHandler(() -> {
+                        try {
+                            httpClient.stop();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    })) {
+                        LOGGER.warn(
+                                "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
                     }
                     httpClient.start();
                     return httpClient;

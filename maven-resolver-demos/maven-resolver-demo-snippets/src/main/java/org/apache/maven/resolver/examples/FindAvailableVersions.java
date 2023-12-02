@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.VersionRangeRequest;
@@ -43,20 +43,20 @@ public class FindAvailableVersions {
         System.out.println("------------------------------------------------------------");
         System.out.println(FindAvailableVersions.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+                CloseableSession session =
+                        Booter.newRepositorySystemSession(system).build()) {
+            Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:[0,)");
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession(system);
+            VersionRangeRequest rangeRequest = new VersionRangeRequest();
+            rangeRequest.setArtifact(artifact);
+            rangeRequest.setRepositories(Booter.newRepositories(system, session));
 
-        Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:[0,)");
+            VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest);
 
-        VersionRangeRequest rangeRequest = new VersionRangeRequest();
-        rangeRequest.setArtifact(artifact);
-        rangeRequest.setRepositories(Booter.newRepositories(system, session));
+            List<Version> versions = rangeResult.getVersions();
 
-        VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest);
-
-        List<Version> versions = rangeResult.getVersions();
-
-        System.out.println("Available versions " + versions);
+            System.out.println("Available versions " + versions);
+        }
     }
 }

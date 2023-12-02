@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,7 @@ import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
+import org.eclipse.aether.internal.impl.session.DefaultSessionBuilder;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -98,6 +100,8 @@ import static java.util.Objects.requireNonNull;
 @Named
 public class DefaultRepositorySystem implements RepositorySystem {
     private final AtomicBoolean shutdown;
+
+    private final AtomicInteger sessionIdCounter;
 
     private final VersionResolver versionResolver;
 
@@ -139,6 +143,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
             RemoteRepositoryManager remoteRepositoryManager,
             RepositorySystemLifecycle repositorySystemLifecycle) {
         this.shutdown = new AtomicBoolean(false);
+        this.sessionIdCounter = new AtomicInteger(0);
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
         this.artifactResolver = requireNonNull(artifactResolver, "artifact resolver cannot be null");
@@ -307,8 +312,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
             RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
         String strategy = ConfigUtils.getString(
                 session,
-                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR,
-                ConfigurationProperties.REPOSITORY_SYSTEM_RESOLVER_DEPENDENCIES_VISITOR);
+                ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER,
+                ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR);
         switch (strategy) {
             case PreorderDependencyNodeConsumerVisitor.NAME:
                 return new PreorderDependencyNodeConsumerVisitor(nodeConsumer);
@@ -351,6 +356,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
             RepositorySystemSession session, LocalRepository localRepository) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(localRepository, "localRepository cannot be null");
+        validateSystem();
 
         try {
             return localRepositoryProvider.newLocalRepositoryManager(session, localRepository);
@@ -390,7 +396,15 @@ public class DefaultRepositorySystem implements RepositorySystem {
 
     @Override
     public void addOnSystemEndedHandler(Runnable handler) {
+        validateSystem();
         repositorySystemLifecycle.addOnSystemEndedHandler(handler);
+    }
+
+    @Override
+    public RepositorySystemSession.SessionBuilder createSessionBuilder() {
+        validateSystem();
+        return new DefaultSessionBuilder(
+                this, repositorySystemLifecycle, () -> "id-" + sessionIdCounter.incrementAndGet());
     }
 
     @Override
@@ -411,6 +425,10 @@ public class DefaultRepositorySystem implements RepositorySystem {
         invalidSession(session.getAuthenticationSelector(), "authentication selector");
         invalidSession(session.getArtifactTypeRegistry(), "artifact type registry");
         invalidSession(session.getData(), "data");
+        validateSystem();
+    }
+
+    private void validateSystem() {
         if (shutdown.get()) {
             throw new IllegalStateException("repository system is already shut down");
         }

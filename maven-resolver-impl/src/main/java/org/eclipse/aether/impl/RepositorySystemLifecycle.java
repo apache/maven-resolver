@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.impl;
 
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
+
 /**
  * Lifecycle managing component for repository system.
  *
@@ -39,4 +41,33 @@ public interface RepositorySystemLifecycle {
      * Throws if repository system is already shut down.
      */
     void addOnSystemEndedHandler(Runnable handler);
+
+    /**
+     * Registers the session for lifecycle tracking: it marks that the passed in session instance is about to start.
+     * <p>
+     * <em>Same session instance can be started only once.</em>
+     *
+     * @since 2.0.0
+     */
+    void sessionStarted(CloseableSession session);
+
+    /**
+     * Signals that passed in session was ended, it will not be used anymore. Repository system
+     * will invoke the registered handlers for this session, if any. This method throws if the passed in session
+     * instance was not passed to method {@link #sessionStarted(CloseableSession)} beforehand.
+     * <p>
+     * <em>Same session instance can be ended only once.</em>
+     *
+     * @since 2.0.0
+     */
+    void sessionEnded(CloseableSession session);
+
+    /**
+     * Registers an "on session end" handler.
+     * <p>
+     * Throws if session was not passed to {@link #sessionStarted(CloseableSession)} beforehand.
+     *
+     * @since 2.0.0
+     */
+    void addOnSessionEndedHandle(CloseableSession session, Runnable handler);
 }

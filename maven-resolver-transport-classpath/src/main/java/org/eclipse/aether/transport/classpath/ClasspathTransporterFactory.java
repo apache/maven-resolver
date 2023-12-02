@@ -20,6 +20,7 @@ package org.eclipse.aether.transport.classpath;
 
 import javax.inject.Named;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
@@ -44,11 +45,15 @@ public final class ClasspathTransporterFactory implements TransporterFactory {
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
      * properties} used to store a {@link ClassLoader} from which resources should be retrieved. If unspecified, the
      * {@link Thread#getContextClassLoader() context class loader} of the current thread will be used.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.ClassLoader}
      */
-    public static final String CONFIG_PROP_CLASS_LOADER = "aether.connector.classpath.loader";
+    public static final String CONFIG_PROP_CLASS_LOADER = ConfigurationProperties.PREFIX_TRANSPORT + NAME + ".loader";
 
     private float priority;
 
+    @Override
     public float getPriority() {
         return priority;
     }
@@ -64,6 +69,7 @@ public final class ClasspathTransporterFactory implements TransporterFactory {
         return this;
     }
 
+    @Override
     public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");

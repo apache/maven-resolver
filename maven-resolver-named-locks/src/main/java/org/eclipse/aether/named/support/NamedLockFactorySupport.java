@@ -39,8 +39,13 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
      * System property key to enable locking diagnostic collection.
      *
      * @since 1.9.11
+     * @configurationSource {@link System#getProperty(String, String)}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
      */
-    private static final boolean DIAGNOSTIC_ENABLED = Boolean.getBoolean("aether.named.diagnostic.enabled");
+    public static final String SYSTEM_PROP_DIAGNOSTIC_ENABLED = "aether.named.diagnostic.enabled";
+
+    private static final boolean DIAGNOSTIC_ENABLED = Boolean.getBoolean(SYSTEM_PROP_DIAGNOSTIC_ENABLED);
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
