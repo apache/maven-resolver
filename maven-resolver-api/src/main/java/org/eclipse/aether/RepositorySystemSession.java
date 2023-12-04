@@ -371,6 +371,8 @@ public interface RepositorySystemSession {
 
         /**
          * Sets the custom data associated with this session.
+         * Note: When this method used to set instance, same passed instance will be used for every built session out
+         * of this builder instance, hence the built sessions will share these instances as well!
          *
          * @param data The session data, may be {@code null}.
          * @return This session for chaining, never {@code null}.
@@ -379,6 +381,8 @@ public interface RepositorySystemSession {
 
         /**
          * Sets the cache the repository system may use to save data for future reuse during the session.
+         * Note: When this method used to set instance, same passed instance will be used for every built session out
+         * of this builder instance, hence the built sessions will share these instances as well!
          *
          * @param cache The repository cache, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
@@ -387,6 +391,8 @@ public interface RepositorySystemSession {
 
         /**
          * Sets the custom session data supplier associated with this session.
+         * Note: The supplier will be used for every built session out of this builder instance, so if supplier supplies
+         * <em>same instance</em> the built sessions will share these instances as well!
          *
          * @param dataSupplier The session data supplier, may not be {@code null}.
          * @return This session for chaining, never {@code null}.
@@ -395,6 +401,8 @@ public interface RepositorySystemSession {
 
         /**
          * Sets the cache supplier for the repository system may use to save data for future reuse during the session.
+         * Note: The supplier will be used for every built session out of this builder instance, so if supplier supplies
+         * <em>same instance</em> the built sessions will share these instances as well!
          *
          * @param cacheSupplier The repository cache supplier, may not be {@code null}.
          * @return This session for chaining, never {@code null}.
