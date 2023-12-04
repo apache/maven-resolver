@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultSessionData;
@@ -76,8 +75,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
     private final Supplier<String> sessionIdSupplier;
-
-    private final AtomicBoolean closed;
 
     private boolean offline;
 
@@ -141,22 +138,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.sessionIdSupplier = requireNonNull(sessionIdSupplier);
-        this.closed = null;
-    }
-
-    /**
-     * "Copy constructor" used by {@link DefaultCloseableSession#copy()}. It carries over session ID and builder will
-     * create same ID sessions.
-     */
-    DefaultSessionBuilder(
-            RepositorySystem repositorySystem,
-            RepositorySystemLifecycle repositorySystemLifecycle,
-            String sessionId,
-            AtomicBoolean closed) {
-        this.repositorySystem = requireNonNull(repositorySystem);
-        this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
-        this.sessionIdSupplier = () -> sessionId;
-        this.closed = closed;
     }
 
     @Override
@@ -429,7 +410,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public CloseableSession build() {
         return new DefaultCloseableSession(
                 sessionIdSupplier.get(),
-                closed,
                 offline,
                 ignoreArtifactDescriptorRepositories,
                 resolutionErrorPolicy,
