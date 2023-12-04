@@ -123,6 +123,7 @@ under the License.
 | 96. | `"aether.trustedChecksumsSource.summaryFile.basedir"` | `java.lang.String` | The basedir where checksums are. If relative, is resolved from local repository root. |  `".checksums"`  | 1.9.0 |  No  | Session Configuration |
 | 97. | `"aether.trustedChecksumsSource.summaryFile.originAware"` | `java.lang.Boolean` | Is source origin aware? |  `true`  | 1.9.0 |  No  | Session Configuration |
 | 98. | `"aether.updateCheckManager.sessionState"` | `java.lang.String` | Manages the session state, i.e. influences if the same download requests to artifacts/metadata will happen multiple times within the same RepositorySystemSession. If "enabled" will enable the session state. If "bypass" will enable bypassing (i.e. store all artifact ids/metadata ids which have been updates but not evaluating those). All other values lead to disabling the session state completely. |  `"enabled"`  |  |  No  | Session Configuration |
+| 99. | `"aether.versionScheme.name"` | `java.lang.String` | The name of the version scheme to be used in session. |  `"generic"`  | 2.0.0 |  No  | Session Configuration |
 
 
 All properties which have `yes` in the column `Supports Repo ID Suffix` can be optionally configured specifically for a repository id. In that case the configuration property needs to be suffixed with a period followed by the repository id of the repository to configure, e.g. `aether.connector.http.headers.central` for repository with id `central`.
