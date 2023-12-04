@@ -47,12 +47,23 @@ import org.eclipse.aether.transfer.TransferListener;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A simple repository system session.
+ * A legacy repository system session. It is usable to "derive" sessions from existing session instances (using
+ * copy-constructor), but the recommended way to derive sessions is using
+ * {@link org.eclipse.aether.RepositorySystemSession.SessionBuilder#withRepositorySystemSession(RepositorySystemSession)}
+ * instead.
+ * <p>
+ * <em>Important: while the default constructor on this class is deprecated only, it is left only to guarantee
+ * backward compatibility with legacy code, but the default constructor should not be used anymore. Using that
+ * constructor will lead to resource leaks.</em>
  * <p>
  * <strong>Note:</strong> This class is not thread-safe. It is assumed that the mutators get only called during an
  * initialization phase and that the session itself is not changed once initialized and being used by the repository
  * system. It is recommended to call {@link #setReadOnly()} once the session has been fully initialized to prevent
  * accidental manipulation of it afterward.
+ *
+ * @see RepositorySystem#createSessionBuilder()
+ * @see RepositorySystemSession.SessionBuilder
+ * @see RepositorySystemSession.CloseableSession
  */
 public final class DefaultRepositorySystemSession implements RepositorySystemSession {
     private boolean readOnly;
@@ -355,6 +366,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         return (lrm != null) ? lrm.getRepository() : null;
     }
 
+    @Override
     public LocalRepositoryManager getLocalRepositoryManager() {
         return localRepositoryManager;
     }

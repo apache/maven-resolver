@@ -44,10 +44,8 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
-import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 /**
  * A default implementation of repository system session that is immutable and thread-safe.
@@ -114,7 +112,6 @@ public final class DefaultCloseableSession implements CloseableSession {
     @SuppressWarnings("checkstyle:parameternumber")
     public DefaultCloseableSession(
             String sessionId,
-            AtomicBoolean closed,
             boolean offline,
             boolean ignoreArtifactDescriptorRepositories,
             ResolutionErrorPolicy resolutionErrorPolicy,
@@ -144,7 +141,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
         this.sessionId = requireNonNull(sessionId);
-        this.closed = closed == null ? new AtomicBoolean(false) : closed;
+        this.closed = new AtomicBoolean(false);
         this.offline = offline;
         this.ignoreArtifactDescriptorRepositories = ignoreArtifactDescriptorRepositories;
         this.resolutionErrorPolicy = resolutionErrorPolicy;
@@ -175,9 +172,7 @@ public final class DefaultCloseableSession implements CloseableSession {
 
         this.localRepositoryManager = getOrCreateLocalRepositoryManager(localRepositoryManager, localRepositories);
 
-        if (closed == null) {
-            repositorySystemLifecycle.sessionStarted(this);
-        }
+        repositorySystemLifecycle.sessionStarted(this);
     }
 
     private LocalRepositoryManager getOrCreateLocalRepositoryManager(
@@ -185,18 +180,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         if (localRepositoryManager != null) {
             return localRepositoryManager;
         } else if (localRepositories != null) {
-            if (localRepositories.isEmpty()) {
-                throw new IllegalArgumentException("empty localRepositories");
-            } else if (localRepositories.size() == 1) {
-                return repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
-            } else {
-                LocalRepositoryManager head =
-                        repositorySystem.newLocalRepositoryManager(this, localRepositories.get(0));
-                List<LocalRepositoryManager> tail = localRepositories.subList(1, localRepositories.size()).stream()
-                        .map(l -> repositorySystem.newLocalRepositoryManager(this, l))
-                        .collect(toList());
-                return new ChainedLocalRepositoryManager(head, tail, this);
-            }
+            return repositorySystem.newLocalRepositoryManager(this, localRepositories);
         } else {
             throw new IllegalStateException("No local repository manager or local repositories set on session");
         }
@@ -205,12 +189,6 @@ public final class DefaultCloseableSession implements CloseableSession {
     @Override
     public String sessionId() {
         return sessionId;
-    }
-
-    @Override
-    public SessionBuilder copy() {
-        return new DefaultSessionBuilder(repositorySystem, repositorySystemLifecycle, sessionId, closed)
-                .withRepositorySystemSession(this);
     }
 
     @Override

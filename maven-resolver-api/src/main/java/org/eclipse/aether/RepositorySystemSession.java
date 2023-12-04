@@ -72,19 +72,6 @@ public interface RepositorySystemSession {
         String sessionId();
 
         /**
-         * Copies this session into a pre-populated builder, effectively making a mutable copy of itself, builder builds
-         * <em>same session</em>. Important: this session <em>remains unchanged</em> upon return of this method but
-         * this session and returned builder created session will have <em>same identity</em>. It is up to client code,
-         * will it close only the original (this) session or new session, or both. Important is, that at least one of
-         * the sessions must be closed, and consequence is that once either one is closed, the other session is closed
-         * as well.
-         * <p>
-         * This pattern should be applied in "filter" like constructs, when code needs to alter the incoming session and
-         * subsequently pass it downstream.
-         */
-        SessionBuilder copy();
-
-        /**
          * Closes the session. The session should be closed by its creator. A closed session should not be used anymore.
          * This method may be invoked multiple times, but close will act only once (first time).
          */
@@ -384,6 +371,8 @@ public interface RepositorySystemSession {
 
         /**
          * Sets the custom data associated with this session.
+         * Note: When this method used to set instance, same passed instance will be used for every built session out
+         * of this builder instance, hence the built sessions will share these instances as well!
          *
          * @param data The session data, may be {@code null}.
          * @return This session for chaining, never {@code null}.
@@ -391,15 +380,9 @@ public interface RepositorySystemSession {
         SessionBuilder setData(SessionData data);
 
         /**
-         * Sets the custom session data supplier associated with this session.
-         *
-         * @param dataSupplier The session data supplier, may not be {@code null}.
-         * @return This session for chaining, never {@code null}.
-         */
-        SessionBuilder setSessionDataSupplier(Supplier<SessionData> dataSupplier);
-
-        /**
          * Sets the cache the repository system may use to save data for future reuse during the session.
+         * Note: When this method used to set instance, same passed instance will be used for every built session out
+         * of this builder instance, hence the built sessions will share these instances as well!
          *
          * @param cache The repository cache, may be {@code null} if none.
          * @return This session for chaining, never {@code null}.
@@ -407,7 +390,19 @@ public interface RepositorySystemSession {
         SessionBuilder setCache(RepositoryCache cache);
 
         /**
+         * Sets the custom session data supplier associated with this session.
+         * Note: The supplier will be used for every built session out of this builder instance, so if supplier supplies
+         * <em>same instance</em> the built sessions will share these instances as well!
+         *
+         * @param dataSupplier The session data supplier, may not be {@code null}.
+         * @return This session for chaining, never {@code null}.
+         */
+        SessionBuilder setSessionDataSupplier(Supplier<SessionData> dataSupplier);
+
+        /**
          * Sets the cache supplier for the repository system may use to save data for future reuse during the session.
+         * Note: The supplier will be used for every built session out of this builder instance, so if supplier supplies
+         * <em>same instance</em> the built sessions will share these instances as well!
          *
          * @param cacheSupplier The repository cache supplier, may not be {@code null}.
          * @return This session for chaining, never {@code null}.
@@ -465,7 +460,9 @@ public interface RepositorySystemSession {
         SessionBuilder withRepositorySystemSession(RepositorySystemSession session);
 
         /**
-         * Creates a session instance.
+         * Creates immutable closeable session out this builder instance.
+         *
+         * @return Immutable closeable session, never {@code null}.
          */
         CloseableSession build();
     }
