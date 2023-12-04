@@ -493,10 +493,14 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             MetadataResolver metadataResolver,
             SyncContextFactory syncContextFactory,
             RepositoryEventDispatcher repositoryEventDispatcher,
-            VersionScheme versionScheme) {
+            VersionSchemeSelector versionSchemeSelector) {
         // from maven-resolver-provider
+        // TODO: hack here, until maven bits does not pick this change
         return new DefaultVersionRangeResolver(
-                metadataResolver, syncContextFactory, repositoryEventDispatcher, versionScheme);
+                metadataResolver,
+                syncContextFactory,
+                repositoryEventDispatcher,
+                versionSchemeSelector.selectVersionScheme(GenericVersionSchemeProvider.NAME));
     }
 
     protected ModelBuilder getModelBuilder() {
@@ -594,12 +598,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         VersionSchemeSelector versionSchemeSelector = getVersionSchemeSelector(versionSchemes);
         VersionResolver versionResolver =
                 getVersionResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
-        // TODO: hack here, until maven bits does not pick this change
         VersionRangeResolver versionRangeResolver = getVersionRangeResolver(
-                metadataResolver,
-                syncContextFactory,
-                repositoryEventDispatcher,
-                versionSchemeSelector.selectVersionScheme(GenericVersionSchemeProvider.NAME));
+                metadataResolver, syncContextFactory, repositoryEventDispatcher, versionSchemeSelector);
 
         Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors =
                 getArtifactResolverPostProcessors(checksumAlgorithmFactorySelector, trustedChecksumsSources);
