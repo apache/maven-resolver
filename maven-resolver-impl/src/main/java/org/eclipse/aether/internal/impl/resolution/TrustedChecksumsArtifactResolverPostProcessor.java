@@ -242,9 +242,11 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                     missingTrustedAlg.removeAll(trustedChecksums.keySet());
 
                     if (!missingTrustedAlg.isEmpty() && failIfMissing) {
-                        artifactResult.addException(new ChecksumFailureException("Missing from " + trustedSourceName
-                                + " trusted checksum(s) " + missingTrustedAlg + " for artifact "
-                                + ArtifactIdUtils.toId(artifact)));
+                        artifactResult.addException(
+                                artifactRepository,
+                                new ChecksumFailureException("Missing from " + trustedSourceName
+                                        + " trusted checksum(s) " + missingTrustedAlg + " for artifact "
+                                        + ArtifactIdUtils.toId(artifact)));
                         valid = false;
                     }
 
@@ -254,10 +256,12 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                         String calculatedChecksum = calculatedChecksums.get(checksumAlgorithmFactory.getName());
                         String trustedChecksum = trustedChecksums.get(checksumAlgorithmFactory.getName());
                         if (trustedChecksum != null && !Objects.equals(calculatedChecksum, trustedChecksum)) {
-                            artifactResult.addException(new ChecksumFailureException("Artifact "
-                                    + ArtifactIdUtils.toId(artifact) + " trusted checksum mismatch: "
-                                    + trustedSourceName + "=" + trustedChecksum + "; calculated="
-                                    + calculatedChecksum));
+                            artifactResult.addException(
+                                    artifactRepository,
+                                    new ChecksumFailureException("Artifact "
+                                            + ArtifactIdUtils.toId(artifact) + " trusted checksum mismatch: "
+                                            + trustedSourceName + "=" + trustedChecksum + "; calculated="
+                                            + calculatedChecksum));
                             valid = false;
                         }
                     }
@@ -265,8 +269,10 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
             }
 
             if (!validated && failIfMissing) {
-                artifactResult.addException(new ChecksumFailureException(
-                        "There are no enabled trusted checksums" + " source(s) to validate against."));
+                artifactResult.addException(
+                        artifactRepository,
+                        new ChecksumFailureException(
+                                "There are no enabled trusted checksums" + " source(s) to validate against."));
                 valid = false;
             }
         } catch (IOException e) {

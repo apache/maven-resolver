@@ -18,9 +18,7 @@
  */
 package org.eclipse.aether.resolution;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
@@ -40,7 +38,7 @@ public final class ArtifactResult {
 
     private final ArtifactRequest request;
 
-    private List<Exception> exceptions;
+    private Map<ArtifactRepository, Exception> exceptions;
 
     private Artifact artifact;
 
@@ -55,7 +53,7 @@ public final class ArtifactResult {
      */
     public ArtifactResult(ArtifactRequest request) {
         this.request = requireNonNull(request, "artifact request cannot be null");
-        exceptions = Collections.emptyList();
+        exceptions = Collections.emptyMap();
     }
 
     /**
@@ -96,7 +94,7 @@ public final class ArtifactResult {
      * @return The exceptions that occurred, never {@code null}.
      * @see #isResolved()
      */
-    public List<Exception> getExceptions() {
+    public Map<ArtifactRepository, Exception> getExceptions() {
         return exceptions;
     }
 
@@ -105,13 +103,14 @@ public final class ArtifactResult {
      *
      * @param exception The exception to record, may be {@code null}.
      * @return This result for chaining, never {@code null}.
+     * @since 2.0.0
      */
-    public ArtifactResult addException(Exception exception) {
-        if (exception != null) {
+    public ArtifactResult addException(ArtifactRepository repository, Exception exception) {
+        if (repository != null && exception != null) {
             if (exceptions.isEmpty()) {
-                exceptions = new ArrayList<>();
+                exceptions = new HashMap<>();
             }
-            exceptions.add(exception);
+            exceptions.put(repository, exception);
         }
         return this;
     }
@@ -175,7 +174,7 @@ public final class ArtifactResult {
      * @return {@code true} if the artifact is not present in any repository, {@code false} otherwise.
      */
     public boolean isMissing() {
-        for (Exception e : getExceptions()) {
+        for (Exception e : getExceptions().values()) {
             if (!(e instanceof ArtifactNotFoundException)) {
                 return false;
             }

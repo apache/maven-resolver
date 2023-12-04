@@ -174,7 +174,7 @@ public class DefaultArtifactResolverTest {
             assertSame(request, result.getRequest());
 
             assertFalse(result.getExceptions().isEmpty());
-            assertTrue(result.getExceptions().get(0) instanceof ArtifactNotFoundException);
+            assertTrue(result.getExceptions().values().stream().findFirst().get() instanceof ArtifactNotFoundException);
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
@@ -236,7 +236,7 @@ public class DefaultArtifactResolverTest {
             assertSame(request, result.getRequest());
 
             assertFalse(result.getExceptions().isEmpty());
-            assertTrue(result.getExceptions().get(0) instanceof ArtifactNotFoundException);
+            assertTrue(result.getExceptions().values().stream().findFirst().get() instanceof ArtifactNotFoundException);
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
@@ -287,8 +287,10 @@ public class DefaultArtifactResolverTest {
             assertSame(request, result.getRequest());
 
             assertFalse(result.getExceptions().isEmpty());
-            assertTrue(result.getExceptions().get(0) instanceof ArtifactNotFoundException);
-            assertEquals("never-accept", result.getExceptions().get(0).getMessage());
+            assertTrue(result.getExceptions().values().stream().findFirst().get() instanceof ArtifactNotFoundException);
+            assertEquals(
+                    "never-accept",
+                    result.getExceptions().values().stream().findFirst().get().getMessage());
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
@@ -337,8 +339,10 @@ public class DefaultArtifactResolverTest {
             assertSame(request, result.getRequest());
 
             assertFalse(result.getExceptions().isEmpty());
-            assertTrue(result.getExceptions().get(0) instanceof ArtifactNotFoundException);
-            assertEquals("never-accept-id", result.getExceptions().get(0).getMessage());
+            assertTrue(result.getExceptions().values().stream().findFirst().get() instanceof ArtifactNotFoundException);
+            assertEquals(
+                    "never-accept-id",
+                    result.getExceptions().values().stream().findFirst().get().getMessage());
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
@@ -399,7 +403,8 @@ public class DefaultArtifactResolverTest {
         } catch (ArtifactResolutionException e) {
             connector.assertSeenExpected();
             for (ArtifactResult result : e.getResults()) {
-                Throwable t = result.getExceptions().get(0);
+                Throwable t =
+                        result.getExceptions().values().stream().findFirst().get();
                 assertTrue(t instanceof ArtifactNotFoundException, t.toString());
                 assertTrue(t.getMessage().contains("cached"), t.toString());
             }
@@ -651,7 +656,8 @@ public class DefaultArtifactResolverTest {
             assertSame(request, result.getRequest());
 
             assertFalse(result.getExceptions().isEmpty());
-            assertTrue(result.getExceptions().get(0) instanceof VersionResolutionException);
+            assertTrue(
+                    result.getExceptions().values().stream().findFirst().get() instanceof VersionResolutionException);
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
