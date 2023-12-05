@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -40,7 +40,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void iteratorOneItem() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         context.set(FOO_DEPENDENCY, result);
@@ -52,7 +52,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void getCountOneItem() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         context.set(FOO_DEPENDENCY, result);
@@ -62,7 +62,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void getOneItem() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         context.set(FOO_DEPENDENCY, result);
@@ -72,7 +72,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void iteratorDelete() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         context.set(FOO_DEPENDENCY, result);
@@ -86,7 +86,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void nextBeyondEnd() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         context.set(FOO_DEPENDENCY, result);
@@ -98,7 +98,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void removeOneOfOne() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         context.set(FOO_DEPENDENCY, result);
@@ -112,7 +112,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void removeOneOfTwo() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         result.addVersion(new TestVersion("2.0"));
@@ -127,7 +127,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void removeOneOfThree() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult result = new VersionRangeResult(new VersionRangeRequest());
         result.addVersion(new TestVersion("1.0"));
         result.addVersion(new TestVersion("2.0"));
@@ -143,7 +143,7 @@ public class DefaultVersionFilterContextTest {
 
     @Test
     void setTwice() {
-        DefaultVersionFilterContext context = new DefaultVersionFilterContext(new DefaultRepositorySystemSession());
+        DefaultVersionFilterContext context = new DefaultVersionFilterContext(TestUtils.newSession());
         VersionRangeResult fooResult = new VersionRangeResult(new VersionRangeRequest());
         fooResult.addVersion(new TestVersion("1.0"));
         context.set(FOO_DEPENDENCY, fooResult);

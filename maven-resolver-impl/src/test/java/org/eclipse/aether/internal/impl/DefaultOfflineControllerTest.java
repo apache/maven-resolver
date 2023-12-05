@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,7 @@ public class DefaultOfflineControllerTest {
     private DefaultOfflineController controller;
 
     private RepositorySystemSession newSession(boolean offline, String protocols, String hosts) {
-        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setOffline(offline);
         session.setConfigProperty(DefaultOfflineController.CONFIG_PROP_OFFLINE_PROTOCOLS, protocols);
         session.setConfigProperty(DefaultOfflineController.CONFIG_PROP_OFFLINE_HOSTS, hosts);

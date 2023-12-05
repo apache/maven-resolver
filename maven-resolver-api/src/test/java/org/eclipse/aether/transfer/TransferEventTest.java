@@ -20,19 +20,19 @@ package org.eclipse.aether.transfer;
 
 import java.nio.ByteBuffer;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 /**
  */
 public class TransferEventTest {
 
-    private static TransferResource res = new TransferResource("none", "file://nil", "void", null, null);
+    private static final TransferResource res = new TransferResource("none", "file://nil", "void", null, null);
 
-    private static RepositorySystemSession session = new DefaultRepositorySystemSession();
+    private static final RepositorySystemSession session = mock(RepositorySystemSession.class);
 
     @Test
     void testByteArrayConversion() {

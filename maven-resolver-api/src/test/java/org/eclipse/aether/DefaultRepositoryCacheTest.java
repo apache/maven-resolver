@@ -25,12 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 public class DefaultRepositoryCacheTest {
 
     private final DefaultRepositoryCache cache = new DefaultRepositoryCache();
 
-    private final RepositorySystemSession session = new DefaultRepositorySystemSession();
+    private final RepositorySystemSession session = mock(RepositorySystemSession.class);
 
     private Object get(Object key) {
         return cache.get(session, key);

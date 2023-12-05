@@ -35,9 +35,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DefaultRepositorySystemSessionTest {
 
+    private DefaultRepositorySystemSession newSession() {
+        return new DefaultRepositorySystemSession();
+    }
+
     @Test
     void testDefaultProxySelectorUsesExistingProxy() {
-        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        DefaultRepositorySystemSession session = newSession();
 
         RemoteRepository repo = new RemoteRepository.Builder("id", "default", "void").build();
         assertSame(null, session.getProxySelector().getProxy(repo));
@@ -49,7 +53,7 @@ public class DefaultRepositorySystemSessionTest {
 
     @Test
     void testDefaultAuthenticationSelectorUsesExistingAuth() {
-        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        DefaultRepositorySystemSession session = newSession();
 
         RemoteRepository repo = new RemoteRepository.Builder("id", "default", "void").build();
         assertSame(null, session.getAuthenticationSelector().getAuthentication(repo));
@@ -65,7 +69,7 @@ public class DefaultRepositorySystemSessionTest {
 
     @Test
     void testCopyConstructorCopiesPropertiesDeep() {
-        DefaultRepositorySystemSession session1 = new DefaultRepositorySystemSession();
+        DefaultRepositorySystemSession session1 = newSession();
         session1.setUserProperties(System.getProperties());
         session1.setSystemProperties(System.getProperties());
         session1.setConfigProperties(System.getProperties());
@@ -82,7 +86,7 @@ public class DefaultRepositorySystemSessionTest {
 
     @Test
     void testReadOnlyProperties() {
-        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        DefaultRepositorySystemSession session = newSession();
 
         try {
             session.getUserProperties().put("key", "test");

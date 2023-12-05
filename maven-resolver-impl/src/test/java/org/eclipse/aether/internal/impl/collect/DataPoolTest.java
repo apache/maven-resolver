@@ -20,9 +20,9 @@ package org.eclipse.aether.internal.impl.collect;
 
 import java.util.Collections;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DataPoolTest {
 
     private DataPool newDataPool() {
-        return new DataPool(new DefaultRepositorySystemSession());
+        return new DataPool(TestUtils.newSession());
     }
 
     @Test
