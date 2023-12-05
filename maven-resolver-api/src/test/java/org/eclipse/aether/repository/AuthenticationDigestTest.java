@@ -20,16 +20,16 @@ package org.eclipse.aether.repository;
 
 import java.util.Map;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 public class AuthenticationDigestTest {
 
     private RepositorySystemSession newSession() {
-        return new DefaultRepositorySystemSession();
+        return mock(RepositorySystemSession.class);
     }
 
     private RemoteRepository newRepo(Authentication auth, Proxy proxy) {

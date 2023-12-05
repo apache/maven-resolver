@@ -28,8 +28,9 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
@@ -111,13 +112,13 @@ public class JreProxySelectorTest {
     void testGetProxy_HttpProxy() throws Exception {
         final RemoteRepository repo =
                 new RemoteRepository.Builder("test", "default", "http://repo.eclipse.org/").build();
-        final URL url = new URL(repo.getUrl());
+        final URL url = new URI(repo.getUrl()).toURL();
         final InetSocketAddress addr = InetSocketAddress.createUnresolved("proxy", 8080);
         java.net.ProxySelector.setDefault(new AbstractProxySelector() {
             @Override
             public List<java.net.Proxy> select(URI uri) {
                 if (repo.getHost().equalsIgnoreCase(uri.getHost())) {
-                    return Arrays.asList(new java.net.Proxy(java.net.Proxy.Type.HTTP, addr));
+                    return Collections.singletonList(new java.net.Proxy(java.net.Proxy.Type.HTTP, addr));
                 }
                 return Collections.emptyList();
             }
@@ -128,7 +129,7 @@ public class JreProxySelectorTest {
                 if (Authenticator.RequestorType.PROXY.equals(getRequestorType())
                         && addr.getHostName().equals(getRequestingHost())
                         && addr.getPort() == getRequestingPort()
-                        && url.equals(getRequestingURL())) {
+                        && Objects.equals(url, getRequestingURL())) {
                     return new PasswordAuthentication("proxyuser", "proxypass".toCharArray());
                 }
                 return super.getPasswordAuthentication();
@@ -145,8 +146,9 @@ public class JreProxySelectorTest {
                 new RemoteRepository.Builder(repo).setProxy(proxy).build();
         Authentication auth = proxy.getAuthentication();
         assertNotNull(auth);
-        AuthenticationContext authCtx = AuthenticationContext.forProxy(new DefaultRepositorySystemSession(), repo2);
-        assertEquals("proxyuser", authCtx.get(AuthenticationContext.USERNAME));
-        assertEquals("proxypass", authCtx.get(AuthenticationContext.PASSWORD));
+        try (AuthenticationContext authCtx = AuthenticationContext.forProxy(TestUtils.newSession(), repo2)) {
+            assertEquals("proxyuser", authCtx.get(AuthenticationContext.USERNAME));
+            assertEquals("proxypass", authCtx.get(AuthenticationContext.PASSWORD));
+        }
     }
 }

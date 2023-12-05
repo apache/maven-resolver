@@ -100,7 +100,7 @@ public abstract class AbstractDependencyGraphTransformerTest {
     void setUp() {
         transformer = newTransformer();
         parser = newParser();
-        session = new DefaultRepositorySystemSession();
+        session = TestUtils.newSession();
     }
 
     @AfterEach
