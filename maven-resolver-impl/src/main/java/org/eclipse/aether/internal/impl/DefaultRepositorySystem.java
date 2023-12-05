@@ -260,13 +260,9 @@ public class DefaultRepositorySystem implements RepositorySystem {
             throw new NullPointerException("dependency node and collect request cannot be null");
         }
 
-        final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
-        DependencyVisitor builder = getDependencyVisitor(session, dependencyNodes::add);
-        DependencyFilter filter = request.getFilter();
-        DependencyVisitor visitor = (filter != null) ? new FilteringDependencyVisitor(builder, filter) : builder;
-        if (result.getRoot() != null) {
-            result.getRoot().accept(visitor);
-        }
+        final List<DependencyNode> dependencyNodes = result.getRoot() != null
+                ? flattenDependencyNodes(session, request.getRoot(), request.getFilter())
+                : new ArrayList<>();
 
         final List<ArtifactRequest> requests = dependencyNodes.stream()
                 .map(n -> {
@@ -303,11 +299,19 @@ public class DefaultRepositorySystem implements RepositorySystem {
 
     @Override
     public List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root) {
+        return flattenDependencyNodes(session, root, null);
+    }
+
+    @Override
+    public List<DependencyNode> flattenDependencyNodes(
+            RepositorySystemSession session, DependencyNode root, DependencyFilter filter) {
         validateSession(session);
         requireNonNull(root, "root cannot be null");
 
         final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
-        root.accept(getDependencyVisitor(session, dependencyNodes::add));
+        DependencyVisitor builder = getDependencyVisitor(session, dependencyNodes::add);
+        DependencyVisitor visitor = (filter != null) ? new FilteringDependencyVisitor(builder, filter) : builder;
+        root.accept(visitor);
         return dependencyNodes;
     }
 
