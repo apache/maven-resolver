@@ -16,14 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.repository;
+package org.eclipse.aether.internal.impl;
+
+import org.eclipse.aether.repository.ArtifactRepository;
 
 /**
- * A repository representing "system" scope, basically this repository has no artifacts.
+ * A repository representing "system" scope, basically this repository has no artifacts. By special meaning of this
+ * repository, it is not part of the public API nor is publicly visible, is merely here to help assign origin to
+ * artifacts in case of resolution errors.
  *
  * @since 2.0.0
  */
-public final class SystemRepository implements ArtifactRepository {
+final class SystemRepository implements ArtifactRepository {
     public static final SystemRepository INSTANCE = new SystemRepository();
 
     private SystemRepository() {}
