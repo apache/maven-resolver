@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.util.repository;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.AuthenticationDigest;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class StringAuthenticationTest {
 
     private RepositorySystemSession newSession() {
-        return new DefaultRepositorySystemSession();
+        return TestUtils.newSession();
     }
 
     private RemoteRepository newRepo(Authentication auth) {
@@ -51,9 +51,10 @@ public class StringAuthenticationTest {
     @Test
     void testFill() {
         Authentication auth = new StringAuthentication("key", "value");
-        AuthenticationContext context = newContext(auth);
-        assertNull(context.get("another-key"));
-        assertEquals("value", context.get("key"));
+        try (AuthenticationContext context = newContext(auth)) {
+            assertNull(context.get("another-key"));
+            assertEquals("value", context.get("key"));
+        }
     }
 
     @Test
