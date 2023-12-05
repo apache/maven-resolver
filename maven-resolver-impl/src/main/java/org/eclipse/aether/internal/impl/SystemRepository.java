@@ -22,8 +22,8 @@ import org.eclipse.aether.repository.ArtifactRepository;
 
 /**
  * A repository representing "system" scope, basically this repository has no artifacts. By special meaning of this
- * repository, it is not part of the public API nor is publicly visible, is merely here to help assign origin to
- * artifacts in case of resolution errors.
+ * repository, it is not part of the public API nor is publicly visible, is merely here to help assign artifact
+ * origin to artifacts in case of resolution errors.
  *
  * @since 2.0.0
  */
@@ -42,29 +42,6 @@ final class SystemRepository implements ArtifactRepository {
 
     @Override
     public String toString() {
-        return getId() + " (" + getContentType() + ")";
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || !getClass().equals(obj.getClass())) {
-            return false;
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 17;
-        hash = hash * 31 + hash(getId());
-        hash = hash * 31 + hash(getContentType());
-        return hash;
-    }
-
-    private static int hash(Object obj) {
-        return obj != null ? obj.hashCode() : 0;
+        return getId();
     }
 }
