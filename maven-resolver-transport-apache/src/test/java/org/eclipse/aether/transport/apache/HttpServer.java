@@ -167,8 +167,7 @@ public class HttpServer {
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
             customizer.setSniHostCheck(false);
             httpsConfig.addCustomizer(customizer);
-            HttpConnectionFactory httpConnection = new HttpConnectionFactory(httpsConfig);
-            httpsConnector = new ServerConnector(server, ssl, httpConnection);
+            httpsConnector = new ServerConnector(server, ssl, new HttpConnectionFactory(httpsConfig));
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
