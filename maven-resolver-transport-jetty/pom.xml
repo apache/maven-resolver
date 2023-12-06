@@ -37,7 +37,7 @@
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
 
     <javaVersion>11</javaVersion>
-    <jettyVersion>10.0.17</jettyVersion>
+    <jettyVersion>10.0.18</jettyVersion>
   </properties>
 
   <dependencies>

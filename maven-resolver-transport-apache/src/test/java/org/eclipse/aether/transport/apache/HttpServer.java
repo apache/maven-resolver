@@ -41,8 +41,11 @@ import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -153,12 +156,19 @@ public class HttpServer {
                 ssl.setKeyStorePassword("server-pwd");
                 ssl.setTrustStorePath(new File("src/test/resources/ssl/client-store").getAbsolutePath());
                 ssl.setTrustStorePassword("client-pwd");
+                ssl.setSniRequired(false);
             } else {
                 ssl.setNeedClientAuth(false);
                 ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store-selfsigned").getAbsolutePath());
                 ssl.setKeyStorePassword("server-pwd");
+                ssl.setSniRequired(false);
             }
-            httpsConnector = new ServerConnector(server, ssl);
+            HttpConfiguration httpsConfig = new HttpConfiguration();
+            SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+            customizer.setSniHostCheck(false);
+            httpsConfig.addCustomizer(customizer);
+            HttpConnectionFactory httpConnection = new HttpConnectionFactory(httpsConfig);
+            httpsConnector = new ServerConnector(server, ssl, httpConnection);
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
