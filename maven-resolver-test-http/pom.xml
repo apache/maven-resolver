@@ -26,15 +26,30 @@
     <version>2.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-test-util</artifactId>
+  <artifactId>maven-resolver-test-http</artifactId>
 
-  <name>Maven Artifact Resolver Test Utilities</name>
-  <description>A collection of utility classes to ease testing of the repository system.</description>
+  <name>Maven Artifact Resolver Test Utilities HTTP</name>
+  <description>A collection of utility classes to ease testing of HTTP transports.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.test.util</Automatic-Module-Name>
+    <Automatic-Module-Name>org.apache.maven.resolver.test.http</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+
+    <javaVersion>11</javaVersion>
+    <jettyVersion>10.0.18</jettyVersion>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-bom</artifactId>
+        <version>${jettyVersion}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -46,9 +61,43 @@
       <artifactId>maven-resolver-spi</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-test-util</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-http</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4jVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

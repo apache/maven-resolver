@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.apache;
+package org.eclipse.aether.internal.test.util.http;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.Buffer;
@@ -25,21 +25,21 @@ import java.nio.ByteBuffer;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 
-class RecordingTransportListener extends TransportListener {
+public class RecordingTransportListener extends TransportListener {
 
-    public final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
+    private final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
 
-    public long dataOffset;
+    private long dataOffset;
 
-    public long dataLength;
+    private long dataLength;
 
-    public int startedCount;
+    private int startedCount;
 
-    public int progressedCount;
+    private int progressedCount;
 
-    public boolean cancelStart;
+    private boolean cancelStart;
 
-    public boolean cancelProgress;
+    private boolean cancelProgress;
 
     @Override
     public void transportStarted(long dataOffset, long dataLength) throws TransferCancelledException {
@@ -60,5 +60,41 @@ class RecordingTransportListener extends TransportListener {
         if (cancelProgress) {
             throw new TransferCancelledException();
         }
+    }
+
+    public ByteArrayOutputStream getBaos() {
+        return baos;
+    }
+
+    public long getDataOffset() {
+        return dataOffset;
+    }
+
+    public long getDataLength() {
+        return dataLength;
+    }
+
+    public int getStartedCount() {
+        return startedCount;
+    }
+
+    public int getProgressedCount() {
+        return progressedCount;
+    }
+
+    public boolean isCancelStart() {
+        return cancelStart;
+    }
+
+    public boolean isCancelProgress() {
+        return cancelProgress;
+    }
+
+    public void cancelStart() {
+        this.cancelStart = true;
+    }
+
+    public void cancelProgress() {
+        this.cancelProgress = true;
     }
 }
