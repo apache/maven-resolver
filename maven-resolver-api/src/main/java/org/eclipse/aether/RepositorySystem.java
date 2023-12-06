@@ -29,6 +29,7 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
@@ -153,10 +154,12 @@ public interface RepositorySystem extends Closeable {
      *
      * @param session The repository session, must not be {@code null}.
      * @param root The dependency node root of the graph, must not be {@code null}.
+     * @param filter The filter to apply, may be {@code null}.
      * @return The flattened list of dependency nodes, never {@code null}.
      * @since 2.0.0
      */
-    List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root);
+    List<DependencyNode> flattenDependencyNodes(
+            RepositorySystemSession session, DependencyNode root, DependencyFilter filter);
 
     /**
      * Resolves the path for an artifact. The artifact will be downloaded to the local repository if necessary. An
