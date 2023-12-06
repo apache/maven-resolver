@@ -297,14 +297,6 @@ public class DefaultRepositorySystem implements RepositorySystem {
     }
 
     @Override
-    public List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root) {
-        validateSession(session);
-        requireNonNull(root, "root cannot be null");
-
-        return doFlattenDependencyNodes(session, root, null);
-    }
-
-    @Override
     public List<DependencyNode> flattenDependencyNodes(
             RepositorySystemSession session, DependencyNode root, DependencyFilter dependencyFilter) {
         validateSession(session);

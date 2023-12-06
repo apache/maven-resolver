@@ -154,17 +154,6 @@ public interface RepositorySystem extends Closeable {
      *
      * @param session The repository session, must not be {@code null}.
      * @param root The dependency node root of the graph, must not be {@code null}.
-     * @return The flattened list of dependency nodes, never {@code null}.
-     * @since 2.0.0
-     */
-    List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root);
-
-    /**
-     * Flattens the provided graph as {@link DependencyNode} into a {@link List}{@code <DependencyNode>} according to session
-     * configuration.
-     *
-     * @param session The repository session, must not be {@code null}.
-     * @param root The dependency node root of the graph, must not be {@code null}.
      * @param filter The filter to apply, may be {@code null}.
      * @return The flattened list of dependency nodes, never {@code null}.
      * @since 2.0.0
