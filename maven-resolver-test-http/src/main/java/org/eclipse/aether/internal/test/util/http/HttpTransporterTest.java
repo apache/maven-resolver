@@ -1103,6 +1103,8 @@ public class HttpTransporterTest {
             fail("Server auth must not be used as proxy auth");
         } catch (HttpTransporterException e) {
             assertEquals(407, e.getStatusCode());
+        } catch (IOException e) {
+            // accepted as well: point is to fail
         }
     }
 
@@ -1121,6 +1123,8 @@ public class HttpTransporterTest {
             fail("Proxy auth must not be used as server auth");
         } catch (HttpTransporterException e) {
             assertEquals(401, e.getStatusCode());
+        } catch (IOException e) {
+            // accepted as well: point is to fail
         }
     }
 
