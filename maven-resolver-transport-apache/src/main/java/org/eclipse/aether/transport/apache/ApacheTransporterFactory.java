@@ -22,8 +22,8 @@ import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.transport.Transporter;
-import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 import static java.util.Objects.requireNonNull;
@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * support uploads to WebDAV servers and resumable downloads.
  */
 @Named(ApacheTransporterFactory.NAME)
-public final class ApacheTransporterFactory implements TransporterFactory {
+public final class ApacheTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "apache";
 
     private float priority = 5.0f;
@@ -55,7 +55,7 @@ public final class ApacheTransporterFactory implements TransporterFactory {
     }
 
     @Override
-    public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
+    public HttpTransporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");

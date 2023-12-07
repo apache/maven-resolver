@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.http.NoHttpResponseException;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.pool.ConnPoolControl;
 import org.apache.http.pool.PoolStats;
@@ -49,6 +48,7 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -138,8 +138,8 @@ public class ApacheTransporterTest {
     @Test
     void testClassify() {
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
-        assertEquals(Transporter.ERROR_OTHER, transporter.classify(new HttpResponseException(403, "Forbidden")));
-        assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new HttpResponseException(404, "Not Found")));
+        assertEquals(Transporter.ERROR_OTHER, transporter.classify(new HttpTransporterException(403)));
+        assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new HttpTransporterException(404)));
     }
 
     @Test
@@ -187,7 +187,7 @@ public class ApacheTransporterTest {
         try {
             transporter.peek(new PeekTask(URI.create("repo/missing.txt")));
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(404, e.getStatusCode());
             assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(e));
         }
@@ -221,7 +221,7 @@ public class ApacheTransporterTest {
         try {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(401, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
         }
@@ -247,7 +247,7 @@ public class ApacheTransporterTest {
         try {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(407, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
         }
@@ -359,7 +359,7 @@ public class ApacheTransporterTest {
         try {
             transporter.get(new GetTask(URI.create("repo/file.txt")));
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(401, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
         }
@@ -393,7 +393,7 @@ public class ApacheTransporterTest {
         try {
             transporter.get(new GetTask(URI.create("repo/file.txt")));
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(407, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
         }
@@ -560,7 +560,7 @@ public class ApacheTransporterTest {
         try {
             transporter.get(new GetTask(URI.create("repo/missing.txt")));
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(404, e.getStatusCode());
             assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(e));
         }
@@ -778,7 +778,7 @@ public class ApacheTransporterTest {
         try {
             transporter.put(task);
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(401, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
         }
@@ -817,7 +817,7 @@ public class ApacheTransporterTest {
         try {
             transporter.put(task);
             fail("Expected error");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(407, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
         }
@@ -1110,7 +1110,7 @@ public class ApacheTransporterTest {
         try {
             transporter.get(new GetTask(URI.create("repo/file.txt")));
             fail("Server auth must not be used as proxy auth");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(407, e.getStatusCode());
         }
     }
@@ -1128,7 +1128,7 @@ public class ApacheTransporterTest {
         try {
             transporter.get(new GetTask(URI.create("repo/file.txt")));
             fail("Proxy auth must not be used as server auth");
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             assertEquals(401, e.getStatusCode());
         }
     }

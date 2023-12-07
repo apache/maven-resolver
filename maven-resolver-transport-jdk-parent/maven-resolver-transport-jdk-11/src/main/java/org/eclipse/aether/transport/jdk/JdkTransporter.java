@@ -64,6 +64,8 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
@@ -79,7 +81,7 @@ import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.D
  * @since 2.0.0
  */
 @SuppressWarnings({"checkstyle:magicnumber"})
-final class JdkTransporter extends AbstractTransporter {
+final class JdkTransporter extends AbstractTransporter implements HttpTransporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporter.class);
 
     private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
@@ -202,7 +204,8 @@ final class JdkTransporter extends AbstractTransporter {
 
     @Override
     public int classify(Throwable error) {
-        if (error instanceof JdkException && ((JdkException) error).getStatusCode() == NOT_FOUND) {
+        if (error instanceof HttpTransporterException
+                && ((HttpTransporterException) error).getStatusCode() == NOT_FOUND) {
             return ERROR_NOT_FOUND;
         }
         return ERROR_OTHER;
@@ -218,7 +221,7 @@ final class JdkTransporter extends AbstractTransporter {
         try {
             HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
-                throw new JdkException(response.statusCode());
+                throw new HttpTransporterException(response.statusCode());
             }
         } catch (ConnectException e) {
             throw enhance(e);
@@ -254,7 +257,7 @@ final class JdkTransporter extends AbstractTransporter {
                         resume = false;
                         continue;
                     }
-                    throw new JdkException(response.statusCode());
+                    throw new HttpTransporterException(response.statusCode());
                 }
             } catch (ConnectException e) {
                 throw enhance(e);
@@ -343,7 +346,7 @@ final class JdkTransporter extends AbstractTransporter {
             try {
                 HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
                 if (response.statusCode() >= MULTIPLE_CHOICES) {
-                    throw new JdkException(response.statusCode());
+                    throw new HttpTransporterException(response.statusCode());
                 }
             } catch (ConnectException e) {
                 throw enhance(e);

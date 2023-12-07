@@ -44,6 +44,8 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
@@ -70,7 +72,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.0
  */
-final class JettyTransporter extends AbstractTransporter {
+final class JettyTransporter extends AbstractTransporter implements HttpTransporter {
     private static final int MULTIPLE_CHOICES = 300;
 
     private static final int NOT_FOUND = 404;
@@ -159,7 +161,8 @@ final class JettyTransporter extends AbstractTransporter {
 
     @Override
     public int classify(Throwable error) {
-        if (error instanceof JettyException && ((JettyException) error).getStatusCode() == NOT_FOUND) {
+        if (error instanceof HttpTransporterException
+                && ((HttpTransporterException) error).getStatusCode() == NOT_FOUND) {
             return ERROR_NOT_FOUND;
         }
         return ERROR_OTHER;
@@ -173,7 +176,7 @@ final class JettyTransporter extends AbstractTransporter {
         request.headers(m -> headers.forEach(m::add));
         Response response = request.send();
         if (response.getStatus() >= MULTIPLE_CHOICES) {
-            throw new JettyException(response.getStatus());
+            throw new HttpTransporterException(response.getStatus());
         }
     }
 
@@ -216,7 +219,7 @@ final class JettyTransporter extends AbstractTransporter {
                     resume = false;
                     continue;
                 }
-                throw new JettyException(response.getStatus());
+                throw new HttpTransporterException(response.getStatus());
             }
             break;
         }
@@ -333,7 +336,7 @@ final class JettyTransporter extends AbstractTransporter {
                 }
             }
             if (response.getStatus() >= MULTIPLE_CHOICES) {
-                throw new JettyException(response.getStatus());
+                throw new HttpTransporterException(response.getStatus());
             }
         }
     }
