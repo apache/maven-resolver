@@ -180,14 +180,15 @@ public class HttpServer {
             HttpConfiguration httpsConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
             customizer.setSniHostCheck(false);
-            httpsConfig.addCustomizer(new SecureRequestCustomizer());
             httpsConfig.addCustomizer(customizer);
 
             HttpConnectionFactory http1 = new HttpConnectionFactory(httpsConfig);
 
             HTTP2ServerConnectionFactory http2 = new HTTP2ServerConnectionFactory(httpsConfig);
+
             ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
             alpn.setDefaultProtocol(http1.getProtocol());
+
             SslConnectionFactory tls = new SslConnectionFactory(ssl, alpn.getProtocol());
 
             httpsConnector = new ServerConnector(server, tls, alpn, http2, http1);
