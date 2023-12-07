@@ -42,9 +42,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http2.api.server.ServerSessionListener;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
-import org.eclipse.jetty.http2.server.RawHTTP2ServerConnectionFactory;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -160,23 +158,15 @@ public class HttpServer {
     private HttpServer addSslConnector(boolean needClientAuth) {
         if (httpsConnector == null) {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
-            if (needClientAuth) {
-                ssl.setNeedClientAuth(true);
-                ssl.setKeyStorePath(
-                        HttpTransporterTest.keyStorePath.toAbsolutePath().toString());
-                ssl.setKeyStorePassword("server-pwd");
-                ssl.setTrustStorePath(
-                        HttpTransporterTest.trustStorePath.toAbsolutePath().toString());
-                ssl.setTrustStorePassword("client-pwd");
-                ssl.setSniRequired(false);
-            } else {
-                ssl.setNeedClientAuth(false);
-                ssl.setKeyStorePath(HttpTransporterTest.keyStoreSelfSignedPath
-                        .toAbsolutePath()
-                        .toString());
-                ssl.setKeyStorePassword("server-pwd");
-                ssl.setSniRequired(false);
-            }
+            ssl.setNeedClientAuth(needClientAuth);
+            ssl.setKeyStorePath(
+                    HttpTransporterTest.keyStorePath.toAbsolutePath().toString());
+            ssl.setKeyStorePassword("server-pwd");
+            ssl.setTrustStorePath(
+                    HttpTransporterTest.trustStorePath.toAbsolutePath().toString());
+            ssl.setTrustStorePassword("client-pwd");
+            ssl.setSniRequired(false);
+
             HttpConfiguration httpsConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
             customizer.setSniHostCheck(false);

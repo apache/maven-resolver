@@ -18,7 +18,7 @@
  */
 package org.eclipse.aether.transport.jetty;
 
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
+import java.security.cert.X509Certificate;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -374,6 +375,18 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
 
+        final String httpsSecurityMode = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
+                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
+                ConfigurationProperties.HTTPS_SECURITY_MODE);
+
+        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
+                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
+            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
+        }
+        final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
+
         try {
             return (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
                 SSLContext sslContext = null;
@@ -393,7 +406,24 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     }
 
                     if (sslContext == null) {
-                        sslContext = SSLContext.getDefault();
+                        if (insecure) {
+                            sslContext = SSLContext.getInstance("TLS");
+                            X509TrustManager tm = new X509TrustManager() {
+                                @Override
+                                public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                                @Override
+                                public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                                @Override
+                                public X509Certificate[] getAcceptedIssuers() {
+                                    return new X509Certificate[0];
+                                }
+                            };
+                            sslContext.init(null, new X509TrustManager[] {tm}, null);
+                        } else {
+                            sslContext = SSLContext.getDefault();
+                        }
                     }
 
                     int connectTimeout = ConfigUtils.getInteger(
@@ -404,6 +434,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
                     SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
                     sslContextFactory.setSslContext(sslContext);
+                    if (insecure) {
+                        sslContextFactory.setHostnameVerifier((name, context) -> true);
+                    }
 
                     ClientConnector clientConnector = new ClientConnector();
                     clientConnector.setSslContextFactory(sslContextFactory);
