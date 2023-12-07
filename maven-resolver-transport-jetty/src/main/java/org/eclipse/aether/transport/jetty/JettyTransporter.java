@@ -28,7 +28,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -273,9 +272,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     response.getHeaders().getDateField(LAST_MODIFIED); // note: Wagon also does first not last
             if (lastModified != -1) {
                 try {
-                    Files.setLastModifiedTime(
-                            task.getDataFile().toPath(),
-                            FileTime.fromMillis(lastModified));
+                    Files.setLastModifiedTime(task.getDataFile().toPath(), FileTime.fromMillis(lastModified));
                 } catch (DateTimeParseException e) {
                     // fall through
                 }

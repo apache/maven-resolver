@@ -39,15 +39,13 @@ import java.util.regex.Pattern;
 
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
+import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.http2.api.server.ServerSessionListener;
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
+import org.eclipse.jetty.http2.server.RawHTTP2ServerConnectionFactory;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.util.IO;
@@ -182,8 +180,17 @@ public class HttpServer {
             HttpConfiguration httpsConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
             customizer.setSniHostCheck(false);
+            httpsConfig.addCustomizer(new SecureRequestCustomizer());
             httpsConfig.addCustomizer(customizer);
-            httpsConnector = new ServerConnector(server, ssl, new HttpConnectionFactory(httpsConfig));
+
+            HttpConnectionFactory http1 = new HttpConnectionFactory(httpsConfig);
+
+            HTTP2ServerConnectionFactory http2 = new HTTP2ServerConnectionFactory(httpsConfig);
+            ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
+            alpn.setDefaultProtocol(http1.getProtocol());
+            SslConnectionFactory tls = new SslConnectionFactory(ssl, alpn.getProtocol());
+
+            httpsConnector = new ServerConnector(server, tls, alpn, http2, http1);
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
