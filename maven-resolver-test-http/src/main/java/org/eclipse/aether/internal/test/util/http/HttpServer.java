@@ -160,8 +160,9 @@ public class HttpServer {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
             ssl.setNeedClientAuth(needClientAuth);
             if (!needClientAuth) {
-                ssl.setKeyStorePath(
-                        HttpTransporterTest.keyStoreSelfSignedPath.toAbsolutePath().toString());
+                ssl.setKeyStorePath(HttpTransporterTest.keyStoreSelfSignedPath
+                        .toAbsolutePath()
+                        .toString());
                 ssl.setKeyStorePassword("server-pwd");
                 ssl.setSniRequired(false);
             } else {

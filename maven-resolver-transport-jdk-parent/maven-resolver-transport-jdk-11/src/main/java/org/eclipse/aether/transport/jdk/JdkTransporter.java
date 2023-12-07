@@ -18,29 +18,21 @@
  */
 package org.eclipse.aether.transport.jdk;
 
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.Authenticator;
-import java.net.ConnectException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.PasswordAuthentication;
-import java.net.ProxySelector;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
-import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -428,6 +420,18 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             throws NoTransporterException {
         final String instanceKey = HTTP_INSTANCE_KEY_PREFIX + repository.getId();
 
+        final String httpsSecurityMode = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
+                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
+                ConfigurationProperties.HTTPS_SECURITY_MODE);
+
+        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
+                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
+            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
+        }
+        final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
+
         // todo: normally a single client per JVM is sufficient - in particular cause part of the config
         //       is global and not per instance so we should create a client only when conf changes for a repo
         //       else fallback on a global client
@@ -451,7 +455,40 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     }
 
                     if (sslContext == null) {
-                        sslContext = SSLContext.getDefault();
+                        if (insecure) {
+                            sslContext = SSLContext.getInstance("TLS");
+                            X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
+                                @Override
+                                public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                                @Override
+                                public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                                @Override
+                                public void checkClientTrusted(
+                                        X509Certificate[] chain, String authType, Socket socket) {}
+
+                                @Override
+                                public void checkServerTrusted(
+                                        X509Certificate[] chain, String authType, Socket socket) {}
+
+                                @Override
+                                public void checkClientTrusted(
+                                        X509Certificate[] chain, String authType, SSLEngine engine) {}
+
+                                @Override
+                                public void checkServerTrusted(
+                                        X509Certificate[] chain, String authType, SSLEngine engine) {}
+
+                                @Override
+                                public X509Certificate[] getAcceptedIssuers() {
+                                    return null;
+                                }
+                            };
+                            sslContext.init(null, new X509TrustManager[] {tm}, null);
+                        } else {
+                            sslContext = SSLContext.getDefault();
+                        }
                     }
 
                     int connectTimeout = ConfigUtils.getInteger(
@@ -469,6 +506,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                             .followRedirects(HttpClient.Redirect.NORMAL)
                             .connectTimeout(Duration.ofMillis(connectTimeout))
                             .sslContext(sslContext);
+
+                    if (insecure) {
+                        SSLParameters sslParameters = new SSLParameters();
+                        sslParameters.setEndpointIdentificationAlgorithm(null);
+                        builder.sslParameters(sslParameters);
+                    }
 
                     setLocalAddress(builder, () -> getHttpLocalAddress(session, repository));
 
@@ -515,7 +558,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     }
 
                     return result;
-                } catch (NoSuchAlgorithmException e) {
+                } catch (Exception e) {
                     throw new WrapperEx(e);
                 }
             });
