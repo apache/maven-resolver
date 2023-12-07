@@ -30,12 +30,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.Authentication;
@@ -133,6 +135,10 @@ public class HttpTransporterTest {
             transporter.close();
             transporter = null;
         }
+        // here we "simulate" onSessionClose
+        // TODO: in UTs currently we cannot do it, sort it out
+        session = new DefaultRepositorySystemSession(session);
+        session.setData(new DefaultSessionData());
         transporter = factory.newInstance(session, newRepo(url));
     }
 
@@ -1049,7 +1055,8 @@ public class HttpTransporterTest {
             try {
                 transporter.get(new GetTask(URI.create("repo/file.txt")));
                 fail("Expected error");
-            } catch (SocketTimeoutException e) {
+            } catch (Exception e) {
+                assertTrue(e.getClass().getSimpleName().contains("Timeout"));
                 assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
             }
         }
