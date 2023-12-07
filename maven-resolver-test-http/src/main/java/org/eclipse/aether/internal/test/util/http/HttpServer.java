@@ -159,13 +159,20 @@ public class HttpServer {
         if (httpsConnector == null) {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
             ssl.setNeedClientAuth(needClientAuth);
-            ssl.setKeyStorePath(
-                    HttpTransporterTest.keyStorePath.toAbsolutePath().toString());
-            ssl.setKeyStorePassword("server-pwd");
-            ssl.setTrustStorePath(
-                    HttpTransporterTest.trustStorePath.toAbsolutePath().toString());
-            ssl.setTrustStorePassword("client-pwd");
-            ssl.setSniRequired(false);
+            if (!needClientAuth) {
+                ssl.setKeyStorePath(
+                        HttpTransporterTest.keyStoreSelfSignedPath.toAbsolutePath().toString());
+                ssl.setKeyStorePassword("server-pwd");
+                ssl.setSniRequired(false);
+            } else {
+                ssl.setKeyStorePath(
+                        HttpTransporterTest.keyStorePath.toAbsolutePath().toString());
+                ssl.setKeyStorePassword("server-pwd");
+                ssl.setTrustStorePath(
+                        HttpTransporterTest.trustStorePath.toAbsolutePath().toString());
+                ssl.setTrustStorePassword("client-pwd");
+                ssl.setSniRequired(false);
+            }
 
             HttpConfiguration httpsConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
@@ -180,7 +187,6 @@ public class HttpServer {
             alpn.setDefaultProtocol(http1.getProtocol());
 
             SslConnectionFactory tls = new SslConnectionFactory(ssl, alpn.getProtocol());
-
             httpsConnector = new ServerConnector(server, tls, alpn, http2, http1);
             server.addConnector(httpsConnector);
             try {

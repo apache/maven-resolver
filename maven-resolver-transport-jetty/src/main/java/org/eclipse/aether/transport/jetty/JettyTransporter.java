@@ -435,6 +435,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
                     sslContextFactory.setSslContext(sslContext);
                     if (insecure) {
+                        sslContextFactory.setEndpointIdentificationAlgorithm(null);
                         sslContextFactory.setHostnameVerifier((name, context) -> true);
                     }
 
