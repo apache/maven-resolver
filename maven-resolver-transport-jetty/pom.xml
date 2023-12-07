@@ -37,7 +37,6 @@
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
 
     <javaVersion>11</javaVersion>
-    <jettyVersion>10.0.18</jettyVersion>
   </properties>
 
   <dependencies>
@@ -67,17 +66,14 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-client</artifactId>
-      <version>${jettyVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.http2</groupId>
       <artifactId>http2-client</artifactId>
-      <version>${jettyVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.http2</groupId>
       <artifactId>http2-http-client-transport</artifactId>
-      <version>${jettyVersion}</version>
     </dependency>
   </dependencies>
 

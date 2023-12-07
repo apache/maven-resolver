@@ -99,6 +99,8 @@
     <sisuVersion>0.9.0.M2</sisuVersion>
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
+    <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
+    <jettyVersion>10.0.18</jettyVersion>
     <!-- used by supplier and demo only -->
     <mavenVersion>4.0.0-alpha-8</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
@@ -185,6 +187,14 @@
         <artifactId>maven-resolver-test-http</artifactId>
         <version>${project.version}</version>
         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-bom</artifactId>
+        <version>${jettyVersion}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <dependency>
