@@ -22,6 +22,7 @@ import java.net.ConnectException;
 import java.net.URI;
 
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
@@ -31,10 +32,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * JDK Transport UT.
+ * JDK Transporter UT.
  */
 @SuppressWarnings({"checkstyle:magicnumber"})
-final class JdkTransporterTest {
+class JdkTransporterTest extends HttpTransporterTest {
+    public JdkTransporterTest() {
+        super(JdkTransporterFactory::new);
+    }
+
     @Test
     void enhanceConnectExceptionMessages() {
         String uri = "https://localhost:12345/";

@@ -164,14 +164,18 @@ public class HttpServer {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
             if (needClientAuth) {
                 ssl.setNeedClientAuth(true);
-                ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store").getAbsolutePath());
+                ssl.setKeyStorePath(
+                        HttpTransporterTest.keyStorePath.toAbsolutePath().toString());
                 ssl.setKeyStorePassword("server-pwd");
-                ssl.setTrustStorePath(new File("src/test/resources/ssl/client-store").getAbsolutePath());
+                ssl.setTrustStorePath(
+                        HttpTransporterTest.trustStorePath.toAbsolutePath().toString());
                 ssl.setTrustStorePassword("client-pwd");
                 ssl.setSniRequired(false);
             } else {
                 ssl.setNeedClientAuth(false);
-                ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store-selfsigned").getAbsolutePath());
+                ssl.setKeyStorePath(HttpTransporterTest.keyStoreSelfSignedPath
+                        .toAbsolutePath()
+                        .toString());
                 ssl.setKeyStorePassword("server-pwd");
                 ssl.setSniRequired(false);
             }
