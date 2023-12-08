@@ -27,20 +27,19 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 
 import org.eclipse.aether.spi.connector.transport.PutTask;
-import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.jetty.client.util.AbstractRequestContent;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.IO;
 
-class PutRequestContent extends AbstractRequestContent {
+class PutTaskRequestContent extends AbstractRequestContent {
     private final PutTask putTask;
     private final int bufferSize;
     private ByteBufferPool bufferPool;
     private boolean useDirectByteBuffers = true;
 
-    public PutRequestContent(PutTask putTask) {
+    public PutTaskRequestContent(PutTask putTask) {
         super("application/octet-stream");
         this.putTask = putTask;
         this.bufferSize = 4096;
@@ -90,11 +89,6 @@ class PutRequestContent extends AbstractRequestContent {
             ByteBuffer buffer;
             boolean last;
             if (channel == null) {
-                try {
-                    putTask.getListener().transportStarted(0, putTask.getDataLength());
-                } catch (TransferCancelledException e) {
-                    throw new IOException(e);
-                }
                 if (putTask.getDataFile() != null) {
                     channel = Files.newByteChannel(putTask.getDataFile().toPath(), StandardOpenOption.READ);
                 } else {
@@ -109,14 +103,6 @@ class PutRequestContent extends AbstractRequestContent {
             BufferUtil.clearToFill(buffer);
             int read = channel.read(buffer);
             BufferUtil.flipToFlush(buffer, 0);
-            if (read > 0) {
-                try {
-                    putTask.getListener().transportProgressed(buffer);
-                } catch (TransferCancelledException e) {
-                    throw new IOException(e);
-                }
-            }
-
             if (!channel.isOpen() && read < 0) {
                 throw new EOFException("EOF reached for " + putTask);
             }

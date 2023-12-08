@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -179,8 +180,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.client = getOrCreateClient(session, repository);
 
         final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
-        this.basicServerAuthenticationResult = (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".serverAuth");
-        this.basicProxyAuthenticationResult = (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".proxyAuth");
+        this.basicServerAuthenticationResult =
+                (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".serverAuth");
+        this.basicProxyAuthenticationResult =
+                (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".proxyAuth");
     }
 
     private URI resolve(TransportTask task) {
@@ -375,7 +378,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     protected void implPut(PutTask task) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT").timeout(requestTimeout, TimeUnit.MILLISECONDS);
         request.headers(m -> headers.forEach(m::add));
-        request.body(new PutRequestContent(task));
         if (preemptiveAuth || preemptivePutAuth) {
             if (basicServerAuthenticationResult != null) {
                 basicServerAuthenticationResult.apply(request);
@@ -384,9 +386,37 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 basicProxyAuthenticationResult.apply(request);
             }
         }
+        request.body(new PutTaskRequestContent(task));
+        AtomicBoolean started = new AtomicBoolean(false);
         Response response;
         try {
-            response = request.send();
+            response = request.onRequestCommit(r -> {
+                        if (task.getDataLength() == 0) {
+                            if (started.compareAndSet(false, true)) {
+                                try {
+                                    task.getListener().transportStarted(0, task.getDataLength());
+                                } catch (TransferCancelledException e) {
+                                    r.abort(e);
+                                }
+                            }
+                        }
+                    })
+                    .onRequestContent((r, b) -> {
+                        if (started.compareAndSet(false, true)) {
+                            try {
+                                task.getListener().transportStarted(0, task.getDataLength());
+                            } catch (TransferCancelledException e) {
+                                r.abort(e);
+                                return;
+                            }
+                        }
+                        try {
+                            task.getListener().transportProgressed(b);
+                        } catch (TransferCancelledException e) {
+                            r.abort(e);
+                        }
+                    })
+                    .send();
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException) {
