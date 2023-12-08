@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -113,6 +114,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final boolean preemptivePutAuth;
 
+    private final BasicAuthentication.BasicResult basicServerAuthenticationResult;
+
+    private final BasicAuthentication.BasicResult basicProxyAuthenticationResult;
+
     JettyTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
@@ -172,6 +177,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
 
         this.client = getOrCreateClient(session, repository);
+
+        final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
+        this.basicServerAuthenticationResult = (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".serverAuth");
+        this.basicProxyAuthenticationResult = (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".proxyAuth");
     }
 
     private URI resolve(TransportTask task) {
@@ -410,10 +419,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     static final Logger LOGGER = LoggerFactory.getLogger(JettyTransporter.class);
 
-    private BasicAuthentication.BasicResult basicServerAuthenticationResult = null;
-
-    private BasicAuthentication.BasicResult basicProxyAuthenticationResult = null;
-
     @SuppressWarnings("checkstyle:methodlength")
     private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
@@ -433,7 +438,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
         try {
-            return (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
+            AtomicReference<BasicAuthentication.BasicResult> serverAuth = new AtomicReference<>(null);
+            AtomicReference<BasicAuthentication.BasicResult> proxyAuth = new AtomicReference<>(null);
+            HttpClient client = (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
                 SSLContext sslContext = null;
                 BasicAuthentication basicAuthentication = null;
                 try {
@@ -449,8 +456,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                             basicAuthentication =
                                     new BasicAuthentication(uri, Authentication.ANY_REALM, username, password);
                             if (preemptiveAuth || preemptivePutAuth) {
-                                basicServerAuthenticationResult = new BasicAuthentication.BasicResult(
-                                        uri, HttpHeader.AUTHORIZATION, username, password);
+                                serverAuth.set(new BasicAuthentication.BasicResult(
+                                        uri, HttpHeader.AUTHORIZATION, username, password));
                             }
                         }
                     }
@@ -535,8 +542,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
                                 httpClient.getAuthenticationStore().addAuthentication(proxyAuthentication);
                                 if (preemptiveAuth || preemptivePutAuth) {
-                                    basicProxyAuthenticationResult = new BasicAuthentication.BasicResult(
-                                            proxy.getURI(), HttpHeader.PROXY_AUTHORIZATION, username, password);
+                                    proxyAuth.set(new BasicAuthentication.BasicResult(
+                                            proxy.getURI(), HttpHeader.PROXY_AUTHORIZATION, username, password));
                                 }
                             }
                         }
@@ -557,6 +564,13 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     throw new WrapperEx(e);
                 }
             });
+            if (serverAuth.get() != null) {
+                session.getData().set(instanceKey + ".serverAuth", serverAuth.get());
+            }
+            if (proxyAuth.get() != null) {
+                session.getData().set(instanceKey + ".proxyAuth", proxyAuth.get());
+            }
+            return client;
         } catch (WrapperEx e) {
             throw new NoTransporterException(repository, e.getCause());
         }
