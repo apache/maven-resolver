@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
