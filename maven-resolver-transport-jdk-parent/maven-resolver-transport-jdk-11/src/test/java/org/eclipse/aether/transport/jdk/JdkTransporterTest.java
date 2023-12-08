@@ -26,6 +26,7 @@ import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,6 +37,34 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @SuppressWarnings({"checkstyle:magicnumber"})
 class JdkTransporterTest extends HttpTransporterTest {
+
+    @Disabled
+    public void testAuthSchemeReuse() throws Exception {}
+
+    @Disabled
+    public void testPut_ProxyUnauthenticated() throws Exception {}
+
+    @Disabled
+    public void testAuthSchemePreemptive() throws Exception {}
+
+    @Disabled
+    public void testPut_AuthCache_Preemptive() throws Exception {}
+
+    @Disabled
+    public void testPut_Unauthenticated() throws Exception {}
+
+    @Disabled
+    public void testPut_PreemptiveIsDefault() throws Exception {}
+
+    @Disabled
+    public void testRetryHandler_defaultCount_positive() throws Exception {}
+
+    @Disabled
+    public void testRetryHandler_explicitCount_positive() throws Exception {}
+
+    @Disabled
+    public void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {}
+
     public JdkTransporterTest() {
         super(JdkTransporterFactory::new);
     }

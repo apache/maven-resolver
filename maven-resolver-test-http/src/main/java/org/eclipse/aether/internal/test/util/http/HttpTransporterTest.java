@@ -187,7 +187,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testRetryHandler_defaultCount_positive() throws Exception {
+    public void testRetryHandler_defaultCount_positive() throws Exception {
         httpServer.setConnectionsToClose(3);
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
     }
@@ -203,7 +203,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testRetryHandler_explicitCount_positive() throws Exception {
+    public void testRetryHandler_explicitCount_positive() throws Exception {
         session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 10);
         newTransporter(httpServer.getHttpUrl());
         httpServer.setConnectionsToClose(10);
@@ -769,7 +769,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {
+    public void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {
         Map<String, String> headers = new HashMap<>();
         headers.put("Expect", "100-continue");
         session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
@@ -792,7 +792,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testPut_Unauthenticated() throws Exception {
+    public void testPut_Unauthenticated() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
@@ -829,7 +829,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testPut_ProxyUnauthenticated() throws Exception {
+    public void testPut_ProxyUnauthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         proxy = new Proxy(Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort());
         newTransporter("http://bad.localhost:1/");
@@ -943,7 +943,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testPut_PreemptiveIsDefault() throws Exception {
+    public void testPut_PreemptiveIsDefault() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -974,7 +974,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testPut_AuthCache_Preemptive() throws Exception {
+    public void testPut_AuthCache_Preemptive() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -1129,7 +1129,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testAuthSchemeReuse() throws Exception {
+    public void testAuthSchemeReuse() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         httpServer.setProxyAuthentication("proxyuser", "proxypass");
         session.setCache(new DefaultRepositoryCache());
@@ -1158,7 +1158,7 @@ public class HttpTransporterTest {
     }
 
     @Test
-    void testAuthSchemePreemptive() throws Exception {
+    public void testAuthSchemePreemptive() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         session.setCache(new DefaultRepositoryCache());
         auth = new AuthenticationBuilder()

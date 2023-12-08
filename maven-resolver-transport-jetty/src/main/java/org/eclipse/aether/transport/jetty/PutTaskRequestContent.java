@@ -39,10 +39,15 @@ class PutTaskRequestContent extends AbstractRequestContent {
     private ByteBufferPool bufferPool;
     private boolean useDirectByteBuffers = true;
 
-    public PutTaskRequestContent(PutTask putTask) {
+    @SuppressWarnings("checkstyle:MagicNumber")
+    PutTaskRequestContent(PutTask putTask) {
+        this(putTask, 4096);
+    }
+
+    PutTaskRequestContent(PutTask putTask, int bufferSize) {
         super("application/octet-stream");
         this.putTask = putTask;
-        this.bufferSize = 4096;
+        this.bufferSize = bufferSize;
     }
 
     @Override
@@ -117,7 +122,9 @@ class PutTaskRequestContent extends AbstractRequestContent {
         }
 
         private void release(ByteBuffer buffer) {
-            if (bufferPool != null) bufferPool.release(buffer);
+            if (bufferPool != null) {
+                bufferPool.release(buffer);
+            }
         }
 
         @Override
