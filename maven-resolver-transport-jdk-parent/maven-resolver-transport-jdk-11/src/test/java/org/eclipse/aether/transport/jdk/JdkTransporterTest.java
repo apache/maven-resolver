@@ -39,31 +39,31 @@ import static org.junit.jupiter.api.Assertions.fail;
 class JdkTransporterTest extends HttpTransporterTest {
 
     @Disabled
-    public void testAuthSchemeReuse() throws Exception {}
+    protected void testAuthSchemeReuse() throws Exception {}
 
     @Disabled
-    public void testPut_ProxyUnauthenticated() throws Exception {}
+    protected void testPut_ProxyUnauthenticated() throws Exception {}
 
     @Disabled
-    public void testAuthSchemePreemptive() throws Exception {}
+    protected void testAuthSchemePreemptive() throws Exception {}
 
     @Disabled
-    public void testPut_AuthCache_Preemptive() throws Exception {}
+    protected void testPut_AuthCache_Preemptive() throws Exception {}
 
     @Disabled
-    public void testPut_Unauthenticated() throws Exception {}
+    protected void testPut_Unauthenticated() throws Exception {}
 
     @Disabled
-    public void testPut_PreemptiveIsDefault() throws Exception {}
+    protected void testPut_PreemptiveIsDefault() throws Exception {}
 
     @Disabled
-    public void testRetryHandler_defaultCount_positive() throws Exception {}
+    protected void testRetryHandler_defaultCount_positive() throws Exception {}
 
     @Disabled
-    public void testRetryHandler_explicitCount_positive() throws Exception {}
+    protected void testRetryHandler_explicitCount_positive() throws Exception {}
 
     @Disabled
-    public void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {}
+    protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {}
 
     public JdkTransporterTest() {
         super(JdkTransporterFactory::new);

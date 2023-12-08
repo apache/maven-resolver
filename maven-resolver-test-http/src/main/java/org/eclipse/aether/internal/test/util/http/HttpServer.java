@@ -160,17 +160,17 @@ public class HttpServer {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
             ssl.setNeedClientAuth(needClientAuth);
             if (!needClientAuth) {
-                ssl.setKeyStorePath(HttpTransporterTest.keyStoreSelfSignedPath
+                ssl.setKeyStorePath(HttpTransporterTest.KEY_STORE_SELF_SIGNED_PATH
                         .toAbsolutePath()
                         .toString());
                 ssl.setKeyStorePassword("server-pwd");
                 ssl.setSniRequired(false);
             } else {
                 ssl.setKeyStorePath(
-                        HttpTransporterTest.keyStorePath.toAbsolutePath().toString());
+                        HttpTransporterTest.KEY_STORE_PATH.toAbsolutePath().toString());
                 ssl.setKeyStorePassword("server-pwd");
                 ssl.setTrustStorePath(
-                        HttpTransporterTest.trustStorePath.toAbsolutePath().toString());
+                        HttpTransporterTest.TRUST_STORE_PATH.toAbsolutePath().toString());
                 ssl.setTrustStorePassword("client-pwd");
                 ssl.setSniRequired(false);
             }
@@ -277,6 +277,7 @@ public class HttpServer {
     }
 
     private class ConnectionClosingHandler extends AbstractHandler {
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             if (connectionsToClose.getAndDecrement() > 0) {
                 Response jettyResponse = (Response) response;
@@ -286,7 +287,7 @@ public class HttpServer {
     }
 
     private class LogHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             LOGGER.info(
                     "{} {}{}",
@@ -313,7 +314,7 @@ public class HttpServer {
     private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
     private class RepoHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
                 throws IOException {
             String path = req.getPathInfo().substring(1);
@@ -447,7 +448,7 @@ public class HttpServer {
     }
 
     private class RedirectHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             String path = req.getPathInfo();
             if (!path.startsWith("/redirect/")) {
@@ -474,7 +475,7 @@ public class HttpServer {
     }
 
     private class AuthHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
                 throws IOException {
             if (ExpectContinue.BROKEN.equals(expectContinue)
@@ -494,7 +495,7 @@ public class HttpServer {
     }
 
     private class ProxyAuthHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             if (proxyUsername != null && proxyPassword != null) {
                 if (checkBasicAuth(
