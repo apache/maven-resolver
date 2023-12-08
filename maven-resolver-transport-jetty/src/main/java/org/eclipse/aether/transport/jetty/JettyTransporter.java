@@ -50,6 +50,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.eclipse.jetty.client.HttpClient;
@@ -61,7 +62,6 @@ import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
 import org.eclipse.jetty.client.util.BasicAuthentication;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.PathRequestContent;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
@@ -108,6 +108,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     private final int requestTimeout;
 
     private final Map<String, String> headers;
+
+    private final boolean preemptiveAuth;
+
+    private final boolean preemptivePutAuth;
 
     JettyTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
         try {
@@ -156,6 +160,16 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                 ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
                 ConfigurationProperties.REQUEST_TIMEOUT);
+        this.preemptiveAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
+        this.preemptivePutAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
 
         this.client = getOrCreateClient(session, repository);
     }
@@ -336,24 +350,30 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     protected void implPut(PutTask task) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT").timeout(requestTimeout, TimeUnit.MILLISECONDS);
         request.headers(m -> headers.forEach(m::add));
-        try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
-            utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
-            request.body(new PathRequestContent(tempFile.getPath()));
-
-            Response response;
-            try {
-                response = request.send();
-            } catch (ExecutionException e) {
-                Throwable t = e.getCause();
-                if (t instanceof Exception) {
-                    throw (Exception) t;
+        request.body(new PutRequestContent(task));
+        if (!preemptiveAuth && preemptivePutAuth && basicAuthenticationResult != null) {
+            basicAuthenticationResult.apply(request);
+        }
+        Response response;
+        try {
+            response = request.send();
+        } catch (ExecutionException e) {
+            Throwable t = e.getCause();
+            if (t instanceof IOException) {
+                IOException ioex = (IOException) t;
+                if (ioex.getCause() instanceof TransferCancelledException) {
+                    throw (TransferCancelledException) ioex.getCause();
                 } else {
-                    throw new RuntimeException(t);
+                    throw ioex;
                 }
+            } else if (t instanceof Exception) {
+                throw (Exception) t;
+            } else {
+                throw new RuntimeException(t);
             }
-            if (response.getStatus() >= MULTIPLE_CHOICES) {
-                throw new HttpTransporterException(response.getStatus());
-            }
+        }
+        if (response.getStatus() >= MULTIPLE_CHOICES) {
+            throw new HttpTransporterException(response.getStatus());
         }
     }
 
@@ -369,8 +389,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     static final Logger LOGGER = LoggerFactory.getLogger(JettyTransporter.class);
 
+    private BasicAuthentication.BasicResult basicAuthenticationResult = null;
+
     @SuppressWarnings("checkstyle:methodlength")
-    private static HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
+    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
 
         final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
@@ -400,8 +422,13 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                             String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                             String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
 
-                            basicAuthentication = new BasicAuthentication(
-                                    URI.create(repository.getUrl()), Authentication.ANY_REALM, username, password);
+                            URI uri = URI.create(repository.getUrl());
+                            basicAuthentication =
+                                    new BasicAuthentication(uri, Authentication.ANY_REALM, username, password);
+                            if (preemptiveAuth || preemptivePutAuth) {
+                                basicAuthenticationResult =
+                                        new BasicAuthentication.BasicResult(uri, username, password);
+                            }
                         }
                     }
 
@@ -466,6 +493,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
                     if (basicAuthentication != null) {
                         httpClient.getAuthenticationStore().addAuthentication(basicAuthentication);
+                        if (preemptiveAuth && basicAuthenticationResult != null) {
+                            httpClient.getAuthenticationStore().addAuthenticationResult(basicAuthenticationResult);
+                        }
                     }
 
                     if (repository.getProxy() != null) {
