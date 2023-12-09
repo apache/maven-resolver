@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.apache;
+package org.eclipse.aether.internal.test.util.http;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,8 +41,11 @@ import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -57,16 +60,28 @@ public class HttpServer {
 
     public static class LogEntry {
 
-        public final String method;
+        private final String method;
 
-        public final String path;
+        private final String path;
 
-        public final Map<String, String> headers;
+        private final Map<String, String> headers;
 
         public LogEntry(String method, String path, Map<String, String> headers) {
             this.method = method;
             this.path = path;
             this.headers = headers;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public Map<String, String> getHeaders() {
+            return headers;
         }
 
         @Override
@@ -114,7 +129,7 @@ public class HttpServer {
 
     private final AtomicInteger connectionsToClose = new AtomicInteger(0);
 
-    private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
+    private final List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
 
     public String getHost() {
         return "localhost";
@@ -153,12 +168,18 @@ public class HttpServer {
                 ssl.setKeyStorePassword("server-pwd");
                 ssl.setTrustStorePath(new File("src/test/resources/ssl/client-store").getAbsolutePath());
                 ssl.setTrustStorePassword("client-pwd");
+                ssl.setSniRequired(false);
             } else {
                 ssl.setNeedClientAuth(false);
                 ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store-selfsigned").getAbsolutePath());
                 ssl.setKeyStorePassword("server-pwd");
+                ssl.setSniRequired(false);
             }
-            httpsConnector = new ServerConnector(server, ssl);
+            HttpConfiguration httpsConfig = new HttpConfiguration();
+            SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+            customizer.setSniHostCheck(false);
+            httpsConfig.addCustomizer(customizer);
+            httpsConnector = new ServerConnector(server, ssl, new HttpConnectionFactory(httpsConfig));
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
@@ -280,9 +301,9 @@ public class HttpServer {
         }
     }
 
-    private class RepoHandler extends AbstractHandler {
+    private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
-        private final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
+    private class RepoHandler extends AbstractHandler {
 
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
                 throws IOException {

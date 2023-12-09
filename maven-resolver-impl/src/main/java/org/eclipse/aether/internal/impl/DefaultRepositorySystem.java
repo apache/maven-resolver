@@ -260,13 +260,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
             throw new NullPointerException("dependency node and collect request cannot be null");
         }
 
-        final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
-        DependencyVisitor builder = getDependencyVisitor(session, dependencyNodes::add);
-        DependencyFilter filter = request.getFilter();
-        DependencyVisitor visitor = (filter != null) ? new FilteringDependencyVisitor(builder, filter) : builder;
-        if (result.getRoot() != null) {
-            result.getRoot().accept(visitor);
-        }
+        final List<DependencyNode> dependencyNodes =
+                doFlattenDependencyNodes(session, result.getRoot(), request.getFilter());
 
         final List<ArtifactRequest> requests = dependencyNodes.stream()
                 .map(n -> {
@@ -302,12 +297,23 @@ public class DefaultRepositorySystem implements RepositorySystem {
     }
 
     @Override
-    public List<DependencyNode> flattenDependencyNodes(RepositorySystemSession session, DependencyNode root) {
+    public List<DependencyNode> flattenDependencyNodes(
+            RepositorySystemSession session, DependencyNode root, DependencyFilter dependencyFilter) {
         validateSession(session);
         requireNonNull(root, "root cannot be null");
 
+        return doFlattenDependencyNodes(session, root, dependencyFilter);
+    }
+
+    private List<DependencyNode> doFlattenDependencyNodes(
+            RepositorySystemSession session, DependencyNode root, DependencyFilter dependencyFilter) {
         final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
-        root.accept(getDependencyVisitor(session, dependencyNodes::add));
+        if (root != null) {
+            DependencyVisitor builder = getDependencyVisitor(session, dependencyNodes::add);
+            DependencyVisitor visitor =
+                    (dependencyFilter != null) ? new FilteringDependencyVisitor(builder, dependencyFilter) : builder;
+            root.accept(visitor);
+        }
         return dependencyNodes;
     }
 
