@@ -346,9 +346,6 @@
                     <!-- MRESOLVER-440 Move properties to their place and cleanup -->
                     <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
                     <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
-                    <!-- MRESOLVER-335 Better resolver errors -->
-                    <exclude>org.eclipse.aether.resolution.ArtifactResult#addException(java.lang.Exception)</exclude>
-                    <exclude>org.eclipse.aether.resolution.ArtifactResult#getExceptions()</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -393,9 +390,6 @@
                     <!-- MRESOLVER-440 Move properties to their place and cleanup -->
                     <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
                     <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
-                    <!-- MRESOLVER-335 Better resolver errors -->
-                    <exclude>org.eclipse.aether.resolution.ArtifactResult#addException(java.lang.Exception)</exclude>
-                    <exclude>org.eclipse.aether.resolution.ArtifactResult#getExceptions()</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>

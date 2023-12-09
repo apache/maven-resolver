@@ -168,9 +168,9 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
         subject.postProcess(session, Collections.singletonList(artifactResult));
         assertFalse(artifactResult.isResolved());
         assertFalse(artifactResult.getExceptions().isEmpty());
-        assertTrue(artifactResult.getExceptions().values().stream()
-                .findFirst()
-                .get()
+        assertTrue(artifactResult
+                .getExceptions()
+                .get(0)
                 .getMessage()
                 .contains("Missing from " + TRUSTED_SOURCE_NAME + " trusted"));
     }
@@ -184,14 +184,10 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
         subject.postProcess(session, Collections.singletonList(artifactResult));
         assertFalse(artifactResult.isResolved());
         assertFalse(artifactResult.getExceptions().isEmpty());
-        assertTrue(artifactResult.getExceptions().values().stream()
-                .findFirst()
-                .get()
-                .getMessage()
-                .contains("trusted checksum mismatch"));
-        assertTrue(artifactResult.getExceptions().values().stream()
-                .findFirst()
-                .get()
+        assertTrue(artifactResult.getExceptions().get(0).getMessage().contains("trusted checksum mismatch"));
+        assertTrue(artifactResult
+                .getExceptions()
+                .get(0)
                 .getMessage()
                 .contains(TRUSTED_SOURCE_NAME + "=" + artifactTrustedChecksum));
     }

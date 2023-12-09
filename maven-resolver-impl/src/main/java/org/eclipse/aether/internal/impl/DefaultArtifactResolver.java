@@ -232,16 +232,11 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         if (!file.isFile()) {
                             failures = true;
                             result.addException(
-                                    SystemRepository.INSTANCE, new ArtifactNotFoundException(artifact, null));
+                                    ArtifactResult.NO_REPOSITORY, new ArtifactNotFoundException(artifact, null));
                         } else {
                             artifact = artifact.setFile(file);
                             result.setArtifact(artifact);
-                            artifactResolved(
-                                    session,
-                                    trace,
-                                    artifact,
-                                    null,
-                                    result.getExceptions().values());
+                            artifactResolved(session, trace, artifact, null, result.getExceptions());
                         }
                         continue;
                     }
@@ -406,12 +401,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                             result.addException(result.getRepository(), exception);
                         }
                         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
-                        artifactResolved(
-                                session,
-                                trace,
-                                request.getArtifact(),
-                                null,
-                                result.getExceptions().values());
+                        artifactResolved(session, trace, request.getArtifact(), null, result.getExceptions());
                     }
                 }
 

@@ -26,6 +26,8 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactResult;
 
+import static java.util.stream.Collectors.joining;
+
 /**
  * Thrown in case of a unresolvable artifacts.
  */
@@ -125,15 +127,17 @@ public class ArtifactResolutionException extends RepositoryException {
 
     private static String getCause(List<? extends ArtifactResult> results) {
         for (ArtifactResult result : results) {
-            if (!result.isResolved() && !result.getExceptions().isEmpty()) {
+            Map<ArtifactRepository, List<Exception>> exMap = result.getMappedExceptions();
+            if (!result.isResolved() && !exMap.isEmpty()) {
                 StringBuilder stringBuilder = new StringBuilder();
-                for (Map.Entry<ArtifactRepository, Exception> t :
-                        result.getExceptions().entrySet()) {
+                for (Map.Entry<ArtifactRepository, List<Exception>> t : exMap.entrySet()) {
                     stringBuilder
                             .append("[")
                             .append(t.getKey().getId())
                             .append(" repository ")
-                            .append(t.getValue().getMessage())
+                            .append(t.getValue().stream()
+                                    .map(Exception::getMessage)
+                                    .collect(joining(",")))
                             .append("]");
                 }
                 return stringBuilder.toString();
