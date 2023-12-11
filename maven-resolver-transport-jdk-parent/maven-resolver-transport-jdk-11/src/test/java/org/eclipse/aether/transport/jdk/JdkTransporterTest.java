@@ -22,19 +22,53 @@ import java.net.ConnectException;
 import java.net.URI;
 
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * JDK Transport UT.
+ * JDK Transporter UT.
  */
 @SuppressWarnings({"checkstyle:magicnumber"})
-final class JdkTransporterTest {
+class JdkTransporterTest extends HttpTransporterTest {
+
+    @Disabled
+    protected void testAuthSchemeReuse() throws Exception {}
+
+    @Disabled
+    protected void testPut_ProxyUnauthenticated() throws Exception {}
+
+    @Disabled
+    protected void testAuthSchemePreemptive() throws Exception {}
+
+    @Disabled
+    protected void testPut_AuthCache_Preemptive() throws Exception {}
+
+    @Disabled
+    protected void testPut_Unauthenticated() throws Exception {}
+
+    @Disabled
+    protected void testPut_PreemptiveIsDefault() throws Exception {}
+
+    @Disabled
+    protected void testRetryHandler_defaultCount_positive() throws Exception {}
+
+    @Disabled
+    protected void testRetryHandler_explicitCount_positive() throws Exception {}
+
+    @Disabled
+    protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {}
+
+    public JdkTransporterTest() {
+        super(JdkTransporterFactory::new);
+    }
+
     @Test
     void enhanceConnectExceptionMessages() {
         String uri = "https://localhost:12345/";

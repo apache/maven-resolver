@@ -39,15 +39,11 @@ import java.util.regex.Pattern;
 
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
+import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.util.IO;
@@ -162,24 +158,37 @@ public class HttpServer {
     private HttpServer addSslConnector(boolean needClientAuth) {
         if (httpsConnector == null) {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
-            if (needClientAuth) {
-                ssl.setNeedClientAuth(true);
-                ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store").getAbsolutePath());
+            ssl.setNeedClientAuth(needClientAuth);
+            if (!needClientAuth) {
+                ssl.setKeyStorePath(HttpTransporterTest.KEY_STORE_SELF_SIGNED_PATH
+                        .toAbsolutePath()
+                        .toString());
                 ssl.setKeyStorePassword("server-pwd");
-                ssl.setTrustStorePath(new File("src/test/resources/ssl/client-store").getAbsolutePath());
-                ssl.setTrustStorePassword("client-pwd");
                 ssl.setSniRequired(false);
             } else {
-                ssl.setNeedClientAuth(false);
-                ssl.setKeyStorePath(new File("src/test/resources/ssl/server-store-selfsigned").getAbsolutePath());
+                ssl.setKeyStorePath(
+                        HttpTransporterTest.KEY_STORE_PATH.toAbsolutePath().toString());
                 ssl.setKeyStorePassword("server-pwd");
+                ssl.setTrustStorePath(
+                        HttpTransporterTest.TRUST_STORE_PATH.toAbsolutePath().toString());
+                ssl.setTrustStorePassword("client-pwd");
                 ssl.setSniRequired(false);
             }
+
             HttpConfiguration httpsConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
             customizer.setSniHostCheck(false);
             httpsConfig.addCustomizer(customizer);
-            httpsConnector = new ServerConnector(server, ssl, new HttpConnectionFactory(httpsConfig));
+
+            HttpConnectionFactory http1 = new HttpConnectionFactory(httpsConfig);
+
+            HTTP2ServerConnectionFactory http2 = new HTTP2ServerConnectionFactory(httpsConfig);
+
+            ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
+            alpn.setDefaultProtocol(http1.getProtocol());
+
+            SslConnectionFactory tls = new SslConnectionFactory(ssl, alpn.getProtocol());
+            httpsConnector = new ServerConnector(server, tls, alpn, http2, http1);
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
@@ -268,6 +277,7 @@ public class HttpServer {
     }
 
     private class ConnectionClosingHandler extends AbstractHandler {
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             if (connectionsToClose.getAndDecrement() > 0) {
                 Response jettyResponse = (Response) response;
@@ -277,7 +287,7 @@ public class HttpServer {
     }
 
     private class LogHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             LOGGER.info(
                     "{} {}{}",
@@ -304,7 +314,7 @@ public class HttpServer {
     private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
     private class RepoHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
                 throws IOException {
             String path = req.getPathInfo().substring(1);
@@ -438,7 +448,7 @@ public class HttpServer {
     }
 
     private class RedirectHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             String path = req.getPathInfo();
             if (!path.startsWith("/redirect/")) {
@@ -465,7 +475,7 @@ public class HttpServer {
     }
 
     private class AuthHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
                 throws IOException {
             if (ExpectContinue.BROKEN.equals(expectContinue)
@@ -485,7 +495,7 @@ public class HttpServer {
     }
 
     private class ProxyAuthHandler extends AbstractHandler {
-
+        @Override
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
             if (proxyUsername != null && proxyPassword != null) {
                 if (checkBasicAuth(
