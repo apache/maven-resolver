@@ -299,6 +299,7 @@
               <configuration>
                 <parameter>
                   <excludes>
+                    <exclude>org.eclipse.aether.RepositoryCache</exclude>
                     <exclude>org.eclipse.aether.RepositoryListener</exclude>
                     <exclude>org.eclipse.aether.RepositorySystem</exclude>
                     <exclude>org.eclipse.aether.RepositorySystemSession</exclude>

@@ -18,12 +18,16 @@
  */
 package org.eclipse.aether;
 
+import java.util.function.Supplier;
+
 /**
  * Caches auxiliary data used during repository access like already processed metadata. The data in the cache is meant
  * for exclusive consumption by the repository system and is opaque to the cache implementation. <strong>Note:</strong>
  * Actual cache implementations must be thread-safe.
  *
  * @see RepositorySystemSession#getCache()
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface RepositoryCache {
 
@@ -53,4 +57,14 @@ public interface RepositoryCache {
      * @return The requested data or {@code null} if none was present in the cache.
      */
     Object get(RepositorySystemSession session, Object key);
+
+    /**
+     * Retrieve or compute the data associated with the specified key.
+     *
+     * @param key The key for which to retrieve the session data, must not be {@code null}.
+     * @param supplier The supplier will compute the new value, must not be {@code null}.
+     * @return The cache data associated with the key.
+     * @since 2.0.0
+     */
+    Object computeIfAbsent(RepositorySystemSession session, Object key, Supplier<Object> supplier);
 }
