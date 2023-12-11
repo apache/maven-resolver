@@ -20,29 +20,42 @@ package org.eclipse.aether.transport.jetty;
 
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * Jetty transporter UT.
  */
 class JettyTransporterTest extends HttpTransporterTest {
 
+    @Override
     @Disabled
-    protected void testAuthSchemeReuse() throws Exception {}
+    @Test
+    protected void testAuthSchemeReuse() {}
 
+    @Override
     @Disabled
-    protected void testPut_ProxyUnauthenticated() throws Exception {}
+    @Test
+    protected void testPut_ProxyUnauthenticated() {}
 
+    @Override
     @Disabled
-    protected void testPut_Unauthenticated() throws Exception {}
+    @Test
+    protected void testPut_Unauthenticated() {}
 
+    @Override
     @Disabled
-    protected void testRetryHandler_defaultCount_positive() throws Exception {}
+    @Test
+    protected void testRetryHandler_defaultCount_positive() {}
 
+    @Override
     @Disabled
-    protected void testRetryHandler_explicitCount_positive() throws Exception {}
+    @Test
+    protected void testRetryHandler_explicitCount_positive() {}
 
+    @Override
     @Disabled
-    protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() throws Exception {}
+    @Test
+    protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
 
     public JettyTransporterTest() {
         super(JettyTransporterFactory::new);
