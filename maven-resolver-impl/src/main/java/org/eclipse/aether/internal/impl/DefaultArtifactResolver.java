@@ -49,15 +49,7 @@ import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
-import org.eclipse.aether.repository.ArtifactRepository;
-import org.eclipse.aether.repository.LocalArtifactRegistration;
-import org.eclipse.aether.repository.LocalArtifactRequest;
-import org.eclipse.aether.repository.LocalArtifactResult;
-import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.repository.LocalRepositoryManager;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryPolicy;
-import org.eclipse.aether.repository.WorkspaceReader;
+import org.eclipse.aether.repository.*;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -239,7 +231,8 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         File file = new File(localPath);
                         if (!file.isFile()) {
                             failures = true;
-                            result.addException(new ArtifactNotFoundException(artifact, null));
+                            result.addException(
+                                    ArtifactResult.NO_REPOSITORY, new ArtifactNotFoundException(artifact, null));
                         } else {
                             artifact = artifact.setFile(file);
                             result.setArtifact(artifact);
@@ -254,8 +247,10 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         for (RemoteRepository repository : remoteRepositories) {
                             RemoteRepositoryFilter.Result filterResult = filter.acceptArtifact(repository, artifact);
                             if (!filterResult.isAccepted()) {
-                                result.addException(new ArtifactFilteredOutException(
-                                        artifact, repository, filterResult.reasoning()));
+                                result.addException(
+                                        repository,
+                                        new ArtifactFilteredOutException(
+                                                artifact, repository, filterResult.reasoning()));
                                 filteredRemoteRepositories.remove(repository);
                             }
                         }
@@ -268,7 +263,11 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         versionRequest.setTrace(trace);
                         versionResult = versionResolver.resolveVersion(session, versionRequest);
                     } catch (VersionResolutionException e) {
-                        result.addException(e);
+                        if (filteredRemoteRepositories.isEmpty()) {
+                            result.addException(lrm.getRepository(), e);
+                        } else {
+                            filteredRemoteRepositories.forEach(r -> result.addException(r, e));
+                        }
                         continue;
                     }
 
@@ -315,7 +314,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                             result.setArtifact(artifact);
                             artifactResolved(session, trace, artifact, result.getRepository(), null);
                         } catch (ArtifactTransferException e) {
-                            result.addException(e);
+                            result.addException(lrm.getRepository(), e);
                         }
                         if (filter == null && simpleLrmInterop && !local.isAvailable()) {
                             /*
@@ -355,7 +354,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                                             + repo.getUrl() + ") in offline mode and the artifact " + artifact
                                             + " has not been downloaded from it before.",
                                     e);
-                            result.addException(exception);
+                            result.addException(repo, exception);
                             continue;
                         }
 
@@ -399,7 +398,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         failures = true;
                         if (result.getExceptions().isEmpty()) {
                             Exception exception = new ArtifactNotFoundException(request.getArtifact(), null);
-                            result.addException(exception);
+                            result.addException(result.getRepository(), exception);
                         }
                         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
                         artifactResolved(session, trace, request.getArtifact(), null, result.getExceptions());
@@ -524,7 +523,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 item.updateCheck = check;
                 updateCheckManager.checkArtifact(session, check);
                 if (!check.isRequired()) {
-                    item.result.addException(check.getException());
+                    item.result.addException(group.repository, check.getException());
                     continue;
                 }
             }
@@ -560,10 +559,10 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                             new LocalArtifactRegistration(artifact, group.repository, download.getSupportedContexts()));
                 } catch (ArtifactTransferException e) {
                     download.setException(e);
-                    item.result.addException(e);
+                    item.result.addException(group.repository, e);
                 }
             } else {
-                item.result.addException(download.getException());
+                item.result.addException(group.repository, download.getException());
             }
 
             /*
@@ -595,12 +594,12 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             RequestTrace trace,
             Artifact artifact,
             ArtifactRepository repository,
-            List<Exception> exceptions) {
+            Collection<Exception> exceptions) {
         RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.ARTIFACT_RESOLVED);
         event.setTrace(trace);
         event.setArtifact(artifact);
         event.setRepository(repository);
-        event.setExceptions(exceptions);
+        event.setExceptions(exceptions != null ? new ArrayList<>(exceptions) : null);
         if (artifact != null) {
             event.setFile(artifact.getFile());
         }

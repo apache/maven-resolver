@@ -35,6 +35,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
@@ -132,6 +133,8 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     private ArtifactResult createArtifactResult(Artifact artifact) {
         ArtifactResult artifactResult = new ArtifactResult(new ArtifactRequest().setArtifact(artifact));
         artifactResult.setArtifact(artifact);
+        artifactResult.setRepository(
+                new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/").build());
         return artifactResult;
     }
 
