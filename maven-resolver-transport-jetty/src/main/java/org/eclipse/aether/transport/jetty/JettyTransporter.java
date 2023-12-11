@@ -18,7 +18,7 @@
  */
 package org.eclipse.aether.transport.jetty;
 
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,11 +27,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
+import java.security.cert.X509Certificate;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,7 +49,10 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.eclipse.jetty.client.HttpClient;
@@ -56,7 +64,6 @@ import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
 import org.eclipse.jetty.client.util.BasicAuthentication;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.PathRequestContent;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
@@ -70,7 +77,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.0
  */
-final class JettyTransporter extends AbstractTransporter {
+final class JettyTransporter extends AbstractTransporter implements HttpTransporter {
     private static final int MULTIPLE_CHOICES = 300;
 
     private static final int NOT_FOUND = 404;
@@ -84,6 +91,8 @@ final class JettyTransporter extends AbstractTransporter {
     private static final String CONTENT_LENGTH = "Content-Length";
 
     private static final String CONTENT_RANGE = "Content-Range";
+
+    private static final String LAST_MODIFIED = "Last-Modified";
 
     private static final String IF_UNMODIFIED_SINCE = "If-Unmodified-Since";
 
@@ -101,6 +110,14 @@ final class JettyTransporter extends AbstractTransporter {
     private final int requestTimeout;
 
     private final Map<String, String> headers;
+
+    private final boolean preemptiveAuth;
+
+    private final boolean preemptivePutAuth;
+
+    private final BasicAuthentication.BasicResult basicServerAuthenticationResult;
+
+    private final BasicAuthentication.BasicResult basicProxyAuthenticationResult;
 
     JettyTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
         try {
@@ -149,8 +166,24 @@ final class JettyTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                 ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
                 ConfigurationProperties.REQUEST_TIMEOUT);
+        this.preemptiveAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
+        this.preemptivePutAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
 
         this.client = getOrCreateClient(session, repository);
+
+        final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
+        this.basicServerAuthenticationResult =
+                (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".serverAuth");
+        this.basicProxyAuthenticationResult =
+                (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".proxyAuth");
     }
 
     private URI resolve(TransportTask task) {
@@ -159,7 +192,8 @@ final class JettyTransporter extends AbstractTransporter {
 
     @Override
     public int classify(Throwable error) {
-        if (error instanceof JettyException && ((JettyException) error).getStatusCode() == NOT_FOUND) {
+        if (error instanceof HttpTransporterException
+                && ((HttpTransporterException) error).getStatusCode() == NOT_FOUND) {
             return ERROR_NOT_FOUND;
         }
         return ERROR_OTHER;
@@ -171,9 +205,17 @@ final class JettyTransporter extends AbstractTransporter {
                 .timeout(requestTimeout, TimeUnit.MILLISECONDS)
                 .method("HEAD");
         request.headers(m -> headers.forEach(m::add));
+        if (preemptiveAuth) {
+            if (basicServerAuthenticationResult != null) {
+                basicServerAuthenticationResult.apply(request);
+            }
+            if (basicProxyAuthenticationResult != null) {
+                basicProxyAuthenticationResult.apply(request);
+            }
+        }
         Response response = request.send();
         if (response.getStatus() >= MULTIPLE_CHOICES) {
-            throw new JettyException(response.getStatus());
+            throw new HttpTransporterException(response.getStatus());
         }
     }
 
@@ -188,6 +230,14 @@ final class JettyTransporter extends AbstractTransporter {
                     .timeout(requestTimeout, TimeUnit.MILLISECONDS)
                     .method("GET");
             request.headers(m -> headers.forEach(m::add));
+            if (preemptiveAuth) {
+                if (basicServerAuthenticationResult != null) {
+                    basicServerAuthenticationResult.apply(request);
+                }
+                if (basicProxyAuthenticationResult != null) {
+                    basicProxyAuthenticationResult.apply(request);
+                }
+            }
 
             if (resume) {
                 long resumeOffset = task.getResumeOffset();
@@ -216,7 +266,7 @@ final class JettyTransporter extends AbstractTransporter {
                     resume = false;
                     continue;
                 }
-                throw new JettyException(response.getStatus());
+                throw new HttpTransporterException(response.getStatus());
             }
             break;
         }
@@ -258,6 +308,17 @@ final class JettyTransporter extends AbstractTransporter {
                 tempFile.move();
             } finally {
                 task.setDataFile(dataFile);
+            }
+        }
+        if (task.getDataFile() != null && response.getHeaders().getDateField(LAST_MODIFIED) != -1) {
+            long lastModified =
+                    response.getHeaders().getDateField(LAST_MODIFIED); // note: Wagon also does first not last
+            if (lastModified != -1) {
+                try {
+                    Files.setLastModifiedTime(task.getDataFile().toPath(), FileTime.fromMillis(lastModified));
+                } catch (DateTimeParseException e) {
+                    // fall through
+                }
             }
         }
         Map<String, String> checksums = extractXChecksums(response);
@@ -317,24 +378,62 @@ final class JettyTransporter extends AbstractTransporter {
     protected void implPut(PutTask task) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT").timeout(requestTimeout, TimeUnit.MILLISECONDS);
         request.headers(m -> headers.forEach(m::add));
-        try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
-            utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
-            request.body(new PathRequestContent(tempFile.getPath()));
-
-            Response response;
-            try {
-                response = request.send();
-            } catch (ExecutionException e) {
-                Throwable t = e.getCause();
-                if (t instanceof Exception) {
-                    throw (Exception) t;
+        if (preemptiveAuth || preemptivePutAuth) {
+            if (basicServerAuthenticationResult != null) {
+                basicServerAuthenticationResult.apply(request);
+            }
+            if (basicProxyAuthenticationResult != null) {
+                basicProxyAuthenticationResult.apply(request);
+            }
+        }
+        request.body(new PutTaskRequestContent(task));
+        AtomicBoolean started = new AtomicBoolean(false);
+        Response response;
+        try {
+            response = request.onRequestCommit(r -> {
+                        if (task.getDataLength() == 0) {
+                            if (started.compareAndSet(false, true)) {
+                                try {
+                                    task.getListener().transportStarted(0, task.getDataLength());
+                                } catch (TransferCancelledException e) {
+                                    r.abort(e);
+                                }
+                            }
+                        }
+                    })
+                    .onRequestContent((r, b) -> {
+                        if (started.compareAndSet(false, true)) {
+                            try {
+                                task.getListener().transportStarted(0, task.getDataLength());
+                            } catch (TransferCancelledException e) {
+                                r.abort(e);
+                                return;
+                            }
+                        }
+                        try {
+                            task.getListener().transportProgressed(b);
+                        } catch (TransferCancelledException e) {
+                            r.abort(e);
+                        }
+                    })
+                    .send();
+        } catch (ExecutionException e) {
+            Throwable t = e.getCause();
+            if (t instanceof IOException) {
+                IOException ioex = (IOException) t;
+                if (ioex.getCause() instanceof TransferCancelledException) {
+                    throw (TransferCancelledException) ioex.getCause();
                 } else {
-                    throw new RuntimeException(t);
+                    throw ioex;
                 }
+            } else if (t instanceof Exception) {
+                throw (Exception) t;
+            } else {
+                throw new RuntimeException(t);
             }
-            if (response.getStatus() >= MULTIPLE_CHOICES) {
-                throw new JettyException(response.getStatus());
-            }
+        }
+        if (response.getStatus() >= MULTIPLE_CHOICES) {
+            throw new HttpTransporterException(response.getStatus());
         }
     }
 
@@ -351,13 +450,27 @@ final class JettyTransporter extends AbstractTransporter {
     static final Logger LOGGER = LoggerFactory.getLogger(JettyTransporter.class);
 
     @SuppressWarnings("checkstyle:methodlength")
-    private static HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
+    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
 
         final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
 
+        final String httpsSecurityMode = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
+                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
+                ConfigurationProperties.HTTPS_SECURITY_MODE);
+
+        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
+                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
+            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
+        }
+        final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
+
         try {
-            return (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
+            AtomicReference<BasicAuthentication.BasicResult> serverAuth = new AtomicReference<>(null);
+            AtomicReference<BasicAuthentication.BasicResult> proxyAuth = new AtomicReference<>(null);
+            HttpClient client = (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
                 SSLContext sslContext = null;
                 BasicAuthentication basicAuthentication = null;
                 try {
@@ -369,13 +482,35 @@ final class JettyTransporter extends AbstractTransporter {
                             String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                             String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
 
-                            basicAuthentication = new BasicAuthentication(
-                                    URI.create(repository.getUrl()), Authentication.ANY_REALM, username, password);
+                            URI uri = URI.create(repository.getUrl());
+                            basicAuthentication =
+                                    new BasicAuthentication(uri, Authentication.ANY_REALM, username, password);
+                            if (preemptiveAuth || preemptivePutAuth) {
+                                serverAuth.set(new BasicAuthentication.BasicResult(
+                                        uri, HttpHeader.AUTHORIZATION, username, password));
+                            }
                         }
                     }
 
                     if (sslContext == null) {
-                        sslContext = SSLContext.getDefault();
+                        if (insecure) {
+                            sslContext = SSLContext.getInstance("TLS");
+                            X509TrustManager tm = new X509TrustManager() {
+                                @Override
+                                public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                                @Override
+                                public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                                @Override
+                                public X509Certificate[] getAcceptedIssuers() {
+                                    return new X509Certificate[0];
+                                }
+                            };
+                            sslContext.init(null, new X509TrustManager[] {tm}, null);
+                        } else {
+                            sslContext = SSLContext.getDefault();
+                        }
                     }
 
                     int connectTimeout = ConfigUtils.getInteger(
@@ -386,6 +521,10 @@ final class JettyTransporter extends AbstractTransporter {
 
                     SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
                     sslContextFactory.setSslContext(sslContext);
+                    if (insecure) {
+                        sslContextFactory.setEndpointIdentificationAlgorithm(null);
+                        sslContextFactory.setHostnameVerifier((name, context) -> true);
+                    }
 
                     ClientConnector clientConnector = new ClientConnector();
                     clientConnector.setSslContextFactory(sslContextFactory);
@@ -432,6 +571,10 @@ final class JettyTransporter extends AbstractTransporter {
                                         proxy.getURI(), Authentication.ANY_REALM, username, password);
 
                                 httpClient.getAuthenticationStore().addAuthentication(proxyAuthentication);
+                                if (preemptiveAuth || preemptivePutAuth) {
+                                    proxyAuth.set(new BasicAuthentication.BasicResult(
+                                            proxy.getURI(), HttpHeader.PROXY_AUTHORIZATION, username, password));
+                                }
                             }
                         }
                     }
@@ -451,6 +594,13 @@ final class JettyTransporter extends AbstractTransporter {
                     throw new WrapperEx(e);
                 }
             });
+            if (serverAuth.get() != null) {
+                session.getData().set(instanceKey + ".serverAuth", serverAuth.get());
+            }
+            if (proxyAuth.get() != null) {
+                session.getData().set(instanceKey + ".proxyAuth", proxyAuth.get());
+            }
+            return client;
         } catch (WrapperEx e) {
             throw new NoTransporterException(repository, e.getCause());
         }

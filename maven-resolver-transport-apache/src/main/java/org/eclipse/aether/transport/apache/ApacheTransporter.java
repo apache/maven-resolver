@@ -93,6 +93,8 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
@@ -112,7 +114,7 @@ import static org.eclipse.aether.transport.apache.ApacheTransporterConfiguration
 /**
  * A transporter for HTTP/HTTPS.
  */
-final class ApacheTransporter extends AbstractTransporter {
+final class ApacheTransporter extends AbstractTransporter implements HttpTransporter {
     private static final Pattern CONTENT_RANGE_PATTERN =
             Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
 
@@ -396,8 +398,8 @@ final class ApacheTransporter extends AbstractTransporter {
 
     @Override
     public int classify(Throwable error) {
-        if (error instanceof HttpResponseException
-                && ((HttpResponseException) error).getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+        if (error instanceof HttpTransporterException
+                && ((HttpTransporterException) error).getStatusCode() == HttpStatus.SC_NOT_FOUND) {
             return ERROR_NOT_FOUND;
         }
         return ERROR_OTHER;
@@ -406,7 +408,11 @@ final class ApacheTransporter extends AbstractTransporter {
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         HttpHead request = commonHeaders(new HttpHead(resolve(task)));
-        execute(request, null);
+        try {
+            execute(request, null);
+        } catch (HttpResponseException e) {
+            throw new HttpTransporterException(e.getStatusCode());
+        }
     }
 
     @Override
@@ -430,7 +436,7 @@ final class ApacheTransporter extends AbstractTransporter {
                     resume = false;
                     continue;
                 }
-                throw e;
+                throw new HttpTransporterException(e.getStatusCode());
             }
         }
     }
@@ -448,7 +454,7 @@ final class ApacheTransporter extends AbstractTransporter {
                 execute(request, null);
                 return;
             }
-            throw e;
+            throw new HttpTransporterException(e.getStatusCode());
         }
     }
 
@@ -475,7 +481,7 @@ final class ApacheTransporter extends AbstractTransporter {
         }
     }
 
-    private void prepare(HttpUriRequest request, SharingHttpContext context) {
+    private void prepare(HttpUriRequest request, SharingHttpContext context) throws HttpTransporterException {
         final boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (preemptiveAuth || (preemptivePutAuth && put)) {
             context.getAuthCache().put(server, new BasicScheme());
@@ -497,7 +503,7 @@ final class ApacheTransporter extends AbstractTransporter {
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
-    private void mkdirs(URI uri, SharingHttpContext context) {
+    private void mkdirs(URI uri, SharingHttpContext context) throws HttpTransporterException {
         List<URI> dirs = UriUtils.getDirectories(baseUri, uri);
         int index = 0;
         for (; index < dirs.size(); index++) {

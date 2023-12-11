@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.resolution;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
@@ -38,9 +38,34 @@ import static java.util.Objects.requireNonNull;
  */
 public final class ArtifactResult {
 
+    /**
+     * A sentinel object, that is used as key for exceptions that had no related repository during resolution.
+     *
+     * @since 2.0.0
+     */
+    public static final ArtifactRepository NO_REPOSITORY = new NoRepository();
+
+    private static final class NoRepository implements ArtifactRepository {
+
+        private NoRepository() {}
+
+        public String getContentType() {
+            return "unknown";
+        }
+
+        public String getId() {
+            return "unknown";
+        }
+
+        @Override
+        public String toString() {
+            return getId();
+        }
+    }
+
     private final ArtifactRequest request;
 
-    private List<Exception> exceptions;
+    private final Map<ArtifactRepository, List<Exception>> exceptions;
 
     private Artifact artifact;
 
@@ -55,7 +80,7 @@ public final class ArtifactResult {
      */
     public ArtifactResult(ArtifactRequest request) {
         this.request = requireNonNull(request, "artifact request cannot be null");
-        exceptions = Collections.emptyList();
+        this.exceptions = new ConcurrentHashMap<>();
     }
 
     /**
@@ -95,8 +120,25 @@ public final class ArtifactResult {
      *
      * @return The exceptions that occurred, never {@code null}.
      * @see #isResolved()
+     * @see #isMissing()
      */
     public List<Exception> getExceptions() {
+        ArrayList<Exception> result = new ArrayList<>();
+        exceptions.values().forEach(result::addAll);
+        return result;
+    }
+
+    /**
+     * Gets the exceptions that occurred while resolving the artifact. Note that this map can be non-empty even if the
+     * artifact was successfully resolved, e.g. when one of the contacted remote repositories didn't contain the
+     * artifact but a later repository eventually contained it.
+     *
+     * @return Map of exceptions per repository, that occurred during resolution, never {@code null}.
+     * @see #isResolved()
+     * @see #isMissing()
+     * @since 2.0.0
+     */
+    public Map<ArtifactRepository, List<Exception>> getMappedExceptions() {
         return exceptions;
     }
 
@@ -105,13 +147,25 @@ public final class ArtifactResult {
      *
      * @param exception The exception to record, may be {@code null}.
      * @return This result for chaining, never {@code null}.
+     * @deprecated Use {@link #addException(ArtifactRepository, Exception)} method instead.
      */
+    @Deprecated
     public ArtifactResult addException(Exception exception) {
-        if (exception != null) {
-            if (exceptions.isEmpty()) {
-                exceptions = new ArrayList<>();
-            }
-            exceptions.add(exception);
+        return addException(NO_REPOSITORY, exception);
+    }
+
+    /**
+     * Records the specified exception while resolving the artifact.
+     *
+     * @param exception The exception to record, may be {@code null}.
+     * @return This result for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public ArtifactResult addException(ArtifactRepository repository, Exception exception) {
+        if (repository != null && exception != null) {
+            exceptions
+                    .computeIfAbsent(repository, k -> new CopyOnWriteArrayList<>())
+                    .add(exception);
         }
         return this;
     }

@@ -22,19 +22,71 @@ import java.net.ConnectException;
 import java.net.URI;
 
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * JDK Transport UT.
+ * JDK Transporter UT.
  */
 @SuppressWarnings({"checkstyle:magicnumber"})
-final class JdkTransporterTest {
+class JdkTransporterTest extends HttpTransporterTest {
+
+    @Override
+    @Disabled
+    @Test
+    protected void testAuthSchemeReuse() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testPut_ProxyUnauthenticated() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testAuthSchemePreemptive() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testPut_AuthCache_Preemptive() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testPut_Unauthenticated() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testPut_PreemptiveIsDefault() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testRetryHandler_defaultCount_positive() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testRetryHandler_explicitCount_positive() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
+
+    public JdkTransporterTest() {
+        super(JdkTransporterFactory::new);
+    }
+
     @Test
     void enhanceConnectExceptionMessages() {
         String uri = "https://localhost:12345/";

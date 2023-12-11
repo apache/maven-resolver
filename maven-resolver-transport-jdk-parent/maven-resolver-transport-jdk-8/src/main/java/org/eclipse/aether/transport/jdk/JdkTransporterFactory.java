@@ -22,8 +22,8 @@ import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.spi.connector.transport.Transporter;
-import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.0
  */
 @Named(JdkTransporterFactory.NAME)
-public final class JdkTransporterFactory implements TransporterFactory {
+public final class JdkTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "jdk";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporterFactory.class);
@@ -54,7 +54,7 @@ public final class JdkTransporterFactory implements TransporterFactory {
     }
 
     @Override
-    public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
+    public HttpTransporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");

@@ -16,17 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.jetty;
+package org.eclipse.aether.spi.connector.transport.http;
 
 /**
- * Exception thrown by {@link JettyTransporter} in case of errors.
+ * Exception thrown by {@link HttpTransporter} in case of errors.
  *
  * @since 2.0.0
  */
-final class JettyException extends Exception {
+public class HttpTransporterException extends Exception {
     private final int statusCode;
 
-    JettyException(int statusCode) {
+    public HttpTransporterException(int statusCode) {
         super("HTTP Status: " + statusCode);
         this.statusCode = statusCode;
     }

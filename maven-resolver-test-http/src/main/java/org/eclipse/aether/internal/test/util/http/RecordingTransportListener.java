@@ -56,7 +56,14 @@ public class RecordingTransportListener extends TransportListener {
     @Override
     public void transportProgressed(ByteBuffer data) throws TransferCancelledException {
         progressedCount++;
-        baos.write(data.array(), data.arrayOffset() + ((Buffer) data).position(), data.remaining());
+        if (data.hasArray()) {
+            baos.write(data.array(), data.arrayOffset() + ((Buffer) data).position(), data.remaining());
+        } else {
+            byte[] arr = new byte[data.remaining()];
+            data.mark();
+            data.get(arr);
+            data.reset();
+        }
         if (cancelProgress) {
             throw new TransferCancelledException();
         }

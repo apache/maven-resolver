@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * A simplistic repository cache backed by a thread-safe map. The simplistic nature of this cache makes it only suitable
@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class DefaultRepositoryCache implements RepositoryCache {
 
-    private final Map<Object, Object> cache = new ConcurrentHashMap<>(256);
+    private final ConcurrentHashMap<Object, Object> cache = new ConcurrentHashMap<>(256);
 
     public Object get(RepositorySystemSession session, Object key) {
         return cache.get(key);
@@ -39,5 +39,10 @@ public final class DefaultRepositoryCache implements RepositoryCache {
         } else {
             cache.remove(key);
         }
+    }
+
+    @Override
+    public Object computeIfAbsent(RepositorySystemSession session, Object key, Supplier<Object> supplier) {
+        return cache.computeIfAbsent(key, k -> supplier.get());
     }
 }

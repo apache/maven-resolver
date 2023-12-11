@@ -31,7 +31,6 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
  * Thrown in case of a unresolvable artifacts.
  */
 public class ArtifactResolutionException extends RepositoryException {
-
     private final transient List<ArtifactResult> results;
 
     /**
@@ -41,7 +40,7 @@ public class ArtifactResolutionException extends RepositoryException {
      */
     public ArtifactResolutionException(List<ArtifactResult> results) {
         super(getMessage(results), getCause(results));
-        this.results = (results != null) ? results : Collections.<ArtifactResult>emptyList();
+        this.results = results != null ? results : Collections.emptyList();
     }
 
     /**
@@ -52,7 +51,7 @@ public class ArtifactResolutionException extends RepositoryException {
      */
     public ArtifactResolutionException(List<ArtifactResult> results, String message) {
         super(message, getCause(results));
-        this.results = (results != null) ? results : Collections.<ArtifactResult>emptyList();
+        this.results = results != null ? results : Collections.emptyList();
     }
 
     /**
@@ -64,14 +63,14 @@ public class ArtifactResolutionException extends RepositoryException {
      */
     public ArtifactResolutionException(List<ArtifactResult> results, String message, Throwable cause) {
         super(message, cause);
-        this.results = (results != null) ? results : Collections.<ArtifactResult>emptyList();
+        this.results = results != null ? results : Collections.emptyList();
     }
 
     /**
      * Gets the resolution results at the point the exception occurred. Despite being incomplete, callers might want to
      * use these results to fail gracefully and continue their operation with whatever interim data has been gathered.
      *
-     * @return The resolution results or {@code null} if unknown.
+     * @return The resolution results, never {@code null} (empty if unknown).
      */
     public List<ArtifactResult> getResults() {
         return results;
@@ -88,6 +87,9 @@ public class ArtifactResolutionException extends RepositoryException {
     }
 
     private static String getMessage(List<? extends ArtifactResult> results) {
+        if (results == null) {
+            return null;
+        }
         StringBuilder buffer = new StringBuilder(256);
 
         buffer.append("The following artifacts could not be resolved: ");
@@ -122,7 +124,15 @@ public class ArtifactResolutionException extends RepositoryException {
         return buffer.toString();
     }
 
+    /**
+     * This method tries to be smart and figure out "cause", but it results in somewhat incomplete result. Maven Core
+     * and probably many other code relies on it, so is left in place, but client code should use {@link #getResults()}
+     * and {@link ArtifactResult#getMappedExceptions()} methods to build more appropriate error messages.
+     */
     private static Throwable getCause(List<? extends ArtifactResult> results) {
+        if (results == null) {
+            return null;
+        }
         for (ArtifactResult result : results) {
             if (!result.isResolved()) {
                 Throwable notFound = null, offline = null;

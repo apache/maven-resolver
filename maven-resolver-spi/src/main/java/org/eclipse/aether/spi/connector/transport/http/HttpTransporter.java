@@ -16,22 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.jdk;
+package org.eclipse.aether.spi.connector.transport.http;
+
+import org.eclipse.aether.spi.connector.transport.Transporter;
 
 /**
- * Exception thrown by {@link JdkTransporter} in case of errors.
+ * A transporter using HTTP protocol.
  *
  * @since 2.0.0
  */
-final class JdkException extends Exception {
-    private final int statusCode;
-
-    JdkException(int statusCode) {
-        super("HTTP Status: " + statusCode);
-        this.statusCode = statusCode;
-    }
-
-    public int getStatusCode() {
-        return statusCode;
-    }
-}
+public interface HttpTransporter extends Transporter {}
