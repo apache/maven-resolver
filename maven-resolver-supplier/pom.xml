@@ -83,6 +83,14 @@
           <groupId>org.eclipse.sisu</groupId>
           <artifactId>org.eclipse.sisu.inject</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.google.inject</groupId>
+          <artifactId>guice</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.ow2.asm</groupId>
+          <artifactId>asm</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -95,8 +103,16 @@
           <artifactId>javax.inject</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>jakarta.inject</groupId>
+          <artifactId>jakarta.inject-api</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.eclipse.sisu</groupId>
           <artifactId>org.eclipse.sisu.inject</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.sisu</groupId>
+          <artifactId>org.eclipse.sisu.plexus</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
