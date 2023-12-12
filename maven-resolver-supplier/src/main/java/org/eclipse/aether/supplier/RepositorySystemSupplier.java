@@ -69,7 +69,6 @@ import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
-import org.eclipse.aether.internal.impl.relocation.PropertyFileArtifactRelocationSource;
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
@@ -348,7 +347,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected Map<String, ArtifactRelocationSource> getArtifactRelocationSources() {
         HashMap<String, ArtifactRelocationSource> result = new HashMap<>();
-        result.put(PropertyFileArtifactRelocationSource.NAME, new PropertyFileArtifactRelocationSource());
+        // TODO
         return result;
     }
 
