@@ -72,6 +72,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.spi.relocation.ArtifactRelocationSource;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.concurrency.ExecutorUtils;
@@ -131,8 +132,9 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     public BfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
+            Map<String, ArtifactRelocationSource> artifactRelocationSources,
             VersionRangeResolver versionRangeResolver) {
-        super(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
+        super(remoteRepositoryManager, artifactDescriptorReader, artifactRelocationSources, versionRangeResolver);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")

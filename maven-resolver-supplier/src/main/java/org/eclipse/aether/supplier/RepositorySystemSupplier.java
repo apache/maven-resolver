@@ -94,6 +94,7 @@ import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
+import org.eclipse.aether.internal.impl.relocation.PropertyFileArtifactRelocationSource;
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
@@ -120,6 +121,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
+import org.eclipse.aether.spi.relocation.ArtifactRelocationSource;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.spi.version.VersionSchemeSelector;
@@ -368,17 +370,32 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 offlineController);
     }
 
+    protected Map<String, ArtifactRelocationSource> getArtifactRelocationSources() {
+        HashMap<String, ArtifactRelocationSource> result = new HashMap<>();
+        result.put(PropertyFileArtifactRelocationSource.NAME, new PropertyFileArtifactRelocationSource());
+        return result;
+    }
+
     protected Map<String, DependencyCollectorDelegate> getDependencyCollectorDelegates(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
+            Map<String, ArtifactRelocationSource> artifactRelocationSources,
             VersionRangeResolver versionRangeResolver) {
         HashMap<String, DependencyCollectorDelegate> result = new HashMap<>();
         result.put(
                 DfDependencyCollector.NAME,
-                new DfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
+                new DfDependencyCollector(
+                        remoteRepositoryManager,
+                        artifactDescriptorReader,
+                        artifactRelocationSources,
+                        versionRangeResolver));
         result.put(
                 BfDependencyCollector.NAME,
-                new BfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
+                new BfDependencyCollector(
+                        remoteRepositoryManager,
+                        artifactDescriptorReader,
+                        artifactRelocationSources,
+                        versionRangeResolver));
         return result;
     }
 
@@ -626,9 +643,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 modelBuilder,
                 repositoryEventDispatcher,
                 modelCacheFactory);
+        Map<String, ArtifactRelocationSource> artifactRelocationSources = getArtifactRelocationSources();
 
         Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates = getDependencyCollectorDelegates(
-                remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
+                remoteRepositoryManager, artifactDescriptorReader, artifactRelocationSources, versionRangeResolver);
         DependencyCollector dependencyCollector = getDependencyCollector(dependencyCollectorDelegates);
 
         return new DefaultRepositorySystem(
