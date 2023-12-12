@@ -50,10 +50,7 @@ public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDel
         session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, true);
 
         return new BfDependencyCollector(
-                new StubRemoteRepositoryManager(),
-                artifactDescriptorReader,
-                Collections.emptyMap(),
-                new StubVersionRangeResolver());
+                new StubRemoteRepositoryManager(), artifactDescriptorReader, new StubVersionRangeResolver());
     }
 
     @Override

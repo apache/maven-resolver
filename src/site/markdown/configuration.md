@@ -25,7 +25,7 @@ under the License.
 
 | No | Key | Type | Description | Default Value | Since | Supports Repo ID suffix | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1. | `"aether.artifactRelocationSource.simple-properties.relocationsFile"` | `java.lang.String` | Configuration property to pass in location of properties file containing relocations. Properties file is expected to be in form , where "GAV" shuld be the standard textual representation of artifact coordinates. |  -  | 2.0.0 |  No  | Session Configuration |
+| 1. | `"aether.artifactRelocationSource.simpleProperties.relocationsFile"` | `java.lang.String` | Configuration property to pass in location of properties file containing relocations. Properties file is expected to be in form , where "GAV" should be the standard string in form of , that is a textual representation of artifact coordinates. |  -  | 2.0.0 |  No  | Session Configuration |
 | 2. | `"aether.artifactResolver.postProcessor.trustedChecksums"` | `java.lang.Boolean` | Is post processor enabled. |  `false`  | 1.9.0 |  No  | Session Configuration |
 | 3. | `"aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms"` | `java.lang.String` | The checksum algorithms to apply during post-processing as comma separated list. |  `"SHA-1"`  | 1.9.0 |  No  | Session Configuration |
 | 4. | `"aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing"` | `java.lang.Boolean` | Should post processor fail resolution if checksum is missing? |  `false`  | 1.9.0 |  No  | Session Configuration |

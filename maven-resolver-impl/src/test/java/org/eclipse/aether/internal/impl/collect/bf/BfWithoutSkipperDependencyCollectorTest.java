@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.internal.impl.collect.bf;
 
-import java.util.Collections;
-
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.StubRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.StubVersionRangeResolver;
@@ -35,10 +33,7 @@ public class BfWithoutSkipperDependencyCollectorTest extends DependencyCollector
         session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, false);
 
         return new BfDependencyCollector(
-                new StubRemoteRepositoryManager(),
-                artifactDescriptorReader,
-                Collections.emptyMap(),
-                new StubVersionRangeResolver());
+                new StubRemoteRepositoryManager(), artifactDescriptorReader, new StubVersionRangeResolver());
     }
 
     @Override

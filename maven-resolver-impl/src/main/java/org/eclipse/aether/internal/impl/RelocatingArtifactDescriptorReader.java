@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import java.util.Map;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
@@ -27,6 +25,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.spi.relocation.ArtifactRelocationSource;
+import org.eclipse.aether.spi.relocation.ArtifactRelocationSourceProvider;
 
 import static java.util.Objects.requireNonNull;
 
@@ -41,24 +40,22 @@ import static java.util.Objects.requireNonNull;
 public final class RelocatingArtifactDescriptorReader implements ArtifactDescriptorReader {
     private final ArtifactDescriptorReader delegate;
 
-    private final Map<String, ArtifactRelocationSource> artifactRelocationSources;
+    private final ArtifactRelocationSourceProvider artifactRelocationSourceProvider;
 
     public RelocatingArtifactDescriptorReader(
-            ArtifactDescriptorReader delegate, Map<String, ArtifactRelocationSource> artifactRelocationSources) {
+            ArtifactDescriptorReader delegate, ArtifactRelocationSourceProvider artifactRelocationSourceProvider) {
         this.delegate = requireNonNull(delegate);
-        this.artifactRelocationSources = requireNonNull(artifactRelocationSources);
+        this.artifactRelocationSourceProvider = requireNonNull(artifactRelocationSourceProvider);
     }
 
     @Override
     public ArtifactDescriptorResult readArtifactDescriptor(
             RepositorySystemSession session, ArtifactDescriptorRequest request) throws ArtifactDescriptorException {
-        PrioritizedComponents<ArtifactRelocationSource> factories = PrioritizedComponents.reuseOrCreate(
-                session, artifactRelocationSources, ArtifactRelocationSource::getPriority);
         Artifact originalTarget = request.getArtifact();
         Artifact actualTarget = originalTarget;
         boolean relocated = false;
-        for (PrioritizedComponent<ArtifactRelocationSource> source : factories.getEnabled()) {
-            actualTarget = source.getComponent().relocatedTarget(session, originalTarget);
+        for (ArtifactRelocationSource source : artifactRelocationSourceProvider.getSources(session)) {
+            actualTarget = source.relocatedTarget(session, originalTarget);
             if (actualTarget != null && !originalTarget.equals(actualTarget)) {
                 relocated = true;
                 break;

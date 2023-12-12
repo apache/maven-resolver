@@ -45,16 +45,16 @@ import org.eclipse.aether.util.ConfigUtils;
 @Named
 public final class PropertyFileArtifactRelocationSource implements ArtifactRelocationSource {
 
-    public static final String NAME = "simple-properties";
+    public static final String NAME = "simpleProperties";
 
     public static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_AETHER + "artifactRelocationSource." + NAME + ".";
 
     /**
      * Configuration property to pass in location of properties file containing relocations. Properties file is expected
-     * to be in form {@code GAV=GAV}, where "GAV" shuld be the standard
-     * {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>} textual representation of artifact
-     * coordinates.
+     * to be in form {@code GAV=GAV}, where "GAV" should be the standard string in form of
+     * {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}, that is a textual representation of
+     * artifact coordinates.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}

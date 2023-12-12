@@ -53,32 +53,7 @@ import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.VersionResolver;
-import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
-import org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider;
-import org.eclipse.aether.internal.impl.DefaultDeployer;
-import org.eclipse.aether.internal.impl.DefaultFileProcessor;
-import org.eclipse.aether.internal.impl.DefaultInstaller;
-import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
-import org.eclipse.aether.internal.impl.DefaultLocalPathPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
-import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
-import org.eclipse.aether.internal.impl.DefaultOfflineController;
-import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
-import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
-import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
-import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
-import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
-import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
-import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
-import org.eclipse.aether.internal.impl.DefaultTransporterProvider;
-import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
-import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
-import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
-import org.eclipse.aether.internal.impl.LocalPathComposer;
-import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
-import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
-import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
-import org.eclipse.aether.internal.impl.TrackingFileManager;
+import org.eclipse.aether.internal.impl.*;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -122,6 +97,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.relocation.ArtifactRelocationSource;
+import org.eclipse.aether.spi.relocation.ArtifactRelocationSourceProvider;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.spi.version.VersionSchemeSelector;
@@ -376,26 +352,22 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
+    protected ArtifactRelocationSourceProvider getArtifactRelocationSourceProvider(
+            Map<String, ArtifactRelocationSource> artifactRelocationSources) {
+        return new DefaultArtifactRelocationSourceProvider(artifactRelocationSources);
+    }
+
     protected Map<String, DependencyCollectorDelegate> getDependencyCollectorDelegates(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
-            Map<String, ArtifactRelocationSource> artifactRelocationSources,
             VersionRangeResolver versionRangeResolver) {
         HashMap<String, DependencyCollectorDelegate> result = new HashMap<>();
         result.put(
                 DfDependencyCollector.NAME,
-                new DfDependencyCollector(
-                        remoteRepositoryManager,
-                        artifactDescriptorReader,
-                        artifactRelocationSources,
-                        versionRangeResolver));
+                new DfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
         result.put(
                 BfDependencyCollector.NAME,
-                new BfDependencyCollector(
-                        remoteRepositoryManager,
-                        artifactDescriptorReader,
-                        artifactRelocationSources,
-                        versionRangeResolver));
+                new BfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
         return result;
     }
 
@@ -479,6 +451,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber")
     protected ArtifactDescriptorReader getArtifactDescriptorReader(
             RemoteRepositoryManager remoteRepositoryManager,
             VersionResolver versionResolver,
@@ -486,8 +459,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             ArtifactResolver artifactResolver,
             ModelBuilder modelBuilder,
             RepositoryEventDispatcher repositoryEventDispatcher,
-            ModelCacheFactory modelCacheFactory) {
+            ModelCacheFactory modelCacheFactory,
+            ArtifactRelocationSourceProvider artifactRelocationSourceProvider) {
         // from maven-resolver-provider
+        // TODO: ball is in maven yard
         return new DefaultArtifactDescriptorReader(
                 remoteRepositoryManager,
                 versionResolver,
@@ -635,6 +610,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         ModelBuilder modelBuilder = getModelBuilder();
         ModelCacheFactory modelCacheFactory = getModelCacheFactory();
 
+        Map<String, ArtifactRelocationSource> artifactRelocationSources = getArtifactRelocationSources();
+        ArtifactRelocationSourceProvider artifactRelocationSourceProvider =
+                getArtifactRelocationSourceProvider(artifactRelocationSources);
+
         ArtifactDescriptorReader artifactDescriptorReader = getArtifactDescriptorReader(
                 remoteRepositoryManager,
                 versionResolver,
@@ -642,11 +621,11 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 artifactResolver,
                 modelBuilder,
                 repositoryEventDispatcher,
-                modelCacheFactory);
-        Map<String, ArtifactRelocationSource> artifactRelocationSources = getArtifactRelocationSources();
+                modelCacheFactory,
+                artifactRelocationSourceProvider);
 
         Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates = getDependencyCollectorDelegates(
-                remoteRepositoryManager, artifactDescriptorReader, artifactRelocationSources, versionRangeResolver);
+                remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
         DependencyCollector dependencyCollector = getDependencyCollector(dependencyCollectorDelegates);
 
         return new DefaultRepositorySystem(

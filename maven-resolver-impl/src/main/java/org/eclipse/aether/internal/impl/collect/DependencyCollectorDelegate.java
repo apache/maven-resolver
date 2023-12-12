@@ -45,7 +45,6 @@ import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
-import org.eclipse.aether.internal.impl.RelocatingArtifactDescriptorReader;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -54,7 +53,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.spi.relocation.ArtifactRelocationSource;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
@@ -104,15 +102,11 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     protected DependencyCollectorDelegate(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
-            Map<String, ArtifactRelocationSource> artifactRelocationSources,
             VersionRangeResolver versionRangeResolver) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository manager cannot be null");
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
-        requireNonNull(artifactDescriptorReader, "artifact descriptor reader cannot be null");
-        requireNonNull(artifactRelocationSources, "artifact relocation sources cannot be null");
-        this.descriptorReader =
-                new RelocatingArtifactDescriptorReader(artifactDescriptorReader, artifactRelocationSources);
+        this.descriptorReader = requireNonNull(artifactDescriptorReader, "artifact descriptor reader cannot be null");
     }
 
     @SuppressWarnings("checkstyle:methodlength")

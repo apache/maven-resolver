@@ -24,7 +24,6 @@ import javax.inject.Singleton;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -55,7 +54,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.spi.relocation.ArtifactRelocationSource;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
@@ -75,9 +73,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
     public DfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
-            Map<String, ArtifactRelocationSource> artifactRelocationSources,
             VersionRangeResolver versionRangeResolver) {
-        super(remoteRepositoryManager, artifactDescriptorReader, artifactRelocationSources, versionRangeResolver);
+        super(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
