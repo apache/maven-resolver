@@ -105,8 +105,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             VersionRangeResolver versionRangeResolver) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository manager cannot be null");
-        this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
         this.descriptorReader = requireNonNull(artifactDescriptorReader, "artifact descriptor reader cannot be null");
+        this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
     }
 
     @SuppressWarnings("checkstyle:methodlength")
