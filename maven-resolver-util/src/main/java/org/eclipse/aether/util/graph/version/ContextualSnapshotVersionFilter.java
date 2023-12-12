@@ -57,12 +57,14 @@ public final class ContextualSnapshotVersionFilter implements VersionFilter {
         return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLE);
     }
 
+    @Override
     public void filterVersions(VersionFilterContext context) {
         if (isEnabled(context.getSession())) {
             filter.filterVersions(context);
         }
     }
 
+    @Override
     public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
         if (!isEnabled(context.getSession())) {
             Artifact artifact = context.getArtifact();

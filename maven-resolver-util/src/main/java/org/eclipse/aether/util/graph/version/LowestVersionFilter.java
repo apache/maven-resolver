@@ -25,22 +25,24 @@ import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.version.Version;
 
 /**
- * A version filter that excludes any version except the highest one.
+ * A version filter that excludes any version except the lowest one.
+ *
+ * @since 2.0.0
  */
-public final class HighestVersionFilter implements VersionFilter {
+public final class LowestVersionFilter implements VersionFilter {
 
     /**
      * Creates a new instance of this version filter.
      */
-    public HighestVersionFilter() {}
+    public LowestVersionFilter() {}
 
     @Override
     public void filterVersions(VersionFilterContext context) {
         Iterator<Version> it = context.iterator();
-        for (boolean hasNext = it.hasNext(); hasNext; ) {
+        if (it.hasNext()) {
             it.next();
-            hasNext = it.hasNext();
-            if (hasNext) {
+            while (it.hasNext()) {
+                it.next();
                 it.remove();
             }
         }

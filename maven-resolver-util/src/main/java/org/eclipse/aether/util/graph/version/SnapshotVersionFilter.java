@@ -35,6 +35,7 @@ public final class SnapshotVersionFilter implements VersionFilter {
      */
     public SnapshotVersionFilter() {}
 
+    @Override
     public void filterVersions(VersionFilterContext context) {
         for (Iterator<Version> it = context.iterator(); it.hasNext(); ) {
             String version = it.next().toString();
@@ -44,6 +45,7 @@ public final class SnapshotVersionFilter implements VersionFilter {
         }
     }
 
+    @Override
     public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
         return this;
     }
