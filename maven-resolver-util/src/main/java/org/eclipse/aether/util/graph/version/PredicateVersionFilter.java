@@ -19,28 +19,38 @@
 package org.eclipse.aether.util.graph.version;
 
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.function.Predicate;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.version.Version;
 
+import static java.util.Objects.requireNonNull;
+
 /**
- * A version filter that excludes any version except the highest one.
+ * A version filter that excludes any version that is blacklisted.
+ *
+ * @since 2.0.0
  */
-public final class HighestVersionFilter implements VersionFilter {
+public final class PredicateVersionFilter implements VersionFilter {
+    private final Predicate<Artifact> artifactPredicate;
 
     /**
      * Creates a new instance of this version filter.
      */
-    public HighestVersionFilter() {}
+    public PredicateVersionFilter(Predicate<Artifact> artifactPredicate) {
+        this.artifactPredicate = requireNonNull(artifactPredicate);
+    }
 
     @Override
     public void filterVersions(VersionFilterContext context) {
+        Artifact dependencyArtifact = context.getDependency().getArtifact();
         Iterator<Version> it = context.iterator();
-        for (boolean hasNext = it.hasNext(); hasNext; ) {
-            it.next();
-            hasNext = it.hasNext();
-            if (hasNext) {
+        while (it.hasNext()) {
+            Version version = it.next();
+            if (!artifactPredicate.test(dependencyArtifact.setVersion(version.toString()))) {
                 it.remove();
             }
         }
@@ -52,17 +62,19 @@ public final class HighestVersionFilter implements VersionFilter {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
-        } else if (null == obj || !getClass().equals(obj.getClass())) {
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return true;
+        PredicateVersionFilter that = (PredicateVersionFilter) o;
+        return Objects.equals(artifactPredicate, that.artifactPredicate);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(artifactPredicate);
     }
 }

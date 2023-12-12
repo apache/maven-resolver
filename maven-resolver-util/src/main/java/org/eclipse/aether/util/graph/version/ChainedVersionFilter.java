@@ -88,12 +88,14 @@ public final class ChainedVersionFilter implements VersionFilter {
         this.filters = filters;
     }
 
+    @Override
     public void filterVersions(VersionFilterContext context) throws RepositoryException {
         for (int i = 0, n = filters.length; i < n && context.getCount() > 0; i++) {
             filters[i].filterVersions(context);
         }
     }
 
+    @Override
     public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
         VersionFilter[] children = null;
         int removed = 0;
