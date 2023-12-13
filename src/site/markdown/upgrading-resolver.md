@@ -46,5 +46,4 @@ Required changes in **client code managing Resolver 2.x**:
 * handle sessions as resources: each created instance should be closed once finished their use.
 * session instances created by given `RepositorySystem` should be used only with that same instance.
 * to shallow-copy session instances (for alteration purposes) using existing `DefaultRepositorySystemSession` copy constructor is acceptable (this is what Mojos do).
-* to shallow-copy session instances (for alteration purposes) there is `CloseableSession#copy` method as well, if closeable session is needed.
 * to shallow-copy session instances but have new lifecycle as well, use `SessionBuilder#withRepositorySystemSession` on newly created builder instances.
