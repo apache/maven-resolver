@@ -26,7 +26,6 @@ import java.net.http.HttpClient;
  * @since 2.0.0
  */
 final class JdkTransporterCloser {
-    @SuppressWarnings("checkstyle:MagicNumber")
     static Runnable closer(int javaVersion, HttpClient httpClient) {
         return httpClient::shutdownNow;
     }
