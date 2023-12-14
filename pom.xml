@@ -107,6 +107,8 @@
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-12-13T22:58:50Z</project.build.outputTimestamp>
+    <!-- site fixes: skip PMD as it does not support Java 21 -->
+    <pmd.skip>true</pmd.skip>
   </properties>
 
   <dependencyManagement>
