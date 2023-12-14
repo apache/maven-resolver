@@ -21,10 +21,7 @@ package org.eclipse.aether.internal.test.util.http;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -124,6 +121,8 @@ public class HttpServer {
     private String proxyPassword;
 
     private final AtomicInteger connectionsToClose = new AtomicInteger(0);
+
+    private final AtomicInteger serverErrorsBeforeWorks = new AtomicInteger(0);
 
     private final List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
 
@@ -245,6 +244,11 @@ public class HttpServer {
         return this;
     }
 
+    public HttpServer setServerErrorsBeforeWorks(int serverErrorsBeforeWorks) {
+        this.serverErrorsBeforeWorks.set(serverErrorsBeforeWorks);
+        return this;
+    }
+
     public HttpServer start() throws Exception {
         if (server != null) {
             return this;
@@ -252,6 +256,7 @@ public class HttpServer {
 
         HandlerList handlers = new HandlerList();
         handlers.addHandler(new ConnectionClosingHandler());
+        handlers.addHandler(new ServerErrorHandler());
         handlers.addHandler(new LogHandler());
         handlers.addHandler(new ProxyAuthHandler());
         handlers.addHandler(new AuthHandler());
@@ -282,6 +287,17 @@ public class HttpServer {
             if (connectionsToClose.getAndDecrement() > 0) {
                 Response jettyResponse = (Response) response;
                 jettyResponse.getHttpChannel().getConnection().close();
+            }
+        }
+    }
+
+    private class ServerErrorHandler extends AbstractHandler {
+        @Override
+        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
+                throws IOException {
+            if (serverErrorsBeforeWorks.getAndDecrement() > 0) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                writeResponseBodyMessage(response, "Oops, come back later!");
             }
         }
     }
@@ -326,6 +342,7 @@ public class HttpServer {
 
             if (ExpectContinue.FAIL.equals(expectContinue) && request.getHeader(HttpHeader.EXPECT.asString()) != null) {
                 response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
+                writeResponseBodyMessage(response, "Expectation was set to fail");
                 return;
             }
 
@@ -333,11 +350,13 @@ public class HttpServer {
             if (HttpMethod.GET.is(req.getMethod()) || HttpMethod.HEAD.is(req.getMethod())) {
                 if (!file.isFile() || path.endsWith(URIUtil.SLASH)) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    writeResponseBodyMessage(response, "Not found");
                     return;
                 }
                 long ifUnmodifiedSince = request.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString());
                 if (ifUnmodifiedSince != -1L && file.lastModified() > ifUnmodifiedSince) {
                     response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
+                    writeResponseBodyMessage(response, "Precondition failed");
                     return;
                 }
                 long offset = 0L;
@@ -348,6 +367,7 @@ public class HttpServer {
                         offset = Long.parseLong(m.group(1));
                         if (offset >= file.length()) {
                             response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                            writeResponseBodyMessage(response, "Range not satisfiable");
                             return;
                         }
                     }
@@ -444,6 +464,12 @@ public class HttpServer {
             } else {
                 response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             }
+        }
+    }
+
+    private void writeResponseBodyMessage(HttpServletResponse response, String message) throws IOException {
+        try (OutputStream outputStream = response.getOutputStream()) {
+            outputStream.write(message.getBytes(StandardCharsets.UTF_8));
         }
     }
 

@@ -455,6 +455,28 @@ public class HttpTransporterTest {
     }
 
     @Test
+    protected void testGet_SSL_WithServerErrors() throws Exception {
+        httpServer.setServerErrorsBeforeWorks(1);
+        httpServer.addSslConnector();
+        newTransporter(httpServer.getHttpsUrl());
+        for (int i = 1; i < 3; i++) {
+            try {
+                RecordingTransportListener listener = new RecordingTransportListener();
+                GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+                transporter.get(task);
+                assertEquals("test", task.getDataString());
+                assertEquals(0L, listener.getDataOffset());
+                assertEquals(4L, listener.getDataLength());
+                assertEquals(1, listener.getStartedCount());
+                assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+                assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+            } catch (HttpTransporterException e) {
+                assertEquals(500, e.getStatusCode());
+            }
+        }
+    }
+
+    @Test
     protected void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
         session.setConfigProperty(ConfigurationProperties.HTTPS_SECURITY_MODE, "unknown");
         httpServer.addSelfSignedSslConnector();
