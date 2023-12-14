@@ -181,7 +181,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
 
         this.headers = headers;
-        this.client = getOrCreateClient(session, repository);
+        this.client = getOrCreateClient(session, repository, javaVersion);
     }
 
     private URI resolve(TransportTask task) {
@@ -223,103 +223,119 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     @Override
     protected void implGet(GetTask task) throws Exception {
         boolean resume = task.getResumeOffset() > 0L && task.getDataFile() != null;
-        HttpResponse<InputStream> response;
+        HttpResponse<InputStream> response = null;
 
-        while (true) {
-            HttpRequest.Builder request = HttpRequest.newBuilder()
-                    .uri(resolve(task))
-                    .timeout(Duration.ofMillis(requestTimeout))
-                    .method("GET", HttpRequest.BodyPublishers.noBody());
-            headers.forEach(request::setHeader);
+        try {
+            while (true) {
+                HttpRequest.Builder request = HttpRequest.newBuilder()
+                        .uri(resolve(task))
+                        .timeout(Duration.ofMillis(requestTimeout))
+                        .method("GET", HttpRequest.BodyPublishers.noBody());
+                headers.forEach(request::setHeader);
 
+                if (resume) {
+                    long resumeOffset = task.getResumeOffset();
+                    request.header(RANGE, "bytes=" + resumeOffset + '-');
+                    request.header(
+                            IF_UNMODIFIED_SINCE,
+                            RFC7231.format(
+                                    Instant.ofEpochMilli(task.getDataFile().lastModified() - MODIFICATION_THRESHOLD)));
+                    request.header(ACCEPT_ENCODING, "identity");
+                }
+
+                try {
+                    response = client.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    if (response.statusCode() >= MULTIPLE_CHOICES) {
+                        closeBody(response);
+                        if (resume && response.statusCode() == PRECONDITION_FAILED) {
+                            resume = false;
+                            continue;
+                        }
+                        throw new HttpTransporterException(response.statusCode());
+                    }
+                } catch (ConnectException e) {
+                    closeBody(response);
+                    throw enhance(e);
+                }
+                break;
+            }
+
+            long offset = 0L,
+                    length = response.headers().firstValueAsLong(CONTENT_LENGTH).orElse(-1L);
             if (resume) {
-                long resumeOffset = task.getResumeOffset();
-                request.header(RANGE, "bytes=" + resumeOffset + '-');
-                request.header(
-                        IF_UNMODIFIED_SINCE,
-                        RFC7231.format(
-                                Instant.ofEpochMilli(task.getDataFile().lastModified() - MODIFICATION_THRESHOLD)));
-                request.header(ACCEPT_ENCODING, "identity");
-            }
-
-            try {
-                response = client.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
-                if (response.statusCode() >= MULTIPLE_CHOICES) {
-                    if (resume && response.statusCode() == PRECONDITION_FAILED) {
-                        resume = false;
-                        continue;
+                String range = response.headers().firstValue(CONTENT_RANGE).orElse(null);
+                if (range != null) {
+                    Matcher m = CONTENT_RANGE_PATTERN.matcher(range);
+                    if (!m.matches()) {
+                        throw new IOException("Invalid Content-Range header for partial download: " + range);
                     }
-                    throw new HttpTransporterException(response.statusCode());
-                }
-            } catch (ConnectException e) {
-                throw enhance(e);
-            }
-            break;
-        }
-
-        long offset = 0L,
-                length = response.headers().firstValueAsLong(CONTENT_LENGTH).orElse(-1L);
-        if (resume) {
-            String range = response.headers().firstValue(CONTENT_RANGE).orElse(null);
-            if (range != null) {
-                Matcher m = CONTENT_RANGE_PATTERN.matcher(range);
-                if (!m.matches()) {
-                    throw new IOException("Invalid Content-Range header for partial download: " + range);
-                }
-                offset = Long.parseLong(m.group(1));
-                length = Long.parseLong(m.group(2)) + 1L;
-                if (offset < 0L || offset >= length || (offset > 0L && offset != task.getResumeOffset())) {
-                    throw new IOException("Invalid Content-Range header for partial download from offset "
-                            + task.getResumeOffset() + ": " + range);
-                }
-            }
-        }
-
-        final boolean downloadResumed = offset > 0L;
-        final File dataFile = task.getDataFile();
-        if (dataFile == null) {
-            try (InputStream is = response.body()) {
-                utilGet(task, is, true, length, downloadResumed);
-            }
-        } else {
-            try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile.toPath())) {
-                task.setDataFile(tempFile.getPath().toFile(), downloadResumed);
-                if (downloadResumed && Files.isRegularFile(dataFile.toPath())) {
-                    try (InputStream inputStream = Files.newInputStream(dataFile.toPath())) {
-                        Files.copy(inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
+                    offset = Long.parseLong(m.group(1));
+                    length = Long.parseLong(m.group(2)) + 1L;
+                    if (offset < 0L || offset >= length || (offset > 0L && offset != task.getResumeOffset())) {
+                        throw new IOException("Invalid Content-Range header for partial download from offset "
+                                + task.getResumeOffset() + ": " + range);
                     }
                 }
+            }
+
+            final boolean downloadResumed = offset > 0L;
+            final File dataFile = task.getDataFile();
+            if (dataFile == null) {
                 try (InputStream is = response.body()) {
                     utilGet(task, is, true, length, downloadResumed);
                 }
-                tempFile.move();
-            } finally {
-                task.setDataFile(dataFile);
-            }
-        }
-        if (task.getDataFile() != null) {
-            String lastModifiedHeader =
-                    response.headers().firstValue(LAST_MODIFIED).orElse(null); // note: Wagon also does first not last
-            if (lastModifiedHeader != null) {
-                try {
-                    Files.setLastModifiedTime(
-                            task.getDataFile().toPath(),
-                            FileTime.fromMillis(ZonedDateTime.parse(lastModifiedHeader, RFC7231)
-                                    .toInstant()
-                                    .toEpochMilli()));
-                } catch (DateTimeParseException e) {
-                    // fall through
+            } else {
+                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile.toPath())) {
+                    task.setDataFile(tempFile.getPath().toFile(), downloadResumed);
+                    if (downloadResumed && Files.isRegularFile(dataFile.toPath())) {
+                        try (InputStream inputStream = Files.newInputStream(dataFile.toPath())) {
+                            Files.copy(inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                    try (InputStream is = response.body()) {
+                        utilGet(task, is, true, length, downloadResumed);
+                    }
+                    tempFile.move();
+                } finally {
+                    task.setDataFile(dataFile);
                 }
             }
+            if (task.getDataFile() != null) {
+                String lastModifiedHeader = response.headers()
+                        .firstValue(LAST_MODIFIED)
+                        .orElse(null); // note: Wagon also does first not last
+                if (lastModifiedHeader != null) {
+                    try {
+                        Files.setLastModifiedTime(
+                                task.getDataFile().toPath(),
+                                FileTime.fromMillis(ZonedDateTime.parse(lastModifiedHeader, RFC7231)
+                                        .toInstant()
+                                        .toEpochMilli()));
+                    } catch (DateTimeParseException e) {
+                        // fall through
+                    }
+                }
+            }
+            Map<String, String> checksums = extractXChecksums(response);
+            if (checksums != null) {
+                checksums.forEach(task::setChecksum);
+                return;
+            }
+            checksums = extractNexus2Checksums(response);
+            if (checksums != null) {
+                checksums.forEach(task::setChecksum);
+            }
+        } finally {
+            closeBody(response);
         }
-        Map<String, String> checksums = extractXChecksums(response);
-        if (checksums != null) {
-            checksums.forEach(task::setChecksum);
-            return;
-        }
-        checksums = extractNexus2Checksums(response);
-        if (checksums != null) {
-            checksums.forEach(task::setChecksum);
+    }
+
+    private void closeBody(HttpResponse<InputStream> streamHttpResponse) throws IOException {
+        if (streamHttpResponse != null) {
+            InputStream body = streamHttpResponse.body();
+            if (body != null) {
+                body.close();
+            }
         }
     }
 
@@ -416,7 +432,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
      */
     static final String HTTP_INSTANCE_KEY_PREFIX = JdkTransporterFactory.class.getName() + ".http.";
 
-    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
+    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository, int javaVersion)
             throws NoTransporterException {
         final String instanceKey = HTTP_INSTANCE_KEY_PREFIX + repository.getId();
 
@@ -544,15 +560,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     }
 
                     HttpClient result = builder.build();
-                    if (!session.addOnSessionEndedHandler(() -> {
-                        if (result instanceof AutoCloseable) {
-                            try {
-                                ((AutoCloseable) client).close();
-                            } catch (final Exception e) {
-                                throw new IllegalStateException(e);
-                            }
-                        }
-                    })) {
+                    if (!session.addOnSessionEndedHandler(JdkTransporterCloser.closer(javaVersion, result))) {
                         LOGGER.warn(
                                 "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
                     }

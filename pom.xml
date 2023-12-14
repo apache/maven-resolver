@@ -105,7 +105,7 @@
     <mavenVersion>4.0.0-alpha-9</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
-    <minimalJavaBuildVersion>[17,)</minimalJavaBuildVersion>
+    <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2023-12-13T22:58:50Z</project.build.outputTimestamp>
   </properties>
 

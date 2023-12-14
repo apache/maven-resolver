@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,6 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.jdk;
 
-asfMavenTlpStdBuild( 'jdks' : [ "21" ] )
+import java.net.http.HttpClient;
 
+/**
+ * JDK Transport that properly closes {@link HttpClient} on Java 21+.
+ *
+ * @since 2.0.0
+ */
+final class JdkTransporterCloser {
+    static Runnable closer(int javaVersion, HttpClient httpClient) {
+        return httpClient::shutdownNow;
+    }
+}

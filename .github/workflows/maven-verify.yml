@@ -28,5 +28,5 @@ jobs:
     with:
       ff-run: false
       ff-site-run: false
-      jdk-matrix: '[ "17", "21" ]'
+      jdk-matrix: '[ "21" ]'
 

@@ -34,10 +34,10 @@ import java.util.function.Supplier;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
+import org.eclipse.aether.internal.test.util.TestRepositorySystemSession;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -84,11 +84,13 @@ public class HttpTransporterTest {
 
     private final Supplier<HttpTransporterFactory> transporterFactorySupplier;
 
-    protected DefaultRepositorySystemSession session;
+    protected TestRepositorySystemSession session;
 
     protected HttpTransporterFactory factory;
 
     protected HttpTransporter transporter;
+
+    protected Runnable closer;
 
     protected File repoDir;
 
@@ -134,9 +136,11 @@ public class HttpTransporterTest {
             transporter.close();
             transporter = null;
         }
-        // here we "simulate" onSessionClose
-        // TODO: in UTs currently we cannot do it, sort it out
-        session = new DefaultRepositorySystemSession(session);
+        if (closer != null) {
+            closer.run();
+            closer = null;
+        }
+        session = new TestRepositorySystemSession(session);
         session.setData(new DefaultSessionData());
         transporter = factory.newInstance(session, newRepo(url));
     }
@@ -146,7 +150,8 @@ public class HttpTransporterTest {
     @BeforeEach
     protected void setUp(TestInfo testInfo) throws Exception {
         System.out.println("=== " + testInfo.getDisplayName() + " ===");
-        session = TestUtils.newSession();
+        session = new TestRepositorySystemSession(h -> this.closer = h);
+        session.setLocalRepositoryManager(new TestLocalRepositoryManager());
         factory = transporterFactorySupplier.get();
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
@@ -166,6 +171,10 @@ public class HttpTransporterTest {
         if (transporter != null) {
             transporter.close();
             transporter = null;
+        }
+        if (closer != null) {
+            closer.run();
+            closer = null;
         }
         if (httpServer != null) {
             httpServer.stop();
@@ -452,6 +461,28 @@ public class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    protected void testGet_SSL_WithServerErrors() throws Exception {
+        httpServer.setServerErrorsBeforeWorks(1);
+        httpServer.addSslConnector();
+        newTransporter(httpServer.getHttpsUrl());
+        for (int i = 1; i < 3; i++) {
+            try {
+                RecordingTransportListener listener = new RecordingTransportListener();
+                GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+                transporter.get(task);
+                assertEquals("test", task.getDataString());
+                assertEquals(0L, listener.getDataOffset());
+                assertEquals(4L, listener.getDataLength());
+                assertEquals(1, listener.getStartedCount());
+                assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+                assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+            } catch (HttpTransporterException e) {
+                assertEquals(500, e.getStatusCode());
+            }
+        }
     }
 
     @Test
