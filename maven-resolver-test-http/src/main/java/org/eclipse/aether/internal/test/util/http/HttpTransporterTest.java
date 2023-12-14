@@ -138,6 +138,7 @@ public class HttpTransporterTest {
         }
         if (closer != null) {
             closer.run();
+            closer = null;
         }
         session = new TestRepositorySystemSession(session);
         session.setData(new DefaultSessionData());
@@ -173,6 +174,7 @@ public class HttpTransporterTest {
         }
         if (closer != null) {
             closer.run();
+            closer = null;
         }
         if (httpServer != null) {
             httpServer.stop();
