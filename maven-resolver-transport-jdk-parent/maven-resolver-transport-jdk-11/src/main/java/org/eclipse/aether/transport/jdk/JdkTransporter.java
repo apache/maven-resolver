@@ -181,7 +181,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
 
         this.headers = headers;
-        this.client = getOrCreateClient(session, repository);
+        this.client = getOrCreateClient(session, repository, javaVersion);
     }
 
     private URI resolve(TransportTask task) {
@@ -246,6 +246,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 try {
                     response = client.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
+                        closeBody(response);
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
                             resume = false;
                             continue;
@@ -253,6 +254,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         throw new HttpTransporterException(response.statusCode());
                     }
                 } catch (ConnectException e) {
+                    closeBody(response);
                     throw enhance(e);
                 }
                 break;
@@ -324,10 +326,15 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 checksums.forEach(task::setChecksum);
             }
         } finally {
-            if (response != null) {
-                try (InputStream body = response.body()) {
-                    // empty:
-                }
+            closeBody(response);
+        }
+    }
+
+    private void closeBody(HttpResponse<InputStream> streamHttpResponse) throws IOException {
+        if (streamHttpResponse != null) {
+            InputStream body = streamHttpResponse.body();
+            if (body != null) {
+                body.close();
             }
         }
     }
@@ -425,7 +432,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
      */
     static final String HTTP_INSTANCE_KEY_PREFIX = JdkTransporterFactory.class.getName() + ".http.";
 
-    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
+    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository, int javaVersion)
             throws NoTransporterException {
         final String instanceKey = HTTP_INSTANCE_KEY_PREFIX + repository.getId();
 
@@ -553,15 +560,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     }
 
                     HttpClient result = builder.build();
-                    if (!session.addOnSessionEndedHandler(() -> {
-                        if (result instanceof AutoCloseable) {
-                            try {
-                                ((AutoCloseable) client).close();
-                            } catch (final Exception e) {
-                                throw new IllegalStateException(e);
-                            }
-                        }
-                    })) {
+                    if (!session.addOnSessionEndedHandler(JdkTransporterCloser.closer(javaVersion, result))) {
                         LOGGER.warn(
                                 "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
                     }

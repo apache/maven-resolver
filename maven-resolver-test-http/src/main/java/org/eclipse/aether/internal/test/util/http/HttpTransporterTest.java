@@ -34,10 +34,10 @@ import java.util.function.Supplier;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
+import org.eclipse.aether.internal.test.util.TestRepositorySystemSession;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -84,11 +84,13 @@ public class HttpTransporterTest {
 
     private final Supplier<HttpTransporterFactory> transporterFactorySupplier;
 
-    protected DefaultRepositorySystemSession session;
+    protected TestRepositorySystemSession session;
 
     protected HttpTransporterFactory factory;
 
     protected HttpTransporter transporter;
+
+    protected Runnable closer;
 
     protected File repoDir;
 
@@ -134,9 +136,10 @@ public class HttpTransporterTest {
             transporter.close();
             transporter = null;
         }
-        // here we "simulate" onSessionClose
-        // TODO: in UTs currently we cannot do it, sort it out
-        session = new DefaultRepositorySystemSession(session);
+        if (closer != null) {
+            closer.run();
+        }
+        session = new TestRepositorySystemSession(session);
         session.setData(new DefaultSessionData());
         transporter = factory.newInstance(session, newRepo(url));
     }
@@ -146,7 +149,8 @@ public class HttpTransporterTest {
     @BeforeEach
     protected void setUp(TestInfo testInfo) throws Exception {
         System.out.println("=== " + testInfo.getDisplayName() + " ===");
-        session = TestUtils.newSession();
+        session = new TestRepositorySystemSession(h -> this.closer = h);
+        session.setLocalRepositoryManager(new TestLocalRepositoryManager());
         factory = transporterFactorySupplier.get();
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
@@ -166,6 +170,9 @@ public class HttpTransporterTest {
         if (transporter != null) {
             transporter.close();
             transporter = null;
+        }
+        if (closer != null) {
+            closer.run();
         }
         if (httpServer != null) {
             httpServer.stop();
