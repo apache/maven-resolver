@@ -100,8 +100,6 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactoryImpl;
-import org.eclipse.aether.internal.impl.version.DefaultVersionSchemeSelector;
-import org.eclipse.aether.internal.impl.version.GenericVersionSchemeProvider;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
@@ -122,7 +120,6 @@ import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.eclipse.aether.spi.version.VersionSchemeSelector;
 import org.eclipse.aether.transport.apache.ApacheTransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.util.version.GenericVersionScheme;
@@ -441,14 +438,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 remoteRepositoryFilterManager);
     }
 
-    protected Map<String, VersionScheme> getVersionSchemes() {
-        HashMap<String, VersionScheme> result = new HashMap<>();
-        result.put(GenericVersionSchemeProvider.NAME, new GenericVersionScheme());
-        return result;
-    }
-
-    protected VersionSchemeSelector getVersionSchemeSelector(Map<String, VersionScheme> versionSchemes) {
-        return new DefaultVersionSchemeSelector(versionSchemes);
+    protected VersionScheme getVersionScheme() {
+        return new GenericVersionScheme();
     }
 
     // Maven provided
@@ -493,14 +484,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             MetadataResolver metadataResolver,
             SyncContextFactory syncContextFactory,
             RepositoryEventDispatcher repositoryEventDispatcher,
-            VersionSchemeSelector versionSchemeSelector) {
+            VersionScheme versionScheme) {
         // from maven-resolver-provider
-        // TODO: hack here, until maven bits does not pick this change
         return new DefaultVersionRangeResolver(
-                metadataResolver,
-                syncContextFactory,
-                repositoryEventDispatcher,
-                versionSchemeSelector.selectVersionScheme(GenericVersionSchemeProvider.NAME));
+                metadataResolver, syncContextFactory, repositoryEventDispatcher, versionScheme);
     }
 
     protected ModelBuilder getModelBuilder() {
@@ -594,12 +581,11 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 offlineController,
                 remoteRepositoryFilterManager);
 
-        Map<String, VersionScheme> versionSchemes = getVersionSchemes();
-        VersionSchemeSelector versionSchemeSelector = getVersionSchemeSelector(versionSchemes);
+        VersionScheme versionScheme = getVersionScheme();
         VersionResolver versionResolver =
                 getVersionResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher);
-        VersionRangeResolver versionRangeResolver = getVersionRangeResolver(
-                metadataResolver, syncContextFactory, repositoryEventDispatcher, versionSchemeSelector);
+        VersionRangeResolver versionRangeResolver =
+                getVersionRangeResolver(metadataResolver, syncContextFactory, repositoryEventDispatcher, versionScheme);
 
         Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors =
                 getArtifactResolverPostProcessors(checksumAlgorithmFactorySelector, trustedChecksumsSources);
