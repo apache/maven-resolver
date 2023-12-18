@@ -102,7 +102,7 @@
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.18</jettyVersion>
     <!-- used by supplier and demo only -->
-    <mavenVersion>4.0.0-alpha-9</mavenVersion>
+    <mavenVersion>4.0.0-alpha-10-SNAPSHOT</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
