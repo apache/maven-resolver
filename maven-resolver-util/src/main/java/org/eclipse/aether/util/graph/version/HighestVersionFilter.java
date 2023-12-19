@@ -28,19 +28,37 @@ import org.eclipse.aether.version.Version;
  * A version filter that excludes any version except the highest one.
  */
 public final class HighestVersionFilter implements VersionFilter {
+    private final int count;
 
     /**
      * Creates a new instance of this version filter.
      */
-    public HighestVersionFilter() {}
+    public HighestVersionFilter() {
+        this.count = 1;
+    }
+
+    /**
+     * Creates a new instance of this version filter.
+     */
+    public HighestVersionFilter(int count) {
+        if (count < 1) {
+            throw new IllegalArgumentException("Count should be greater or equal to 1");
+        }
+        this.count = count;
+    }
 
     @Override
     public void filterVersions(VersionFilterContext context) {
+        if (context.getCount() <= count) {
+            return;
+        }
+        // iterator comes in ascending order, basically we "step over" (remove) first few
+        int stepOver = context.getCount() - count;
         Iterator<Version> it = context.iterator();
-        for (boolean hasNext = it.hasNext(); hasNext; ) {
+        while (it.hasNext()) {
             it.next();
-            hasNext = it.hasNext();
-            if (hasNext) {
+            stepOver--;
+            if (stepOver >= 0) {
                 it.remove();
             }
         }

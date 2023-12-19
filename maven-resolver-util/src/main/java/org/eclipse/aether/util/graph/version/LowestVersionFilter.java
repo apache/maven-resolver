@@ -30,19 +30,37 @@ import org.eclipse.aether.version.Version;
  * @since 2.0.0
  */
 public final class LowestVersionFilter implements VersionFilter {
+    private final int count;
 
     /**
      * Creates a new instance of this version filter.
      */
-    public LowestVersionFilter() {}
+    public LowestVersionFilter() {
+        this.count = 1;
+    }
+
+    /**
+     * Creates a new instance of this version filter.
+     */
+    public LowestVersionFilter(int count) {
+        if (count < 1) {
+            throw new IllegalArgumentException("Count should be greater or equal to 1");
+        }
+        this.count = count;
+    }
 
     @Override
     public void filterVersions(VersionFilterContext context) {
+        if (context.getCount() <= count) {
+            return;
+        }
+        // iterator comes in ascending order, basically we "step over" (leave) first few
+        int stepOver = count;
         Iterator<Version> it = context.iterator();
-        if (it.hasNext()) {
+        while (it.hasNext()) {
             it.next();
-            while (it.hasNext()) {
-                it.next();
+            stepOver--;
+            if (stepOver < 0) {
                 it.remove();
             }
         }

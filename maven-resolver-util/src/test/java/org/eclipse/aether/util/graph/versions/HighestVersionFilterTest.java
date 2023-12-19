@@ -35,6 +35,14 @@ public class HighestVersionFilterTest extends AbstractVersionFilterTest {
     }
 
     @Test
+    void testFilterVersions3() {
+        HighestVersionFilter filter = new HighestVersionFilter(3);
+        VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+        filter.filterVersions(ctx);
+        assertVersions(ctx, "7", "8", "9");
+    }
+
+    @Test
     void testDeriveChildFilter() {
         HighestVersionFilter filter = new HighestVersionFilter();
         assertSame(filter, derive(filter, "g:a:1"));
