@@ -43,6 +43,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
         super(Integer.MAX_VALUE, 0);
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber")
     private DefaultDependencyManager(
             int depth,
             int deriveUntil,

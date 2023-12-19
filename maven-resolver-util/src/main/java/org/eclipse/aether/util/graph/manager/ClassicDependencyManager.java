@@ -38,6 +38,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
         super(2, 2);
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber")
     private ClassicDependencyManager(
             int depth,
             int deriveUntil,

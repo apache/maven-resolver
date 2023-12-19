@@ -76,6 +76,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 Collections.emptyMap());
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber")
     protected AbstractDependencyManager(
             int depth,
             int deriveUntil,

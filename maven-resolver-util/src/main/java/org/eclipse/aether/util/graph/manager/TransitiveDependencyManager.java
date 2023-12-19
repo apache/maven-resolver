@@ -38,6 +38,7 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
         super(Integer.MAX_VALUE, 2);
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber")
     private TransitiveDependencyManager(
             int depth,
             int deriveUntil,
