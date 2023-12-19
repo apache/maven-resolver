@@ -150,7 +150,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      *
      * @since 2.0.0
      */
-    public DefaultRepositorySystemSession(Function<Runnable, Boolean> onSessionCloseConsumer) {
+    public DefaultRepositorySystemSession(Function<Runnable, Boolean> onSessionEndedRegistrar) {
         systemProperties = new HashMap<>();
         systemPropertiesView = Collections.unmodifiableMap(systemProperties);
         userProperties = new HashMap<>();
@@ -162,7 +162,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
         data = new DefaultSessionData();
-        onSessionEndedRegistrar = onSessionCloseConsumer;
+        this.onSessionEndedRegistrar = requireNonNull(onSessionEndedRegistrar, "onSessionEndedRegistrar");
     }
 
     /**
