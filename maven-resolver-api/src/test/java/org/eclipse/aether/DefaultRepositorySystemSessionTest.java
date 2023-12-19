@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DefaultRepositorySystemSessionTest {
 
     private DefaultRepositorySystemSession newSession() {
-        return new DefaultRepositorySystemSession();
+        return new DefaultRepositorySystemSession(h -> false);
     }
 
     @Test

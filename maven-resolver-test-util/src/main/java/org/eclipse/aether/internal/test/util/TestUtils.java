@@ -43,7 +43,7 @@ public class TestUtils {
      * {@link TestLocalRepositoryManager}.
      */
     public static DefaultRepositorySystemSession newSession() {
-        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(h -> false);
         session.setLocalRepositoryManager(new TestLocalRepositoryManager());
         return session;
     }
