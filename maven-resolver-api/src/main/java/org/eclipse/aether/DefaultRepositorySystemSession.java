@@ -147,6 +147,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * <p>
      * Note: preferred way to create sessions is {@link RepositorySystem#createSessionBuilder()}, as then client code
      * does not have to fiddle with session close callbacks. This constructor is meant more for testing purposes.
+     *
+     * @since 2.0.0
      */
     public DefaultRepositorySystemSession(Function<Runnable, Boolean> onSessionCloseConsumer) {
         systemProperties = new HashMap<>();
