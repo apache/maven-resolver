@@ -61,7 +61,6 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
 
     @Override
     public DependencyManager deriveChildManager(DependencyCollectionContext context) {
-        requireNonNull(context, "context cannot be null");
         if (depth == 1) {
             return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
         }

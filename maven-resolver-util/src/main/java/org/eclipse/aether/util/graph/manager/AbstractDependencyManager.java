@@ -115,9 +115,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     @Override
     public DependencyManager deriveChildManager(DependencyCollectionContext context) {
+        requireNonNull(context, "context cannot be null");
         if (depth >= deriveUntil) {
             return this;
         }
+
         Map<Object, String> managedVersions = this.managedVersions;
         Map<Object, String> managedScopes = this.managedScopes;
         Map<Object, Boolean> managedOptionals = this.managedOptionals;
@@ -177,7 +179,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     public DependencyManagement manageDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
         DependencyManagement management = null;
-
         Object key = new Key(dependency.getArtifact());
 
         if (depth >= applyFrom) {
