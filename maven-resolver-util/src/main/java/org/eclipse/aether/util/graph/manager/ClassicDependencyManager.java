@@ -25,8 +25,6 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * A dependency manager that mimics the way Maven 2.x works.
  */
