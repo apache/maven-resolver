@@ -18,9 +18,7 @@
  */
 package org.eclipse.aether.util.graph.version;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
@@ -56,14 +54,13 @@ public final class LowestVersionFilter implements VersionFilter {
         if (context.getCount() <= count) {
             return;
         }
-        List<Version> versions = new ArrayList<>(context.getCount());
-        context.iterator().forEachRemaining(versions::add);
-        List<Version> remains = versions.subList(0, count);
-
+        // iterator comes in ascending order, basically we "step over" (leave) first few
+        int stepOver = count;
         Iterator<Version> it = context.iterator();
         while (it.hasNext()) {
-            Version version = it.next();
-            if (!remains.contains(version)) {
+            it.next();
+            stepOver--;
+            if (stepOver < 0) {
                 it.remove();
             }
         }
