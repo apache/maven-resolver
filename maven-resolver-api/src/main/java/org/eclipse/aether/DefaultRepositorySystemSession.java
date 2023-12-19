@@ -137,6 +137,18 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      */
     @Deprecated
     public DefaultRepositorySystemSession() {
+        this(h -> false);
+    }
+
+    /**
+     * Creates an uninitialized session. <em>Note:</em> The new session is not ready to use, as a bare minimum,
+     * {@link #setLocalRepositoryManager(LocalRepositoryManager)} needs to be called but usually other settings also
+     * need to be customized to achieve meaningful behavior.
+     * <p>
+     * Note: preferred way to create sessions is {@link RepositorySystem#createSessionBuilder()}, as then client code
+     * does not have to fiddle with session close callbacks. This constructor is meant more for testing purposes.
+     */
+    public DefaultRepositorySystemSession(Function<Runnable, Boolean> onSessionCloseConsumer) {
         systemProperties = new HashMap<>();
         systemPropertiesView = Collections.unmodifiableMap(systemProperties);
         userProperties = new HashMap<>();
@@ -148,7 +160,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
         data = new DefaultSessionData();
-        onSessionEndedRegistrar = h -> false;
+        onSessionEndedRegistrar = onSessionCloseConsumer;
     }
 
     /**

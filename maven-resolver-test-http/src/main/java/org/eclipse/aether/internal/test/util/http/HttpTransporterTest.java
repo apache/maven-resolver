@@ -34,10 +34,10 @@ import java.util.function.Supplier;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.DefaultSessionData;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
-import org.eclipse.aether.internal.test.util.TestRepositorySystemSession;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -84,7 +84,7 @@ public class HttpTransporterTest {
 
     private final Supplier<HttpTransporterFactory> transporterFactorySupplier;
 
-    protected TestRepositorySystemSession session;
+    protected DefaultRepositorySystemSession session;
 
     protected HttpTransporterFactory factory;
 
@@ -140,7 +140,7 @@ public class HttpTransporterTest {
             closer.run();
             closer = null;
         }
-        session = new TestRepositorySystemSession(session);
+        session = new DefaultRepositorySystemSession(session);
         session.setData(new DefaultSessionData());
         transporter = factory.newInstance(session, newRepo(url));
     }
@@ -150,7 +150,10 @@ public class HttpTransporterTest {
     @BeforeEach
     protected void setUp(TestInfo testInfo) throws Exception {
         System.out.println("=== " + testInfo.getDisplayName() + " ===");
-        session = new TestRepositorySystemSession(h -> this.closer = h);
+        session = new DefaultRepositorySystemSession(h -> {
+            this.closer = h;
+            return true;
+        });
         session.setLocalRepositoryManager(new TestLocalRepositoryManager());
         factory = transporterFactorySupplier.get();
         repoDir = TestFileUtils.createTempDir();
