@@ -35,7 +35,20 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
      * Creates a new dependency manager without any management information.
      */
     public ClassicDependencyManager() {
-        super(2, 2);
+        this(false);
+    }
+
+    /**
+     * Creates a new dependency manager without any management information.
+     *
+     * @param transitive If true, this manager will collect (derive) until last node on graph. If false,
+     *                   it will work as original Maven 3 "classic" dependency manager, collect only up to
+     *                   depth of 2.
+     *
+     * @since 2.0.0
+     */
+    public ClassicDependencyManager(boolean transitive) {
+        super(transitive ? Integer.MAX_VALUE : 2, 2);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
