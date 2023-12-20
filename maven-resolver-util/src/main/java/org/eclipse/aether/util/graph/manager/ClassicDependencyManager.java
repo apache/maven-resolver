@@ -61,6 +61,9 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
 
     @Override
     public DependencyManager deriveChildManager(DependencyCollectionContext context) {
+        // MNG-4720: Maven2 backward compatibility
+        // Removing this IF makes one IT fail here (read comment above):
+        // https://github.com/apache/maven-integration-testing/blob/b4e8fd52b99a058336f9c7c5ec44fdbc1427759c/core-it-suite/src/test/java/org/apache/maven/it/MavenITmng4720DependencyManagementExclusionMergeTest.java#L67
         if (depth == 1) {
             return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
         }
