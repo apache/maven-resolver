@@ -30,7 +30,8 @@ import org.eclipse.aether.graph.Exclusion;
  * <b>Note:</b>Unlike the {@code ClassicDependencyManager} and the {@code TransitiveDependencyManager} this
  * implementation applies management also on the first level. This is considered the resolver's default behaviour.
  * It ignores all management overrides supported by the {@code MavenModelBuilder}.
- * </p>
+ * <p>
+ * This manager has {@code deriveUntil=Integer.MAX_VALUE} and {@code applyFrom=0}.
  *
  * @author Christian Schulte
  * @since 1.4.0

@@ -26,6 +26,9 @@ import org.eclipse.aether.graph.Exclusion;
 
 /**
  * A dependency manager managing transitive dependencies supporting transitive dependency management.
+ * <p>
+ * This manager is similar to "classic", it has {@code deriveUntil=Integer.MAX_VALUE} (unlike 2 as in "classic") and
+ * {@code applyFrom=2}.
  *
  * @author Christian Schulte
  * @since 1.4.0

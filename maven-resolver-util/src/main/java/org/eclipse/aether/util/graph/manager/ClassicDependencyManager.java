@@ -26,7 +26,9 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
 
 /**
- * A dependency manager that mimics the way Maven 2.x works.
+ * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions.
+ * <p>
+ * This manager has {@code deriveUntil=2} and {@code applyFrom=2}.
  */
 public final class ClassicDependencyManager extends AbstractDependencyManager {
     /**
