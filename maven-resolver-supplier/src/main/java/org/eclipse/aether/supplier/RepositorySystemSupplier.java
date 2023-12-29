@@ -19,19 +19,15 @@
 package org.eclipse.aether.supplier;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
-import org.apache.maven.repository.internal.DefaultArtifactDescriptorReader;
-import org.apache.maven.repository.internal.DefaultModelCacheFactory;
-import org.apache.maven.repository.internal.DefaultVersionRangeResolver;
-import org.apache.maven.repository.internal.DefaultVersionResolver;
-import org.apache.maven.repository.internal.ModelCacheFactory;
-import org.apache.maven.repository.internal.PluginsMetadataGeneratorFactory;
-import org.apache.maven.repository.internal.SnapshotMetadataGeneratorFactory;
-import org.apache.maven.repository.internal.VersionsMetadataGeneratorFactory;
+import org.apache.maven.repository.internal.*;
+import org.apache.maven.repository.internal.relocation.DistributionManagementArtifactRelocationSource;
+import org.apache.maven.repository.internal.relocation.UserPropertiesArtifactRelocationSource;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
@@ -453,6 +449,17 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
+    protected LinkedHashMap<String, MavenArtifactRelocationSource> getMavenArtifactRelocationSource() {
+        // from maven-resolver-provider
+        LinkedHashMap<String, MavenArtifactRelocationSource> result = new LinkedHashMap<>();
+        result.put(UserPropertiesArtifactRelocationSource.NAME, new UserPropertiesArtifactRelocationSource());
+        result.put(
+                DistributionManagementArtifactRelocationSource.NAME,
+                new DistributionManagementArtifactRelocationSource());
+        return result;
+    }
+
+    @SuppressWarnings("checkstyle:parameternumber")
     protected ArtifactDescriptorReader getArtifactDescriptorReader(
             RemoteRepositoryManager remoteRepositoryManager,
             VersionResolver versionResolver,
@@ -460,7 +467,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
             ArtifactResolver artifactResolver,
             ModelBuilder modelBuilder,
             RepositoryEventDispatcher repositoryEventDispatcher,
-            ModelCacheFactory modelCacheFactory) {
+            ModelCacheFactory modelCacheFactory,
+            LinkedHashMap<String, MavenArtifactRelocationSource> artifactRelocationSources) {
         // from maven-resolver-provider
         return new DefaultArtifactDescriptorReader(
                 remoteRepositoryManager,
@@ -469,7 +477,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 artifactResolver,
                 modelBuilder,
                 repositoryEventDispatcher,
-                modelCacheFactory);
+                modelCacheFactory,
+                artifactRelocationSources);
     }
 
     protected VersionResolver getVersionResolver(
@@ -603,6 +612,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
         ModelBuilder modelBuilder = getModelBuilder();
         ModelCacheFactory modelCacheFactory = getModelCacheFactory();
+        LinkedHashMap<String, MavenArtifactRelocationSource> mavenArtifactRelocationSources =
+                getMavenArtifactRelocationSource();
 
         ArtifactDescriptorReader artifactDescriptorReader = getArtifactDescriptorReader(
                 remoteRepositoryManager,
@@ -611,7 +622,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 artifactResolver,
                 modelBuilder,
                 repositoryEventDispatcher,
-                modelCacheFactory);
+                modelCacheFactory,
+                mavenArtifactRelocationSources);
 
         Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates = getDependencyCollectorDelegates(
                 remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
