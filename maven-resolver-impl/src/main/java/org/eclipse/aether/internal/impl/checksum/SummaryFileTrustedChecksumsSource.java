@@ -315,7 +315,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                             p -> Files.write(
                                     p,
                                     result.entrySet().stream()
-                                            .sorted(Map.Entry.comparingByValue())
+                                            .sorted(Map.Entry.comparingByKey())
                                             .map(e -> e.getValue() + "  " + e.getKey())
                                             .collect(toList())));
                 } catch (IOException e) {
