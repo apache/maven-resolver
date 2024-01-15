@@ -29,7 +29,7 @@ import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +51,9 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory {
-    public static final String DEFAULT_FACTORY_NAME = LocalReadWriteLockNamedLockFactory.NAME;
+    public static final String DEFAULT_FACTORY_NAME = FileLockNamedLockFactory.NAME;
 
-    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.GAV_NAME;
+    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_HGAV_NAME;
 
     /**
      * Name of the lock factory to use in session.
