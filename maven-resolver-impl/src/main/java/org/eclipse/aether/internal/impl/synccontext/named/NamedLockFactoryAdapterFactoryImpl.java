@@ -53,7 +53,7 @@ import static java.util.Objects.requireNonNull;
 public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory {
     public static final String DEFAULT_FACTORY_NAME = FileLockNamedLockFactory.NAME;
 
-    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_HGAV_NAME;
+    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_GAV_NAME;
 
     /**
      * Name of the lock factory to use in session.
