@@ -136,6 +136,16 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
+    void testEdgeCase_2_3() {
+        // 1.ga trimmed to 1 == 1.0.0.0.0.0...
+        assertOrder(X_EQ_Y, "1.ga", "1.0");
+        // ga.1 is not trimmed < 0.1 (as qualifier < number)
+        assertOrder(X_LT_Y, "ga.1", "0.1");
+        // 1.ga.1 is not trimmed < 1.0.1 (as qualifier < number)
+        assertOrder(X_LT_Y, "1.ga.1", "1.0.1");
+    }
+
+    @Test
     void testQualifier() {
         String ver = "1.0.0";
         assertOrder(X_LT_Y, ver + ".a1", ver + ".b1");
