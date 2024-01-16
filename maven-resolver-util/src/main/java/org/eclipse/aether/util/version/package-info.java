@@ -52,7 +52,6 @@
  *     <li>When trimming, "zero segments" are qualifiers {@code "ga"}, {@code "final"}, {@code "release"} only if being last (right-most) segment, empty string and "0" always.</li>
  *     <li>In comparison of same kind segments, the given type of segment determines comparison rules.</li>
  *     <li>In comparison of different kind of segments, following applies: {@code max > numeric > string > qualifier > min}.</li>
- *     <li>In comparison, a "zero segment" separator is assumed to exists between any two segments when one of them is numeric segment (including 0) and the other is non-numeric segment (including qualifiers).</li>
  *     <li>Any version can be considered to have an infinite number of invisible trailing "zero segments", for the purposes of comparison (in other words, "1" == "1.0.0.0.0.0.0.0.0....")</li>
  *     <li>It is common that a version identifier starts with numeric segment (consider this "best practice").</li>
  * </ul>
