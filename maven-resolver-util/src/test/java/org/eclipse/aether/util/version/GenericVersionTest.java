@@ -96,6 +96,22 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
+    void testTrimPaddingNeededQualifierMixedInBetweenGa() {
+        // 1.0.ga.0.string.0.ga -> 1.ga.0.string
+        List<GenericVersion.Item> items = new ArrayList<>(Arrays.asList(
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 1),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_QUALIFIER, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_STRING, "string"),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_QUALIFIER, 0)));
+        assertEquals(7, items.size());
+        GenericVersion.trimPadding(items);
+        assertEquals(4, items.size());
+    }
+
+    @Test
     void testEdgeCase_1_1() {
         Version v1 = newVersion("0.0.0.ga.ga.foo");
         Version v2 = newVersion("foo");
