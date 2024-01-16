@@ -56,6 +56,12 @@
  *     <li>It is common that a version identifier starts with numeric segment (consider this "best practice").</li>
  * </ul>
  * <p>
+ * Note: this version spec does not document (nor cover) many corner cases, that we believe are "atypical" or not
+ * used commonly. None of these are enforced, but in future implementations they probably will be. Some known examples are:
+ * <ul>
+ *     <li>Using "min" or "max" special segments as non-trailing segment. This yields in "undefined" behaviour and should be avoided.</li>
+ *     <li>Having non-number as first segment of version. Versions are expected (but not enforced) to start with numbers.</li>
+ * </ul>
  *
  */
 package org.eclipse.aether.util.version;
