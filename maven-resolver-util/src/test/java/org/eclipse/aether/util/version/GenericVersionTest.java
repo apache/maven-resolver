@@ -151,10 +151,12 @@ public class GenericVersionTest extends AbstractVersionTest {
         assertOrder(X_LT_Y, ver + ".a1", ver + ".b1");
         assertOrder(X_LT_Y, ver + ".b1", ver + ".m1");
         assertOrder(X_LT_Y, ver + ".m1", ver + ".rc");
+        assertOrder(X_LT_Y, ver + ".rc", ver + "-SNAPSHOT");
         assertOrder(X_LT_Y, ver + "-SNAPSHOT", ver);
         assertOrder(X_EQ_Y, ver + ".ga", ver + ".final");
         assertOrder(X_EQ_Y, ver + ".final", ver + ".release");
         assertOrder(X_LT_Y, ver + ".final", ver + ".sp");
+        assertOrder(X_LT_Y, ver, ver + ".sp");
     }
 
     @Test
