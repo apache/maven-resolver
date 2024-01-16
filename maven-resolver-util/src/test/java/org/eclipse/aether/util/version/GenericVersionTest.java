@@ -162,6 +162,11 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
+    void testEdgeCase_2_4() {
+        assertOrder(X_LT_Y, "1.0.final.1", "1.0.1.final");
+    }
+
+    @Test
     void testQualifier() {
         String ver = "1.0.0";
         assertOrder(X_LT_Y, ver + ".a1", ver + ".b1");
