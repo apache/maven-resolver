@@ -18,10 +18,7 @@
  */
 package org.eclipse.aether.util.version;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +40,127 @@ public class GenericVersionTest extends AbstractVersionTest {
     void testEmptyVersion() {
         assertOrder(X_EQ_Y, "0", "");
     }
+
+    // Block of tests from https://issues.apache.org/jira/browse/MRESOLVER-336
+    @Test
+    void testTrimPadding() {
+        // 1.0.0 -> 1
+        List<GenericVersion.Item> items = new ArrayList<>(Arrays.asList(
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 1),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0)));
+        assertEquals(3, items.size());
+        GenericVersion.trimPadding(items);
+        assertEquals(1, items.size());
+    }
+
+    @Test
+    void testTrimPaddingNotNeededString() {
+        // 1.0.0.string -> 1.string
+        List<GenericVersion.Item> items = new ArrayList<>(Arrays.asList(
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 1),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_STRING, "string")));
+        assertEquals(4, items.size());
+        GenericVersion.trimPadding(items);
+        assertEquals(2, items.size());
+    }
+
+    @Test
+    void testTrimPaddingNeededQualifier() {
+        // 1.0.0.ga -> 1
+        List<GenericVersion.Item> items = new ArrayList<>(Arrays.asList(
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 1),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_QUALIFIER, 0)));
+        assertEquals(4, items.size());
+        GenericVersion.trimPadding(items);
+        assertEquals(1, items.size());
+    }
+
+    @Test
+    void testTrimPaddingNeededQualifierMixed() {
+        // 1.0.0.string.0.ga -> 1.string
+        List<GenericVersion.Item> items = new ArrayList<>(Arrays.asList(
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 1),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_STRING, "string"),
+                new GenericVersion.Item(GenericVersion.Item.KIND_INT, 0),
+                new GenericVersion.Item(GenericVersion.Item.KIND_QUALIFIER, 0)));
+        assertEquals(6, items.size());
+        GenericVersion.trimPadding(items);
+        assertEquals(2, items.size());
+    }
+
+    @Test
+    void testEdgeCase_1_1() {
+        Version v1 = newVersion("0.0.0.ga.ga.foo");
+        Version v2 = newVersion("foo");
+        // they were equal in Resolver 1.x
+        assertNotEquals(v1, v2);
+    }
+
+    @Test
+    void testEdgeCase_1_2() {
+        // as expected
+        assertOrder(X_LT_Y, "ga.ga.foo", "foo");
+    }
+
+    @Test
+    void testEdgeCase_2_1() {
+        assertOrder(X_GT_Y, "0.foo.1.2.3", "foo.1.2.3");
+        // they were equal in Resolver 1.x
+        assertOrder(X_GT_Y, "0.foo", "foo");
+        assertOrder(X_EQ_Y, "1.0.0-foo", "1-foo");
+        // but "foo" != "ga" (string > qualifier)
+        assertOrder(X_LT_Y, "1.0.0-ga-foo", "1-foo");
+        assertOrder(X_EQ_Y, "1.0.0-ga-foo", "1-ga-foo");
+        assertOrder(X_LT_Y, "1.0.0.final-foo", "1-foo");
+        assertOrder(X_EQ_Y, "1.0.0.final-foo", "1-final-foo");
+    }
+
+    @Test
+    void testEdgeCase_2_2() {
+        Version v1 = newVersion("0.0.0.ga.ga.foo");
+        Version v2 = newVersion("foo");
+        Version v3 = newVersion("0.0.0.0.0.foo");
+        // they were equal in Resolver 1.x
+        assertNotEquals(v1, v2);
+        // they were equal in Resolver 1.x
+        assertNotEquals(v2, v3);
+        // but "0" != "ga"
+        assertNotEquals(v1, v3);
+    }
+
+    @Test
+    void testQualifier() {
+        String ver = "1.0.0";
+        assertOrder(X_LT_Y, ver + ".a1", ver + ".b1");
+        assertOrder(X_LT_Y, ver + ".b1", ver + ".m1");
+        assertOrder(X_LT_Y, ver + ".m1", ver + ".rc");
+        assertOrder(X_LT_Y, ver + "-SNAPSHOT", ver);
+        assertOrder(X_EQ_Y, ver + ".ga", ver + ".final");
+        assertOrder(X_EQ_Y, ver + ".final", ver + ".release");
+        assertOrder(X_LT_Y, ver + ".final", ver + ".sp");
+    }
+
+    @Test
+    void testTransition() {
+        GenericVersion v;
+        v = (GenericVersion) newVersion("1.0.0");
+        assertEquals(1, v.asItems().size()); // trailing zero padding trimmed
+        v = (GenericVersion) newVersion("1.2.3");
+        assertEquals(3, v.asItems().size());
+        v = (GenericVersion) newVersion("1a0");
+        assertEquals(2, v.asItems().size()); // trailing zero padding trimmed
+        v = (GenericVersion) newVersion("1a2");
+        assertEquals(3, v.asItems().size()); // trailing zero padding trimmed
+    }
+
+    // End of https://issues.apache.org/jira/browse/MRESOLVER-336
 
     @Test
     void testNumericOrdering() {
