@@ -47,7 +47,7 @@
  *         </ul>
  *     </li>
  *     <li>String segments are sorted lexicographically and case-insensitively per ROOT locale, ascending.</li>
- *     <li>There are two special segments, {@code "min"} and {@code "max"}, they represent absolute minimum and absolute maximum in comparisons.</li>
+ *     <li>There are two special segments, {@code "min"} and {@code "max"}, they represent absolute minimum and absolute maximum in comparisons. They can be used only as trailing segment.</li>
  *     <li>As last step, trailing "zero segments" are trimmed. Similarly, "zero segments" positioned before numeric and non-numeric transitions (either explicitly or implicitly delimited) are trimmed.</li>
  *     <li>When trimming, "zero segments" are qualifiers {@code "ga"}, {@code "final"}, {@code "release"} only if being last (right-most) segment, empty string and "0" always.</li>
  *     <li>In comparison of same kind segments, the given type of segment determines comparison rules.</li>

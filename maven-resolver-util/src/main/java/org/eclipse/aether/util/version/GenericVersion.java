@@ -350,7 +350,7 @@ final class GenericVersion implements Version {
         public int compareTo(Item that) {
             int rel;
             if (that == null) {
-                // null in this context denotes the "zero segment" (0 or "ga")
+                // null in this context denotes the pad item (0 or "ga")
                 switch (kind) {
                     case KIND_MIN:
                         rel = -1;
