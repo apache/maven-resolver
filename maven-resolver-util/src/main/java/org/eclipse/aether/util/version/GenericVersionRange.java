@@ -23,13 +23,17 @@ import java.util.Objects;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionRange;
+import org.eclipse.aether.version.VersionScheme;
 
 import static java.util.Objects.requireNonNull;
 
 /**
  * A version range inspired by mathematical range syntax. For example, "[1.0,2.0)", "[1.0,)" or "[1.0]".
+ * <p>
+ * Despite its name, this class is generic in a sense it works with any {@link Version}
  */
 final class GenericVersionRange implements VersionRange {
+    private final VersionScheme versionScheme;
 
     private final Bound lowerBound;
 
@@ -41,7 +45,8 @@ final class GenericVersionRange implements VersionRange {
      * @param range The range specification to parse, must not be {@code null}.
      * @throws InvalidVersionSpecificationException If the range could not be parsed.
      */
-    GenericVersionRange(String range) throws InvalidVersionSpecificationException {
+    GenericVersionRange(VersionScheme versionScheme, String range) throws InvalidVersionSpecificationException {
+        this.versionScheme = requireNonNull(versionScheme, "versionScheme cannot be null");
         String process = requireNonNull(range, "version range cannot be null");
 
         boolean lowerBoundInclusive, upperBoundInclusive;
@@ -110,8 +115,8 @@ final class GenericVersionRange implements VersionRange {
         this.upperBound = (upperBound != null) ? new Bound(upperBound, upperBoundInclusive) : null;
     }
 
-    private Version parse(String version) {
-        return new GenericVersion(version);
+    private Version parse(String version) throws InvalidVersionSpecificationException {
+        return versionScheme.parseVersion(version);
     }
 
     @Override
@@ -159,9 +164,9 @@ final class GenericVersionRange implements VersionRange {
             return false;
         }
 
-        GenericVersionRange that = (GenericVersionRange) obj;
+        VersionRange that = (VersionRange) obj;
 
-        return Objects.equals(upperBound, that.upperBound) && Objects.equals(lowerBound, that.lowerBound);
+        return Objects.equals(upperBound, that.getUpperBound()) && Objects.equals(lowerBound, that.getLowerBound());
     }
 
     @Override

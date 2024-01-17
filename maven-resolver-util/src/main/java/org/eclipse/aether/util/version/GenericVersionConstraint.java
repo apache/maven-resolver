@@ -28,6 +28,8 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A constraint on versions for a dependency.
+ * <p>
+ * Despite its name, this class is generic in a sense it works with any {@link Version}.
  */
 final class GenericVersionConstraint implements VersionConstraint {
 
@@ -88,9 +90,9 @@ final class GenericVersionConstraint implements VersionConstraint {
             return false;
         }
 
-        GenericVersionConstraint that = (GenericVersionConstraint) obj;
+        VersionConstraint that = (VersionConstraint) obj;
 
-        return Objects.equals(range, that.range) && Objects.equals(version, that.getVersion());
+        return Objects.equals(range, that.getRange()) && Objects.equals(version, that.getVersion());
     }
 
     @Override
