@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GenericVersionRangeTest {
+    private final GenericVersionScheme versionScheme = new GenericVersionScheme();
 
     private Version newVersion(String version) {
         return new GenericVersion(version);
@@ -33,7 +34,7 @@ public class GenericVersionRangeTest {
 
     private VersionRange parseValid(String range) {
         try {
-            return new GenericVersionRange(range);
+            return new GenericVersionRange(versionScheme, range);
         } catch (InvalidVersionSpecificationException e) {
             throw new AssertionError(range + " should be valid but failed to parse due to: " + e.getMessage(), e);
         }
@@ -41,7 +42,7 @@ public class GenericVersionRangeTest {
 
     private void parseInvalid(String range) {
         try {
-            new GenericVersionRange(range);
+            new GenericVersionRange(versionScheme, range);
             fail(range + " should be invalid");
         } catch (InvalidVersionSpecificationException e) {
             assertTrue(true);
