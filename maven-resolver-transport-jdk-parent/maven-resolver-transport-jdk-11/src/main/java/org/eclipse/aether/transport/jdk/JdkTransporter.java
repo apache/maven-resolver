@@ -182,8 +182,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
         }
 
-        this.maxConcurrentRequests = new Semaphore(
-                ConfigUtils.getInteger(session, DEFAULT_MAX_CONCURRENT_REQUESTS, CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
+        this.maxConcurrentRequests = new Semaphore(ConfigUtils.getInteger(
+                session,
+                DEFAULT_MAX_CONCURRENT_REQUESTS,
+                CONFIG_PROP_MAX_CONCURRENT_REQUESTS + "." + repository.getId(),
+                CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
 
         this.headers = headers;
         this.client = getOrCreateClient(session, repository, javaVersion);
