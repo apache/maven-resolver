@@ -84,18 +84,4 @@ abstract class VersionSchemeSupport implements VersionScheme {
 
         return result;
     }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        return obj != null && getClass().equals(obj.getClass());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }
