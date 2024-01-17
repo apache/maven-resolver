@@ -84,7 +84,10 @@ final class GenericVersion implements Version {
         return Collections.unmodifiableList(items);
     }
 
-    private static void trimPadding(List<Item> items) {
+    /**
+     * Visible for testing.
+     */
+    static void trimPadding(List<Item> items) {
         Boolean number = null;
         int end = items.size() - 1;
         for (int i = end; i > 0; i--) {
@@ -122,6 +125,9 @@ final class GenericVersion implements Version {
             Item thatItem = those.get(index);
 
             if (thisItem.isNumber() != thatItem.isNumber()) {
+                if (index == 0) {
+                    return thisItem.compareTo(thatItem);
+                }
                 if (number == thisItem.isNumber()) {
                     return comparePadding(these, index, number);
                 } else {
