@@ -51,16 +51,14 @@ public final class GenericVersionScheme extends VersionSchemeSupport {
         return new GenericVersion(version);
     }
 
-    // CHECKSTYLE_OFF: LineLength
     /**
      * A handy main method that behaves similarly like maven-artifact ComparableVersion is, to make possible test
      * and possibly compare differences between the two.
      * <p>
      * To check how "1.2.7" compares to "1.2-SNAPSHOT", for example, you can issue
-     * <pre>java -cp ${maven.repo.local}/org/apache/maven/resolver/maven-resolver-api/${resolver.version}/maven-resolver-api-${resolver.version}.jar:${maven.repo.local}/org/apache/maven/resolver/maven-resolver-util/${resolver.version}/maven-resolver-util-${resolver.version}.jar org.eclipse.aether.util.version.GenericVersionScheme "1.2.7" "1.2-SNAPSHOT"</pre>
+     * <pre>jbang --main=org.eclipse.aether.util.version.GenericVersionScheme org.apache.maven.resolver:maven-resolver-util:1.9.18 "1.2.7" "1.2-SNAPSHOT"</pre>
      * command to command line, output is very similar to that of ComparableVersion on purpose.
      */
-    // CHECKSTYLE_ON: LineLength
     public static void main(String... args) {
         System.out.println(
                 "Display parameters as parsed by Maven Resolver 'generic' scheme (in canonical form and as a list of tokens)"
