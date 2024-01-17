@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,8 +65,7 @@ import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_HTTP_VERSION;
-import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_HTTP_VERSION;
+import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.*;
 
 /**
  * JDK Transport using {@link HttpClient}.
@@ -116,6 +116,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     private final int requestTimeout;
 
     private final Boolean expectContinue;
+
+    private final Semaphore maxConcurrentRequests;
 
     JdkTransporter(RepositorySystemSession session, RemoteRepository repository, int javaVersion)
             throws NoTransporterException {
@@ -180,6 +182,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
         }
 
+        this.maxConcurrentRequests = new Semaphore(
+                ConfigUtils.getInteger(session, DEFAULT_MAX_CONCURRENT_REQUESTS, CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
+
         this.headers = headers;
         this.client = getOrCreateClient(session, repository, javaVersion);
     }
@@ -211,7 +216,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 .method("HEAD", HttpRequest.BodyPublishers.noBody());
         headers.forEach(request::setHeader);
         try {
-            HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
+            HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 throw new HttpTransporterException(response.statusCode());
             }
@@ -244,7 +249,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 }
 
                 try {
-                    response = client.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
                         closeBody(response);
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
@@ -352,13 +357,23 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request.method("PUT", HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
             try {
-                HttpResponse<Void> response = client.send(request.build(), HttpResponse.BodyHandlers.discarding());
+                HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
                 if (response.statusCode() >= MULTIPLE_CHOICES) {
                     throw new HttpTransporterException(response.statusCode());
                 }
             } catch (ConnectException e) {
                 throw enhance(e);
             }
+        }
+    }
+
+    private <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
+            throws IOException, InterruptedException {
+        maxConcurrentRequests.acquire();
+        try {
+            return client.send(request, responseBodyHandler);
+        } finally {
+            maxConcurrentRequests.release();
         }
     }
 
