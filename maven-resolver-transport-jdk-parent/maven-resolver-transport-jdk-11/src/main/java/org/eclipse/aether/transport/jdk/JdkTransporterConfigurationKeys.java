@@ -43,4 +43,19 @@ public final class JdkTransporterConfigurationKeys {
     public static final String CONFIG_PROP_HTTP_VERSION = CONFIG_PROPS_PREFIX + "httpVersion";
 
     public static final String DEFAULT_HTTP_VERSION = "HTTP_2";
+
+    /**
+     * The hard limit of maximum concurrent requests JDK transport can do. This is a workaround for the fact, that in
+     * HTTP/2 mode, JDK HttpClient initializes this value to Integer.MAX_VALUE (!) and lowers it on first response
+     * from the remote server (but it may be too late). See JDK bug
+     * <a href="https://bugs.openjdk.org/browse/JDK-8225647">JDK-8225647</a> for details.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_MAX_CONCURRENT_REQUESTS}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_MAX_CONCURRENT_REQUESTS = CONFIG_PROPS_PREFIX + "maxConcurrentRequests";
+
+    public static final int DEFAULT_MAX_CONCURRENT_REQUESTS = 100;
 }
