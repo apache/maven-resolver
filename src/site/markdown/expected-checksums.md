@@ -84,7 +84,7 @@ Related configuration keys:
   transport will ask for those in specified order (default is "SHA-1,MD5"), and first received and matched causes
   integrity validation algorithm to stop.
 
-Note: Since Maven 3.9.x you can use expression `${session.rootDirectory}` to store checksums along with
+Note: Since Maven 3.9.x you can use expression `${session.rootDirectory}/.mvn/checksums/` to store checksums along with
 sources as `session.rootDirectory` will become an absolute path pointing to the root directory of your project (where
 usually the `.mvn` directory is).
 
@@ -158,7 +158,7 @@ This new functionality, at the cost of checksum calculation overhead, is able to
 the resolved artifacts against Trusted Checksums, thus, making sure that all resolved
 artifacts are "validated" with some known (possibly even cryptographically strong) checksum
 provided by user. This new feature may become handy in cases when user cannot trust the local
-repository, as it may be shared with some other unknown or even untrusted party.
+repository, as it may be shared with some other unknown or even untrusted parties.
 
 Moreover, using Resolver Trusted Checksum post-processor, one can "record" the checksums,
 for example when executed in a known "pristine" and safe environment, and reuse the produced
@@ -185,6 +185,6 @@ Each summary file contains information for single checksum algorithm, represente
 This source mimics Maven local repository layout, and stores checksums in similar layout
 as Maven local repository stores checksums in local repository.
 
-Hare, just like Maven local repository, the sparse directory can contain multiple algorithm checksums,
+Here, just like Maven local repository, the sparse directory can contain multiple algorithm checksums,
 as they are coded in checksum file path (the extension).
 
