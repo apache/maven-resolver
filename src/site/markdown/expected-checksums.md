@@ -65,8 +65,8 @@ got both, content and checksums in one response.
 Finally, the **Remote External** checksums are the "classic" checksums we all know: They are laid down 
 next to Artifact files, external in other words on the remote repository, according 
 to remote repository layout. To obtain Remote External checksum, new HTTP request against remote repository is
-required. The order of requested checksums will follow the order given in `aether.checksums.algorithms`, 
-it asks for checksums in same order as the parameter contains algorithm names.
+required. The order of requested checksums will follow the order given in layout configuration, 
+asking for checksums in same order as the parameter contains algorithm names.
 
 During single artifact retrieval, these strategies are executed in above specified order,
 and only if current strategy has "no answer", the next strategy is attempted. Hence, if 
