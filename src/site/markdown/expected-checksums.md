@@ -84,6 +84,10 @@ Related configuration keys:
   transport will ask for those in specified order (default is "SHA-1,MD5"), and first received and matched causes
   integrity validation algorithm to stop.
 
+Note: Since Maven 3.9.x you can use expression `${session.rootDirectory}` to store checksums along with
+sources as `session.rootDirectory` will become an absolute path pointing to the root directory of your project (where
+usually the `.mvn` directory is).
+
 
 ### Provided Checksums
 
