@@ -19,11 +19,11 @@ under the License.
 -->
 
 Due to smooth transitions from Maven2 into Maven3 (and soon
-Maven4), and the fact that Maven2 kept working in Maven3 maybe
+Maven4), and the fact that Maven2 plugins kept working with Maven3, maybe
 even without change, there were some misconceptions crept in 
 as well. Despite the marvel of "compatibility", Maven3 resolution
-differs quite much from Maven2 and the sole reason is actual improvement
-in area of resolution, that it became much more precise (and, due
+differs quite much from Maven2, and the sole reason is actual improvement
+in area of resolution, it became much more precise (and, due
 that lost some "bad" habits present in Maven2). Here, we will try to
 enumerate some of the most common misconceptions.
 
@@ -33,7 +33,7 @@ enumerate some of the most common misconceptions.
 
 The most typical use case for Resolver is to "resolve transitively" 
 dependencies. Resolver, to achieve this, internally (but these are
-exposed via API as two distinguish API calls as well) performs 3 steps:
+exposed via API as distinguished API calls as well) performs 3 steps:
 "collect", "transform" and "resolve".
 
 The "collect" step is first, where it builds the "dirty tree" (dirty graph)
@@ -42,15 +42,18 @@ the graph is being built, Maven uses only POMs. Hence, if collecting an
 Artifact that was never downloaded to your local repository, it will 
 download **the POMs only**. Using POMs resolver is able to build current 
 "node" of graph, but also figure outgoing vertices and adjacent nodes of 
-current node and so on.
+current node and so on. Which dependency is chosen to continue with from
+the current node POM is decided by various criteria (configured).
 
-The "transform" step transforms the graph, this is where conflict resolution
+The "transform" step transforms the "dirty graph": this is where conflict resolution
 happens. It is here when resolver applies various rules to resolve conflicting 
-versions, conflicting scopes, and so on.
+versions, conflicting scopes, and so on. Here, if "verbose tree" is asked for,
+conflict resolution does not remove graph nodes, merely marks the conflicts
+and the conflict "winner". Thus, "verbose tree" cannot be resolved.
 
 Finally, the "resolve" step runs, when the (transformed) graph node artifacts
 are being resolved, basically ensuring (and downloading if needed) their 
-correspondent files (i.e. JAR files).
+correspondent files (i.e. JAR files) are present in local repository.
 
 It is important to state, that in "collect" step happens the selection of nodes
 by various criteria, among other by the configured scope filters. And here we
@@ -65,7 +68,7 @@ is set up as this:
   new ScopeDependencySelector("test", "provided")
 ```
 
-This means, that "current node" dependencies in "test" and "provided" scope
+This means, that "current dependency node" dependencies in "test" and "provided" scope
 will be simply omitted from the graph. In other words, this filter builds
 the "downstream runtime classpath" of supplied artifact (i.e. "what is needed by the 
 artifact at runtime when I depend on it").
@@ -76,7 +79,9 @@ With selector like this:
   new ScopeDependencySelector("provided")
 ```
 
-the "downstream test classpath" would be built.
+the "downstream dependency test classpath" would be built. Aside of giving example,
+this selector is actually never used, as "test classpath" makes sense only in the
+scope of "current project", but not for "downstream dependant projects".
 
 Note: these are NOT "Maven related" notions yet, there is nowhere Maven in picture here,
 and these are not the classpath used by Compiler or Surefire plugins, merely just
@@ -86,8 +91,8 @@ a showcase how Resolver works.
 ## Misconception No2: "Test classpath" Is Superset of "Runtime classpath"
 
 **Wrong**. As can be seen from above, for runtime classpath we leave out "test" scoped
-dependencies. This was true in Maven2, where test classpath was superset of runtime, 
-but is not true anymore in Maven3. And this may have interesting consequences. Let me show an example:
+dependencies. It was true in Maven2, where test classpath really was superset of runtime, 
+this does not stand anymore in Maven3. And this have interesting consequences. Let me show an example:
 
 (Note: very same scenario, as explained below for Guice+Guava would work for Jackson Databind+Core, etc.)
 
@@ -182,11 +187,18 @@ goes as expected.
 One, maybe not so obvious consequence can be explained with use of `maven-assembly-plugin`. Let assume you want to
 assemble your module "runtime" dependencies.
 
-If you do it from "within" of the project, your packaging will be incomplete, Guava will be missing! But if you 
-do it from "outside" of the project (i.e. subsequent module of the build, or downstream dependency), the assembly 
-will contain Guava as well.
+If you do it from "within" of the project, for example in package phase, your packaging will be incomplete: 
+Guava will be missing! But if you do it from "outside" of the project (i.e. subsequent module of the build, or 
+downstream dependency), the assembly will contain Guava as well.
 
-This is a Maven Assembly plugin [bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008), somewhat explained 
+This is a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008), somewhat explained 
 in [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391). In short, Maven Assembly plugin considers 
 "project test classpath", and then "cherry-picks runtime scoped nodes" from it, which, as we can see in this case, 
 is wrong. You need to build different graphs for "runtime" and "test" classpath, unlike as it was true in Maven2.
+For Assembly plugin, the problem is that as Mojo, it requests "test classpath", then it reads configuration
+(assembly descriptor, and this is the point where it learns about required scopes), and then it "filters"
+the resolved "test classpath" by runtime scopes. And it is wrong, as Guava is in test scope. Instead, the plugin
+should read the configuration first, and ask Resolver for "runtime classpath" and filter that. In turn, this problem
+does not stand with `maven-war-plugin`, as the "war" Mojo asks for "compile+runtime" scope. Of course, WAR use case
+is much simpler than Assembly use case is, as former always packages same scope, while Assembly receives a complex 
+configuration and exposes much more complex "modus operandi".
