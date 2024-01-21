@@ -107,10 +107,11 @@ count, since many repository services along Maven Central emits the reference ch
 the artifact response itself (as HTTP headers). Hence, we are able to get the
 artifact and reference "expected" checksum using only one HTTP round-trip.
 
-Following sources are supported:
-
 Related configuration keys:
 * `aether.connector.basic.smartChecksums` to enable or disable Remote Included checksums.
+
+The Remote Included checksums support several "strategies" to extract checksums from HTTP response header.
+
 
 #### Sonatype Nexus 2
 
@@ -124,7 +125,7 @@ Emitted by: Sonatype Nexus2 only.
 
 Maven Central emits headers `x-checksum-sha1` and `x-checksum-md5` along with artifact response. 
 Google GCS on the other hand uses `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5` 
-headers. Resolver will detect these and use their value.
+headers. Resolver will detect all these and use their value.
 
 Emitted by: Maven Central, GCS, some CDNs and probably more.
 
