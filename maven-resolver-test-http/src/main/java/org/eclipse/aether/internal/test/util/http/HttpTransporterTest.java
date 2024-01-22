@@ -50,6 +50,10 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
+import org.eclipse.aether.transport.shared.http.DefaultChecksumExtractor;
+import org.eclipse.aether.transport.shared.http.Nx2ChecksumExtractor;
+import org.eclipse.aether.transport.shared.http.XChecksumExtractor;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.jupiter.api.*;
 
@@ -122,6 +126,13 @@ public class HttpTransporterTest {
                 throw new UncheckedIOException(e);
             }
         }
+    }
+
+    protected static ChecksumExtractor standardChecksumExtractor() {
+        HashMap<String, ChecksumExtractor.Strategy> strategies = new HashMap<>();
+        strategies.put("1", new Nx2ChecksumExtractor());
+        strategies.put("2", new XChecksumExtractor());
+        return new DefaultChecksumExtractor(strategies);
     }
 
     protected RemoteRepository newRepo(String url) {

@@ -118,6 +118,10 @@ import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transport.apache.ApacheTransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
+import org.eclipse.aether.transport.shared.http.DefaultChecksumExtractor;
+import org.eclipse.aether.transport.shared.http.Nx2ChecksumExtractor;
+import org.eclipse.aether.transport.shared.http.XChecksumExtractor;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.VersionScheme;
 
@@ -293,10 +297,21 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
-    protected Map<String, TransporterFactory> getTransporterFactories() {
+    protected Map<String, ChecksumExtractor.Strategy> getChecksumExtractorStrategies() {
+        HashMap<String, ChecksumExtractor.Strategy> result = new HashMap<>();
+        result.put(XChecksumExtractor.NAME, new XChecksumExtractor());
+        result.put(Nx2ChecksumExtractor.NAME, new Nx2ChecksumExtractor());
+        return result;
+    }
+
+    protected ChecksumExtractor getChecksumExtractor(Map<String, ChecksumExtractor.Strategy> strategies) {
+        return new DefaultChecksumExtractor(strategies);
+    }
+
+    protected Map<String, TransporterFactory> getTransporterFactories(ChecksumExtractor checksumExtractor) {
         HashMap<String, TransporterFactory> result = new HashMap<>();
         result.put(FileTransporterFactory.NAME, new FileTransporterFactory());
-        result.put(ApacheTransporterFactory.NAME, new ApacheTransporterFactory());
+        result.put(ApacheTransporterFactory.NAME, new ApacheTransporterFactory(checksumExtractor));
         return result;
     }
 
@@ -554,7 +569,9 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         Map<String, ProvidedChecksumsSource> providedChecksumsSources =
                 getProvidedChecksumsSources(trustedChecksumsSources);
 
-        Map<String, TransporterFactory> transporterFactories = getTransporterFactories();
+        Map<String, ChecksumExtractor.Strategy> checksumExtractorStrategies = getChecksumExtractorStrategies();
+        ChecksumExtractor checksumExtractor = getChecksumExtractor(checksumExtractorStrategies);
+        Map<String, TransporterFactory> transporterFactories = getTransporterFactories(checksumExtractor);
         TransporterProvider transporterProvider = getTransporterProvider(transporterFactories);
 
         BasicRepositoryConnectorFactory basic = getBasicRepositoryConnectorFactory(

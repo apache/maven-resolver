@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.transport.jetty;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -25,6 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,6 +40,13 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "jetty";
 
     private float priority = 15.0f;
+
+    private final ChecksumExtractor checksumExtractor;
+
+    @Inject
+    public JettyTransporterFactory(ChecksumExtractor checksumExtractor) {
+        this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
+    }
 
     @Override
     public float getPriority() {
@@ -59,6 +68,6 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
             throw new NoTransporterException(repository);
         }
 
-        return new JettyTransporter(session, repository);
+        return new JettyTransporter(session, repository, checksumExtractor);
     }
 }

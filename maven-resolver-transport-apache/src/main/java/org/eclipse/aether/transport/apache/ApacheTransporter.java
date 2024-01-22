@@ -34,13 +34,12 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -97,6 +96,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
@@ -110,15 +110,15 @@ import static org.eclipse.aether.transport.apache.ApacheTransporterConfiguration
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_DEFAULT;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
+import static org.eclipse.aether.transport.shared.http.HttpConstants.CONTENT_RANGE_PATTERN;
 
 /**
  * A transporter for HTTP/HTTPS.
  */
 final class ApacheTransporter extends AbstractTransporter implements HttpTransporter {
-    private static final Pattern CONTENT_RANGE_PATTERN =
-            Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ApacheTransporter.class);
+
+    private final ChecksumExtractor checksumExtractor;
 
     private final AuthenticationContext repoAuthContext;
 
@@ -143,10 +143,12 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private final boolean supportWebDav;
 
     @SuppressWarnings("checkstyle:methodlength")
-    ApacheTransporter(RemoteRepository repository, RepositorySystemSession session) throws NoTransporterException {
+    ApacheTransporter(RemoteRepository repository, RepositorySystemSession session, ChecksumExtractor checksumExtractor)
+            throws NoTransporterException {
         if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
             throw new NoTransporterException(repository);
         }
+        this.checksumExtractor = checksumExtractor;
         try {
             this.baseUri = new URI(repository.getUrl()).parseServerAuthority();
             if (baseUri.isOpaque()) {
@@ -679,62 +681,18 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
 
         private void extractChecksums(CloseableHttpResponse response) {
-            Map<String, String> checksums = extractXChecksums(response);
-            if (checksums == null) {
-                checksums = extractNx2Checksums(response);
-            }
-            if (checksums != null) {
+            Map<String, String> checksums = checksumExtractor.extractChecksums(headerGetter(response));
+            if (checksums != null && !checksums.isEmpty()) {
                 checksums.forEach(task::setChecksum);
             }
         }
     }
 
-    private static Map<String, String> extractNx2Checksums(HttpResponse response) {
-        // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
-        Header header = response.getFirstHeader(HttpHeaders.ETAG);
-        String etag = header != null ? header.getValue() : null;
-        if (etag != null) {
-            int start = etag.indexOf("SHA1{"), end = etag.indexOf("}", start + 5);
-            if (start >= 0 && end > start) {
-                return Collections.singletonMap("SHA-1", etag.substring(start + 5, end));
-            }
-        }
-        return null;
-    }
-
-    private static Map<String, String> extractXChecksums(HttpResponse response) {
-        String value;
-        HashMap<String, String> result = new HashMap<>();
-        // Central style: x-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
-        value = extractXChecksum(response, "x-checksum-sha1");
-        if (value != null) {
-            result.put("SHA-1", value);
-        }
-        // Central style: x-checksum-md5: 9ad0d8e3482767c122e85f83567b8ce6
-        value = extractXChecksum(response, "x-checksum-md5");
-        if (value != null) {
-            result.put("MD5", value);
-        }
-        if (!result.isEmpty()) {
-            return result;
-        }
-        // Google style: x-goog-meta-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
-        value = extractXChecksum(response, "x-goog-meta-checksum-sha1");
-        if (value != null) {
-            result.put("SHA-1", value);
-        }
-        // Central style: x-goog-meta-checksum-sha1: 9ad0d8e3482767c122e85f83567b8ce6
-        value = extractXChecksum(response, "x-goog-meta-checksum-md5");
-        if (value != null) {
-            result.put("MD5", value);
-        }
-
-        return result.isEmpty() ? null : result;
-    }
-
-    private static String extractXChecksum(HttpResponse response, String name) {
-        Header header = response.getFirstHeader(name);
-        return header != null ? header.getValue() : null;
+    private static Function<String, String> headerGetter(CloseableHttpResponse closeableHttpResponse) {
+        return s -> {
+            Header header = closeableHttpResponse.getFirstHeader(s);
+            return header != null ? header.getValue() : null;
+        };
     }
 
     private class PutTaskEntity extends AbstractHttpEntity {

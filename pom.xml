@@ -57,6 +57,7 @@
     <module>maven-resolver-connector-basic</module>
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
+    <module>maven-resolver-transport-shared-http</module>
     <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-jdk-parent</module>
     <module>maven-resolver-transport-apache</module>
@@ -151,6 +152,11 @@
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-transport-file</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-transport-shared-http</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

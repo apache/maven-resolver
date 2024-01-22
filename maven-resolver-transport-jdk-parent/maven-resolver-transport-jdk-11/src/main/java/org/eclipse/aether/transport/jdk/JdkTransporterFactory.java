@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.transport.jdk;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -25,6 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,6 +40,13 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "jdk";
 
     private float priority = 10.0f;
+
+    private final ChecksumExtractor checksumExtractor;
+
+    @Inject
+    public JdkTransporterFactory(ChecksumExtractor checksumExtractor) {
+        this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
+    }
 
     @Override
     public float getPriority() {
@@ -59,7 +68,7 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
             throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
         }
 
-        return new JdkTransporter(session, repository, javaVersion());
+        return new JdkTransporter(session, repository, javaVersion(), checksumExtractor);
     }
 
     private static int javaVersion() {
