@@ -22,10 +22,10 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.transport.jdk.JdkTransporterFactory;
 import org.eclipse.aether.transport.jetty.JettyTransporterFactory;
-import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
 
 /**
  * A factory for repository system instances that employs Maven Artifact Resolver's provided supplier.

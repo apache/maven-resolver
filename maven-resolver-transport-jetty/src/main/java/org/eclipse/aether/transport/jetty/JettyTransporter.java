@@ -49,11 +49,11 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
-import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.eclipse.jetty.client.HttpClient;
@@ -73,7 +73,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.eclipse.aether.transport.shared.http.HttpConstants.*;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.*;
 
 /**
  * A transporter for HTTP/HTTPS.

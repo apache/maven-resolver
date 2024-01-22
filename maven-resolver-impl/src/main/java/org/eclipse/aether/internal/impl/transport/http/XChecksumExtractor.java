@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.shared.http;
+package org.eclipse.aether.internal.impl.transport.http;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -24,6 +24,8 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 
 /**
  * Generic checksum extractor that goes for "X-" headers.

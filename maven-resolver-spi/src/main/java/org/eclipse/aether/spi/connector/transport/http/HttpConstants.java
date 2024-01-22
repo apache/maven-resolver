@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.shared.http;
+package org.eclipse.aether.spi.connector.transport.http;
 
 import java.util.regex.Pattern;
 

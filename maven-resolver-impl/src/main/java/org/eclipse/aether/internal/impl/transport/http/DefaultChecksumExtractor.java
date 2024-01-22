@@ -16,32 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.shared.http;
+package org.eclipse.aether.internal.impl.transport.http;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+
+import static java.util.Objects.requireNonNull;
+
 /**
- * Sonatype Nexus2 checksum extractor.
+ * Checksum extractor.
  */
 @Singleton
-@Named(Nx2ChecksumExtractor.NAME)
-public final class Nx2ChecksumExtractor implements ChecksumExtractor.Strategy {
-    public static final String NAME = "nx2";
-    private static final String ETAG = "ETag";
+@Named
+public final class DefaultChecksumExtractor implements ChecksumExtractor {
+    private final Map<String, Strategy> strategies;
+
+    @Inject
+    public DefaultChecksumExtractor(Map<String, Strategy> strategies) {
+        this.strategies = requireNonNull(strategies, "strategies");
+    }
 
     @Override
     public Map<String, String> extractChecksums(Function<String, String> headerGetter) {
-        // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
-        String etag = headerGetter.apply(ETAG);
-        if (etag != null) {
-            int start = etag.indexOf("SHA1{"), end = etag.indexOf("}", start + 5);
-            if (start >= 0 && end > start) {
-                return Collections.singletonMap("SHA-1", etag.substring(start + 5, end));
+        for (Strategy strategy : strategies.values()) {
+            Map<String, String> extracted = strategy.extractChecksums(headerGetter);
+            if (extracted != null && !extracted.isEmpty()) {
+                return extracted;
             }
         }
         return null;

@@ -92,17 +92,18 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
-import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE_PATTERN;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES;
@@ -110,7 +111,6 @@ import static org.eclipse.aether.transport.apache.ApacheTransporterConfiguration
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_DEFAULT;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
-import static org.eclipse.aether.transport.shared.http.HttpConstants.CONTENT_RANGE_PATTERN;
 
 /**
  * A transporter for HTTP/HTTPS.

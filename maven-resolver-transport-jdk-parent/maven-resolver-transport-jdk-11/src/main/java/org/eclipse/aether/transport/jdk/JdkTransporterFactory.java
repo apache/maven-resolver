@@ -23,10 +23,10 @@ import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
-import org.eclipse.aether.transport.shared.http.ChecksumExtractor;
 
 import static java.util.Objects.requireNonNull;
 
