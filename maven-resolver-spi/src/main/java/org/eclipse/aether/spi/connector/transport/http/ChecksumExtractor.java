@@ -37,10 +37,10 @@ public interface ChecksumExtractor {
      * Extract checksums using given getter, if possible, or {@code null}.
      * <p>
      * The supplied {@code headerGetter} function should provide access to given transport response HTTP Headers in
-     * some common way, like for example returning last (if more) header value, or {@code null} if not present.
+     * some common way, like for example returning first header value, or {@code null} if header not present.
      *
      * @param headerGetter A function that provides access to response HTTP Headers, never {@code null}.
-     * @return Map of extracted checksums, or {@code null}.
+     * @return Map of extracted checksums, or {@code null} if none extracted.
      */
     Map<String, String> extractChecksums(Function<String, String> headerGetter);
 }
