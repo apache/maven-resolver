@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
+import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 
 /**
@@ -42,12 +44,12 @@ public final class XChecksumExtractor implements ChecksumExtractor.Strategy {
         // Central style: x-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
         value = headerGetter.apply("x-checksum-sha1");
         if (value != null) {
-            result.put("SHA-1", value);
+            result.put(Sha1ChecksumAlgorithmFactory.NAME, value);
         }
         // Central style: x-checksum-md5: 9ad0d8e3482767c122e85f83567b8ce6
         value = headerGetter.apply("x-checksum-md5");
         if (value != null) {
-            result.put("MD5", value);
+            result.put(Md5ChecksumAlgorithmFactory.NAME, value);
         }
         if (!result.isEmpty()) {
             return result;
@@ -55,14 +57,13 @@ public final class XChecksumExtractor implements ChecksumExtractor.Strategy {
         // Google style: x-goog-meta-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
         value = headerGetter.apply("x-goog-meta-checksum-sha1");
         if (value != null) {
-            result.put("SHA-1", value);
+            result.put(Sha1ChecksumAlgorithmFactory.NAME, value);
         }
         // Central style: x-goog-meta-checksum-sha1: 9ad0d8e3482767c122e85f83567b8ce6
         value = headerGetter.apply("x-goog-meta-checksum-md5");
         if (value != null) {
-            result.put("MD5", value);
+            result.put(Md5ChecksumAlgorithmFactory.NAME, value);
         }
-
         return result.isEmpty() ? null : result;
     }
 }

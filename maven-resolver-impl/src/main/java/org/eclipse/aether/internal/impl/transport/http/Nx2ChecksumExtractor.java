@@ -25,7 +25,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
 
 /**
  * Sonatype Nexus2 checksum extractor.
@@ -34,16 +36,15 @@ import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 @Named(Nx2ChecksumExtractor.NAME)
 public final class Nx2ChecksumExtractor implements ChecksumExtractor.Strategy {
     public static final String NAME = "nx2";
-    private static final String ETAG = "ETag";
 
     @Override
     public Map<String, String> extractChecksums(Function<String, String> headerGetter) {
         // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
-        String etag = headerGetter.apply(ETAG);
+        String etag = headerGetter.apply(HttpConstants.ETAG);
         if (etag != null) {
             int start = etag.indexOf("SHA1{"), end = etag.indexOf("}", start + 5);
             if (start >= 0 && end > start) {
-                return Collections.singletonMap("SHA-1", etag.substring(start + 5, end));
+                return Collections.singletonMap(Sha1ChecksumAlgorithmFactory.NAME, etag.substring(start + 5, end));
             }
         }
         return null;
