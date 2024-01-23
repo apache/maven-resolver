@@ -57,7 +57,7 @@ correspondent files (i.e. JAR files) are present in local repository.
 
 It is important to state, that in "collect" step happens the selection of nodes
 by various criteria, among other by the configured scope filters. And here we
-come to the notion of "runtime classpath" vs "test classpath". 
+come to the notion of "runtime graph" vs "test graph". 
 
 In resolver, maybe un-intuitively, the "scope filter" is usually used (but does 
 not have to, this is just how it IS used in Maven Core, probably for historical
@@ -73,25 +73,15 @@ will be simply omitted from the graph. In other words, this filter builds
 the "downstream runtime classpath" of supplied artifact (i.e. "what is needed by the 
 artifact at runtime when I depend on it").
 
-With selector like this:
-
-```
-  new ScopeDependencySelector("provided")
-```
-
-the "downstream dependency test classpath" would be built. Aside of giving example,
-this selector is actually never used, as "test classpath" makes sense only in the
-scope of "current project", but not for "downstream dependant projects".
-
 Note: these are NOT "Maven related" notions yet, there is nowhere Maven in picture here,
 and these are not the classpath used by Compiler or Surefire plugins, merely just
 a showcase how Resolver works.
 
 
-## Misconception No2: "Test classpath" Is Superset Of "Runtime classpath"
+## Misconception No2: "Test graph" Is Superset Of "Runtime graph"
 
-**Wrong**. As can be seen from above, for runtime classpath we leave out "test" scoped
-dependencies. It was true in Maven2, where test classpath really was superset of runtime, 
+**Wrong**. As can be seen from above, for runtime graph we leave out "test" scoped
+dependencies. It was true in Maven2, where test graph really was superset of runtime, 
 this does not stand anymore in Maven3. And this have interesting consequences. Let me show an example:
 
 (Note: very same scenario, as explained below for Guice+Guava would work for Jackson Databind+Core, etc.)
@@ -146,7 +136,7 @@ The `dependency:tree` plugin for this project outputs this verbose tree:
 [INFO]    \- com.google.j2objc:j2objc-annotations:jar:1.3:test
 ```
 
-And is right, this IS the "test classpath" **of the project** and contains a conflict as noted by "omitted for duplicate"
+And is right, this IS the "test graph" **of the project** and contains a conflict as noted by "omitted for duplicate"
 and "scope not updated to compile" remarks next to Guava nodes.
 
 So this setup results that:
@@ -176,7 +166,7 @@ the node that is your library):
 [INFO]          \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
 ```
 
-So what happens here? First, revisit "How Resolver Works", there you will see that for "runtime classpath" of the
+So what happens here? First, revisit "How Resolver Works", there you will see that for "runtime graph" of the
 dependency the "test" and "provided" scopes of the dependency artifact **are not even considered**. They are simply
 omitted. Not skipped, but completely omitted, like they do not even exists. Hence, in the graph there is 
 **no conflict happening** (as "test" Guava is completely omitted during "collect" step). Hence, everything 
@@ -193,12 +183,12 @@ downstream dependency), the assembly will contain Guava as well.
 
 This is a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008), somewhat explained 
 in [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391). In short, Maven Assembly plugin considers 
-"project test classpath", and then "cherry-picks runtime scoped nodes" from it, which, as we can see in this case, 
+"project test graph", and then "cherry-picks runtime scoped nodes" from it, which, as we can see in this case, 
 is wrong. You need to build different graphs for "runtime" and "test" classpath, unlike as it was true in Maven2.
-For Assembly plugin, the problem is that as Mojo, it requests "test classpath", then it reads configuration
+For Assembly plugin, the problem is that as Mojo, it requests "test graph", then it reads configuration
 (assembly descriptor, and this is the point where it learns about required scopes), and then it "filters"
-the resolved "test classpath" by runtime scopes. And it is wrong, as Guava is in test scope. Instead, the plugin
-should read the configuration first, and ask Resolver for "runtime classpath" and filter that. In turn, this problem
-does not stand with `maven-war-plugin`, as the "war" Mojo asks for "compile+runtime" scope. Of course, WAR use case
-is much simpler than Assembly use case is, as former always packages same scope, while Assembly receives a complex 
-configuration and exposes much more complex "modus operandi".
+the resolved "test graph" for runtime scopes. And it is wrong, as Guava is in test scope. Instead, the plugin
+should read the configuration first, and ask Resolver for "runtime graph" and filter that. In turn, this problem
+does not stand with `maven-war-plugin`, as the "war" Mojo asks resolution of "compile+runtime" scope. Of course, 
+WAR use case is much simpler than Assembly use case is, as former always packages same scope, while Assembly receives 
+a complex configuration and exposes much more complex "modus operandi".
