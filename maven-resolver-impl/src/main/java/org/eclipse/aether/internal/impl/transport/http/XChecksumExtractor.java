@@ -27,14 +27,14 @@ import java.util.function.Function;
 
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy;
 
 /**
  * Generic checksum extractor that goes for "X-" headers.
  */
 @Singleton
 @Named(XChecksumExtractor.NAME)
-public final class XChecksumExtractor implements ChecksumExtractor.Strategy {
+public final class XChecksumExtractor extends ChecksumExtractorStrategy {
     public static final String NAME = "xChecksum";
 
     @Override

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy;
 
 import static java.util.Objects.requireNonNull;
 
@@ -35,16 +36,16 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public final class DefaultChecksumExtractor implements ChecksumExtractor {
-    private final Map<String, Strategy> strategies;
+    private final Map<String, ChecksumExtractorStrategy> strategies;
 
     @Inject
-    public DefaultChecksumExtractor(Map<String, Strategy> strategies) {
+    public DefaultChecksumExtractor(Map<String, ChecksumExtractorStrategy> strategies) {
         this.strategies = requireNonNull(strategies, "strategies");
     }
 
     @Override
     public Map<String, String> extractChecksums(Function<String, String> headerGetter) {
-        for (Strategy strategy : strategies.values()) {
+        for (ChecksumExtractorStrategy strategy : strategies.values()) {
             Map<String, String> extracted = strategy.extractChecksums(headerGetter);
             if (extracted != null && !extracted.isEmpty()) {
                 return extracted;

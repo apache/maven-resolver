@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy;
 import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
 
 /**
@@ -34,7 +34,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
  */
 @Singleton
 @Named(Nx2ChecksumExtractor.NAME)
-public final class Nx2ChecksumExtractor implements ChecksumExtractor.Strategy {
+public final class Nx2ChecksumExtractor extends ChecksumExtractorStrategy {
     public static final String NAME = "nx2";
 
     @Override

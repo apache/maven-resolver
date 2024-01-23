@@ -48,10 +48,7 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
-import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.*;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -129,7 +126,7 @@ public class HttpTransporterTest {
     }
 
     protected static ChecksumExtractor standardChecksumExtractor() {
-        HashMap<String, ChecksumExtractor.Strategy> strategies = new HashMap<>();
+        HashMap<String, ChecksumExtractorStrategy> strategies = new HashMap<>();
         strategies.put("1", new Nx2ChecksumExtractor());
         strategies.put("2", new XChecksumExtractor());
         return new DefaultChecksumExtractor(strategies);

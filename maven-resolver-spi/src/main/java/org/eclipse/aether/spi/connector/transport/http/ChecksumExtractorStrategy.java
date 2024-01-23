@@ -22,12 +22,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Checksum extractor. Uses all known {@link ChecksumExtractorStrategy} components to extract included checksums,
- * first extractor returning non-empty value wins.
+ * Checksum extractor strategy, that aims for given type of included checksum.
  *
  * @since 2.0.0
  */
-public interface ChecksumExtractor {
+public abstract class ChecksumExtractorStrategy {
     /**
      * Extract checksums using given getter, if possible, or {@code null}.
      * <p>
@@ -37,5 +36,7 @@ public interface ChecksumExtractor {
      * @param headerGetter A function that provides access to response HTTP Headers, never {@code null}.
      * @return Map of extracted checksums, or {@code null} if none extracted.
      */
-    Map<String, String> extractChecksums(Function<String, String> headerGetter);
+    public Map<String, String> extractChecksums(Function<String, String> headerGetter) {
+        return null;
+    }
 }

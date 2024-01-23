@@ -26,20 +26,20 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.impl.Deployer;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RepositorySystemSupplierTest {
-    private final RepositorySystemSupplier subject = new RepositorySystemSupplier();
-
     @Test
     void smoke() throws Exception {
-        try (RepositorySystem system = subject.get();
+        try (RepositorySystem system = new RepositorySystemSupplier().get();
                 CloseableSession session = new SessionBuilderSupplier(system)
                         .get()
                         .withLocalRepositoryBaseDirectories(new File("target/local-repo"))
@@ -57,5 +57,30 @@ public class RepositorySystemSupplierTest {
             assertTrue(versions.size() >= 36);
             System.out.println("Available " + versions.size() + " versions: " + versions);
         }
+    }
+
+    @Test
+    void closed() {
+        RepositorySystemSupplier systemSupplier = new RepositorySystemSupplier();
+        systemSupplier.get().close(); // get an instance and immediately shut it down, this closes supplier as well
+        assertThrows(IllegalStateException.class, systemSupplier::get);
+        assertThrows(IllegalStateException.class, systemSupplier::getRepositorySystem);
+        assertThrows(IllegalStateException.class, systemSupplier::getFileProcessor);
+    }
+
+    @Test
+    void memorizing() {
+        RepositorySystemSupplier systemSupplier = new RepositorySystemSupplier();
+        FileProcessor fileProcessor = systemSupplier.getFileProcessor();
+        Deployer deployer = systemSupplier.getDeployer();
+        try (RepositorySystem repositorySystem = systemSupplier.get()) {
+            assertSame(systemSupplier.get(), repositorySystem);
+            assertSame(systemSupplier.getFileProcessor(), fileProcessor);
+            assertSame(systemSupplier.getDeployer(), deployer);
+        }
+        assertThrows(IllegalStateException.class, systemSupplier::get);
+        assertThrows(IllegalStateException.class, systemSupplier::getRepositorySystem);
+        assertThrows(IllegalStateException.class, systemSupplier::getDeployer);
+        assertThrows(IllegalStateException.class, systemSupplier::getFileProcessor);
     }
 }

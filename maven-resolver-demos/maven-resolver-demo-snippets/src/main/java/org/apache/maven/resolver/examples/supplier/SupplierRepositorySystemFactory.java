@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.transport.jdk.JdkTransporterFactory;
 import org.eclipse.aether.transport.jetty.JettyTransporterFactory;
@@ -34,10 +33,10 @@ public class SupplierRepositorySystemFactory {
     public static RepositorySystem newRepositorySystem() {
         return new RepositorySystemSupplier() {
             @Override
-            protected Map<String, TransporterFactory> getTransporterFactories(ChecksumExtractor checksumExtractor) {
-                Map<String, TransporterFactory> result = super.getTransporterFactories(checksumExtractor);
-                result.put(JdkTransporterFactory.NAME, new JdkTransporterFactory(checksumExtractor));
-                result.put(JettyTransporterFactory.NAME, new JettyTransporterFactory(checksumExtractor));
+            protected Map<String, TransporterFactory> createTransporterFactories() {
+                Map<String, TransporterFactory> result = super.createTransporterFactories();
+                result.put(JdkTransporterFactory.NAME, new JdkTransporterFactory(getChecksumExtractor()));
+                result.put(JettyTransporterFactory.NAME, new JettyTransporterFactory(getChecksumExtractor()));
                 return result;
             }
         }.get();
