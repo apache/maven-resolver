@@ -118,6 +118,10 @@ import org.eclipse.aether.version.VersionScheme;
  * <p>
  * This class is not thread safe and must be used from one thread only, while the constructed {@link RepositorySystem}
  * is thread safe.
+ * <p>
+ * Important: Given the instance of supplier memorizes the supplier {@link RepositorySystem} instance it supplies,
+ * their lifecycle is shared as well: once supplied repository system is shut-down, this instance becomes closed as
+ * well. Any subsequent {@code getXXX} method invocation attempt will fail with {@link IllegalStateException}.
  *
  * @since 1.9.15
  */
