@@ -88,7 +88,7 @@ and these are not the classpath used by Compiler or Surefire plugins, merely jus
 a showcase how Resolver works.
 
 
-## Misconception No2: "Test classpath" Is Superset of "Runtime classpath"
+## Misconception No2: "Test classpath" Is Superset Of "Runtime classpath"
 
 **Wrong**. As can be seen from above, for runtime classpath we leave out "test" scoped
 dependencies. It was true in Maven2, where test classpath really was superset of runtime, 
