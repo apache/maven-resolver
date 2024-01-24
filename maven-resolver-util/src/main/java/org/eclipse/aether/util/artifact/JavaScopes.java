@@ -22,14 +22,19 @@ package org.eclipse.aether.util.artifact;
  * The dependency scopes used for Java dependencies.
  *
  * @see org.eclipse.aether.graph.Dependency#getScope()
+ *
+ * @deprecated Definition and semantics of the scopes should be defined by consumer project. Resolver out-of-the-box
+ * supported scopes are defined in {@link Scopes} class. Resolver is oblivious about any other scopes and their
+ * semantics.
  */
+@Deprecated
 public final class JavaScopes {
 
     public static final String COMPILE = "compile";
 
     public static final String PROVIDED = "provided";
 
-    public static final String SYSTEM = "system";
+    public static final String SYSTEM = Scopes.SYSTEM;
 
     public static final String RUNTIME = "runtime";
 

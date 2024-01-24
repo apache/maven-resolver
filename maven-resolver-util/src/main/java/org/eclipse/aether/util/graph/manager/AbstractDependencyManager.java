@@ -32,7 +32,7 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
-import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.artifact.Scopes;
 
 import static java.util.Objects.requireNonNull;
 
@@ -195,7 +195,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 }
                 management.setScope(scope);
 
-                if (!JavaScopes.SYSTEM.equals(scope)
+                if (!Scopes.SYSTEM.equals(scope)
                         && dependency.getArtifact().getProperty(ArtifactProperties.LOCAL_PATH, null) != null) {
                     Map<String, String> properties =
                             new HashMap<>(dependency.getArtifact().getProperties());
@@ -204,8 +204,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 }
             }
 
-            if ((JavaScopes.SYSTEM.equals(scope))
-                    || (scope == null && JavaScopes.SYSTEM.equals(dependency.getScope()))) {
+            if ((Scopes.SYSTEM.equals(scope)) || (scope == null && Scopes.SYSTEM.equals(dependency.getScope()))) {
                 String localPath = managedLocalPaths.get(key);
                 if (localPath != null) {
                     if (management == null) {
