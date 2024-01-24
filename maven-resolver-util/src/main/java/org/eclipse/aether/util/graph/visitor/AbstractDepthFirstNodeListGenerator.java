@@ -46,7 +46,10 @@ import org.eclipse.aether.graph.DependencyVisitor;
  * is not used in Resolver and is kept only for backward compatibility reasons.
  *
  * @see AbstractDependencyNodeConsumerVisitor
+ *
+ * @deprecated See {@link AbstractDependencyNodeConsumerVisitor} that is more versatile.
  */
+@Deprecated
 abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor {
 
     private final Map<DependencyNode, Object> visitedNodes;

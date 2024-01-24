@@ -31,7 +31,10 @@ import org.eclipse.aether.graph.DependencyNode;
  *
  * @see PreorderDependencyNodeConsumerVisitor
  * @see NodeListGenerator
+ *
+ * @deprecated See {@link PreorderDependencyNodeConsumerVisitor} that is more versatile.
  */
+@Deprecated
 public final class PreorderNodeListGenerator extends AbstractDepthFirstNodeListGenerator {
 
     /**

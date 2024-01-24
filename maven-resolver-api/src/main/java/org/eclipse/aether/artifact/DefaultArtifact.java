@@ -58,7 +58,7 @@ public final class DefaultArtifact extends AbstractArtifact {
      * format.
      */
     public DefaultArtifact(String coords) {
-        this(coords, Collections.<String, String>emptyMap());
+        this(coords, null, null);
     }
 
     /**
@@ -73,6 +73,39 @@ public final class DefaultArtifact extends AbstractArtifact {
      * format.
      */
     public DefaultArtifact(String coords, Map<String, String> properties) {
+        this(coords, properties, null);
+    }
+
+    /**
+     * Creates a new artifact with the specified coordinates and type. If not specified in the artifact coordinates,
+     * the artifact's extension defaults to type extension (or "jar" if type is {@code null}) and
+     * classifier to type extension (or "" if type is {@code null}).
+     *
+     * @param coords The artifact coordinates in the format
+     *            {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}, must not be {@code null}.
+     * @param type The artifact type, may be {@code null}.
+     *
+     * @throws IllegalArgumentException If the artifact coordinates found in {@code coords} do not match the expected
+     * format.
+     */
+    public DefaultArtifact(String coords, ArtifactType type) {
+        this(coords, null, type);
+    }
+
+    /**
+     * Creates a new artifact with the specified coordinates, properties and type. If not specified in the artifact
+     * coordinates, the artifact's extension defaults to type extension (or "jar" if type is {@code null}) and
+     * classifier to type extension (or "" if type is {@code null}).
+     *
+     * @param coords The artifact coordinates in the format
+     *            {@code <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>}, must not be {@code null}.
+     * @param properties The artifact properties, may be {@code null}.
+     * @param type The artifact type, may be {@code null}.
+     *
+     * @throws IllegalArgumentException If the artifact coordinates found in {@code coords} do not match the expected
+     * format.
+     */
+    public DefaultArtifact(String coords, Map<String, String> properties, ArtifactType type) {
         Matcher m = COORDINATE_PATTERN.matcher(coords);
         if (!m.matches()) {
             throw new IllegalArgumentException("Bad artifact coordinates " + coords
@@ -80,11 +113,11 @@ public final class DefaultArtifact extends AbstractArtifact {
         }
         groupId = m.group(1);
         artifactId = m.group(2);
-        extension = get(m.group(4), "jar");
-        classifier = get(m.group(6), "");
-        version = m.group(7);
-        file = null;
-        this.properties = copyProperties(properties);
+        extension = get(m.group(4), type == null ? "jar" : type.getExtension());
+        classifier = get(m.group(6), type == null ? "" : type.getClassifier());
+        this.version = emptify(m.group(7));
+        this.file = null;
+        this.properties = merge(properties, (type != null) ? type.getProperties() : null);
     }
 
     private static String get(String value, String defaultValue) {
