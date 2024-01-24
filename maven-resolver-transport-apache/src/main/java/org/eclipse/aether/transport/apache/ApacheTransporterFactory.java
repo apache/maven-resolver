@@ -18,10 +18,12 @@
  */
 package org.eclipse.aether.transport.apache;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
@@ -37,6 +39,13 @@ public final class ApacheTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "apache";
 
     private float priority = 5.0f;
+
+    private final ChecksumExtractor checksumExtractor;
+
+    @Inject
+    public ApacheTransporterFactory(ChecksumExtractor checksumExtractor) {
+        this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
+    }
 
     @Override
     public float getPriority() {
@@ -60,6 +69,6 @@ public final class ApacheTransporterFactory implements HttpTransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        return new ApacheTransporter(repository, session);
+        return new ApacheTransporter(repository, session, checksumExtractor);
     }
 }

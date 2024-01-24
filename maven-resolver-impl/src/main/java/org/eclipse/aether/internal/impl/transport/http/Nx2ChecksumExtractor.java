@@ -1,0 +1,52 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.eclipse.aether.internal.impl.transport.http;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.function.Function;
+
+import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy;
+import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
+
+/**
+ * Sonatype Nexus2 checksum extractor.
+ */
+@Singleton
+@Named(Nx2ChecksumExtractor.NAME)
+public final class Nx2ChecksumExtractor extends ChecksumExtractorStrategy {
+    public static final String NAME = "nx2";
+
+    @Override
+    public Map<String, String> extractChecksums(Function<String, String> headerGetter) {
+        // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
+        String etag = headerGetter.apply(HttpConstants.ETAG);
+        if (etag != null) {
+            int start = etag.indexOf("SHA1{"), end = etag.indexOf("}", start + 5);
+            if (start >= 0 && end > start) {
+                return Collections.singletonMap(Sha1ChecksumAlgorithmFactory.NAME, etag.substring(start + 5, end));
+            }
+        }
+        return null;
+    }
+}

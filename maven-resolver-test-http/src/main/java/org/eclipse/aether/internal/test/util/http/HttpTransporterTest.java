@@ -36,6 +36,9 @@ import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.DefaultSessionData;
+import org.eclipse.aether.internal.impl.transport.http.DefaultChecksumExtractor;
+import org.eclipse.aether.internal.impl.transport.http.Nx2ChecksumExtractor;
+import org.eclipse.aether.internal.impl.transport.http.XChecksumExtractor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
 import org.eclipse.aether.repository.Authentication;
@@ -45,9 +48,7 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.*;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -122,6 +123,13 @@ public class HttpTransporterTest {
                 throw new UncheckedIOException(e);
             }
         }
+    }
+
+    protected static ChecksumExtractor standardChecksumExtractor() {
+        HashMap<String, ChecksumExtractorStrategy> strategies = new HashMap<>();
+        strategies.put("1", new Nx2ChecksumExtractor());
+        strategies.put("2", new XChecksumExtractor());
+        return new DefaultChecksumExtractor(strategies);
     }
 
     protected RemoteRepository newRepo(String url) {

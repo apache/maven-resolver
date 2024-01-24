@@ -37,8 +37,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -49,6 +49,7 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.transfer.NoTransporterException;
@@ -72,36 +73,17 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.*;
+
 /**
  * A transporter for HTTP/HTTPS.
  *
  * @since 2.0.0
  */
 final class JettyTransporter extends AbstractTransporter implements HttpTransporter {
-    private static final int MULTIPLE_CHOICES = 300;
-
-    private static final int NOT_FOUND = 404;
-
-    private static final int PRECONDITION_FAILED = 412;
-
     private static final long MODIFICATION_THRESHOLD = 60L * 1000L;
 
-    private static final String ACCEPT_ENCODING = "Accept-Encoding";
-
-    private static final String CONTENT_LENGTH = "Content-Length";
-
-    private static final String CONTENT_RANGE = "Content-Range";
-
-    private static final String LAST_MODIFIED = "Last-Modified";
-
-    private static final String IF_UNMODIFIED_SINCE = "If-Unmodified-Since";
-
-    private static final String RANGE = "Range";
-
-    private static final String USER_AGENT = "User-Agent";
-
-    private static final Pattern CONTENT_RANGE_PATTERN =
-            Pattern.compile("\\s*bytes\\s+([0-9]+)\\s*-\\s*([0-9]+)\\s*/.*");
+    private final ChecksumExtractor checksumExtractor;
 
     private final URI baseUri;
 
@@ -119,7 +101,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final BasicAuthentication.BasicResult basicProxyAuthenticationResult;
 
-    JettyTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
+    JettyTransporter(RepositorySystemSession session, RemoteRepository repository, ChecksumExtractor checksumExtractor)
+            throws NoTransporterException {
+        this.checksumExtractor = checksumExtractor;
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
@@ -321,57 +305,14 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 }
             }
         }
-        Map<String, String> checksums = extractXChecksums(response);
-        if (checksums != null) {
-            checksums.forEach(task::setChecksum);
-            return;
-        }
-        checksums = extractNexus2Checksums(response);
-        if (checksums != null) {
+        Map<String, String> checksums = checksumExtractor.extractChecksums(headerGetter(response));
+        if (checksums != null && !checksums.isEmpty()) {
             checksums.forEach(task::setChecksum);
         }
     }
 
-    private static Map<String, String> extractXChecksums(Response response) {
-        String value;
-        HashMap<String, String> result = new HashMap<>();
-        // Central style: x-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
-        value = response.getHeaders().get("x-checksum-sha1");
-        if (value != null) {
-            result.put("SHA-1", value);
-        }
-        // Central style: x-checksum-md5: 9ad0d8e3482767c122e85f83567b8ce6
-        value = response.getHeaders().get("x-checksum-md5");
-        if (value != null) {
-            result.put("MD5", value);
-        }
-        if (!result.isEmpty()) {
-            return result;
-        }
-        // Google style: x-goog-meta-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
-        value = response.getHeaders().get("x-goog-meta-checksum-sha1");
-        if (value != null) {
-            result.put("SHA-1", value);
-        }
-        // Central style: x-goog-meta-checksum-sha1: 9ad0d8e3482767c122e85f83567b8ce6
-        value = response.getHeaders().get("x-goog-meta-checksum-md5");
-        if (value != null) {
-            result.put("MD5", value);
-        }
-
-        return result.isEmpty() ? null : result;
-    }
-
-    private static Map<String, String> extractNexus2Checksums(Response response) {
-        // Nexus-style, ETag: "{SHA1{d40d68ba1f88d8e9b0040f175a6ff41928abd5e7}}"
-        String etag = response.getHeaders().get("ETag");
-        if (etag != null) {
-            int start = etag.indexOf("SHA1{"), end = etag.indexOf("}", start + 5);
-            if (start >= 0 && end > start) {
-                return Collections.singletonMap("SHA-1", etag.substring(start + 5, end));
-            }
-        }
-        return null;
+    private static Function<String, String> headerGetter(Response response) {
+        return s -> response.getHeaders().get(s);
     }
 
     @Override

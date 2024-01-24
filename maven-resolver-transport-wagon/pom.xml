@@ -81,11 +81,7 @@
       <artifactId>org.eclipse.sisu.plexus</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <scope>test</scope>
-    </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>

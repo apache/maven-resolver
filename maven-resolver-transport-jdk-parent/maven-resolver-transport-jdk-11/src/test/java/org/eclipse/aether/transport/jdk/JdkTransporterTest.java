@@ -84,14 +84,14 @@ class JdkTransporterTest extends HttpTransporterTest {
     protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
 
     public JdkTransporterTest() {
-        super(JdkTransporterFactory::new);
+        super(() -> new JdkTransporterFactory(standardChecksumExtractor()));
     }
 
     @Test
     void enhanceConnectExceptionMessages() {
         String uri = "https://localhost:12345/";
         RemoteRepository remoteRepository = new RemoteRepository.Builder("central", "default", uri).build();
-        JdkTransporterFactory factory = new JdkTransporterFactory();
+        JdkTransporterFactory factory = new JdkTransporterFactory(s -> null);
 
         try (Transporter transporter = factory.newInstance(TestUtils.newSession(), remoteRepository)) {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));

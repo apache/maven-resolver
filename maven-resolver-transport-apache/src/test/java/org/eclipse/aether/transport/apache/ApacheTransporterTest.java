@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApacheTransporterTest extends HttpTransporterTest {
 
     public ApacheTransporterTest() {
-        super(ApacheTransporterFactory::new);
+        super(() -> new ApacheTransporterFactory(standardChecksumExtractor()));
     }
 
     @Test

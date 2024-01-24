@@ -33,10 +33,10 @@ public class SupplierRepositorySystemFactory {
     public static RepositorySystem newRepositorySystem() {
         return new RepositorySystemSupplier() {
             @Override
-            protected Map<String, TransporterFactory> getTransporterFactories() {
-                Map<String, TransporterFactory> result = super.getTransporterFactories();
-                result.put(JdkTransporterFactory.NAME, new JdkTransporterFactory());
-                result.put(JettyTransporterFactory.NAME, new JettyTransporterFactory());
+            protected Map<String, TransporterFactory> createTransporterFactories() {
+                Map<String, TransporterFactory> result = super.createTransporterFactories();
+                result.put(JdkTransporterFactory.NAME, new JdkTransporterFactory(getChecksumExtractor()));
+                result.put(JettyTransporterFactory.NAME, new JettyTransporterFactory(getChecksumExtractor()));
                 return result;
             }
         }.get();
