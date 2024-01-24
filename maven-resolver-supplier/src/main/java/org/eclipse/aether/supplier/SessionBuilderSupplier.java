@@ -56,7 +56,13 @@ import static java.util.Objects.requireNonNull;
  * Extend this class and override methods to customize, if needed.
  *
  * @since 2.0.0
+ *
+ * @deprecated (To be removed as it was introduced in 2.0.0-alpha-2!) This class is wrong, as it uses Resolver 1.x
+ * bits that do interpret dependency scopes. The proper session supplier should be provided by consumer project
+ * (Maven) that also defines the dependency scopes and their meaning and semantics, as session need to be equipped
+ * with these bits. Session is very much dependent on the consumer project.
  */
+@Deprecated
 public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected final RepositorySystem repositorySystem;
 
