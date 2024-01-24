@@ -112,7 +112,12 @@ public final class DependencyFilterUtils {
      * @param classpathTypes The classpath types, may be {@code null} or empty to match no dependency.
      * @return The new filter, never {@code null}.
      * @see JavaScopes
+     *
+     * @deprecated Resolver is oblivious about "scopes", it is consumer project which needs to lay these down and
+     * also assign proper semantics. Moreover, Resolver is oblivious about notions of "classpath", "modulepath", and
+     * any other similar uses. These should be handled by consumer project.
      */
+    @Deprecated
     public static DependencyFilter classpathFilter(String... classpathTypes) {
         return classpathFilter((classpathTypes != null) ? Arrays.asList(classpathTypes) : null);
     }
@@ -124,7 +129,12 @@ public final class DependencyFilterUtils {
      * @param classpathTypes The classpath types, may be {@code null} or empty to match no dependency.
      * @return The new filter, never {@code null}.
      * @see JavaScopes
+     *
+     * @deprecated Resolver is oblivious about "scopes", it is consumer project which needs to lay these down and
+     * also assign proper semantics. Moreover, Resolver is oblivious about notions of "classpath", "modulepath", and
+     * any other similar uses. These should be handled by consumer project.
      */
+    @Deprecated
     public static DependencyFilter classpathFilter(Collection<String> classpathTypes) {
         Collection<String> types = new HashSet<>();
 

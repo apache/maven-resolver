@@ -29,11 +29,16 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A dependency graph transformer that refines the request context for nodes that belong to the "project" context by
- * appending the classpath type to which the node belongs. For instance, a compile-time project dependency will be
+ * appending the buildpath type to which the node belongs. For instance, a compile-time project dependency will be
  * assigned the request context "project/compile".
  *
  * @see DependencyNode#getRequestContext()
+ *
+ * @deprecated This class belongs to consumer project. Resolver have no notion of scopes other than those defined
+ * in {@link org.eclipse.aether.util.artifact.Scopes} class, moreover it has no knowledge about scope transformation
+ * of dependencies to build path scopes.
  */
+@Deprecated
 public final class JavaDependencyContextRefiner implements DependencyGraphTransformer {
 
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
@@ -43,7 +48,7 @@ public final class JavaDependencyContextRefiner implements DependencyGraphTransf
         String ctx = node.getRequestContext();
 
         if ("project".equals(ctx)) {
-            String scope = getClasspathScope(node);
+            String scope = getBuildpathScope(node);
             if (scope != null) {
                 ctx += '/' + scope;
                 node.setRequestContext(ctx);
@@ -57,7 +62,7 @@ public final class JavaDependencyContextRefiner implements DependencyGraphTransf
         return node;
     }
 
-    private String getClasspathScope(DependencyNode node) {
+    private String getBuildpathScope(DependencyNode node) {
         Dependency dependency = node.getDependency();
         if (dependency == null) {
             return null;

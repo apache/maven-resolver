@@ -25,7 +25,12 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeDeriver;
 
 /**
  * A scope deriver for use with {@link ConflictResolver} that supports the scopes from {@link JavaScopes}.
+ *
+ * @deprecated This class belongs to consumer project. Resolver have no notion of scopes other than those defined
+ * in {@link org.eclipse.aether.util.artifact.Scopes} class, moreover it has no knowledge about scope transformation
+ * of dependencies to build path scopes.
  */
+@Deprecated
 public final class JavaScopeDeriver extends ScopeDeriver {
 
     /**
