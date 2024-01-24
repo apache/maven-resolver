@@ -82,6 +82,10 @@ directory. It will be referred to in this document with `${filterBasedir}` place
 To explicitly set filter basedir, use following setting: `-Daether.remoteRepositoryFilter.${filterName}.basedir=somePath`, 
 where "somePath" can be relative path, then is resolved from local repository root, or absolute path, then is used as is.
 
+Since Maven 3.9.x you can use expression like `${session.rootDirectory}/.mvn/rrf/` to store filter data along with 
+sources as `session.rootDirectory` will become an absolute path pointing to the root directory of your project (where
+usually the `.mvn` directory is).
+
 ### The Prefixes Filter
 
 The "prefixes" named filter relies on a file containing a list of "repository prefixes" available from a given repository.
