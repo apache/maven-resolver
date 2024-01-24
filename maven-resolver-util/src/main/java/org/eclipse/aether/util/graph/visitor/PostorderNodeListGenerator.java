@@ -31,7 +31,10 @@ import org.eclipse.aether.graph.DependencyNode;
  *
  * @see PostorderDependencyNodeConsumerVisitor
  * @see NodeListGenerator
+ *
+ * @deprecated See {@link PostorderDependencyNodeConsumerVisitor} that is more versatile.
  */
+@Deprecated
 public final class PostorderNodeListGenerator extends AbstractDepthFirstNodeListGenerator {
 
     private final Stack<Boolean> visits;
