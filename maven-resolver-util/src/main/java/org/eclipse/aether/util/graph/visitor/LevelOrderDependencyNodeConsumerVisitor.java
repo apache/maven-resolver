@@ -31,6 +31,8 @@ import org.eclipse.aether.graph.DependencyNode;
  * free of duplicates.
  *
  * @since 2.0.0
+ *
+ * @see NodeListGenerator
  */
 public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDependencyNodeConsumerVisitor {
 

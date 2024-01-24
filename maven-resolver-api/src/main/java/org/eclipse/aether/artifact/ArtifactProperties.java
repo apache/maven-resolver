@@ -54,6 +54,10 @@ public final class ArtifactProperties {
     /**
      * A boolean flag indicating whether the artifact is meant to be used for the compile/runtime/test build path of a
      * consumer project.
+     * <p>
+     * Note: This property is about "build path", whatever it means in the scope of the consumer project. It is NOT
+     * about Java classpath or anything alike. How artifact is being consumed depends heavily on the consumer project.
+     * Resolver is and will remain agnostic of consumer project use cases.
      */
     public static final String CONSTITUTES_BUILD_PATH = "constitutesBuildPath";
 

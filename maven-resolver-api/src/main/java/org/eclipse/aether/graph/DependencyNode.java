@@ -102,7 +102,7 @@ public interface DependencyNode {
 
     /**
      * Gets the artifact associated with this node. If this node is associated with a dependency, this is equivalent to
-     * {@code getDependency().getArtifact()}. Otherwise the artifact merely provides a label for this node in which case
+     * {@code getDependency().getArtifact()}. Otherwise, the artifact merely provides a label for this node in which case
      * the artifact must not be subjected to dependency collection/resolution.
      *
      * @return The associated artifact or {@code null} if none.

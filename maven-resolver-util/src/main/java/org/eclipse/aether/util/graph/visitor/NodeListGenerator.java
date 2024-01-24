@@ -35,6 +35,10 @@ import static java.util.stream.Collectors.toList;
  * offers several transformations, that are handy.
  *
  * @since 2.0.0
+ *
+ * @see PreorderDependencyNodeConsumerVisitor
+ * @see PostorderDependencyNodeConsumerVisitor
+ * @see LevelOrderDependencyNodeConsumerVisitor
  */
 public final class NodeListGenerator implements Consumer<DependencyNode> {
 
