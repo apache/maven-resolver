@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * assigned the request context "project/compile".
  *
  * @see DependencyNode#getRequestContext()
- * 
+ *
  * @deprecated This class belongs to consumer project. Resolver have no notion of scopes other than those defined
  * in {@link org.eclipse.aether.util.artifact.Scopes} class, moreover it has no knowledge about scope transformation
  * of dependencies to build path scopes.
