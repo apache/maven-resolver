@@ -204,7 +204,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 }
             }
 
-            if ((DependencyScopes.SYSTEM.equals(scope)) || (scope == null && DependencyScopes.SYSTEM.equals(dependency.getScope()))) {
+            if ((DependencyScopes.SYSTEM.equals(scope))
+                    || (scope == null && DependencyScopes.SYSTEM.equals(dependency.getScope()))) {
                 String localPath = managedLocalPaths.get(key);
                 if (localPath != null) {
                     if (management == null) {
