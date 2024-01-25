@@ -100,7 +100,7 @@
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
-    <jettyVersion>10.0.18</jettyVersion>
+    <jettyVersion>10.0.19</jettyVersion>
     <!-- used by supplier and demo only -->
     <mavenVersion>4.0.0-alpha-12</mavenVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
