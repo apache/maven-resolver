@@ -29,7 +29,7 @@ package org.eclipse.aether.util.artifact;
  * @see org.eclipse.aether.graph.Dependency#getScope()
  * @since 2.0.0
  */
-public final class Scopes {
+public final class DependencyScopes {
 
     /**
      * Special scope that tells resolver that dependency is not to be found in any regular repository, so it should not
@@ -42,7 +42,7 @@ public final class Scopes {
      */
     public static final String SYSTEM = "system";
 
-    private Scopes() {
+    private DependencyScopes() {
         // hide constructor
     }
 }
