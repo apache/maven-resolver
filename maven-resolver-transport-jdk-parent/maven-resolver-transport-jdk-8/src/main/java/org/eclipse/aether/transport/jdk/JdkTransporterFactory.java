@@ -18,10 +18,12 @@
  */
 package org.eclipse.aether.transport.jdk;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
@@ -42,6 +44,11 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporterFactory.class);
 
     private float priority = 10.0f;
+
+    @Inject
+    public JdkTransporterFactory(ChecksumExtractor checksumExtractor) {
+        // this is to equalize all Java version constructors to be same, so Supplier could work across all versions
+    }
 
     @Override
     public float getPriority() {
