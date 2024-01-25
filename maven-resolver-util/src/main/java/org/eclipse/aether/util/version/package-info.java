@@ -25,8 +25,9 @@
  * <p>
  * On the other hand, the {@link org.eclipse.aether.util.version.UnionVersionRange} is universal implementation of
  * "unions" of various {@link org.eclipse.aether.version.VersionRange} instances.
- *
- * <h1>Generic Version Spec</h1>
+ * <p>
+ * Below is the <em>Generic Version Spec</em> described:
+ * <p>
  * Version string is parsed into version according to these rules below:
  * <ul>
  *     <li>The version string is parsed into segments, from left to right.</li>
