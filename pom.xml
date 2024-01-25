@@ -98,7 +98,7 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.9.0.M2</sisuVersion>
     <guiceVersion>6.0.0</guiceVersion>
-    <slf4jVersion>1.7.36</slf4jVersion>
+    <slf4jVersion>2.0.11</slf4jVersion>
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.19</jettyVersion>
     <!-- used by supplier and demo only -->
@@ -222,7 +222,7 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-xml</artifactId>
-        <version>4.0.2</version>
+        <version>4.0.3</version>
       </dependency>
 
       <dependency>
@@ -252,11 +252,6 @@
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
         <version>${guiceVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.plexus</groupId>
-        <artifactId>plexus-testing</artifactId>
-        <version>1.2.0</version>
       </dependency>
 
       <dependency>
