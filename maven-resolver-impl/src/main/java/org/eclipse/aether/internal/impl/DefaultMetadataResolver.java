@@ -18,10 +18,6 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;

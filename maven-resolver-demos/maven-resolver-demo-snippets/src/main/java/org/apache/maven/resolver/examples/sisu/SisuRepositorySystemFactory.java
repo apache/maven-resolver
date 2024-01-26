@@ -18,12 +18,11 @@
  */
 package org.apache.maven.resolver.examples.sisu;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-
 import com.google.inject.Guice;
 import com.google.inject.Module;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
 import org.eclipse.aether.RepositorySystem;

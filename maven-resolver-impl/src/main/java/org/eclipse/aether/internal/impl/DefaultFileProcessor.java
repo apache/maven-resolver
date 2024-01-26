@@ -18,15 +18,14 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.spi.io.FileProcessor;
 import org.eclipse.aether.util.FileUtils;
 

@@ -18,11 +18,10 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.util.Calendar;
 
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.repository.RepositoryPolicy;

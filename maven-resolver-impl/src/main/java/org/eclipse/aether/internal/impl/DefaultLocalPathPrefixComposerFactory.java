@@ -18,9 +18,8 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.RepositorySystemSession;
 
 /**
