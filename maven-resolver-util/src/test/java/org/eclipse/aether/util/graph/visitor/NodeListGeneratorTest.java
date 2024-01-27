@@ -18,9 +18,16 @@
  */
 package org.eclipse.aether.util.graph.visitor;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyVisitor;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.jupiter.api.Test;
 
@@ -106,5 +113,104 @@ public class NodeListGeneratorTest {
         root.accept(visitor);
 
         assertSequence(nodeListGenerator.getNodes(), "a", "b", "d", "c", "e");
+    }
+
+    @Test
+    void testEmptyResolvedClassPath() throws Exception {
+        DependencyNode root = parse("simple.txt");
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        LevelOrderDependencyNodeConsumerVisitor visitor =
+                new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
+        root.accept(visitor);
+
+        assertEquals(5, nodeListGenerator.getNodes().size());
+        assertEquals(0, nodeListGenerator.getDependencies(false).size());
+        assertEquals(5, nodeListGenerator.getDependencies(true).size());
+        assertEquals(0, nodeListGenerator.getArtifacts(false).size());
+        assertEquals(5, nodeListGenerator.getArtifacts(true).size());
+        assertEquals(0, nodeListGenerator.getFiles().size());
+        assertEquals("", nodeListGenerator.getClassPath());
+    }
+
+    @Test
+    void testFullyResolvedClassPath() throws Exception {
+        DependencyNode root = parse("simple.txt");
+        DependencyVisitor fileSetter = new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                node.setArtifact(node.getArtifact()
+                        .setFile(new File(node.getDependency().getArtifact().getArtifactId())));
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        };
+        root.accept(fileSetter);
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        LevelOrderDependencyNodeConsumerVisitor visitor =
+                new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
+        root.accept(visitor);
+
+        Set<String> fileNames = nodeListGenerator.getNodes().stream().map(  )files.stream().map(File::getName).collect(Collectors.toSet());
+        String classPath = nodeListGenerator.getClassPath();
+        String[] splitClassPath = classPath.split(File.pathSeparator);
+        Set<String> classPathNames =
+                Arrays.stream(splitClassPath).map(File::new).map(File::getName).collect(Collectors.toSet());
+
+        assertEquals(5, nodeListGenerator.getNodes().size());
+        assertEquals(5, nodeListGenerator.getDependencies(false).size());
+        assertEquals(5, nodeListGenerator.getDependencies(true).size());
+        assertEquals(5, nodeListGenerator.getArtifacts(false).size());
+        assertEquals(5, nodeListGenerator.getArtifacts(true).size());
+        assertEquals(5, nodeListGenerator.getFiles().size());
+        assertEquals(fileNames, classPathNames);
+    }
+
+    @Test
+    void testIncompletelyResolvedEmptyClassPath() throws Exception {
+        DependencyNode root = parse("simple.txt");
+        AtomicBoolean alternator = new AtomicBoolean(false);
+        HashSet<String> fileNames = new HashSet<>();
+        DependencyVisitor fileSetter = new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                alternator.set(!alternator.get());
+                if (alternator.get()) {
+                    String fileName = node.getDependency().getArtifact().getArtifactId();
+                    fileNames.add(fileName);
+                    node.setArtifact(node.getArtifact().setFile(new File(fileName)));
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        };
+        root.accept(fileSetter);
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        LevelOrderDependencyNodeConsumerVisitor visitor =
+                new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
+        root.accept(visitor);
+
+        String classPath = nodeListGenerator.getClassPath();
+        String[] splitClassPath = classPath.split(File.pathSeparator);
+        Set<String> classPathNames =
+                Arrays.stream(splitClassPath).map(File::new).map(File::getName).collect(Collectors.toSet());
+
+        assertEquals(5, nodeListGenerator.getNodes().size());
+        assertEquals(3, nodeListGenerator.getDependencies(false).size());
+        assertEquals(5, nodeListGenerator.getDependencies(true).size());
+        assertEquals(3, nodeListGenerator.getArtifacts(false).size());
+        assertEquals(5, nodeListGenerator.getArtifacts(true).size());
+        assertEquals(3, nodeListGenerator.getFiles().size());
+        assertEquals(fileNames, classPathNames);
     }
 }

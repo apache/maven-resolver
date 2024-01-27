@@ -20,9 +20,10 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
@@ -116,51 +117,27 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     }
 
     static List<Dependency> getDependencies(List<DependencyNode> nodes, boolean includeUnresolved) {
-        List<Dependency> dependencies = new ArrayList<>(nodes.size());
-        for (DependencyNode node : getNodesWithDependencies(nodes)) {
-            Dependency dependency = node.getDependency();
-            if (includeUnresolved || dependency.getArtifact().getFile() != null) {
-                dependencies.add(dependency);
-            }
-        }
-        return dependencies;
+        return getNodesWithDependencies(nodes).stream()
+                .filter(d -> includeUnresolved || d.getArtifact().getFile() != null)
+                .map(DependencyNode::getDependency)
+                .collect(toList());
     }
 
     static List<Artifact> getArtifacts(List<DependencyNode> nodes, boolean includeUnresolved) {
-        List<Artifact> artifacts = new ArrayList<>(nodes.size());
-        for (DependencyNode node : getNodesWithDependencies(nodes)) {
-            Artifact artifact = node.getDependency().getArtifact();
-            if (includeUnresolved || artifact.getFile() != null) {
-                artifacts.add(artifact);
-            }
-        }
-
-        return artifacts;
+        return getNodesWithDependencies(nodes).stream()
+                .map(DependencyNode::getArtifact)
+                .filter(artifact -> includeUnresolved || artifact.getFile() != null)
+                .collect(toList());
     }
 
     static List<File> getFiles(List<DependencyNode> nodes) {
-        List<File> files = new ArrayList<>(nodes.size());
-        for (DependencyNode node : getNodesWithDependencies(nodes)) {
-            File file = node.getDependency().getArtifact().getFile();
-            if (file != null) {
-                files.add(file);
-            }
-        }
-        return files;
+        return getNodesWithDependencies(nodes).stream()
+                .map(d -> d.getDependency().getArtifact().getFile())
+                .filter(Objects::nonNull)
+                .collect(toList());
     }
 
     static String getClassPath(List<DependencyNode> nodes) {
-        StringBuilder buffer = new StringBuilder(1024);
-        for (Iterator<DependencyNode> it = getNodesWithDependencies(nodes).iterator(); it.hasNext(); ) {
-            DependencyNode node = it.next();
-            Artifact artifact = node.getDependency().getArtifact();
-            if (artifact.getFile() != null) {
-                buffer.append(artifact.getFile().getAbsolutePath());
-                if (it.hasNext()) {
-                    buffer.append(File.pathSeparatorChar);
-                }
-            }
-        }
-        return buffer.toString();
+        return getFiles(nodes).stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
     }
 }
