@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -156,7 +157,11 @@ public class NodeListGeneratorTest {
                 new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator);
         root.accept(visitor);
 
-        Set<String> fileNames = nodeListGenerator.getNodes().stream().map(  )files.stream().map(File::getName).collect(Collectors.toSet());
+        Set<String> fileNames = nodeListGenerator.getNodes().stream()
+                .map(n -> n.getArtifact().getFile())
+                .filter(Objects::nonNull)
+                .map(f -> f.getName())
+                .collect(Collectors.toSet());
         String classPath = nodeListGenerator.getClassPath();
         String[] splitClassPath = classPath.split(File.pathSeparator);
         Set<String> classPathNames =
