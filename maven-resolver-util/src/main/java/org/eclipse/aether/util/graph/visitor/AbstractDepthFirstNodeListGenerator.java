@@ -135,10 +135,10 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
             if (node.getDependency() != null) {
                 Artifact artifact = node.getDependency().getArtifact();
                 if (artifact.getFile() != null) {
-                    buffer.append(artifact.getFile().getAbsolutePath());
-                    if (it.hasNext()) {
+                    if (buffer.length() != 0) {
                         buffer.append(File.pathSeparatorChar);
                     }
+                    buffer.append(artifact.getFile().getAbsolutePath());
                 }
             }
         }
