@@ -20,7 +20,6 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -151,14 +150,13 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
 
     static String getClassPath(List<DependencyNode> nodes) {
         StringBuilder buffer = new StringBuilder(1024);
-        for (Iterator<DependencyNode> it = getNodesWithDependencies(nodes).iterator(); it.hasNext(); ) {
-            DependencyNode node = it.next();
+        for (DependencyNode node : getNodesWithDependencies(nodes)) {
             Artifact artifact = node.getDependency().getArtifact();
             if (artifact.getFile() != null) {
-                buffer.append(artifact.getFile().getAbsolutePath());
-                if (it.hasNext()) {
+                if (buffer.length() != 0) {
                     buffer.append(File.pathSeparatorChar);
                 }
+                buffer.append(artifact.getFile().getAbsolutePath());
             }
         }
         return buffer.toString();
