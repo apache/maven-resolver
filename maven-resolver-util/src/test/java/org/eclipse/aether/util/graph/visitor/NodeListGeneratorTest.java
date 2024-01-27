@@ -160,7 +160,7 @@ public class NodeListGeneratorTest {
         Set<String> fileNames = nodeListGenerator.getNodes().stream()
                 .map(n -> n.getArtifact().getFile())
                 .filter(Objects::nonNull)
-                .map(f -> f.getName())
+                .map(File::getName)
                 .collect(Collectors.toSet());
         String classPath = nodeListGenerator.getClassPath();
         String[] splitClassPath = classPath.split(File.pathSeparator);

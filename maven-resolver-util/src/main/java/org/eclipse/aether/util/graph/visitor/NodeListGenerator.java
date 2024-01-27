@@ -23,12 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -125,7 +125,7 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
 
     static List<Artifact> getArtifacts(List<DependencyNode> nodes, boolean includeUnresolved) {
         return getNodesWithDependencies(nodes).stream()
-                .map(DependencyNode::getArtifact)
+                .map(d -> d.getDependency().getArtifact())
                 .filter(artifact -> includeUnresolved || artifact.getFile() != null)
                 .collect(toList());
     }
@@ -138,6 +138,6 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     }
 
     static String getClassPath(List<DependencyNode> nodes) {
-        return getFiles(nodes).stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
+        return getFiles(nodes).stream().map(File::getAbsolutePath).collect(joining(File.pathSeparator));
     }
 }
