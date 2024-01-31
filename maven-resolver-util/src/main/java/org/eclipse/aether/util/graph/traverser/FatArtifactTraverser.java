@@ -31,6 +31,7 @@ import static java.util.Objects.requireNonNull;
  * {@code true}.
  *
  * @see org.eclipse.aether.artifact.Artifact#getProperties()
+ * @deprecated the DependencyTraverser should be provided by the resolver consumer
  */
 @Deprecated
 public final class FatArtifactTraverser implements DependencyTraverser {
