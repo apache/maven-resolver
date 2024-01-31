@@ -49,6 +49,7 @@ public final class ArtifactProperties {
      * A boolean flag indicating whether the artifact presents some kind of bundle that physically includes its
      * dependencies, e.g. a fat WAR.
      */
+    @Deprecated
     public static final String INCLUDES_DEPENDENCIES = "includesDependencies";
 
     /**
@@ -59,6 +60,7 @@ public final class ArtifactProperties {
      * about Java classpath or anything alike. How artifact is being consumed depends heavily on the consumer project.
      * Resolver is and will remain agnostic of consumer project use cases.
      */
+    @Deprecated
     public static final String CONSTITUTES_BUILD_PATH = "constitutesBuildPath";
 
     /**

@@ -32,6 +32,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @see org.eclipse.aether.artifact.Artifact#getProperties()
  */
+@Deprecated
 public final class FatArtifactTraverser implements DependencyTraverser {
 
     /**
