@@ -27,7 +27,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A simple artifact type.
  *
- * @deprecated the artifact types should be defined by the resolver consumer
+ * @deprecated since 2.0, the artifact types should be defined by the resolver consumer
  */
 @Deprecated
 public final class DefaultArtifactType implements ArtifactType {

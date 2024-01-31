@@ -48,6 +48,10 @@ public final class ArtifactProperties {
     /**
      * A boolean flag indicating whether the artifact presents some kind of bundle that physically includes its
      * dependencies, e.g. a fat WAR.
+     *
+     * @deprecated since 2.0, the semantic carried by this property should be defined in a  custom
+     *             {@link org.eclipse.aether.collection.DependencyTraverser} implementation provided by the resolver
+     *             consumer
      */
     @Deprecated
     public static final String INCLUDES_DEPENDENCIES = "includesDependencies";
@@ -59,6 +63,9 @@ public final class ArtifactProperties {
      * Note: This property is about "build path", whatever it means in the scope of the consumer project. It is NOT
      * about Java classpath or anything alike. How artifact is being consumed depends heavily on the consumer project.
      * Resolver is and will remain agnostic of consumer project use cases.
+     *
+     * @deprecated since 2.0, this property should be defined by the resolver consumer along with the {@link ArtifactType}
+     *             implementation
      */
     @Deprecated
     public static final String CONSTITUTES_BUILD_PATH = "constitutesBuildPath";
