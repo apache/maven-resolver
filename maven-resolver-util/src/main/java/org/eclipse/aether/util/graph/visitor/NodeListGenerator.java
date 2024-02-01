@@ -118,8 +118,8 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
 
     static List<Dependency> getDependencies(List<DependencyNode> nodes, boolean includeUnresolved) {
         return getNodesWithDependencies(nodes).stream()
-                .filter(d -> includeUnresolved || d.getArtifact().getFile() != null)
                 .map(DependencyNode::getDependency)
+                .filter(d -> includeUnresolved || d.getArtifact().getFile() != null)
                 .collect(toList());
     }
 
