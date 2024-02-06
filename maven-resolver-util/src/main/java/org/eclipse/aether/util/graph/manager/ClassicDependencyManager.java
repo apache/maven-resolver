@@ -20,11 +20,11 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
+import org.eclipse.aether.util.graph.SystemScopePredicate;
 
 /**
  * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions.
@@ -42,7 +42,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
         this(SYSTEM_PREDICATE);
     }
 
-    public ClassicDependencyManager(Predicate<String> systemScopePredicate) {
+    public ClassicDependencyManager(SystemScopePredicate systemScopePredicate) {
         this(false, systemScopePredicate);
     }
 
@@ -55,7 +55,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
      *
      * @since 2.0.0
      */
-    public ClassicDependencyManager(boolean transitive, Predicate<String> systemScopePredicate) {
+    public ClassicDependencyManager(boolean transitive, SystemScopePredicate systemScopePredicate) {
         super(transitive ? Integer.MAX_VALUE : 2, 2, systemScopePredicate);
     }
 
@@ -69,7 +69,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            Predicate<String> systemScopePredicate) {
+            SystemScopePredicate systemScopePredicate) {
         super(
                 depth,
                 deriveUntil,

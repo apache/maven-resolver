@@ -379,7 +379,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         Dependency dependency = newDep("managed:aid:ext:ver");
         CollectRequest request = new CollectRequest(dependency, singletonList(repository));
 
-        session.setDependencyManager(new ClassicDependencyManager(s -> Objects.equals(s, "system")));
+        session.setDependencyManager(new ClassicDependencyManager("system"::equals));
 
         CollectResult result = collector.collectDependencies(session, request);
 
@@ -454,7 +454,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     void testDependencyManagement_TransitiveDependencyManager() throws DependencyCollectionException, IOException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
-        session.setDependencyManager(new TransitiveDependencyManager(s -> Objects.equals(s, "system")));
+        session.setDependencyManager(new TransitiveDependencyManager("system"::equals));
         final Dependency root = newDep("gid:root:ext:ver", "compile");
         CollectRequest request = new CollectRequest(root, singletonList(repository));
         request.addManagedDependency(newDep("gid:root:ext:must-retain-core-management"));
@@ -471,7 +471,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         rootArtifactRequest.addManagedDependency(newDep("gid:root:ext:must-retain-core-management"));
         rootArtifactRequest.addManagedDependency(newDep("gid:direct:ext:must-retain-core-management"));
         rootArtifactRequest.addManagedDependency(newDep("gid:transitive-1:ext:managed-by-root"));
-        session.setDependencyManager(new TransitiveDependencyManager(s -> Objects.equals(s, "system")));
+        session.setDependencyManager(new TransitiveDependencyManager("system"::equals));
         result = collector.collectDependencies(session, rootArtifactRequest);
         assertEqualSubtree(expectedTree, toDependencyResult(result.getRoot(), "compile", null));
     }
@@ -480,7 +480,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     void testDependencyManagement_DefaultDependencyManager() throws DependencyCollectionException, IOException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
-        session.setDependencyManager(new DefaultDependencyManager(s -> Objects.equals(s, "system")));
+        session.setDependencyManager(new DefaultDependencyManager("system"::equals));
         final Dependency root = newDep("gid:root:ext:ver", "compile");
         CollectRequest request = new CollectRequest(root, singletonList(repository));
         request.addManagedDependency(newDep("gid:root:ext:must-not-manage-root"));
@@ -498,7 +498,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         rootArtifactRequest.addManagedDependency(newDep("gid:root:ext:must-not-manage-root"));
         rootArtifactRequest.addManagedDependency(newDep("gid:direct:ext:managed-by-dominant-request"));
         rootArtifactRequest.addManagedDependency(newDep("gid:transitive-1:ext:managed-by-root"));
-        session.setDependencyManager(new DefaultDependencyManager(s -> Objects.equals(s, "system")));
+        session.setDependencyManager(new DefaultDependencyManager("system"::equals));
         result = collector.collectDependencies(session, rootArtifactRequest);
         assertEqualSubtree(expectedTree, toDependencyResult(result.getRoot(), "compile", null));
     }

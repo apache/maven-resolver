@@ -19,7 +19,6 @@
 package org.eclipse.aether.util.graph.manager;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
@@ -28,6 +27,7 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
+import org.eclipse.aether.util.graph.SystemScopePredicate;
 
 import static java.util.Objects.requireNonNull;
 
@@ -43,7 +43,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * @deprecated To be removed when deprecated constructors are removed.
      */
     @Deprecated
-    protected static final Predicate<String> SYSTEM_PREDICATE = s -> Objects.equals(s, "system");
+    protected static final SystemScopePredicate SYSTEM_PREDICATE = "system"::equals;
 
     protected final int depth;
 
@@ -61,11 +61,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected final Map<Object, Collection<Exclusion>> managedExclusions;
 
-    protected final Predicate<String> systemScopePredicate;
+    protected final SystemScopePredicate systemScopePredicate;
 
     private final int hashCode;
 
-    protected AbstractDependencyManager(int deriveUntil, int applyFrom, Predicate<String> systemScopePredicate) {
+    protected AbstractDependencyManager(int deriveUntil, int applyFrom, SystemScopePredicate systemScopePredicate) {
         this(
                 0,
                 deriveUntil,
@@ -88,7 +88,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            Predicate<String> systemScopePredicate) {
+            SystemScopePredicate systemScopePredicate) {
         this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;

@@ -20,10 +20,10 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
+import org.eclipse.aether.util.graph.SystemScopePredicate;
 
 /**
  * A dependency manager managing dependencies on all levels supporting transitive dependency management.
@@ -48,7 +48,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
         this(SYSTEM_PREDICATE);
     }
 
-    public DefaultDependencyManager(Predicate<String> systemScopePredicate) {
+    public DefaultDependencyManager(SystemScopePredicate systemScopePredicate) {
         super(Integer.MAX_VALUE, 0, systemScopePredicate);
     }
 
@@ -62,7 +62,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            Predicate<String> systemScopePredicate) {
+            SystemScopePredicate systemScopePredicate) {
         super(
                 depth,
                 deriveUntil,
