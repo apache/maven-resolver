@@ -18,10 +18,7 @@
  */
 package org.eclipse.aether.internal.impl.collect.bf;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -72,7 +69,7 @@ public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDel
     void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
-        session.setDependencyManager(new TransitiveDependencyManager());
+        session.setDependencyManager(new TransitiveDependencyManager(s -> Objects.equals(s, "system")));
 
         ExclusionDependencySelector exclSel1 = new ExclusionDependencySelector();
         session.setDependencySelector(exclSel1);

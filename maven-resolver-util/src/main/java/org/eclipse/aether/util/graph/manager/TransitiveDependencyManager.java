@@ -20,6 +20,8 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
@@ -36,9 +38,16 @@ import org.eclipse.aether.graph.Exclusion;
 public final class TransitiveDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
+     *
+     * @deprecated Use constructor that provides consumer application specific predicate.
      */
+    @Deprecated
     public TransitiveDependencyManager() {
-        super(Integer.MAX_VALUE, 2);
+        this(s -> Objects.equals(s, "system"));
+    }
+
+    public TransitiveDependencyManager(Predicate<String> systemScopePredicate) {
+        super(Integer.MAX_VALUE, 2, systemScopePredicate);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -50,7 +59,8 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
             Map<Object, String> managedScopes,
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions) {
+            Map<Object, Collection<Exclusion>> managedExclusions,
+            Predicate<String> systemScopePredicate) {
         super(
                 depth,
                 deriveUntil,
@@ -59,7 +69,8 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedScopes,
                 managedOptionals,
                 managedLocalPaths,
-                managedExclusions);
+                managedExclusions,
+                systemScopePredicate);
     }
 
     @Override
@@ -77,6 +88,7 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedScopes,
                 managedOptionals,
                 managedLocalPaths,
-                managedExclusions);
+                managedExclusions,
+                systemScopePredicate);
     }
 }

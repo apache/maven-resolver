@@ -18,12 +18,8 @@
  */
 package org.eclipse.aether.util.graph.manager;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Predicate;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
@@ -32,7 +28,6 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
-import org.eclipse.aether.util.artifact.DependencyScopes;
 
 import static java.util.Objects.requireNonNull;
 
@@ -59,12 +54,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected final Map<Object, Collection<Exclusion>> managedExclusions;
 
+    protected final Predicate<String> systemScopePredicate;
+
     private final int hashCode;
 
-    /**
-     * Creates a new dependency manager without any management information.
-     */
-    protected AbstractDependencyManager(int deriveUntil, int applyFrom) {
+    protected AbstractDependencyManager(int deriveUntil, int applyFrom, Predicate<String> systemScopePredicate) {
         this(
                 0,
                 deriveUntil,
@@ -73,7 +67,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 Collections.emptyMap(),
                 Collections.emptyMap(),
                 Collections.emptyMap(),
-                Collections.emptyMap());
+                Collections.emptyMap(),
+                systemScopePredicate);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -85,15 +80,17 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Map<Object, String> managedScopes,
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions) {
+            Map<Object, Collection<Exclusion>> managedExclusions,
+            Predicate<String> systemScopePredicate) {
         this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;
-        this.managedVersions = managedVersions;
-        this.managedScopes = managedScopes;
-        this.managedOptionals = managedOptionals;
-        this.managedLocalPaths = managedLocalPaths;
-        this.managedExclusions = managedExclusions;
+        this.managedVersions = requireNonNull(managedVersions);
+        this.managedScopes = requireNonNull(managedScopes);
+        this.managedOptionals = requireNonNull(managedOptionals);
+        this.managedLocalPaths = requireNonNull(managedLocalPaths);
+        this.managedExclusions = requireNonNull(managedExclusions);
+        this.systemScopePredicate = requireNonNull(systemScopePredicate);
 
         this.hashCode = Objects.hash(
                 depth,
@@ -195,7 +192,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 }
                 management.setScope(scope);
 
-                if (!DependencyScopes.SYSTEM.equals(scope)
+                if (!systemScopePredicate.test(scope)
                         && dependency.getArtifact().getProperty(ArtifactProperties.LOCAL_PATH, null) != null) {
                     Map<String, String> properties =
                             new HashMap<>(dependency.getArtifact().getProperties());
@@ -204,8 +201,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 }
             }
 
-            if ((DependencyScopes.SYSTEM.equals(scope))
-                    || (scope == null && DependencyScopes.SYSTEM.equals(dependency.getScope()))) {
+            if ((systemScopePredicate.test(scope))
+                    || (scope == null && systemScopePredicate.test(dependency.getScope()))) {
                 String localPath = managedLocalPaths.get(key);
                 if (localPath != null) {
                     if (management == null) {

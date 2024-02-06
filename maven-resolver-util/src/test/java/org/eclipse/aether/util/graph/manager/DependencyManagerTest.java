@@ -20,6 +20,8 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -39,6 +41,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * UT for {@link DependencyManager} implementations.
  */
 public class DependencyManagerTest {
+
+    private final Predicate<String> systemScopePredicate = s -> Objects.equals(s, "system");
 
     private final Artifact A1 = new DefaultArtifact("test", "a", "", "1");
 
@@ -73,7 +77,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassic() {
-        DependencyManager manager = new ClassicDependencyManager();
+        DependencyManager manager = new ClassicDependencyManager(systemScopePredicate);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -132,7 +136,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassicTransitive() {
-        DependencyManager manager = new ClassicDependencyManager(true);
+        DependencyManager manager = new ClassicDependencyManager(true, systemScopePredicate);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -192,7 +196,7 @@ public class DependencyManagerTest {
 
     @Test
     void testTransitive() {
-        DependencyManager manager = new TransitiveDependencyManager();
+        DependencyManager manager = new TransitiveDependencyManager(systemScopePredicate);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -252,7 +256,7 @@ public class DependencyManagerTest {
 
     @Test
     void testDefault() {
-        DependencyManager manager = new DefaultDependencyManager();
+        DependencyManager manager = new DefaultDependencyManager(systemScopePredicate);
         DependencyManagement mngt;
 
         // depth=1: all applied

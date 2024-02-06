@@ -28,7 +28,9 @@ package org.eclipse.aether.util.artifact;
  *
  * @see org.eclipse.aether.graph.Dependency#getScope()
  * @since 2.0.0
+ * @deprecated Consumer project is defining scopes.
  */
+@Deprecated
 public final class DependencyScopes {
 
     /**
