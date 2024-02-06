@@ -43,7 +43,7 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
      */
     @Deprecated
     public TransitiveDependencyManager() {
-        this(s -> Objects.equals(s, "system"));
+        this(SYSTEM_PREDICATE);
     }
 
     public TransitiveDependencyManager(Predicate<String> systemScopePredicate) {

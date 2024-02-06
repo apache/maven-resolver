@@ -40,7 +40,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
      */
     @Deprecated
     public ClassicDependencyManager() {
-        this(s -> Objects.equals(s, "system"));
+        this(SYSTEM_PREDICATE);
     }
 
     public ClassicDependencyManager(Predicate<String> systemScopePredicate) {

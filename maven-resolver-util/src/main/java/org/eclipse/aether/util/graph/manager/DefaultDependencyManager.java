@@ -46,7 +46,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
      */
     @Deprecated
     public DefaultDependencyManager() {
-        this(s -> Objects.equals(s, "system"));
+        this(SYSTEM_PREDICATE);
     }
 
     public DefaultDependencyManager(Predicate<String> systemScopePredicate) {

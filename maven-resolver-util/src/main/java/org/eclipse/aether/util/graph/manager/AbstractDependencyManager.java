@@ -37,6 +37,13 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.0
  */
 public abstract class AbstractDependencyManager implements DependencyManager {
+    /**
+     * This predicate is here ONLY to support deprecated constructors.
+     *
+     * @deprecated To be removed when deprecated constructors are removed.
+     */
+    @Deprecated
+    protected static final Predicate<String> SYSTEM_PREDICATE = s -> Objects.equals(s, "system");
 
     protected final int depth;
 
