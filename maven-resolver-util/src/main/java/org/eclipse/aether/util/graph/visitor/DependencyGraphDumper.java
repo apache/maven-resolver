@@ -19,14 +19,18 @@
 package org.eclipse.aether.util.graph.visitor;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
@@ -111,6 +115,28 @@ public class DependencyGraphDumper implements DependencyVisitor {
         if (premanaged != null && d != null && !premanaged.equals(d.getScope())) {
             buffer.append(" (scope managed from ").append(premanaged).append(")");
         }
+
+        Boolean premanagedOptional = DependencyManagerUtils.getPremanagedOptional(node);
+        if (premanagedOptional != null && d != null && !premanagedOptional.equals(d.getOptional())) {
+            buffer.append(" (optionality managed from ")
+                    .append(premanagedOptional)
+                    .append(")");
+        }
+
+        Collection<Exclusion> premanagedExclusions = DependencyManagerUtils.getPremanagedExclusions(node);
+        if (premanagedExclusions != null && d != null && !equals(premanagedExclusions, d.getExclusions())) {
+            buffer.append(" (exclusions managed from ")
+                    .append(premanagedExclusions)
+                    .append(")");
+        }
+
+        Map<String, String> premanagedProperties = DependencyManagerUtils.getPremanagedProperties(node);
+        if (premanagedProperties != null && !equals(premanagedProperties, a.getProperties())) {
+            buffer.append(" (properties managed from ")
+                    .append(premanagedProperties)
+                    .append(")");
+        }
+
         DependencyNode winner = (DependencyNode) node.getData().get(ConflictResolver.NODE_DATA_WINNER);
         if (winner != null) {
             if (ArtifactIdUtils.equalsId(a, winner.getArtifact())) {
@@ -127,5 +153,16 @@ public class DependencyGraphDumper implements DependencyVisitor {
             }
         }
         return buffer.toString();
+    }
+
+    private boolean equals(Collection<Exclusion> c1, Collection<Exclusion> c2) {
+        return c1 != null && c2 != null && c1.size() == c2.size() && c1.containsAll(c2);
+    }
+
+    private boolean equals(Map<String, String> m1, Map<String, String> m2) {
+        return m1 != null
+                && m2 != null
+                && m1.size() == m2.size()
+                && m1.entrySet().stream().allMatch(entry -> Objects.equals(m2.get(entry.getKey()), entry.getValue()));
     }
 }
