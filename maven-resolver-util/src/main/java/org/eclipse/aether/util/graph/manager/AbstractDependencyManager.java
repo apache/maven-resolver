@@ -292,5 +292,10 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         public int hashCode() {
             return hashCode;
         }
+
+        @Override
+        public String toString() {
+            return String.valueOf(artifact);
+        }
     }
 }
