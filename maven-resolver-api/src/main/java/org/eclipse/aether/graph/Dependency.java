@@ -32,16 +32,8 @@ import org.eclipse.aether.artifact.Artifact;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A dependency to some artifact.
- * <p>
- * <em>Note:</em> Instances of this class are immutable and the exposed mutators return new objects rather than
- * changing the current instance.
- * <p>
- * <em>Note about scope:</em> This class is used in two roles, as "dependency to some artifact", but also as
- * "dependency management entry in {@link org.eclipse.aether.resolution.ArtifactDescriptorResult}. As latter MAY
- * have empty scope (not given), with meaning "scope not managed". Hence, this class allows empty
- * ({@code ""} empty string) scopes as well, but, empty scopes are used exclusively when this class is used in
- * role of dependency management entry.
+ * A dependency to some artifact. <em>Note:</em> Instances of this class are immutable and the exposed mutators return
+ * new objects rather than changing the current instance.
  */
 public final class Dependency {
 
