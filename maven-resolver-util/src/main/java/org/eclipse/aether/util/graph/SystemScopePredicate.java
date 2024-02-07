@@ -24,14 +24,14 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * In Resolver 1.x line, the "system" scope represented artifacts, that in 2.x resolver are now delegate to consumer
- * application. Class or component that wants to test for this special dependency scope should use this inteface,
- * with implementation provided by consumer application.
+ * In Resolver 1.x line, the "system" scope represented special artifacts. In 2.x resolver testing for this scope
+ * is now delegated to consumer application. Class or component that wants to test for this special dependency scope
+ * should use this interface, with implementation provided by consumer application.
  * <p>
- * Special scope that tells resolver that dependency is not to be found in any regular repository, so it should not
- * even try to resolve the artifact from them. Dependency in this scope does not have artifact descriptor either.
- * Artifacts in this scope should have the "local path" property set, pointing to a file on local system, where the
- * backing file should reside. Resolution of artifacts in this scope fails, if backing file does not exist
+ * System is a special scope that tells resolver that dependency is not to be found in any regular repository, so it
+ * should not even try to resolve the artifact from them. Dependency in this scope does not have artifact descriptor
+ * either. Artifacts in this scope should have the "local path" property set, pointing to a file on local system, where
+ * the backing file should reside. Resolution of artifacts in this scope fails, if backing file does not exist
  * (no property set, or property contains invalid path, or the path points to a non-existent file).
  *
  * @see org.eclipse.aether.artifact.ArtifactProperties#LOCAL_PATH
