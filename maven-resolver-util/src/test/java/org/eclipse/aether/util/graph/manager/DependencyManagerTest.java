@@ -30,6 +30,7 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.util.graph.SystemScopePredicate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * UT for {@link DependencyManager} implementations.
  */
 public class DependencyManagerTest {
+
+    @SuppressWarnings("deprecation")
+    private static final SystemScopePredicate SYSTEM_PREDICATE = AbstractDependencyManager.SYSTEM_PREDICATE;
 
     private final Artifact A1 = new DefaultArtifact("test", "a", "", "1");
 
@@ -73,7 +77,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassic() {
-        DependencyManager manager = new ClassicDependencyManager();
+        DependencyManager manager = new ClassicDependencyManager(SYSTEM_PREDICATE);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -132,7 +136,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassicTransitive() {
-        DependencyManager manager = new ClassicDependencyManager(true);
+        DependencyManager manager = new ClassicDependencyManager(true, SYSTEM_PREDICATE);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -192,7 +196,7 @@ public class DependencyManagerTest {
 
     @Test
     void testTransitive() {
-        DependencyManager manager = new TransitiveDependencyManager();
+        DependencyManager manager = new TransitiveDependencyManager(SYSTEM_PREDICATE);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -252,7 +256,7 @@ public class DependencyManagerTest {
 
     @Test
     void testDefault() {
-        DependencyManager manager = new DefaultDependencyManager();
+        DependencyManager manager = new DefaultDependencyManager(SYSTEM_PREDICATE);
         DependencyManagement mngt;
 
         // depth=1: all applied
