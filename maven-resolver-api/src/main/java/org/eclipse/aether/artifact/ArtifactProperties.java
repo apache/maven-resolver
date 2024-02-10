@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.artifact;
 
+import org.eclipse.aether.RepositorySystemSession;
+
 /**
  * The keys for common properties of artifacts.
  *
@@ -43,9 +45,10 @@ public final class ArtifactProperties {
      * verify the path and resolve the artifact if the path actually denotes an existing file. If the path isn't valid,
      * resolution will fail and no attempts to search local/remote repositories are made.
      *
-     * @deprecated since 2.0, the semantic carried by this property should be defined in a  custom
-     *             {@link org.eclipse.aether.collection.DependencyTraverser} implementation provided by the resolver
-     *             consumer
+     * @deprecated since 2.0, the semantic carried by this property and the fact this property is coupled to Resolver
+     * 1.x "system" scope (that was delegated to consumer application) implies this property should not be used anymore,
+     * instead, the {@link org.eclipse.aether.SystemScopeHandler} exposed via method
+     * {@link RepositorySystemSession#getSystemScopeHandler()} should be used.
      */
     @Deprecated
     public static final String LOCAL_PATH = "localPath";
@@ -54,7 +57,7 @@ public final class ArtifactProperties {
      * A boolean flag indicating whether the artifact presents some kind of bundle that physically includes its
      * dependencies, e.g. a fat WAR.
      *
-     * @deprecated since 2.0, the semantic carried by this property should be defined in a  custom
+     * @deprecated since 2.0, the semantic carried by this property should be defined in a custom
      *             {@link org.eclipse.aether.collection.DependencyTraverser} implementation provided by the resolver
      *             consumer
      */

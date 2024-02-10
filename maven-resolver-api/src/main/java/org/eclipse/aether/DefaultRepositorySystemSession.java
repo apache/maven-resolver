@@ -815,6 +815,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      *
      * @param systemScopeHandler The system scope handler, cannot be {@code null}.
      * @return The session for chaining, never {@code null}.
+     * @since 2.0.0
      */
     public DefaultRepositorySystemSession setSystemScopeHandler(SystemScopeHandler systemScopeHandler) {
         verifyStateForMutation();
