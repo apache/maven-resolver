@@ -390,6 +390,14 @@ public interface RepositorySystemSession {
         SessionBuilder setCache(RepositoryCache cache);
 
         /**
+         * Sets the system scope handler for session, may not be {@code null}.
+         *
+         * @param systemScopeHandler The system scope handler, may not be {@code null}.
+         * @return The session for chaining, never {@code null}.
+         */
+        SessionBuilder setSystemScopeHandler(SystemScopeHandler systemScopeHandler);
+
+        /**
          * Sets the custom session data supplier associated with this session.
          * Note: The supplier will be used for every built session out of this builder instance, so if supplier supplies
          * <em>same instance</em> the built sessions will share these instances as well!
@@ -702,6 +710,14 @@ public interface RepositorySystemSession {
      * @return The repository cache or {@code null} if none.
      */
     RepositoryCache getCache();
+
+    /**
+     * Returns the system scope handler, never {@code null}.
+     *
+     * @return The system scope handler, never {@code null}.
+     * @since 2.0.0
+     */
+    SystemScopeHandler getSystemScopeHandler();
 
     /**
      * Registers a handler to execute when this session closed.

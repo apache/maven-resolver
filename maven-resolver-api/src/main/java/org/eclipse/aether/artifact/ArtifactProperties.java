@@ -42,7 +42,12 @@ public final class ArtifactProperties {
      * to be not present in any regular repository and likewise has no artifact descriptor. Artifact resolution will
      * verify the path and resolve the artifact if the path actually denotes an existing file. If the path isn't valid,
      * resolution will fail and no attempts to search local/remote repositories are made.
+     *
+     * @deprecated since 2.0, the semantic carried by this property should be defined in a  custom
+     *             {@link org.eclipse.aether.collection.DependencyTraverser} implementation provided by the resolver
+     *             consumer
      */
+    @Deprecated
     public static final String LOCAL_PATH = "localPath";
 
     /**

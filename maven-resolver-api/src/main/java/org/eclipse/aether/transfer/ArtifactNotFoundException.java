@@ -34,15 +34,26 @@ public class ArtifactNotFoundException extends ArtifactTransferException {
      * @param repository The involved remote repository, may be {@code null}.
      */
     public ArtifactNotFoundException(Artifact artifact, RemoteRepository repository) {
-        super(artifact, repository, getMessage(artifact, repository));
+        super(artifact, repository, getMessage(artifact, null, repository));
     }
 
-    private static String getMessage(Artifact artifact, RemoteRepository repository) {
+    /**
+     * Creates a new exception with the specified system artifact and expected local path.
+     *
+     * @param artifact The missing artifact, may be {@code null}.
+     * @param localPath The expected local path of missing artifact, may be {@code null}.
+     *
+     * @since 2.0.0
+     */
+    public ArtifactNotFoundException(Artifact artifact, String localPath) {
+        super(artifact, null, getMessage(artifact, localPath, null));
+    }
+
+    private static String getMessage(Artifact artifact, String localPath, RemoteRepository repository) {
         StringBuilder buffer = new StringBuilder(256);
         buffer.append("Could not find artifact ").append(artifact);
         buffer.append(getString(" in ", repository));
         if (artifact != null) {
-            String localPath = artifact.getProperty(ArtifactProperties.LOCAL_PATH, null);
             if (localPath != null && repository == null) {
                 buffer.append(" at specified path ").append(localPath);
             }

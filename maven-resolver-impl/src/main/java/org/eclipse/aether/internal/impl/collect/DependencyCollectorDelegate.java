@@ -31,7 +31,6 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
@@ -157,7 +156,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                 descriptorRequest.setRepositories(request.getRepositories());
                 descriptorRequest.setRequestContext(request.getRequestContext());
                 descriptorRequest.setTrace(trace);
-                if (isLackingDescriptor(root.getArtifact())) {
+                if (isLackingDescriptor(session, root.getArtifact())) {
                     descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
                 } else {
                     descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
@@ -394,8 +393,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         return rangeResult;
     }
 
-    protected static boolean isLackingDescriptor(Artifact artifact) {
-        return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null) != null;
+    protected static boolean isLackingDescriptor(RepositorySystemSession session, Artifact artifact) {
+        return session.getSystemScopeHandler().getSystemPath(artifact.getProperties()) != null;
     }
 
     protected static List<RemoteRepository> getRemoteRepositories(

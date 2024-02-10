@@ -23,11 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.eclipse.aether.RepositoryCache;
-import org.eclipse.aether.RepositoryListener;
-import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.*;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
-import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
@@ -105,6 +102,8 @@ public final class DefaultCloseableSession implements CloseableSession {
 
     private final RepositoryCache cache;
 
+    private final SystemScopeHandler systemScopeHandler;
+
     private final RepositorySystem repositorySystem;
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
@@ -138,6 +137,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             DependencyGraphTransformer dependencyGraphTransformer,
             SessionData data,
             RepositoryCache cache,
+            SystemScopeHandler systemScopeHandler,
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
         this.sessionId = requireNonNull(sessionId);
@@ -166,6 +166,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.dependencyGraphTransformer = dependencyGraphTransformer;
         this.data = requireNonNull(data);
         this.cache = cache;
+        this.systemScopeHandler = requireNonNull(systemScopeHandler);
 
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
@@ -324,6 +325,11 @@ public final class DefaultCloseableSession implements CloseableSession {
     @Override
     public RepositoryCache getCache() {
         return cache;
+    }
+
+    @Override
+    public SystemScopeHandler getSystemScopeHandler() {
+        return systemScopeHandler;
     }
 
     @Override

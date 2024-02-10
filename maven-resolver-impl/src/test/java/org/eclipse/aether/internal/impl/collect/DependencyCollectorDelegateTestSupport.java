@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -47,7 +48,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.eclipse.aether.util.graph.SystemScopePredicate;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
@@ -70,7 +70,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public abstract class DependencyCollectorDelegateTestSupport {
 
-    protected static final SystemScopePredicate SYSTEM_PREDICATE = "system"::equals;
+    protected static final SystemScopeHandler SYSTEM_PREDICATE = SystemScopeHandler.LEGACY;
 
     protected DefaultRepositorySystemSession session;
 

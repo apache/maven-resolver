@@ -21,10 +21,10 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.Collection;
 import java.util.Map;
 
+import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
-import org.eclipse.aether.util.graph.SystemScopePredicate;
 
 /**
  * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions.
@@ -42,8 +42,8 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
         this(SYSTEM_PREDICATE);
     }
 
-    public ClassicDependencyManager(SystemScopePredicate systemScopePredicate) {
-        this(false, systemScopePredicate);
+    public ClassicDependencyManager(SystemScopeHandler systemScopeHandler) {
+        this(false, systemScopeHandler);
     }
 
     /**
@@ -55,8 +55,8 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
      *
      * @since 2.0.0
      */
-    public ClassicDependencyManager(boolean transitive, SystemScopePredicate systemScopePredicate) {
-        super(transitive ? Integer.MAX_VALUE : 2, 2, systemScopePredicate);
+    public ClassicDependencyManager(boolean transitive, SystemScopeHandler systemScopeHandler) {
+        super(transitive ? Integer.MAX_VALUE : 2, 2, systemScopeHandler);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -69,7 +69,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemScopePredicate systemScopePredicate) {
+            SystemScopeHandler systemScopeHandler) {
         super(
                 depth,
                 deriveUntil,
@@ -79,7 +79,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopePredicate);
+                systemScopeHandler);
     }
 
     @Override
@@ -109,6 +109,6 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopePredicate);
+                systemScopeHandler);
     }
 }

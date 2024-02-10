@@ -124,6 +124,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private RepositoryCache cache;
 
+    private SystemScopeHandler systemScopeHandler;
+
     private final Function<Runnable, Boolean> onSessionEndedRegistrar;
 
     /**
@@ -162,6 +164,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         authenticationSelector = NullAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
         data = new DefaultSessionData();
+        systemScopeHandler = SystemScopeHandler.LEGACY;
         this.onSessionEndedRegistrar = requireNonNull(onSessionEndedRegistrar, "onSessionEndedRegistrar");
     }
 
@@ -201,6 +204,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setDependencyGraphTransformer(session.getDependencyGraphTransformer());
         setData(session.getData());
         setCache(session.getCache());
+        setSystemScopeHandler(session.getSystemScopeHandler());
         this.onSessionEndedRegistrar = session::addOnSessionEndedHandler;
     }
 
@@ -798,6 +802,23 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     public DefaultRepositorySystemSession setCache(RepositoryCache cache) {
         verifyStateForMutation();
         this.cache = cache;
+        return this;
+    }
+
+    @Override
+    public SystemScopeHandler getSystemScopeHandler() {
+        return systemScopeHandler;
+    }
+
+    /**
+     * Sets the system scope handler, must not be {@code null}.
+     *
+     * @param systemScopeHandler The system scope handler, cannot be {@code null}.
+     * @return The session for chaining, never {@code null}.
+     */
+    public DefaultRepositorySystemSession setSystemScopeHandler(SystemScopeHandler systemScopeHandler) {
+        verifyStateForMutation();
+        this.systemScopeHandler = requireNonNull(systemScopeHandler);
         return this;
     }
 
