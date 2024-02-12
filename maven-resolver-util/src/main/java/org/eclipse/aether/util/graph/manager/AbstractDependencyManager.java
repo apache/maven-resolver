@@ -42,7 +42,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * @deprecated To be removed when deprecated constructors are removed.
      */
     @Deprecated
-    protected static final SystemScopeHandler SYSTEM_PREDICATE = SystemScopeHandler.LEGACY;
+    protected static final SystemScopeHandler SYSTEM_SCOPE_HANDLER = SystemScopeHandler.LEGACY;
 
     protected final int depth;
 

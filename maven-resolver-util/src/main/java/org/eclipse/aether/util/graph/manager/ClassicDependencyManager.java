@@ -39,7 +39,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
      */
     @Deprecated
     public ClassicDependencyManager() {
-        this(SYSTEM_PREDICATE);
+        this(SYSTEM_SCOPE_HANDLER);
     }
 
     public ClassicDependencyManager(SystemScopeHandler systemScopeHandler) {

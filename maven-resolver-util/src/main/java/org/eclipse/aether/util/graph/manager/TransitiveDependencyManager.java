@@ -42,7 +42,7 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
      */
     @Deprecated
     public TransitiveDependencyManager() {
-        this(SYSTEM_PREDICATE);
+        this(SYSTEM_SCOPE_HANDLER);
     }
 
     public TransitiveDependencyManager(SystemScopeHandler systemScopeHandler) {

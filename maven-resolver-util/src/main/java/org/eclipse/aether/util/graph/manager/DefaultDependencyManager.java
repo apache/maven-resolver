@@ -45,7 +45,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
      */
     @Deprecated
     public DefaultDependencyManager() {
-        this(SYSTEM_PREDICATE);
+        this(SYSTEM_SCOPE_HANDLER);
     }
 
     public DefaultDependencyManager(SystemScopeHandler systemScopeHandler) {

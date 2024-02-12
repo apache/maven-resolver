@@ -41,8 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DependencyManagerTest {
 
-    @SuppressWarnings("deprecation")
-    private static final SystemScopeHandler SYSTEM_PREDICATE = AbstractDependencyManager.SYSTEM_PREDICATE;
+    private static final SystemScopeHandler SYSTEM_SCOPE_HANDLER = SystemScopeHandler.LEGACY;
 
     private final Artifact A1 = new DefaultArtifact("test", "a", "", "1");
 
@@ -77,7 +76,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassic() {
-        DependencyManager manager = new ClassicDependencyManager(SYSTEM_PREDICATE);
+        DependencyManager manager = new ClassicDependencyManager(SYSTEM_SCOPE_HANDLER);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -136,7 +135,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassicTransitive() {
-        DependencyManager manager = new ClassicDependencyManager(true, SYSTEM_PREDICATE);
+        DependencyManager manager = new ClassicDependencyManager(true, SYSTEM_SCOPE_HANDLER);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -196,7 +195,7 @@ public class DependencyManagerTest {
 
     @Test
     void testTransitive() {
-        DependencyManager manager = new TransitiveDependencyManager(SYSTEM_PREDICATE);
+        DependencyManager manager = new TransitiveDependencyManager(SYSTEM_SCOPE_HANDLER);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -256,7 +255,7 @@ public class DependencyManagerTest {
 
     @Test
     void testDefault() {
-        DependencyManager manager = new DefaultDependencyManager(SYSTEM_PREDICATE);
+        DependencyManager manager = new DefaultDependencyManager(SYSTEM_SCOPE_HANDLER);
         DependencyManagement mngt;
 
         // depth=1: all applied
