@@ -53,14 +53,14 @@ Required changes in **consumer project code managing Resolver 2.x**:
 Maven Resolver 2.x now delegates multiple aspects fully to consumer project, itself remaining "oblivious" about
 them. This was done to lessen (or better, fully remove) any overlap of logic between Resolver, and it's major
 consumer project: Maven. The following aspects are fully delegated to consumer projects:
-* Most of the `ArtifactProperties` is deprecated (sans two "core" ones: type and language), as it is really matter of consumer project assign semantics to them.
-* The `ArtifactType` default implementation is deprecated, should be provided by consumer project instead, Resolver 2.x does not provide implementations for it.
-* Class path generation (in NodeListGenerator class variations in `org.eclipse.aether.util.graph.visitor` package) and class path filtering (in `DependencyFilterUtils`) is deprecated. It is consumer app, based on own artifact properties, that can really deduce how to build class path (or module path, or anything alike).
+* Most of the `ArtifactProperties` is deprecated (sans two "core" ones: type and language), as it is really matter of the consumer project assign semantics to them.
+* The `ArtifactType` default implementation is deprecated, should be provided by consumer project instead, Resolver 2.x should not provide implementations for it.
+* Class path generation (in NodeListGenerator class variations in `org.eclipse.aether.util.graph.visitor` package) and class path filtering (in `DependencyFilterUtils`) is deprecated. It is the consumer app, based on own artifact properties, that can deduce how to build class path (or module path, or anything alike).
 * Dependency Scopes are fully removed. For Resolver, they were always "just labels". Resolver is now fully unaware of scopes (and for "system" artifacts has a dedicated handler exposed on session).
 
-For users of Maven Resolver Provider module, these changes will be fully transparent, as all the replacements for 
-items from the list above are moved to `org.apache.maven:maven-resolver-provider` module. Still, for binary 
-compatibility, almost all affected classes are left in place, but deprecated. Consumer projects should update 
+For users of Maven Resolver Provider module, these changes will have clean migration path, as all the replacements for 
+items from the list above are present in `org.apache.maven:maven-resolver-provider` module. Still, for binary 
+compatibility, all affected classes are in fact left in place, but deprecated. Consumer projects should update 
 accordingly, and if they do use any of deprecated classes from resolver (affected modules are maven-resolver-api 
 and maven-resolver-util), they should switch to their counterparts, that are now present in maven-resolver-provider 
 module.

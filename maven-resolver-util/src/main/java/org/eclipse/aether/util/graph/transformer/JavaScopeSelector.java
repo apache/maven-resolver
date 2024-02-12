@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.util.artifact.DependencyScopes;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictContext;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictItem;
@@ -34,9 +33,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeSelector;
  * this selector picks the widest scope present among conflicting dependencies where e.g. "compile" is wider than
  * "runtime" which is wider than "test". If however a direct dependency is involved, its scope is selected.
  *
- * @deprecated This class belongs to consumer project. Resolver have no notion of scopes other than those defined
- * in {@link DependencyScopes} class, moreover it has no knowledge about scope transformation
- * of dependencies to build path scopes.
+ * @deprecated This class belongs to consumer project. Resolver should have no notion of scopes.
  */
 @Deprecated
 public final class JavaScopeSelector extends ScopeSelector {

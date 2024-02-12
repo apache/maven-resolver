@@ -19,7 +19,6 @@
 package org.eclipse.aether.util.graph.transformer;
 
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.util.artifact.DependencyScopes;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeContext;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeDeriver;
@@ -27,9 +26,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeDeriver;
 /**
  * A scope deriver for use with {@link ConflictResolver} that supports the scopes from {@link JavaScopes}.
  *
- * @deprecated This class belongs to consumer project. Resolver have no notion of scopes other than those defined
- * in {@link DependencyScopes} class, moreover it has no knowledge about scope transformation
- * of dependencies to build path scopes.
+ * @deprecated This class belongs to consumer project. Resolver should have no notion of scopes.
  */
 @Deprecated
 public final class JavaScopeDeriver extends ScopeDeriver {
