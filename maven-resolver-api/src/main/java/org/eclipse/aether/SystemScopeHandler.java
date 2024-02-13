@@ -54,7 +54,9 @@ public interface SystemScopeHandler {
      * Returns {@code true} if given dependency node dependency is in "system" scope.
      */
     default boolean isSystemScope(DependencyNode dependencyNode) {
-        return dependencyNode != null && dependencyNode.getDependency() != null && isSystemScope(dependencyNode.getDependency());
+        return dependencyNode != null
+                && dependencyNode.getDependency() != null
+                && isSystemScope(dependencyNode.getDependency());
     }
 
     /**
