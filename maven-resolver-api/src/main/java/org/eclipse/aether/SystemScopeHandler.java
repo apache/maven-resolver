@@ -39,7 +39,7 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public interface SystemScopeHandler {
     /**
-     * Returns {@code true} if given scope label is "system" scope.
+     * Returns {@code true} only, if given scope label equals "system" scope.
      */
     boolean isSystemScope(String scope);
 
@@ -47,14 +47,14 @@ public interface SystemScopeHandler {
      * Returns {@code true} if given dependency is in "system" scope.
      */
     default boolean isSystemScope(Dependency dependency) {
-        return isSystemScope(dependency.getScope());
+        return dependency != null && isSystemScope(dependency.getScope());
     }
 
     /**
      * Returns {@code true} if given dependency node dependency is in "system" scope.
      */
     default boolean isSystemScope(DependencyNode dependencyNode) {
-        return dependencyNode.getDependency() != null && isSystemScope(dependencyNode.getDependency());
+        return dependencyNode != null && dependencyNode.getDependency() != null && isSystemScope(dependencyNode.getDependency());
     }
 
     /**
