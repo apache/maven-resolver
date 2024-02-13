@@ -39,7 +39,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
@@ -180,7 +179,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
             Collection<Artifact> artifacts = new ArrayList<>(requests.size());
             for (ArtifactRequest request : requests) {
-                if (request.getArtifact().getProperty(ArtifactProperties.LOCAL_PATH, null) != null) {
+                if (session.getSystemScopeHandler().getSystemPath(request.getArtifact()) != null) {
                     continue;
                 }
                 artifacts.add(request.getArtifact());
@@ -225,14 +224,14 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         artifactResolving(session, trace, artifact);
                     }
 
-                    String localPath = artifact.getProperty(ArtifactProperties.LOCAL_PATH, null);
+                    String localPath = session.getSystemScopeHandler().getSystemPath(artifact);
                     if (localPath != null) {
                         // unhosted artifact, just validate file
                         File file = new File(localPath);
                         if (!file.isFile()) {
                             failures = true;
                             result.addException(
-                                    ArtifactResult.NO_REPOSITORY, new ArtifactNotFoundException(artifact, null));
+                                    ArtifactResult.NO_REPOSITORY, new ArtifactNotFoundException(artifact, localPath));
                         } else {
                             artifact = artifact.setFile(file);
                             result.setArtifact(artifact);
@@ -397,7 +396,8 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     if (artifact == null || artifact.getFile() == null) {
                         failures = true;
                         if (result.getExceptions().isEmpty()) {
-                            Exception exception = new ArtifactNotFoundException(request.getArtifact(), null);
+                            Exception exception =
+                                    new ArtifactNotFoundException(request.getArtifact(), (RemoteRepository) null);
                             result.addException(result.getRepository(), exception);
                         }
                         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);

@@ -21,9 +21,9 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.Collection;
 import java.util.Map;
 
+import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
-import org.eclipse.aether.util.graph.SystemScopePredicate;
 
 /**
  * A dependency manager managing dependencies on all levels supporting transitive dependency management.
@@ -45,11 +45,11 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
      */
     @Deprecated
     public DefaultDependencyManager() {
-        this(SYSTEM_PREDICATE);
+        this(SYSTEM_SCOPE_HANDLER);
     }
 
-    public DefaultDependencyManager(SystemScopePredicate systemScopePredicate) {
-        super(Integer.MAX_VALUE, 0, systemScopePredicate);
+    public DefaultDependencyManager(SystemScopeHandler systemScopeHandler) {
+        super(Integer.MAX_VALUE, 0, systemScopeHandler);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -62,7 +62,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemScopePredicate systemScopePredicate) {
+            SystemScopeHandler systemScopeHandler) {
         super(
                 depth,
                 deriveUntil,
@@ -72,7 +72,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopePredicate);
+                systemScopeHandler);
     }
 
     @Override
@@ -91,6 +91,6 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopePredicate);
+                systemScopeHandler);
     }
 }

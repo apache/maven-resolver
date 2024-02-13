@@ -192,6 +192,11 @@ public abstract class AbstractForwardingRepositorySystemSession implements Repos
     }
 
     @Override
+    public SystemScopeHandler getSystemScopeHandler() {
+        return getSession().getSystemScopeHandler();
+    }
+
+    @Override
     public boolean addOnSessionEndedHandler(Runnable handler) {
         return getSession().addOnSessionEndedHandler(handler);
     }
