@@ -20,13 +20,15 @@ package org.eclipse.aether.internal.impl.checksum;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
-import org.eclipse.aether.internal.impl.DefaultFileProcessor;
+import org.eclipse.aether.internal.impl.DefaultChecksumProcessor;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
+import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 
 public class SparseDirectoryTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport {
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject(RepositorySystemLifecycle lifecycle) {
-        return new SparseDirectoryTrustedChecksumsSource(new DefaultFileProcessor(), new DefaultLocalPathComposer());
+        return new SparseDirectoryTrustedChecksumsSource(
+                new DefaultChecksumProcessor(new DefaultPathProcessor()), new DefaultLocalPathComposer());
     }
 
     @Override

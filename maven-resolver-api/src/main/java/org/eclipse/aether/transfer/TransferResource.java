@@ -19,6 +19,7 @@
 package org.eclipse.aether.transfer;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.eclipse.aether.RequestTrace;
 
@@ -33,7 +34,7 @@ public final class TransferResource {
 
     private final String resourceName;
 
-    private final File file;
+    private final Path path;
 
     private final long startTime;
 
@@ -56,9 +57,30 @@ public final class TransferResource {
      * @param trace The trace information, may be {@code null}.
      *
      * @since 1.1.0
+     * @deprecated Use {@link TransferResource(String, String, String, Path, RequestTrace)} instead.
      */
+    @Deprecated
     public TransferResource(
             String repositoryId, String repositoryUrl, String resourceName, File file, RequestTrace trace) {
+        this(repositoryId, repositoryUrl, resourceName, file != null ? file.toPath() : null, trace);
+    }
+
+    /**
+     * Creates a new transfer resource with the specified properties.
+     *
+     * @param repositoryId The ID of the repository used to transfer the resource, may be {@code null} or
+     *                     empty if unknown.
+     * @param repositoryUrl The base URL of the repository, may be {@code null} or empty if unknown. If not empty, a
+     *            trailing slash will automatically be added if missing.
+     * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
+     *            (if any) will be automatically removed.
+     * @param path The source/target file involved in the transfer, may be {@code null}.
+     * @param trace The trace information, may be {@code null}.
+     *
+     * @since 2.0.0
+     */
+    public TransferResource(
+            String repositoryId, String repositoryUrl, String resourceName, Path path, RequestTrace trace) {
         if (repositoryId == null || repositoryId.isEmpty()) {
             this.repositoryId = "";
         } else {
@@ -81,7 +103,7 @@ public final class TransferResource {
             this.resourceName = resourceName;
         }
 
-        this.file = file;
+        this.path = path;
 
         this.trace = trace;
 
@@ -100,7 +122,7 @@ public final class TransferResource {
     }
 
     /**
-     * The base URL of the repository, e.g. "http://repo1.maven.org/maven2/". Unless the URL is unknown, it will be
+     * The base URL of the repository, e.g. "https://repo1.maven.org/maven2/". Unless the URL is unknown, it will be
      * terminated by a trailing slash.
      *
      * @return The base URL of the repository or an empty string if unknown, never {@code null}.
@@ -123,9 +145,22 @@ public final class TransferResource {
      * remote resource, no local file will be involved in the transfer.
      *
      * @return The source/target file involved in the transfer or {@code null} if none.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
+    }
+
+    /**
+     * Gets the local file being uploaded or downloaded. When the repository system merely checks for the existence of a
+     * remote resource, no local file will be involved in the transfer.
+     *
+     * @return The source/target file involved in the transfer or {@code null} if none.
+     * @since 2.0.0
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**
@@ -195,6 +230,6 @@ public final class TransferResource {
 
     @Override
     public String toString() {
-        return getRepositoryUrl() + getResourceName() + " <> " + getFile();
+        return getRepositoryUrl() + getResourceName() + " <> " + getPath();
     }
 }

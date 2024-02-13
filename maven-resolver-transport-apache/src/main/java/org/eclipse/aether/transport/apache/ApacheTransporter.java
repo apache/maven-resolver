@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.transport.apache;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -30,6 +29,7 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.Collections;
@@ -582,13 +582,13 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
-    private <T extends HttpUriRequest> void resume(T request, GetTask task) {
+    private <T extends HttpUriRequest> void resume(T request, GetTask task) throws IOException {
         long resumeOffset = task.getResumeOffset();
-        if (resumeOffset > 0L && task.getDataFile() != null) {
+        if (resumeOffset > 0L && task.getDataPath() != null) {
+            long lastModified = Files.getLastModifiedTime(task.getDataPath()).toMillis();
             request.setHeader(HttpHeaders.RANGE, "bytes=" + resumeOffset + '-');
             request.setHeader(
-                    HttpHeaders.IF_UNMODIFIED_SINCE,
-                    DateUtils.formatDate(new Date(task.getDataFile().lastModified() - 60L * 1000L)));
+                    HttpHeaders.IF_UNMODIFIED_SINCE, DateUtils.formatDate(new Date(lastModified - 60L * 1000L)));
             request.setHeader(HttpHeaders.ACCEPT_ENCODING, "identity");
         }
     }
@@ -644,17 +644,17 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             }
 
             final boolean resume = offset > 0L;
-            final File dataFile = task.getDataFile();
+            final Path dataFile = task.getDataPath();
             if (dataFile == null) {
                 try (InputStream is = entity.getContent()) {
                     utilGet(task, is, true, length, resume);
                     extractChecksums(response);
                 }
             } else {
-                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile.toPath())) {
-                    task.setDataFile(tempFile.getPath().toFile(), resume);
-                    if (resume && Files.isRegularFile(dataFile.toPath())) {
-                        try (InputStream inputStream = Files.newInputStream(dataFile.toPath())) {
+                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile)) {
+                    task.setDataPath(tempFile.getPath(), resume);
+                    if (resume && Files.isRegularFile(dataFile)) {
+                        try (InputStream inputStream = Files.newInputStream(dataFile)) {
                             Files.copy(inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
                         }
                     }
@@ -663,17 +663,16 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     }
                     tempFile.move();
                 } finally {
-                    task.setDataFile(dataFile);
+                    task.setDataPath(dataFile);
                 }
             }
-            if (task.getDataFile() != null) {
+            if (task.getDataPath() != null) {
                 Header lastModifiedHeader =
                         response.getFirstHeader(HttpHeaders.LAST_MODIFIED); // note: Wagon also does first not last
                 if (lastModifiedHeader != null) {
                     Date lastModified = DateUtils.parseDate(lastModifiedHeader.getValue());
                     if (lastModified != null) {
-                        Files.setLastModifiedTime(
-                                task.getDataFile().toPath(), FileTime.fromMillis(lastModified.getTime()));
+                        Files.setLastModifiedTime(task.getDataPath(), FileTime.fromMillis(lastModified.getTime()));
                     }
                 }
             }

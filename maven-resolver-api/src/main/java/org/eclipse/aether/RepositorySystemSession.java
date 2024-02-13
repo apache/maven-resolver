@@ -19,8 +19,8 @@
 package org.eclipse.aether;
 
 import java.io.Closeable;
-import java.io.File;
-import java.util.List;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -398,6 +398,14 @@ public interface RepositorySystemSession {
         SessionBuilder setSystemScopeHandler(SystemScopeHandler systemScopeHandler);
 
         /**
+         * Adds on session ended handler to be immediately registered when this builder creates session.
+         *
+         * @param handler The on session ended handler, may not be {@code null}.
+         * @return The session for chaining, never {@code null}.
+         */
+        SessionBuilder addOnSessionEndedHandler(Runnable handler);
+
+        /**
          * Sets the custom session data supplier associated with this session.
          * Note: The supplier will be used for every built session out of this builder instance, so if supplier supplies
          * <em>same instance</em> the built sessions will share these instances as well!
@@ -419,25 +427,25 @@ public interface RepositorySystemSession {
 
         /**
          * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
-         * {@link File} passed in this method. In case multiple files, session builder will use chained local repository
+         * {@link Path} passed in this method. In case multiple files, session builder will use chained local repository
          * manager.
          *
          * @param baseDirectories The local repository base directories.
          * @return This session for chaining, never {@code null}.
          * @see #withLocalRepositories(LocalRepository...)
          */
-        SessionBuilder withLocalRepositoryBaseDirectories(File... baseDirectories);
+        SessionBuilder withLocalRepositoryBaseDirectories(Path... baseDirectories);
 
         /**
          * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
-         * {@link File} present in passed in list. In case multiple files, session builder will use chained local
+         * {@link Path} present in passed in list. In case multiple files, session builder will use chained local
          * repository manager.
          *
          * @param baseDirectories The local repository base directories.
          * @return This session for chaining, never {@code null}.
-         * @see #withLocalRepositories(List)
+         * @see #withLocalRepositories(Collection)
          */
-        SessionBuilder withLocalRepositoryBaseDirectories(List<File> baseDirectories);
+        SessionBuilder withLocalRepositoryBaseDirectories(Collection<Path> baseDirectories);
 
         /**
          * Shortcut method to set up local repository manager directly onto builder. There must be at least one non-null
@@ -457,7 +465,39 @@ public interface RepositorySystemSession {
          * @param localRepositories The local repositories.
          * @return This session for chaining, never {@code null}.
          */
-        SessionBuilder withLocalRepositories(List<LocalRepository> localRepositories);
+        SessionBuilder withLocalRepositories(Collection<LocalRepository> localRepositories);
+
+        /**
+         * Adds the listeners to be notified of actions in the repository system.
+         *
+         * @param repositoryListeners The repository listeners, never {@code null}.
+         * @return This session for chaining, never {@code null}.
+         */
+        SessionBuilder withRepositoryListener(RepositoryListener... repositoryListeners);
+
+        /**
+         * Adds the listeners to be notified of actions in the repository system.
+         *
+         * @param repositoryListeners The repository listeners, never {@code null}.
+         * @return This session for chaining, never {@code null}.
+         */
+        SessionBuilder withRepositoryListener(Collection<RepositoryListener> repositoryListeners);
+
+        /**
+         * Adds the listener to be notified of uploads/downloads by the repository system.
+         *
+         * @param transferListeners The transfer listeners, never {@code null}.
+         * @return This session for chaining, never {@code null}.
+         */
+        SessionBuilder withTransferListener(TransferListener... transferListeners);
+
+        /**
+         * Adds the listener to be notified of uploads/downloads by the repository system.
+         *
+         * @param transferListeners The transfer listeners, never {@code null}.
+         * @return This session for chaining, never {@code null}.
+         */
+        SessionBuilder withTransferListener(Collection<TransferListener> transferListeners);
 
         /**
          * Shortcut method to shallow-copy passed in session into current builder.

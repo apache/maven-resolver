@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -33,7 +34,7 @@ import static org.mockito.Mockito.when;
  * Simple support class for {@link NameMapper} implementation UTs.
  */
 public abstract class NameMapperTestSupport {
-    protected String basedir;
+    protected Path basedir;
 
     protected HashMap<String, Object> configProperties;
 
@@ -41,10 +42,10 @@ public abstract class NameMapperTestSupport {
 
     @BeforeEach
     void before() throws IOException {
-        basedir = new File("/home/maven/.m2/repository").getCanonicalPath();
+        basedir = new File("/home/maven/.m2/repository").getCanonicalFile().toPath();
         configProperties = new HashMap<>();
 
-        LocalRepository localRepository = new LocalRepository(new File(basedir));
+        LocalRepository localRepository = new LocalRepository(basedir);
         session = mock(RepositorySystemSession.class);
         when(session.getConfigProperties()).thenReturn(configProperties);
         when(session.getLocalRepository()).thenReturn(localRepository);

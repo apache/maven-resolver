@@ -19,6 +19,7 @@
 package org.eclipse.aether.metadata;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -96,16 +97,37 @@ public interface Metadata {
      * Gets the file of this metadata. Note that only resolved metadata has a file associated with it.
      *
      * @return The file or {@code null} if none.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     File getFile();
+
+    /**
+     * Gets the file of this metadata. Note that only resolved metadata has a file associated with it.
+     *
+     * @return The file or {@code null} if none.
+     * @since 2.0.0
+     */
+    Path getPath();
 
     /**
      * Sets the file of the metadata.
      *
      * @param file The file of the metadata, may be {@code null}
      * @return The new metadata, never {@code null}.
+     * @deprecated Use {@link #setPath(Path)} instead.
      */
+    @Deprecated
     Metadata setFile(File file);
+
+    /**
+     * Sets the file of the metadata.
+     *
+     * @param path The file of the metadata, may be {@code null}
+     * @return The new metadata, never {@code null}.
+     * @since 2.0.0
+     */
+    Metadata setPath(Path path);
 
     /**
      * Gets the specified property.

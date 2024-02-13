@@ -18,9 +18,7 @@
  */
 package org.eclipse.aether.internal.impl.session;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.*;
@@ -41,6 +39,8 @@ import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.util.listener.ChainedRepositoryListener;
+import org.eclipse.aether.util.listener.ChainedTransferListener;
 
 import static java.util.Objects.requireNonNull;
 
@@ -119,10 +119,10 @@ public final class DefaultCloseableSession implements CloseableSession {
             String artifactUpdatePolicy,
             String metadataUpdatePolicy,
             LocalRepositoryManager localRepositoryManager,
-            List<LocalRepository> localRepositories,
+            Collection<LocalRepository> localRepositories,
             WorkspaceReader workspaceReader,
-            RepositoryListener repositoryListener,
-            TransferListener transferListener,
+            Collection<RepositoryListener> repositoryListener,
+            Collection<TransferListener> transferListener,
             Map<String, String> systemProperties,
             Map<String, String> userProperties,
             Map<String, Object> configProperties,
@@ -138,6 +138,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             SessionData data,
             RepositoryCache cache,
             SystemScopeHandler systemScopeHandler,
+            List<Runnable> onSessionEndedHandlers,
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
         this.sessionId = requireNonNull(sessionId);
@@ -150,8 +151,8 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.artifactUpdatePolicy = artifactUpdatePolicy;
         this.metadataUpdatePolicy = metadataUpdatePolicy;
         this.workspaceReader = workspaceReader;
-        this.repositoryListener = repositoryListener;
-        this.transferListener = transferListener;
+        this.repositoryListener = new ChainedRepositoryListener(repositoryListener);
+        this.transferListener = new ChainedTransferListener(transferListener);
         this.systemProperties = Collections.unmodifiableMap(systemProperties);
         this.userProperties = Collections.unmodifiableMap(userProperties);
         this.configProperties = Collections.unmodifiableMap(configProperties);
@@ -174,14 +175,15 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.localRepositoryManager = getOrCreateLocalRepositoryManager(localRepositoryManager, localRepositories);
 
         repositorySystemLifecycle.sessionStarted(this);
+        onSessionEndedHandlers.forEach(this::addOnSessionEndedHandler);
     }
 
     private LocalRepositoryManager getOrCreateLocalRepositoryManager(
-            LocalRepositoryManager localRepositoryManager, List<LocalRepository> localRepositories) {
+            LocalRepositoryManager localRepositoryManager, Collection<LocalRepository> localRepositories) {
         if (localRepositoryManager != null) {
             return localRepositoryManager;
         } else if (localRepositories != null) {
-            return repositorySystem.newLocalRepositoryManager(this, localRepositories);
+            return repositorySystem.newLocalRepositoryManager(this, new ArrayList<>(localRepositories));
         } else {
             throw new IllegalStateException("No local repository manager or local repositories set on session");
         }

@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -34,8 +35,8 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeploymentException;
-import org.eclipse.aether.internal.test.util.TestFileProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestPathProcessor;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.MergeableMetadata;
@@ -84,7 +85,7 @@ public class DefaultDeployerTest {
         connectorProvider = new StubRepositoryConnectorProvider();
 
         deployer = new DefaultDeployer(
-                new TestFileProcessor(),
+                new TestPathProcessor(),
                 new StubRepositoryEventDispatcher(),
                 connectorProvider,
                 new StubRemoteRepositoryManager(),
@@ -239,6 +240,10 @@ public class DefaultDeployerTest {
                 return this;
             }
 
+            public Metadata setPath(Path path) {
+                return this;
+            }
+
             public String getVersion() {
                 return "";
             }
@@ -259,6 +264,10 @@ public class DefaultDeployerTest {
                 return null;
             }
 
+            public Path getPath() {
+                return null;
+            }
+
             public String getArtifactId() {
                 return "aether";
             }
@@ -273,6 +282,10 @@ public class DefaultDeployerTest {
 
             public String getProperty(String key, String defaultValue) {
                 return defaultValue;
+            }
+
+            public void merge(Path current, Path result) throws RepositoryException {
+                merge(current != null ? current.toFile() : null, result != null ? result.toFile() : null);
             }
 
             public void merge(File current, File result) throws RepositoryException {

@@ -19,6 +19,7 @@
 package org.eclipse.aether.metadata;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,27 +30,40 @@ import java.util.Objects;
  */
 public abstract class AbstractMetadata implements Metadata {
 
-    private Metadata newInstance(Map<String, String> properties, File file) {
+    private Metadata newInstance(Map<String, String> properties, Path path) {
         return new DefaultMetadata(
-                getGroupId(), getArtifactId(), getVersion(), getType(), getNature(), file, properties);
+                getGroupId(), getArtifactId(), getVersion(), getType(), getNature(), path, properties);
     }
 
+    @Deprecated
+    @Override
     public Metadata setFile(File file) {
         File current = getFile();
         if (Objects.equals(current, file)) {
             return this;
         }
-        return newInstance(getProperties(), file);
+        return newInstance(getProperties(), file != null ? file.toPath() : null);
     }
 
+    @Override
+    public Metadata setPath(Path path) {
+        Path current = getPath();
+        if (Objects.equals(current, path)) {
+            return this;
+        }
+        return newInstance(getProperties(), path);
+    }
+
+    @Override
     public Metadata setProperties(Map<String, String> properties) {
         Map<String, String> current = getProperties();
         if (current.equals(properties) || (properties == null && current.isEmpty())) {
             return this;
         }
-        return newInstance(copyProperties(properties), getFile());
+        return newInstance(copyProperties(properties), getPath());
     }
 
+    @Override
     public String getProperty(String key, String defaultValue) {
         String value = getProperties().get(key);
         return (value != null) ? value : defaultValue;
@@ -108,7 +122,7 @@ public abstract class AbstractMetadata implements Metadata {
                 && Objects.equals(getVersion(), that.getVersion())
                 && Objects.equals(getType(), that.getType())
                 && Objects.equals(getNature(), that.getNature())
-                && Objects.equals(getFile(), that.getFile())
+                && Objects.equals(getPath(), that.getPath())
                 && Objects.equals(getProperties(), that.getProperties());
     }
 
@@ -125,7 +139,7 @@ public abstract class AbstractMetadata implements Metadata {
         hash = hash * 31 + getType().hashCode();
         hash = hash * 31 + getNature().hashCode();
         hash = hash * 31 + getVersion().hashCode();
-        hash = hash * 31 + hash(getFile());
+        hash = hash * 31 + hash(getPath());
         return hash;
     }
 

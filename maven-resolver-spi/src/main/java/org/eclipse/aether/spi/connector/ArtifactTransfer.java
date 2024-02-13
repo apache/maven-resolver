@@ -19,6 +19,7 @@
 package org.eclipse.aether.spi.connector;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.transfer.ArtifactTransferException;
@@ -32,7 +33,7 @@ public abstract class ArtifactTransfer extends Transfer {
 
     private Artifact artifact;
 
-    private File file;
+    private Path path;
 
     private ArtifactTransferException exception;
 
@@ -66,9 +67,23 @@ public abstract class ArtifactTransfer extends Transfer {
      * completed such that an interrupted/failed download does not corrupt the current file contents.
      *
      * @return The local file or {@code null} if not set.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
+    }
+
+    /**
+     * Gets the local file the artifact is downloaded to or uploaded from. In case of a download, a connector should
+     * first transfer the bytes to a temporary file and only overwrite the target file once the entire download is
+     * completed such that an interrupted/failed download does not corrupt the current file contents.
+     *
+     * @return The local file or {@code null} if not set.
+     * @since 2.0.0
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**
@@ -76,9 +91,22 @@ public abstract class ArtifactTransfer extends Transfer {
      *
      * @param file The local file, may be {@code null}.
      * @return This transfer for chaining, never {@code null}.
+     * @deprecated Use {@link #setPath(Path)} instead.
      */
+    @Deprecated
     public ArtifactTransfer setFile(File file) {
-        this.file = file;
+        return setPath(file != null ? file.toPath() : null);
+    }
+
+    /**
+     * Sets the local file the artifact is downloaded to or uploaded from.
+     *
+     * @param path The local file, may be {@code null}.
+     * @return This transfer for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public ArtifactTransfer setPath(Path path) {
+        this.path = path;
         return this;
     }
 

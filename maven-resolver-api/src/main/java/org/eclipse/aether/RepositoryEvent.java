@@ -19,6 +19,7 @@
 package org.eclipse.aether;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -149,7 +150,7 @@ public final class RepositoryEvent {
 
     private final ArtifactRepository repository;
 
-    private final File file;
+    private final Path path;
 
     private final List<Exception> exceptions;
 
@@ -161,7 +162,7 @@ public final class RepositoryEvent {
         artifact = builder.artifact;
         metadata = builder.metadata;
         repository = builder.repository;
-        file = builder.file;
+        path = builder.path;
         exceptions = builder.exceptions;
         trace = builder.trace;
     }
@@ -206,9 +207,21 @@ public final class RepositoryEvent {
      * Gets the file involved in the event (if any).
      *
      * @return The involved file or {@code null} if none.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
+    }
+
+    /**
+     * Gets the file involved in the event (if any).
+     *
+     * @return The involved file or {@code null} if none.
+     * @since 2.0.0
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**
@@ -260,8 +273,8 @@ public final class RepositoryEvent {
         if (getMetadata() != null) {
             buffer.append(" ").append(getMetadata());
         }
-        if (getFile() != null) {
-            buffer.append(" (").append(getFile()).append(")");
+        if (getPath() != null) {
+            buffer.append(" (").append(getPath()).append(")");
         }
         if (getRepository() != null) {
             buffer.append(" @ ").append(getRepository());
@@ -284,7 +297,7 @@ public final class RepositoryEvent {
 
         ArtifactRepository repository;
 
-        File file;
+        Path path;
 
         List<Exception> exceptions = Collections.emptyList();
 
@@ -339,9 +352,22 @@ public final class RepositoryEvent {
          *
          * @param file The involved file, may be {@code null}.
          * @return This event builder for chaining, never {@code null}.
+         * @deprecated Use {@link #setPath(Path)} instead.
          */
+        @Deprecated
         public Builder setFile(File file) {
-            this.file = file;
+            return setPath(file != null ? file.toPath() : null);
+        }
+
+        /**
+         * Sets the file involved in the event.
+         *
+         * @param path The involved file, may be {@code null}.
+         * @return This event builder for chaining, never {@code null}.
+         * @since 2.0.0
+         */
+        public Builder setPath(Path path) {
+            this.path = path;
             return this;
         }
 

@@ -19,6 +19,7 @@
 package org.eclipse.aether.spi.connector;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -54,10 +55,25 @@ public final class MetadataDownload extends MetadataTransfer {
      * @param context The context in which this download is performed, may be {@code null}.
      * @param file The local file to download the metadata to, may be {@code null}.
      * @param checksumPolicy The checksum policy, may be {@code null}.
+     * @deprecated Use {@link #MetadataDownload(Metadata, String, Path, String)} instead.
      */
+    @Deprecated
     public MetadataDownload(Metadata metadata, String context, File file, String checksumPolicy) {
+        this(metadata, context, file != null ? file.toPath() : null, checksumPolicy);
+    }
+
+    /**
+     * Creates a new download with the specified properties.
+     *
+     * @param metadata The metadata to download, may be {@code null}.
+     * @param context The context in which this download is performed, may be {@code null}.
+     * @param path The local file to download the metadata to, may be {@code null}.
+     * @param checksumPolicy The checksum policy, may be {@code null}.
+     * @since 2.0.0
+     */
+    public MetadataDownload(Metadata metadata, String context, Path path, String checksumPolicy) {
         setMetadata(metadata);
-        setFile(file);
+        setPath(path);
         setChecksumPolicy(checksumPolicy);
         setRequestContext(context);
     }
@@ -68,9 +84,16 @@ public final class MetadataDownload extends MetadataTransfer {
         return this;
     }
 
+    @Deprecated
     @Override
     public MetadataDownload setFile(File file) {
         super.setFile(file);
+        return this;
+    }
+
+    @Override
+    public MetadataDownload setPath(Path path) {
+        super.setPath(path);
         return this;
     }
 
@@ -160,6 +183,6 @@ public final class MetadataDownload extends MetadataTransfer {
 
     @Override
     public String toString() {
-        return getMetadata() + " - " + getFile();
+        return getMetadata() + " - " + getPath();
     }
 }

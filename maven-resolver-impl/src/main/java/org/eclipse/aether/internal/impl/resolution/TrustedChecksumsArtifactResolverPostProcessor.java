@@ -169,7 +169,7 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                 if (record) {
                     recordArtifactChecksums(session, artifactResult, checksumAlgorithms);
                 } else if (!validateArtifactChecksums(session, artifactResult, checksumAlgorithms, failIfMissing)) {
-                    artifactResult.setArtifact(artifactResult.getArtifact().setFile(null)); // make it unresolved
+                    artifactResult.setArtifact(artifactResult.getArtifact().setPath(null)); // make it unresolved
                 }
             }
         }
@@ -186,7 +186,7 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
         ArtifactRepository artifactRepository = artifactResult.getRepository();
         try {
             final Map<String, String> calculatedChecksums =
-                    ChecksumAlgorithmHelper.calculate(artifact.getFile(), checksumAlgorithmFactories);
+                    ChecksumAlgorithmHelper.calculate(artifact.getPath(), checksumAlgorithmFactories);
 
             for (TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values()) {
                 TrustedChecksumsSource.Writer writer =
@@ -197,12 +197,12 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                                 artifact, artifactRepository, checksumAlgorithmFactories, calculatedChecksums);
                     } catch (IOException e) {
                         throw new UncheckedIOException(
-                                "Could not write required checksums for " + artifact.getFile(), e);
+                                "Could not write required checksums for " + artifact.getPath(), e);
                     }
                 }
             }
         } catch (IOException e) {
-            throw new UncheckedIOException("Could not calculate required checksums for " + artifact.getFile(), e);
+            throw new UncheckedIOException("Could not calculate required checksums for " + artifact.getPath(), e);
         }
     }
 
@@ -222,7 +222,7 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
         try {
             // full set: calculate all algorithms we were asked for
             final Map<String, String> calculatedChecksums =
-                    ChecksumAlgorithmHelper.calculate(artifact.getFile(), checksumAlgorithmFactories);
+                    ChecksumAlgorithmHelper.calculate(artifact.getPath(), checksumAlgorithmFactories);
 
             for (Map.Entry<String, TrustedChecksumsSource> entry : trustedChecksumsSources.entrySet()) {
                 final String trustedSourceName = entry.getKey();

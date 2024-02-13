@@ -72,7 +72,7 @@ public class NoLocalRepositoryManagerException extends RepositoryException {
     private static String toMessage(LocalRepository repository) {
         if (repository != null) {
             return "No manager available for local repository ("
-                    + repository.getBasedir().getAbsolutePath() + ") of type " + repository.getContentType();
+                    + repository.getBasePath().toAbsolutePath() + ") of type " + repository.getContentType();
         } else {
             return "No manager available for local repository";
         }

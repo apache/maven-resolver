@@ -19,6 +19,7 @@
 package org.eclipse.aether.spi.connector;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -60,11 +61,30 @@ public final class ArtifactDownload extends ArtifactTransfer {
      * @param context The context in which this download is performed, may be {@code null}.
      * @param file The local file to download the artifact to, may be {@code null}.
      * @param checksumPolicy The checksum policy, may be {@code null}.
+     * @deprecated Use {@link ArtifactDownload(Artifact, String, Path, String)} instead.
      */
+    @Deprecated
     public ArtifactDownload(Artifact artifact, String context, File file, String checksumPolicy) {
         setArtifact(artifact);
         setRequestContext(context);
         setFile(file);
+        setChecksumPolicy(checksumPolicy);
+    }
+
+    /**
+     * Creates a new download with the specified properties.
+     *
+     * @param artifact The artifact to download, may be {@code null}.
+     * @param context The context in which this download is performed, may be {@code null}.
+     * @param path The local file to download the artifact to, may be {@code null}.
+     * @param checksumPolicy The checksum policy, may be {@code null}.
+     * @deprecated Use {@link ArtifactDownload(Artifact, String, Path, String)} instead.
+     * @since 2.0.0
+     */
+    public ArtifactDownload(Artifact artifact, String context, Path path, String checksumPolicy) {
+        setArtifact(artifact);
+        setRequestContext(context);
+        setPath(path);
         setChecksumPolicy(checksumPolicy);
     }
 
@@ -74,9 +94,16 @@ public final class ArtifactDownload extends ArtifactTransfer {
         return this;
     }
 
+    @Deprecated
     @Override
     public ArtifactDownload setFile(File file) {
         super.setFile(file);
+        return this;
+    }
+
+    @Override
+    public ArtifactDownload setPath(Path path) {
+        super.setPath(path);
         return this;
     }
 
@@ -222,6 +249,6 @@ public final class ArtifactDownload extends ArtifactTransfer {
 
     @Override
     public String toString() {
-        return getArtifact() + " - " + (isExistenceCheck() ? "?" : "") + getFile();
+        return getArtifact() + " - " + (isExistenceCheck() ? "?" : "") + getPath();
     }
 }

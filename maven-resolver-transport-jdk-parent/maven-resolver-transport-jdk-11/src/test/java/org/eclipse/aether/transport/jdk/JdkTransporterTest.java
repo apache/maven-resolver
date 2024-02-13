@@ -21,6 +21,7 @@ package org.eclipse.aether.transport.jdk;
 import java.net.ConnectException;
 import java.net.URI;
 
+import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -84,14 +85,14 @@ class JdkTransporterTest extends HttpTransporterTest {
     protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
 
     public JdkTransporterTest() {
-        super(() -> new JdkTransporterFactory(standardChecksumExtractor()));
+        super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
     }
 
     @Test
     void enhanceConnectExceptionMessages() {
         String uri = "https://localhost:12345/";
         RemoteRepository remoteRepository = new RemoteRepository.Builder("central", "default", uri).build();
-        JdkTransporterFactory factory = new JdkTransporterFactory(s -> null);
+        JdkTransporterFactory factory = new JdkTransporterFactory(s -> null, new DefaultPathProcessor());
 
         try (Transporter transporter = factory.newInstance(TestUtils.newSession(), remoteRepository)) {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));

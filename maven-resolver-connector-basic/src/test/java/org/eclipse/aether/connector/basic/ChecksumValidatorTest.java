@@ -21,6 +21,8 @@ package org.eclipse.aether.connector.basic;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,7 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.aether.internal.test.util.TestFileProcessor;
+import org.eclipse.aether.internal.test.util.TestChecksumProcessor;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
@@ -113,12 +115,12 @@ public class ChecksumValidatorTest {
 
         HashMap<URI, Object> checksums = new HashMap<>();
 
-        ArrayList<File> checksumFiles = new ArrayList<>();
+        ArrayList<Path> checksumFiles = new ArrayList<>();
 
         private final ArrayList<URI> fetchedFiles = new ArrayList<>();
 
         @Override
-        public boolean fetchChecksum(URI remote, File local) throws Exception {
+        public boolean fetchChecksum(URI remote, Path local) throws Exception {
             fetchedFiles.add(remote);
             Object checksum = checksums.get(remote);
             if (checksum == null) {
@@ -127,7 +129,7 @@ public class ChecksumValidatorTest {
             if (checksum instanceof Exception) {
                 throw (Exception) checksum;
             }
-            TestFileUtils.writeString(local, checksum.toString());
+            TestFileUtils.writeString(local.toFile(), checksum.toString());
             checksumFiles.add(local);
             return true;
         }
@@ -185,9 +187,9 @@ public class ChecksumValidatorTest {
     private ChecksumValidator newValidator(Map<String, String> providedChecksums, String... factories) {
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = newChecksumAlgorithmFactories(factories);
         return new ChecksumValidator(
-                dataFile,
+                dataFile.toPath(),
                 checksumAlgorithmFactories,
-                new TestFileProcessor(),
+                new TestChecksumProcessor(),
                 fetcher,
                 policy,
                 providedChecksums,
@@ -368,8 +370,8 @@ public class ChecksumValidatorTest {
         fetcher.assertFetchedFiles(SHA1);
         assertEquals(1, fetcher.checksumFiles.size());
         validator.retry();
-        for (File file : fetcher.checksumFiles) {
-            assertFalse(file.exists(), file.getAbsolutePath());
+        for (Path file : fetcher.checksumFiles) {
+            assertFalse(Files.exists(file), file.toAbsolutePath().toString());
         }
     }
 
@@ -387,8 +389,8 @@ public class ChecksumValidatorTest {
         checksumFile = new File(dataFile.getPath() + ".md5");
         assertTrue(checksumFile.isFile(), checksumFile.getAbsolutePath());
         assertEquals("bar", TestFileUtils.readString(checksumFile));
-        for (File file : fetcher.checksumFiles) {
-            assertFalse(file.exists(), file.getAbsolutePath());
+        for (Path file : fetcher.checksumFiles) {
+            assertFalse(Files.exists(file), file.toAbsolutePath().toString());
         }
     }
 
@@ -399,8 +401,8 @@ public class ChecksumValidatorTest {
         validator.validate(checksums(SHA1, "foo"), null);
         fetcher.assertFetchedFiles(SHA1);
         assertEquals(1, fetcher.checksumFiles.size());
-        for (File file : fetcher.checksumFiles) {
-            assertFalse(file.exists(), file.getAbsolutePath());
+        for (Path file : fetcher.checksumFiles) {
+            assertFalse(Files.exists(file), file.toAbsolutePath().toString());
         }
     }
 }

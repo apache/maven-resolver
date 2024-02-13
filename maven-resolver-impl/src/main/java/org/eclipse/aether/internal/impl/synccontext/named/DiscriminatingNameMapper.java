@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.internal.impl.synccontext.named;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.util.Collection;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -110,7 +110,7 @@ public class DiscriminatingNameMapper implements NameMapper {
 
         if (discriminator == null || discriminator.isEmpty()) {
             String hostname = ConfigUtils.getString(session, this.hostname, CONFIG_PROP_HOSTNAME);
-            File basedir = session.getLocalRepository().getBasedir();
+            Path basedir = session.getLocalRepository().getBasePath();
             discriminator = hostname + ":" + basedir;
             try {
                 return StringDigestUtil.sha1(discriminator);

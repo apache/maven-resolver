@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.graph.visitor;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -97,9 +98,21 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
      * Gets the files of resolved artifacts seen during the graph traversal.
      *
      * @return The list of artifact files, never {@code null}.
+     * @deprecated Use {@link #getPaths()} instead.
      */
+    @Deprecated
     public List<File> getFiles() {
         return getFiles(getNodes());
+    }
+
+    /**
+     * Gets the files of resolved artifacts seen during the graph traversal.
+     *
+     * @return The list of artifact files, never {@code null}.
+     * @since 2.0.0
+     */
+    public List<Path> getPaths() {
+        return getPaths(getNodes());
     }
 
     /**
@@ -119,17 +132,18 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     static List<Dependency> getDependencies(List<DependencyNode> nodes, boolean includeUnresolved) {
         return getNodesWithDependencies(nodes).stream()
                 .map(DependencyNode::getDependency)
-                .filter(d -> includeUnresolved || d.getArtifact().getFile() != null)
+                .filter(d -> includeUnresolved || d.getArtifact().getPath() != null)
                 .collect(toList());
     }
 
     static List<Artifact> getArtifacts(List<DependencyNode> nodes, boolean includeUnresolved) {
         return getNodesWithDependencies(nodes).stream()
                 .map(d -> d.getDependency().getArtifact())
-                .filter(artifact -> includeUnresolved || artifact.getFile() != null)
+                .filter(artifact -> includeUnresolved || artifact.getPath() != null)
                 .collect(toList());
     }
 
+    @Deprecated
     static List<File> getFiles(List<DependencyNode> nodes) {
         return getNodesWithDependencies(nodes).stream()
                 .map(d -> d.getDependency().getArtifact().getFile())
@@ -137,7 +151,17 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
                 .collect(toList());
     }
 
+    static List<Path> getPaths(List<DependencyNode> nodes) {
+        return getNodesWithDependencies(nodes).stream()
+                .map(d -> d.getDependency().getArtifact().getPath())
+                .filter(Objects::nonNull)
+                .collect(toList());
+    }
+
     static String getClassPath(List<DependencyNode> nodes) {
-        return getFiles(nodes).stream().map(File::getAbsolutePath).collect(joining(File.pathSeparator));
+        return getPaths(nodes).stream()
+                .map(Path::toAbsolutePath)
+                .map(Path::toString)
+                .collect(joining(File.pathSeparator));
     }
 }

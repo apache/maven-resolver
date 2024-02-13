@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Artifact GAV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
- * considering local repository, only the artifact coordinates. May use custom prefixes and sufixes and separators,
+ * considering local repository, only the artifact coordinates. May use custom prefixes and suffixes and separators,
  * hence this instance may or may not be filesystem friendly (depends on strings used).
  */
 public class GAVNameMapper implements NameMapper {

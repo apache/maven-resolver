@@ -31,6 +31,11 @@ public interface NameMapper {
     /**
      * Returns {@code true} if lock names returned by this lock name mapper are file system friendly, can be used
      * as file names and paths.
+     * <p>
+     * <em>Note:</em> The fact that name mapper is "file system friendly" means ONLY that names it produces CAN be
+     * used as file names and paths. Still, it does not mean they will work with ANY file based locking, as for example
+     * {@link org.eclipse.aether.named.providers.FileLockNamedLockFactory} expects names as string encoded
+     * {@link java.net.URI}s. The only name mapper doing it is {@link BasedirNameMapper}.
      *
      * @since 1.9.0
      */

@@ -35,7 +35,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,13 +98,14 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SparseDirectoryTrustedChecksumsSource.class);
 
-    private final FileProcessor fileProcessor;
+    private final ChecksumProcessor checksumProcessor;
 
     private final LocalPathComposer localPathComposer;
 
     @Inject
-    public SparseDirectoryTrustedChecksumsSource(FileProcessor fileProcessor, LocalPathComposer localPathComposer) {
-        this.fileProcessor = requireNonNull(fileProcessor);
+    public SparseDirectoryTrustedChecksumsSource(
+            ChecksumProcessor checksumProcessor, LocalPathComposer localPathComposer) {
+        this.checksumProcessor = requireNonNull(checksumProcessor);
         this.localPathComposer = requireNonNull(localPathComposer);
     }
 
@@ -141,7 +142,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                 }
 
                 try {
-                    String checksum = fileProcessor.readChecksum(checksumPath.toFile());
+                    String checksum = checksumProcessor.readChecksum(checksumPath);
                     if (checksum != null) {
                         checksums.put(checksumAlgorithmFactory.getName(), checksum);
                     }
@@ -196,7 +197,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                 Path checksumPath = basedir.resolve(
                         calculateArtifactPath(originAware, artifact, artifactRepository, checksumAlgorithmFactory));
                 String checksum = requireNonNull(trustedArtifactChecksums.get(checksumAlgorithmFactory.getName()));
-                fileProcessor.writeChecksum(checksumPath.toFile(), checksum);
+                checksumProcessor.writeChecksum(checksumPath, checksum);
             }
         }
     }

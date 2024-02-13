@@ -48,7 +48,7 @@ public class SimpleLocalRepositoryManagerTest {
     @BeforeEach
     void setup() throws IOException {
         basedir = TestFileUtils.createTempDir("simple-repo");
-        manager = new SimpleLocalRepositoryManager(basedir, "simple", new DefaultLocalPathComposer());
+        manager = new SimpleLocalRepositoryManager(basedir.toPath(), "simple", new DefaultLocalPathComposer());
         session = TestUtils.newSession();
     }
 

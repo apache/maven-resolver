@@ -26,6 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 import static java.util.Objects.requireNonNull;
@@ -43,9 +44,12 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
 
     private final ChecksumExtractor checksumExtractor;
 
+    private final PathProcessor pathProcessor;
+
     @Inject
-    public JdkTransporterFactory(ChecksumExtractor checksumExtractor) {
+    public JdkTransporterFactory(ChecksumExtractor checksumExtractor, PathProcessor pathProcessor) {
         this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
+        this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");
     }
 
     @Override
@@ -68,7 +72,7 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
             throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
         }
 
-        return new JdkTransporter(session, repository, javaVersion(), checksumExtractor);
+        return new JdkTransporter(session, repository, javaVersion(), checksumExtractor, pathProcessor);
     }
 
     private static int javaVersion() {

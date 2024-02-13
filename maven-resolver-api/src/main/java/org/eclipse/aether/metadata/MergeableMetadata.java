@@ -19,6 +19,7 @@
 package org.eclipse.aether.metadata;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.eclipse.aether.RepositoryException;
 
@@ -34,8 +35,23 @@ public interface MergeableMetadata extends Metadata {
      * @param current The path to the current metadata file, may not exist but must not be {@code null}.
      * @param result The path to the result file where the merged metadata should be stored, must not be {@code null}.
      * @throws RepositoryException If the metadata could not be merged.
+     * @deprecated Use {@link #merge(Path, Path)} instead.
      */
+    @Deprecated
     void merge(File current, File result) throws RepositoryException;
+
+    /**
+     * Merges this metadata into the current metadata (if any). Note that this method will be invoked regardless whether
+     * metadata currently exists or not.
+     *
+     * @param current The path to the current metadata file, may not exist but must not be {@code null}.
+     * @param result The path to the result file where the merged metadata should be stored, must not be {@code null}.
+     * @throws RepositoryException If the metadata could not be merged.
+     * @since 2.0.0
+     */
+    default void merge(Path current, Path result) throws RepositoryException {
+        merge(current.toFile(), result.toFile());
+    }
 
     /**
      * Indicates whether this metadata has been merged.

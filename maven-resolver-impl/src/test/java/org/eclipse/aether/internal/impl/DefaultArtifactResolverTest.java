@@ -38,10 +38,7 @@ import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.Filters;
-import org.eclipse.aether.internal.test.util.TestFileProcessor;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
-import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.*;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
@@ -113,7 +110,7 @@ public class DefaultArtifactResolverTest {
     private DefaultArtifactResolver setupArtifactResolver(
             VersionResolver versionResolver, UpdateCheckManager updateCheckManager) {
         return new DefaultArtifactResolver(
-                new TestFileProcessor(),
+                new TestPathProcessor(),
                 new StubRepositoryEventDispatcher(),
                 versionResolver,
                 updateCheckManager,
@@ -365,7 +362,10 @@ public class DefaultArtifactResolverTest {
         repositoryConnectorProvider.setConnector(connector);
         resolver = setupArtifactResolver(
                 new StubVersionResolver(),
-                new DefaultUpdateCheckManager(new DefaultTrackingFileManager(), new DefaultUpdatePolicyAnalyzer()));
+                new DefaultUpdateCheckManager(
+                        new DefaultTrackingFileManager(),
+                        new DefaultUpdatePolicyAnalyzer(),
+                        new DefaultPathProcessor()));
 
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
         session.setUpdatePolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);

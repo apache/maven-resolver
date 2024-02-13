@@ -64,7 +64,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @BeforeEach
     void setup() throws Exception {
-        File dir = TestFileUtils.createTempFile("");
+        File dir = TestFileUtils.createTempDir("");
         TestFileUtils.deleteFile(dir);
 
         File metadataFile = new File(dir, "metadata.txt");
@@ -78,7 +78,8 @@ public class DefaultUpdateCheckManagerTest {
                         "default",
                         TestFileUtils.createTempDir().toURI().toURL().toString())
                 .build();
-        manager = new DefaultUpdateCheckManager(new DefaultTrackingFileManager(), new DefaultUpdatePolicyAnalyzer());
+        manager = new DefaultUpdateCheckManager(
+                new DefaultTrackingFileManager(), new DefaultUpdatePolicyAnalyzer(), new DefaultPathProcessor());
         metadata = new DefaultMetadata(
                 "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT, metadataFile);
         artifact = new DefaultArtifact("gid", "aid", "", "ext", "ver").setFile(artifactFile);

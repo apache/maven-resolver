@@ -72,7 +72,7 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
                     buffer.append("Using manager ").append(manager.getClass().getSimpleName());
                     Utils.appendClassLoader(buffer, manager);
                     buffer.append(" with priority ").append(factory.getPriority());
-                    buffer.append(" for ").append(repository.getBasedir());
+                    buffer.append(" for ").append(repository.getBasePath());
 
                     LOGGER.debug(buffer.toString());
                 }
@@ -93,7 +93,7 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
         if (factories.isEmpty()) {
             buffer.append("No local repository managers registered");
         } else {
-            buffer.append("Cannot access ").append(repository.getBasedir());
+            buffer.append("Cannot access ").append(repository.getBasePath());
             buffer.append(" with type ").append(repository.getContentType());
             buffer.append(" using the available factories ");
             factories.list(buffer);

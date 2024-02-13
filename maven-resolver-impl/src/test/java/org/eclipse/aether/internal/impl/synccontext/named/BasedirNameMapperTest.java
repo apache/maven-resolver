@@ -33,7 +33,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BasedirNameMapperTest extends NameMapperTestSupport {
-    private final String PS = File.separator;
+    private final String PS = "/"; // we work with URIs now, not OS file paths
 
     BasedirNameMapper mapper = new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
 
@@ -62,7 +62,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
         assertEquals(
-                names.iterator().next(), basedir + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
+                names.iterator().next(),
+                basedir.toUri() + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -74,13 +75,14 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         assertEquals(names.size(), 1);
         assertEquals(
                 names.iterator().next(),
-                basedir + PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
+                basedir.toUri() + PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
     void absoluteLocksDir() throws IOException {
         String absoluteLocksDir = "/my/locks";
-        String customBaseDir = new File(absoluteLocksDir).getCanonicalPath();
+        String customBaseDir =
+                new File(absoluteLocksDir).getCanonicalFile().toPath().toUri().toASCIIString();
 
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", absoluteLocksDir);
@@ -98,7 +100,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
         assertEquals(
-                names.iterator().next(), basedir + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
+                names.iterator().next(),
+                basedir.toUri() + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -110,7 +113,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<String> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(names.size(), 1);
         assertEquals(
-                names.iterator().next(), basedir + PS + ".locks" + PS + "293b3990971f4b4b02b220620d2538eaac5f221b");
+                names.iterator().next(),
+                basedir.toUri() + PS + ".locks" + PS + "293b3990971f4b4b02b220620d2538eaac5f221b");
     }
 
     @Test
@@ -126,7 +130,11 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Iterator<String> namesIterator = names.iterator();
 
         // they are sorted as well
-        assertEquals(namesIterator.next(), basedir + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085");
-        assertEquals(namesIterator.next(), basedir + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638");
+        assertEquals(
+                namesIterator.next(),
+                basedir.toUri() + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085");
+        assertEquals(
+                namesIterator.next(),
+                basedir.toUri() + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638");
     }
 }

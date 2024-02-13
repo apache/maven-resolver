@@ -20,7 +20,7 @@ package org.eclipse.aether.transport.jdk;
 
 import javax.net.ssl.*;
 
-import java.io.File;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -30,6 +30,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.security.cert.X509Certificate;
@@ -60,6 +61,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
@@ -86,6 +88,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final ChecksumExtractor checksumExtractor;
 
+    private final PathProcessor pathProcessor;
+
     private final URI baseUri;
 
     private final HttpClient client;
@@ -102,9 +106,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             RepositorySystemSession session,
             RemoteRepository repository,
             int javaVersion,
-            ChecksumExtractor checksumExtractor)
+            ChecksumExtractor checksumExtractor,
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         this.checksumExtractor = checksumExtractor;
+        this.pathProcessor = pathProcessor;
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
@@ -214,7 +220,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     @Override
     protected void implGet(GetTask task) throws Exception {
-        boolean resume = task.getResumeOffset() > 0L && task.getDataFile() != null;
+        boolean resume = task.getResumeOffset() > 0L && task.getDataPath() != null;
         HttpResponse<InputStream> response = null;
 
         try {
@@ -227,11 +233,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
                 if (resume) {
                     long resumeOffset = task.getResumeOffset();
+                    long lastModified = pathProcessor.lastModified(task.getDataPath(), 0L);
                     request.header(RANGE, "bytes=" + resumeOffset + '-');
                     request.header(
                             IF_UNMODIFIED_SINCE,
-                            RFC7231.format(
-                                    Instant.ofEpochMilli(task.getDataFile().lastModified() - MODIFICATION_THRESHOLD)));
+                            RFC7231.format(Instant.ofEpochMilli(lastModified - MODIFICATION_THRESHOLD)));
                     request.header(ACCEPT_ENCODING, "identity");
                 }
 
@@ -271,16 +277,16 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
 
             final boolean downloadResumed = offset > 0L;
-            final File dataFile = task.getDataFile();
+            final Path dataFile = task.getDataPath();
             if (dataFile == null) {
                 try (InputStream is = response.body()) {
                     utilGet(task, is, true, length, downloadResumed);
                 }
             } else {
-                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile.toPath())) {
-                    task.setDataFile(tempFile.getPath().toFile(), downloadResumed);
-                    if (downloadResumed && Files.isRegularFile(dataFile.toPath())) {
-                        try (InputStream inputStream = Files.newInputStream(dataFile.toPath())) {
+                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile)) {
+                    task.setDataPath(tempFile.getPath(), downloadResumed);
+                    if (downloadResumed && Files.isRegularFile(dataFile)) {
+                        try (InputStream inputStream = new BufferedInputStream(Files.newInputStream(dataFile))) {
                             Files.copy(inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
                         }
                     }
@@ -289,17 +295,17 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     }
                     tempFile.move();
                 } finally {
-                    task.setDataFile(dataFile);
+                    task.setDataPath(dataFile);
                 }
             }
-            if (task.getDataFile() != null) {
+            if (task.getDataPath() != null) {
                 String lastModifiedHeader = response.headers()
                         .firstValue(LAST_MODIFIED)
                         .orElse(null); // note: Wagon also does first not last
                 if (lastModifiedHeader != null) {
                     try {
                         Files.setLastModifiedTime(
-                                task.getDataFile().toPath(),
+                                task.getDataPath(),
                                 FileTime.fromMillis(ZonedDateTime.parse(lastModifiedHeader, RFC7231)
                                         .toInstant()
                                         .toEpochMilli()));

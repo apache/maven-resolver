@@ -19,6 +19,7 @@
 package org.eclipse.aether.internal.impl;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
 
@@ -28,12 +29,29 @@ import java.util.Properties;
 public interface TrackingFileManager {
     /**
      * Reads up the specified properties file into {@link Properties}, if exists, otherwise {@code null} is returned.
+     * @deprecated Use {@link #read(Path)} instead.
      */
+    @Deprecated
     Properties read(File file);
+
+    /**
+     * Reads up the specified properties file into {@link Properties}, if exists, otherwise {@code null} is returned.
+     * @since 2.0.0
+     */
+    Properties read(Path path);
 
     /**
      * Applies updates to specified properties file and returns resulting {@link Properties} with contents same
      * as in updated file, never {@code null}.
+     * @deprecated Use {@link #update(Path, Map)} instead.
      */
+    @Deprecated
     Properties update(File file, Map<String, String> updates);
+
+    /**
+     * Applies updates to specified properties file and returns resulting {@link Properties} with contents same
+     * as in updated file, never {@code null}.
+     * @since 2.0.0
+     */
+    Properties update(Path path, Map<String, String> updates);
 }

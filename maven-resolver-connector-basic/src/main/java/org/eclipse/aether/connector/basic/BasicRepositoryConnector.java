@@ -18,10 +18,10 @@
  */
 package org.eclipse.aether.connector.basic;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,7 +51,7 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
-import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
@@ -83,7 +83,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
 
-    private final FileProcessor fileProcessor;
+    private final ChecksumProcessor checksumProcessor;
 
     private final RemoteRepository repository;
 
@@ -113,7 +113,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             TransporterProvider transporterProvider,
             RepositoryLayoutProvider layoutProvider,
             ChecksumPolicyProvider checksumPolicyProvider,
-            FileProcessor fileProcessor,
+            ChecksumProcessor checksumProcessor,
             Map<String, ProvidedChecksumsSource> providedChecksumsSources)
             throws NoRepositoryConnectorException {
         try {
@@ -130,7 +130,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
         this.session = session;
         this.repository = repository;
-        this.fileProcessor = fileProcessor;
+        this.checksumProcessor = checksumProcessor;
         this.providedChecksumsSources = providedChecksumsSources;
         this.closed = new AtomicBoolean(false);
 
@@ -191,7 +191,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         for (MetadataDownload transfer : safeMetadataDownloads) {
             URI location = layout.getLocation(transfer.getMetadata(), false);
 
-            TransferResource resource = newTransferResource(location, transfer.getFile(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
             TransferEvent.Builder builder = newEventBuilder(resource, false, false);
             MetadataTransportListener listener = new MetadataTransportListener(transfer, repository, builder);
 
@@ -203,7 +203,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
             Runnable task = new GetTaskRunner(
                     location,
-                    transfer.getFile(),
+                    transfer.getPath(),
                     checksumPolicy,
                     checksumAlgorithmFactories,
                     checksumLocations,
@@ -231,7 +231,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
             URI location = layout.getLocation(transfer.getArtifact(), false);
 
-            TransferResource resource = newTransferResource(location, transfer.getFile(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
             TransferEvent.Builder builder = newEventBuilder(resource, false, transfer.isExistenceCheck());
             ArtifactTransportListener listener = new ArtifactTransportListener(transfer, repository, builder);
 
@@ -247,7 +247,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
                 task = new GetTaskRunner(
                         location,
-                        transfer.getFile(),
+                        transfer.getPath(),
                         checksumPolicy,
                         checksumAlgorithmFactories,
                         checksumLocations,
@@ -282,14 +282,14 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         for (ArtifactUpload transfer : safeArtifactUploads) {
             URI location = layout.getLocation(transfer.getArtifact(), true);
 
-            TransferResource resource = newTransferResource(location, transfer.getFile(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
             TransferEvent.Builder builder = newEventBuilder(resource, true, false);
             ArtifactTransportListener listener = new ArtifactTransportListener(transfer, repository, builder);
 
             List<RepositoryLayout.ChecksumLocation> checksumLocations =
                     layout.getChecksumLocations(transfer.getArtifact(), true, location);
 
-            Runnable task = new PutTaskRunner(location, transfer.getFile(), checksumLocations, listener);
+            Runnable task = new PutTaskRunner(location, transfer.getPath(), checksumLocations, listener);
             if (first) {
                 task.run();
                 first = false;
@@ -304,14 +304,14 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             for (MetadataUpload transfer : transferGroup) {
                 URI location = layout.getLocation(transfer.getMetadata(), true);
 
-                TransferResource resource = newTransferResource(location, transfer.getFile(), transfer.getTrace());
+                TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
                 TransferEvent.Builder builder = newEventBuilder(resource, true, false);
                 MetadataTransportListener listener = new MetadataTransportListener(transfer, repository, builder);
 
                 List<RepositoryLayout.ChecksumLocation> checksumLocations =
                         layout.getChecksumLocations(transfer.getMetadata(), true, location);
 
-                Runnable task = new PutTaskRunner(location, transfer.getFile(), checksumLocations, listener);
+                Runnable task = new PutTaskRunner(location, transfer.getPath(), checksumLocations, listener);
                 if (first) {
                     task.run();
                     first = false;
@@ -368,7 +368,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         return (items != null) ? items : Collections.emptyList();
     }
 
-    private TransferResource newTransferResource(URI path, File file, RequestTrace trace) {
+    private TransferResource newTransferResource(URI path, Path file, RequestTrace trace) {
         return new TransferResource(repository.getId(), repository.getUrl(), path.toString(), file, trace);
     }
 
@@ -432,13 +432,13 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     class GetTaskRunner extends TaskRunner implements ChecksumValidator.ChecksumFetcher {
 
-        private final File file;
+        private final Path file;
 
         private final ChecksumValidator checksumValidator;
 
         GetTaskRunner(
                 URI path,
-                File file,
+                Path file,
                 ChecksumPolicy checksumPolicy,
                 List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
                 List<RepositoryLayout.ChecksumLocation> checksumLocations,
@@ -449,7 +449,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             checksumValidator = new ChecksumValidator(
                     file,
                     checksumAlgorithmFactories,
-                    fileProcessor,
+                    checksumProcessor,
                     this,
                     checksumPolicy,
                     providedChecksums,
@@ -457,9 +457,9 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         }
 
         @Override
-        public boolean fetchChecksum(URI remote, File local) throws Exception {
+        public boolean fetchChecksum(URI remote, Path local) throws Exception {
             try {
-                transporter.get(new GetTask(remote).setDataFile(local));
+                transporter.get(new GetTask(remote).setDataPath(local));
             } catch (Exception e) {
                 if (transporter.classify(e) == Transporter.ERROR_NOT_FOUND) {
                     return false;
@@ -471,11 +471,11 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
         @Override
         protected void runTask() throws Exception {
-            try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(file.toPath())) {
-                final File tmp = tempFile.getPath().toFile();
+            try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(file)) {
+                final Path tmp = tempFile.getPath();
                 listener.setChecksumCalculator(checksumValidator.newChecksumCalculator(tmp));
                 for (int firstTrial = 0, lastTrial = 1, trial = firstTrial; ; trial++) {
-                    GetTask task = new GetTask(path).setDataFile(tmp, false).setListener(listener);
+                    GetTask task = new GetTask(path).setDataPath(tmp, false).setListener(listener);
                     transporter.get(task);
                     try {
                         checksumValidator.validate(
@@ -504,13 +504,13 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     class PutTaskRunner extends TaskRunner {
 
-        private final File file;
+        private final Path file;
 
         private final Collection<RepositoryLayout.ChecksumLocation> checksumLocations;
 
         PutTaskRunner(
                 URI path,
-                File file,
+                Path file,
                 List<RepositoryLayout.ChecksumLocation> checksumLocations,
                 TransferTransportListener<?> listener) {
             super(path, listener);
@@ -521,15 +521,15 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         @SuppressWarnings("checkstyle:innerassignment")
         @Override
         protected void runTask() throws Exception {
-            transporter.put(new PutTask(path).setDataFile(file).setListener(listener));
+            transporter.put(new PutTask(path).setDataPath(file).setListener(listener));
             uploadChecksums(file, null);
         }
 
         /**
-         * @param file  source
+         * @param path  source
          * @param bytes transformed data from file or {@code null}
          */
-        private void uploadChecksums(File file, byte[] bytes) {
+        private void uploadChecksums(Path path, byte[] bytes) {
             if (checksumLocations.isEmpty()) {
                 return;
             }
@@ -543,7 +543,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 if (bytes != null) {
                     sumsByAlgo = ChecksumAlgorithmHelper.calculate(bytes, algorithms);
                 } else {
-                    sumsByAlgo = ChecksumAlgorithmHelper.calculate(file, algorithms);
+                    sumsByAlgo = ChecksumAlgorithmHelper.calculate(path, algorithms);
                 }
 
                 for (RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations) {

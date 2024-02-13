@@ -19,6 +19,7 @@
 package org.eclipse.aether.metadata;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
@@ -39,7 +40,7 @@ public final class DefaultMetadata extends AbstractMetadata {
 
     private final Nature nature;
 
-    private final File file;
+    private final Path path;
 
     private final Map<String, String> properties;
 
@@ -50,7 +51,7 @@ public final class DefaultMetadata extends AbstractMetadata {
      * @param nature The nature of the metadata, must not be {@code null}.
      */
     public DefaultMetadata(String type, Nature nature) {
-        this("", "", "", type, nature, null, (File) null);
+        this("", "", "", type, nature, null, (Path) null);
     }
 
     /**
@@ -61,7 +62,7 @@ public final class DefaultMetadata extends AbstractMetadata {
      * @param nature The nature of the metadata, must not be {@code null}.
      */
     public DefaultMetadata(String groupId, String type, Nature nature) {
-        this(groupId, "", "", type, nature, null, (File) null);
+        this(groupId, "", "", type, nature, null, (Path) null);
     }
 
     /**
@@ -73,7 +74,7 @@ public final class DefaultMetadata extends AbstractMetadata {
      * @param nature The nature of the metadata, must not be {@code null}.
      */
     public DefaultMetadata(String groupId, String artifactId, String type, Nature nature) {
-        this(groupId, artifactId, "", type, nature, null, (File) null);
+        this(groupId, artifactId, "", type, nature, null, (Path) null);
     }
 
     /**
@@ -86,7 +87,7 @@ public final class DefaultMetadata extends AbstractMetadata {
      * @param nature The nature of the metadata, must not be {@code null}.
      */
     public DefaultMetadata(String groupId, String artifactId, String version, String type, Nature nature) {
-        this(groupId, artifactId, version, type, nature, null, (File) null);
+        this(groupId, artifactId, version, type, nature, null, (Path) null);
     }
 
     /**
@@ -98,7 +99,9 @@ public final class DefaultMetadata extends AbstractMetadata {
      * @param type The type of the metadata, e.g. "maven-metadata.xml", may be {@code null}.
      * @param nature The nature of the metadata, must not be {@code null}.
      * @param file The resolved file of the metadata, may be {@code null}.
+     * @deprecated Use {@link #DefaultMetadata(String, String, String, String, Nature, Path)} instead.
      */
+    @Deprecated
     public DefaultMetadata(String groupId, String artifactId, String version, String type, Nature nature, File file) {
         this(groupId, artifactId, version, type, nature, null, file);
     }
@@ -111,9 +114,26 @@ public final class DefaultMetadata extends AbstractMetadata {
      * @param version The version to which this metadata applies, may be {@code null}.
      * @param type The type of the metadata, e.g. "maven-metadata.xml", may be {@code null}.
      * @param nature The nature of the metadata, must not be {@code null}.
+     * @param path The resolved file of the metadata, may be {@code null}.
+     * @since 2.0.0
+     */
+    public DefaultMetadata(String groupId, String artifactId, String version, String type, Nature nature, Path path) {
+        this(groupId, artifactId, version, type, nature, null, path);
+    }
+
+    /**
+     * Creates a new metadata for the groupId:artifactId:version level with the specific type and nature.
+     *
+     * @param groupId The group identifier to which this metadata applies, may be {@code null}.
+     * @param artifactId The artifact identifier to which this metadata applies, may be {@code null}.
+     * @param version The version to which this metadata applies, may be {@code null}.
+     * @param type The type of the metadata, e.g. "maven-metadata.xml", may be {@code null}.
+     * @param nature The nature of the metadata, must not be {@code null}.
      * @param properties The properties of the metadata, may be {@code null} if none.
      * @param file The resolved file of the metadata, may be {@code null}.
+     * @deprecated Use {@link #DefaultMetadata(String, String, String, String, Nature, Map, Path)} instead.
      */
+    @Deprecated
     public DefaultMetadata(
             String groupId,
             String artifactId,
@@ -127,7 +147,36 @@ public final class DefaultMetadata extends AbstractMetadata {
         this.version = emptify(version);
         this.type = emptify(type);
         this.nature = requireNonNull(nature, "metadata nature cannot be null");
-        this.file = file;
+        this.path = file != null ? file.toPath() : null;
+        this.properties = copyProperties(properties);
+    }
+
+    /**
+     * Creates a new metadata for the groupId:artifactId:version level with the specific type and nature.
+     *
+     * @param groupId The group identifier to which this metadata applies, may be {@code null}.
+     * @param artifactId The artifact identifier to which this metadata applies, may be {@code null}.
+     * @param version The version to which this metadata applies, may be {@code null}.
+     * @param type The type of the metadata, e.g. "maven-metadata.xml", may be {@code null}.
+     * @param nature The nature of the metadata, must not be {@code null}.
+     * @param properties The properties of the metadata, may be {@code null} if none.
+     * @param path The resolved file of the metadata, may be {@code null}.
+     * @since 2.0.0
+     */
+    public DefaultMetadata(
+            String groupId,
+            String artifactId,
+            String version,
+            String type,
+            Nature nature,
+            Map<String, String> properties,
+            Path path) {
+        this.groupId = emptify(groupId);
+        this.artifactId = emptify(artifactId);
+        this.version = emptify(version);
+        this.type = emptify(type);
+        this.nature = requireNonNull(nature, "metadata nature cannot be null");
+        this.path = path;
         this.properties = copyProperties(properties);
     }
 
@@ -137,7 +186,7 @@ public final class DefaultMetadata extends AbstractMetadata {
             String version,
             String type,
             Nature nature,
-            File file,
+            Path path,
             Map<String, String> properties) {
         // NOTE: This constructor assumes immutability of the provided properties, for internal use only
         this.groupId = emptify(groupId);
@@ -145,7 +194,7 @@ public final class DefaultMetadata extends AbstractMetadata {
         this.version = emptify(version);
         this.type = emptify(type);
         this.nature = nature;
-        this.file = file;
+        this.path = path;
         this.properties = properties;
     }
 
@@ -153,30 +202,43 @@ public final class DefaultMetadata extends AbstractMetadata {
         return (str == null) ? "" : str;
     }
 
+    @Override
     public String getGroupId() {
         return groupId;
     }
 
+    @Override
     public String getArtifactId() {
         return artifactId;
     }
 
+    @Override
     public String getVersion() {
         return version;
     }
 
+    @Override
     public String getType() {
         return type;
     }
 
+    @Override
     public Nature getNature() {
         return nature;
     }
 
+    @Deprecated
+    @Override
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
     }
 
+    @Override
+    public Path getPath() {
+        return path;
+    }
+
+    @Override
     public Map<String, String> getProperties() {
         return properties;
     }

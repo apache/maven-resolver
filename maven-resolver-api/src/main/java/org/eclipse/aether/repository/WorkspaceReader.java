@@ -19,6 +19,7 @@
 package org.eclipse.aether.repository;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -44,6 +45,18 @@ public interface WorkspaceReader {
      * @return The path to the artifact or {@code null} if the artifact is not available.
      */
     File findArtifact(Artifact artifact);
+
+    /**
+     * Locates the specified artifact.
+     *
+     * @param artifact The artifact to locate, must not be {@code null}.
+     * @return The path to the artifact or {@code null} if the artifact is not available.
+     * @since 2.0.0
+     */
+    default Path findArtifactPath(Artifact artifact) {
+        File file = findArtifact(artifact);
+        return file != null ? file.toPath() : null;
+    }
 
     /**
      * Determines all available versions of the specified artifact.

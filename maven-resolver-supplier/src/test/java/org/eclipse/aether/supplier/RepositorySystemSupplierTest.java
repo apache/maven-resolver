@@ -30,7 +30,7 @@ import org.eclipse.aether.impl.Deployer;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +42,7 @@ public class RepositorySystemSupplierTest {
         try (RepositorySystem system = new RepositorySystemSupplier().get();
                 CloseableSession session = new SessionBuilderSupplier(system)
                         .get()
-                        .withLocalRepositoryBaseDirectories(new File("target/local-repo"))
+                        .withLocalRepositoryBaseDirectories(new File("target/local-repo").toPath())
                         .build()) {
             Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:[0,)");
             VersionRangeRequest rangeRequest = new VersionRangeRequest();
@@ -65,22 +65,22 @@ public class RepositorySystemSupplierTest {
         systemSupplier.get().close(); // get an instance and immediately shut it down, this closes supplier as well
         assertThrows(IllegalStateException.class, systemSupplier::get);
         assertThrows(IllegalStateException.class, systemSupplier::getRepositorySystem);
-        assertThrows(IllegalStateException.class, systemSupplier::getFileProcessor);
+        assertThrows(IllegalStateException.class, systemSupplier::getChecksumProcessor);
     }
 
     @Test
     void memorizing() {
         RepositorySystemSupplier systemSupplier = new RepositorySystemSupplier();
-        FileProcessor fileProcessor = systemSupplier.getFileProcessor();
+        PathProcessor pathProcessor = systemSupplier.getPathProcessor();
         Deployer deployer = systemSupplier.getDeployer();
         try (RepositorySystem repositorySystem = systemSupplier.get()) {
             assertSame(systemSupplier.get(), repositorySystem);
-            assertSame(systemSupplier.getFileProcessor(), fileProcessor);
+            assertSame(systemSupplier.getPathProcessor(), pathProcessor);
             assertSame(systemSupplier.getDeployer(), deployer);
         }
         assertThrows(IllegalStateException.class, systemSupplier::get);
         assertThrows(IllegalStateException.class, systemSupplier::getRepositorySystem);
         assertThrows(IllegalStateException.class, systemSupplier::getDeployer);
-        assertThrows(IllegalStateException.class, systemSupplier::getFileProcessor);
+        assertThrows(IllegalStateException.class, systemSupplier::getPathProcessor);
     }
 }

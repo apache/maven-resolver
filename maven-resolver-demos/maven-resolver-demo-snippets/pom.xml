@@ -98,6 +98,10 @@
       <artifactId>org.eclipse.sisu.inject</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.google.jimfs</groupId>
+      <artifactId>jimfs</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
       <optional>true</optional>

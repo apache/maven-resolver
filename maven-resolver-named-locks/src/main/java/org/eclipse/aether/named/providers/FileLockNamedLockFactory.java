@@ -23,6 +23,7 @@ import javax.inject.Singleton;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -39,8 +40,9 @@ import org.eclipse.aether.named.support.NamedLockSupport;
 import static org.eclipse.aether.named.support.Retry.retry;
 
 /**
- * Named locks factory of {@link FileLockNamedLock}s. This is a bit special implementation, as it
- * expects locks names to be fully qualified absolute file system paths.
+ * Named locks factory of {@link FileLockNamedLock}s. This is a bit of special implementation, as it
+ * expects locks names to be proper URI string representations (use {@code file:} protocol for default
+ * file system).
  *
  * @since 1.7.3
  */
@@ -98,7 +100,7 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
 
     @Override
     protected NamedLockSupport createLock(final String name) {
-        Path path = Paths.get(name);
+        Path path = Paths.get(URI.create(name));
         FileChannel fileChannel = fileChannels.computeIfAbsent(name, k -> {
             try {
                 Files.createDirectories(path.getParent());

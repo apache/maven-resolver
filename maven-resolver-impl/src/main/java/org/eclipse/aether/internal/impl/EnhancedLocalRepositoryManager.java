@@ -18,7 +18,8 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,7 +68,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private final LocalPathPrefixComposer localPathPrefixComposer;
 
     EnhancedLocalRepositoryManager(
-            File basedir,
+            Path basedir,
             LocalPathComposer localPathComposer,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
@@ -119,21 +120,21 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         LocalArtifactResult result = new LocalArtifactResult(request);
 
         String path;
-        File file;
+        Path filePath;
 
         // Local repository CANNOT have timestamped installed, they are created only during deploy
         if (Objects.equals(artifact.getVersion(), artifact.getBaseVersion())) {
             path = getPathForLocalArtifact(artifact);
-            file = new File(getRepository().getBasedir(), path);
-            checkFind(file, result);
+            filePath = getRepository().getBasePath().resolve(path);
+            checkFind(filePath, result);
         }
 
         if (!result.isAvailable()) {
             for (RemoteRepository repository : request.getRepositories()) {
                 path = getPathForRemoteArtifact(artifact, repository, request.getContext());
-                file = new File(getRepository().getBasedir(), path);
+                filePath = getRepository().getBasePath().resolve(path);
 
-                checkFind(file, result);
+                checkFind(filePath, result);
 
                 if (result.isAvailable()) {
                     break;
@@ -144,19 +145,19 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         return result;
     }
 
-    private void checkFind(File file, LocalArtifactResult result) {
-        if (file.isFile()) {
-            result.setFile(file);
+    private void checkFind(Path path, LocalArtifactResult result) {
+        if (Files.isRegularFile(path)) {
+            result.setPath(path);
 
-            Properties props = readRepos(file);
+            Properties props = readRepos(path);
 
-            if (props.get(getKey(file, LOCAL_REPO_ID)) != null) {
+            if (props.get(getKey(path, LOCAL_REPO_ID)) != null) {
                 // artifact installed into the local repo is always accepted
                 result.setAvailable(true);
             } else {
                 String context = result.getRequest().getContext();
                 for (RemoteRepository repository : result.getRequest().getRepositories()) {
-                    if (props.get(getKey(file, getRepositoryKey(repository, context))) != null) {
+                    if (props.get(getKey(path, getRepositoryKey(repository, context))) != null) {
                         // artifact downloaded from remote repository is accepted only downloaded from request
                         // repositories
                         result.setAvailable(true);
@@ -164,7 +165,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                         break;
                     }
                 }
-                if (!result.isAvailable() && !isTracked(props, file)) {
+                if (!result.isAvailable() && !isTracked(props, path)) {
                     /*
                      * NOTE: The artifact is present but not tracked at all, for inter-op with simple local repo, assume
                      * the artifact was locally installed.
@@ -210,40 +211,40 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         String path = repository == null
                 ? getPathForLocalArtifact(artifact)
                 : getPathForRemoteArtifact(artifact, repository, context);
-        File file = new File(getRepository().getBasedir(), path);
+        Path file = getRepository().getBasePath().resolve(path);
         addRepo(file, repositories);
     }
 
-    private Properties readRepos(File artifactFile) {
-        File trackingFile = getTrackingFile(artifactFile);
+    private Properties readRepos(Path artifactPath) {
+        Path trackingFile = getTrackingFile(artifactPath);
 
         Properties props = trackingFileManager.read(trackingFile);
 
         return (props != null) ? props : new Properties();
     }
 
-    private void addRepo(File artifactFile, Collection<String> repositories) {
+    private void addRepo(Path artifactPath, Collection<String> repositories) {
         Map<String, String> updates = new HashMap<>();
         for (String repository : repositories) {
-            updates.put(getKey(artifactFile, repository), "");
+            updates.put(getKey(artifactPath, repository), "");
         }
 
-        File trackingFile = getTrackingFile(artifactFile);
+        Path trackingPath = getTrackingFile(artifactPath);
 
-        trackingFileManager.update(trackingFile, updates);
+        trackingFileManager.update(trackingPath, updates);
     }
 
-    private File getTrackingFile(File artifactFile) {
-        return new File(artifactFile.getParentFile(), trackingFilename);
+    private Path getTrackingFile(Path artifactPath) {
+        return artifactPath.getParent().resolve(trackingFilename);
     }
 
-    private String getKey(File file, String repository) {
-        return file.getName() + '>' + repository;
+    private String getKey(Path path, String repository) {
+        return path.getFileName() + ">" + repository;
     }
 
-    private boolean isTracked(Properties props, File file) {
+    private boolean isTracked(Properties props, Path path) {
         if (props != null) {
-            String keyPrefix = file.getName() + '>';
+            String keyPrefix = path.getFileName() + ">";
             for (Object key : props.keySet()) {
                 if (key.toString().startsWith(keyPrefix)) {
                     return true;

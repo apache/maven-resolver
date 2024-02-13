@@ -102,7 +102,7 @@ public class ArtifactResolutionException extends RepositoryException {
                 LocalArtifactResult localResult = result.getLocalArtifactResult();
                 if (localResult != null) {
                     buffer.append(" (");
-                    if (localResult.getFile() != null) {
+                    if (localResult.getPath() != null) {
                         buffer.append("present");
                         if (!localResult.isAvailable()) {
                             buffer.append(", but unavailable");

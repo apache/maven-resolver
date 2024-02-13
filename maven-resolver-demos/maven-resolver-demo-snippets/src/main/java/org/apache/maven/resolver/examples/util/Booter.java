@@ -18,7 +18,7 @@
  */
 package org.apache.maven.resolver.examples.util;
 
-import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,11 +61,22 @@ public class Booter {
     }
 
     public static SessionBuilder newRepositorySystemSession(RepositorySystem system) {
-        return new SessionBuilderSupplier(system)
+        // FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+        SessionBuilder result = new SessionBuilderSupplier(system)
                 .get()
-                .withLocalRepositoryBaseDirectories(new File("target/local-repo"))
+                //        .withLocalRepositoryBaseDirectories(fs.getPath("local-repo"))
+                .withLocalRepositoryBaseDirectories(Paths.get("target/local-repo"))
                 .setRepositoryListener(new ConsoleRepositoryListener())
                 .setTransferListener(new ConsoleTransferListener());
+        result.setConfigProperty("aether.syncContext.named.factory", "noop");
+        // result.addOnSessionEndedHandler(() -> {
+        //     try {
+        //         fs.close();
+        //     } catch (IOException e) {
+        //         throw new UncheckedIOException(e);
+        //     }
+        // });
+        return result;
         // uncomment to generate dirty trees
         // session.setDependencyGraphTransformer( null );
     }

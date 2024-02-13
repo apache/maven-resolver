@@ -344,8 +344,9 @@ public class HttpTransporterTest {
     protected void testGet_ToFile() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task =
-                new GetTask(URI.create("repo/file.txt")).setDataFile(file).setListener(listener);
+        GetTask task = new GetTask(URI.create("repo/file.txt"))
+                .setDataPath(file.toPath())
+                .setListener(listener);
         transporter.get(task);
         assertEquals("test", TestFileUtils.readString(file));
         assertEquals(0L, listener.getDataOffset());
@@ -360,7 +361,7 @@ public class HttpTransporterTest {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/dir/oldFile.txt"))
-                .setDataFile(file)
+                .setDataPath(file.toPath())
                 .setListener(listener);
         transporter.get(task);
         assertEquals("oldTest", TestFileUtils.readString(file));
@@ -376,8 +377,9 @@ public class HttpTransporterTest {
     protected void testGet_EmptyResource() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task =
-                new GetTask(URI.create("repo/empty.txt")).setDataFile(file).setListener(listener);
+        GetTask task = new GetTask(URI.create("repo/empty.txt"))
+                .setDataPath(file.toPath())
+                .setListener(listener);
         transporter.get(task);
         assertEquals("", TestFileUtils.readString(file));
         assertEquals(0L, listener.getDataOffset());
@@ -546,7 +548,7 @@ public class HttpTransporterTest {
         File file = TestFileUtils.createTempFile("re");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/resume.txt"))
-                .setDataFile(file, true)
+                .setDataPath(file.toPath(), true)
                 .setListener(listener);
         transporter.get(task);
         assertEquals("resumable", TestFileUtils.readString(file));
@@ -563,7 +565,7 @@ public class HttpTransporterTest {
         file.setLastModified(System.currentTimeMillis() - 5 * 60 * 1000);
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/resume.txt"))
-                .setDataFile(file, true)
+                .setDataPath(file.toPath(), true)
                 .setListener(listener);
         transporter.get(task);
         assertEquals("resumable", TestFileUtils.readString(file));
@@ -580,7 +582,7 @@ public class HttpTransporterTest {
         File file = TestFileUtils.createTempFile("re");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/resume.txt"))
-                .setDataFile(file, true)
+                .setDataPath(file.toPath(), true)
                 .setListener(listener);
         transporter.get(task);
         assertEquals("resumable", TestFileUtils.readString(file));
@@ -615,7 +617,7 @@ public class HttpTransporterTest {
     protected void testGet_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
             File file = TestFileUtils.createTempFile("failure");
-            transporter.get(new GetTask(URI.create("repo/file.txt")).setDataFile(file));
+            transporter.get(new GetTask(URI.create("repo/file.txt")).setDataPath(file.toPath()));
             assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
         }
     }
@@ -694,7 +696,7 @@ public class HttpTransporterTest {
         File file = TestFileUtils.createTempFile("upload");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
-                new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataFile(file);
+                new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataPath(file.toPath());
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
@@ -915,7 +917,7 @@ public class HttpTransporterTest {
         for (int i = 0; i < 100; i++) {
             File src = TestFileUtils.createTempFile("upload");
             File dst = new File(repoDir, "file.txt");
-            transporter.put(new PutTask(URI.create("repo/file.txt")).setDataFile(src));
+            transporter.put(new PutTask(URI.create("repo/file.txt")).setDataPath(src.toPath()));
             assertTrue(src.delete(), i + ", " + src.getAbsolutePath());
             assertTrue(dst.delete(), i + ", " + dst.getAbsolutePath());
         }

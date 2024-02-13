@@ -39,7 +39,10 @@ public class FileLockNamedLockFactorySupportTest extends NamedLockFactoryTestSup
 
     @Override
     protected String lockName(TestInfo testInfo) {
-        return baseDir.resolve(testInfo.getDisplayName()).toAbsolutePath().toString();
+        return baseDir.resolve(testInfo.getDisplayName())
+                .toAbsolutePath()
+                .toUri()
+                .toASCIIString();
     }
 
     @BeforeAll

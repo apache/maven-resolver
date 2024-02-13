@@ -19,6 +19,7 @@
 package org.eclipse.aether.repository;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import static java.util.Objects.requireNonNull;
 
@@ -31,7 +32,7 @@ public final class LocalMetadataResult {
 
     private final LocalMetadataRequest request;
 
-    private File file;
+    private Path path;
 
     private boolean stale;
 
@@ -57,9 +58,21 @@ public final class LocalMetadataResult {
      * Gets the file to the requested metadata if the metadata is available in the local repository.
      *
      * @return The file to the requested metadata or {@code null}.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
+    }
+
+    /**
+     * Gets the file to the requested metadata if the metadata is available in the local repository.
+     *
+     * @return The file to the requested metadata or {@code null}.
+     * @since 2.0.0
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**
@@ -67,9 +80,22 @@ public final class LocalMetadataResult {
      *
      * @param file The metadata file, may be {@code null}.
      * @return This result for chaining, never {@code null}.
+     * @deprecated Use {@link #setPath(Path)} instead.
      */
+    @Deprecated
     public LocalMetadataResult setFile(File file) {
-        this.file = file;
+        return setPath(file != null ? file.toPath() : null);
+    }
+
+    /**
+     * Sets the file to requested metadata.
+     *
+     * @param path The metadata file, may be {@code null}.
+     * @return This result for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public LocalMetadataResult setPath(Path path) {
+        this.path = path;
         return this;
     }
 
@@ -95,6 +121,6 @@ public final class LocalMetadataResult {
 
     @Override
     public String toString() {
-        return request.toString() + "(" + getFile() + ")";
+        return request.toString() + "(" + getPath() + ")";
     }
 }

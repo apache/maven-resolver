@@ -90,7 +90,8 @@ public class DefaultMetadataResolverTest {
                 new StubRemoteRepositoryManager(),
                 new StubSyncContextFactory(),
                 new DefaultOfflineController(),
-                remoteRepositoryFilterManager);
+                remoteRepositoryFilterManager,
+                new DefaultPathProcessor());
         repository = new RemoteRepository.Builder(
                         "test-DMRT",
                         "default",
@@ -267,7 +268,8 @@ public class DefaultMetadataResolverTest {
                 new StubRemoteRepositoryManager(),
                 new StubSyncContextFactory(),
                 new DefaultOfflineController(),
-                remoteRepositoryFilterManager);
+                remoteRepositoryFilterManager,
+                new DefaultPathProcessor());
 
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
 

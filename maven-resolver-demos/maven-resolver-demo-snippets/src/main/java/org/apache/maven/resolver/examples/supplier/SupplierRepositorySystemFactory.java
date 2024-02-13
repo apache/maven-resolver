@@ -35,7 +35,9 @@ public class SupplierRepositorySystemFactory {
             @Override
             protected Map<String, TransporterFactory> createTransporterFactories() {
                 Map<String, TransporterFactory> result = super.createTransporterFactories();
-                result.put(JdkTransporterFactory.NAME, new JdkTransporterFactory(getChecksumExtractor()));
+                result.put(
+                        JdkTransporterFactory.NAME,
+                        new JdkTransporterFactory(getChecksumExtractor(), getPathProcessor()));
                 result.put(JettyTransporterFactory.NAME, new JettyTransporterFactory(getChecksumExtractor()));
                 return result;
             }

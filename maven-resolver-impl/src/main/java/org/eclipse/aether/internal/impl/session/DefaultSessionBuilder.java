@@ -18,16 +18,19 @@
  */
 package org.eclipse.aether.internal.impl.session;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.function.Supplier;
 
-import org.eclipse.aether.*;
+import org.eclipse.aether.DefaultSessionData;
+import org.eclipse.aether.RepositoryCache;
+import org.eclipse.aether.RepositoryListener;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
+import org.eclipse.aether.SessionData;
+import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
@@ -87,13 +90,13 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private LocalRepositoryManager localRepositoryManager;
 
-    private List<LocalRepository> localRepositories;
+    private Collection<LocalRepository> localRepositories;
 
     private WorkspaceReader workspaceReader;
 
-    private RepositoryListener repositoryListener;
+    private final ArrayList<RepositoryListener> repositoryListener = new ArrayList<>();
 
-    private TransferListener transferListener;
+    private final ArrayList<TransferListener> transferListener = new ArrayList<>();
 
     private Map<String, String> systemProperties = new HashMap<>();
 
@@ -124,6 +127,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     private Supplier<RepositoryCache> repositoryCacheSupplier = DEFAULT_REPOSITORY_CACHE_SUPPLIER;
 
     private SystemScopeHandler systemScopeHandler = SystemScopeHandler.LEGACY;
+
+    private final ArrayList<Runnable> onSessionCloseHandlers = new ArrayList<>();
 
     /**
      * Constructor for "top level" builders.
@@ -200,13 +205,19 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     @Override
     public DefaultSessionBuilder setRepositoryListener(RepositoryListener repositoryListener) {
-        this.repositoryListener = repositoryListener;
+        this.repositoryListener.clear();
+        if (repositoryListener != null) {
+            this.repositoryListener.add(repositoryListener);
+        }
         return this;
     }
 
     @Override
     public DefaultSessionBuilder setTransferListener(TransferListener transferListener) {
-        this.transferListener = transferListener;
+        this.transferListener.clear();
+        if (transferListener != null) {
+            this.transferListener.add(transferListener);
+        }
         return this;
     }
 
@@ -349,6 +360,13 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
+    public SessionBuilder addOnSessionEndedHandler(Runnable handler) {
+        requireNonNull(handler, "null handler");
+        onSessionCloseHandlers.add(handler);
+        return this;
+    }
+
+    @Override
     public DefaultSessionBuilder setRepositoryCacheSupplier(Supplier<RepositoryCache> cacheSupplier) {
         requireNonNull(cacheSupplier, "null cacheSupplier");
         this.repositoryCacheSupplier = cacheSupplier;
@@ -356,12 +374,12 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
-    public SessionBuilder withLocalRepositoryBaseDirectories(File... baseDirectories) {
+    public SessionBuilder withLocalRepositoryBaseDirectories(Path... baseDirectories) {
         return withLocalRepositoryBaseDirectories(Arrays.asList(baseDirectories));
     }
 
     @Override
-    public SessionBuilder withLocalRepositoryBaseDirectories(List<File> baseDirectories) {
+    public SessionBuilder withLocalRepositoryBaseDirectories(Collection<Path> baseDirectories) {
         requireNonNull(baseDirectories, "null baseDirectories");
         return withLocalRepositories(
                 baseDirectories.stream().map(LocalRepository::new).collect(toList()));
@@ -373,9 +391,31 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
-    public SessionBuilder withLocalRepositories(List<LocalRepository> localRepositories) {
+    public SessionBuilder withLocalRepositories(Collection<LocalRepository> localRepositories) {
         requireNonNull(localRepositories, "null localRepositories");
         this.localRepositories = localRepositories;
+        return this;
+    }
+
+    @Override
+    public SessionBuilder withRepositoryListener(RepositoryListener... repositoryListeners) {
+        return withRepositoryListener(Arrays.asList(repositoryListeners));
+    }
+
+    @Override
+    public SessionBuilder withRepositoryListener(Collection<RepositoryListener> repositoryListeners) {
+        this.repositoryListener.addAll(repositoryListeners);
+        return this;
+    }
+
+    @Override
+    public SessionBuilder withTransferListener(TransferListener... transferListeners) {
+        return withTransferListener(Arrays.asList(transferListeners));
+    }
+
+    @Override
+    public SessionBuilder withTransferListener(Collection<TransferListener> transferListeners) {
+        this.transferListener.addAll(transferListeners);
         return this;
     }
 
@@ -442,6 +482,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 sessionDataSupplier.get(),
                 repositoryCacheSupplier.get(),
                 systemScopeHandler,
+                onSessionCloseHandlers,
                 repositorySystem,
                 repositorySystemLifecycle);
     }
