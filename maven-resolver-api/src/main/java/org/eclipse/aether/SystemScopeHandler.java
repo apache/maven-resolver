@@ -40,7 +40,7 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public interface SystemScopeHandler {
     /**
-     * Returns {@code true} only, if given scope label equals "system" scope.
+     * Returns {@code true} only, if passed in scope label represents "system" scope (as consumer project defines it).
      */
     boolean isSystemScope(String scope);
 
@@ -63,13 +63,17 @@ public interface SystemScopeHandler {
     /**
      * Returns system path string of provided artifact, or {@code null}.
      *
+     * @param artifact The artifact that we want system path from, must not be {@code null}.
      * @return the system path from passed in properties, or {@code null} if not present.
      */
     String getSystemPath(Artifact artifact);
 
     /**
-     * Sets system path in properties. The passed in {@code systemPath} can be {@code null}, in which case this is
-     * "remove" operation (or "unset").
+     * Sets system path in properties. The passed in {@code systemPath} can be {@code null}, in which case expected
+     * operation is "remove" (or "unset").
+     *
+     * @param properties the properties map, must not be {@code null}.
+     * @param systemPath the system path to set (if not {@code null}) or unset (if {@code null}).
      */
     void setSystemPath(Map<String, String> properties, String systemPath);
 
