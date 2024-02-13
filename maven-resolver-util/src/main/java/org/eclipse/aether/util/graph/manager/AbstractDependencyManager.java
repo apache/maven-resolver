@@ -157,8 +157,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 managedOptionals.put(key, optional);
             }
 
-            String localPath = systemScopeHandler.getSystemPath(
-                    managedDependency.getArtifact().getProperties());
+            String localPath = systemScopeHandler.getSystemPath(managedDependency.getArtifact());
             if (localPath != null && !managedLocalPaths.containsKey(key)) {
                 if (managedLocalPaths == this.managedLocalPaths) {
                     managedLocalPaths = new HashMap<>(this.managedLocalPaths);
@@ -200,9 +199,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 management.setScope(scope);
 
                 if (!systemScopeHandler.isSystemScope(scope)
-                        && systemScopeHandler.getSystemPath(
-                                        dependency.getArtifact().getProperties())
-                                != null) {
+                        && systemScopeHandler.getSystemPath(dependency.getArtifact()) != null) {
                     Map<String, String> properties =
                             new HashMap<>(dependency.getArtifact().getProperties());
                     systemScopeHandler.setSystemPath(properties, null);

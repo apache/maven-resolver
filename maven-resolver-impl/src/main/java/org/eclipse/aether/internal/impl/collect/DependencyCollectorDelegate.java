@@ -394,7 +394,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     }
 
     protected static boolean isLackingDescriptor(RepositorySystemSession session, Artifact artifact) {
-        return session.getSystemScopeHandler().getSystemPath(artifact.getProperties()) != null;
+        return session.getSystemScopeHandler().getSystemPath(artifact) != null;
     }
 
     protected static List<RemoteRepository> getRemoteRepositories(

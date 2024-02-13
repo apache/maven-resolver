@@ -20,6 +20,7 @@ package org.eclipse.aether;
 
 import java.util.Map;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -64,7 +65,7 @@ public interface SystemScopeHandler {
      *
      * @return the system path from passed in properties, or {@code null} if not present.
      */
-    String getSystemPath(Map<String, String> properties);
+    String getSystemPath(Artifact artifact);
 
     /**
      * Sets system path in properties. The passed in {@code systemPath} can be {@code null}, in which case this is
@@ -82,8 +83,8 @@ public interface SystemScopeHandler {
         }
 
         @Override
-        public String getSystemPath(Map<String, String> properties) {
-            return properties.get(ArtifactProperties.LOCAL_PATH);
+        public String getSystemPath(Artifact artifact) {
+            return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null);
         }
 
         @Override

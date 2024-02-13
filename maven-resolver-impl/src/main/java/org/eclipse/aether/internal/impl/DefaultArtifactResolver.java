@@ -179,9 +179,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
             Collection<Artifact> artifacts = new ArrayList<>(requests.size());
             for (ArtifactRequest request : requests) {
-                if (session.getSystemScopeHandler()
-                                .getSystemPath(request.getArtifact().getProperties())
-                        != null) {
+                if (session.getSystemScopeHandler().getSystemPath(request.getArtifact()) != null) {
                     continue;
                 }
                 artifacts.add(request.getArtifact());
@@ -226,7 +224,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         artifactResolving(session, trace, artifact);
                     }
 
-                    String localPath = session.getSystemScopeHandler().getSystemPath(artifact.getProperties());
+                    String localPath = session.getSystemScopeHandler().getSystemPath(artifact);
                     if (localPath != null) {
                         // unhosted artifact, just validate file
                         File file = new File(localPath);
