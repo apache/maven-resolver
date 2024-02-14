@@ -25,14 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.eclipse.aether.DefaultSessionData;
-import org.eclipse.aether.RepositoryCache;
-import org.eclipse.aether.RepositoryListener;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.*;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
-import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
@@ -127,6 +122,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     private Supplier<SessionData> sessionDataSupplier = DEFAULT_SESSION_DATA_SUPPLIER;
 
     private Supplier<RepositoryCache> repositoryCacheSupplier = DEFAULT_REPOSITORY_CACHE_SUPPLIER;
+
+    private SystemScopeHandler systemScopeHandler = SystemScopeHandler.LEGACY;
 
     /**
      * Constructor for "top level" builders.
@@ -345,6 +342,13 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
+    public DefaultSessionBuilder setSystemScopeHandler(SystemScopeHandler systemScopeHandler) {
+        requireNonNull(systemScopeHandler, "null systemScopeHandler");
+        this.systemScopeHandler = systemScopeHandler;
+        return this;
+    }
+
+    @Override
     public DefaultSessionBuilder setRepositoryCacheSupplier(Supplier<RepositoryCache> cacheSupplier) {
         requireNonNull(cacheSupplier, "null cacheSupplier");
         this.repositoryCacheSupplier = cacheSupplier;
@@ -403,6 +407,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
         setDependencyGraphTransformer(session.getDependencyGraphTransformer());
         setData(session.getData());
         setCache(session.getCache());
+        setSystemScopeHandler(session.getSystemScopeHandler());
         return this;
     }
 
@@ -436,6 +441,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 dependencyGraphTransformer,
                 sessionDataSupplier.get(),
                 repositoryCacheSupplier.get(),
+                systemScopeHandler,
                 repositorySystem,
                 repositorySystemLifecycle);
     }

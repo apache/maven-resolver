@@ -192,7 +192,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                 PremanagedDependency.create(depManager, dependency, disableVersionManagement, args.premanagedState);
         dependency = preManaged.getManagedDependency();
 
-        boolean noDescriptor = isLackingDescriptor(dependency.getArtifact());
+        boolean noDescriptor = isLackingDescriptor(args.session, dependency.getArtifact());
 
         boolean traverse = !noDescriptor && (depTraverser == null || depTraverser.traverseDependency(dependency));
 

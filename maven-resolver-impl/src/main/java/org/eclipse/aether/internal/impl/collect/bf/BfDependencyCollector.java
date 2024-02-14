@@ -227,7 +227,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         Dependency dependency = context.dependency;
         PremanagedDependency preManaged = context.premanagedDependency;
 
-        boolean noDescriptor = isLackingDescriptor(dependency.getArtifact());
+        boolean noDescriptor = isLackingDescriptor(args.session, dependency.getArtifact());
         boolean traverse =
                 !noDescriptor && (context.depTraverser == null || context.depTraverser.traverseDependency(dependency));
 
@@ -464,7 +464,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
         ArtifactDescriptorRequest descriptorRequest = createArtifactDescriptorRequest(
                 args.request.getRequestContext(), context.trace, newContext.repositories, newDependency);
-        return isLackingDescriptor(newArtifact)
+        return isLackingDescriptor(args.session, newArtifact)
                 ? new ArtifactDescriptorResult(descriptorRequest)
                 : resolveCachedArtifactDescriptor(
                         args.pool, descriptorRequest, args.session, newContext.withDependency(newDependency), results);
