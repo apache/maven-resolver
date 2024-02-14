@@ -19,13 +19,13 @@
 This page will collect quick guides for developers upgrading from one to
 another major version of Resolver.
 
-# Upgrading From 1.x to 2.x
+# Upgrading from 1.x to 2.x
 
 Maven Resolver upcoming major version 2.x should be "smooth sailing", as long you
 do not depend (directly or indirectly) on **deprecated** classes from Resolver
 1.x line. Always use latest 1.x release to check for deprecated classes.
 
-## Session Handling Changes
+## Session handling changes
 
 Maven Resolver 2.x introduced "onSessionEnd" hooks, that became required for
 some of the new features (like HTTP/2 transports are). While existing "Resolver 1.x"
@@ -50,8 +50,8 @@ Required changes in **consumer project code managing Resolver 2.x**:
 
 ## Consumer Project Changes (if more needed)
 
-Maven Resolver 2.x now delegates multiple aspects fully to consumer project, itself remaining "oblivious" about
-them. This was done to lessen (or better, fully remove) any overlap of logic between Resolver, and it's major
+Maven Resolver 2.x now fully delegates multiple aspects to the consumer project, itself remaining "oblivious" about
+them. This was done to lessen (or better, fully remove) any overlap between the logic of the Resolver, and it's major
 consumer project: Maven. The following aspects are fully delegated to consumer projects:
 * Most of the `ArtifactProperties` is deprecated (sans two "core" ones: type and language), as it is really matter of the consumer project assign semantics to them.
 * The `ArtifactType` default implementation is deprecated, should be provided by consumer project instead, Resolver 2.x should not provide implementations for it.
@@ -61,10 +61,10 @@ consumer project: Maven. The following aspects are fully delegated to consumer p
 For users of Maven Resolver Provider module, these changes will have clean migration path, as all the replacements for 
 items from the list above are present in `org.apache.maven:maven-resolver-provider` module. Still, for binary 
 compatibility, all affected classes are in fact left in place, but deprecated. Consumer projects should update 
-accordingly, and if they do use any of deprecated classes from resolver (affected modules are maven-resolver-api 
+accordingly, and if they do use any deprecated classes from the resolver (affected modules are maven-resolver-api 
 and maven-resolver-util), they should switch to their counterparts, that are now present in maven-resolver-provider 
 module.
 
 Note: Resolver 2.x still fully supports "legacy" (Maven3-like) functionality, and if existing consumer
 code base adapts only the session related changes, consumer project can enjoy new features (like HTTP/2 transport),
-while keep full compatibility, identical to Resolver 1.x release.
+while keeping full compatibility, identical to Resolver 1.x release.
