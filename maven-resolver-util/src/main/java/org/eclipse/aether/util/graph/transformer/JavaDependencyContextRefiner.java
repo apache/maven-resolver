@@ -23,7 +23,6 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.util.artifact.DependencyScopes;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import static java.util.Objects.requireNonNull;
@@ -35,9 +34,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @see DependencyNode#getRequestContext()
  *
- * @deprecated This class belongs to consumer project. Resolver have no notion of scopes other than those defined
- * in {@link DependencyScopes} class, moreover it has no knowledge about scope transformation
- * of dependencies to build path scopes.
+ * @deprecated This class belongs to consumer project. Resolver should have no notion of scopes.
  */
 @Deprecated
 public final class JavaDependencyContextRefiner implements DependencyGraphTransformer {
