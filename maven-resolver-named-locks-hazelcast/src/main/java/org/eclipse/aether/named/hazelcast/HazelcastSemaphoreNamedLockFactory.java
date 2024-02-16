@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.ISemaphore;
+import org.eclipse.aether.named.NamedLock;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock.AdaptedSemaphore;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
@@ -42,7 +44,7 @@ public class HazelcastSemaphoreNamedLockFactory extends NamedLockFactorySupport 
 
     private final HazelcastSemaphoreProvider hazelcastSemaphoreProvider;
 
-    private final ConcurrentMap<String, ISemaphore> semaphores;
+    private final ConcurrentMap<NamedLockKey, ISemaphore> semaphores;
 
     public HazelcastSemaphoreNamedLockFactory(
             final HazelcastInstance hazelcastInstance,
@@ -55,19 +57,22 @@ public class HazelcastSemaphoreNamedLockFactory extends NamedLockFactorySupport 
     }
 
     @Override
-    protected AdaptedSemaphoreNamedLock createLock(final String name) {
+    protected AdaptedSemaphoreNamedLock createLock(final NamedLockKey key) {
         ISemaphore semaphore = semaphores.computeIfAbsent(
-                name, k -> hazelcastSemaphoreProvider.acquireSemaphore(hazelcastInstance, name));
-        return new AdaptedSemaphoreNamedLock(name, this, new HazelcastSemaphore(semaphore));
+                key, k -> hazelcastSemaphoreProvider.acquireSemaphore(hazelcastInstance, key));
+        return new AdaptedSemaphoreNamedLock(key, this, new HazelcastSemaphore(semaphore));
     }
 
     @Override
-    protected void destroyLock(final String name) {
-        hazelcastSemaphoreProvider.releaseSemaphore(hazelcastInstance, name, semaphores.remove(name));
+    protected void destroyLock(final NamedLock namedLock) {
+        if (namedLock instanceof AdaptedSemaphoreNamedLock) {
+            final NamedLockKey key = namedLock.key();
+            hazelcastSemaphoreProvider.releaseSemaphore(hazelcastInstance, key, semaphores.remove(key));
+        }
     }
 
     @Override
-    public void shutdown() {
+    protected void doShutdown() {
         if (manageHazelcast) {
             hazelcastInstance.shutdown();
         }

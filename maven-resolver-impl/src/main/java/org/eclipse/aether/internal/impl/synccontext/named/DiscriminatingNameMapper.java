@@ -26,6 +26,7 @@ import java.util.Collection;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 import org.slf4j.Logger;
@@ -86,13 +87,13 @@ public class DiscriminatingNameMapper implements NameMapper {
     }
 
     @Override
-    public Collection<String> nameLocks(
+    public Collection<NamedLockKey> nameLocks(
             final RepositorySystemSession session,
             final Collection<? extends Artifact> artifacts,
             final Collection<? extends Metadata> metadatas) {
         String discriminator = createDiscriminator(session);
         return delegate.nameLocks(session, artifacts, metadatas).stream()
-                .map(s -> discriminator + ":" + s)
+                .map(k -> NamedLockKey.of(discriminator + ":" + k.name(), k.resources()))
                 .collect(toList());
     }
 

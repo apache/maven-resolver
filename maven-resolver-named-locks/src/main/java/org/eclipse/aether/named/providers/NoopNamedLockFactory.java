@@ -23,6 +23,7 @@ import javax.inject.Singleton;
 
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 
@@ -35,13 +36,13 @@ public class NoopNamedLockFactory extends NamedLockFactorySupport {
     public static final String NAME = "noop";
 
     @Override
-    protected NoopNamedLock createLock(final String name) {
-        return new NoopNamedLock(name, this);
+    protected NoopNamedLock createLock(final NamedLockKey key) {
+        return new NoopNamedLock(key, this);
     }
 
     private static final class NoopNamedLock extends NamedLockSupport {
-        private NoopNamedLock(final String name, final NamedLockFactorySupport factory) {
-            super(name, factory);
+        private NoopNamedLock(final NamedLockKey key, final NamedLockFactorySupport factory) {
+            super(key, factory);
         }
 
         @Override

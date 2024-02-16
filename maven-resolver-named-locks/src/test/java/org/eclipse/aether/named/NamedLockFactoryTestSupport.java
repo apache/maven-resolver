@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.named;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -35,8 +37,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     protected static NamedLockFactory namedLockFactory;
 
-    protected String lockName(TestInfo testInfo) {
-        return testInfo.getDisplayName();
+    protected Collection<NamedLockKey> lockName(TestInfo testInfo) {
+        return Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
     }
 
     @Test
@@ -71,14 +73,14 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void refCounting(TestInfo testInfo) {
-        final String name = lockName(testInfo);
-        try (NamedLock one = namedLockFactory.getLock(name);
-                NamedLock two = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = lockName(testInfo);
+        try (NamedLock one = namedLockFactory.getLock(keys);
+                NamedLock two = namedLockFactory.getLock(keys)) {
             assertSame(one, two);
             one.close();
             two.close();
 
-            try (NamedLock three = namedLockFactory.getLock(name)) {
+            try (NamedLock three = namedLockFactory.getLock(keys)) {
                 assertNotSame(three, two);
             }
         }
@@ -87,8 +89,8 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     void unlockWoLock(TestInfo testInfo) {
         assertThrows(IllegalStateException.class, () -> {
-            final String name = lockName(testInfo);
-            try (NamedLock one = namedLockFactory.getLock(name)) {
+            final Collection<NamedLockKey> keys = lockName(testInfo);
+            try (NamedLock one = namedLockFactory.getLock(keys)) {
                 one.unlock();
             }
         });
@@ -96,8 +98,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void wwBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = lockName(testInfo);
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             one.unlock();
@@ -107,8 +109,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void rrBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = lockName(testInfo);
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             one.unlock();
@@ -118,8 +120,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void wrBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = lockName(testInfo);
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             one.unlock();
@@ -129,8 +131,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void rwBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = lockName(testInfo);
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             try {
                 one.lockExclusively(1L, TimeUnit.MILLISECONDS);
@@ -145,11 +147,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     @Timeout(5)
     public void sharedAccess(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
+        final Collection<NamedLockKey> keys = lockName(testInfo);
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
-        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
-        Thread t2 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
         t1.start();
         t2.start();
         t1.join();
@@ -161,11 +163,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     @Timeout(5)
     public void exclusiveAccess(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
+        final Collection<NamedLockKey> keys = lockName(testInfo);
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
-        Thread t2 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
         t1.start();
         t2.start();
         t1.join();
@@ -177,11 +179,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     @Timeout(5)
     public void mixedAccess(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
+        final Collection<NamedLockKey> keys = lockName(testInfo);
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
-        Thread t2 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
         t1.start();
         t2.start();
         t1.join();
@@ -194,11 +196,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Timeout(5)
     public void fullyConsumeLockTime(TestInfo testInfo) throws InterruptedException {
         long start = System.nanoTime();
-        final String name = lockName(testInfo);
+        final Collection<NamedLockKey> keys = lockName(testInfo);
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
-        Thread t2 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
         t1.start();
         t2.start();
         t1.join();
@@ -214,11 +216,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     @Timeout(5)
     public void releasedExclusiveAllowAccess(TestInfo testInfo) throws InterruptedException {
-        final String name = lockName(testInfo);
+        final Collection<NamedLockKey> keys = lockName(testInfo);
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
-        try (NamedLock namedLock = namedLockFactory.getLock(name)) {
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
+        try (NamedLock namedLock = namedLockFactory.getLock(keys)) {
             assertTrue(namedLock.lockExclusively(50L, TimeUnit.MILLISECONDS));
             try {
                 t1.start();
@@ -236,19 +238,19 @@ public abstract class NamedLockFactoryTestSupport {
 
     private static class Access implements Runnable {
         final NamedLockFactory namedLockFactory;
-        final String name;
+        final Collection<NamedLockKey> keys;
         final boolean shared;
         final CountDownLatch winner;
         final CountDownLatch loser;
 
         public Access(
                 NamedLockFactory namedLockFactory,
-                String name,
+                Collection<NamedLockKey> keys,
                 boolean shared,
                 CountDownLatch winner,
                 CountDownLatch loser) {
             this.namedLockFactory = namedLockFactory;
-            this.name = name;
+            this.keys = keys;
             this.shared = shared;
             this.winner = winner;
             this.loser = loser;
@@ -256,7 +258,7 @@ public abstract class NamedLockFactoryTestSupport {
 
         @Override
         public void run() {
-            try (NamedLock lock = namedLockFactory.getLock(name)) {
+            try (NamedLock lock = namedLockFactory.getLock(keys)) {
                 if (shared
                         ? lock.lockShared(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS)
                         : lock.lockExclusively(ACCESS_WAIT_MILLIS, TimeUnit.MILLISECONDS)) {

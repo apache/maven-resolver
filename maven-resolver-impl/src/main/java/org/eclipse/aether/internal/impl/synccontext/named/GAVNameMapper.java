@@ -19,11 +19,13 @@
 package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.TreeSet;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 
 import static java.util.Objects.requireNonNull;
 
@@ -66,49 +68,53 @@ public class GAVNameMapper implements NameMapper {
     }
 
     @Override
-    public Collection<String> nameLocks(
+    public Collection<NamedLockKey> nameLocks(
             final RepositorySystemSession session,
             final Collection<? extends Artifact> artifacts,
             final Collection<? extends Metadata> metadatas) {
         // Deadlock prevention: https://stackoverflow.com/a/16780988/696632
         // We must acquire multiple locks always in the same order!
-        TreeSet<String> keys = new TreeSet<>();
+        TreeSet<NamedLockKey> keys = new TreeSet<>(Comparator.comparing(NamedLockKey::name));
         if (artifacts != null) {
             for (Artifact artifact : artifacts) {
-                keys.add(getArtifactName(artifact));
+                keys.add(NamedLockKey.of(
+                        getArtifactName(artifact, artifactPrefix, fieldSeparator, artifactSuffix),
+                        getArtifactName(artifact, "", ":", "")));
             }
         }
 
         if (metadatas != null) {
             for (Metadata metadata : metadatas) {
-                keys.add(getMetadataName(metadata));
+                keys.add(NamedLockKey.of(
+                        getMetadataName(metadata, metadataPrefix, fieldSeparator, metadataSuffix),
+                        getMetadataName(metadata, "", ":", "")));
             }
         }
         return keys;
     }
 
-    private String getArtifactName(Artifact artifact) {
-        return artifactPrefix
+    private static String getArtifactName(Artifact artifact, String prefix, String separator, String suffix) {
+        return prefix
                 + artifact.getGroupId()
-                + fieldSeparator
+                + separator
                 + artifact.getArtifactId()
-                + fieldSeparator
+                + separator
                 + artifact.getBaseVersion()
-                + artifactSuffix;
+                + suffix;
     }
 
-    private String getMetadataName(Metadata metadata) {
-        String name = metadataPrefix;
+    private static String getMetadataName(Metadata metadata, String prefix, String separator, String suffix) {
+        String name = prefix;
         if (!metadata.getGroupId().isEmpty()) {
             name += metadata.getGroupId();
             if (!metadata.getArtifactId().isEmpty()) {
-                name += fieldSeparator + metadata.getArtifactId();
+                name += separator + metadata.getArtifactId();
                 if (!metadata.getVersion().isEmpty()) {
-                    name += fieldSeparator + metadata.getVersion();
+                    name += separator + metadata.getVersion();
                 }
             }
         }
-        return name + metadataSuffix;
+        return name + suffix;
     }
 
     public static NameMapper gav() {

@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.named.NamedLock;
+import org.eclipse.aether.named.NamedLockKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,21 +36,21 @@ import org.slf4j.LoggerFactory;
 public abstract class NamedLockSupport implements NamedLock {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final String name;
+    private final NamedLockKey key;
 
     private final NamedLockFactorySupport factory;
 
     private final ConcurrentHashMap<Thread, Deque<String>> diagnosticState; // non-null only if diag enabled
 
-    public NamedLockSupport(final String name, final NamedLockFactorySupport factory) {
-        this.name = name;
+    public NamedLockSupport(final NamedLockKey key, final NamedLockFactorySupport factory) {
+        this.key = key;
         this.factory = factory;
         this.diagnosticState = factory.isDiagnosticEnabled() ? new ConcurrentHashMap<>() : null;
     }
 
     @Override
-    public String name() {
-        return name;
+    public NamedLockKey key() {
+        return key;
     }
 
     @Override
@@ -107,12 +108,12 @@ public abstract class NamedLockSupport implements NamedLock {
     protected abstract void doUnlock();
 
     @Override
-    public void close() {
+    public final void close() {
         doClose();
     }
 
     protected void doClose() {
-        factory.closeLock(name);
+        factory.closeLock(key);
     }
 
     /**
@@ -130,6 +131,6 @@ public abstract class NamedLockSupport implements NamedLock {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "{" + "name='" + name + '\'' + '}';
+        return getClass().getSimpleName() + "{" + "key='" + key + '\'' + '}';
     }
 }

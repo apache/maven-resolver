@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,11 +40,11 @@ public class FileLockNamedLockFactorySupportTest extends NamedLockFactoryTestSup
     }
 
     @Override
-    protected String lockName(TestInfo testInfo) {
-        return baseDir.resolve(testInfo.getDisplayName())
+    protected Collection<NamedLockKey> lockName(TestInfo testInfo) {
+        return Collections.singleton(NamedLockKey.of(baseDir.resolve(testInfo.getDisplayName())
                 .toAbsolutePath()
                 .toUri()
-                .toASCIIString();
+                .toASCIIString()));
     }
 
     @BeforeAll

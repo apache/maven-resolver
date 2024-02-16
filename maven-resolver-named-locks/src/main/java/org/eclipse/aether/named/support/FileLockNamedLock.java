@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.eclipse.aether.named.NamedLockKey;
+
 import static org.eclipse.aether.named.support.Retry.retry;
 
 /**
@@ -74,8 +76,9 @@ public final class FileLockNamedLock extends NamedLockSupport {
      */
     private final ReentrantLock criticalRegion;
 
-    public FileLockNamedLock(final String name, final FileChannel fileChannel, final NamedLockFactorySupport factory) {
-        super(name, factory);
+    public FileLockNamedLock(
+            final NamedLockKey key, final FileChannel fileChannel, final NamedLockFactorySupport factory) {
+        super(key, factory);
         this.threadSteps = new HashMap<>();
         this.fileChannel = fileChannel;
         this.fileLockRef = new AtomicReference<>(null);
@@ -207,11 +210,11 @@ public final class FileLockNamedLock extends NamedLockSupport {
         try {
             result = fileChannel.tryLock(LOCK_POSITION, LOCK_SIZE, shared);
         } catch (OverlappingFileLockException e) {
-            logger.trace("File lock overlap on '{}'", name(), e);
+            logger.trace("File lock overlap on '{}'", key(), e);
             return null;
         } catch (IOException e) {
-            logger.trace("Failure on acquire of file lock for '{}'", name(), e);
-            throw new UncheckedIOException("Failed to acquire lock file channel for '" + name() + "'", e);
+            logger.trace("Failure on acquire of file lock for '{}'", key(), e);
+            throw new UncheckedIOException("Failed to acquire lock file channel for '" + key() + "'", e);
         }
         return result;
     }

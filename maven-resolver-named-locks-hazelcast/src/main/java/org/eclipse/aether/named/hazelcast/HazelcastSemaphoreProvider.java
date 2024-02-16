@@ -20,6 +20,7 @@ package org.eclipse.aether.named.hazelcast;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.ISemaphore;
+import org.eclipse.aether.named.NamedLockKey;
 
 /**
  * Support class for providers of {@link ISemaphore} instances.
@@ -31,12 +32,12 @@ public abstract class HazelcastSemaphoreProvider {
     protected static final String NAME_PREFIX = "maven:resolver:";
 
     /**
-     * Invoked when new instance of semaphore needed for given name. must not return {@code null}.
+     * Invoked when new instance of semaphore needed for given key. must not return {@code null}.
      */
-    public abstract ISemaphore acquireSemaphore(HazelcastInstance hazelcastInstance, String name);
+    public abstract ISemaphore acquireSemaphore(HazelcastInstance hazelcastInstance, NamedLockKey key);
 
     /**
-     * Invoked when passed in semaphore associated with passed in name is not to be used anymore.
+     * Invoked when passed in semaphore associated with passed in key is not to be used anymore.
      */
-    public abstract void releaseSemaphore(HazelcastInstance hazelcastInstance, String name, ISemaphore semaphore);
+    public abstract void releaseSemaphore(HazelcastInstance hazelcastInstance, NamedLockKey key, ISemaphore semaphore);
 }

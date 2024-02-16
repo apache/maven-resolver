@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 
 /**
  * Component mapping lock names to passed in artifacts and metadata as required.
@@ -56,7 +57,7 @@ public interface NameMapper {
      * Note: name mapper must not use same string for artifacts and metadata, so even the simplest possible
      * implementation like {@link StaticNameMapper} uses two different static strings.
      */
-    Collection<String> nameLocks(
+    Collection<NamedLockKey> nameLocks(
             RepositorySystemSession session,
             Collection<? extends Artifact> artifacts,
             Collection<? extends Metadata> metadatas);
