@@ -18,9 +18,8 @@
  */
 package org.eclipse.aether.named.redisson;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.named.support.ReadWriteLockNamedLock;
 import org.redisson.api.RReadWriteLock;
 

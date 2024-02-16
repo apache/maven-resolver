@@ -18,9 +18,8 @@
  */
 package org.eclipse.aether.transport.wagon;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.codehaus.plexus.testing.PlexusTest;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.junit.jupiter.api.Test;

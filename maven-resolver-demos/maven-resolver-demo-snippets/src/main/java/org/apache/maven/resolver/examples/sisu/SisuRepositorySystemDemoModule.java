@@ -18,10 +18,9 @@
  */
 package org.apache.maven.resolver.examples.sisu;
 
-import javax.inject.Inject;
-
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import jakarta.inject.Inject;
 import org.eclipse.sisu.inject.MutableBeanLocator;
 import org.eclipse.sisu.wire.ParameterKeys;
 

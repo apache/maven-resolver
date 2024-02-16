@@ -18,9 +18,6 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -35,6 +32,8 @@ import java.nio.file.Files;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

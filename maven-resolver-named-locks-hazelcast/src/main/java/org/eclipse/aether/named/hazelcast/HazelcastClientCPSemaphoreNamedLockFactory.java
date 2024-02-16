@@ -18,12 +18,11 @@
  */
 package org.eclipse.aether.named.hazelcast;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 /**
  * {@link HazelcastSemaphoreNamedLockFactory} using {@link DirectHazelcastSemaphoreProvider} and Hazelcast client. The

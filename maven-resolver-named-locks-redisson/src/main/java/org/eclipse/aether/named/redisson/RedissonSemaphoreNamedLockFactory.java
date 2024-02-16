@@ -18,13 +18,12 @@
  */
 package org.eclipse.aether.named.redisson;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.redisson.api.RSemaphore;
 

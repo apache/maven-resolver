@@ -18,11 +18,10 @@
  */
 package org.eclipse.aether.connector.basic;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import java.util.Map;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;

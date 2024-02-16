@@ -18,9 +18,6 @@
  */
 package org.eclipse.aether.named.providers;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
@@ -32,6 +29,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.named.support.FileLockNamedLock;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;

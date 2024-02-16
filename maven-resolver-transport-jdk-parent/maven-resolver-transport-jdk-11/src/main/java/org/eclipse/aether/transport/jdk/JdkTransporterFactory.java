@@ -18,9 +18,8 @@
  */
 package org.eclipse.aether.transport.jdk;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;

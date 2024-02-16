@@ -18,13 +18,12 @@
  */
 package org.eclipse.aether.internal.impl.transport.http;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy;

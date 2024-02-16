@@ -18,11 +18,10 @@
  */
 package org.eclipse.aether.named.providers;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.util.concurrent.TimeUnit;
 
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 

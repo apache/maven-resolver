@@ -18,8 +18,7 @@
  */
 package org.eclipse.aether.transport.classpath;
 
-import javax.inject.Named;
-
+import jakarta.inject.Named;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
