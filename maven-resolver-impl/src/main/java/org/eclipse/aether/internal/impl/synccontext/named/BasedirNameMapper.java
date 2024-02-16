@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -82,7 +83,7 @@ public class BasedirNameMapper implements NameMapper {
     }
 
     @Override
-    public Collection<String> nameLocks(
+    public Collection<NamedLockKey> nameLocks(
             final RepositorySystemSession session,
             final Collection<? extends Artifact> artifacts,
             final Collection<? extends Metadata> metadatas) {
@@ -92,7 +93,8 @@ public class BasedirNameMapper implements NameMapper {
                     : DirectoryUtils.resolveDirectory(session, DEFAULT_LOCKS_DIR, CONFIG_PROP_LOCKS_DIR, false);
 
             return delegate.nameLocks(session, artifacts, metadatas).stream()
-                    .map(name -> basedir.resolve(name).toAbsolutePath().toUri().toASCIIString())
+                    .map(k -> NamedLockKey.of(
+                            basedir.resolve(k.name()).toAbsolutePath().toUri().toASCIIString(), k.resources()))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);

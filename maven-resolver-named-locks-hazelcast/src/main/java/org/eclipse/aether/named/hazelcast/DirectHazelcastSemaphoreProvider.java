@@ -20,6 +20,7 @@ package org.eclipse.aether.named.hazelcast;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.ISemaphore;
+import org.eclipse.aether.named.NamedLockKey;
 
 /**
  * Direct provider of {@link ISemaphore} instances: it simply uses the passed in lock name to create semaphore name out
@@ -28,12 +29,12 @@ import com.hazelcast.cp.ISemaphore;
  */
 public class DirectHazelcastSemaphoreProvider extends HazelcastSemaphoreProvider {
     @Override
-    public ISemaphore acquireSemaphore(HazelcastInstance hazelcastInstance, String name) {
-        return hazelcastInstance.getCPSubsystem().getSemaphore(NAME_PREFIX + name);
+    public ISemaphore acquireSemaphore(HazelcastInstance hazelcastInstance, NamedLockKey key) {
+        return hazelcastInstance.getCPSubsystem().getSemaphore(NAME_PREFIX + key.name());
     }
 
     @Override
-    public void releaseSemaphore(HazelcastInstance hazelcastInstance, String name, ISemaphore semaphore) {
+    public void releaseSemaphore(HazelcastInstance hazelcastInstance, NamedLockKey key, ISemaphore semaphore) {
         // nothing
     }
 }

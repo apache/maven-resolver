@@ -24,6 +24,7 @@ import java.util.Collections;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 
 /**
  * Static {@link NameMapper}, always assigns one same name, effectively becoming equivalent to "static" sync context:
@@ -36,15 +37,14 @@ public class StaticNameMapper implements NameMapper {
     }
 
     @Override
-    public Collection<String> nameLocks(
+    public Collection<NamedLockKey> nameLocks(
             final RepositorySystemSession session,
             final Collection<? extends Artifact> artifacts,
             final Collection<? extends Metadata> metadatas) {
         if (artifacts != null && !artifacts.isEmpty()) {
-            return Collections.singletonList("static-artifact");
+            return Collections.singletonList(NamedLockKey.of("static-artifact"));
         } else if (metadatas != null && !metadatas.isEmpty()) {
-            return Collections.singletonList("static-metadata");
-
+            return Collections.singletonList(NamedLockKey.of("static-metadata"));
         } else {
             return Collections.emptyList();
         }

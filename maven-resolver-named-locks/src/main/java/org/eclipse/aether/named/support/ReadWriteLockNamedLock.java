@@ -23,6 +23,8 @@ import java.util.Deque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 
+import org.eclipse.aether.named.NamedLockKey;
+
 /**
  * Named lock support implementation that is using {@link ReadWriteLock} instances. The adapted lock MUST SUPPORT
  * reentrancy, non re-entrant locks will NOT work. It is the responsibility of an adapting lock, to ensure that
@@ -46,8 +48,8 @@ public class ReadWriteLockNamedLock extends NamedLockSupport {
     private final ReadWriteLock readWriteLock;
 
     public ReadWriteLockNamedLock(
-            final String name, final NamedLockFactorySupport factory, final ReadWriteLock readWriteLock) {
-        super(name, factory);
+            final NamedLockKey key, final NamedLockFactorySupport factory, final ReadWriteLock readWriteLock) {
+        super(key, factory);
         this.threadSteps = ThreadLocal.withInitial(ArrayDeque::new);
         this.readWriteLock = readWriteLock;
     }

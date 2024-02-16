@@ -57,7 +57,7 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
     }
 
     @Override
-    public void shutdown() {
+    protected void doShutdown() {
         logger.trace("Shutting down Redisson client with id '{}'", redissonClient.getId());
         redissonClient.shutdown();
     }

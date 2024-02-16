@@ -21,6 +21,7 @@ package org.eclipse.aether.named.redisson;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.ReadWriteLockNamedLock;
 import org.redisson.api.RReadWriteLock;
 
@@ -35,8 +36,8 @@ public class RedissonReadWriteLockNamedLockFactory extends RedissonNamedLockFact
     private static final String TYPED_NAME_PREFIX = NAME_PREFIX + NAME + ":";
 
     @Override
-    protected ReadWriteLockNamedLock createLock(final String name) {
-        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(TYPED_NAME_PREFIX + name);
-        return new ReadWriteLockNamedLock(name, this, readWriteLock);
+    protected ReadWriteLockNamedLock createLock(final NamedLockKey key) {
+        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(TYPED_NAME_PREFIX + key.name());
+        return new ReadWriteLockNamedLock(key, this, readWriteLock);
     }
 }

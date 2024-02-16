@@ -30,7 +30,7 @@ public final class LockUpgradeNotSupportedException extends RuntimeException imp
      */
     public LockUpgradeNotSupportedException(NamedLockSupport namedLock) {
         super("Thread " + Thread.currentThread().getName()
-                + " already holds shared lock for '" + namedLock.name()
+                + " already holds shared lock for '" + namedLock.key()
                 + "', but asks for exclusive lock; lock upgrade not supported");
     }
 }

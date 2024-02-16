@@ -18,11 +18,14 @@
  */
 package org.eclipse.aether.named.hazelcast;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -49,14 +52,14 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void refCounting(TestInfo testInfo) {
-        final String name = testInfo.getDisplayName();
-        try (NamedLock one = namedLockFactory.getLock(name);
-                NamedLock two = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
+        try (NamedLock one = namedLockFactory.getLock(keys);
+                NamedLock two = namedLockFactory.getLock(keys)) {
             assertSame(one, two);
             one.close();
             two.close();
 
-            try (NamedLock three = namedLockFactory.getLock(name)) {
+            try (NamedLock three = namedLockFactory.getLock(keys)) {
                 assertNotSame(three, two);
             }
         }
@@ -64,16 +67,16 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void unlockWoLock(TestInfo testInfo) {
-        final String name = testInfo.getDisplayName();
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertThrows(IllegalStateException.class, one::unlock);
         }
     }
 
     @Test
     void wwBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = testInfo.getDisplayName();
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             one.unlock();
@@ -83,8 +86,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void rrBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = testInfo.getDisplayName();
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             one.unlock();
@@ -94,8 +97,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void wrBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = testInfo.getDisplayName();
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             one.unlock();
@@ -105,8 +108,8 @@ public abstract class NamedLockFactoryTestSupport {
 
     @Test
     void rwBoxing(TestInfo testInfo) throws InterruptedException {
-        final String name = testInfo.getDisplayName();
-        try (NamedLock one = namedLockFactory.getLock(name)) {
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
             assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             try {
                 one.lockExclusively(1L, TimeUnit.MILLISECONDS);
@@ -121,11 +124,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     @Timeout(5)
     public void sharedAccess(TestInfo testInfo) throws InterruptedException {
-        final String name = testInfo.getDisplayName();
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
-        Thread t2 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
         t1.start();
         t2.start();
         t1.join();
@@ -137,11 +140,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     @Timeout(5)
     public void exclusiveAccess(TestInfo testInfo) throws InterruptedException {
-        final String name = testInfo.getDisplayName();
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
-        Thread t2 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
         t1.start();
         t2.start();
         t1.join();
@@ -153,11 +156,11 @@ public abstract class NamedLockFactoryTestSupport {
     @Test
     @Timeout(5)
     public void mixedAccess(TestInfo testInfo) throws InterruptedException {
-        final String name = testInfo.getDisplayName();
+        final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
-        Thread t2 = new Thread(new Access(namedLockFactory, name, false, winners, losers));
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
+        Thread t2 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
         t1.start();
         t2.start();
         t1.join();
@@ -168,19 +171,19 @@ public abstract class NamedLockFactoryTestSupport {
 
     private static class Access implements Runnable {
         final NamedLockFactory namedLockFactory;
-        final String name;
+        final Collection<NamedLockKey> keys;
         final boolean shared;
         final CountDownLatch winner;
         final CountDownLatch loser;
 
         public Access(
                 NamedLockFactory namedLockFactory,
-                String name,
+                Collection<NamedLockKey> keys,
                 boolean shared,
                 CountDownLatch winner,
                 CountDownLatch loser) {
             this.namedLockFactory = namedLockFactory;
-            this.name = name;
+            this.keys = keys;
             this.shared = shared;
             this.winner = winner;
             this.loser = loser;
@@ -188,7 +191,7 @@ public abstract class NamedLockFactoryTestSupport {
 
         @Override
         public void run() {
-            try (NamedLock lock = namedLockFactory.getLock(name)) {
+            try (NamedLock lock = namedLockFactory.getLock(keys)) {
                 if (shared
                         ? lock.lockShared(100L, TimeUnit.MILLISECONDS)
                         : lock.lockExclusively(100L, TimeUnit.MILLISECONDS)) {

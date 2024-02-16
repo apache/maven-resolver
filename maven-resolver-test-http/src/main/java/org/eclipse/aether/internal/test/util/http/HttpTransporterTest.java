@@ -80,7 +80,7 @@ public class HttpTransporterTest {
 
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        System.setProperty("javax.net.debug", "all");
+        // System.setProperty("javax.net.debug", "all");
     }
 
     private final Supplier<HttpTransporterFactory> transporterFactorySupplier;

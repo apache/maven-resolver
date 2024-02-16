@@ -24,6 +24,7 @@ import javax.inject.Singleton;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 
@@ -36,9 +37,9 @@ public class LocalSemaphoreNamedLockFactory extends NamedLockFactorySupport {
     public static final String NAME = "semaphore-local";
 
     @Override
-    protected AdaptedSemaphoreNamedLock createLock(final String name) {
+    protected AdaptedSemaphoreNamedLock createLock(final NamedLockKey key) {
         Semaphore semaphore = new Semaphore(Integer.MAX_VALUE);
-        return new AdaptedSemaphoreNamedLock(name, this, new JVMSemaphore(semaphore));
+        return new AdaptedSemaphoreNamedLock(key, this, new JVMSemaphore(semaphore));
     }
 
     /**
