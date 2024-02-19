@@ -18,9 +18,13 @@
  */
 package org.apache.maven.resolver.examples.supplier;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.generator.gnupg.GnupgSignatureArtifactGeneratorFactory;
+import org.eclipse.aether.generator.gnupg.loaders.*;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.transport.jdk.JdkTransporterFactory;
@@ -32,6 +36,26 @@ import org.eclipse.aether.transport.jetty.JettyTransporterFactory;
 public class SupplierRepositorySystemFactory {
     public static RepositorySystem newRepositorySystem() {
         return new RepositorySystemSupplier() {
+            @Override
+            protected Map<String, ArtifactGeneratorFactory> createArtifactGeneratorFactories() {
+                Map<String, ArtifactGeneratorFactory> result = super.createArtifactGeneratorFactories();
+                result.put(
+                        GnupgSignatureArtifactGeneratorFactory.NAME,
+                        new GnupgSignatureArtifactGeneratorFactory(
+                                getArtifactPredicateFactory(), getGnupgSignatureArtifactGeneratorFactoryLoaders()));
+                return result;
+            }
+
+            private Map<String, GnupgSignatureArtifactGeneratorFactory.Loader>
+                    getGnupgSignatureArtifactGeneratorFactoryLoaders() {
+                // order matters
+                LinkedHashMap<String, GnupgSignatureArtifactGeneratorFactory.Loader> loaders = new LinkedHashMap<>();
+                loaders.put(GpgEnvLoader.NAME, new GpgEnvLoader());
+                loaders.put(GpgConfLoader.NAME, new GpgConfLoader());
+                loaders.put(GpgAgentPasswordLoader.NAME, new GpgAgentPasswordLoader());
+                return loaders;
+            }
+
             @Override
             protected Map<String, TransporterFactory> createTransporterFactories() {
                 Map<String, TransporterFactory> result = super.createTransporterFactories();

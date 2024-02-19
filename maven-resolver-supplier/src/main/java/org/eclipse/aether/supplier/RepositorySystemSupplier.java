@@ -80,6 +80,8 @@ import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
+import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
@@ -379,6 +381,20 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return new DefaultChecksumAlgorithmFactorySelector(getChecksumAlgorithmFactories());
     }
 
+    private ArtifactPredicateFactory artifactPredicateFactory;
+
+    public final ArtifactPredicateFactory getArtifactPredicateFactory() {
+        checkClosed();
+        if (artifactPredicateFactory == null) {
+            artifactPredicateFactory = createArtifactPredicateFactory();
+        }
+        return artifactPredicateFactory;
+    }
+
+    protected ArtifactPredicateFactory createArtifactPredicateFactory() {
+        return new DefaultArtifactPredicateFactory(getChecksumAlgorithmFactorySelector());
+    }
+
     private Map<String, RepositoryLayoutFactory> repositoryLayoutFactories;
 
     public final Map<String, RepositoryLayoutFactory> getRepositoryLayoutFactories() {
@@ -393,7 +409,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         HashMap<String, RepositoryLayoutFactory> result = new HashMap<>();
         result.put(
                 Maven2RepositoryLayoutFactory.NAME,
-                new Maven2RepositoryLayoutFactory(getChecksumAlgorithmFactorySelector()));
+                new Maven2RepositoryLayoutFactory(
+                        getChecksumAlgorithmFactorySelector(), getArtifactPredicateFactory()));
         return result;
     }
 
@@ -675,6 +692,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return new DefaultInstaller(
                 getPathProcessor(),
                 getRepositoryEventDispatcher(),
+                getArtifactGeneratorFactories(),
                 getMetadataGeneratorFactories(),
                 getSyncContextFactory());
     }
@@ -696,6 +714,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getRepositoryConnectorProvider(),
                 getRemoteRepositoryManager(),
                 getUpdateCheckManager(),
+                getArtifactGeneratorFactories(),
                 getMetadataGeneratorFactories(),
                 getSyncContextFactory(),
                 getOfflineController());
@@ -816,6 +835,21 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected VersionScheme createVersionScheme() {
         return new GenericVersionScheme();
+    }
+
+    private Map<String, ArtifactGeneratorFactory> artifactGeneratorFactories;
+
+    public final Map<String, ArtifactGeneratorFactory> getArtifactGeneratorFactories() {
+        checkClosed();
+        if (artifactGeneratorFactories == null) {
+            artifactGeneratorFactories = createArtifactGeneratorFactories();
+        }
+        return artifactGeneratorFactories;
+    }
+
+    protected Map<String, ArtifactGeneratorFactory> createArtifactGeneratorFactories() {
+        // by default none, this is extension point
+        return new HashMap<>();
     }
 
     // Maven provided
