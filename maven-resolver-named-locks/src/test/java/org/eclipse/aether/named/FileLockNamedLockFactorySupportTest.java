@@ -41,8 +41,9 @@ public class FileLockNamedLockFactorySupportTest extends NamedLockFactoryTestSup
 
     @Override
     protected Collection<NamedLockKey> lockName(TestInfo testInfo) {
-        return Collections.singleton(NamedLockKey.of(
-                baseDir.resolve(testInfo.getDisplayName()).toAbsolutePath().toUri()
+        return Collections.singleton(NamedLockKey.of(baseDir.resolve(testInfo.getDisplayName())
+                .toAbsolutePath()
+                .toUri()
                 .toASCIIString()));
     }
 

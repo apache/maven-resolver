@@ -132,8 +132,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
 
         // they are sorted as well
         assertEquals(
-                namesIterator.next().name(), basedir.toUri() + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085");
+                namesIterator.next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085");
         assertEquals(
-                namesIterator.next().name(), basedir.toUri() + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638");
+                namesIterator.next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638");
     }
 }
